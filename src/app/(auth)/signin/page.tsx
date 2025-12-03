@@ -1,0 +1,114 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
+import CredentialsForm from "@/components/auth/CredentialsForm";
+import Divider from "@/components/auth/Divider";
+
+export default function SignIn() {
+	const [authMethod, setAuthMethod] = useState<"credentials" | "google">(
+		"credentials"
+	);
+
+	return (
+		<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+			<div className="max-w-md w-full space-y-8">
+				{/* Header */}
+				<div className="text-center">
+					<div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mb-4">
+						<svg
+							className="h-8 w-8 text-white"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+							/>
+						</svg>
+					</div>
+					<h2 className="text-3xl font-bold text-gray-900 mb-2">
+						Bienvenido de vuelta
+					</h2>
+					<p className="text-gray-600">Inicia sesión en tu cuenta</p>
+				</div>
+
+				{/* Auth Method Tabs */}
+				<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+					<div className="flex">
+						<button
+							onClick={() => setAuthMethod("credentials")}
+							className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 ${
+								authMethod === "credentials"
+									? "bg-blue-600 text-white shadow-sm"
+									: "text-gray-500 hover:text-gray-700"
+							}`}
+						>
+							Credenciales
+						</button>
+						<button
+							onClick={() => setAuthMethod("google")}
+							className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 ${
+								authMethod === "google"
+									? "bg-blue-600 text-white shadow-sm"
+									: "text-gray-500 hover:text-gray-700"
+							}`}
+						>
+							Google
+						</button>
+					</div>
+				</div>
+
+				{/* Auth Content */}
+				<div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8">
+					{authMethod === "credentials" ? (
+						<CredentialsForm />
+					) : (
+						<div className="space-y-6">
+							<div className="text-center">
+								<p className="text-gray-600 mb-6">
+									Inicia sesión rápidamente con tu cuenta de Google
+								</p>
+								<GoogleSignInButton />
+							</div>
+
+							<Divider text="O continúa con credenciales" />
+
+							<button
+								onClick={() => setAuthMethod("credentials")}
+								className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-medium"
+							>
+								Usar email y contraseña
+							</button>
+						</div>
+					)}
+				</div>
+
+				{/* Footer */}
+				<div className="text-center">
+					<p className="text-gray-600">
+						¿No tienes una cuenta?{" "}
+						<Link
+							href="/signup"
+							className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200"
+						>
+							Regístrate aquí
+						</Link>
+					</p>
+				</div>
+
+				{/* Additional Info */}
+				<div className="text-center text-xs text-gray-500">
+					<p>
+						Al continuar, aceptas nuestros términos de servicio y política de
+						privacidad
+					</p>
+				</div>
+			</div>
+		</div>
+	);
+}
