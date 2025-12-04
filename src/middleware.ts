@@ -42,6 +42,8 @@ export const config = {
     // "/panel/:path*",
     // "/test",
     // Proteger todas las rutas excepto las públicas
-    "/((?!api|_next/static|_next/image|favicon.ico|signin|signup).*)",
+    // "/((?!api|_next/static|_next/image|favicon.ico|signin|signup).*)",
+
+    "/((?!api|_next/static|_next/image|.*\\.(?:ico|png|jpg|jpeg|svg|gif|webp)$|signin|signup).*)",
   ],
 };

@@ -5,47 +5,21 @@ import Link from "next/link";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import CredentialsForm from "@/components/auth/CredentialsForm";
 import Divider from "@/components/auth/Divider";
-import { useSession } from "next-auth/react";
-import { redirect } from "next/navigation";
 
 export default function SignIn() {
   const [authMethod, setAuthMethod] = useState<"credentials" | "google">(
     "credentials"
   );
 
-  // si ya estoy logueado, redirijo a home
-  const session = useSession();
-  if (session.status === "authenticated") {
-    redirect("/home");
-  }
-
-  if (session.status === "unauthenticated") {
-    redirect("/signin");
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mb-4">
-            <svg
-              className="h-8 w-8 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-              />
-            </svg>
+          <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-500 to-[#90c472] rounded-full flex items-center justify-center mb-4">
+            <img src="/XPDark.ico" alt="" className="h-6" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Bienvenido de vuelta
-          </h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Bienvenido</h2>
           <p className="text-gray-600">Inicia sesión en tu cuenta</p>
         </div>
 
@@ -56,7 +30,7 @@ export default function SignIn() {
               onClick={() => setAuthMethod("credentials")}
               className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 ${
                 authMethod === "credentials"
-                  ? "bg-blue-600 text-white shadow-sm"
+                  ? "bg-gradient-to-r from-blue-500 to-[#90c472] hover:from-blue-600 hover:to-[#90c472] text-white shadow-sm"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -66,7 +40,7 @@ export default function SignIn() {
               onClick={() => setAuthMethod("google")}
               className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 ${
                 authMethod === "google"
-                  ? "bg-blue-600 text-white shadow-sm"
+                  ? "bg-gradient-to-r from-blue-500 to-[#90c472] hover:from-blue-600 hover:to-[#90c472] text-white shadow-sm"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -106,7 +80,7 @@ export default function SignIn() {
             ¿No tienes una cuenta?{" "}
             <Link
               href="/signup"
-              className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200"
+              className="font-medium text-blue-500 hover:text-blue-600 transition-colors duration-200"
             >
               Regístrate aquí
             </Link>
