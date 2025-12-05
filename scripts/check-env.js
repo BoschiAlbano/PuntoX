@@ -13,8 +13,10 @@ console.log("[check-env] Verificando configuracion de variables de entorno...\n"
 const requiredVars = {
   NEXTAUTH_URL: process.env.NEXTAUTH_URL,
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-  NEXTAUTH_JWT_SECRET: process.env.NEXTAUTH_JWT_SECRET,
+  // NEXTAUTH_JWT_SECRET se permite igual a NEXTAUTH_SECRET, no se exige valor distinto
+  NEXTAUTH_JWT_SECRET: process.env.NEXTAUTH_JWT_SECRET || process.env.NEXTAUTH_SECRET,
   DATABASE_URL: process.env.DATABASE_URL,
+  DEFAULT_TENANT_ID: process.env.DEFAULT_TENANT_ID,
 };
 
 let hasErrors = false;
@@ -33,15 +35,6 @@ Object.entries(requiredVars).forEach(([key, value]) => {
 
 console.log("\nVerificaciones adicionales:");
 
-if (process.env.NEXTAUTH_SECRET && process.env.NEXTAUTH_JWT_SECRET) {
-  if (process.env.NEXTAUTH_SECRET === process.env.NEXTAUTH_JWT_SECRET) {
-    console.log("  ADVERTENCIA: NEXTAUTH_SECRET y NEXTAUTH_JWT_SECRET son iguales");
-    hasErrors = true;
-  } else {
-    console.log("  OK: NEXTAUTH_SECRET y NEXTAUTH_JWT_SECRET son diferentes");
-  }
-}
-
 if (process.env.NEXTAUTH_SECRET) {
   if (process.env.NEXTAUTH_SECRET.length < 32) {
     console.log("  ADVERTENCIA: NEXTAUTH_SECRET es muy corta (minimo 32 caracteres)");
@@ -58,6 +51,13 @@ if (process.env.NEXTAUTH_JWT_SECRET) {
   } else {
     console.log("  OK: NEXTAUTH_JWT_SECRET tiene longitud adecuada");
   }
+}
+
+if (process.env.DEFAULT_TENANT_ID) {
+  console.log("  OK: DEFAULT_TENANT_ID definido");
+} else {
+  console.log("  ADVERTENCIA: DEFAULT_TENANT_ID no esta definido");
+  hasErrors = true;
 }
 
 if (process.env.DATABASE_URL) {

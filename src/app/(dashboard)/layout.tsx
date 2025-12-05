@@ -30,7 +30,11 @@ export default function DashboardLayout({
 
   // Si no está autenticado, no mostrar nada (se redirigirá)
   if (status === "unauthenticated") {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center text-sm text-gray-600">
+        Redirigiendo a inicio de sesión...
+      </div>
+    );
   }
 
   // Si está autenticado, mostrar el contenido del dashboard

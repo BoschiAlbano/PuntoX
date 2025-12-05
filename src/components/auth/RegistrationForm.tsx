@@ -18,6 +18,7 @@ interface RegistrationData {
   nombreUsuario: string;
   password: string;
   confirmPassword: string;
+  tenantId: string;
 }
 
 interface Localidad {
@@ -26,6 +27,7 @@ interface Localidad {
 }
 
 export default function RegistrationForm() {
+  const defaultTenantId = process.env.NEXT_PUBLIC_TENANT_ID || "";
   const [formData, setFormData] = useState<RegistrationData>({
     apellido: "",
     nombre: "",
@@ -37,6 +39,7 @@ export default function RegistrationForm() {
     nombreUsuario: "",
     password: "",
     confirmPassword: "",
+    tenantId: defaultTenantId,
   });
 
   const [localidades, setLocalidades] = useState<Localidad[]>([]);
@@ -82,9 +85,17 @@ export default function RegistrationForm() {
       !formData.localidadId ||
       !formData.nombreUsuario ||
       !formData.password ||
-      !formData.confirmPassword
+      !formData.confirmPassword ||
+      !formData.tenantId
     ) {
       setError("Todos los campos obligatorios deben estar completos");
+      return false;
+    }
+
+    if (!formData.tenantId) {
+      setError(
+        "No se ha configurado el TenantId. Contacta a un administrador o define NEXT_PUBLIC_TENANT_ID."
+      );
       return false;
     }
 
@@ -137,7 +148,7 @@ export default function RegistrationForm() {
       // Auto-login después del registro
       setTimeout(async () => {
         try {
-          await login("credentials", {
+          await login({
             email: formData.mail,
             password: formData.password,
           });
