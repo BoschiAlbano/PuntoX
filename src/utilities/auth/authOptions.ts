@@ -44,7 +44,7 @@ export const authOptions: AuthOptions = {
             throw new Error("Credenciales indefinidas");
           }
 
-          const email = credentials.email?.trim();
+          const email = credentials.email?.trim().toLowerCase();
           const password = credentials.password;
           const resolvedTenant = defaultTenantIdEnv;
 

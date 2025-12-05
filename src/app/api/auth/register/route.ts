@@ -36,6 +36,16 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
+		let parsedLocalidadId: bigint;
+		try {
+			parsedLocalidadId = BigInt(localidadId);
+		} catch {
+			return NextResponse.json(
+				{ error: "Localidad inválida" },
+				{ status: 400 }
+			);
+		}
+
 		// Validaciones basicas
 		if (
 			!apellido ||
@@ -52,6 +62,18 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
+		if (typeof password !== "string" || password.length < 8) {
+			return NextResponse.json(
+				{ error: "La contraseña debe tener al menos 8 caracteres" },
+				{ status: 400 }
+			);
+		}
+
+		const mailNormalized =
+			typeof mail === "string" ? mail.trim().toLowerCase() : "";
+		const usernameNormalized =
+			typeof nombreUsuario === "string" ? nombreUsuario.trim() : "";
+
 		// Validar que el Tenant exista
 		const tenantExists = await prisma.tenant.findUnique({
 			where: { Id: parsedTenantId },
@@ -64,10 +86,25 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
+		// Validar que la localidad exista y no esté eliminada
+		const localidadValida = await prisma.localidad.findFirst({
+			where: {
+				Id: parsedLocalidadId,
+				EstaEliminado: false,
+			},
+		});
+
+		if (!localidadValida) {
+			return NextResponse.json(
+				{ error: "Localidad no válida" },
+				{ status: 400 }
+			);
+		}
+
 		// Verificar si el email ya existe
 		const existingPersona = await prisma.persona.findFirst({
 			where: {
-				Mail: mail,
+				Mail: mailNormalized,
 				EstaEliminado: false,
 				TenantId: parsedTenantId,
 			},
@@ -83,7 +120,7 @@ export async function POST(request: NextRequest) {
 		// Verificar si el nombre de usuario ya existe
 		const existingUsuario = await prisma.usuario.findFirst({
 			where: {
-				Nombre: nombreUsuario,
+				Nombre: usernameNormalized,
 				EstaEliminado: false,
 				TenantId: parsedTenantId,
 			},
@@ -110,8 +147,8 @@ export async function POST(request: NextRequest) {
 					Dni: dni || null,
 					Direccion: direccion,
 					Telefono: telefono || null,
-					Mail: mail,
-					LocalidadId: BigInt(localidadId),
+					Mail: mailNormalized,
+					LocalidadId: parsedLocalidadId,
 					EstaEliminado: false,
 				},
 			});
@@ -130,7 +167,7 @@ export async function POST(request: NextRequest) {
 				data: {
 					EmpleadoId: personaEmpleado.Id,
 					TenantId: parsedTenantId,
-					Nombre: nombreUsuario,
+					Nombre: usernameNormalized,
 					Password: hashedPassword,
 					EstaBloqueado: false,
 					EstaEliminado: false,

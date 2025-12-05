@@ -37,7 +37,8 @@ console.log("\nVerificaciones adicionales:");
 
 if (process.env.NEXTAUTH_SECRET) {
   if (process.env.NEXTAUTH_SECRET.length < 32) {
-    console.log("  ADVERTENCIA: NEXTAUTH_SECRET es muy corta (minimo 32 caracteres)");
+    console.log("  ERROR: NEXTAUTH_SECRET es muy corta (minimo 32 caracteres)");
+    hasErrors = true;
   } else {
     console.log("  OK: NEXTAUTH_SECRET tiene longitud adecuada");
   }
@@ -46,8 +47,9 @@ if (process.env.NEXTAUTH_SECRET) {
 if (process.env.NEXTAUTH_JWT_SECRET) {
   if (process.env.NEXTAUTH_JWT_SECRET.length < 32) {
     console.log(
-      "  ADVERTENCIA: NEXTAUTH_JWT_SECRET es muy corta (minimo 32 caracteres)"
+      "  ERROR: NEXTAUTH_JWT_SECRET es muy corta (minimo 32 caracteres)"
     );
+    hasErrors = true;
   } else {
     console.log("  OK: NEXTAUTH_JWT_SECRET tiene longitud adecuada");
   }

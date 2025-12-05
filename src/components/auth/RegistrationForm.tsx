@@ -104,8 +104,8 @@ export default function RegistrationForm() {
       return false;
     }
 
-    if (formData.password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
+    if (formData.password.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres");
       return false;
     }
 
@@ -129,12 +129,16 @@ export default function RegistrationForm() {
     setIsLoading(true);
 
     try {
+      const normalizedMail = formData.mail.trim().toLowerCase();
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          mail: normalizedMail,
+        }),
       });
 
       const data = await response.json();
@@ -149,7 +153,7 @@ export default function RegistrationForm() {
       setTimeout(async () => {
         try {
           await login({
-            email: formData.mail,
+            email: normalizedMail,
             password: formData.password,
           });
         } catch (error) {
@@ -355,7 +359,7 @@ export default function RegistrationForm() {
               onChange={handleInputChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="••••••••"
+              placeholder="********"
             />
           </div>
 
@@ -374,7 +378,7 @@ export default function RegistrationForm() {
               onChange={handleInputChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="••••••••"
+              placeholder="********"
             />
           </div>
         </div>
