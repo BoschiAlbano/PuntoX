@@ -11,7 +11,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/home");
+      router.push("/ventas");
     }
   }, [status, router]);
 

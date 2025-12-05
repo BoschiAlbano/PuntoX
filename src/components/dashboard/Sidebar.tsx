@@ -32,8 +32,8 @@ const menuItems: MenuItem[] = [
         />
       </svg>
     ),
-    label: "Dashboard",
-    href: "/home",
+    label: "Ventas",
+    href: "/ventas",
   },
   {
     icon: (
@@ -52,7 +52,7 @@ const menuItems: MenuItem[] = [
       </svg>
     ),
     label: "Productos",
-    href: "/panel",
+    href: "/productos",
   },
   {
     icon: (
@@ -70,7 +70,7 @@ const menuItems: MenuItem[] = [
         />
       </svg>
     ),
-    label: "Órdenes",
+    label: "Test",
     href: "/test",
     badge: "12",
   },
@@ -91,7 +91,26 @@ const menuItems: MenuItem[] = [
       </svg>
     ),
     label: "Clientes",
-    href: "/customers",
+    href: "/clientes",
+  },
+  {
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+        />
+      </svg>
+    ),
+    label: "Empleados",
+    href: "/empleados",
   },
   {
     icon: (
@@ -110,7 +129,7 @@ const menuItems: MenuItem[] = [
       </svg>
     ),
     label: "Analíticas",
-    href: "/analytics",
+    href: "/analiticas",
   },
   {
     icon: (
@@ -135,7 +154,7 @@ const menuItems: MenuItem[] = [
       </svg>
     ),
     label: "Configuración",
-    href: "/settings",
+    href: "/configuracion",
   },
 ];
 
@@ -147,7 +166,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     // <section className={`z-[99] relative flex flex-col h-auto ${isCollapsed ? "w-[80px]" : "w-[280px]"} transition-all duration-300 ease-in-out`}>
 
     <motion.section
-      className={`z-[99] sm:relative absolute flex flex-col h-auto ${
+      className={`z-[99] sm:relative absolute flex-col h-auto sm:flex hidden ${
         isCollapsed ? "sm:w-[80px] w-[0px]" : "w-[280px]"
       }`}
       initial={false}

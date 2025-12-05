@@ -38,7 +38,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // "/home/:path*",
+    // "/ventas/:path*",
     // "/panel/:path*",
     // "/test",
     // Proteger todas las rutas excepto las públicas

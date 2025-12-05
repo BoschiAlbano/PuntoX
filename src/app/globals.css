@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@plugin "../components/heroUi/hero.ts";
+@source '../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+
+/* @source "../../node_modules/@heroui/theme/dist*.{js,ts,jsx,tsx}"; */
 
 /* 
   Colores:
@@ -6,6 +10,7 @@
   --foreground: #171717;
 
   --color-verde: #90c472;
+  --color-azul-oscuro: #182337;
 */
 :root {
   --background: #ffffff;
@@ -43,12 +48,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(180deg, #3b82f6, #90c472);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #2563eb, #7c3aed);
+  background: linear-gradient(180deg, #2563eb, #90c472);
 }
 
 * {
