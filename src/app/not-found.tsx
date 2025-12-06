@@ -4,7 +4,11 @@ import React from "react";
 export default function page() {
   return (
     <section className="flex flex-col items-center justify-center h-screen gap-4">
-      <img src="/favicon-light.ico" alt="" className="w-24 h-24" />
+      <img
+        src="/favicon-light.ico"
+        alt="Punto X"
+        className="w-24 h-24 object-contain"
+      />
 
       <div className="flex flex-col items-center gap-2">
         <h1 className="text-2xl font-bold">Pagina no encontrada</h1>

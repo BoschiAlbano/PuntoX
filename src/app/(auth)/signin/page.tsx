@@ -9,7 +9,11 @@ export default function SignIn() {
         {/* Header simple (solo credenciales, sin Google) */}
         <div className="text-center">
           <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-500 to-[#90c472] rounded-full flex items-center justify-center mb-4">
-            <img src="/XPDark.ico" alt="" className="h-6" />
+            <img
+              src="/XPDark.ico"
+              alt="Punto X"
+              className="h-10 w-10 object-contain"
+            />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Bienvenido</h2>
           <p className="text-gray-600">Inicia sesion en tu cuenta</p>

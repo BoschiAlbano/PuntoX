@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 
 // GET /api/rubros - Listar todos los rubros activos
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const rubros = await prisma.rubro.findMany({
       where: {

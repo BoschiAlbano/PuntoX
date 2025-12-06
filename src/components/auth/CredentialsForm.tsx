@@ -16,8 +16,9 @@ export default function CredentialsForm() {
     setError("");
 
     try {
-      const data = await login({ email, password });
+      await login({ email, password });
     } catch (error) {
+      console.error("Error al iniciar sesion:", error);
       setError("Credenciales invalidas");
     }
   };
