@@ -4,7 +4,7 @@ import { getToken } from "next-auth/jwt";
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Rutas públicas que no pasan por autenticación
+  // Rutas publicas que no pasan por autenticacion
   const publicPaths = [
     "/signin",
     "/signup",

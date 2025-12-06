@@ -13,7 +13,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -23,21 +23,21 @@ export default function DashboardLayout({
     }
   }, [status, router]);
 
-  // Mostrar loading mientras se verifica la autenticación
+  // Mostrar loading mientras se verifica la autenticacion
   if (status === "loading") {
     return <Loading />;
   }
 
-  // Si no está autenticado, no mostrar nada (se redirigirá)
+  // Si no esta autenticado, no mostrar nada (se redirigira)
   if (status === "unauthenticated") {
     return (
       <div className="min-h-screen flex items-center justify-center text-sm text-gray-600">
-        Redirigiendo a inicio de sesión...
+        Redirigiendo a inicio de sesion...
       </div>
     );
   }
 
-  // Si está autenticado, mostrar el contenido del dashboard
+  // Si esta autenticado, mostrar el contenido del dashboard
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 flex">
       {/* Sidebar */}
@@ -69,7 +69,7 @@ export default function DashboardLayout({
             <p>© 2024 Punto X SaaS. Todos los derechos reservados.</p>
             <div className="flex items-center gap-4">
               <a href="#" className="hover:text-blue-600 transition-colors">
-                Términos
+                Terminos
               </a>
               <a href="#" className="hover:text-blue-600 transition-colors">
                 Privacidad
