@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SessionProviderComponent from "@/components/auth/sessionProvider";
 import { HeroUIProvider } from "@heroui/react";
-import { Toaster } from "sonner";
+import { ToastProvider } from "@heroui/toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,10 +47,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <HeroUIProvider>
-          <SessionProviderComponent>
-            {children}
-          </SessionProviderComponent>
-          <Toaster richColors />
+          <ToastProvider />
+          <SessionProviderComponent>{children}</SessionProviderComponent>
         </HeroUIProvider>
       </body>
     </html>

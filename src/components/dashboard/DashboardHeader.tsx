@@ -1,5 +1,4 @@
 "use client";
-
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -8,8 +7,9 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
+  addToast,
+  Button,
 } from "@heroui/react";
-import { toast } from "sonner";
 
 export default function DashboardHeader() {
   const { data: session } = useSession();
@@ -23,11 +23,14 @@ export default function DashboardHeader() {
       .toUpperCase() || "U";
 
   function handleSignOut(): void {
-    toast(" ¿ Desea cerrar sesión? ?", {
-      action: {
-        label: "Aceptar",
-        onClick: () => signOut(),
-      },
+    addToast({
+      title: " ¿ Desea cerrar sesión? ",
+      description: " ¿ Desea cerrar sesión? ",
+      endContent: (
+        <Button size="sm" variant="flat" onPress={() => signOut()}>
+          Aceptar
+        </Button>
+      ),
     });
   }
 
