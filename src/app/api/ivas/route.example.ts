@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 
 // GET /api/ivas - Listar todos los tipos de IVA activos
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const ivas = await prisma.iva.findMany({
       where: {

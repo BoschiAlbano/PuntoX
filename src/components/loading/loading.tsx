@@ -17,7 +17,11 @@ export default function Loading() {
           />
           <div className="absolute inset-2 rounded-full bg-gradient-to-br from-blue-500 to-[#90c472] flex items-center justify-center">
             {/* <span className="text-white font-bold text-2xl">P</span> */}
-            <img src="/XP.ico" alt="" className="w-12" />
+            <img
+              src="/XP.ico"
+              alt="Punto X"
+              className="w-10 h-10 object-contain"
+            />
           </div>
         </div>
         <motion.p

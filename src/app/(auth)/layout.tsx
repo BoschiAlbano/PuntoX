@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Loading from "@/components/loading/loading";
 
-export default function layout({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession();
+export default function Layout({ children }: { children: React.ReactNode }) {
+  const { status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
@@ -15,12 +15,12 @@ export default function layout({ children }: { children: React.ReactNode }) {
     }
   }, [status, router]);
 
-  // Mostrar loading mientras se verifica la autenticación
+  // Mostrar loading mientras se verifica la autenticacion
   if (status === "loading") {
     return <Loading />;
   }
 
-  // Si está autenticado, no mostrar nada (se redirigirá)
+  // Si esta autenticado, no mostrar nada (se redirigira)
   if (status === "authenticated") {
     return null;
   }

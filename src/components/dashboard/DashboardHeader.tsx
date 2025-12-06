@@ -1,6 +1,5 @@
 "use client";
 import { signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Dropdown,
@@ -13,7 +12,6 @@ import {
 
 export default function DashboardHeader() {
   const { data: session } = useSession();
-  const router = useRouter();
 
   const userInitials =
     session?.user?.name
@@ -24,8 +22,8 @@ export default function DashboardHeader() {
 
   function handleSignOut(): void {
     addToast({
-      title: " ¿ Desea cerrar sesión? ",
-      description: " ¿ Desea cerrar sesión? ",
+      title: "Cerrar sesion",
+      description: "Confirma que deseas cerrar sesion.",
       endContent: (
         <Button size="sm" variant="flat" onPress={() => signOut()}>
           Aceptar
@@ -60,7 +58,7 @@ export default function DashboardHeader() {
               </svg>
               <input
                 type="text"
-                placeholder="Buscar productos, órdenes, clientes..."
+                placeholder="Buscar productos, ordenes, clientes..."
                 className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               />
             </div>
@@ -138,29 +136,27 @@ export default function DashboardHeader() {
                   key="team_settings"
                   className="my-1 hover:bg-slate-100 transition-colors rounded-lg py-2 px-4 cursor-pointer"
                 >
-                  Configuración
+                  Configuracion
                 </DropdownItem>
                 <DropdownItem
                   key="analytics"
                   className="my-1 hover:bg-slate-100 transition-colors rounded-lg py-2 px-4 cursor-pointer"
                 >
-                  Analíticas
+                  Analiticas
                 </DropdownItem>
                 <DropdownItem
                   key="help_and_feedback"
                   className="my-1 hover:bg-slate-100 transition-colors rounded-lg py-2 px-4 cursor-pointer"
                 >
-                  Ayuda & Feedback
+                  Ayuda y Feedback
                 </DropdownItem>
                 <DropdownItem
                   key="logout"
                   color="danger"
-                  // onClick={() => router.push("/api/auth/signout")}
-                  // onClick={() => handleSignOut()}
                   onPress={() => handleSignOut()}
                   className=" w-full rounded-lg my-1  hover:bg-slate-100 transition-colors py-2 px-4 cursor-pointer"
                 >
-                  Cerrar Sesión
+                  Cerrar Sesion
                 </DropdownItem>
               </DropdownMenu>
             </Dropdown>

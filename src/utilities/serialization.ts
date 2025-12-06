@@ -1,28 +1,34 @@
 /**
- * Función para convertir BigInt a Number en objetos
- * Útil para serializar datos de Prisma que contienen BigInt
+ * FunciИn para convertir BigInt a Number en objetos
+ * れtil para serializar datos de Prisma que contienen BigInt
  */
-export function serializeBigInt<T extends Record<string, any>>(obj: T): T {
-	const serialized = { ...obj };
+export function serializeBigInt<T extends Record<string, unknown>>(obj: T): T {
+	const serialized = { ...obj } as Record<string, unknown>;
 
 	for (const key in serialized) {
-		if (typeof serialized[key] === "bigint") {
-			serialized[key] = Number(serialized[key]);
-		} else if (
-			typeof serialized[key] === "object" &&
-			serialized[key] !== null
-		) {
-			serialized[key] = serializeBigInt(serialized[key]);
+		const value = serialized[key];
+
+		if (typeof value === "bigint") {
+			serialized[key] = Number(value);
+		} else if (Array.isArray(value)) {
+			serialized[key] = value.map((item) => {
+				if (typeof item === "bigint") return Number(item);
+				if (typeof item === "object" && item !== null)
+					return serializeBigInt(item as Record<string, unknown>);
+				return item;
+			});
+		} else if (typeof value === "object" && value !== null) {
+			serialized[key] = serializeBigInt(value as Record<string, unknown>);
 		}
 	}
 
-	return serialized;
+	return serialized as T;
 }
 
 /**
- * Función para convertir un array de objetos que contienen BigInt
+ * FunciИn para convertir un array de objetos que contienen BigInt
  */
-export function serializeBigIntArray<T extends Record<string, any>>(
+export function serializeBigIntArray<T extends Record<string, unknown>>(
 	arr: T[]
 ): T[] {
 	return arr.map((item) => serializeBigInt(item));

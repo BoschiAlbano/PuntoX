@@ -7,45 +7,38 @@ export function useAuth() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const login = async (
-    provider: "google" | "credentials",
-    credentials?: { email: string; password: string }
-  ) => {
+  const login = async (credentials: { email: string; password: string }) => {
     try {
-      if (provider === "google") {
-        await signIn("google", { callbackUrl: "/ventas" });
-      } else if (provider === "credentials" && credentials) {
-        const result = await signIn("credentials", {
-          email: credentials.email,
-          password: credentials.password,
-          redirect: false,
-        });
+      const result = await signIn("credentials", {
+        email: credentials.email,
+        password: credentials.password,
+        redirect: false,
+      });
 
-        console.log("Resultado del login:", result);
+      console.log("Resultado del login:", result);
 
-        if (result?.error) {
-          // Manejar errores específicos de NextAuth
-          if (result.error === "Configuration") {
-            throw new Error(
-              "Error de configuración del servidor. Verifica las variables de entorno."
-            );
-          } else if (result.error === "CredentialsSignin") {
-            throw new Error(
-              "Credenciales inválidas. Verifica tu email y contraseña."
-            );
-          } else if (result.error === "AccessDenied") {
-            throw new Error(
-              "Acceso denegado. Tu cuenta puede estar bloqueada."
-            );
-          } else {
-            throw new Error(`Error de autenticación: ${result.error}`);
-          }
+      if (result?.error) {
+        // Manejar errores específicos de NextAuth
+        if (result.error === "Configuration") {
+          throw new Error(
+            "Error de configuración del servidor. Verifica las variables de entorno."
+          );
+        } else if (result.error === "CredentialsSignin") {
+          throw new Error(
+            "Credenciales inválidas. Verifica tu email y contraseña."
+          );
+        } else if (result.error === "AccessDenied") {
+          throw new Error(
+            "Acceso denegado. Tu cuenta puede estar bloqueada."
+          );
+        } else {
+          throw new Error(`Error de autenticación: ${result.error}`);
         }
+      }
 
-        // Si no hay error, redirigir
-        if (result?.ok) {
-          router.push("/ventas");
-        }
+      // Si no hay error, redirigir
+      if (result?.ok) {
+        router.push("/ventas");
       }
     } catch (error) {
       console.error("Error en login:", error);

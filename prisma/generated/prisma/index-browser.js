@@ -128,6 +128,36 @@ exports.Prisma.MigrationHistoryScalarFieldEnum = {
   ProductVersion: 'ProductVersion'
 };
 
+exports.Prisma.TenantScalarFieldEnum = {
+  Id: 'Id',
+  Nombre: 'Nombre',
+  Dominio: 'Dominio',
+  RazonSocial: 'RazonSocial',
+  Cuit: 'Cuit',
+  Email: 'Email',
+  Telefono: 'Telefono',
+  EstaActivo: 'EstaActivo',
+  PlanId: 'PlanId'
+};
+
+exports.Prisma.PlanSaaSScalarFieldEnum = {
+  Id: 'Id',
+  Nombre: 'Nombre',
+  Descripcion: 'Descripcion',
+  CostoMensual: 'CostoMensual',
+  Caracteristicas: 'Caracteristicas'
+};
+
+exports.Prisma.LogScalarFieldEnum = {
+  Id: 'Id',
+  TenantId: 'TenantId',
+  Fecha: 'Fecha',
+  Nivel: 'Nivel',
+  Servicio: 'Servicio',
+  Mensaje: 'Mensaje',
+  Metadata: 'Metadata'
+};
+
 exports.Prisma.ArticuloScalarFieldEnum = {
   Id: 'Id',
   MarcaId: 'MarcaId',
@@ -154,7 +184,8 @@ exports.Prisma.ArticuloScalarFieldEnum = {
   StockMinimo: 'StockMinimo',
   VencimientoDias: 'VencimientoDias',
   TipoVenta: 'TipoVenta',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.BajaArticuloScalarFieldEnum = {
@@ -164,13 +195,15 @@ exports.Prisma.BajaArticuloScalarFieldEnum = {
   Cantidad: 'Cantidad',
   Fecha: 'Fecha',
   Observacion: 'Observacion',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.BancoScalarFieldEnum = {
   Id: 'Id',
   Descripcion: 'Descripcion',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.CajaScalarFieldEnum = {
@@ -192,7 +225,8 @@ exports.Prisma.CajaScalarFieldEnum = {
   TotalEntradaTransf: 'TotalEntradaTransf',
   TotalSalidaTransf: 'TotalSalidaTransf',
   EstaEliminado: 'EstaEliminado',
-  Ganancia: 'Ganancia'
+  Ganancia: 'Ganancia',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.ChequeScalarFieldEnum = {
@@ -202,7 +236,8 @@ exports.Prisma.ChequeScalarFieldEnum = {
   Numero: 'Numero',
   FechaVencimiento: 'FechaVencimiento',
   EstaRechazado: 'EstaRechazado',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.ComprobanteScalarFieldEnum = {
@@ -217,7 +252,8 @@ exports.Prisma.ComprobanteScalarFieldEnum = {
   Iva21: 'Iva21',
   Iva105: 'Iva105',
   TipoComprobante: 'TipoComprobante',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.Comprobante_CompraScalarFieldEnum = {
@@ -269,7 +305,8 @@ exports.Prisma.Comprobante_RemitoScalarFieldEnum = {
 exports.Prisma.ConceptoGastosScalarFieldEnum = {
   Id: 'Id',
   Descripcion: 'Descripcion',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.CondicionIvaScalarFieldEnum = {
@@ -309,14 +346,16 @@ exports.Prisma.ConfiguracionScalarFieldEnum = {
   CodigoBascula: 'CodigoBascula',
   EstaEliminado: 'EstaEliminado',
   Foto: 'Foto',
-  ShowFoto: 'ShowFoto'
+  ShowFoto: 'ShowFoto',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.ContadorScalarFieldEnum = {
   Id: 'Id',
   TipoComprobante: 'TipoComprobante',
   Valor: 'Valor',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.CuentaBancariasScalarFieldEnum = {
@@ -324,7 +363,8 @@ exports.Prisma.CuentaBancariasScalarFieldEnum = {
   BancoId: 'BancoId',
   Numero: 'Numero',
   Titular: 'Titular',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.DepartamentoScalarFieldEnum = {
@@ -338,7 +378,8 @@ exports.Prisma.DepositoScalarFieldEnum = {
   Id: 'Id',
   Descripcion: 'Descripcion',
   Ubicacion: 'Ubicacion',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.DepositoChequesScalarFieldEnum = {
@@ -346,7 +387,8 @@ exports.Prisma.DepositoChequesScalarFieldEnum = {
   ChequeId: 'ChequeId',
   CuentaBancariaId: 'CuentaBancariaId',
   Fecha: 'Fecha',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.DetalleCajaScalarFieldEnum = {
@@ -354,7 +396,8 @@ exports.Prisma.DetalleCajaScalarFieldEnum = {
   CajaId: 'CajaId',
   TipoPago: 'TipoPago',
   Monto: 'Monto',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.DetalleComprobanteScalarFieldEnum = {
@@ -368,7 +411,8 @@ exports.Prisma.DetalleComprobanteScalarFieldEnum = {
   Precio: 'Precio',
   SubTotal: 'SubTotal',
   EstaEliminado: 'EstaEliminado',
-  Costo: 'Costo'
+  Costo: 'Costo',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.FormaPagoScalarFieldEnum = {
@@ -376,7 +420,8 @@ exports.Prisma.FormaPagoScalarFieldEnum = {
   ComprobanteId: 'ComprobanteId',
   TipoPago: 'TipoPago',
   Monto: 'Monto',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.FormaPago_ChequeScalarFieldEnum = {
@@ -399,7 +444,8 @@ exports.Prisma.FormaPago_TarjetaScalarFieldEnum = {
 
 exports.Prisma.FormularioPerfilScalarFieldEnum = {
   Formulario_Id: 'Formulario_Id',
-  Perfil_Id: 'Perfil_Id'
+  Perfil_Id: 'Perfil_Id',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.FormulariosScalarFieldEnum = {
@@ -407,7 +453,8 @@ exports.Prisma.FormulariosScalarFieldEnum = {
   Codigo: 'Codigo',
   Nombre: 'Nombre',
   NombreCompleto: 'NombreCompleto',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.GastoScalarFieldEnum = {
@@ -417,7 +464,8 @@ exports.Prisma.GastoScalarFieldEnum = {
   Fecha: 'Fecha',
   Descripcion: 'Descripcion',
   Monto: 'Monto',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.IvaScalarFieldEnum = {
@@ -437,13 +485,15 @@ exports.Prisma.LocalidadScalarFieldEnum = {
 exports.Prisma.MarcaScalarFieldEnum = {
   Id: 'Id',
   Descripcion: 'Descripcion',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.MotivoBajasScalarFieldEnum = {
   Id: 'Id',
   Descripcion: 'Descripcion',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.MovimientoScalarFieldEnum = {
@@ -455,7 +505,8 @@ exports.Prisma.MovimientoScalarFieldEnum = {
   Fecha: 'Fecha',
   Descripcion: 'Descripcion',
   TipoMovimiento: 'TipoMovimiento',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.Movimiento_CuentaCorrienteScalarFieldEnum = {
@@ -471,12 +522,14 @@ exports.Prisma.Movimiento_CuentaCorrienteProveedorScalarFieldEnum = {
 exports.Prisma.PerfilesScalarFieldEnum = {
   Id: 'Id',
   Descripcion: 'Descripcion',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.PerfilUsuarioScalarFieldEnum = {
   Perfil_Id: 'Perfil_Id',
-  Usuario_Id: 'Usuario_Id'
+  Usuario_Id: 'Usuario_Id',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.PersonaScalarFieldEnum = {
@@ -488,7 +541,8 @@ exports.Prisma.PersonaScalarFieldEnum = {
   Telefono: 'Telefono',
   Mail: 'Mail',
   LocalidadId: 'LocalidadId',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.Persona_ClienteScalarFieldEnum = {
@@ -514,7 +568,8 @@ exports.Prisma.PrecioScalarFieldEnum = {
   PorcentajeGanancia2: 'PorcentajeGanancia2',
   PrecioPublico2: 'PrecioPublico2',
   FechaActualizacion: 'FechaActualizacion',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.ProveedorScalarFieldEnum = {
@@ -526,7 +581,8 @@ exports.Prisma.ProveedorScalarFieldEnum = {
   Mail: 'Mail',
   LocalidadId: 'LocalidadId',
   CondicionIvaId: 'CondicionIvaId',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.ProvinciaScalarFieldEnum = {
@@ -539,13 +595,15 @@ exports.Prisma.PuestoTrabajoScalarFieldEnum = {
   Id: 'Id',
   Codigo: 'Codigo',
   Descripcion: 'Descripcion',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.RubroScalarFieldEnum = {
   Id: 'Id',
   Descripcion: 'Descripcion',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.StockScalarFieldEnum = {
@@ -553,7 +611,8 @@ exports.Prisma.StockScalarFieldEnum = {
   ArticuloId: 'ArticuloId',
   DepositoId: 'DepositoId',
   Cantidad: 'Cantidad',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.SysdiagramsScalarFieldEnum = {
@@ -567,13 +626,15 @@ exports.Prisma.SysdiagramsScalarFieldEnum = {
 exports.Prisma.TarjetaScalarFieldEnum = {
   Id: 'Id',
   Descripcion: 'Descripcion',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.UnidadMedidaScalarFieldEnum = {
   Id: 'Id',
   Descripcion: 'Descripcion',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.UsuarioScalarFieldEnum = {
@@ -582,7 +643,8 @@ exports.Prisma.UsuarioScalarFieldEnum = {
   Nombre: 'Nombre',
   Password: 'Password',
   EstaBloqueado: 'EstaBloqueado',
-  EstaEliminado: 'EstaEliminado'
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
 };
 
 exports.Prisma.SortOrder = {
@@ -598,6 +660,9 @@ exports.Prisma.NullsOrder = {
 
 exports.Prisma.ModelName = {
   MigrationHistory: 'MigrationHistory',
+  Tenant: 'Tenant',
+  PlanSaaS: 'PlanSaaS',
+  Log: 'Log',
   Articulo: 'Articulo',
   BajaArticulo: 'BajaArticulo',
   Banco: 'Banco',

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Table,
   TableHeader,
@@ -88,7 +88,7 @@ const tiposVenta = [
 
 export default function ProductoCRUD() {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [productos, setProductos] = useState<Producto[]>([]);
+  const [productos] = useState<Producto[]>([]);
   const [productoSeleccionado, setProductoSeleccionado] =
     useState<Producto | null>(null);
   const [modoEdicion, setModoEdicion] = useState(false);

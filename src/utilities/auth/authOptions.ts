@@ -1,17 +1,15 @@
 import { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "@/DB/prisma";
 import bcrypt from "bcryptjs";
 
 // Variables de entorno requeridas para NextAuth (solo credenciales)
 const requiredEnvVars = {
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-  NEXTAUTH_JWT_SECRET: process.env.NEXTAUTH_JWT_SECRET,
 };
 
 const missingVars = Object.entries(requiredEnvVars)
-  .filter(([_, value]) => !value)
+  .filter(([, value]) => !value)
   .map(([key]) => key);
 
 if (missingVars.length > 0) {
@@ -19,10 +17,13 @@ if (missingVars.length > 0) {
   console.error("Configura estas variables en tu archivo .env.local o .env");
 }
 
+const authSecret = process.env.NEXTAUTH_SECRET;
+const jwtSecret = process.env.NEXTAUTH_JWT_SECRET || authSecret;
+const defaultTenantIdEnv = process.env.DEFAULT_TENANT_ID;
+
 export const authOptions: AuthOptions = {
-  adapter: PrismaAdapter(prisma),
   providers: [
-    // Único proveedor: credenciales internas (sin alta automática por Google)
+    // Unico proveedor: credenciales internas
     CredentialsProvider({
       id: "credentials",
       name: "Credentials",
@@ -43,16 +44,30 @@ export const authOptions: AuthOptions = {
             throw new Error("Credenciales indefinidas");
           }
 
-          const email = credentials.email;
+          const email = credentials.email?.trim().toLowerCase();
           const password = credentials.password;
+          const resolvedTenant = defaultTenantIdEnv;
 
-          // Busca al usuario por email (Persona) y verifica que no esté eliminado/bloqueado
+          if (!resolvedTenant) {
+            throw new Error("Tenant no configurado (DEFAULT_TENANT_ID requerido)");
+          }
+
+          let tenantId: bigint;
+          try {
+            tenantId = BigInt(resolvedTenant);
+          } catch {
+            throw new Error("TenantId invalido");
+          }
+
+          // Busca al usuario por email (Persona) y verifica que no esté eliminado/bloqueado y pertenezca al tenant
           const usuario = await prisma.usuario.findFirst({
             where: {
+              TenantId: tenantId,
               Persona_Empleado: {
                 Persona: {
                   Mail: email,
                   EstaEliminado: false,
+                  TenantId: tenantId,
                 },
               },
               EstaEliminado: false,
@@ -105,9 +120,9 @@ export const authOptions: AuthOptions = {
     strategy: "jwt",
   },
   jwt: {
-    secret: process.env.NEXTAUTH_JWT_SECRET || "fallback-secret",
+    secret: jwtSecret,
   },
-  secret: process.env.NEXTAUTH_SECRET || "fallback-secret",
+  secret: authSecret,
   debug: process.env.NODE_ENV !== "production",
   callbacks: {
     // Propaga rol y permite actualización de nombre vía trigger "update"

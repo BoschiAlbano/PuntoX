@@ -204,7 +204,11 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 {/* <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                     <span className="text-white font-bold text-lg">P</span>
                   </div> */}
-                <img src="/XPDark.ico" alt="Logo" className="w-8" />
+                <img
+                  src="/XPDark.ico"
+                  alt="Punto X"
+                  className="w-7 h-7 object-contain"
+                />
                 <span className="text-white font-semibold text-lg">
                   Punto X
                 </span>
@@ -242,7 +246,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
         {/* Menu Items */}
         <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-          {menuItems.map((item, index) => {
+          {menuItems.map((item) => {
             const isActive = pathname === item.href;
             return (
               <motion.button

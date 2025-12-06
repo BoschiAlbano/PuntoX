@@ -16,9 +16,10 @@ export default function CredentialsForm() {
     setError("");
 
     try {
-      const data = await login("credentials", { email, password });
+      await login({ email, password });
     } catch (error) {
-      setError("Credenciales inválidas");
+      console.error("Error al iniciar sesion:", error);
+      setError("Credenciales invalidas");
     }
   };
 
@@ -29,7 +30,7 @@ export default function CredentialsForm() {
           htmlFor="email"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          Correo electrónico
+          Correo electronico
         </label>
         <input
           id="email"
@@ -47,7 +48,7 @@ export default function CredentialsForm() {
           htmlFor="password"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          Contraseña
+          Contrasena
         </label>
         <input
           id="password"
@@ -56,7 +57,7 @@ export default function CredentialsForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="••••••••"
+          placeholder="********"
         />
       </div>
 
@@ -70,7 +71,7 @@ export default function CredentialsForm() {
         type="submit"
         className="w-full bg-gradient-to-r from-blue-500 to-[#90c472] hover:from-blue-600 hover:to-[#90c472] text-white py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium"
       >
-        Iniciar sesión
+        Iniciar sesion
       </button>
     </form>
   );

@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 
 // GET /api/marcas - Listar todas las marcas activas
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const marcas = await prisma.marca.findMany({
       where: {
