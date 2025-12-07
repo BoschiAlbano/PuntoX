@@ -19,7 +19,6 @@ if (missingVars.length > 0) {
 
 const authSecret = process.env.NEXTAUTH_SECRET;
 const jwtSecret = process.env.NEXTAUTH_JWT_SECRET || authSecret;
-const defaultTenantIdEnv = process.env.DEFAULT_TENANT_ID;
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -46,28 +45,16 @@ export const authOptions: AuthOptions = {
 
           const email = credentials.email?.trim().toLowerCase();
           const password = credentials.password;
-          const resolvedTenant = defaultTenantIdEnv;
-
-          if (!resolvedTenant) {
-            throw new Error("Tenant no configurado (DEFAULT_TENANT_ID requerido)");
-          }
-
-          let tenantId: bigint;
-          try {
-            tenantId = BigInt(resolvedTenant);
-          } catch {
-            throw new Error("TenantId invalido");
-          }
 
           // Busca al usuario por email (Persona) y verifica que no esté eliminado/bloqueado y pertenezca al tenant
           const usuario = await prisma.usuario.findFirst({
             where: {
-              TenantId: tenantId,
+              // TenantId: tenantId,
               Persona_Empleado: {
                 Persona: {
                   Mail: email,
                   EstaEliminado: false,
-                  TenantId: tenantId,
+                  // TenantId: tenantId,
                 },
               },
               EstaEliminado: false,
@@ -79,6 +66,7 @@ export const authOptions: AuthOptions = {
                   Persona: true,
                 },
               },
+              Tenant: true,
             },
           });
 
@@ -102,6 +90,7 @@ export const authOptions: AuthOptions = {
             email: usuario.Persona_Empleado.Persona.Mail,
             image: "",
             roll: "Empleado",
+            tenantId: usuario.Tenant.Id.toString(),
           };
         } catch (error) {
           console.error("Error en authorize:", error);
@@ -135,6 +124,7 @@ export const authOptions: AuthOptions = {
         return {
           ...token,
           roll: user.roll,
+          tenantId: user.tenantId,
         };
       }
 
@@ -147,6 +137,7 @@ export const authOptions: AuthOptions = {
         user: {
           ...session.user,
           roll: token.roll,
+          tenantId: token.tenantId,
         },
       };
     },

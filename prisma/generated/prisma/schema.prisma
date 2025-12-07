@@ -468,7 +468,7 @@ model CuentaBancarias {
 
 /// Departamentos (subdivisión de provincia).
 model Departamento {
-  Id            BigInt      @id(map: "PK_dbo.Departamento") @default(autoincrement())
+  Id            BigInt      @id(map: "PK_dbo.Departamento") @unique(map: "UX_Departamento_Id")
   ProvinciaId   BigInt
   Descripcion   String      @db.VarChar(250)
   EstaEliminado Boolean
@@ -671,7 +671,7 @@ model Iva {
 
 /// Localidades (ciudad/pueblo) asociadas a departamento.
 model Localidad {
-  Id             BigInt          @id(map: "PK_dbo.Localidad") @default(autoincrement())
+  Id             BigInt          @id(map: "PK_dbo.Localidad") @unique(map: "UX_Localidad_Id")
   DepartamentoId BigInt
   Descripcion    String          @db.VarChar(250)
   EstaEliminado  Boolean
@@ -679,8 +679,6 @@ model Localidad {
   Departamento   Departamento    @relation(fields: [DepartamentoId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Localidad_dbo.Departamento_DepartamentoId")
   Persona        Persona[]
   Proveedor      Proveedor[]
-
-  @@unique([DepartamentoId, Descripcion], map: "Index_DepartamentoId_Descripcion_Localidad")
 }
 
 /// Marcas de artículos (Nike, Samsung, etc.).
@@ -893,7 +891,7 @@ model Proveedor {
 
 /// Provincias (nivel más alto de la ubicación geográfica).
 model Provincia {
-  Id            BigInt         @id(map: "PK_dbo.Provincia") @default(autoincrement())
+  Id            BigInt         @id(map: "PK_dbo.Provincia") @unique(map: "UX_Provincia_Id")
   Descripcion   String         @unique(map: "Index_Descripcion_Provincia") @db.VarChar(100)
   EstaEliminado Boolean
   Departamento  Departamento[]

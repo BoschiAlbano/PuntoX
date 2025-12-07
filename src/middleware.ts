@@ -11,6 +11,7 @@ export async function middleware(req: NextRequest) {
     "/favicon.ico",
     "/favicon-light.ico",
     "/favicon-dark.ico",
+    "/new-tenant",
   ];
 
   const isPublic =
@@ -43,6 +44,6 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|.*\\.(?:ico|png|jpg|jpeg|svg|gif|webp)$|signin|signup).*)",
+    "/((?!api|_next/static|_next/image|.*\\.(?:ico|png|jpg|jpeg|svg|gif|webp)$|signin|signup|new-tenant).*)",
   ],
 };
