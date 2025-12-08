@@ -127,15 +127,6 @@ export async function registerTenant(formData: FormData) {
       },
     });
 
-    const deposito = await prisma.deposito.create({
-      data: {
-        Descripcion: "Depósito principal 2",
-        Ubicacion: "Principal",
-        EstaEliminado: false,
-        TenantId: tenant.Id,
-      },
-    });
-
     await prisma.configuracion.create({
       data: {
         RazonSocial: tenantName,
@@ -151,7 +142,6 @@ export async function registerTenant(formData: FormData) {
         RemitoDescuentaStock: true,
         ActualizaCostoDesdeCompra: true,
         ModificaPrecioVentaDesdeCompra: false,
-        DepositoId: deposito.Id,
         Imprimir: false,
         Instalada: 1,
         TipoFormaPagoPorDefectoVenta: 0,

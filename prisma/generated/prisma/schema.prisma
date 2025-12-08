@@ -32,7 +32,7 @@ model Tenant {
   Configuraciones     Configuracion[]
   Contadores          Contador[]
   CuentasBancarias    CuentaBancarias[]
-  Depositos           Deposito[]
+  // Depositos           Deposito[]
   DepositosCheques    DepositoCheques[]
   DetallesCaja        DetalleCaja[]
   DetallesComprobante DetalleComprobante[]
@@ -398,7 +398,7 @@ model Configuracion {
   RemitoDescuentaStock                   Boolean
   ActualizaCostoDesdeCompra              Boolean
   ModificaPrecioVentaDesdeCompra         Boolean
-  DepositoId                             BigInt
+  // DepositoId                             BigInt
   Imprimir                               Boolean
   Instalada                              Int?
   TipoFormaPagoPorDefectoVenta           Int
@@ -417,12 +417,12 @@ model Configuracion {
   ShowFoto                               Boolean   @default(false)
   /// Tenant dueño de esta configuración
   TenantId                               BigInt
-  Deposito                               Deposito  @relation(fields: [DepositoId], references: [Id], onUpdate: NoAction)
+  // Deposito                               Deposito  @relation(fields: [DepositoId], references: [Id], onUpdate: NoAction)
   Localidad                              Localidad @relation(fields: [LocalidadId], references: [Id], onUpdate: NoAction)
   Tenant                                 Tenant    @relation(fields: [TenantId], references: [Id])
 
   @@index([TenantId])
-  @@index([DepositoId])
+  // @@index([DepositoId])
   @@index([LocalidadId])
 }
 
@@ -492,19 +492,19 @@ model Localidad {
 }
 
 /// Depósitos o almacenes donde se guarda stock.
-model Deposito {
-  Id            BigInt          @id @default(autoincrement())
-  Descripcion   String          @unique @db.VarChar(250)
-  Ubicacion     String?         @db.VarChar(400)
-  EstaEliminado Boolean
-  /// Tenant dueño de este depósito
-  TenantId      BigInt
-  Configuracion Configuracion[]
-  Tenant        Tenant          @relation(fields: [TenantId], references: [Id])
-  Stock         Stock[]
+// model Deposito {
+//   Id            BigInt          @id @default(autoincrement())
+//   Descripcion   String          @unique @db.VarChar(250)
+//   Ubicacion     String?         @db.VarChar(400)
+//   EstaEliminado Boolean
+//   /// Tenant dueño de este depósito
+//   TenantId      BigInt
+//   Configuracion Configuracion[]
+//   Tenant        Tenant          @relation(fields: [TenantId], references: [Id])
+//   Stock         Stock[]
 
-  @@index([TenantId])
-}
+//   @@index([TenantId])
+// }
 
 /// Depósitos de cheques en cuentas bancarias.
 model DepositoCheques {
@@ -871,18 +871,18 @@ model Rubro {
 model Stock {
   Id            BigInt   @id @default(autoincrement())
   ArticuloId    BigInt
-  DepositoId    BigInt
+  // DepositoId    BigInt
   Cantidad      Decimal  @db.Decimal(18, 3)
   EstaEliminado Boolean
   /// Tenant dueño de este stock
   TenantId      BigInt
   Articulo      Articulo @relation(fields: [ArticuloId], references: [Id], onUpdate: NoAction)
-  Deposito      Deposito @relation(fields: [DepositoId], references: [Id], onUpdate: NoAction)
+  // Deposito      Deposito @relation(fields: [DepositoId], references: [Id], onUpdate: NoAction)
   Tenant        Tenant   @relation(fields: [TenantId], references: [Id])
+  // @@index([DepositoId])
 
   @@index([TenantId])
   @@index([ArticuloId])
-  @@index([DepositoId])
 }
 
 /// Tarjetas de crédito/débito configuradas para el comercio.

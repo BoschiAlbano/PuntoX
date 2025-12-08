@@ -323,7 +323,6 @@ exports.Prisma.ConfiguracionScalarFieldEnum = {
   RemitoDescuentaStock: 'RemitoDescuentaStock',
   ActualizaCostoDesdeCompra: 'ActualizaCostoDesdeCompra',
   ModificaPrecioVentaDesdeCompra: 'ModificaPrecioVentaDesdeCompra',
-  DepositoId: 'DepositoId',
   Imprimir: 'Imprimir',
   Instalada: 'Instalada',
   TipoFormaPagoPorDefectoVenta: 'TipoFormaPagoPorDefectoVenta',
@@ -378,14 +377,6 @@ exports.Prisma.LocalidadScalarFieldEnum = {
   DepartamentoId: 'DepartamentoId',
   Descripcion: 'Descripcion',
   EstaEliminado: 'EstaEliminado'
-};
-
-exports.Prisma.DepositoScalarFieldEnum = {
-  Id: 'Id',
-  Descripcion: 'Descripcion',
-  Ubicacion: 'Ubicacion',
-  EstaEliminado: 'EstaEliminado',
-  TenantId: 'TenantId'
 };
 
 exports.Prisma.DepositoChequesScalarFieldEnum = {
@@ -579,7 +570,6 @@ exports.Prisma.RubroScalarFieldEnum = {
 exports.Prisma.StockScalarFieldEnum = {
   Id: 'Id',
   ArticuloId: 'ArticuloId',
-  DepositoId: 'DepositoId',
   Cantidad: 'Cantidad',
   EstaEliminado: 'EstaEliminado',
   TenantId: 'TenantId'
@@ -673,7 +663,6 @@ exports.Prisma.ModelName = {
   Provincia: 'Provincia',
   Departamento: 'Departamento',
   Localidad: 'Localidad',
-  Deposito: 'Deposito',
   DepositoCheques: 'DepositoCheques',
   DetalleCaja: 'DetalleCaja',
   DetalleComprobante: 'DetalleComprobante',

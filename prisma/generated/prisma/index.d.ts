@@ -138,11 +138,6 @@ export type Departamento = $Result.DefaultSelection<Prisma.$DepartamentoPayload>
  */
 export type Localidad = $Result.DefaultSelection<Prisma.$LocalidadPayload>
 /**
- * Model Deposito
- * Depósitos o almacenes donde se guarda stock.
- */
-export type Deposito = $Result.DefaultSelection<Prisma.$DepositoPayload>
-/**
  * Model DepositoCheques
  * Depósitos de cheques en cuentas bancarias.
  */
@@ -649,16 +644,6 @@ export class PrismaClient<
     * ```
     */
   get localidad(): Prisma.LocalidadDelegate<ExtArgs, ClientOptions>;
-
-  /**
-   * `prisma.deposito`: Exposes CRUD operations for the **Deposito** model.
-    * Example usage:
-    * ```ts
-    * // Fetch zero or more Depositos
-    * const depositos = await prisma.deposito.findMany()
-    * ```
-    */
-  get deposito(): Prisma.DepositoDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.depositoCheques`: Exposes CRUD operations for the **DepositoCheques** model.
@@ -1413,7 +1398,6 @@ export namespace Prisma {
     Provincia: 'Provincia',
     Departamento: 'Departamento',
     Localidad: 'Localidad',
-    Deposito: 'Deposito',
     DepositoCheques: 'DepositoCheques',
     DetalleCaja: 'DetalleCaja',
     DetalleComprobante: 'DetalleComprobante',
@@ -1461,7 +1445,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "tenant" | "planSaaS" | "log" | "articulo" | "bajaArticulo" | "banco" | "caja" | "cheque" | "comprobante" | "comprobante_Compra" | "comprobante_CtaCteProveedor" | "comprobante_CuentaCorriente" | "comprobante_Factura" | "comprobante_NotaCredito" | "comprobante_Presupuesto" | "comprobante_Remito" | "conceptoGastos" | "condicionIva" | "configuracion" | "contador" | "cuentaBancarias" | "provincia" | "departamento" | "localidad" | "deposito" | "depositoCheques" | "detalleCaja" | "detalleComprobante" | "formaPago" | "formaPago_Cheque" | "formaPago_CtaCte" | "formaPago_Tarjeta" | "formularioPerfil" | "formularios" | "gasto" | "iva" | "marca" | "motivoBajas" | "perfiles" | "perfilUsuario" | "persona" | "persona_Cliente" | "persona_Empleado" | "precio" | "proveedor" | "puestoTrabajo" | "rubro" | "stock" | "tarjeta" | "unidadMedida" | "usuario" | "movimiento" | "movimiento_CuentaCorriente" | "movimiento_CuentaCorrienteProveedor"
+      modelProps: "tenant" | "planSaaS" | "log" | "articulo" | "bajaArticulo" | "banco" | "caja" | "cheque" | "comprobante" | "comprobante_Compra" | "comprobante_CtaCteProveedor" | "comprobante_CuentaCorriente" | "comprobante_Factura" | "comprobante_NotaCredito" | "comprobante_Presupuesto" | "comprobante_Remito" | "conceptoGastos" | "condicionIva" | "configuracion" | "contador" | "cuentaBancarias" | "provincia" | "departamento" | "localidad" | "depositoCheques" | "detalleCaja" | "detalleComprobante" | "formaPago" | "formaPago_Cheque" | "formaPago_CtaCte" | "formaPago_Tarjeta" | "formularioPerfil" | "formularios" | "gasto" | "iva" | "marca" | "motivoBajas" | "perfiles" | "perfilUsuario" | "persona" | "persona_Cliente" | "persona_Empleado" | "precio" | "proveedor" | "puestoTrabajo" | "rubro" | "stock" | "tarjeta" | "unidadMedida" | "usuario" | "movimiento" | "movimiento_CuentaCorriente" | "movimiento_CuentaCorrienteProveedor"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3238,80 +3222,6 @@ export namespace Prisma {
           count: {
             args: Prisma.LocalidadCountArgs<ExtArgs>
             result: $Utils.Optional<LocalidadCountAggregateOutputType> | number
-          }
-        }
-      }
-      Deposito: {
-        payload: Prisma.$DepositoPayload<ExtArgs>
-        fields: Prisma.DepositoFieldRefs
-        operations: {
-          findUnique: {
-            args: Prisma.DepositoFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$DepositoPayload> | null
-          }
-          findUniqueOrThrow: {
-            args: Prisma.DepositoFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$DepositoPayload>
-          }
-          findFirst: {
-            args: Prisma.DepositoFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$DepositoPayload> | null
-          }
-          findFirstOrThrow: {
-            args: Prisma.DepositoFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$DepositoPayload>
-          }
-          findMany: {
-            args: Prisma.DepositoFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$DepositoPayload>[]
-          }
-          create: {
-            args: Prisma.DepositoCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$DepositoPayload>
-          }
-          createMany: {
-            args: Prisma.DepositoCreateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          createManyAndReturn: {
-            args: Prisma.DepositoCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$DepositoPayload>[]
-          }
-          delete: {
-            args: Prisma.DepositoDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$DepositoPayload>
-          }
-          update: {
-            args: Prisma.DepositoUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$DepositoPayload>
-          }
-          deleteMany: {
-            args: Prisma.DepositoDeleteManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateMany: {
-            args: Prisma.DepositoUpdateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.DepositoUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$DepositoPayload>[]
-          }
-          upsert: {
-            args: Prisma.DepositoUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$DepositoPayload>
-          }
-          aggregate: {
-            args: Prisma.DepositoAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateDeposito>
-          }
-          groupBy: {
-            args: Prisma.DepositoGroupByArgs<ExtArgs>
-            result: $Utils.Optional<DepositoGroupByOutputType>[]
-          }
-          count: {
-            args: Prisma.DepositoCountArgs<ExtArgs>
-            result: $Utils.Optional<DepositoCountAggregateOutputType> | number
           }
         }
       }
@@ -5577,7 +5487,6 @@ export namespace Prisma {
     provincia?: ProvinciaOmit
     departamento?: DepartamentoOmit
     localidad?: LocalidadOmit
-    deposito?: DepositoOmit
     depositoCheques?: DepositoChequesOmit
     detalleCaja?: DetalleCajaOmit
     detalleComprobante?: DetalleComprobanteOmit
@@ -5697,7 +5606,6 @@ export namespace Prisma {
     Configuraciones: number
     Contadores: number
     CuentasBancarias: number
-    Depositos: number
     DepositosCheques: number
     DetallesCaja: number
     DetallesComprobante: number
@@ -5733,7 +5641,6 @@ export namespace Prisma {
     Configuraciones?: boolean | TenantCountOutputTypeCountConfiguracionesArgs
     Contadores?: boolean | TenantCountOutputTypeCountContadoresArgs
     CuentasBancarias?: boolean | TenantCountOutputTypeCountCuentasBancariasArgs
-    Depositos?: boolean | TenantCountOutputTypeCountDepositosArgs
     DepositosCheques?: boolean | TenantCountOutputTypeCountDepositosChequesArgs
     DetallesCaja?: boolean | TenantCountOutputTypeCountDetallesCajaArgs
     DetallesComprobante?: boolean | TenantCountOutputTypeCountDetallesComprobanteArgs
@@ -5837,13 +5744,6 @@ export namespace Prisma {
    */
   export type TenantCountOutputTypeCountCuentasBancariasArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: CuentaBancariasWhereInput
-  }
-
-  /**
-   * TenantCountOutputType without action
-   */
-  export type TenantCountOutputTypeCountDepositosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: DepositoWhereInput
   }
 
   /**
@@ -6478,46 +6378,6 @@ export namespace Prisma {
    */
   export type LocalidadCountOutputTypeCountProveedorArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ProveedorWhereInput
-  }
-
-
-  /**
-   * Count Type DepositoCountOutputType
-   */
-
-  export type DepositoCountOutputType = {
-    Configuracion: number
-    Stock: number
-  }
-
-  export type DepositoCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    Configuracion?: boolean | DepositoCountOutputTypeCountConfiguracionArgs
-    Stock?: boolean | DepositoCountOutputTypeCountStockArgs
-  }
-
-  // Custom InputTypes
-  /**
-   * DepositoCountOutputType without action
-   */
-  export type DepositoCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the DepositoCountOutputType
-     */
-    select?: DepositoCountOutputTypeSelect<ExtArgs> | null
-  }
-
-  /**
-   * DepositoCountOutputType without action
-   */
-  export type DepositoCountOutputTypeCountConfiguracionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: ConfiguracionWhereInput
-  }
-
-  /**
-   * DepositoCountOutputType without action
-   */
-  export type DepositoCountOutputTypeCountStockArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: StockWhereInput
   }
 
 
@@ -7368,7 +7228,6 @@ export namespace Prisma {
     Configuraciones?: boolean | Tenant$ConfiguracionesArgs<ExtArgs>
     Contadores?: boolean | Tenant$ContadoresArgs<ExtArgs>
     CuentasBancarias?: boolean | Tenant$CuentasBancariasArgs<ExtArgs>
-    Depositos?: boolean | Tenant$DepositosArgs<ExtArgs>
     DepositosCheques?: boolean | Tenant$DepositosChequesArgs<ExtArgs>
     DetallesCaja?: boolean | Tenant$DetallesCajaArgs<ExtArgs>
     DetallesComprobante?: boolean | Tenant$DetallesComprobanteArgs<ExtArgs>
@@ -7448,7 +7307,6 @@ export namespace Prisma {
     Configuraciones?: boolean | Tenant$ConfiguracionesArgs<ExtArgs>
     Contadores?: boolean | Tenant$ContadoresArgs<ExtArgs>
     CuentasBancarias?: boolean | Tenant$CuentasBancariasArgs<ExtArgs>
-    Depositos?: boolean | Tenant$DepositosArgs<ExtArgs>
     DepositosCheques?: boolean | Tenant$DepositosChequesArgs<ExtArgs>
     DetallesCaja?: boolean | Tenant$DetallesCajaArgs<ExtArgs>
     DetallesComprobante?: boolean | Tenant$DetallesComprobanteArgs<ExtArgs>
@@ -7494,7 +7352,6 @@ export namespace Prisma {
       Configuraciones: Prisma.$ConfiguracionPayload<ExtArgs>[]
       Contadores: Prisma.$ContadorPayload<ExtArgs>[]
       CuentasBancarias: Prisma.$CuentaBancariasPayload<ExtArgs>[]
-      Depositos: Prisma.$DepositoPayload<ExtArgs>[]
       DepositosCheques: Prisma.$DepositoChequesPayload<ExtArgs>[]
       DetallesCaja: Prisma.$DetalleCajaPayload<ExtArgs>[]
       DetallesComprobante: Prisma.$DetalleComprobantePayload<ExtArgs>[]
@@ -7934,7 +7791,6 @@ export namespace Prisma {
     Configuraciones<T extends Tenant$ConfiguracionesArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$ConfiguracionesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ConfiguracionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     Contadores<T extends Tenant$ContadoresArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$ContadoresArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ContadorPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     CuentasBancarias<T extends Tenant$CuentasBancariasArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$CuentasBancariasArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CuentaBancariasPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    Depositos<T extends Tenant$DepositosArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$DepositosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DepositoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     DepositosCheques<T extends Tenant$DepositosChequesArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$DepositosChequesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DepositoChequesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     DetallesCaja<T extends Tenant$DetallesCajaArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$DetallesCajaArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DetalleCajaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     DetallesComprobante<T extends Tenant$DetallesComprobanteArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$DetallesComprobanteArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DetalleComprobantePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -8630,30 +8486,6 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: CuentaBancariasScalarFieldEnum | CuentaBancariasScalarFieldEnum[]
-  }
-
-  /**
-   * Tenant.Depositos
-   */
-  export type Tenant$DepositosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Deposito
-     */
-    select?: DepositoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Deposito
-     */
-    omit?: DepositoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: DepositoInclude<ExtArgs> | null
-    where?: DepositoWhereInput
-    orderBy?: DepositoOrderByWithRelationInput | DepositoOrderByWithRelationInput[]
-    cursor?: DepositoWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: DepositoScalarFieldEnum | DepositoScalarFieldEnum[]
   }
 
   /**
@@ -29480,7 +29312,6 @@ export namespace Prisma {
   export type ConfiguracionAvgAggregateOutputType = {
     Id: number | null
     LocalidadId: number | null
-    DepositoId: number | null
     Instalada: number | null
     TipoFormaPagoPorDefectoVenta: number | null
     TipoFormaPagoPorDefectoCompra: number | null
@@ -29491,7 +29322,6 @@ export namespace Prisma {
   export type ConfiguracionSumAggregateOutputType = {
     Id: bigint | null
     LocalidadId: bigint | null
-    DepositoId: bigint | null
     Instalada: number | null
     TipoFormaPagoPorDefectoVenta: number | null
     TipoFormaPagoPorDefectoCompra: number | null
@@ -29514,7 +29344,6 @@ export namespace Prisma {
     RemitoDescuentaStock: boolean | null
     ActualizaCostoDesdeCompra: boolean | null
     ModificaPrecioVentaDesdeCompra: boolean | null
-    DepositoId: bigint | null
     Imprimir: boolean | null
     Instalada: number | null
     TipoFormaPagoPorDefectoVenta: number | null
@@ -29549,7 +29378,6 @@ export namespace Prisma {
     RemitoDescuentaStock: boolean | null
     ActualizaCostoDesdeCompra: boolean | null
     ModificaPrecioVentaDesdeCompra: boolean | null
-    DepositoId: bigint | null
     Imprimir: boolean | null
     Instalada: number | null
     TipoFormaPagoPorDefectoVenta: number | null
@@ -29584,7 +29412,6 @@ export namespace Prisma {
     RemitoDescuentaStock: number
     ActualizaCostoDesdeCompra: number
     ModificaPrecioVentaDesdeCompra: number
-    DepositoId: number
     Imprimir: number
     Instalada: number
     TipoFormaPagoPorDefectoVenta: number
@@ -29609,7 +29436,6 @@ export namespace Prisma {
   export type ConfiguracionAvgAggregateInputType = {
     Id?: true
     LocalidadId?: true
-    DepositoId?: true
     Instalada?: true
     TipoFormaPagoPorDefectoVenta?: true
     TipoFormaPagoPorDefectoCompra?: true
@@ -29620,7 +29446,6 @@ export namespace Prisma {
   export type ConfiguracionSumAggregateInputType = {
     Id?: true
     LocalidadId?: true
-    DepositoId?: true
     Instalada?: true
     TipoFormaPagoPorDefectoVenta?: true
     TipoFormaPagoPorDefectoCompra?: true
@@ -29643,7 +29468,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: true
     ActualizaCostoDesdeCompra?: true
     ModificaPrecioVentaDesdeCompra?: true
-    DepositoId?: true
     Imprimir?: true
     Instalada?: true
     TipoFormaPagoPorDefectoVenta?: true
@@ -29678,7 +29502,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: true
     ActualizaCostoDesdeCompra?: true
     ModificaPrecioVentaDesdeCompra?: true
-    DepositoId?: true
     Imprimir?: true
     Instalada?: true
     TipoFormaPagoPorDefectoVenta?: true
@@ -29713,7 +29536,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: true
     ActualizaCostoDesdeCompra?: true
     ModificaPrecioVentaDesdeCompra?: true
-    DepositoId?: true
     Imprimir?: true
     Instalada?: true
     TipoFormaPagoPorDefectoVenta?: true
@@ -29835,7 +29657,6 @@ export namespace Prisma {
     RemitoDescuentaStock: boolean
     ActualizaCostoDesdeCompra: boolean
     ModificaPrecioVentaDesdeCompra: boolean
-    DepositoId: bigint
     Imprimir: boolean
     Instalada: number | null
     TipoFormaPagoPorDefectoVenta: number
@@ -29889,7 +29710,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: boolean
     ActualizaCostoDesdeCompra?: boolean
     ModificaPrecioVentaDesdeCompra?: boolean
-    DepositoId?: boolean
     Imprimir?: boolean
     Instalada?: boolean
     TipoFormaPagoPorDefectoVenta?: boolean
@@ -29907,7 +29727,6 @@ export namespace Prisma {
     Foto?: boolean
     ShowFoto?: boolean
     TenantId?: boolean
-    Deposito?: boolean | DepositoDefaultArgs<ExtArgs>
     Localidad?: boolean | LocalidadDefaultArgs<ExtArgs>
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["configuracion"]>
@@ -29927,7 +29746,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: boolean
     ActualizaCostoDesdeCompra?: boolean
     ModificaPrecioVentaDesdeCompra?: boolean
-    DepositoId?: boolean
     Imprimir?: boolean
     Instalada?: boolean
     TipoFormaPagoPorDefectoVenta?: boolean
@@ -29945,7 +29763,6 @@ export namespace Prisma {
     Foto?: boolean
     ShowFoto?: boolean
     TenantId?: boolean
-    Deposito?: boolean | DepositoDefaultArgs<ExtArgs>
     Localidad?: boolean | LocalidadDefaultArgs<ExtArgs>
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["configuracion"]>
@@ -29965,7 +29782,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: boolean
     ActualizaCostoDesdeCompra?: boolean
     ModificaPrecioVentaDesdeCompra?: boolean
-    DepositoId?: boolean
     Imprimir?: boolean
     Instalada?: boolean
     TipoFormaPagoPorDefectoVenta?: boolean
@@ -29983,7 +29799,6 @@ export namespace Prisma {
     Foto?: boolean
     ShowFoto?: boolean
     TenantId?: boolean
-    Deposito?: boolean | DepositoDefaultArgs<ExtArgs>
     Localidad?: boolean | LocalidadDefaultArgs<ExtArgs>
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["configuracion"]>
@@ -30003,7 +29818,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: boolean
     ActualizaCostoDesdeCompra?: boolean
     ModificaPrecioVentaDesdeCompra?: boolean
-    DepositoId?: boolean
     Imprimir?: boolean
     Instalada?: boolean
     TipoFormaPagoPorDefectoVenta?: boolean
@@ -30023,19 +29837,16 @@ export namespace Prisma {
     TenantId?: boolean
   }
 
-  export type ConfiguracionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id" | "RazonSocial" | "NombreFantasia" | "Cuit" | "Telefono" | "Celular" | "Direccion" | "Email" | "LocalidadId" | "FacturaDescuentaStock" | "PresupuestoDescuentaStock" | "RemitoDescuentaStock" | "ActualizaCostoDesdeCompra" | "ModificaPrecioVentaDesdeCompra" | "DepositoId" | "Imprimir" | "Instalada" | "TipoFormaPagoPorDefectoVenta" | "TipoFormaPagoPorDefectoCompra" | "ObservacionEnPieFactura" | "UnificarRenglonesIngresarMismoProducto" | "IngresoManualCajaInicial" | "PuestoCajaSeparado" | "ActivarRetiroDeCaja" | "MontoMaximoRetiroCaja" | "ActivarBascula" | "EtiquetaPorPeso" | "CodigoBascula" | "EstaEliminado" | "Foto" | "ShowFoto" | "TenantId", ExtArgs["result"]["configuracion"]>
+  export type ConfiguracionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id" | "RazonSocial" | "NombreFantasia" | "Cuit" | "Telefono" | "Celular" | "Direccion" | "Email" | "LocalidadId" | "FacturaDescuentaStock" | "PresupuestoDescuentaStock" | "RemitoDescuentaStock" | "ActualizaCostoDesdeCompra" | "ModificaPrecioVentaDesdeCompra" | "Imprimir" | "Instalada" | "TipoFormaPagoPorDefectoVenta" | "TipoFormaPagoPorDefectoCompra" | "ObservacionEnPieFactura" | "UnificarRenglonesIngresarMismoProducto" | "IngresoManualCajaInicial" | "PuestoCajaSeparado" | "ActivarRetiroDeCaja" | "MontoMaximoRetiroCaja" | "ActivarBascula" | "EtiquetaPorPeso" | "CodigoBascula" | "EstaEliminado" | "Foto" | "ShowFoto" | "TenantId", ExtArgs["result"]["configuracion"]>
   export type ConfiguracionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    Deposito?: boolean | DepositoDefaultArgs<ExtArgs>
     Localidad?: boolean | LocalidadDefaultArgs<ExtArgs>
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
   }
   export type ConfiguracionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    Deposito?: boolean | DepositoDefaultArgs<ExtArgs>
     Localidad?: boolean | LocalidadDefaultArgs<ExtArgs>
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
   }
   export type ConfiguracionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    Deposito?: boolean | DepositoDefaultArgs<ExtArgs>
     Localidad?: boolean | LocalidadDefaultArgs<ExtArgs>
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
   }
@@ -30043,7 +29854,6 @@ export namespace Prisma {
   export type $ConfiguracionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Configuracion"
     objects: {
-      Deposito: Prisma.$DepositoPayload<ExtArgs>
       Localidad: Prisma.$LocalidadPayload<ExtArgs>
       Tenant: Prisma.$TenantPayload<ExtArgs>
     }
@@ -30062,7 +29872,6 @@ export namespace Prisma {
       RemitoDescuentaStock: boolean
       ActualizaCostoDesdeCompra: boolean
       ModificaPrecioVentaDesdeCompra: boolean
-      DepositoId: bigint
       Imprimir: boolean
       Instalada: number | null
       TipoFormaPagoPorDefectoVenta: number
@@ -30477,7 +30286,6 @@ export namespace Prisma {
    */
   export interface Prisma__ConfiguracionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    Deposito<T extends DepositoDefaultArgs<ExtArgs> = {}>(args?: Subset<T, DepositoDefaultArgs<ExtArgs>>): Prisma__DepositoClient<$Result.GetResult<Prisma.$DepositoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     Localidad<T extends LocalidadDefaultArgs<ExtArgs> = {}>(args?: Subset<T, LocalidadDefaultArgs<ExtArgs>>): Prisma__LocalidadClient<$Result.GetResult<Prisma.$LocalidadPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     Tenant<T extends TenantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TenantDefaultArgs<ExtArgs>>): Prisma__TenantClient<$Result.GetResult<Prisma.$TenantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
@@ -30523,7 +30331,6 @@ export namespace Prisma {
     readonly RemitoDescuentaStock: FieldRef<"Configuracion", 'Boolean'>
     readonly ActualizaCostoDesdeCompra: FieldRef<"Configuracion", 'Boolean'>
     readonly ModificaPrecioVentaDesdeCompra: FieldRef<"Configuracion", 'Boolean'>
-    readonly DepositoId: FieldRef<"Configuracion", 'BigInt'>
     readonly Imprimir: FieldRef<"Configuracion", 'Boolean'>
     readonly Instalada: FieldRef<"Configuracion", 'Int'>
     readonly TipoFormaPagoPorDefectoVenta: FieldRef<"Configuracion", 'Int'>
@@ -36573,1163 +36380,6 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: LocalidadInclude<ExtArgs> | null
-  }
-
-
-  /**
-   * Model Deposito
-   */
-
-  export type AggregateDeposito = {
-    _count: DepositoCountAggregateOutputType | null
-    _avg: DepositoAvgAggregateOutputType | null
-    _sum: DepositoSumAggregateOutputType | null
-    _min: DepositoMinAggregateOutputType | null
-    _max: DepositoMaxAggregateOutputType | null
-  }
-
-  export type DepositoAvgAggregateOutputType = {
-    Id: number | null
-    TenantId: number | null
-  }
-
-  export type DepositoSumAggregateOutputType = {
-    Id: bigint | null
-    TenantId: bigint | null
-  }
-
-  export type DepositoMinAggregateOutputType = {
-    Id: bigint | null
-    Descripcion: string | null
-    Ubicacion: string | null
-    EstaEliminado: boolean | null
-    TenantId: bigint | null
-  }
-
-  export type DepositoMaxAggregateOutputType = {
-    Id: bigint | null
-    Descripcion: string | null
-    Ubicacion: string | null
-    EstaEliminado: boolean | null
-    TenantId: bigint | null
-  }
-
-  export type DepositoCountAggregateOutputType = {
-    Id: number
-    Descripcion: number
-    Ubicacion: number
-    EstaEliminado: number
-    TenantId: number
-    _all: number
-  }
-
-
-  export type DepositoAvgAggregateInputType = {
-    Id?: true
-    TenantId?: true
-  }
-
-  export type DepositoSumAggregateInputType = {
-    Id?: true
-    TenantId?: true
-  }
-
-  export type DepositoMinAggregateInputType = {
-    Id?: true
-    Descripcion?: true
-    Ubicacion?: true
-    EstaEliminado?: true
-    TenantId?: true
-  }
-
-  export type DepositoMaxAggregateInputType = {
-    Id?: true
-    Descripcion?: true
-    Ubicacion?: true
-    EstaEliminado?: true
-    TenantId?: true
-  }
-
-  export type DepositoCountAggregateInputType = {
-    Id?: true
-    Descripcion?: true
-    Ubicacion?: true
-    EstaEliminado?: true
-    TenantId?: true
-    _all?: true
-  }
-
-  export type DepositoAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which Deposito to aggregate.
-     */
-    where?: DepositoWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of Depositos to fetch.
-     */
-    orderBy?: DepositoOrderByWithRelationInput | DepositoOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the start position
-     */
-    cursor?: DepositoWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` Depositos from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` Depositos.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Count returned Depositos
-    **/
-    _count?: true | DepositoCountAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to average
-    **/
-    _avg?: DepositoAvgAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to sum
-    **/
-    _sum?: DepositoSumAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the minimum value
-    **/
-    _min?: DepositoMinAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the maximum value
-    **/
-    _max?: DepositoMaxAggregateInputType
-  }
-
-  export type GetDepositoAggregateType<T extends DepositoAggregateArgs> = {
-        [P in keyof T & keyof AggregateDeposito]: P extends '_count' | 'count'
-      ? T[P] extends true
-        ? number
-        : GetScalarType<T[P], AggregateDeposito[P]>
-      : GetScalarType<T[P], AggregateDeposito[P]>
-  }
-
-
-
-
-  export type DepositoGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: DepositoWhereInput
-    orderBy?: DepositoOrderByWithAggregationInput | DepositoOrderByWithAggregationInput[]
-    by: DepositoScalarFieldEnum[] | DepositoScalarFieldEnum
-    having?: DepositoScalarWhereWithAggregatesInput
-    take?: number
-    skip?: number
-    _count?: DepositoCountAggregateInputType | true
-    _avg?: DepositoAvgAggregateInputType
-    _sum?: DepositoSumAggregateInputType
-    _min?: DepositoMinAggregateInputType
-    _max?: DepositoMaxAggregateInputType
-  }
-
-  export type DepositoGroupByOutputType = {
-    Id: bigint
-    Descripcion: string
-    Ubicacion: string | null
-    EstaEliminado: boolean
-    TenantId: bigint
-    _count: DepositoCountAggregateOutputType | null
-    _avg: DepositoAvgAggregateOutputType | null
-    _sum: DepositoSumAggregateOutputType | null
-    _min: DepositoMinAggregateOutputType | null
-    _max: DepositoMaxAggregateOutputType | null
-  }
-
-  type GetDepositoGroupByPayload<T extends DepositoGroupByArgs> = Prisma.PrismaPromise<
-    Array<
-      PickEnumerable<DepositoGroupByOutputType, T['by']> &
-        {
-          [P in ((keyof T) & (keyof DepositoGroupByOutputType))]: P extends '_count'
-            ? T[P] extends boolean
-              ? number
-              : GetScalarType<T[P], DepositoGroupByOutputType[P]>
-            : GetScalarType<T[P], DepositoGroupByOutputType[P]>
-        }
-      >
-    >
-
-
-  export type DepositoSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    Id?: boolean
-    Descripcion?: boolean
-    Ubicacion?: boolean
-    EstaEliminado?: boolean
-    TenantId?: boolean
-    Configuracion?: boolean | Deposito$ConfiguracionArgs<ExtArgs>
-    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
-    Stock?: boolean | Deposito$StockArgs<ExtArgs>
-    _count?: boolean | DepositoCountOutputTypeDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["deposito"]>
-
-  export type DepositoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    Id?: boolean
-    Descripcion?: boolean
-    Ubicacion?: boolean
-    EstaEliminado?: boolean
-    TenantId?: boolean
-    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["deposito"]>
-
-  export type DepositoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    Id?: boolean
-    Descripcion?: boolean
-    Ubicacion?: boolean
-    EstaEliminado?: boolean
-    TenantId?: boolean
-    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["deposito"]>
-
-  export type DepositoSelectScalar = {
-    Id?: boolean
-    Descripcion?: boolean
-    Ubicacion?: boolean
-    EstaEliminado?: boolean
-    TenantId?: boolean
-  }
-
-  export type DepositoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id" | "Descripcion" | "Ubicacion" | "EstaEliminado" | "TenantId", ExtArgs["result"]["deposito"]>
-  export type DepositoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    Configuracion?: boolean | Deposito$ConfiguracionArgs<ExtArgs>
-    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
-    Stock?: boolean | Deposito$StockArgs<ExtArgs>
-    _count?: boolean | DepositoCountOutputTypeDefaultArgs<ExtArgs>
-  }
-  export type DepositoIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
-  }
-  export type DepositoIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
-  }
-
-  export type $DepositoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "Deposito"
-    objects: {
-      Configuracion: Prisma.$ConfiguracionPayload<ExtArgs>[]
-      Tenant: Prisma.$TenantPayload<ExtArgs>
-      Stock: Prisma.$StockPayload<ExtArgs>[]
-    }
-    scalars: $Extensions.GetPayloadResult<{
-      Id: bigint
-      Descripcion: string
-      Ubicacion: string | null
-      EstaEliminado: boolean
-      /**
-       * Tenant dueño de este depósito
-       */
-      TenantId: bigint
-    }, ExtArgs["result"]["deposito"]>
-    composites: {}
-  }
-
-  type DepositoGetPayload<S extends boolean | null | undefined | DepositoDefaultArgs> = $Result.GetResult<Prisma.$DepositoPayload, S>
-
-  type DepositoCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<DepositoFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: DepositoCountAggregateInputType | true
-    }
-
-  export interface DepositoDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Deposito'], meta: { name: 'Deposito' } }
-    /**
-     * Find zero or one Deposito that matches the filter.
-     * @param {DepositoFindUniqueArgs} args - Arguments to find a Deposito
-     * @example
-     * // Get one Deposito
-     * const deposito = await prisma.deposito.findUnique({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUnique<T extends DepositoFindUniqueArgs>(args: SelectSubset<T, DepositoFindUniqueArgs<ExtArgs>>): Prisma__DepositoClient<$Result.GetResult<Prisma.$DepositoPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find one Deposito that matches the filter or throw an error with `error.code='P2025'`
-     * if no matches were found.
-     * @param {DepositoFindUniqueOrThrowArgs} args - Arguments to find a Deposito
-     * @example
-     * // Get one Deposito
-     * const deposito = await prisma.deposito.findUniqueOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUniqueOrThrow<T extends DepositoFindUniqueOrThrowArgs>(args: SelectSubset<T, DepositoFindUniqueOrThrowArgs<ExtArgs>>): Prisma__DepositoClient<$Result.GetResult<Prisma.$DepositoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first Deposito that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {DepositoFindFirstArgs} args - Arguments to find a Deposito
-     * @example
-     * // Get one Deposito
-     * const deposito = await prisma.deposito.findFirst({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirst<T extends DepositoFindFirstArgs>(args?: SelectSubset<T, DepositoFindFirstArgs<ExtArgs>>): Prisma__DepositoClient<$Result.GetResult<Prisma.$DepositoPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first Deposito that matches the filter or
-     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {DepositoFindFirstOrThrowArgs} args - Arguments to find a Deposito
-     * @example
-     * // Get one Deposito
-     * const deposito = await prisma.deposito.findFirstOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirstOrThrow<T extends DepositoFindFirstOrThrowArgs>(args?: SelectSubset<T, DepositoFindFirstOrThrowArgs<ExtArgs>>): Prisma__DepositoClient<$Result.GetResult<Prisma.$DepositoPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find zero or more Depositos that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {DepositoFindManyArgs} args - Arguments to filter and select certain fields only.
-     * @example
-     * // Get all Depositos
-     * const depositos = await prisma.deposito.findMany()
-     * 
-     * // Get first 10 Depositos
-     * const depositos = await prisma.deposito.findMany({ take: 10 })
-     * 
-     * // Only select the `Id`
-     * const depositoWithIdOnly = await prisma.deposito.findMany({ select: { Id: true } })
-     * 
-     */
-    findMany<T extends DepositoFindManyArgs>(args?: SelectSubset<T, DepositoFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DepositoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
-
-    /**
-     * Create a Deposito.
-     * @param {DepositoCreateArgs} args - Arguments to create a Deposito.
-     * @example
-     * // Create one Deposito
-     * const Deposito = await prisma.deposito.create({
-     *   data: {
-     *     // ... data to create a Deposito
-     *   }
-     * })
-     * 
-     */
-    create<T extends DepositoCreateArgs>(args: SelectSubset<T, DepositoCreateArgs<ExtArgs>>): Prisma__DepositoClient<$Result.GetResult<Prisma.$DepositoPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Create many Depositos.
-     * @param {DepositoCreateManyArgs} args - Arguments to create many Depositos.
-     * @example
-     * // Create many Depositos
-     * const deposito = await prisma.deposito.createMany({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     *     
-     */
-    createMany<T extends DepositoCreateManyArgs>(args?: SelectSubset<T, DepositoCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Create many Depositos and returns the data saved in the database.
-     * @param {DepositoCreateManyAndReturnArgs} args - Arguments to create many Depositos.
-     * @example
-     * // Create many Depositos
-     * const deposito = await prisma.deposito.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many Depositos and only return the `Id`
-     * const depositoWithIdOnly = await prisma.deposito.createManyAndReturn({
-     *   select: { Id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends DepositoCreateManyAndReturnArgs>(args?: SelectSubset<T, DepositoCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DepositoPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Delete a Deposito.
-     * @param {DepositoDeleteArgs} args - Arguments to delete one Deposito.
-     * @example
-     * // Delete one Deposito
-     * const Deposito = await prisma.deposito.delete({
-     *   where: {
-     *     // ... filter to delete one Deposito
-     *   }
-     * })
-     * 
-     */
-    delete<T extends DepositoDeleteArgs>(args: SelectSubset<T, DepositoDeleteArgs<ExtArgs>>): Prisma__DepositoClient<$Result.GetResult<Prisma.$DepositoPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Update one Deposito.
-     * @param {DepositoUpdateArgs} args - Arguments to update one Deposito.
-     * @example
-     * // Update one Deposito
-     * const deposito = await prisma.deposito.update({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    update<T extends DepositoUpdateArgs>(args: SelectSubset<T, DepositoUpdateArgs<ExtArgs>>): Prisma__DepositoClient<$Result.GetResult<Prisma.$DepositoPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Delete zero or more Depositos.
-     * @param {DepositoDeleteManyArgs} args - Arguments to filter Depositos to delete.
-     * @example
-     * // Delete a few Depositos
-     * const { count } = await prisma.deposito.deleteMany({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     * 
-     */
-    deleteMany<T extends DepositoDeleteManyArgs>(args?: SelectSubset<T, DepositoDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more Depositos.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {DepositoUpdateManyArgs} args - Arguments to update one or more rows.
-     * @example
-     * // Update many Depositos
-     * const deposito = await prisma.deposito.updateMany({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    updateMany<T extends DepositoUpdateManyArgs>(args: SelectSubset<T, DepositoUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more Depositos and returns the data updated in the database.
-     * @param {DepositoUpdateManyAndReturnArgs} args - Arguments to update many Depositos.
-     * @example
-     * // Update many Depositos
-     * const deposito = await prisma.deposito.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more Depositos and only return the `Id`
-     * const depositoWithIdOnly = await prisma.deposito.updateManyAndReturn({
-     *   select: { Id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends DepositoUpdateManyAndReturnArgs>(args: SelectSubset<T, DepositoUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DepositoPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Create or update one Deposito.
-     * @param {DepositoUpsertArgs} args - Arguments to update or create a Deposito.
-     * @example
-     * // Update or create a Deposito
-     * const deposito = await prisma.deposito.upsert({
-     *   create: {
-     *     // ... data to create a Deposito
-     *   },
-     *   update: {
-     *     // ... in case it already exists, update
-     *   },
-     *   where: {
-     *     // ... the filter for the Deposito we want to update
-     *   }
-     * })
-     */
-    upsert<T extends DepositoUpsertArgs>(args: SelectSubset<T, DepositoUpsertArgs<ExtArgs>>): Prisma__DepositoClient<$Result.GetResult<Prisma.$DepositoPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-
-    /**
-     * Count the number of Depositos.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {DepositoCountArgs} args - Arguments to filter Depositos to count.
-     * @example
-     * // Count the number of Depositos
-     * const count = await prisma.deposito.count({
-     *   where: {
-     *     // ... the filter for the Depositos we want to count
-     *   }
-     * })
-    **/
-    count<T extends DepositoCountArgs>(
-      args?: Subset<T, DepositoCountArgs>,
-    ): Prisma.PrismaPromise<
-      T extends $Utils.Record<'select', any>
-        ? T['select'] extends true
-          ? number
-          : GetScalarType<T['select'], DepositoCountAggregateOutputType>
-        : number
-    >
-
-    /**
-     * Allows you to perform aggregations operations on a Deposito.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {DepositoAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
-     * @example
-     * // Ordered by age ascending
-     * // Where email contains prisma.io
-     * // Limited to the 10 users
-     * const aggregations = await prisma.user.aggregate({
-     *   _avg: {
-     *     age: true,
-     *   },
-     *   where: {
-     *     email: {
-     *       contains: "prisma.io",
-     *     },
-     *   },
-     *   orderBy: {
-     *     age: "asc",
-     *   },
-     *   take: 10,
-     * })
-    **/
-    aggregate<T extends DepositoAggregateArgs>(args: Subset<T, DepositoAggregateArgs>): Prisma.PrismaPromise<GetDepositoAggregateType<T>>
-
-    /**
-     * Group by Deposito.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {DepositoGroupByArgs} args - Group by arguments.
-     * @example
-     * // Group by city, order by createdAt, get count
-     * const result = await prisma.user.groupBy({
-     *   by: ['city', 'createdAt'],
-     *   orderBy: {
-     *     createdAt: true
-     *   },
-     *   _count: {
-     *     _all: true
-     *   },
-     * })
-     * 
-    **/
-    groupBy<
-      T extends DepositoGroupByArgs,
-      HasSelectOrTake extends Or<
-        Extends<'skip', Keys<T>>,
-        Extends<'take', Keys<T>>
-      >,
-      OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: DepositoGroupByArgs['orderBy'] }
-        : { orderBy?: DepositoGroupByArgs['orderBy'] },
-      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
-      ByFields extends MaybeTupleToUnion<T['by']>,
-      ByValid extends Has<ByFields, OrderFields>,
-      HavingFields extends GetHavingFields<T['having']>,
-      HavingValid extends Has<ByFields, HavingFields>,
-      ByEmpty extends T['by'] extends never[] ? True : False,
-      InputErrors extends ByEmpty extends True
-      ? `Error: "by" must not be empty.`
-      : HavingValid extends False
-      ? {
-          [P in HavingFields]: P extends ByFields
-            ? never
-            : P extends string
-            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
-            : [
-                Error,
-                'Field ',
-                P,
-                ` in "having" needs to be provided in "by"`,
-              ]
-        }[HavingFields]
-      : 'take' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "take", you also need to provide "orderBy"'
-      : 'skip' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "skip", you also need to provide "orderBy"'
-      : ByValid extends True
-      ? {}
-      : {
-          [P in OrderFields]: P extends ByFields
-            ? never
-            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-        }[OrderFields]
-    >(args: SubsetIntersection<T, DepositoGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDepositoGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
-  /**
-   * Fields of the Deposito model
-   */
-  readonly fields: DepositoFieldRefs;
-  }
-
-  /**
-   * The delegate class that acts as a "Promise-like" for Deposito.
-   * Why is this prefixed with `Prisma__`?
-   * Because we want to prevent naming conflicts as mentioned in
-   * https://github.com/prisma/prisma-client-js/issues/707
-   */
-  export interface Prisma__DepositoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
-    readonly [Symbol.toStringTag]: "PrismaPromise"
-    Configuracion<T extends Deposito$ConfiguracionArgs<ExtArgs> = {}>(args?: Subset<T, Deposito$ConfiguracionArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ConfiguracionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    Tenant<T extends TenantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TenantDefaultArgs<ExtArgs>>): Prisma__TenantClient<$Result.GetResult<Prisma.$TenantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    Stock<T extends Deposito$StockArgs<ExtArgs> = {}>(args?: Subset<T, Deposito$StockArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    /**
-     * Attaches callbacks for the resolution and/or rejection of the Promise.
-     * @param onfulfilled The callback to execute when the Promise is resolved.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of which ever callback is executed.
-     */
-    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
-    /**
-     * Attaches a callback for only the rejection of the Promise.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of the callback.
-     */
-    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
-    /**
-     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
-     * resolved value cannot be modified from the callback.
-     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
-     * @returns A Promise for the completion of the callback.
-     */
-    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
-  }
-
-
-
-
-  /**
-   * Fields of the Deposito model
-   */
-  interface DepositoFieldRefs {
-    readonly Id: FieldRef<"Deposito", 'BigInt'>
-    readonly Descripcion: FieldRef<"Deposito", 'String'>
-    readonly Ubicacion: FieldRef<"Deposito", 'String'>
-    readonly EstaEliminado: FieldRef<"Deposito", 'Boolean'>
-    readonly TenantId: FieldRef<"Deposito", 'BigInt'>
-  }
-    
-
-  // Custom InputTypes
-  /**
-   * Deposito findUnique
-   */
-  export type DepositoFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Deposito
-     */
-    select?: DepositoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Deposito
-     */
-    omit?: DepositoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: DepositoInclude<ExtArgs> | null
-    /**
-     * Filter, which Deposito to fetch.
-     */
-    where: DepositoWhereUniqueInput
-  }
-
-  /**
-   * Deposito findUniqueOrThrow
-   */
-  export type DepositoFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Deposito
-     */
-    select?: DepositoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Deposito
-     */
-    omit?: DepositoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: DepositoInclude<ExtArgs> | null
-    /**
-     * Filter, which Deposito to fetch.
-     */
-    where: DepositoWhereUniqueInput
-  }
-
-  /**
-   * Deposito findFirst
-   */
-  export type DepositoFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Deposito
-     */
-    select?: DepositoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Deposito
-     */
-    omit?: DepositoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: DepositoInclude<ExtArgs> | null
-    /**
-     * Filter, which Deposito to fetch.
-     */
-    where?: DepositoWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of Depositos to fetch.
-     */
-    orderBy?: DepositoOrderByWithRelationInput | DepositoOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for Depositos.
-     */
-    cursor?: DepositoWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` Depositos from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` Depositos.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of Depositos.
-     */
-    distinct?: DepositoScalarFieldEnum | DepositoScalarFieldEnum[]
-  }
-
-  /**
-   * Deposito findFirstOrThrow
-   */
-  export type DepositoFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Deposito
-     */
-    select?: DepositoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Deposito
-     */
-    omit?: DepositoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: DepositoInclude<ExtArgs> | null
-    /**
-     * Filter, which Deposito to fetch.
-     */
-    where?: DepositoWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of Depositos to fetch.
-     */
-    orderBy?: DepositoOrderByWithRelationInput | DepositoOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for Depositos.
-     */
-    cursor?: DepositoWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` Depositos from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` Depositos.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of Depositos.
-     */
-    distinct?: DepositoScalarFieldEnum | DepositoScalarFieldEnum[]
-  }
-
-  /**
-   * Deposito findMany
-   */
-  export type DepositoFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Deposito
-     */
-    select?: DepositoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Deposito
-     */
-    omit?: DepositoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: DepositoInclude<ExtArgs> | null
-    /**
-     * Filter, which Depositos to fetch.
-     */
-    where?: DepositoWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of Depositos to fetch.
-     */
-    orderBy?: DepositoOrderByWithRelationInput | DepositoOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for listing Depositos.
-     */
-    cursor?: DepositoWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` Depositos from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` Depositos.
-     */
-    skip?: number
-    distinct?: DepositoScalarFieldEnum | DepositoScalarFieldEnum[]
-  }
-
-  /**
-   * Deposito create
-   */
-  export type DepositoCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Deposito
-     */
-    select?: DepositoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Deposito
-     */
-    omit?: DepositoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: DepositoInclude<ExtArgs> | null
-    /**
-     * The data needed to create a Deposito.
-     */
-    data: XOR<DepositoCreateInput, DepositoUncheckedCreateInput>
-  }
-
-  /**
-   * Deposito createMany
-   */
-  export type DepositoCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to create many Depositos.
-     */
-    data: DepositoCreateManyInput | DepositoCreateManyInput[]
-    skipDuplicates?: boolean
-  }
-
-  /**
-   * Deposito createManyAndReturn
-   */
-  export type DepositoCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Deposito
-     */
-    select?: DepositoSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the Deposito
-     */
-    omit?: DepositoOmit<ExtArgs> | null
-    /**
-     * The data used to create many Depositos.
-     */
-    data: DepositoCreateManyInput | DepositoCreateManyInput[]
-    skipDuplicates?: boolean
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: DepositoIncludeCreateManyAndReturn<ExtArgs> | null
-  }
-
-  /**
-   * Deposito update
-   */
-  export type DepositoUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Deposito
-     */
-    select?: DepositoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Deposito
-     */
-    omit?: DepositoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: DepositoInclude<ExtArgs> | null
-    /**
-     * The data needed to update a Deposito.
-     */
-    data: XOR<DepositoUpdateInput, DepositoUncheckedUpdateInput>
-    /**
-     * Choose, which Deposito to update.
-     */
-    where: DepositoWhereUniqueInput
-  }
-
-  /**
-   * Deposito updateMany
-   */
-  export type DepositoUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to update Depositos.
-     */
-    data: XOR<DepositoUpdateManyMutationInput, DepositoUncheckedUpdateManyInput>
-    /**
-     * Filter which Depositos to update
-     */
-    where?: DepositoWhereInput
-    /**
-     * Limit how many Depositos to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * Deposito updateManyAndReturn
-   */
-  export type DepositoUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Deposito
-     */
-    select?: DepositoSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the Deposito
-     */
-    omit?: DepositoOmit<ExtArgs> | null
-    /**
-     * The data used to update Depositos.
-     */
-    data: XOR<DepositoUpdateManyMutationInput, DepositoUncheckedUpdateManyInput>
-    /**
-     * Filter which Depositos to update
-     */
-    where?: DepositoWhereInput
-    /**
-     * Limit how many Depositos to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: DepositoIncludeUpdateManyAndReturn<ExtArgs> | null
-  }
-
-  /**
-   * Deposito upsert
-   */
-  export type DepositoUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Deposito
-     */
-    select?: DepositoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Deposito
-     */
-    omit?: DepositoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: DepositoInclude<ExtArgs> | null
-    /**
-     * The filter to search for the Deposito to update in case it exists.
-     */
-    where: DepositoWhereUniqueInput
-    /**
-     * In case the Deposito found by the `where` argument doesn't exist, create a new Deposito with this data.
-     */
-    create: XOR<DepositoCreateInput, DepositoUncheckedCreateInput>
-    /**
-     * In case the Deposito was found with the provided `where` argument, update it with this data.
-     */
-    update: XOR<DepositoUpdateInput, DepositoUncheckedUpdateInput>
-  }
-
-  /**
-   * Deposito delete
-   */
-  export type DepositoDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Deposito
-     */
-    select?: DepositoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Deposito
-     */
-    omit?: DepositoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: DepositoInclude<ExtArgs> | null
-    /**
-     * Filter which Deposito to delete.
-     */
-    where: DepositoWhereUniqueInput
-  }
-
-  /**
-   * Deposito deleteMany
-   */
-  export type DepositoDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which Depositos to delete
-     */
-    where?: DepositoWhereInput
-    /**
-     * Limit how many Depositos to delete.
-     */
-    limit?: number
-  }
-
-  /**
-   * Deposito.Configuracion
-   */
-  export type Deposito$ConfiguracionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Configuracion
-     */
-    select?: ConfiguracionSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Configuracion
-     */
-    omit?: ConfiguracionOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ConfiguracionInclude<ExtArgs> | null
-    where?: ConfiguracionWhereInput
-    orderBy?: ConfiguracionOrderByWithRelationInput | ConfiguracionOrderByWithRelationInput[]
-    cursor?: ConfiguracionWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: ConfiguracionScalarFieldEnum | ConfiguracionScalarFieldEnum[]
-  }
-
-  /**
-   * Deposito.Stock
-   */
-  export type Deposito$StockArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Stock
-     */
-    select?: StockSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Stock
-     */
-    omit?: StockOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: StockInclude<ExtArgs> | null
-    where?: StockWhereInput
-    orderBy?: StockOrderByWithRelationInput | StockOrderByWithRelationInput[]
-    cursor?: StockWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: StockScalarFieldEnum | StockScalarFieldEnum[]
-  }
-
-  /**
-   * Deposito without action
-   */
-  export type DepositoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Deposito
-     */
-    select?: DepositoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Deposito
-     */
-    omit?: DepositoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: DepositoInclude<ExtArgs> | null
   }
 
 
@@ -63070,7 +61720,6 @@ export namespace Prisma {
   export type StockAvgAggregateOutputType = {
     Id: number | null
     ArticuloId: number | null
-    DepositoId: number | null
     Cantidad: Decimal | null
     TenantId: number | null
   }
@@ -63078,7 +61727,6 @@ export namespace Prisma {
   export type StockSumAggregateOutputType = {
     Id: bigint | null
     ArticuloId: bigint | null
-    DepositoId: bigint | null
     Cantidad: Decimal | null
     TenantId: bigint | null
   }
@@ -63086,7 +61734,6 @@ export namespace Prisma {
   export type StockMinAggregateOutputType = {
     Id: bigint | null
     ArticuloId: bigint | null
-    DepositoId: bigint | null
     Cantidad: Decimal | null
     EstaEliminado: boolean | null
     TenantId: bigint | null
@@ -63095,7 +61742,6 @@ export namespace Prisma {
   export type StockMaxAggregateOutputType = {
     Id: bigint | null
     ArticuloId: bigint | null
-    DepositoId: bigint | null
     Cantidad: Decimal | null
     EstaEliminado: boolean | null
     TenantId: bigint | null
@@ -63104,7 +61750,6 @@ export namespace Prisma {
   export type StockCountAggregateOutputType = {
     Id: number
     ArticuloId: number
-    DepositoId: number
     Cantidad: number
     EstaEliminado: number
     TenantId: number
@@ -63115,7 +61760,6 @@ export namespace Prisma {
   export type StockAvgAggregateInputType = {
     Id?: true
     ArticuloId?: true
-    DepositoId?: true
     Cantidad?: true
     TenantId?: true
   }
@@ -63123,7 +61767,6 @@ export namespace Prisma {
   export type StockSumAggregateInputType = {
     Id?: true
     ArticuloId?: true
-    DepositoId?: true
     Cantidad?: true
     TenantId?: true
   }
@@ -63131,7 +61774,6 @@ export namespace Prisma {
   export type StockMinAggregateInputType = {
     Id?: true
     ArticuloId?: true
-    DepositoId?: true
     Cantidad?: true
     EstaEliminado?: true
     TenantId?: true
@@ -63140,7 +61782,6 @@ export namespace Prisma {
   export type StockMaxAggregateInputType = {
     Id?: true
     ArticuloId?: true
-    DepositoId?: true
     Cantidad?: true
     EstaEliminado?: true
     TenantId?: true
@@ -63149,7 +61790,6 @@ export namespace Prisma {
   export type StockCountAggregateInputType = {
     Id?: true
     ArticuloId?: true
-    DepositoId?: true
     Cantidad?: true
     EstaEliminado?: true
     TenantId?: true
@@ -63245,7 +61885,6 @@ export namespace Prisma {
   export type StockGroupByOutputType = {
     Id: bigint
     ArticuloId: bigint
-    DepositoId: bigint
     Cantidad: Decimal
     EstaEliminado: boolean
     TenantId: bigint
@@ -63273,62 +61912,52 @@ export namespace Prisma {
   export type StockSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     Id?: boolean
     ArticuloId?: boolean
-    DepositoId?: boolean
     Cantidad?: boolean
     EstaEliminado?: boolean
     TenantId?: boolean
     Articulo?: boolean | ArticuloDefaultArgs<ExtArgs>
-    Deposito?: boolean | DepositoDefaultArgs<ExtArgs>
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["stock"]>
 
   export type StockSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     Id?: boolean
     ArticuloId?: boolean
-    DepositoId?: boolean
     Cantidad?: boolean
     EstaEliminado?: boolean
     TenantId?: boolean
     Articulo?: boolean | ArticuloDefaultArgs<ExtArgs>
-    Deposito?: boolean | DepositoDefaultArgs<ExtArgs>
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["stock"]>
 
   export type StockSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     Id?: boolean
     ArticuloId?: boolean
-    DepositoId?: boolean
     Cantidad?: boolean
     EstaEliminado?: boolean
     TenantId?: boolean
     Articulo?: boolean | ArticuloDefaultArgs<ExtArgs>
-    Deposito?: boolean | DepositoDefaultArgs<ExtArgs>
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["stock"]>
 
   export type StockSelectScalar = {
     Id?: boolean
     ArticuloId?: boolean
-    DepositoId?: boolean
     Cantidad?: boolean
     EstaEliminado?: boolean
     TenantId?: boolean
   }
 
-  export type StockOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id" | "ArticuloId" | "DepositoId" | "Cantidad" | "EstaEliminado" | "TenantId", ExtArgs["result"]["stock"]>
+  export type StockOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id" | "ArticuloId" | "Cantidad" | "EstaEliminado" | "TenantId", ExtArgs["result"]["stock"]>
   export type StockInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     Articulo?: boolean | ArticuloDefaultArgs<ExtArgs>
-    Deposito?: boolean | DepositoDefaultArgs<ExtArgs>
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
   }
   export type StockIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     Articulo?: boolean | ArticuloDefaultArgs<ExtArgs>
-    Deposito?: boolean | DepositoDefaultArgs<ExtArgs>
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
   }
   export type StockIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     Articulo?: boolean | ArticuloDefaultArgs<ExtArgs>
-    Deposito?: boolean | DepositoDefaultArgs<ExtArgs>
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
   }
 
@@ -63336,13 +61965,11 @@ export namespace Prisma {
     name: "Stock"
     objects: {
       Articulo: Prisma.$ArticuloPayload<ExtArgs>
-      Deposito: Prisma.$DepositoPayload<ExtArgs>
       Tenant: Prisma.$TenantPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       Id: bigint
       ArticuloId: bigint
-      DepositoId: bigint
       Cantidad: Prisma.Decimal
       EstaEliminado: boolean
       /**
@@ -63744,7 +62371,6 @@ export namespace Prisma {
   export interface Prisma__StockClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     Articulo<T extends ArticuloDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ArticuloDefaultArgs<ExtArgs>>): Prisma__ArticuloClient<$Result.GetResult<Prisma.$ArticuloPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    Deposito<T extends DepositoDefaultArgs<ExtArgs> = {}>(args?: Subset<T, DepositoDefaultArgs<ExtArgs>>): Prisma__DepositoClient<$Result.GetResult<Prisma.$DepositoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     Tenant<T extends TenantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TenantDefaultArgs<ExtArgs>>): Prisma__TenantClient<$Result.GetResult<Prisma.$TenantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -63777,7 +62403,6 @@ export namespace Prisma {
   interface StockFieldRefs {
     readonly Id: FieldRef<"Stock", 'BigInt'>
     readonly ArticuloId: FieldRef<"Stock", 'BigInt'>
-    readonly DepositoId: FieldRef<"Stock", 'BigInt'>
     readonly Cantidad: FieldRef<"Stock", 'Decimal'>
     readonly EstaEliminado: FieldRef<"Stock", 'Boolean'>
     readonly TenantId: FieldRef<"Stock", 'BigInt'>
@@ -71400,7 +70025,6 @@ export namespace Prisma {
     RemitoDescuentaStock: 'RemitoDescuentaStock',
     ActualizaCostoDesdeCompra: 'ActualizaCostoDesdeCompra',
     ModificaPrecioVentaDesdeCompra: 'ModificaPrecioVentaDesdeCompra',
-    DepositoId: 'DepositoId',
     Imprimir: 'Imprimir',
     Instalada: 'Instalada',
     TipoFormaPagoPorDefectoVenta: 'TipoFormaPagoPorDefectoVenta',
@@ -71473,17 +70097,6 @@ export namespace Prisma {
   };
 
   export type LocalidadScalarFieldEnum = (typeof LocalidadScalarFieldEnum)[keyof typeof LocalidadScalarFieldEnum]
-
-
-  export const DepositoScalarFieldEnum: {
-    Id: 'Id',
-    Descripcion: 'Descripcion',
-    Ubicacion: 'Ubicacion',
-    EstaEliminado: 'EstaEliminado',
-    TenantId: 'TenantId'
-  };
-
-  export type DepositoScalarFieldEnum = (typeof DepositoScalarFieldEnum)[keyof typeof DepositoScalarFieldEnum]
 
 
   export const DepositoChequesScalarFieldEnum: {
@@ -71743,7 +70356,6 @@ export namespace Prisma {
   export const StockScalarFieldEnum: {
     Id: 'Id',
     ArticuloId: 'ArticuloId',
-    DepositoId: 'DepositoId',
     Cantidad: 'Cantidad',
     EstaEliminado: 'EstaEliminado',
     TenantId: 'TenantId'
@@ -71978,7 +70590,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionListRelationFilter
     Contadores?: ContadorListRelationFilter
     CuentasBancarias?: CuentaBancariasListRelationFilter
-    Depositos?: DepositoListRelationFilter
     DepositosCheques?: DepositoChequesListRelationFilter
     DetallesCaja?: DetalleCajaListRelationFilter
     DetallesComprobante?: DetalleComprobanteListRelationFilter
@@ -72025,7 +70636,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionOrderByRelationAggregateInput
     Contadores?: ContadorOrderByRelationAggregateInput
     CuentasBancarias?: CuentaBancariasOrderByRelationAggregateInput
-    Depositos?: DepositoOrderByRelationAggregateInput
     DepositosCheques?: DepositoChequesOrderByRelationAggregateInput
     DetallesCaja?: DetalleCajaOrderByRelationAggregateInput
     DetallesComprobante?: DetalleComprobanteOrderByRelationAggregateInput
@@ -72075,7 +70685,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionListRelationFilter
     Contadores?: ContadorListRelationFilter
     CuentasBancarias?: CuentaBancariasListRelationFilter
-    Depositos?: DepositoListRelationFilter
     DepositosCheques?: DepositoChequesListRelationFilter
     DetallesCaja?: DetalleCajaListRelationFilter
     DetallesComprobante?: DetalleComprobanteListRelationFilter
@@ -73452,7 +72061,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: BoolFilter<"Configuracion"> | boolean
     ActualizaCostoDesdeCompra?: BoolFilter<"Configuracion"> | boolean
     ModificaPrecioVentaDesdeCompra?: BoolFilter<"Configuracion"> | boolean
-    DepositoId?: BigIntFilter<"Configuracion"> | bigint | number
     Imprimir?: BoolFilter<"Configuracion"> | boolean
     Instalada?: IntNullableFilter<"Configuracion"> | number | null
     TipoFormaPagoPorDefectoVenta?: IntFilter<"Configuracion"> | number
@@ -73470,7 +72078,6 @@ export namespace Prisma {
     Foto?: BytesNullableFilter<"Configuracion"> | Uint8Array | null
     ShowFoto?: BoolFilter<"Configuracion"> | boolean
     TenantId?: BigIntFilter<"Configuracion"> | bigint | number
-    Deposito?: XOR<DepositoScalarRelationFilter, DepositoWhereInput>
     Localidad?: XOR<LocalidadScalarRelationFilter, LocalidadWhereInput>
     Tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
   }
@@ -73490,7 +72097,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: SortOrder
     ActualizaCostoDesdeCompra?: SortOrder
     ModificaPrecioVentaDesdeCompra?: SortOrder
-    DepositoId?: SortOrder
     Imprimir?: SortOrder
     Instalada?: SortOrderInput | SortOrder
     TipoFormaPagoPorDefectoVenta?: SortOrder
@@ -73508,7 +72114,6 @@ export namespace Prisma {
     Foto?: SortOrderInput | SortOrder
     ShowFoto?: SortOrder
     TenantId?: SortOrder
-    Deposito?: DepositoOrderByWithRelationInput
     Localidad?: LocalidadOrderByWithRelationInput
     Tenant?: TenantOrderByWithRelationInput
   }
@@ -73531,7 +72136,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: BoolFilter<"Configuracion"> | boolean
     ActualizaCostoDesdeCompra?: BoolFilter<"Configuracion"> | boolean
     ModificaPrecioVentaDesdeCompra?: BoolFilter<"Configuracion"> | boolean
-    DepositoId?: BigIntFilter<"Configuracion"> | bigint | number
     Imprimir?: BoolFilter<"Configuracion"> | boolean
     Instalada?: IntNullableFilter<"Configuracion"> | number | null
     TipoFormaPagoPorDefectoVenta?: IntFilter<"Configuracion"> | number
@@ -73549,7 +72153,6 @@ export namespace Prisma {
     Foto?: BytesNullableFilter<"Configuracion"> | Uint8Array | null
     ShowFoto?: BoolFilter<"Configuracion"> | boolean
     TenantId?: BigIntFilter<"Configuracion"> | bigint | number
-    Deposito?: XOR<DepositoScalarRelationFilter, DepositoWhereInput>
     Localidad?: XOR<LocalidadScalarRelationFilter, LocalidadWhereInput>
     Tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
   }, "Id">
@@ -73569,7 +72172,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: SortOrder
     ActualizaCostoDesdeCompra?: SortOrder
     ModificaPrecioVentaDesdeCompra?: SortOrder
-    DepositoId?: SortOrder
     Imprimir?: SortOrder
     Instalada?: SortOrderInput | SortOrder
     TipoFormaPagoPorDefectoVenta?: SortOrder
@@ -73612,7 +72214,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: BoolWithAggregatesFilter<"Configuracion"> | boolean
     ActualizaCostoDesdeCompra?: BoolWithAggregatesFilter<"Configuracion"> | boolean
     ModificaPrecioVentaDesdeCompra?: BoolWithAggregatesFilter<"Configuracion"> | boolean
-    DepositoId?: BigIntWithAggregatesFilter<"Configuracion"> | bigint | number
     Imprimir?: BoolWithAggregatesFilter<"Configuracion"> | boolean
     Instalada?: IntNullableWithAggregatesFilter<"Configuracion"> | number | null
     TipoFormaPagoPorDefectoVenta?: IntWithAggregatesFilter<"Configuracion"> | number
@@ -73919,69 +72520,6 @@ export namespace Prisma {
     DepartamentoId?: BigIntWithAggregatesFilter<"Localidad"> | bigint | number
     Descripcion?: StringWithAggregatesFilter<"Localidad"> | string
     EstaEliminado?: BoolWithAggregatesFilter<"Localidad"> | boolean
-  }
-
-  export type DepositoWhereInput = {
-    AND?: DepositoWhereInput | DepositoWhereInput[]
-    OR?: DepositoWhereInput[]
-    NOT?: DepositoWhereInput | DepositoWhereInput[]
-    Id?: BigIntFilter<"Deposito"> | bigint | number
-    Descripcion?: StringFilter<"Deposito"> | string
-    Ubicacion?: StringNullableFilter<"Deposito"> | string | null
-    EstaEliminado?: BoolFilter<"Deposito"> | boolean
-    TenantId?: BigIntFilter<"Deposito"> | bigint | number
-    Configuracion?: ConfiguracionListRelationFilter
-    Tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
-    Stock?: StockListRelationFilter
-  }
-
-  export type DepositoOrderByWithRelationInput = {
-    Id?: SortOrder
-    Descripcion?: SortOrder
-    Ubicacion?: SortOrderInput | SortOrder
-    EstaEliminado?: SortOrder
-    TenantId?: SortOrder
-    Configuracion?: ConfiguracionOrderByRelationAggregateInput
-    Tenant?: TenantOrderByWithRelationInput
-    Stock?: StockOrderByRelationAggregateInput
-  }
-
-  export type DepositoWhereUniqueInput = Prisma.AtLeast<{
-    Id?: bigint | number
-    Descripcion?: string
-    AND?: DepositoWhereInput | DepositoWhereInput[]
-    OR?: DepositoWhereInput[]
-    NOT?: DepositoWhereInput | DepositoWhereInput[]
-    Ubicacion?: StringNullableFilter<"Deposito"> | string | null
-    EstaEliminado?: BoolFilter<"Deposito"> | boolean
-    TenantId?: BigIntFilter<"Deposito"> | bigint | number
-    Configuracion?: ConfiguracionListRelationFilter
-    Tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
-    Stock?: StockListRelationFilter
-  }, "Id" | "Descripcion">
-
-  export type DepositoOrderByWithAggregationInput = {
-    Id?: SortOrder
-    Descripcion?: SortOrder
-    Ubicacion?: SortOrderInput | SortOrder
-    EstaEliminado?: SortOrder
-    TenantId?: SortOrder
-    _count?: DepositoCountOrderByAggregateInput
-    _avg?: DepositoAvgOrderByAggregateInput
-    _max?: DepositoMaxOrderByAggregateInput
-    _min?: DepositoMinOrderByAggregateInput
-    _sum?: DepositoSumOrderByAggregateInput
-  }
-
-  export type DepositoScalarWhereWithAggregatesInput = {
-    AND?: DepositoScalarWhereWithAggregatesInput | DepositoScalarWhereWithAggregatesInput[]
-    OR?: DepositoScalarWhereWithAggregatesInput[]
-    NOT?: DepositoScalarWhereWithAggregatesInput | DepositoScalarWhereWithAggregatesInput[]
-    Id?: BigIntWithAggregatesFilter<"Deposito"> | bigint | number
-    Descripcion?: StringWithAggregatesFilter<"Deposito"> | string
-    Ubicacion?: StringNullableWithAggregatesFilter<"Deposito"> | string | null
-    EstaEliminado?: BoolWithAggregatesFilter<"Deposito"> | boolean
-    TenantId?: BigIntWithAggregatesFilter<"Deposito"> | bigint | number
   }
 
   export type DepositoChequesWhereInput = {
@@ -75438,24 +73976,20 @@ export namespace Prisma {
     NOT?: StockWhereInput | StockWhereInput[]
     Id?: BigIntFilter<"Stock"> | bigint | number
     ArticuloId?: BigIntFilter<"Stock"> | bigint | number
-    DepositoId?: BigIntFilter<"Stock"> | bigint | number
     Cantidad?: DecimalFilter<"Stock"> | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFilter<"Stock"> | boolean
     TenantId?: BigIntFilter<"Stock"> | bigint | number
     Articulo?: XOR<ArticuloScalarRelationFilter, ArticuloWhereInput>
-    Deposito?: XOR<DepositoScalarRelationFilter, DepositoWhereInput>
     Tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
   }
 
   export type StockOrderByWithRelationInput = {
     Id?: SortOrder
     ArticuloId?: SortOrder
-    DepositoId?: SortOrder
     Cantidad?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
     Articulo?: ArticuloOrderByWithRelationInput
-    Deposito?: DepositoOrderByWithRelationInput
     Tenant?: TenantOrderByWithRelationInput
   }
 
@@ -75465,19 +73999,16 @@ export namespace Prisma {
     OR?: StockWhereInput[]
     NOT?: StockWhereInput | StockWhereInput[]
     ArticuloId?: BigIntFilter<"Stock"> | bigint | number
-    DepositoId?: BigIntFilter<"Stock"> | bigint | number
     Cantidad?: DecimalFilter<"Stock"> | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFilter<"Stock"> | boolean
     TenantId?: BigIntFilter<"Stock"> | bigint | number
     Articulo?: XOR<ArticuloScalarRelationFilter, ArticuloWhereInput>
-    Deposito?: XOR<DepositoScalarRelationFilter, DepositoWhereInput>
     Tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
   }, "Id">
 
   export type StockOrderByWithAggregationInput = {
     Id?: SortOrder
     ArticuloId?: SortOrder
-    DepositoId?: SortOrder
     Cantidad?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
@@ -75494,7 +74025,6 @@ export namespace Prisma {
     NOT?: StockScalarWhereWithAggregatesInput | StockScalarWhereWithAggregatesInput[]
     Id?: BigIntWithAggregatesFilter<"Stock"> | bigint | number
     ArticuloId?: BigIntWithAggregatesFilter<"Stock"> | bigint | number
-    DepositoId?: BigIntWithAggregatesFilter<"Stock"> | bigint | number
     Cantidad?: DecimalWithAggregatesFilter<"Stock"> | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolWithAggregatesFilter<"Stock"> | boolean
     TenantId?: BigIntWithAggregatesFilter<"Stock"> | bigint | number
@@ -75905,7 +74435,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -75952,7 +74481,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -75997,7 +74525,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -76044,7 +74571,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -77429,7 +75955,6 @@ export namespace Prisma {
     EstaEliminado: boolean
     Foto?: Uint8Array | null
     ShowFoto?: boolean
-    Deposito: DepositoCreateNestedOneWithoutConfiguracionInput
     Localidad: LocalidadCreateNestedOneWithoutConfiguracionInput
     Tenant: TenantCreateNestedOneWithoutConfiguracionesInput
   }
@@ -77449,7 +75974,6 @@ export namespace Prisma {
     RemitoDescuentaStock: boolean
     ActualizaCostoDesdeCompra: boolean
     ModificaPrecioVentaDesdeCompra: boolean
-    DepositoId: bigint | number
     Imprimir: boolean
     Instalada?: number | null
     TipoFormaPagoPorDefectoVenta: number
@@ -77499,7 +76023,6 @@ export namespace Prisma {
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     Foto?: NullableBytesFieldUpdateOperationsInput | Uint8Array | null
     ShowFoto?: BoolFieldUpdateOperationsInput | boolean
-    Deposito?: DepositoUpdateOneRequiredWithoutConfiguracionNestedInput
     Localidad?: LocalidadUpdateOneRequiredWithoutConfiguracionNestedInput
     Tenant?: TenantUpdateOneRequiredWithoutConfiguracionesNestedInput
   }
@@ -77519,7 +76042,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: BoolFieldUpdateOperationsInput | boolean
     ActualizaCostoDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
     ModificaPrecioVentaDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
-    DepositoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Imprimir?: BoolFieldUpdateOperationsInput | boolean
     Instalada?: NullableIntFieldUpdateOperationsInput | number | null
     TipoFormaPagoPorDefectoVenta?: IntFieldUpdateOperationsInput | number
@@ -77554,7 +76076,6 @@ export namespace Prisma {
     RemitoDescuentaStock: boolean
     ActualizaCostoDesdeCompra: boolean
     ModificaPrecioVentaDesdeCompra: boolean
-    DepositoId: bigint | number
     Imprimir: boolean
     Instalada?: number | null
     TipoFormaPagoPorDefectoVenta: number
@@ -77621,7 +76142,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: BoolFieldUpdateOperationsInput | boolean
     ActualizaCostoDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
     ModificaPrecioVentaDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
-    DepositoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Imprimir?: BoolFieldUpdateOperationsInput | boolean
     Instalada?: NullableIntFieldUpdateOperationsInput | number | null
     TipoFormaPagoPorDefectoVenta?: IntFieldUpdateOperationsInput | number
@@ -77917,69 +76437,6 @@ export namespace Prisma {
     DepartamentoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Descripcion?: StringFieldUpdateOperationsInput | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-  }
-
-  export type DepositoCreateInput = {
-    Id?: bigint | number
-    Descripcion: string
-    Ubicacion?: string | null
-    EstaEliminado: boolean
-    Configuracion?: ConfiguracionCreateNestedManyWithoutDepositoInput
-    Tenant: TenantCreateNestedOneWithoutDepositosInput
-    Stock?: StockCreateNestedManyWithoutDepositoInput
-  }
-
-  export type DepositoUncheckedCreateInput = {
-    Id?: bigint | number
-    Descripcion: string
-    Ubicacion?: string | null
-    EstaEliminado: boolean
-    TenantId: bigint | number
-    Configuracion?: ConfiguracionUncheckedCreateNestedManyWithoutDepositoInput
-    Stock?: StockUncheckedCreateNestedManyWithoutDepositoInput
-  }
-
-  export type DepositoUpdateInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Descripcion?: StringFieldUpdateOperationsInput | string
-    Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    Configuracion?: ConfiguracionUpdateManyWithoutDepositoNestedInput
-    Tenant?: TenantUpdateOneRequiredWithoutDepositosNestedInput
-    Stock?: StockUpdateManyWithoutDepositoNestedInput
-  }
-
-  export type DepositoUncheckedUpdateInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Descripcion?: StringFieldUpdateOperationsInput | string
-    Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
-    Configuracion?: ConfiguracionUncheckedUpdateManyWithoutDepositoNestedInput
-    Stock?: StockUncheckedUpdateManyWithoutDepositoNestedInput
-  }
-
-  export type DepositoCreateManyInput = {
-    Id?: bigint | number
-    Descripcion: string
-    Ubicacion?: string | null
-    EstaEliminado: boolean
-    TenantId: bigint | number
-  }
-
-  export type DepositoUpdateManyMutationInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Descripcion?: StringFieldUpdateOperationsInput | string
-    Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-  }
-
-  export type DepositoUncheckedUpdateManyInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Descripcion?: StringFieldUpdateOperationsInput | string
-    Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
   }
 
   export type DepositoChequesCreateInput = {
@@ -79371,14 +77828,12 @@ export namespace Prisma {
     Cantidad: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     Articulo: ArticuloCreateNestedOneWithoutStockInput
-    Deposito: DepositoCreateNestedOneWithoutStockInput
     Tenant: TenantCreateNestedOneWithoutStocksInput
   }
 
   export type StockUncheckedCreateInput = {
     Id?: bigint | number
     ArticuloId: bigint | number
-    DepositoId: bigint | number
     Cantidad: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
@@ -79389,14 +77844,12 @@ export namespace Prisma {
     Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     Articulo?: ArticuloUpdateOneRequiredWithoutStockNestedInput
-    Deposito?: DepositoUpdateOneRequiredWithoutStockNestedInput
     Tenant?: TenantUpdateOneRequiredWithoutStocksNestedInput
   }
 
   export type StockUncheckedUpdateInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     ArticuloId?: BigIntFieldUpdateOperationsInput | bigint | number
-    DepositoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
@@ -79405,7 +77858,6 @@ export namespace Prisma {
   export type StockCreateManyInput = {
     Id?: bigint | number
     ArticuloId: bigint | number
-    DepositoId: bigint | number
     Cantidad: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
@@ -79420,7 +77872,6 @@ export namespace Prisma {
   export type StockUncheckedUpdateManyInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     ArticuloId?: BigIntFieldUpdateOperationsInput | bigint | number
-    DepositoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
@@ -79902,12 +78353,6 @@ export namespace Prisma {
     none?: CuentaBancariasWhereInput
   }
 
-  export type DepositoListRelationFilter = {
-    every?: DepositoWhereInput
-    some?: DepositoWhereInput
-    none?: DepositoWhereInput
-  }
-
   export type DepositoChequesListRelationFilter = {
     every?: DepositoChequesWhereInput
     some?: DepositoChequesWhereInput
@@ -80087,10 +78532,6 @@ export namespace Prisma {
   }
 
   export type CuentaBancariasOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
-  export type DepositoOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -81433,11 +79874,6 @@ export namespace Prisma {
     not?: NestedBytesNullableFilter<$PrismaModel> | Uint8Array | null
   }
 
-  export type DepositoScalarRelationFilter = {
-    is?: DepositoWhereInput
-    isNot?: DepositoWhereInput
-  }
-
   export type LocalidadScalarRelationFilter = {
     is?: LocalidadWhereInput
     isNot?: LocalidadWhereInput
@@ -81458,7 +79894,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: SortOrder
     ActualizaCostoDesdeCompra?: SortOrder
     ModificaPrecioVentaDesdeCompra?: SortOrder
-    DepositoId?: SortOrder
     Imprimir?: SortOrder
     Instalada?: SortOrder
     TipoFormaPagoPorDefectoVenta?: SortOrder
@@ -81481,7 +79916,6 @@ export namespace Prisma {
   export type ConfiguracionAvgOrderByAggregateInput = {
     Id?: SortOrder
     LocalidadId?: SortOrder
-    DepositoId?: SortOrder
     Instalada?: SortOrder
     TipoFormaPagoPorDefectoVenta?: SortOrder
     TipoFormaPagoPorDefectoCompra?: SortOrder
@@ -81504,7 +79938,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: SortOrder
     ActualizaCostoDesdeCompra?: SortOrder
     ModificaPrecioVentaDesdeCompra?: SortOrder
-    DepositoId?: SortOrder
     Imprimir?: SortOrder
     Instalada?: SortOrder
     TipoFormaPagoPorDefectoVenta?: SortOrder
@@ -81539,7 +79972,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: SortOrder
     ActualizaCostoDesdeCompra?: SortOrder
     ModificaPrecioVentaDesdeCompra?: SortOrder
-    DepositoId?: SortOrder
     Imprimir?: SortOrder
     Instalada?: SortOrder
     TipoFormaPagoPorDefectoVenta?: SortOrder
@@ -81562,7 +79994,6 @@ export namespace Prisma {
   export type ConfiguracionSumOrderByAggregateInput = {
     Id?: SortOrder
     LocalidadId?: SortOrder
-    DepositoId?: SortOrder
     Instalada?: SortOrder
     TipoFormaPagoPorDefectoVenta?: SortOrder
     TipoFormaPagoPorDefectoCompra?: SortOrder
@@ -81794,40 +80225,6 @@ export namespace Prisma {
   export type LocalidadSumOrderByAggregateInput = {
     Id?: SortOrder
     DepartamentoId?: SortOrder
-  }
-
-  export type DepositoCountOrderByAggregateInput = {
-    Id?: SortOrder
-    Descripcion?: SortOrder
-    Ubicacion?: SortOrder
-    EstaEliminado?: SortOrder
-    TenantId?: SortOrder
-  }
-
-  export type DepositoAvgOrderByAggregateInput = {
-    Id?: SortOrder
-    TenantId?: SortOrder
-  }
-
-  export type DepositoMaxOrderByAggregateInput = {
-    Id?: SortOrder
-    Descripcion?: SortOrder
-    Ubicacion?: SortOrder
-    EstaEliminado?: SortOrder
-    TenantId?: SortOrder
-  }
-
-  export type DepositoMinOrderByAggregateInput = {
-    Id?: SortOrder
-    Descripcion?: SortOrder
-    Ubicacion?: SortOrder
-    EstaEliminado?: SortOrder
-    TenantId?: SortOrder
-  }
-
-  export type DepositoSumOrderByAggregateInput = {
-    Id?: SortOrder
-    TenantId?: SortOrder
   }
 
   export type ChequeScalarRelationFilter = {
@@ -82858,7 +81255,6 @@ export namespace Prisma {
   export type StockCountOrderByAggregateInput = {
     Id?: SortOrder
     ArticuloId?: SortOrder
-    DepositoId?: SortOrder
     Cantidad?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
@@ -82867,7 +81263,6 @@ export namespace Prisma {
   export type StockAvgOrderByAggregateInput = {
     Id?: SortOrder
     ArticuloId?: SortOrder
-    DepositoId?: SortOrder
     Cantidad?: SortOrder
     TenantId?: SortOrder
   }
@@ -82875,7 +81270,6 @@ export namespace Prisma {
   export type StockMaxOrderByAggregateInput = {
     Id?: SortOrder
     ArticuloId?: SortOrder
-    DepositoId?: SortOrder
     Cantidad?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
@@ -82884,7 +81278,6 @@ export namespace Prisma {
   export type StockMinOrderByAggregateInput = {
     Id?: SortOrder
     ArticuloId?: SortOrder
-    DepositoId?: SortOrder
     Cantidad?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
@@ -82893,7 +81286,6 @@ export namespace Prisma {
   export type StockSumOrderByAggregateInput = {
     Id?: SortOrder
     ArticuloId?: SortOrder
-    DepositoId?: SortOrder
     Cantidad?: SortOrder
     TenantId?: SortOrder
   }
@@ -83206,13 +81598,6 @@ export namespace Prisma {
     connect?: CuentaBancariasWhereUniqueInput | CuentaBancariasWhereUniqueInput[]
   }
 
-  export type DepositoCreateNestedManyWithoutTenantInput = {
-    create?: XOR<DepositoCreateWithoutTenantInput, DepositoUncheckedCreateWithoutTenantInput> | DepositoCreateWithoutTenantInput[] | DepositoUncheckedCreateWithoutTenantInput[]
-    connectOrCreate?: DepositoCreateOrConnectWithoutTenantInput | DepositoCreateOrConnectWithoutTenantInput[]
-    createMany?: DepositoCreateManyTenantInputEnvelope
-    connect?: DepositoWhereUniqueInput | DepositoWhereUniqueInput[]
-  }
-
   export type DepositoChequesCreateNestedManyWithoutTenantInput = {
     create?: XOR<DepositoChequesCreateWithoutTenantInput, DepositoChequesUncheckedCreateWithoutTenantInput> | DepositoChequesCreateWithoutTenantInput[] | DepositoChequesUncheckedCreateWithoutTenantInput[]
     connectOrCreate?: DepositoChequesCreateOrConnectWithoutTenantInput | DepositoChequesCreateOrConnectWithoutTenantInput[]
@@ -83441,13 +81826,6 @@ export namespace Prisma {
     connectOrCreate?: CuentaBancariasCreateOrConnectWithoutTenantInput | CuentaBancariasCreateOrConnectWithoutTenantInput[]
     createMany?: CuentaBancariasCreateManyTenantInputEnvelope
     connect?: CuentaBancariasWhereUniqueInput | CuentaBancariasWhereUniqueInput[]
-  }
-
-  export type DepositoUncheckedCreateNestedManyWithoutTenantInput = {
-    create?: XOR<DepositoCreateWithoutTenantInput, DepositoUncheckedCreateWithoutTenantInput> | DepositoCreateWithoutTenantInput[] | DepositoUncheckedCreateWithoutTenantInput[]
-    connectOrCreate?: DepositoCreateOrConnectWithoutTenantInput | DepositoCreateOrConnectWithoutTenantInput[]
-    createMany?: DepositoCreateManyTenantInputEnvelope
-    connect?: DepositoWhereUniqueInput | DepositoWhereUniqueInput[]
   }
 
   export type DepositoChequesUncheckedCreateNestedManyWithoutTenantInput = {
@@ -83762,20 +82140,6 @@ export namespace Prisma {
     update?: CuentaBancariasUpdateWithWhereUniqueWithoutTenantInput | CuentaBancariasUpdateWithWhereUniqueWithoutTenantInput[]
     updateMany?: CuentaBancariasUpdateManyWithWhereWithoutTenantInput | CuentaBancariasUpdateManyWithWhereWithoutTenantInput[]
     deleteMany?: CuentaBancariasScalarWhereInput | CuentaBancariasScalarWhereInput[]
-  }
-
-  export type DepositoUpdateManyWithoutTenantNestedInput = {
-    create?: XOR<DepositoCreateWithoutTenantInput, DepositoUncheckedCreateWithoutTenantInput> | DepositoCreateWithoutTenantInput[] | DepositoUncheckedCreateWithoutTenantInput[]
-    connectOrCreate?: DepositoCreateOrConnectWithoutTenantInput | DepositoCreateOrConnectWithoutTenantInput[]
-    upsert?: DepositoUpsertWithWhereUniqueWithoutTenantInput | DepositoUpsertWithWhereUniqueWithoutTenantInput[]
-    createMany?: DepositoCreateManyTenantInputEnvelope
-    set?: DepositoWhereUniqueInput | DepositoWhereUniqueInput[]
-    disconnect?: DepositoWhereUniqueInput | DepositoWhereUniqueInput[]
-    delete?: DepositoWhereUniqueInput | DepositoWhereUniqueInput[]
-    connect?: DepositoWhereUniqueInput | DepositoWhereUniqueInput[]
-    update?: DepositoUpdateWithWhereUniqueWithoutTenantInput | DepositoUpdateWithWhereUniqueWithoutTenantInput[]
-    updateMany?: DepositoUpdateManyWithWhereWithoutTenantInput | DepositoUpdateManyWithWhereWithoutTenantInput[]
-    deleteMany?: DepositoScalarWhereInput | DepositoScalarWhereInput[]
   }
 
   export type DepositoChequesUpdateManyWithoutTenantNestedInput = {
@@ -84242,20 +82606,6 @@ export namespace Prisma {
     update?: CuentaBancariasUpdateWithWhereUniqueWithoutTenantInput | CuentaBancariasUpdateWithWhereUniqueWithoutTenantInput[]
     updateMany?: CuentaBancariasUpdateManyWithWhereWithoutTenantInput | CuentaBancariasUpdateManyWithWhereWithoutTenantInput[]
     deleteMany?: CuentaBancariasScalarWhereInput | CuentaBancariasScalarWhereInput[]
-  }
-
-  export type DepositoUncheckedUpdateManyWithoutTenantNestedInput = {
-    create?: XOR<DepositoCreateWithoutTenantInput, DepositoUncheckedCreateWithoutTenantInput> | DepositoCreateWithoutTenantInput[] | DepositoUncheckedCreateWithoutTenantInput[]
-    connectOrCreate?: DepositoCreateOrConnectWithoutTenantInput | DepositoCreateOrConnectWithoutTenantInput[]
-    upsert?: DepositoUpsertWithWhereUniqueWithoutTenantInput | DepositoUpsertWithWhereUniqueWithoutTenantInput[]
-    createMany?: DepositoCreateManyTenantInputEnvelope
-    set?: DepositoWhereUniqueInput | DepositoWhereUniqueInput[]
-    disconnect?: DepositoWhereUniqueInput | DepositoWhereUniqueInput[]
-    delete?: DepositoWhereUniqueInput | DepositoWhereUniqueInput[]
-    connect?: DepositoWhereUniqueInput | DepositoWhereUniqueInput[]
-    update?: DepositoUpdateWithWhereUniqueWithoutTenantInput | DepositoUpdateWithWhereUniqueWithoutTenantInput[]
-    updateMany?: DepositoUpdateManyWithWhereWithoutTenantInput | DepositoUpdateManyWithWhereWithoutTenantInput[]
-    deleteMany?: DepositoScalarWhereInput | DepositoScalarWhereInput[]
   }
 
   export type DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput = {
@@ -86104,12 +84454,6 @@ export namespace Prisma {
     deleteMany?: ProveedorScalarWhereInput | ProveedorScalarWhereInput[]
   }
 
-  export type DepositoCreateNestedOneWithoutConfiguracionInput = {
-    create?: XOR<DepositoCreateWithoutConfiguracionInput, DepositoUncheckedCreateWithoutConfiguracionInput>
-    connectOrCreate?: DepositoCreateOrConnectWithoutConfiguracionInput
-    connect?: DepositoWhereUniqueInput
-  }
-
   export type LocalidadCreateNestedOneWithoutConfiguracionInput = {
     create?: XOR<LocalidadCreateWithoutConfiguracionInput, LocalidadUncheckedCreateWithoutConfiguracionInput>
     connectOrCreate?: LocalidadCreateOrConnectWithoutConfiguracionInput
@@ -86132,14 +84476,6 @@ export namespace Prisma {
 
   export type NullableBytesFieldUpdateOperationsInput = {
     set?: Uint8Array | null
-  }
-
-  export type DepositoUpdateOneRequiredWithoutConfiguracionNestedInput = {
-    create?: XOR<DepositoCreateWithoutConfiguracionInput, DepositoUncheckedCreateWithoutConfiguracionInput>
-    connectOrCreate?: DepositoCreateOrConnectWithoutConfiguracionInput
-    upsert?: DepositoUpsertWithoutConfiguracionInput
-    connect?: DepositoWhereUniqueInput
-    update?: XOR<XOR<DepositoUpdateToOneWithWhereWithoutConfiguracionInput, DepositoUpdateWithoutConfiguracionInput>, DepositoUncheckedUpdateWithoutConfiguracionInput>
   }
 
   export type LocalidadUpdateOneRequiredWithoutConfiguracionNestedInput = {
@@ -86478,104 +84814,6 @@ export namespace Prisma {
     update?: ProveedorUpdateWithWhereUniqueWithoutLocalidadInput | ProveedorUpdateWithWhereUniqueWithoutLocalidadInput[]
     updateMany?: ProveedorUpdateManyWithWhereWithoutLocalidadInput | ProveedorUpdateManyWithWhereWithoutLocalidadInput[]
     deleteMany?: ProveedorScalarWhereInput | ProveedorScalarWhereInput[]
-  }
-
-  export type ConfiguracionCreateNestedManyWithoutDepositoInput = {
-    create?: XOR<ConfiguracionCreateWithoutDepositoInput, ConfiguracionUncheckedCreateWithoutDepositoInput> | ConfiguracionCreateWithoutDepositoInput[] | ConfiguracionUncheckedCreateWithoutDepositoInput[]
-    connectOrCreate?: ConfiguracionCreateOrConnectWithoutDepositoInput | ConfiguracionCreateOrConnectWithoutDepositoInput[]
-    createMany?: ConfiguracionCreateManyDepositoInputEnvelope
-    connect?: ConfiguracionWhereUniqueInput | ConfiguracionWhereUniqueInput[]
-  }
-
-  export type TenantCreateNestedOneWithoutDepositosInput = {
-    create?: XOR<TenantCreateWithoutDepositosInput, TenantUncheckedCreateWithoutDepositosInput>
-    connectOrCreate?: TenantCreateOrConnectWithoutDepositosInput
-    connect?: TenantWhereUniqueInput
-  }
-
-  export type StockCreateNestedManyWithoutDepositoInput = {
-    create?: XOR<StockCreateWithoutDepositoInput, StockUncheckedCreateWithoutDepositoInput> | StockCreateWithoutDepositoInput[] | StockUncheckedCreateWithoutDepositoInput[]
-    connectOrCreate?: StockCreateOrConnectWithoutDepositoInput | StockCreateOrConnectWithoutDepositoInput[]
-    createMany?: StockCreateManyDepositoInputEnvelope
-    connect?: StockWhereUniqueInput | StockWhereUniqueInput[]
-  }
-
-  export type ConfiguracionUncheckedCreateNestedManyWithoutDepositoInput = {
-    create?: XOR<ConfiguracionCreateWithoutDepositoInput, ConfiguracionUncheckedCreateWithoutDepositoInput> | ConfiguracionCreateWithoutDepositoInput[] | ConfiguracionUncheckedCreateWithoutDepositoInput[]
-    connectOrCreate?: ConfiguracionCreateOrConnectWithoutDepositoInput | ConfiguracionCreateOrConnectWithoutDepositoInput[]
-    createMany?: ConfiguracionCreateManyDepositoInputEnvelope
-    connect?: ConfiguracionWhereUniqueInput | ConfiguracionWhereUniqueInput[]
-  }
-
-  export type StockUncheckedCreateNestedManyWithoutDepositoInput = {
-    create?: XOR<StockCreateWithoutDepositoInput, StockUncheckedCreateWithoutDepositoInput> | StockCreateWithoutDepositoInput[] | StockUncheckedCreateWithoutDepositoInput[]
-    connectOrCreate?: StockCreateOrConnectWithoutDepositoInput | StockCreateOrConnectWithoutDepositoInput[]
-    createMany?: StockCreateManyDepositoInputEnvelope
-    connect?: StockWhereUniqueInput | StockWhereUniqueInput[]
-  }
-
-  export type ConfiguracionUpdateManyWithoutDepositoNestedInput = {
-    create?: XOR<ConfiguracionCreateWithoutDepositoInput, ConfiguracionUncheckedCreateWithoutDepositoInput> | ConfiguracionCreateWithoutDepositoInput[] | ConfiguracionUncheckedCreateWithoutDepositoInput[]
-    connectOrCreate?: ConfiguracionCreateOrConnectWithoutDepositoInput | ConfiguracionCreateOrConnectWithoutDepositoInput[]
-    upsert?: ConfiguracionUpsertWithWhereUniqueWithoutDepositoInput | ConfiguracionUpsertWithWhereUniqueWithoutDepositoInput[]
-    createMany?: ConfiguracionCreateManyDepositoInputEnvelope
-    set?: ConfiguracionWhereUniqueInput | ConfiguracionWhereUniqueInput[]
-    disconnect?: ConfiguracionWhereUniqueInput | ConfiguracionWhereUniqueInput[]
-    delete?: ConfiguracionWhereUniqueInput | ConfiguracionWhereUniqueInput[]
-    connect?: ConfiguracionWhereUniqueInput | ConfiguracionWhereUniqueInput[]
-    update?: ConfiguracionUpdateWithWhereUniqueWithoutDepositoInput | ConfiguracionUpdateWithWhereUniqueWithoutDepositoInput[]
-    updateMany?: ConfiguracionUpdateManyWithWhereWithoutDepositoInput | ConfiguracionUpdateManyWithWhereWithoutDepositoInput[]
-    deleteMany?: ConfiguracionScalarWhereInput | ConfiguracionScalarWhereInput[]
-  }
-
-  export type TenantUpdateOneRequiredWithoutDepositosNestedInput = {
-    create?: XOR<TenantCreateWithoutDepositosInput, TenantUncheckedCreateWithoutDepositosInput>
-    connectOrCreate?: TenantCreateOrConnectWithoutDepositosInput
-    upsert?: TenantUpsertWithoutDepositosInput
-    connect?: TenantWhereUniqueInput
-    update?: XOR<XOR<TenantUpdateToOneWithWhereWithoutDepositosInput, TenantUpdateWithoutDepositosInput>, TenantUncheckedUpdateWithoutDepositosInput>
-  }
-
-  export type StockUpdateManyWithoutDepositoNestedInput = {
-    create?: XOR<StockCreateWithoutDepositoInput, StockUncheckedCreateWithoutDepositoInput> | StockCreateWithoutDepositoInput[] | StockUncheckedCreateWithoutDepositoInput[]
-    connectOrCreate?: StockCreateOrConnectWithoutDepositoInput | StockCreateOrConnectWithoutDepositoInput[]
-    upsert?: StockUpsertWithWhereUniqueWithoutDepositoInput | StockUpsertWithWhereUniqueWithoutDepositoInput[]
-    createMany?: StockCreateManyDepositoInputEnvelope
-    set?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    disconnect?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    delete?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    connect?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    update?: StockUpdateWithWhereUniqueWithoutDepositoInput | StockUpdateWithWhereUniqueWithoutDepositoInput[]
-    updateMany?: StockUpdateManyWithWhereWithoutDepositoInput | StockUpdateManyWithWhereWithoutDepositoInput[]
-    deleteMany?: StockScalarWhereInput | StockScalarWhereInput[]
-  }
-
-  export type ConfiguracionUncheckedUpdateManyWithoutDepositoNestedInput = {
-    create?: XOR<ConfiguracionCreateWithoutDepositoInput, ConfiguracionUncheckedCreateWithoutDepositoInput> | ConfiguracionCreateWithoutDepositoInput[] | ConfiguracionUncheckedCreateWithoutDepositoInput[]
-    connectOrCreate?: ConfiguracionCreateOrConnectWithoutDepositoInput | ConfiguracionCreateOrConnectWithoutDepositoInput[]
-    upsert?: ConfiguracionUpsertWithWhereUniqueWithoutDepositoInput | ConfiguracionUpsertWithWhereUniqueWithoutDepositoInput[]
-    createMany?: ConfiguracionCreateManyDepositoInputEnvelope
-    set?: ConfiguracionWhereUniqueInput | ConfiguracionWhereUniqueInput[]
-    disconnect?: ConfiguracionWhereUniqueInput | ConfiguracionWhereUniqueInput[]
-    delete?: ConfiguracionWhereUniqueInput | ConfiguracionWhereUniqueInput[]
-    connect?: ConfiguracionWhereUniqueInput | ConfiguracionWhereUniqueInput[]
-    update?: ConfiguracionUpdateWithWhereUniqueWithoutDepositoInput | ConfiguracionUpdateWithWhereUniqueWithoutDepositoInput[]
-    updateMany?: ConfiguracionUpdateManyWithWhereWithoutDepositoInput | ConfiguracionUpdateManyWithWhereWithoutDepositoInput[]
-    deleteMany?: ConfiguracionScalarWhereInput | ConfiguracionScalarWhereInput[]
-  }
-
-  export type StockUncheckedUpdateManyWithoutDepositoNestedInput = {
-    create?: XOR<StockCreateWithoutDepositoInput, StockUncheckedCreateWithoutDepositoInput> | StockCreateWithoutDepositoInput[] | StockUncheckedCreateWithoutDepositoInput[]
-    connectOrCreate?: StockCreateOrConnectWithoutDepositoInput | StockCreateOrConnectWithoutDepositoInput[]
-    upsert?: StockUpsertWithWhereUniqueWithoutDepositoInput | StockUpsertWithWhereUniqueWithoutDepositoInput[]
-    createMany?: StockCreateManyDepositoInputEnvelope
-    set?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    disconnect?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    delete?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    connect?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    update?: StockUpdateWithWhereUniqueWithoutDepositoInput | StockUpdateWithWhereUniqueWithoutDepositoInput[]
-    updateMany?: StockUpdateManyWithWhereWithoutDepositoInput | StockUpdateManyWithWhereWithoutDepositoInput[]
-    deleteMany?: StockScalarWhereInput | StockScalarWhereInput[]
   }
 
   export type ChequeCreateNestedOneWithoutDepositoChequesInput = {
@@ -88186,12 +86424,6 @@ export namespace Prisma {
     connect?: ArticuloWhereUniqueInput
   }
 
-  export type DepositoCreateNestedOneWithoutStockInput = {
-    create?: XOR<DepositoCreateWithoutStockInput, DepositoUncheckedCreateWithoutStockInput>
-    connectOrCreate?: DepositoCreateOrConnectWithoutStockInput
-    connect?: DepositoWhereUniqueInput
-  }
-
   export type TenantCreateNestedOneWithoutStocksInput = {
     create?: XOR<TenantCreateWithoutStocksInput, TenantUncheckedCreateWithoutStocksInput>
     connectOrCreate?: TenantCreateOrConnectWithoutStocksInput
@@ -88204,14 +86436,6 @@ export namespace Prisma {
     upsert?: ArticuloUpsertWithoutStockInput
     connect?: ArticuloWhereUniqueInput
     update?: XOR<XOR<ArticuloUpdateToOneWithWhereWithoutStockInput, ArticuloUpdateWithoutStockInput>, ArticuloUncheckedUpdateWithoutStockInput>
-  }
-
-  export type DepositoUpdateOneRequiredWithoutStockNestedInput = {
-    create?: XOR<DepositoCreateWithoutStockInput, DepositoUncheckedCreateWithoutStockInput>
-    connectOrCreate?: DepositoCreateOrConnectWithoutStockInput
-    upsert?: DepositoUpsertWithoutStockInput
-    connect?: DepositoWhereUniqueInput
-    update?: XOR<XOR<DepositoUpdateToOneWithWhereWithoutStockInput, DepositoUpdateWithoutStockInput>, DepositoUncheckedUpdateWithoutStockInput>
   }
 
   export type TenantUpdateOneRequiredWithoutStocksNestedInput = {
@@ -89473,7 +87697,6 @@ export namespace Prisma {
     EstaEliminado: boolean
     Foto?: Uint8Array | null
     ShowFoto?: boolean
-    Deposito: DepositoCreateNestedOneWithoutConfiguracionInput
     Localidad: LocalidadCreateNestedOneWithoutConfiguracionInput
   }
 
@@ -89492,7 +87715,6 @@ export namespace Prisma {
     RemitoDescuentaStock: boolean
     ActualizaCostoDesdeCompra: boolean
     ModificaPrecioVentaDesdeCompra: boolean
-    DepositoId: bigint | number
     Imprimir: boolean
     Instalada?: number | null
     TipoFormaPagoPorDefectoVenta: number
@@ -89570,34 +87792,6 @@ export namespace Prisma {
 
   export type CuentaBancariasCreateManyTenantInputEnvelope = {
     data: CuentaBancariasCreateManyTenantInput | CuentaBancariasCreateManyTenantInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type DepositoCreateWithoutTenantInput = {
-    Id?: bigint | number
-    Descripcion: string
-    Ubicacion?: string | null
-    EstaEliminado: boolean
-    Configuracion?: ConfiguracionCreateNestedManyWithoutDepositoInput
-    Stock?: StockCreateNestedManyWithoutDepositoInput
-  }
-
-  export type DepositoUncheckedCreateWithoutTenantInput = {
-    Id?: bigint | number
-    Descripcion: string
-    Ubicacion?: string | null
-    EstaEliminado: boolean
-    Configuracion?: ConfiguracionUncheckedCreateNestedManyWithoutDepositoInput
-    Stock?: StockUncheckedCreateNestedManyWithoutDepositoInput
-  }
-
-  export type DepositoCreateOrConnectWithoutTenantInput = {
-    where: DepositoWhereUniqueInput
-    create: XOR<DepositoCreateWithoutTenantInput, DepositoUncheckedCreateWithoutTenantInput>
-  }
-
-  export type DepositoCreateManyTenantInputEnvelope = {
-    data: DepositoCreateManyTenantInput | DepositoCreateManyTenantInput[]
     skipDuplicates?: boolean
   }
 
@@ -90130,13 +88324,11 @@ export namespace Prisma {
     Cantidad: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     Articulo: ArticuloCreateNestedOneWithoutStockInput
-    Deposito: DepositoCreateNestedOneWithoutStockInput
   }
 
   export type StockUncheckedCreateWithoutTenantInput = {
     Id?: bigint | number
     ArticuloId: bigint | number
-    DepositoId: bigint | number
     Cantidad: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
   }
@@ -90530,7 +88722,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: BoolFilter<"Configuracion"> | boolean
     ActualizaCostoDesdeCompra?: BoolFilter<"Configuracion"> | boolean
     ModificaPrecioVentaDesdeCompra?: BoolFilter<"Configuracion"> | boolean
-    DepositoId?: BigIntFilter<"Configuracion"> | bigint | number
     Imprimir?: BoolFilter<"Configuracion"> | boolean
     Instalada?: IntNullableFilter<"Configuracion"> | number | null
     TipoFormaPagoPorDefectoVenta?: IntFilter<"Configuracion"> | number
@@ -90603,33 +88794,6 @@ export namespace Prisma {
     Titular?: StringFilter<"CuentaBancarias"> | string
     EstaEliminado?: BoolFilter<"CuentaBancarias"> | boolean
     TenantId?: BigIntFilter<"CuentaBancarias"> | bigint | number
-  }
-
-  export type DepositoUpsertWithWhereUniqueWithoutTenantInput = {
-    where: DepositoWhereUniqueInput
-    update: XOR<DepositoUpdateWithoutTenantInput, DepositoUncheckedUpdateWithoutTenantInput>
-    create: XOR<DepositoCreateWithoutTenantInput, DepositoUncheckedCreateWithoutTenantInput>
-  }
-
-  export type DepositoUpdateWithWhereUniqueWithoutTenantInput = {
-    where: DepositoWhereUniqueInput
-    data: XOR<DepositoUpdateWithoutTenantInput, DepositoUncheckedUpdateWithoutTenantInput>
-  }
-
-  export type DepositoUpdateManyWithWhereWithoutTenantInput = {
-    where: DepositoScalarWhereInput
-    data: XOR<DepositoUpdateManyMutationInput, DepositoUncheckedUpdateManyWithoutTenantInput>
-  }
-
-  export type DepositoScalarWhereInput = {
-    AND?: DepositoScalarWhereInput | DepositoScalarWhereInput[]
-    OR?: DepositoScalarWhereInput[]
-    NOT?: DepositoScalarWhereInput | DepositoScalarWhereInput[]
-    Id?: BigIntFilter<"Deposito"> | bigint | number
-    Descripcion?: StringFilter<"Deposito"> | string
-    Ubicacion?: StringNullableFilter<"Deposito"> | string | null
-    EstaEliminado?: BoolFilter<"Deposito"> | boolean
-    TenantId?: BigIntFilter<"Deposito"> | bigint | number
   }
 
   export type DepositoChequesUpsertWithWhereUniqueWithoutTenantInput = {
@@ -91168,7 +89332,6 @@ export namespace Prisma {
     NOT?: StockScalarWhereInput | StockScalarWhereInput[]
     Id?: BigIntFilter<"Stock"> | bigint | number
     ArticuloId?: BigIntFilter<"Stock"> | bigint | number
-    DepositoId?: BigIntFilter<"Stock"> | bigint | number
     Cantidad?: DecimalFilter<"Stock"> | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFilter<"Stock"> | boolean
     TenantId?: BigIntFilter<"Stock"> | bigint | number
@@ -91302,7 +89465,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -91347,7 +89509,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -91434,7 +89595,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -91480,7 +89640,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -91540,7 +89699,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -91586,7 +89744,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -91717,7 +89874,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -91763,7 +89919,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -91884,13 +90039,11 @@ export namespace Prisma {
     Id?: bigint | number
     Cantidad: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
-    Deposito: DepositoCreateNestedOneWithoutStockInput
     Tenant: TenantCreateNestedOneWithoutStocksInput
   }
 
   export type StockUncheckedCreateWithoutArticuloInput = {
     Id?: bigint | number
-    DepositoId: bigint | number
     Cantidad: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
@@ -92048,7 +90201,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -92094,7 +90246,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -92299,7 +90450,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -92345,7 +90495,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -92505,7 +90654,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -92551,7 +90699,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -92595,7 +90742,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -92641,7 +90787,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -92763,7 +90908,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -92809,7 +90953,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -92885,7 +91028,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -92931,7 +91073,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -93151,7 +91292,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -93197,7 +91337,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -93421,7 +91560,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -93467,7 +91605,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -93637,7 +91774,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -93683,7 +91819,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -93786,7 +91921,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -93832,7 +91966,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -94189,7 +92322,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -94235,7 +92367,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -96029,7 +94160,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -96075,7 +94205,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -96165,7 +94294,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -96211,7 +94339,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -96373,29 +94500,6 @@ export namespace Prisma {
     data: XOR<ProveedorUpdateManyMutationInput, ProveedorUncheckedUpdateManyWithoutCondicionIvaInput>
   }
 
-  export type DepositoCreateWithoutConfiguracionInput = {
-    Id?: bigint | number
-    Descripcion: string
-    Ubicacion?: string | null
-    EstaEliminado: boolean
-    Tenant: TenantCreateNestedOneWithoutDepositosInput
-    Stock?: StockCreateNestedManyWithoutDepositoInput
-  }
-
-  export type DepositoUncheckedCreateWithoutConfiguracionInput = {
-    Id?: bigint | number
-    Descripcion: string
-    Ubicacion?: string | null
-    EstaEliminado: boolean
-    TenantId: bigint | number
-    Stock?: StockUncheckedCreateNestedManyWithoutDepositoInput
-  }
-
-  export type DepositoCreateOrConnectWithoutConfiguracionInput = {
-    where: DepositoWhereUniqueInput
-    create: XOR<DepositoCreateWithoutConfiguracionInput, DepositoUncheckedCreateWithoutConfiguracionInput>
-  }
-
   export type LocalidadCreateWithoutConfiguracionInput = {
     Id?: bigint | number
     Descripcion: string
@@ -96438,7 +94542,6 @@ export namespace Prisma {
     ConceptosGasto?: ConceptoGastosCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -96484,7 +94587,6 @@ export namespace Prisma {
     ConceptosGasto?: ConceptoGastosUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -96512,35 +94614,6 @@ export namespace Prisma {
   export type TenantCreateOrConnectWithoutConfiguracionesInput = {
     where: TenantWhereUniqueInput
     create: XOR<TenantCreateWithoutConfiguracionesInput, TenantUncheckedCreateWithoutConfiguracionesInput>
-  }
-
-  export type DepositoUpsertWithoutConfiguracionInput = {
-    update: XOR<DepositoUpdateWithoutConfiguracionInput, DepositoUncheckedUpdateWithoutConfiguracionInput>
-    create: XOR<DepositoCreateWithoutConfiguracionInput, DepositoUncheckedCreateWithoutConfiguracionInput>
-    where?: DepositoWhereInput
-  }
-
-  export type DepositoUpdateToOneWithWhereWithoutConfiguracionInput = {
-    where?: DepositoWhereInput
-    data: XOR<DepositoUpdateWithoutConfiguracionInput, DepositoUncheckedUpdateWithoutConfiguracionInput>
-  }
-
-  export type DepositoUpdateWithoutConfiguracionInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Descripcion?: StringFieldUpdateOperationsInput | string
-    Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    Tenant?: TenantUpdateOneRequiredWithoutDepositosNestedInput
-    Stock?: StockUpdateManyWithoutDepositoNestedInput
-  }
-
-  export type DepositoUncheckedUpdateWithoutConfiguracionInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Descripcion?: StringFieldUpdateOperationsInput | string
-    Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
-    Stock?: StockUncheckedUpdateManyWithoutDepositoNestedInput
   }
 
   export type LocalidadUpsertWithoutConfiguracionInput = {
@@ -96602,7 +94675,6 @@ export namespace Prisma {
     ConceptosGasto?: ConceptoGastosUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -96648,7 +94720,6 @@ export namespace Prisma {
     ConceptosGasto?: ConceptoGastosUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -96692,7 +94763,6 @@ export namespace Prisma {
     ConceptosGasto?: ConceptoGastosCreateNestedManyWithoutTenantInput
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -96738,7 +94808,6 @@ export namespace Prisma {
     ConceptosGasto?: ConceptoGastosUncheckedCreateNestedManyWithoutTenantInput
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -96798,7 +94867,6 @@ export namespace Prisma {
     ConceptosGasto?: ConceptoGastosUpdateManyWithoutTenantNestedInput
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -96844,7 +94912,6 @@ export namespace Prisma {
     ConceptosGasto?: ConceptoGastosUncheckedUpdateManyWithoutTenantNestedInput
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -96909,7 +94976,6 @@ export namespace Prisma {
     ConceptosGasto?: ConceptoGastosCreateNestedManyWithoutTenantInput
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -96955,7 +95021,6 @@ export namespace Prisma {
     ConceptosGasto?: ConceptoGastosUncheckedCreateNestedManyWithoutTenantInput
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -97068,7 +95133,6 @@ export namespace Prisma {
     ConceptosGasto?: ConceptoGastosUpdateManyWithoutTenantNestedInput
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -97114,7 +95178,6 @@ export namespace Prisma {
     ConceptosGasto?: ConceptoGastosUncheckedUpdateManyWithoutTenantNestedInput
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -97329,7 +95392,6 @@ export namespace Prisma {
     EstaEliminado: boolean
     Foto?: Uint8Array | null
     ShowFoto?: boolean
-    Deposito: DepositoCreateNestedOneWithoutConfiguracionInput
     Tenant: TenantCreateNestedOneWithoutConfiguracionesInput
   }
 
@@ -97347,7 +95409,6 @@ export namespace Prisma {
     RemitoDescuentaStock: boolean
     ActualizaCostoDesdeCompra: boolean
     ModificaPrecioVentaDesdeCompra: boolean
-    DepositoId: bigint | number
     Imprimir: boolean
     Instalada?: number | null
     TipoFormaPagoPorDefectoVenta: number
@@ -97547,338 +95608,6 @@ export namespace Prisma {
     data: XOR<ProveedorUpdateManyMutationInput, ProveedorUncheckedUpdateManyWithoutLocalidadInput>
   }
 
-  export type ConfiguracionCreateWithoutDepositoInput = {
-    Id?: bigint | number
-    RazonSocial: string
-    NombreFantasia?: string | null
-    Cuit: string
-    Telefono?: string | null
-    Celular?: string | null
-    Direccion: string
-    Email?: string | null
-    FacturaDescuentaStock: boolean
-    PresupuestoDescuentaStock: boolean
-    RemitoDescuentaStock: boolean
-    ActualizaCostoDesdeCompra: boolean
-    ModificaPrecioVentaDesdeCompra: boolean
-    Imprimir: boolean
-    Instalada?: number | null
-    TipoFormaPagoPorDefectoVenta: number
-    TipoFormaPagoPorDefectoCompra: number
-    ObservacionEnPieFactura?: string | null
-    UnificarRenglonesIngresarMismoProducto: boolean
-    IngresoManualCajaInicial: boolean
-    PuestoCajaSeparado: boolean
-    ActivarRetiroDeCaja: boolean
-    MontoMaximoRetiroCaja: Decimal | DecimalJsLike | number | string
-    ActivarBascula: boolean
-    EtiquetaPorPeso: boolean
-    CodigoBascula?: string | null
-    EstaEliminado: boolean
-    Foto?: Uint8Array | null
-    ShowFoto?: boolean
-    Localidad: LocalidadCreateNestedOneWithoutConfiguracionInput
-    Tenant: TenantCreateNestedOneWithoutConfiguracionesInput
-  }
-
-  export type ConfiguracionUncheckedCreateWithoutDepositoInput = {
-    Id?: bigint | number
-    RazonSocial: string
-    NombreFantasia?: string | null
-    Cuit: string
-    Telefono?: string | null
-    Celular?: string | null
-    Direccion: string
-    Email?: string | null
-    LocalidadId: bigint | number
-    FacturaDescuentaStock: boolean
-    PresupuestoDescuentaStock: boolean
-    RemitoDescuentaStock: boolean
-    ActualizaCostoDesdeCompra: boolean
-    ModificaPrecioVentaDesdeCompra: boolean
-    Imprimir: boolean
-    Instalada?: number | null
-    TipoFormaPagoPorDefectoVenta: number
-    TipoFormaPagoPorDefectoCompra: number
-    ObservacionEnPieFactura?: string | null
-    UnificarRenglonesIngresarMismoProducto: boolean
-    IngresoManualCajaInicial: boolean
-    PuestoCajaSeparado: boolean
-    ActivarRetiroDeCaja: boolean
-    MontoMaximoRetiroCaja: Decimal | DecimalJsLike | number | string
-    ActivarBascula: boolean
-    EtiquetaPorPeso: boolean
-    CodigoBascula?: string | null
-    EstaEliminado: boolean
-    Foto?: Uint8Array | null
-    ShowFoto?: boolean
-    TenantId: bigint | number
-  }
-
-  export type ConfiguracionCreateOrConnectWithoutDepositoInput = {
-    where: ConfiguracionWhereUniqueInput
-    create: XOR<ConfiguracionCreateWithoutDepositoInput, ConfiguracionUncheckedCreateWithoutDepositoInput>
-  }
-
-  export type ConfiguracionCreateManyDepositoInputEnvelope = {
-    data: ConfiguracionCreateManyDepositoInput | ConfiguracionCreateManyDepositoInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type TenantCreateWithoutDepositosInput = {
-    Id?: bigint | number
-    Nombre: string
-    Dominio?: string | null
-    RazonSocial?: string | null
-    Cuit?: string | null
-    Email?: string | null
-    Telefono?: string | null
-    EstaActivo?: boolean
-    OnboardingCompleto?: boolean
-    Articulos?: ArticuloCreateNestedManyWithoutTenantInput
-    BajaArticulos?: BajaArticuloCreateNestedManyWithoutTenantInput
-    Bancos?: BancoCreateNestedManyWithoutTenantInput
-    Cajas?: CajaCreateNestedManyWithoutTenantInput
-    Cheques?: ChequeCreateNestedManyWithoutTenantInput
-    Comprobantes?: ComprobanteCreateNestedManyWithoutTenantInput
-    ConceptosGasto?: ConceptoGastosCreateNestedManyWithoutTenantInput
-    Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
-    Contadores?: ContadorCreateNestedManyWithoutTenantInput
-    CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
-    DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
-    DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
-    FormasPago?: FormaPagoCreateNestedManyWithoutTenantInput
-    FormulariosPerfiles?: FormularioPerfilCreateNestedManyWithoutTenantInput
-    FormulariosPermisos?: FormulariosCreateNestedManyWithoutTenantInput
-    Gastos?: GastoCreateNestedManyWithoutTenantInput
-    Logs?: LogCreateNestedManyWithoutTenantInput
-    Marcas?: MarcaCreateNestedManyWithoutTenantInput
-    MotivosBaja?: MotivoBajasCreateNestedManyWithoutTenantInput
-    Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
-    PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
-    Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
-    Personas?: PersonaCreateNestedManyWithoutTenantInput
-    Precios?: PrecioCreateNestedManyWithoutTenantInput
-    Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
-    PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
-    Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
-    Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
-    Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
-    Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
-    Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
-  }
-
-  export type TenantUncheckedCreateWithoutDepositosInput = {
-    Id?: bigint | number
-    Nombre: string
-    Dominio?: string | null
-    RazonSocial?: string | null
-    Cuit?: string | null
-    Email?: string | null
-    Telefono?: string | null
-    EstaActivo?: boolean
-    OnboardingCompleto?: boolean
-    PlanId?: bigint | number | null
-    Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
-    BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
-    Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
-    Cajas?: CajaUncheckedCreateNestedManyWithoutTenantInput
-    Cheques?: ChequeUncheckedCreateNestedManyWithoutTenantInput
-    Comprobantes?: ComprobanteUncheckedCreateNestedManyWithoutTenantInput
-    ConceptosGasto?: ConceptoGastosUncheckedCreateNestedManyWithoutTenantInput
-    Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
-    Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
-    CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
-    DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
-    DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
-    FormasPago?: FormaPagoUncheckedCreateNestedManyWithoutTenantInput
-    FormulariosPerfiles?: FormularioPerfilUncheckedCreateNestedManyWithoutTenantInput
-    FormulariosPermisos?: FormulariosUncheckedCreateNestedManyWithoutTenantInput
-    Gastos?: GastoUncheckedCreateNestedManyWithoutTenantInput
-    Logs?: LogUncheckedCreateNestedManyWithoutTenantInput
-    Marcas?: MarcaUncheckedCreateNestedManyWithoutTenantInput
-    MotivosBaja?: MotivoBajasUncheckedCreateNestedManyWithoutTenantInput
-    Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
-    PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
-    Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
-    Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
-    Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
-    Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
-    PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
-    Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
-    Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
-    Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
-    Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
-  }
-
-  export type TenantCreateOrConnectWithoutDepositosInput = {
-    where: TenantWhereUniqueInput
-    create: XOR<TenantCreateWithoutDepositosInput, TenantUncheckedCreateWithoutDepositosInput>
-  }
-
-  export type StockCreateWithoutDepositoInput = {
-    Id?: bigint | number
-    Cantidad: Decimal | DecimalJsLike | number | string
-    EstaEliminado: boolean
-    Articulo: ArticuloCreateNestedOneWithoutStockInput
-    Tenant: TenantCreateNestedOneWithoutStocksInput
-  }
-
-  export type StockUncheckedCreateWithoutDepositoInput = {
-    Id?: bigint | number
-    ArticuloId: bigint | number
-    Cantidad: Decimal | DecimalJsLike | number | string
-    EstaEliminado: boolean
-    TenantId: bigint | number
-  }
-
-  export type StockCreateOrConnectWithoutDepositoInput = {
-    where: StockWhereUniqueInput
-    create: XOR<StockCreateWithoutDepositoInput, StockUncheckedCreateWithoutDepositoInput>
-  }
-
-  export type StockCreateManyDepositoInputEnvelope = {
-    data: StockCreateManyDepositoInput | StockCreateManyDepositoInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type ConfiguracionUpsertWithWhereUniqueWithoutDepositoInput = {
-    where: ConfiguracionWhereUniqueInput
-    update: XOR<ConfiguracionUpdateWithoutDepositoInput, ConfiguracionUncheckedUpdateWithoutDepositoInput>
-    create: XOR<ConfiguracionCreateWithoutDepositoInput, ConfiguracionUncheckedCreateWithoutDepositoInput>
-  }
-
-  export type ConfiguracionUpdateWithWhereUniqueWithoutDepositoInput = {
-    where: ConfiguracionWhereUniqueInput
-    data: XOR<ConfiguracionUpdateWithoutDepositoInput, ConfiguracionUncheckedUpdateWithoutDepositoInput>
-  }
-
-  export type ConfiguracionUpdateManyWithWhereWithoutDepositoInput = {
-    where: ConfiguracionScalarWhereInput
-    data: XOR<ConfiguracionUpdateManyMutationInput, ConfiguracionUncheckedUpdateManyWithoutDepositoInput>
-  }
-
-  export type TenantUpsertWithoutDepositosInput = {
-    update: XOR<TenantUpdateWithoutDepositosInput, TenantUncheckedUpdateWithoutDepositosInput>
-    create: XOR<TenantCreateWithoutDepositosInput, TenantUncheckedCreateWithoutDepositosInput>
-    where?: TenantWhereInput
-  }
-
-  export type TenantUpdateToOneWithWhereWithoutDepositosInput = {
-    where?: TenantWhereInput
-    data: XOR<TenantUpdateWithoutDepositosInput, TenantUncheckedUpdateWithoutDepositosInput>
-  }
-
-  export type TenantUpdateWithoutDepositosInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Nombre?: StringFieldUpdateOperationsInput | string
-    Dominio?: NullableStringFieldUpdateOperationsInput | string | null
-    RazonSocial?: NullableStringFieldUpdateOperationsInput | string | null
-    Cuit?: NullableStringFieldUpdateOperationsInput | string | null
-    Email?: NullableStringFieldUpdateOperationsInput | string | null
-    Telefono?: NullableStringFieldUpdateOperationsInput | string | null
-    EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
-    Articulos?: ArticuloUpdateManyWithoutTenantNestedInput
-    BajaArticulos?: BajaArticuloUpdateManyWithoutTenantNestedInput
-    Bancos?: BancoUpdateManyWithoutTenantNestedInput
-    Cajas?: CajaUpdateManyWithoutTenantNestedInput
-    Cheques?: ChequeUpdateManyWithoutTenantNestedInput
-    Comprobantes?: ComprobanteUpdateManyWithoutTenantNestedInput
-    ConceptosGasto?: ConceptoGastosUpdateManyWithoutTenantNestedInput
-    Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
-    Contadores?: ContadorUpdateManyWithoutTenantNestedInput
-    CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
-    DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
-    DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
-    FormasPago?: FormaPagoUpdateManyWithoutTenantNestedInput
-    FormulariosPerfiles?: FormularioPerfilUpdateManyWithoutTenantNestedInput
-    FormulariosPermisos?: FormulariosUpdateManyWithoutTenantNestedInput
-    Gastos?: GastoUpdateManyWithoutTenantNestedInput
-    Logs?: LogUpdateManyWithoutTenantNestedInput
-    Marcas?: MarcaUpdateManyWithoutTenantNestedInput
-    MotivosBaja?: MotivoBajasUpdateManyWithoutTenantNestedInput
-    Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
-    PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
-    Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
-    Personas?: PersonaUpdateManyWithoutTenantNestedInput
-    Precios?: PrecioUpdateManyWithoutTenantNestedInput
-    Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
-    PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
-    Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
-    Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
-    Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
-    Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
-    Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
-  }
-
-  export type TenantUncheckedUpdateWithoutDepositosInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Nombre?: StringFieldUpdateOperationsInput | string
-    Dominio?: NullableStringFieldUpdateOperationsInput | string | null
-    RazonSocial?: NullableStringFieldUpdateOperationsInput | string | null
-    Cuit?: NullableStringFieldUpdateOperationsInput | string | null
-    Email?: NullableStringFieldUpdateOperationsInput | string | null
-    Telefono?: NullableStringFieldUpdateOperationsInput | string | null
-    EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
-    PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
-    BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
-    Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
-    Cajas?: CajaUncheckedUpdateManyWithoutTenantNestedInput
-    Cheques?: ChequeUncheckedUpdateManyWithoutTenantNestedInput
-    Comprobantes?: ComprobanteUncheckedUpdateManyWithoutTenantNestedInput
-    ConceptosGasto?: ConceptoGastosUncheckedUpdateManyWithoutTenantNestedInput
-    Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
-    Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
-    CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
-    DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
-    DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
-    FormasPago?: FormaPagoUncheckedUpdateManyWithoutTenantNestedInput
-    FormulariosPerfiles?: FormularioPerfilUncheckedUpdateManyWithoutTenantNestedInput
-    FormulariosPermisos?: FormulariosUncheckedUpdateManyWithoutTenantNestedInput
-    Gastos?: GastoUncheckedUpdateManyWithoutTenantNestedInput
-    Logs?: LogUncheckedUpdateManyWithoutTenantNestedInput
-    Marcas?: MarcaUncheckedUpdateManyWithoutTenantNestedInput
-    MotivosBaja?: MotivoBajasUncheckedUpdateManyWithoutTenantNestedInput
-    Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
-    PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
-    Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
-    Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
-    Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
-    Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
-    PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
-    Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
-    Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
-    Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
-    Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
-  }
-
-  export type StockUpsertWithWhereUniqueWithoutDepositoInput = {
-    where: StockWhereUniqueInput
-    update: XOR<StockUpdateWithoutDepositoInput, StockUncheckedUpdateWithoutDepositoInput>
-    create: XOR<StockCreateWithoutDepositoInput, StockUncheckedCreateWithoutDepositoInput>
-  }
-
-  export type StockUpdateWithWhereUniqueWithoutDepositoInput = {
-    where: StockWhereUniqueInput
-    data: XOR<StockUpdateWithoutDepositoInput, StockUncheckedUpdateWithoutDepositoInput>
-  }
-
-  export type StockUpdateManyWithWhereWithoutDepositoInput = {
-    where: StockScalarWhereInput
-    data: XOR<StockUpdateManyMutationInput, StockUncheckedUpdateManyWithoutDepositoInput>
-  }
-
   export type ChequeCreateWithoutDepositoChequesInput = {
     Id?: bigint | number
     Numero: string
@@ -97951,7 +95680,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
     FormasPago?: FormaPagoCreateNestedManyWithoutTenantInput
@@ -97997,7 +95725,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
     FormasPago?: FormaPagoUncheckedCreateNestedManyWithoutTenantInput
@@ -98121,7 +95848,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
     FormasPago?: FormaPagoUpdateManyWithoutTenantNestedInput
@@ -98167,7 +95893,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
     FormasPago?: FormaPagoUncheckedUpdateManyWithoutTenantNestedInput
@@ -98266,7 +95991,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
     FormasPago?: FormaPagoCreateNestedManyWithoutTenantInput
@@ -98312,7 +96036,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
     FormasPago?: FormaPagoUncheckedCreateNestedManyWithoutTenantInput
@@ -98433,7 +96156,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
     FormasPago?: FormaPagoUpdateManyWithoutTenantNestedInput
@@ -98479,7 +96201,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
     FormasPago?: FormaPagoUncheckedUpdateManyWithoutTenantNestedInput
@@ -98649,7 +96370,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     FormasPago?: FormaPagoCreateNestedManyWithoutTenantInput
@@ -98695,7 +96415,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     FormasPago?: FormaPagoUncheckedCreateNestedManyWithoutTenantInput
@@ -98893,7 +96612,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     FormasPago?: FormaPagoUpdateManyWithoutTenantNestedInput
@@ -98939,7 +96657,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     FormasPago?: FormaPagoUncheckedUpdateManyWithoutTenantNestedInput
@@ -99040,7 +96757,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -99086,7 +96802,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -99254,7 +96969,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -99300,7 +97014,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -99811,7 +97524,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -99857,7 +97569,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -99973,7 +97684,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -100019,7 +97729,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -100083,7 +97792,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -100129,7 +97837,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -100205,7 +97912,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -100251,7 +97957,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -100369,7 +98074,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -100415,7 +98119,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -100561,7 +98264,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -100607,7 +98309,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -100815,7 +98516,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -100861,7 +98561,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -100937,7 +98636,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -100983,7 +98681,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -101057,7 +98754,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -101103,7 +98799,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -101179,7 +98874,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -101225,7 +98919,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -101309,7 +99002,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -101355,7 +99047,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -101447,7 +99138,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -101493,7 +99183,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -101558,7 +99247,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -101604,7 +99292,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -101724,7 +99411,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -101770,7 +99456,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -101876,7 +99561,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -101922,7 +99606,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -102063,7 +99746,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -102109,7 +99791,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -102924,7 +100605,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -102970,7 +100650,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -103046,7 +100725,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -103092,7 +100770,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -103248,7 +100925,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -103294,7 +100970,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -103488,7 +101163,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -103534,7 +101208,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -103600,7 +101273,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -103646,7 +101318,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -103722,7 +101393,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -103768,7 +101438,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -103886,7 +101555,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -103932,7 +101600,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -104008,7 +101675,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -104054,7 +101720,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -104147,29 +101812,6 @@ export namespace Prisma {
     create: XOR<ArticuloCreateWithoutStockInput, ArticuloUncheckedCreateWithoutStockInput>
   }
 
-  export type DepositoCreateWithoutStockInput = {
-    Id?: bigint | number
-    Descripcion: string
-    Ubicacion?: string | null
-    EstaEliminado: boolean
-    Configuracion?: ConfiguracionCreateNestedManyWithoutDepositoInput
-    Tenant: TenantCreateNestedOneWithoutDepositosInput
-  }
-
-  export type DepositoUncheckedCreateWithoutStockInput = {
-    Id?: bigint | number
-    Descripcion: string
-    Ubicacion?: string | null
-    EstaEliminado: boolean
-    TenantId: bigint | number
-    Configuracion?: ConfiguracionUncheckedCreateNestedManyWithoutDepositoInput
-  }
-
-  export type DepositoCreateOrConnectWithoutStockInput = {
-    where: DepositoWhereUniqueInput
-    create: XOR<DepositoCreateWithoutStockInput, DepositoUncheckedCreateWithoutStockInput>
-  }
-
   export type TenantCreateWithoutStocksInput = {
     Id?: bigint | number
     Nombre: string
@@ -104190,7 +101832,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -104236,7 +101877,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -104340,35 +101980,6 @@ export namespace Prisma {
     DetalleComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutArticuloNestedInput
   }
 
-  export type DepositoUpsertWithoutStockInput = {
-    update: XOR<DepositoUpdateWithoutStockInput, DepositoUncheckedUpdateWithoutStockInput>
-    create: XOR<DepositoCreateWithoutStockInput, DepositoUncheckedCreateWithoutStockInput>
-    where?: DepositoWhereInput
-  }
-
-  export type DepositoUpdateToOneWithWhereWithoutStockInput = {
-    where?: DepositoWhereInput
-    data: XOR<DepositoUpdateWithoutStockInput, DepositoUncheckedUpdateWithoutStockInput>
-  }
-
-  export type DepositoUpdateWithoutStockInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Descripcion?: StringFieldUpdateOperationsInput | string
-    Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    Configuracion?: ConfiguracionUpdateManyWithoutDepositoNestedInput
-    Tenant?: TenantUpdateOneRequiredWithoutDepositosNestedInput
-  }
-
-  export type DepositoUncheckedUpdateWithoutStockInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Descripcion?: StringFieldUpdateOperationsInput | string
-    Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
-    Configuracion?: ConfiguracionUncheckedUpdateManyWithoutDepositoNestedInput
-  }
-
   export type TenantUpsertWithoutStocksInput = {
     update: XOR<TenantUpdateWithoutStocksInput, TenantUncheckedUpdateWithoutStocksInput>
     create: XOR<TenantCreateWithoutStocksInput, TenantUncheckedCreateWithoutStocksInput>
@@ -104400,7 +102011,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -104446,7 +102056,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -104514,7 +102123,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -104560,7 +102168,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -104647,7 +102254,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -104693,7 +102299,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -104811,7 +102416,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -104857,7 +102461,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -104933,7 +102536,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -104979,7 +102581,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -105282,7 +102883,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -105328,7 +102928,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -105493,7 +103092,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -105539,7 +103137,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -105695,7 +103292,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
     Contadores?: ContadorCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
@@ -105741,7 +103337,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
     Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
     CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    Depositos?: DepositoUncheckedCreateNestedManyWithoutTenantInput
     DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
     DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
     DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
@@ -105986,7 +103581,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -106032,7 +103626,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -106576,7 +104169,6 @@ export namespace Prisma {
     RemitoDescuentaStock: boolean
     ActualizaCostoDesdeCompra: boolean
     ModificaPrecioVentaDesdeCompra: boolean
-    DepositoId: bigint | number
     Imprimir: boolean
     Instalada?: number | null
     TipoFormaPagoPorDefectoVenta: number
@@ -106607,13 +104199,6 @@ export namespace Prisma {
     BancoId: bigint | number
     Numero: string
     Titular: string
-    EstaEliminado: boolean
-  }
-
-  export type DepositoCreateManyTenantInput = {
-    Id?: bigint | number
-    Descripcion: string
-    Ubicacion?: string | null
     EstaEliminado: boolean
   }
 
@@ -106774,7 +104359,6 @@ export namespace Prisma {
   export type StockCreateManyTenantInput = {
     Id?: bigint | number
     ArticuloId: bigint | number
-    DepositoId: bigint | number
     Cantidad: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
   }
@@ -107168,7 +104752,6 @@ export namespace Prisma {
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     Foto?: NullableBytesFieldUpdateOperationsInput | Uint8Array | null
     ShowFoto?: BoolFieldUpdateOperationsInput | boolean
-    Deposito?: DepositoUpdateOneRequiredWithoutConfiguracionNestedInput
     Localidad?: LocalidadUpdateOneRequiredWithoutConfiguracionNestedInput
   }
 
@@ -107187,7 +104770,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: BoolFieldUpdateOperationsInput | boolean
     ActualizaCostoDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
     ModificaPrecioVentaDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
-    DepositoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Imprimir?: BoolFieldUpdateOperationsInput | boolean
     Instalada?: NullableIntFieldUpdateOperationsInput | number | null
     TipoFormaPagoPorDefectoVenta?: IntFieldUpdateOperationsInput | number
@@ -107221,7 +104803,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: BoolFieldUpdateOperationsInput | boolean
     ActualizaCostoDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
     ModificaPrecioVentaDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
-    DepositoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Imprimir?: BoolFieldUpdateOperationsInput | boolean
     Instalada?: NullableIntFieldUpdateOperationsInput | number | null
     TipoFormaPagoPorDefectoVenta?: IntFieldUpdateOperationsInput | number
@@ -107284,31 +104865,6 @@ export namespace Prisma {
     BancoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Numero?: StringFieldUpdateOperationsInput | string
     Titular?: StringFieldUpdateOperationsInput | string
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-  }
-
-  export type DepositoUpdateWithoutTenantInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Descripcion?: StringFieldUpdateOperationsInput | string
-    Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    Configuracion?: ConfiguracionUpdateManyWithoutDepositoNestedInput
-    Stock?: StockUpdateManyWithoutDepositoNestedInput
-  }
-
-  export type DepositoUncheckedUpdateWithoutTenantInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Descripcion?: StringFieldUpdateOperationsInput | string
-    Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    Configuracion?: ConfiguracionUncheckedUpdateManyWithoutDepositoNestedInput
-    Stock?: StockUncheckedUpdateManyWithoutDepositoNestedInput
-  }
-
-  export type DepositoUncheckedUpdateManyWithoutTenantInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Descripcion?: StringFieldUpdateOperationsInput | string
-    Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
   }
 
@@ -107815,13 +105371,11 @@ export namespace Prisma {
     Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     Articulo?: ArticuloUpdateOneRequiredWithoutStockNestedInput
-    Deposito?: DepositoUpdateOneRequiredWithoutStockNestedInput
   }
 
   export type StockUncheckedUpdateWithoutTenantInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     ArticuloId?: BigIntFieldUpdateOperationsInput | bigint | number
-    DepositoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
   }
@@ -107829,7 +105383,6 @@ export namespace Prisma {
   export type StockUncheckedUpdateManyWithoutTenantInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     ArticuloId?: BigIntFieldUpdateOperationsInput | bigint | number
-    DepositoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
   }
@@ -107943,7 +105496,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
@@ -107988,7 +105540,6 @@ export namespace Prisma {
     Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
     Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
     CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    Depositos?: DepositoUncheckedUpdateManyWithoutTenantNestedInput
     DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
     DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
     DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
@@ -108051,7 +105602,6 @@ export namespace Prisma {
 
   export type StockCreateManyArticuloInput = {
     Id?: bigint | number
-    DepositoId: bigint | number
     Cantidad: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
@@ -108133,13 +105683,11 @@ export namespace Prisma {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    Deposito?: DepositoUpdateOneRequiredWithoutStockNestedInput
     Tenant?: TenantUpdateOneRequiredWithoutStocksNestedInput
   }
 
   export type StockUncheckedUpdateWithoutArticuloInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    DepositoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
@@ -108147,7 +105695,6 @@ export namespace Prisma {
 
   export type StockUncheckedUpdateManyWithoutArticuloInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    DepositoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
@@ -108803,7 +106350,6 @@ export namespace Prisma {
     RemitoDescuentaStock: boolean
     ActualizaCostoDesdeCompra: boolean
     ModificaPrecioVentaDesdeCompra: boolean
-    DepositoId: bigint | number
     Imprimir: boolean
     Instalada?: number | null
     TipoFormaPagoPorDefectoVenta: number
@@ -108877,7 +106423,6 @@ export namespace Prisma {
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     Foto?: NullableBytesFieldUpdateOperationsInput | Uint8Array | null
     ShowFoto?: BoolFieldUpdateOperationsInput | boolean
-    Deposito?: DepositoUpdateOneRequiredWithoutConfiguracionNestedInput
     Tenant?: TenantUpdateOneRequiredWithoutConfiguracionesNestedInput
   }
 
@@ -108895,7 +106440,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: BoolFieldUpdateOperationsInput | boolean
     ActualizaCostoDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
     ModificaPrecioVentaDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
-    DepositoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Imprimir?: BoolFieldUpdateOperationsInput | boolean
     Instalada?: NullableIntFieldUpdateOperationsInput | number | null
     TipoFormaPagoPorDefectoVenta?: IntFieldUpdateOperationsInput | number
@@ -108929,7 +106473,6 @@ export namespace Prisma {
     RemitoDescuentaStock?: BoolFieldUpdateOperationsInput | boolean
     ActualizaCostoDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
     ModificaPrecioVentaDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
-    DepositoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Imprimir?: BoolFieldUpdateOperationsInput | boolean
     Instalada?: NullableIntFieldUpdateOperationsInput | number | null
     TipoFormaPagoPorDefectoVenta?: IntFieldUpdateOperationsInput | number
@@ -109027,174 +106570,6 @@ export namespace Prisma {
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     Mail?: StringFieldUpdateOperationsInput | string
     CondicionIvaId?: BigIntFieldUpdateOperationsInput | bigint | number
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
-  }
-
-  export type ConfiguracionCreateManyDepositoInput = {
-    Id?: bigint | number
-    RazonSocial: string
-    NombreFantasia?: string | null
-    Cuit: string
-    Telefono?: string | null
-    Celular?: string | null
-    Direccion: string
-    Email?: string | null
-    LocalidadId: bigint | number
-    FacturaDescuentaStock: boolean
-    PresupuestoDescuentaStock: boolean
-    RemitoDescuentaStock: boolean
-    ActualizaCostoDesdeCompra: boolean
-    ModificaPrecioVentaDesdeCompra: boolean
-    Imprimir: boolean
-    Instalada?: number | null
-    TipoFormaPagoPorDefectoVenta: number
-    TipoFormaPagoPorDefectoCompra: number
-    ObservacionEnPieFactura?: string | null
-    UnificarRenglonesIngresarMismoProducto: boolean
-    IngresoManualCajaInicial: boolean
-    PuestoCajaSeparado: boolean
-    ActivarRetiroDeCaja: boolean
-    MontoMaximoRetiroCaja: Decimal | DecimalJsLike | number | string
-    ActivarBascula: boolean
-    EtiquetaPorPeso: boolean
-    CodigoBascula?: string | null
-    EstaEliminado: boolean
-    Foto?: Uint8Array | null
-    ShowFoto?: boolean
-    TenantId: bigint | number
-  }
-
-  export type StockCreateManyDepositoInput = {
-    Id?: bigint | number
-    ArticuloId: bigint | number
-    Cantidad: Decimal | DecimalJsLike | number | string
-    EstaEliminado: boolean
-    TenantId: bigint | number
-  }
-
-  export type ConfiguracionUpdateWithoutDepositoInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    RazonSocial?: StringFieldUpdateOperationsInput | string
-    NombreFantasia?: NullableStringFieldUpdateOperationsInput | string | null
-    Cuit?: StringFieldUpdateOperationsInput | string
-    Telefono?: NullableStringFieldUpdateOperationsInput | string | null
-    Celular?: NullableStringFieldUpdateOperationsInput | string | null
-    Direccion?: StringFieldUpdateOperationsInput | string
-    Email?: NullableStringFieldUpdateOperationsInput | string | null
-    FacturaDescuentaStock?: BoolFieldUpdateOperationsInput | boolean
-    PresupuestoDescuentaStock?: BoolFieldUpdateOperationsInput | boolean
-    RemitoDescuentaStock?: BoolFieldUpdateOperationsInput | boolean
-    ActualizaCostoDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
-    ModificaPrecioVentaDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
-    Imprimir?: BoolFieldUpdateOperationsInput | boolean
-    Instalada?: NullableIntFieldUpdateOperationsInput | number | null
-    TipoFormaPagoPorDefectoVenta?: IntFieldUpdateOperationsInput | number
-    TipoFormaPagoPorDefectoCompra?: IntFieldUpdateOperationsInput | number
-    ObservacionEnPieFactura?: NullableStringFieldUpdateOperationsInput | string | null
-    UnificarRenglonesIngresarMismoProducto?: BoolFieldUpdateOperationsInput | boolean
-    IngresoManualCajaInicial?: BoolFieldUpdateOperationsInput | boolean
-    PuestoCajaSeparado?: BoolFieldUpdateOperationsInput | boolean
-    ActivarRetiroDeCaja?: BoolFieldUpdateOperationsInput | boolean
-    MontoMaximoRetiroCaja?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    ActivarBascula?: BoolFieldUpdateOperationsInput | boolean
-    EtiquetaPorPeso?: BoolFieldUpdateOperationsInput | boolean
-    CodigoBascula?: NullableStringFieldUpdateOperationsInput | string | null
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    Foto?: NullableBytesFieldUpdateOperationsInput | Uint8Array | null
-    ShowFoto?: BoolFieldUpdateOperationsInput | boolean
-    Localidad?: LocalidadUpdateOneRequiredWithoutConfiguracionNestedInput
-    Tenant?: TenantUpdateOneRequiredWithoutConfiguracionesNestedInput
-  }
-
-  export type ConfiguracionUncheckedUpdateWithoutDepositoInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    RazonSocial?: StringFieldUpdateOperationsInput | string
-    NombreFantasia?: NullableStringFieldUpdateOperationsInput | string | null
-    Cuit?: StringFieldUpdateOperationsInput | string
-    Telefono?: NullableStringFieldUpdateOperationsInput | string | null
-    Celular?: NullableStringFieldUpdateOperationsInput | string | null
-    Direccion?: StringFieldUpdateOperationsInput | string
-    Email?: NullableStringFieldUpdateOperationsInput | string | null
-    LocalidadId?: BigIntFieldUpdateOperationsInput | bigint | number
-    FacturaDescuentaStock?: BoolFieldUpdateOperationsInput | boolean
-    PresupuestoDescuentaStock?: BoolFieldUpdateOperationsInput | boolean
-    RemitoDescuentaStock?: BoolFieldUpdateOperationsInput | boolean
-    ActualizaCostoDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
-    ModificaPrecioVentaDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
-    Imprimir?: BoolFieldUpdateOperationsInput | boolean
-    Instalada?: NullableIntFieldUpdateOperationsInput | number | null
-    TipoFormaPagoPorDefectoVenta?: IntFieldUpdateOperationsInput | number
-    TipoFormaPagoPorDefectoCompra?: IntFieldUpdateOperationsInput | number
-    ObservacionEnPieFactura?: NullableStringFieldUpdateOperationsInput | string | null
-    UnificarRenglonesIngresarMismoProducto?: BoolFieldUpdateOperationsInput | boolean
-    IngresoManualCajaInicial?: BoolFieldUpdateOperationsInput | boolean
-    PuestoCajaSeparado?: BoolFieldUpdateOperationsInput | boolean
-    ActivarRetiroDeCaja?: BoolFieldUpdateOperationsInput | boolean
-    MontoMaximoRetiroCaja?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    ActivarBascula?: BoolFieldUpdateOperationsInput | boolean
-    EtiquetaPorPeso?: BoolFieldUpdateOperationsInput | boolean
-    CodigoBascula?: NullableStringFieldUpdateOperationsInput | string | null
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    Foto?: NullableBytesFieldUpdateOperationsInput | Uint8Array | null
-    ShowFoto?: BoolFieldUpdateOperationsInput | boolean
-    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
-  }
-
-  export type ConfiguracionUncheckedUpdateManyWithoutDepositoInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    RazonSocial?: StringFieldUpdateOperationsInput | string
-    NombreFantasia?: NullableStringFieldUpdateOperationsInput | string | null
-    Cuit?: StringFieldUpdateOperationsInput | string
-    Telefono?: NullableStringFieldUpdateOperationsInput | string | null
-    Celular?: NullableStringFieldUpdateOperationsInput | string | null
-    Direccion?: StringFieldUpdateOperationsInput | string
-    Email?: NullableStringFieldUpdateOperationsInput | string | null
-    LocalidadId?: BigIntFieldUpdateOperationsInput | bigint | number
-    FacturaDescuentaStock?: BoolFieldUpdateOperationsInput | boolean
-    PresupuestoDescuentaStock?: BoolFieldUpdateOperationsInput | boolean
-    RemitoDescuentaStock?: BoolFieldUpdateOperationsInput | boolean
-    ActualizaCostoDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
-    ModificaPrecioVentaDesdeCompra?: BoolFieldUpdateOperationsInput | boolean
-    Imprimir?: BoolFieldUpdateOperationsInput | boolean
-    Instalada?: NullableIntFieldUpdateOperationsInput | number | null
-    TipoFormaPagoPorDefectoVenta?: IntFieldUpdateOperationsInput | number
-    TipoFormaPagoPorDefectoCompra?: IntFieldUpdateOperationsInput | number
-    ObservacionEnPieFactura?: NullableStringFieldUpdateOperationsInput | string | null
-    UnificarRenglonesIngresarMismoProducto?: BoolFieldUpdateOperationsInput | boolean
-    IngresoManualCajaInicial?: BoolFieldUpdateOperationsInput | boolean
-    PuestoCajaSeparado?: BoolFieldUpdateOperationsInput | boolean
-    ActivarRetiroDeCaja?: BoolFieldUpdateOperationsInput | boolean
-    MontoMaximoRetiroCaja?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    ActivarBascula?: BoolFieldUpdateOperationsInput | boolean
-    EtiquetaPorPeso?: BoolFieldUpdateOperationsInput | boolean
-    CodigoBascula?: NullableStringFieldUpdateOperationsInput | string | null
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    Foto?: NullableBytesFieldUpdateOperationsInput | Uint8Array | null
-    ShowFoto?: BoolFieldUpdateOperationsInput | boolean
-    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
-  }
-
-  export type StockUpdateWithoutDepositoInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    Articulo?: ArticuloUpdateOneRequiredWithoutStockNestedInput
-    Tenant?: TenantUpdateOneRequiredWithoutStocksNestedInput
-  }
-
-  export type StockUncheckedUpdateWithoutDepositoInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    ArticuloId?: BigIntFieldUpdateOperationsInput | bigint | number
-    Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
-  }
-
-  export type StockUncheckedUpdateManyWithoutDepositoInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    ArticuloId?: BigIntFieldUpdateOperationsInput | bigint | number
-    Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
   }
