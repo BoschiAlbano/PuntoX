@@ -5,25 +5,40 @@ import { registerTenant } from "@/app/actions/register-tenant";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
-const initialState = {
-  success: false,
+type RegisterState = {
+  ok: boolean;
+  error?: string;
+  message?: string;
+  tenantId?: bigint;
+};
+
+const initialState: RegisterState = {
+  ok: false,
   message: "",
+  error: "",
 };
 
 export default function NewTenantPage() {
   const [state, formAction, isPending] = useActionState(
-    registerTenant,
+    async (_prev: RegisterState, formData: FormData): Promise<RegisterState> => {
+      const result = await registerTenant(formData);
+      return {
+        ok: result.ok,
+        message: result.message ?? "",
+        error: result.error ?? "",
+        tenantId: result.tenantId,
+      };
+    },
     initialState
   );
 
   useEffect(() => {
-    if (state.message) {
-      if (state.success) {
-        toast.success(state.message);
-        // Optional: Redirect or clear form
-      } else {
-        toast.error(state.message);
-      }
+    if (!state.message && !state.error) return;
+    if (state.ok) {
+      toast.success(state.message || "La tienda fue creada con exito.");
+      // Optional: Redirect or clear form
+    } else {
+      toast.error(state.error || state.message || "Error al crear la tienda");
     }
   }, [state]);
 

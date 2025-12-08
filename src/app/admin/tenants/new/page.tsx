@@ -6,7 +6,6 @@ import {
   Divider,
   Input,
 } from "@heroui/react";
-import { isRedirectError } from "next/dist/client/components/redirect";
 import { redirect } from "next/navigation";
 import { registerTenant } from "@/app/actions/register-tenant";
 import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
@@ -16,28 +15,26 @@ export const dynamic = "force-dynamic";
 export default async function NewTenantPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; success?: string }>;
 }) {
   await requireSuperAdmin();
 
   const params = await searchParams;
   const errorMessage = params?.error && decodeURIComponent(params.error);
+  const successMessage = params?.success && decodeURIComponent(params.success);
 
   async function action(formData: FormData) {
     "use server";
 
-    try {
-      await registerTenant(formData);
-    } catch (error) {
-      if (isRedirectError(error)) {
-        throw error;
-      }
+    const result = await registerTenant(formData);
 
-      const msg =
-        (error as Error)?.message ??
-        "Error al crear el comercio";
+    if (!result.ok) {
+      const msg = result.error ?? "Error al crear el comercio";
       redirect(`/admin/tenants/new?error=${encodeURIComponent(msg)}`);
     }
+
+    const msg = result.message ?? "La tienda fue creada con éxito.";
+    redirect(`/admin/tenants/new?success=${encodeURIComponent(msg)}`);
   }
 
   return (
@@ -56,6 +53,14 @@ export default async function NewTenantPage({
             <Card className="border border-danger-200 bg-danger-50">
               <CardBody className="text-sm text-danger-700">
                 {errorMessage}
+              </CardBody>
+            </Card>
+          ) : null}
+
+          {successMessage ? (
+            <Card className="border border-success-200 bg-success-50">
+              <CardBody className="text-sm text-success-700">
+                {successMessage}
               </CardBody>
             </Card>
           ) : null}

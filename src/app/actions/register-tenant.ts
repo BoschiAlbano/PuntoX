@@ -1,7 +1,6 @@
 "use server";
 
 import { z } from "zod";
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -171,8 +170,11 @@ export async function registerTenant(formData: FormData) {
       },
     });
 
-    console.log("Tenant creado OK:", tenant.Id);
-    redirect("/admin/tenants");
+    return {
+      ok: true as const,
+      tenantId: tenant.Id,
+      message: "La tienda fue creada con éxito.",
+    };
   } catch (err) {
     console.error("Error en registerTenant:", err);
     return {

@@ -29,7 +29,7 @@ function extractTenantId(user: TenantUser | null) {
 }
 
 async function getTenantFromAuth() {
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

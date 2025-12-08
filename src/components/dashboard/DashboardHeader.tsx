@@ -13,14 +13,27 @@ import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 export default function DashboardHeader() {
   const { user, supabase } = useSupabaseAuthContext();
 
+  const fullName =
+    typeof user?.user_metadata?.full_name === "string"
+      ? user.user_metadata.full_name
+      : "";
+  const initialsFromName = fullName
+    ? fullName
+        .split(" ")
+        .filter(Boolean)
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase()
+    : "";
   const userInitials =
-    user?.user_metadata?.full_name
-      ?.split(" ")
-      .map((n: string) => n[0])
-      .join("")
-      .toUpperCase() ||
-    user?.email?.[0]?.toUpperCase() ||
-    "U";
+    initialsFromName || user?.email?.[0]?.toUpperCase() || "U";
+
+  const displayName =
+    fullName.trim() ||
+    (typeof user?.email === "string" ? user.email : "") ||
+    "Usuario";
+  const displayEmail =
+    typeof user?.email === "string" ? user.email : "";
 
   function handleSignOut(): void {
     addToast({
@@ -103,9 +116,9 @@ export default function DashboardHeader() {
                   </div>
                   <div className="text-left hidden md:block">
                     <p className="text-sm font-semibold text-slate-900">
-                      {user?.user_metadata?.full_name || user?.email || "Usuario"}
+                      {displayName}
                     </p>
-                    <p className="text-xs text-slate-500">{user?.email || ""}</p>
+                    <p className="text-xs text-slate-500">{displayEmail}</p>
                   </div>
                   <svg
                     className="w-4 h-4 text-slate-400"
