@@ -129,8 +129,8 @@ exports.Prisma.TenantScalarFieldEnum = {
   Email: 'Email',
   Telefono: 'Telefono',
   EstaActivo: 'EstaActivo',
-  OnboardingCompleto: 'OnboardingCompleto',
-  PlanId: 'PlanId'
+  PlanId: 'PlanId',
+  OnboardingCompleto: 'OnboardingCompleto'
 };
 
 exports.Prisma.PlanSaaSScalarFieldEnum = {
@@ -593,10 +593,10 @@ exports.Prisma.UsuarioScalarFieldEnum = {
   Id: 'Id',
   EmpleadoId: 'EmpleadoId',
   Nombre: 'Nombre',
-  AuthUserId: 'AuthUserId',
   EstaBloqueado: 'EstaBloqueado',
   EstaEliminado: 'EstaEliminado',
-  TenantId: 'TenantId'
+  TenantId: 'TenantId',
+  AuthUserId: 'AuthUserId'
 };
 
 exports.Prisma.MovimientoScalarFieldEnum = {

@@ -20,8 +20,8 @@ model Tenant {
   Email               String?              @db.VarChar(250)
   Telefono            String?              @db.VarChar(25)
   EstaActivo          Boolean              @default(true)
-  OnboardingCompleto  Boolean              @default(false)
   PlanId              BigInt?
+  OnboardingCompleto  Boolean              @default(false)
   Articulos           Articulo[]
   BajaArticulos       BajaArticulo[]
   Bancos              Banco[]
@@ -32,7 +32,6 @@ model Tenant {
   Configuraciones     Configuracion[]
   Contadores          Contador[]
   CuentasBancarias    CuentaBancarias[]
-  // Depositos           Deposito[]
   DepositosCheques    DepositoCheques[]
   DetallesCaja        DetalleCaja[]
   DetallesComprobante DetalleComprobante[]
@@ -398,7 +397,6 @@ model Configuracion {
   RemitoDescuentaStock                   Boolean
   ActualizaCostoDesdeCompra              Boolean
   ModificaPrecioVentaDesdeCompra         Boolean
-  // DepositoId                             BigInt
   Imprimir                               Boolean
   Instalada                              Int?
   TipoFormaPagoPorDefectoVenta           Int
@@ -417,12 +415,10 @@ model Configuracion {
   ShowFoto                               Boolean   @default(false)
   /// Tenant dueño de esta configuración
   TenantId                               BigInt
-  // Deposito                               Deposito  @relation(fields: [DepositoId], references: [Id], onUpdate: NoAction)
   Localidad                              Localidad @relation(fields: [LocalidadId], references: [Id], onUpdate: NoAction)
   Tenant                                 Tenant    @relation(fields: [TenantId], references: [Id])
 
   @@index([TenantId])
-  // @@index([DepositoId])
   @@index([LocalidadId])
 }
 
@@ -459,19 +455,19 @@ model CuentaBancarias {
 /// Provincias (catálogo fijo, lo carga el sistema).
 /// Los clientes solo seleccionan una provincia, no la crean.
 model Provincia {
-  Id            BigInt         @id(map: "PK_dbo.Provincia") @unique(map: "UX_Provincia_Id")
+  Id            BigInt         @id @default(autoincrement())
   Descripcion   String         @unique @db.VarChar(100)
-  EstaEliminado Boolean
+  EstaEliminado Boolean        @default(false)
   Departamento  Departamento[]
 }
 
 /// Departamentos (subdivisión de provincia).
 /// Podés tratarlos como catálogo pre-cargado o ir agregando.
 model Departamento {
-  Id            BigInt      @id(map: "PK_dbo.Departamento") @unique(map: "UX_Departamento_Id")
+  Id            BigInt      @id @default(autoincrement())
   ProvinciaId   BigInt
   Descripcion   String      @db.VarChar(250)
-  EstaEliminado Boolean
+  EstaEliminado Boolean     @default(false)
   Provincia     Provincia   @relation(fields: [ProvinciaId], references: [Id], onUpdate: NoAction)
   Localidad     Localidad[]
 
@@ -481,31 +477,15 @@ model Departamento {
 /// Localidades (ciudad/pueblo).
 /// Estas sí las puede crear el cliente desde el sistema.
 model Localidad {
-  Id             BigInt          @id(map: "PK_dbo.Localidad") @unique(map: "UX_Localidad_Id")
+  Id             BigInt          @id @default(autoincrement())
   DepartamentoId BigInt
   Descripcion    String          @db.VarChar(250)
-  EstaEliminado  Boolean
+  EstaEliminado  Boolean         @default(false)
   Configuracion  Configuracion[]
   Departamento   Departamento    @relation(fields: [DepartamentoId], references: [Id], onUpdate: NoAction)
   Persona        Persona[]
   Proveedor      Proveedor[]
-
 }
-
-/// Depósitos o almacenes donde se guarda stock.
-// model Deposito {
-//   Id            BigInt          @id @default(autoincrement())
-//   Descripcion   String          @unique @db.VarChar(250)
-//   Ubicacion     String?         @db.VarChar(400)
-//   EstaEliminado Boolean
-//   /// Tenant dueño de este depósito
-//   TenantId      BigInt
-//   Configuracion Configuracion[]
-//   Tenant        Tenant          @relation(fields: [TenantId], references: [Id])
-//   Stock         Stock[]
-
-//   @@index([TenantId])
-// }
 
 /// Depósitos de cheques en cuentas bancarias.
 model DepositoCheques {
@@ -872,18 +852,15 @@ model Rubro {
 model Stock {
   Id            BigInt   @id @default(autoincrement())
   ArticuloId    BigInt
-  // DepositoId    BigInt
   Cantidad      Decimal  @db.Decimal(18, 3)
   EstaEliminado Boolean
   /// Tenant dueño de este stock
   TenantId      BigInt
   Articulo      Articulo @relation(fields: [ArticuloId], references: [Id], onUpdate: NoAction)
-  // Deposito      Deposito @relation(fields: [DepositoId], references: [Id], onUpdate: NoAction)
   Tenant        Tenant   @relation(fields: [TenantId], references: [Id])
 
   @@index([TenantId])
   @@index([ArticuloId])
-  // @@index([DepositoId])
 }
 
 /// Tarjetas de crédito/débito configuradas para el comercio.
@@ -920,12 +897,12 @@ model Usuario {
   Id                                   BigInt           @id @default(autoincrement())
   EmpleadoId                           BigInt
   Nombre                               String           @db.VarChar(50)
-  /// ID del usuario en Supabase Auth (auth.users.id)
-  AuthUserId                           String           @unique @db.VarChar(255)
   EstaBloqueado                        Boolean
   EstaEliminado                        Boolean
   /// Tenant dueño de este usuario
   TenantId                             BigInt
+  /// ID del usuario en Supabase Auth (auth.users.id)
+  AuthUserId                           String           @unique @db.VarChar(255)
   Caja_Caja_UsuarioAperturaIdToUsuario Caja[]           @relation("Caja_UsuarioAperturaIdToUsuario")
   Caja_Caja_UsuarioCierreIdToUsuario   Caja[]           @relation("Caja_UsuarioCierreIdToUsuario")
   Comprobante                          Comprobante[]

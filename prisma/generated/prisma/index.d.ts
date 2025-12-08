@@ -7007,8 +7007,8 @@ export namespace Prisma {
     Email: string | null
     Telefono: string | null
     EstaActivo: boolean | null
-    OnboardingCompleto: boolean | null
     PlanId: bigint | null
+    OnboardingCompleto: boolean | null
   }
 
   export type TenantMaxAggregateOutputType = {
@@ -7020,8 +7020,8 @@ export namespace Prisma {
     Email: string | null
     Telefono: string | null
     EstaActivo: boolean | null
-    OnboardingCompleto: boolean | null
     PlanId: bigint | null
+    OnboardingCompleto: boolean | null
   }
 
   export type TenantCountAggregateOutputType = {
@@ -7033,8 +7033,8 @@ export namespace Prisma {
     Email: number
     Telefono: number
     EstaActivo: number
-    OnboardingCompleto: number
     PlanId: number
+    OnboardingCompleto: number
     _all: number
   }
 
@@ -7058,8 +7058,8 @@ export namespace Prisma {
     Email?: true
     Telefono?: true
     EstaActivo?: true
-    OnboardingCompleto?: true
     PlanId?: true
+    OnboardingCompleto?: true
   }
 
   export type TenantMaxAggregateInputType = {
@@ -7071,8 +7071,8 @@ export namespace Prisma {
     Email?: true
     Telefono?: true
     EstaActivo?: true
-    OnboardingCompleto?: true
     PlanId?: true
+    OnboardingCompleto?: true
   }
 
   export type TenantCountAggregateInputType = {
@@ -7084,8 +7084,8 @@ export namespace Prisma {
     Email?: true
     Telefono?: true
     EstaActivo?: true
-    OnboardingCompleto?: true
     PlanId?: true
+    OnboardingCompleto?: true
     _all?: true
   }
 
@@ -7184,8 +7184,8 @@ export namespace Prisma {
     Email: string | null
     Telefono: string | null
     EstaActivo: boolean
-    OnboardingCompleto: boolean
     PlanId: bigint | null
+    OnboardingCompleto: boolean
     _count: TenantCountAggregateOutputType | null
     _avg: TenantAvgAggregateOutputType | null
     _sum: TenantSumAggregateOutputType | null
@@ -7216,8 +7216,8 @@ export namespace Prisma {
     Email?: boolean
     Telefono?: boolean
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: boolean
+    OnboardingCompleto?: boolean
     Articulos?: boolean | Tenant$ArticulosArgs<ExtArgs>
     BajaArticulos?: boolean | Tenant$BajaArticulosArgs<ExtArgs>
     Bancos?: boolean | Tenant$BancosArgs<ExtArgs>
@@ -7263,8 +7263,8 @@ export namespace Prisma {
     Email?: boolean
     Telefono?: boolean
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: boolean
+    OnboardingCompleto?: boolean
     Plan?: boolean | Tenant$PlanArgs<ExtArgs>
   }, ExtArgs["result"]["tenant"]>
 
@@ -7277,8 +7277,8 @@ export namespace Prisma {
     Email?: boolean
     Telefono?: boolean
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: boolean
+    OnboardingCompleto?: boolean
     Plan?: boolean | Tenant$PlanArgs<ExtArgs>
   }, ExtArgs["result"]["tenant"]>
 
@@ -7291,11 +7291,11 @@ export namespace Prisma {
     Email?: boolean
     Telefono?: boolean
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: boolean
+    OnboardingCompleto?: boolean
   }
 
-  export type TenantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id" | "Nombre" | "Dominio" | "RazonSocial" | "Cuit" | "Email" | "Telefono" | "EstaActivo" | "OnboardingCompleto" | "PlanId", ExtArgs["result"]["tenant"]>
+  export type TenantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id" | "Nombre" | "Dominio" | "RazonSocial" | "Cuit" | "Email" | "Telefono" | "EstaActivo" | "PlanId" | "OnboardingCompleto", ExtArgs["result"]["tenant"]>
   export type TenantInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     Articulos?: boolean | Tenant$ArticulosArgs<ExtArgs>
     BajaArticulos?: boolean | Tenant$BajaArticulosArgs<ExtArgs>
@@ -7385,8 +7385,8 @@ export namespace Prisma {
       Email: string | null
       Telefono: string | null
       EstaActivo: boolean
-      OnboardingCompleto: boolean
       PlanId: bigint | null
+      OnboardingCompleto: boolean
     }, ExtArgs["result"]["tenant"]>
     composites: {}
   }
@@ -7851,8 +7851,8 @@ export namespace Prisma {
     readonly Email: FieldRef<"Tenant", 'String'>
     readonly Telefono: FieldRef<"Tenant", 'String'>
     readonly EstaActivo: FieldRef<"Tenant", 'Boolean'>
-    readonly OnboardingCompleto: FieldRef<"Tenant", 'Boolean'>
     readonly PlanId: FieldRef<"Tenant", 'BigInt'>
+    readonly OnboardingCompleto: FieldRef<"Tenant", 'Boolean'>
   }
     
 
@@ -65080,30 +65080,30 @@ export namespace Prisma {
     Id: bigint | null
     EmpleadoId: bigint | null
     Nombre: string | null
-    AuthUserId: string | null
     EstaBloqueado: boolean | null
     EstaEliminado: boolean | null
     TenantId: bigint | null
+    AuthUserId: string | null
   }
 
   export type UsuarioMaxAggregateOutputType = {
     Id: bigint | null
     EmpleadoId: bigint | null
     Nombre: string | null
-    AuthUserId: string | null
     EstaBloqueado: boolean | null
     EstaEliminado: boolean | null
     TenantId: bigint | null
+    AuthUserId: string | null
   }
 
   export type UsuarioCountAggregateOutputType = {
     Id: number
     EmpleadoId: number
     Nombre: number
-    AuthUserId: number
     EstaBloqueado: number
     EstaEliminado: number
     TenantId: number
+    AuthUserId: number
     _all: number
   }
 
@@ -65124,30 +65124,30 @@ export namespace Prisma {
     Id?: true
     EmpleadoId?: true
     Nombre?: true
-    AuthUserId?: true
     EstaBloqueado?: true
     EstaEliminado?: true
     TenantId?: true
+    AuthUserId?: true
   }
 
   export type UsuarioMaxAggregateInputType = {
     Id?: true
     EmpleadoId?: true
     Nombre?: true
-    AuthUserId?: true
     EstaBloqueado?: true
     EstaEliminado?: true
     TenantId?: true
+    AuthUserId?: true
   }
 
   export type UsuarioCountAggregateInputType = {
     Id?: true
     EmpleadoId?: true
     Nombre?: true
-    AuthUserId?: true
     EstaBloqueado?: true
     EstaEliminado?: true
     TenantId?: true
+    AuthUserId?: true
     _all?: true
   }
 
@@ -65241,10 +65241,10 @@ export namespace Prisma {
     Id: bigint
     EmpleadoId: bigint
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
     TenantId: bigint
+    AuthUserId: string
     _count: UsuarioCountAggregateOutputType | null
     _avg: UsuarioAvgAggregateOutputType | null
     _sum: UsuarioSumAggregateOutputType | null
@@ -65270,10 +65270,10 @@ export namespace Prisma {
     Id?: boolean
     EmpleadoId?: boolean
     Nombre?: boolean
-    AuthUserId?: boolean
     EstaBloqueado?: boolean
     EstaEliminado?: boolean
     TenantId?: boolean
+    AuthUserId?: boolean
     Caja_Caja_UsuarioAperturaIdToUsuario?: boolean | Usuario$Caja_Caja_UsuarioAperturaIdToUsuarioArgs<ExtArgs>
     Caja_Caja_UsuarioCierreIdToUsuario?: boolean | Usuario$Caja_Caja_UsuarioCierreIdToUsuarioArgs<ExtArgs>
     Comprobante?: boolean | Usuario$ComprobanteArgs<ExtArgs>
@@ -65288,10 +65288,10 @@ export namespace Prisma {
     Id?: boolean
     EmpleadoId?: boolean
     Nombre?: boolean
-    AuthUserId?: boolean
     EstaBloqueado?: boolean
     EstaEliminado?: boolean
     TenantId?: boolean
+    AuthUserId?: boolean
     Persona_Empleado?: boolean | Persona_EmpleadoDefaultArgs<ExtArgs>
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["usuario"]>
@@ -65300,10 +65300,10 @@ export namespace Prisma {
     Id?: boolean
     EmpleadoId?: boolean
     Nombre?: boolean
-    AuthUserId?: boolean
     EstaBloqueado?: boolean
     EstaEliminado?: boolean
     TenantId?: boolean
+    AuthUserId?: boolean
     Persona_Empleado?: boolean | Persona_EmpleadoDefaultArgs<ExtArgs>
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["usuario"]>
@@ -65312,13 +65312,13 @@ export namespace Prisma {
     Id?: boolean
     EmpleadoId?: boolean
     Nombre?: boolean
-    AuthUserId?: boolean
     EstaBloqueado?: boolean
     EstaEliminado?: boolean
     TenantId?: boolean
+    AuthUserId?: boolean
   }
 
-  export type UsuarioOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id" | "EmpleadoId" | "Nombre" | "AuthUserId" | "EstaBloqueado" | "EstaEliminado" | "TenantId", ExtArgs["result"]["usuario"]>
+  export type UsuarioOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id" | "EmpleadoId" | "Nombre" | "EstaBloqueado" | "EstaEliminado" | "TenantId" | "AuthUserId", ExtArgs["result"]["usuario"]>
   export type UsuarioInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     Caja_Caja_UsuarioAperturaIdToUsuario?: boolean | Usuario$Caja_Caja_UsuarioAperturaIdToUsuarioArgs<ExtArgs>
     Caja_Caja_UsuarioCierreIdToUsuario?: boolean | Usuario$Caja_Caja_UsuarioCierreIdToUsuarioArgs<ExtArgs>
@@ -65353,16 +65353,16 @@ export namespace Prisma {
       Id: bigint
       EmpleadoId: bigint
       Nombre: string
-      /**
-       * ID del usuario en Supabase Auth (auth.users.id)
-       */
-      AuthUserId: string
       EstaBloqueado: boolean
       EstaEliminado: boolean
       /**
        * Tenant dueño de este usuario
        */
       TenantId: bigint
+      /**
+       * ID del usuario en Supabase Auth (auth.users.id)
+       */
+      AuthUserId: string
     }, ExtArgs["result"]["usuario"]>
     composites: {}
   }
@@ -65796,10 +65796,10 @@ export namespace Prisma {
     readonly Id: FieldRef<"Usuario", 'BigInt'>
     readonly EmpleadoId: FieldRef<"Usuario", 'BigInt'>
     readonly Nombre: FieldRef<"Usuario", 'String'>
-    readonly AuthUserId: FieldRef<"Usuario", 'String'>
     readonly EstaBloqueado: FieldRef<"Usuario", 'Boolean'>
     readonly EstaEliminado: FieldRef<"Usuario", 'Boolean'>
     readonly TenantId: FieldRef<"Usuario", 'BigInt'>
+    readonly AuthUserId: FieldRef<"Usuario", 'String'>
   }
     
 
@@ -69777,8 +69777,8 @@ export namespace Prisma {
     Email: 'Email',
     Telefono: 'Telefono',
     EstaActivo: 'EstaActivo',
-    OnboardingCompleto: 'OnboardingCompleto',
-    PlanId: 'PlanId'
+    PlanId: 'PlanId',
+    OnboardingCompleto: 'OnboardingCompleto'
   };
 
   export type TenantScalarFieldEnum = (typeof TenantScalarFieldEnum)[keyof typeof TenantScalarFieldEnum]
@@ -70388,10 +70388,10 @@ export namespace Prisma {
     Id: 'Id',
     EmpleadoId: 'EmpleadoId',
     Nombre: 'Nombre',
-    AuthUserId: 'AuthUserId',
     EstaBloqueado: 'EstaBloqueado',
     EstaEliminado: 'EstaEliminado',
-    TenantId: 'TenantId'
+    TenantId: 'TenantId',
+    AuthUserId: 'AuthUserId'
   };
 
   export type UsuarioScalarFieldEnum = (typeof UsuarioScalarFieldEnum)[keyof typeof UsuarioScalarFieldEnum]
@@ -70578,8 +70578,8 @@ export namespace Prisma {
     Email?: StringNullableFilter<"Tenant"> | string | null
     Telefono?: StringNullableFilter<"Tenant"> | string | null
     EstaActivo?: BoolFilter<"Tenant"> | boolean
-    OnboardingCompleto?: BoolFilter<"Tenant"> | boolean
     PlanId?: BigIntNullableFilter<"Tenant"> | bigint | number | null
+    OnboardingCompleto?: BoolFilter<"Tenant"> | boolean
     Articulos?: ArticuloListRelationFilter
     BajaArticulos?: BajaArticuloListRelationFilter
     Bancos?: BancoListRelationFilter
@@ -70624,8 +70624,8 @@ export namespace Prisma {
     Email?: SortOrderInput | SortOrder
     Telefono?: SortOrderInput | SortOrder
     EstaActivo?: SortOrder
-    OnboardingCompleto?: SortOrder
     PlanId?: SortOrderInput | SortOrder
+    OnboardingCompleto?: SortOrder
     Articulos?: ArticuloOrderByRelationAggregateInput
     BajaArticulos?: BajaArticuloOrderByRelationAggregateInput
     Bancos?: BancoOrderByRelationAggregateInput
@@ -70673,8 +70673,8 @@ export namespace Prisma {
     Email?: StringNullableFilter<"Tenant"> | string | null
     Telefono?: StringNullableFilter<"Tenant"> | string | null
     EstaActivo?: BoolFilter<"Tenant"> | boolean
-    OnboardingCompleto?: BoolFilter<"Tenant"> | boolean
     PlanId?: BigIntNullableFilter<"Tenant"> | bigint | number | null
+    OnboardingCompleto?: BoolFilter<"Tenant"> | boolean
     Articulos?: ArticuloListRelationFilter
     BajaArticulos?: BajaArticuloListRelationFilter
     Bancos?: BancoListRelationFilter
@@ -70719,8 +70719,8 @@ export namespace Prisma {
     Email?: SortOrderInput | SortOrder
     Telefono?: SortOrderInput | SortOrder
     EstaActivo?: SortOrder
-    OnboardingCompleto?: SortOrder
     PlanId?: SortOrderInput | SortOrder
+    OnboardingCompleto?: SortOrder
     _count?: TenantCountOrderByAggregateInput
     _avg?: TenantAvgOrderByAggregateInput
     _max?: TenantMaxOrderByAggregateInput
@@ -70740,8 +70740,8 @@ export namespace Prisma {
     Email?: StringNullableWithAggregatesFilter<"Tenant"> | string | null
     Telefono?: StringNullableWithAggregatesFilter<"Tenant"> | string | null
     EstaActivo?: BoolWithAggregatesFilter<"Tenant"> | boolean
-    OnboardingCompleto?: BoolWithAggregatesFilter<"Tenant"> | boolean
     PlanId?: BigIntNullableWithAggregatesFilter<"Tenant"> | bigint | number | null
+    OnboardingCompleto?: BoolWithAggregatesFilter<"Tenant"> | boolean
   }
 
   export type PlanSaaSWhereInput = {
@@ -72383,7 +72383,7 @@ export namespace Prisma {
     NOT?: ProvinciaWhereInput | ProvinciaWhereInput[]
     EstaEliminado?: BoolFilter<"Provincia"> | boolean
     Departamento?: DepartamentoListRelationFilter
-  }, "Id" | "Id" | "Descripcion">
+  }, "Id" | "Descripcion">
 
   export type ProvinciaOrderByWithAggregationInput = {
     Id?: SortOrder
@@ -72437,7 +72437,7 @@ export namespace Prisma {
     EstaEliminado?: BoolFilter<"Departamento"> | boolean
     Provincia?: XOR<ProvinciaScalarRelationFilter, ProvinciaWhereInput>
     Localidad?: LocalidadListRelationFilter
-  }, "Id" | "Id" | "ProvinciaId_Descripcion">
+  }, "Id" | "ProvinciaId_Descripcion">
 
   export type DepartamentoOrderByWithAggregationInput = {
     Id?: SortOrder
@@ -72498,7 +72498,7 @@ export namespace Prisma {
     Departamento?: XOR<DepartamentoScalarRelationFilter, DepartamentoWhereInput>
     Persona?: PersonaListRelationFilter
     Proveedor?: ProveedorListRelationFilter
-  }, "Id" | "Id">
+  }, "Id">
 
   export type LocalidadOrderByWithAggregationInput = {
     Id?: SortOrder
@@ -74147,10 +74147,10 @@ export namespace Prisma {
     Id?: BigIntFilter<"Usuario"> | bigint | number
     EmpleadoId?: BigIntFilter<"Usuario"> | bigint | number
     Nombre?: StringFilter<"Usuario"> | string
-    AuthUserId?: StringFilter<"Usuario"> | string
     EstaBloqueado?: BoolFilter<"Usuario"> | boolean
     EstaEliminado?: BoolFilter<"Usuario"> | boolean
     TenantId?: BigIntFilter<"Usuario"> | bigint | number
+    AuthUserId?: StringFilter<"Usuario"> | string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaListRelationFilter
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaListRelationFilter
     Comprobante?: ComprobanteListRelationFilter
@@ -74164,10 +74164,10 @@ export namespace Prisma {
     Id?: SortOrder
     EmpleadoId?: SortOrder
     Nombre?: SortOrder
-    AuthUserId?: SortOrder
     EstaBloqueado?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
+    AuthUserId?: SortOrder
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaOrderByRelationAggregateInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaOrderByRelationAggregateInput
     Comprobante?: ComprobanteOrderByRelationAggregateInput
@@ -74201,10 +74201,10 @@ export namespace Prisma {
     Id?: SortOrder
     EmpleadoId?: SortOrder
     Nombre?: SortOrder
-    AuthUserId?: SortOrder
     EstaBloqueado?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
+    AuthUserId?: SortOrder
     _count?: UsuarioCountOrderByAggregateInput
     _avg?: UsuarioAvgOrderByAggregateInput
     _max?: UsuarioMaxOrderByAggregateInput
@@ -74219,10 +74219,10 @@ export namespace Prisma {
     Id?: BigIntWithAggregatesFilter<"Usuario"> | bigint | number
     EmpleadoId?: BigIntWithAggregatesFilter<"Usuario"> | bigint | number
     Nombre?: StringWithAggregatesFilter<"Usuario"> | string
-    AuthUserId?: StringWithAggregatesFilter<"Usuario"> | string
     EstaBloqueado?: BoolWithAggregatesFilter<"Usuario"> | boolean
     EstaEliminado?: BoolWithAggregatesFilter<"Usuario"> | boolean
     TenantId?: BigIntWithAggregatesFilter<"Usuario"> | bigint | number
+    AuthUserId?: StringWithAggregatesFilter<"Usuario"> | string
   }
 
   export type MovimientoWhereInput = {
@@ -74469,8 +74469,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -74559,8 +74559,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -74604,8 +74604,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
   }
 
   export type TenantUpdateManyMutationInput = {
@@ -74629,8 +74629,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type PlanSaaSCreateInput = {
@@ -76282,16 +76282,16 @@ export namespace Prisma {
   }
 
   export type ProvinciaCreateInput = {
-    Id: bigint | number
+    Id?: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
     Departamento?: DepartamentoCreateNestedManyWithoutProvinciaInput
   }
 
   export type ProvinciaUncheckedCreateInput = {
-    Id: bigint | number
+    Id?: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
     Departamento?: DepartamentoUncheckedCreateNestedManyWithoutProvinciaInput
   }
 
@@ -76310,9 +76310,9 @@ export namespace Prisma {
   }
 
   export type ProvinciaCreateManyInput = {
-    Id: bigint | number
+    Id?: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
   }
 
   export type ProvinciaUpdateManyMutationInput = {
@@ -76328,18 +76328,18 @@ export namespace Prisma {
   }
 
   export type DepartamentoCreateInput = {
-    Id: bigint | number
+    Id?: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
     Provincia: ProvinciaCreateNestedOneWithoutDepartamentoInput
     Localidad?: LocalidadCreateNestedManyWithoutDepartamentoInput
   }
 
   export type DepartamentoUncheckedCreateInput = {
-    Id: bigint | number
+    Id?: bigint | number
     ProvinciaId: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
     Localidad?: LocalidadUncheckedCreateNestedManyWithoutDepartamentoInput
   }
 
@@ -76360,10 +76360,10 @@ export namespace Prisma {
   }
 
   export type DepartamentoCreateManyInput = {
-    Id: bigint | number
+    Id?: bigint | number
     ProvinciaId: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
   }
 
   export type DepartamentoUpdateManyMutationInput = {
@@ -76380,9 +76380,9 @@ export namespace Prisma {
   }
 
   export type LocalidadCreateInput = {
-    Id: bigint | number
+    Id?: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
     Configuracion?: ConfiguracionCreateNestedManyWithoutLocalidadInput
     Departamento: DepartamentoCreateNestedOneWithoutLocalidadInput
     Persona?: PersonaCreateNestedManyWithoutLocalidadInput
@@ -76390,10 +76390,10 @@ export namespace Prisma {
   }
 
   export type LocalidadUncheckedCreateInput = {
-    Id: bigint | number
+    Id?: bigint | number
     DepartamentoId: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
     Configuracion?: ConfiguracionUncheckedCreateNestedManyWithoutLocalidadInput
     Persona?: PersonaUncheckedCreateNestedManyWithoutLocalidadInput
     Proveedor?: ProveedorUncheckedCreateNestedManyWithoutLocalidadInput
@@ -76420,10 +76420,10 @@ export namespace Prisma {
   }
 
   export type LocalidadCreateManyInput = {
-    Id: bigint | number
+    Id?: bigint | number
     DepartamentoId: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
   }
 
   export type LocalidadUpdateManyMutationInput = {
@@ -77984,9 +77984,9 @@ export namespace Prisma {
   export type UsuarioCreateInput = {
     Id?: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
+    AuthUserId: string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaCreateNestedManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaCreateNestedManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioInput
     Comprobante?: ComprobanteCreateNestedManyWithoutUsuarioInput
@@ -78000,10 +78000,10 @@ export namespace Prisma {
     Id?: bigint | number
     EmpleadoId: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
     TenantId: bigint | number
+    AuthUserId: string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUncheckedCreateNestedManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUncheckedCreateNestedManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioInput
     Comprobante?: ComprobanteUncheckedCreateNestedManyWithoutUsuarioInput
@@ -78014,9 +78014,9 @@ export namespace Prisma {
   export type UsuarioUpdateInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    AuthUserId?: StringFieldUpdateOperationsInput | string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUpdateManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioNestedInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUpdateManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioNestedInput
     Comprobante?: ComprobanteUpdateManyWithoutUsuarioNestedInput
@@ -78030,10 +78030,10 @@ export namespace Prisma {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     EmpleadoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+    AuthUserId?: StringFieldUpdateOperationsInput | string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUncheckedUpdateManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioNestedInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUncheckedUpdateManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioNestedInput
     Comprobante?: ComprobanteUncheckedUpdateManyWithoutUsuarioNestedInput
@@ -78045,28 +78045,28 @@ export namespace Prisma {
     Id?: bigint | number
     EmpleadoId: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
     TenantId: bigint | number
+    AuthUserId: string
   }
 
   export type UsuarioUpdateManyMutationInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    AuthUserId?: StringFieldUpdateOperationsInput | string
   }
 
   export type UsuarioUncheckedUpdateManyInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     EmpleadoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+    AuthUserId?: StringFieldUpdateOperationsInput | string
   }
 
   export type MovimientoCreateInput = {
@@ -78632,8 +78632,8 @@ export namespace Prisma {
     Email?: SortOrder
     Telefono?: SortOrder
     EstaActivo?: SortOrder
-    OnboardingCompleto?: SortOrder
     PlanId?: SortOrder
+    OnboardingCompleto?: SortOrder
   }
 
   export type TenantAvgOrderByAggregateInput = {
@@ -78650,8 +78650,8 @@ export namespace Prisma {
     Email?: SortOrder
     Telefono?: SortOrder
     EstaActivo?: SortOrder
-    OnboardingCompleto?: SortOrder
     PlanId?: SortOrder
+    OnboardingCompleto?: SortOrder
   }
 
   export type TenantMinOrderByAggregateInput = {
@@ -78663,8 +78663,8 @@ export namespace Prisma {
     Email?: SortOrder
     Telefono?: SortOrder
     EstaActivo?: SortOrder
-    OnboardingCompleto?: SortOrder
     PlanId?: SortOrder
+    OnboardingCompleto?: SortOrder
   }
 
   export type TenantSumOrderByAggregateInput = {
@@ -81366,10 +81366,10 @@ export namespace Prisma {
     Id?: SortOrder
     EmpleadoId?: SortOrder
     Nombre?: SortOrder
-    AuthUserId?: SortOrder
     EstaBloqueado?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
+    AuthUserId?: SortOrder
   }
 
   export type UsuarioAvgOrderByAggregateInput = {
@@ -81382,20 +81382,20 @@ export namespace Prisma {
     Id?: SortOrder
     EmpleadoId?: SortOrder
     Nombre?: SortOrder
-    AuthUserId?: SortOrder
     EstaBloqueado?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
+    AuthUserId?: SortOrder
   }
 
   export type UsuarioMinOrderByAggregateInput = {
     Id?: SortOrder
     EmpleadoId?: SortOrder
     Nombre?: SortOrder
-    AuthUserId?: SortOrder
     EstaBloqueado?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
+    AuthUserId?: SortOrder
   }
 
   export type UsuarioSumOrderByAggregateInput = {
@@ -88415,9 +88415,9 @@ export namespace Prisma {
   export type UsuarioCreateWithoutTenantInput = {
     Id?: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
+    AuthUserId: string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaCreateNestedManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaCreateNestedManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioInput
     Comprobante?: ComprobanteCreateNestedManyWithoutUsuarioInput
@@ -88430,9 +88430,9 @@ export namespace Prisma {
     Id?: bigint | number
     EmpleadoId: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
+    AuthUserId: string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUncheckedCreateNestedManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUncheckedCreateNestedManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioInput
     Comprobante?: ComprobanteUncheckedCreateNestedManyWithoutUsuarioInput
@@ -89439,10 +89439,10 @@ export namespace Prisma {
     Id?: BigIntFilter<"Usuario"> | bigint | number
     EmpleadoId?: BigIntFilter<"Usuario"> | bigint | number
     Nombre?: StringFilter<"Usuario"> | string
-    AuthUserId?: StringFilter<"Usuario"> | string
     EstaBloqueado?: BoolFilter<"Usuario"> | boolean
     EstaEliminado?: BoolFilter<"Usuario"> | boolean
     TenantId?: BigIntFilter<"Usuario"> | bigint | number
+    AuthUserId?: StringFilter<"Usuario"> | string
   }
 
   export type TenantCreateWithoutPlanInput = {
@@ -89571,8 +89571,8 @@ export namespace Prisma {
     Email?: StringNullableFilter<"Tenant"> | string | null
     Telefono?: StringNullableFilter<"Tenant"> | string | null
     EstaActivo?: BoolFilter<"Tenant"> | boolean
-    OnboardingCompleto?: BoolFilter<"Tenant"> | boolean
     PlanId?: BigIntNullableFilter<"Tenant"> | bigint | number | null
+    OnboardingCompleto?: BoolFilter<"Tenant"> | boolean
   }
 
   export type TenantCreateWithoutLogsInput = {
@@ -89628,8 +89628,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -89732,8 +89732,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -89908,8 +89908,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
     Cajas?: CajaUncheckedCreateNestedManyWithoutTenantInput
@@ -90235,8 +90235,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
     Cajas?: CajaUncheckedUpdateManyWithoutTenantNestedInput
@@ -90484,8 +90484,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
     Cajas?: CajaUncheckedCreateNestedManyWithoutTenantInput
@@ -90688,8 +90688,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
     Cajas?: CajaUncheckedUpdateManyWithoutTenantNestedInput
@@ -90776,8 +90776,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Cajas?: CajaUncheckedCreateNestedManyWithoutTenantInput
@@ -90942,8 +90942,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Cajas?: CajaUncheckedUpdateManyWithoutTenantNestedInput
@@ -91062,8 +91062,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -91105,9 +91105,9 @@ export namespace Prisma {
   export type UsuarioCreateWithoutCaja_Caja_UsuarioAperturaIdToUsuarioInput = {
     Id?: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
+    AuthUserId: string
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaCreateNestedManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioInput
     Comprobante?: ComprobanteCreateNestedManyWithoutUsuarioInput
     Movimiento?: MovimientoCreateNestedManyWithoutUsuarioInput
@@ -91120,10 +91120,10 @@ export namespace Prisma {
     Id?: bigint | number
     EmpleadoId: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
     TenantId: bigint | number
+    AuthUserId: string
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUncheckedCreateNestedManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioInput
     Comprobante?: ComprobanteUncheckedCreateNestedManyWithoutUsuarioInput
     Movimiento?: MovimientoUncheckedCreateNestedManyWithoutUsuarioInput
@@ -91138,9 +91138,9 @@ export namespace Prisma {
   export type UsuarioCreateWithoutCaja_Caja_UsuarioCierreIdToUsuarioInput = {
     Id?: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
+    AuthUserId: string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaCreateNestedManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioInput
     Comprobante?: ComprobanteCreateNestedManyWithoutUsuarioInput
     Movimiento?: MovimientoCreateNestedManyWithoutUsuarioInput
@@ -91153,10 +91153,10 @@ export namespace Prisma {
     Id?: bigint | number
     EmpleadoId: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
     TenantId: bigint | number
+    AuthUserId: string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUncheckedCreateNestedManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioInput
     Comprobante?: ComprobanteUncheckedCreateNestedManyWithoutUsuarioInput
     Movimiento?: MovimientoUncheckedCreateNestedManyWithoutUsuarioInput
@@ -91326,8 +91326,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -91375,9 +91375,9 @@ export namespace Prisma {
   export type UsuarioUpdateWithoutCaja_Caja_UsuarioAperturaIdToUsuarioInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    AuthUserId?: StringFieldUpdateOperationsInput | string
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUpdateManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioNestedInput
     Comprobante?: ComprobanteUpdateManyWithoutUsuarioNestedInput
     Movimiento?: MovimientoUpdateManyWithoutUsuarioNestedInput
@@ -91390,10 +91390,10 @@ export namespace Prisma {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     EmpleadoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+    AuthUserId?: StringFieldUpdateOperationsInput | string
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUncheckedUpdateManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioNestedInput
     Comprobante?: ComprobanteUncheckedUpdateManyWithoutUsuarioNestedInput
     Movimiento?: MovimientoUncheckedUpdateManyWithoutUsuarioNestedInput
@@ -91414,9 +91414,9 @@ export namespace Prisma {
   export type UsuarioUpdateWithoutCaja_Caja_UsuarioCierreIdToUsuarioInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    AuthUserId?: StringFieldUpdateOperationsInput | string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUpdateManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioNestedInput
     Comprobante?: ComprobanteUpdateManyWithoutUsuarioNestedInput
     Movimiento?: MovimientoUpdateManyWithoutUsuarioNestedInput
@@ -91429,10 +91429,10 @@ export namespace Prisma {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     EmpleadoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+    AuthUserId?: StringFieldUpdateOperationsInput | string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUncheckedUpdateManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioNestedInput
     Comprobante?: ComprobanteUncheckedUpdateManyWithoutUsuarioNestedInput
     Movimiento?: MovimientoUncheckedUpdateManyWithoutUsuarioNestedInput
@@ -91594,8 +91594,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -91808,8 +91808,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -91955,8 +91955,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -91998,9 +91998,9 @@ export namespace Prisma {
   export type UsuarioCreateWithoutComprobanteInput = {
     Id?: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
+    AuthUserId: string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaCreateNestedManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaCreateNestedManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioInput
     Movimiento?: MovimientoCreateNestedManyWithoutUsuarioInput
@@ -92013,10 +92013,10 @@ export namespace Prisma {
     Id?: bigint | number
     EmpleadoId: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
     TenantId: bigint | number
+    AuthUserId: string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUncheckedCreateNestedManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUncheckedCreateNestedManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioInput
     Movimiento?: MovimientoUncheckedCreateNestedManyWithoutUsuarioInput
@@ -92356,8 +92356,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -92405,9 +92405,9 @@ export namespace Prisma {
   export type UsuarioUpdateWithoutComprobanteInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    AuthUserId?: StringFieldUpdateOperationsInput | string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUpdateManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioNestedInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUpdateManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioNestedInput
     Movimiento?: MovimientoUpdateManyWithoutUsuarioNestedInput
@@ -92420,10 +92420,10 @@ export namespace Prisma {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     EmpleadoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+    AuthUserId?: StringFieldUpdateOperationsInput | string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUncheckedUpdateManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioNestedInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUncheckedUpdateManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioNestedInput
     Movimiento?: MovimientoUncheckedUpdateManyWithoutUsuarioNestedInput
@@ -94194,8 +94194,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -94328,8 +94328,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -94501,19 +94501,19 @@ export namespace Prisma {
   }
 
   export type LocalidadCreateWithoutConfiguracionInput = {
-    Id: bigint | number
+    Id?: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
     Departamento: DepartamentoCreateNestedOneWithoutLocalidadInput
     Persona?: PersonaCreateNestedManyWithoutLocalidadInput
     Proveedor?: ProveedorCreateNestedManyWithoutLocalidadInput
   }
 
   export type LocalidadUncheckedCreateWithoutConfiguracionInput = {
-    Id: bigint | number
+    Id?: bigint | number
     DepartamentoId: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
     Persona?: PersonaUncheckedCreateNestedManyWithoutLocalidadInput
     Proveedor?: ProveedorUncheckedCreateNestedManyWithoutLocalidadInput
   }
@@ -94576,8 +94576,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -94709,8 +94709,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -94797,8 +94797,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -94901,8 +94901,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -95010,8 +95010,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -95167,8 +95167,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -95219,16 +95219,16 @@ export namespace Prisma {
   }
 
   export type DepartamentoCreateWithoutProvinciaInput = {
-    Id: bigint | number
+    Id?: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
     Localidad?: LocalidadCreateNestedManyWithoutDepartamentoInput
   }
 
   export type DepartamentoUncheckedCreateWithoutProvinciaInput = {
-    Id: bigint | number
+    Id?: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
     Localidad?: LocalidadUncheckedCreateNestedManyWithoutDepartamentoInput
   }
 
@@ -95269,15 +95269,15 @@ export namespace Prisma {
   }
 
   export type ProvinciaCreateWithoutDepartamentoInput = {
-    Id: bigint | number
+    Id?: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
   }
 
   export type ProvinciaUncheckedCreateWithoutDepartamentoInput = {
-    Id: bigint | number
+    Id?: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
   }
 
   export type ProvinciaCreateOrConnectWithoutDepartamentoInput = {
@@ -95286,18 +95286,18 @@ export namespace Prisma {
   }
 
   export type LocalidadCreateWithoutDepartamentoInput = {
-    Id: bigint | number
+    Id?: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
     Configuracion?: ConfiguracionCreateNestedManyWithoutLocalidadInput
     Persona?: PersonaCreateNestedManyWithoutLocalidadInput
     Proveedor?: ProveedorCreateNestedManyWithoutLocalidadInput
   }
 
   export type LocalidadUncheckedCreateWithoutDepartamentoInput = {
-    Id: bigint | number
+    Id?: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
     Configuracion?: ConfiguracionUncheckedCreateNestedManyWithoutLocalidadInput
     Persona?: PersonaUncheckedCreateNestedManyWithoutLocalidadInput
     Proveedor?: ProveedorUncheckedCreateNestedManyWithoutLocalidadInput
@@ -95439,17 +95439,17 @@ export namespace Prisma {
   }
 
   export type DepartamentoCreateWithoutLocalidadInput = {
-    Id: bigint | number
+    Id?: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
     Provincia: ProvinciaCreateNestedOneWithoutDepartamentoInput
   }
 
   export type DepartamentoUncheckedCreateWithoutLocalidadInput = {
-    Id: bigint | number
+    Id?: bigint | number
     ProvinciaId: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
   }
 
   export type DepartamentoCreateOrConnectWithoutLocalidadInput = {
@@ -95713,8 +95713,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -95881,8 +95881,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -96024,8 +96024,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -96189,8 +96189,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -96403,8 +96403,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -96645,8 +96645,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -96790,8 +96790,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -97002,8 +97002,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -97557,8 +97557,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -97717,8 +97717,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -97825,8 +97825,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -97945,8 +97945,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -98107,8 +98107,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -98297,8 +98297,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -98549,8 +98549,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -98669,8 +98669,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -98787,8 +98787,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -98907,8 +98907,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -99035,8 +99035,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -99171,8 +99171,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -99280,8 +99280,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -99323,9 +99323,9 @@ export namespace Prisma {
   export type UsuarioCreateWithoutPerfilUsuarioInput = {
     Id?: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
+    AuthUserId: string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaCreateNestedManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaCreateNestedManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioInput
     Comprobante?: ComprobanteCreateNestedManyWithoutUsuarioInput
@@ -99338,10 +99338,10 @@ export namespace Prisma {
     Id?: bigint | number
     EmpleadoId: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
     TenantId: bigint | number
+    AuthUserId: string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUncheckedCreateNestedManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUncheckedCreateNestedManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioInput
     Comprobante?: ComprobanteUncheckedCreateNestedManyWithoutUsuarioInput
@@ -99444,8 +99444,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -99493,9 +99493,9 @@ export namespace Prisma {
   export type UsuarioUpdateWithoutPerfilUsuarioInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    AuthUserId?: StringFieldUpdateOperationsInput | string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUpdateManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioNestedInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUpdateManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioNestedInput
     Comprobante?: ComprobanteUpdateManyWithoutUsuarioNestedInput
@@ -99508,10 +99508,10 @@ export namespace Prisma {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     EmpleadoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+    AuthUserId?: StringFieldUpdateOperationsInput | string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUncheckedUpdateManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioNestedInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUncheckedUpdateManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioNestedInput
     Comprobante?: ComprobanteUncheckedUpdateManyWithoutUsuarioNestedInput
@@ -99519,19 +99519,19 @@ export namespace Prisma {
   }
 
   export type LocalidadCreateWithoutPersonaInput = {
-    Id: bigint | number
+    Id?: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
     Configuracion?: ConfiguracionCreateNestedManyWithoutLocalidadInput
     Departamento: DepartamentoCreateNestedOneWithoutLocalidadInput
     Proveedor?: ProveedorCreateNestedManyWithoutLocalidadInput
   }
 
   export type LocalidadUncheckedCreateWithoutPersonaInput = {
-    Id: bigint | number
+    Id?: bigint | number
     DepartamentoId: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
     Configuracion?: ConfiguracionUncheckedCreateNestedManyWithoutLocalidadInput
     Proveedor?: ProveedorUncheckedCreateNestedManyWithoutLocalidadInput
   }
@@ -99594,8 +99594,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -99779,8 +99779,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -100405,9 +100405,9 @@ export namespace Prisma {
   export type UsuarioCreateWithoutPersona_EmpleadoInput = {
     Id?: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
+    AuthUserId: string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaCreateNestedManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaCreateNestedManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioInput
     Comprobante?: ComprobanteCreateNestedManyWithoutUsuarioInput
@@ -100419,10 +100419,10 @@ export namespace Prisma {
   export type UsuarioUncheckedCreateWithoutPersona_EmpleadoInput = {
     Id?: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
     TenantId: bigint | number
+    AuthUserId: string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUncheckedCreateNestedManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUncheckedCreateNestedManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioInput
     Comprobante?: ComprobanteUncheckedCreateNestedManyWithoutUsuarioInput
@@ -100638,8 +100638,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -100758,8 +100758,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -100883,19 +100883,19 @@ export namespace Prisma {
   }
 
   export type LocalidadCreateWithoutProveedorInput = {
-    Id: bigint | number
+    Id?: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
     Configuracion?: ConfiguracionCreateNestedManyWithoutLocalidadInput
     Departamento: DepartamentoCreateNestedOneWithoutLocalidadInput
     Persona?: PersonaCreateNestedManyWithoutLocalidadInput
   }
 
   export type LocalidadUncheckedCreateWithoutProveedorInput = {
-    Id: bigint | number
+    Id?: bigint | number
     DepartamentoId: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
     Configuracion?: ConfiguracionUncheckedCreateNestedManyWithoutLocalidadInput
     Persona?: PersonaUncheckedCreateNestedManyWithoutLocalidadInput
   }
@@ -100958,8 +100958,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -101196,8 +101196,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -101306,8 +101306,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -101426,8 +101426,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -101588,8 +101588,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -101708,8 +101708,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -101865,8 +101865,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -102044,8 +102044,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -102156,8 +102156,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -102287,8 +102287,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -102449,8 +102449,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -102569,8 +102569,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -102916,8 +102916,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -103125,8 +103125,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -103325,8 +103325,8 @@ export namespace Prisma {
     Email?: string | null
     Telefono?: string | null
     EstaActivo?: boolean
-    OnboardingCompleto?: boolean
     PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
     Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
     BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
     Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
@@ -103368,9 +103368,9 @@ export namespace Prisma {
   export type UsuarioCreateWithoutMovimientoInput = {
     Id?: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
+    AuthUserId: string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaCreateNestedManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaCreateNestedManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioInput
     Comprobante?: ComprobanteCreateNestedManyWithoutUsuarioInput
@@ -103383,10 +103383,10 @@ export namespace Prisma {
     Id?: bigint | number
     EmpleadoId: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
     TenantId: bigint | number
+    AuthUserId: string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUncheckedCreateNestedManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUncheckedCreateNestedManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioInput
     Comprobante?: ComprobanteUncheckedCreateNestedManyWithoutUsuarioInput
@@ -103614,8 +103614,8 @@ export namespace Prisma {
     Email?: NullableStringFieldUpdateOperationsInput | string | null
     Telefono?: NullableStringFieldUpdateOperationsInput | string | null
     EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
     Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
     BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
     Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
@@ -103663,9 +103663,9 @@ export namespace Prisma {
   export type UsuarioUpdateWithoutMovimientoInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    AuthUserId?: StringFieldUpdateOperationsInput | string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUpdateManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioNestedInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUpdateManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioNestedInput
     Comprobante?: ComprobanteUpdateManyWithoutUsuarioNestedInput
@@ -103678,10 +103678,10 @@ export namespace Prisma {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     EmpleadoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+    AuthUserId?: StringFieldUpdateOperationsInput | string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUncheckedUpdateManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioNestedInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUncheckedUpdateManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioNestedInput
     Comprobante?: ComprobanteUncheckedUpdateManyWithoutUsuarioNestedInput
@@ -104379,9 +104379,9 @@ export namespace Prisma {
     Id?: bigint | number
     EmpleadoId: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
+    AuthUserId: string
   }
 
   export type ArticuloUpdateWithoutTenantInput = {
@@ -105430,9 +105430,9 @@ export namespace Prisma {
   export type UsuarioUpdateWithoutTenantInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    AuthUserId?: StringFieldUpdateOperationsInput | string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUpdateManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioNestedInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUpdateManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioNestedInput
     Comprobante?: ComprobanteUpdateManyWithoutUsuarioNestedInput
@@ -105445,9 +105445,9 @@ export namespace Prisma {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     EmpleadoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    AuthUserId?: StringFieldUpdateOperationsInput | string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUncheckedUpdateManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioNestedInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUncheckedUpdateManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioNestedInput
     Comprobante?: ComprobanteUncheckedUpdateManyWithoutUsuarioNestedInput
@@ -105459,9 +105459,9 @@ export namespace Prisma {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     EmpleadoId?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    AuthUserId?: StringFieldUpdateOperationsInput | string
   }
 
   export type TenantCreateManyPlanInput = {
@@ -106281,9 +106281,9 @@ export namespace Prisma {
   }
 
   export type DepartamentoCreateManyProvinciaInput = {
-    Id: bigint | number
+    Id?: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
   }
 
   export type DepartamentoUpdateWithoutProvinciaInput = {
@@ -106307,9 +106307,9 @@ export namespace Prisma {
   }
 
   export type LocalidadCreateManyDepartamentoInput = {
-    Id: bigint | number
+    Id?: bigint | number
     Descripcion: string
-    EstaEliminado: boolean
+    EstaEliminado?: boolean
   }
 
   export type LocalidadUpdateWithoutDepartamentoInput = {
@@ -107090,10 +107090,10 @@ export namespace Prisma {
   export type UsuarioCreateManyPersona_EmpleadoInput = {
     Id?: bigint | number
     Nombre: string
-    AuthUserId: string
     EstaBloqueado: boolean
     EstaEliminado: boolean
     TenantId: bigint | number
+    AuthUserId: string
   }
 
   export type ComprobanteUpdateWithoutPersona_EmpleadoInput = {
@@ -107166,9 +107166,9 @@ export namespace Prisma {
   export type UsuarioUpdateWithoutPersona_EmpleadoInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    AuthUserId?: StringFieldUpdateOperationsInput | string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUpdateManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioNestedInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUpdateManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioNestedInput
     Comprobante?: ComprobanteUpdateManyWithoutUsuarioNestedInput
@@ -107180,10 +107180,10 @@ export namespace Prisma {
   export type UsuarioUncheckedUpdateWithoutPersona_EmpleadoInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+    AuthUserId?: StringFieldUpdateOperationsInput | string
     Caja_Caja_UsuarioAperturaIdToUsuario?: CajaUncheckedUpdateManyWithoutUsuario_Caja_UsuarioAperturaIdToUsuarioNestedInput
     Caja_Caja_UsuarioCierreIdToUsuario?: CajaUncheckedUpdateManyWithoutUsuario_Caja_UsuarioCierreIdToUsuarioNestedInput
     Comprobante?: ComprobanteUncheckedUpdateManyWithoutUsuarioNestedInput
@@ -107194,10 +107194,10 @@ export namespace Prisma {
   export type UsuarioUncheckedUpdateManyWithoutPersona_EmpleadoInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Nombre?: StringFieldUpdateOperationsInput | string
-    AuthUserId?: StringFieldUpdateOperationsInput | string
     EstaBloqueado?: BoolFieldUpdateOperationsInput | boolean
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+    AuthUserId?: StringFieldUpdateOperationsInput | string
   }
 
   export type ArticuloCreateManyPrecioInput = {
