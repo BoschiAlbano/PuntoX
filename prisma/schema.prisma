@@ -459,7 +459,7 @@ model CuentaBancarias {
 /// Provincias (catálogo fijo, lo carga el sistema).
 /// Los clientes solo seleccionan una provincia, no la crean.
 model Provincia {
-  Id            BigInt         @id @default(autoincrement())
+  Id            BigInt         @id(map: "PK_dbo.Provincia") @unique(map: "UX_Provincia_Id")
   Descripcion   String         @unique @db.VarChar(100)
   EstaEliminado Boolean
   Departamento  Departamento[]
@@ -468,7 +468,7 @@ model Provincia {
 /// Departamentos (subdivisión de provincia).
 /// Podés tratarlos como catálogo pre-cargado o ir agregando.
 model Departamento {
-  Id            BigInt      @id @default(autoincrement())
+  Id            BigInt      @id(map: "PK_dbo.Departamento") @unique(map: "UX_Departamento_Id")
   ProvinciaId   BigInt
   Descripcion   String      @db.VarChar(250)
   EstaEliminado Boolean
@@ -481,7 +481,7 @@ model Departamento {
 /// Localidades (ciudad/pueblo).
 /// Estas sí las puede crear el cliente desde el sistema.
 model Localidad {
-  Id             BigInt          @id @default(autoincrement())
+  Id             BigInt          @id(map: "PK_dbo.Localidad") @unique(map: "UX_Localidad_Id")
   DepartamentoId BigInt
   Descripcion    String          @db.VarChar(250)
   EstaEliminado  Boolean

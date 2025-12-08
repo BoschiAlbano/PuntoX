@@ -72383,7 +72383,7 @@ export namespace Prisma {
     NOT?: ProvinciaWhereInput | ProvinciaWhereInput[]
     EstaEliminado?: BoolFilter<"Provincia"> | boolean
     Departamento?: DepartamentoListRelationFilter
-  }, "Id" | "Descripcion">
+  }, "Id" | "Id" | "Descripcion">
 
   export type ProvinciaOrderByWithAggregationInput = {
     Id?: SortOrder
@@ -72437,7 +72437,7 @@ export namespace Prisma {
     EstaEliminado?: BoolFilter<"Departamento"> | boolean
     Provincia?: XOR<ProvinciaScalarRelationFilter, ProvinciaWhereInput>
     Localidad?: LocalidadListRelationFilter
-  }, "Id" | "ProvinciaId_Descripcion">
+  }, "Id" | "Id" | "ProvinciaId_Descripcion">
 
   export type DepartamentoOrderByWithAggregationInput = {
     Id?: SortOrder
@@ -72498,7 +72498,7 @@ export namespace Prisma {
     Departamento?: XOR<DepartamentoScalarRelationFilter, DepartamentoWhereInput>
     Persona?: PersonaListRelationFilter
     Proveedor?: ProveedorListRelationFilter
-  }, "Id">
+  }, "Id" | "Id">
 
   export type LocalidadOrderByWithAggregationInput = {
     Id?: SortOrder
@@ -76282,14 +76282,14 @@ export namespace Prisma {
   }
 
   export type ProvinciaCreateInput = {
-    Id?: bigint | number
+    Id: bigint | number
     Descripcion: string
     EstaEliminado: boolean
     Departamento?: DepartamentoCreateNestedManyWithoutProvinciaInput
   }
 
   export type ProvinciaUncheckedCreateInput = {
-    Id?: bigint | number
+    Id: bigint | number
     Descripcion: string
     EstaEliminado: boolean
     Departamento?: DepartamentoUncheckedCreateNestedManyWithoutProvinciaInput
@@ -76310,7 +76310,7 @@ export namespace Prisma {
   }
 
   export type ProvinciaCreateManyInput = {
-    Id?: bigint | number
+    Id: bigint | number
     Descripcion: string
     EstaEliminado: boolean
   }
@@ -76328,7 +76328,7 @@ export namespace Prisma {
   }
 
   export type DepartamentoCreateInput = {
-    Id?: bigint | number
+    Id: bigint | number
     Descripcion: string
     EstaEliminado: boolean
     Provincia: ProvinciaCreateNestedOneWithoutDepartamentoInput
@@ -76336,7 +76336,7 @@ export namespace Prisma {
   }
 
   export type DepartamentoUncheckedCreateInput = {
-    Id?: bigint | number
+    Id: bigint | number
     ProvinciaId: bigint | number
     Descripcion: string
     EstaEliminado: boolean
@@ -76360,7 +76360,7 @@ export namespace Prisma {
   }
 
   export type DepartamentoCreateManyInput = {
-    Id?: bigint | number
+    Id: bigint | number
     ProvinciaId: bigint | number
     Descripcion: string
     EstaEliminado: boolean
@@ -76380,7 +76380,7 @@ export namespace Prisma {
   }
 
   export type LocalidadCreateInput = {
-    Id?: bigint | number
+    Id: bigint | number
     Descripcion: string
     EstaEliminado: boolean
     Configuracion?: ConfiguracionCreateNestedManyWithoutLocalidadInput
@@ -76390,7 +76390,7 @@ export namespace Prisma {
   }
 
   export type LocalidadUncheckedCreateInput = {
-    Id?: bigint | number
+    Id: bigint | number
     DepartamentoId: bigint | number
     Descripcion: string
     EstaEliminado: boolean
@@ -76420,7 +76420,7 @@ export namespace Prisma {
   }
 
   export type LocalidadCreateManyInput = {
-    Id?: bigint | number
+    Id: bigint | number
     DepartamentoId: bigint | number
     Descripcion: string
     EstaEliminado: boolean
@@ -94501,7 +94501,7 @@ export namespace Prisma {
   }
 
   export type LocalidadCreateWithoutConfiguracionInput = {
-    Id?: bigint | number
+    Id: bigint | number
     Descripcion: string
     EstaEliminado: boolean
     Departamento: DepartamentoCreateNestedOneWithoutLocalidadInput
@@ -94510,7 +94510,7 @@ export namespace Prisma {
   }
 
   export type LocalidadUncheckedCreateWithoutConfiguracionInput = {
-    Id?: bigint | number
+    Id: bigint | number
     DepartamentoId: bigint | number
     Descripcion: string
     EstaEliminado: boolean
@@ -95219,14 +95219,14 @@ export namespace Prisma {
   }
 
   export type DepartamentoCreateWithoutProvinciaInput = {
-    Id?: bigint | number
+    Id: bigint | number
     Descripcion: string
     EstaEliminado: boolean
     Localidad?: LocalidadCreateNestedManyWithoutDepartamentoInput
   }
 
   export type DepartamentoUncheckedCreateWithoutProvinciaInput = {
-    Id?: bigint | number
+    Id: bigint | number
     Descripcion: string
     EstaEliminado: boolean
     Localidad?: LocalidadUncheckedCreateNestedManyWithoutDepartamentoInput
@@ -95269,13 +95269,13 @@ export namespace Prisma {
   }
 
   export type ProvinciaCreateWithoutDepartamentoInput = {
-    Id?: bigint | number
+    Id: bigint | number
     Descripcion: string
     EstaEliminado: boolean
   }
 
   export type ProvinciaUncheckedCreateWithoutDepartamentoInput = {
-    Id?: bigint | number
+    Id: bigint | number
     Descripcion: string
     EstaEliminado: boolean
   }
@@ -95286,7 +95286,7 @@ export namespace Prisma {
   }
 
   export type LocalidadCreateWithoutDepartamentoInput = {
-    Id?: bigint | number
+    Id: bigint | number
     Descripcion: string
     EstaEliminado: boolean
     Configuracion?: ConfiguracionCreateNestedManyWithoutLocalidadInput
@@ -95295,7 +95295,7 @@ export namespace Prisma {
   }
 
   export type LocalidadUncheckedCreateWithoutDepartamentoInput = {
-    Id?: bigint | number
+    Id: bigint | number
     Descripcion: string
     EstaEliminado: boolean
     Configuracion?: ConfiguracionUncheckedCreateNestedManyWithoutLocalidadInput
@@ -95439,14 +95439,14 @@ export namespace Prisma {
   }
 
   export type DepartamentoCreateWithoutLocalidadInput = {
-    Id?: bigint | number
+    Id: bigint | number
     Descripcion: string
     EstaEliminado: boolean
     Provincia: ProvinciaCreateNestedOneWithoutDepartamentoInput
   }
 
   export type DepartamentoUncheckedCreateWithoutLocalidadInput = {
-    Id?: bigint | number
+    Id: bigint | number
     ProvinciaId: bigint | number
     Descripcion: string
     EstaEliminado: boolean
@@ -99519,7 +99519,7 @@ export namespace Prisma {
   }
 
   export type LocalidadCreateWithoutPersonaInput = {
-    Id?: bigint | number
+    Id: bigint | number
     Descripcion: string
     EstaEliminado: boolean
     Configuracion?: ConfiguracionCreateNestedManyWithoutLocalidadInput
@@ -99528,7 +99528,7 @@ export namespace Prisma {
   }
 
   export type LocalidadUncheckedCreateWithoutPersonaInput = {
-    Id?: bigint | number
+    Id: bigint | number
     DepartamentoId: bigint | number
     Descripcion: string
     EstaEliminado: boolean
@@ -100883,7 +100883,7 @@ export namespace Prisma {
   }
 
   export type LocalidadCreateWithoutProveedorInput = {
-    Id?: bigint | number
+    Id: bigint | number
     Descripcion: string
     EstaEliminado: boolean
     Configuracion?: ConfiguracionCreateNestedManyWithoutLocalidadInput
@@ -100892,7 +100892,7 @@ export namespace Prisma {
   }
 
   export type LocalidadUncheckedCreateWithoutProveedorInput = {
-    Id?: bigint | number
+    Id: bigint | number
     DepartamentoId: bigint | number
     Descripcion: string
     EstaEliminado: boolean
@@ -106281,7 +106281,7 @@ export namespace Prisma {
   }
 
   export type DepartamentoCreateManyProvinciaInput = {
-    Id?: bigint | number
+    Id: bigint | number
     Descripcion: string
     EstaEliminado: boolean
   }
@@ -106307,7 +106307,7 @@ export namespace Prisma {
   }
 
   export type LocalidadCreateManyDepartamentoInput = {
-    Id?: bigint | number
+    Id: bigint | number
     Descripcion: string
     EstaEliminado: boolean
   }
