@@ -117,16 +117,8 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   ReadUncommitted: 'ReadUncommitted',
   ReadCommitted: 'ReadCommitted',
   RepeatableRead: 'RepeatableRead',
-  Serializable: 'Serializable',
-  Snapshot: 'Snapshot'
+  Serializable: 'Serializable'
 });
-
-exports.Prisma.MigrationHistoryScalarFieldEnum = {
-  MigrationId: 'MigrationId',
-  ContextKey: 'ContextKey',
-  Model: 'Model',
-  ProductVersion: 'ProductVersion'
-};
 
 exports.Prisma.TenantScalarFieldEnum = {
   Id: 'Id',
@@ -137,6 +129,7 @@ exports.Prisma.TenantScalarFieldEnum = {
   Email: 'Email',
   Telefono: 'Telefono',
   EstaActivo: 'EstaActivo',
+  OnboardingCompleto: 'OnboardingCompleto',
   PlanId: 'PlanId'
 };
 
@@ -367,9 +360,22 @@ exports.Prisma.CuentaBancariasScalarFieldEnum = {
   TenantId: 'TenantId'
 };
 
+exports.Prisma.ProvinciaScalarFieldEnum = {
+  Id: 'Id',
+  Descripcion: 'Descripcion',
+  EstaEliminado: 'EstaEliminado'
+};
+
 exports.Prisma.DepartamentoScalarFieldEnum = {
   Id: 'Id',
   ProvinciaId: 'ProvinciaId',
+  Descripcion: 'Descripcion',
+  EstaEliminado: 'EstaEliminado'
+};
+
+exports.Prisma.LocalidadScalarFieldEnum = {
+  Id: 'Id',
+  DepartamentoId: 'DepartamentoId',
   Descripcion: 'Descripcion',
   EstaEliminado: 'EstaEliminado'
 };
@@ -475,13 +481,6 @@ exports.Prisma.IvaScalarFieldEnum = {
   EstaEliminado: 'EstaEliminado'
 };
 
-exports.Prisma.LocalidadScalarFieldEnum = {
-  Id: 'Id',
-  DepartamentoId: 'DepartamentoId',
-  Descripcion: 'Descripcion',
-  EstaEliminado: 'EstaEliminado'
-};
-
 exports.Prisma.MarcaScalarFieldEnum = {
   Id: 'Id',
   Descripcion: 'Descripcion',
@@ -494,29 +493,6 @@ exports.Prisma.MotivoBajasScalarFieldEnum = {
   Descripcion: 'Descripcion',
   EstaEliminado: 'EstaEliminado',
   TenantId: 'TenantId'
-};
-
-exports.Prisma.MovimientoScalarFieldEnum = {
-  Id: 'Id',
-  CajaId: 'CajaId',
-  ComprobanteId: 'ComprobanteId',
-  UsuarioId: 'UsuarioId',
-  Monto: 'Monto',
-  Fecha: 'Fecha',
-  Descripcion: 'Descripcion',
-  TipoMovimiento: 'TipoMovimiento',
-  EstaEliminado: 'EstaEliminado',
-  TenantId: 'TenantId'
-};
-
-exports.Prisma.Movimiento_CuentaCorrienteScalarFieldEnum = {
-  Id: 'Id',
-  ClienteId: 'ClienteId'
-};
-
-exports.Prisma.Movimiento_CuentaCorrienteProveedorScalarFieldEnum = {
-  Id: 'Id',
-  ProveedorId: 'ProveedorId'
 };
 
 exports.Prisma.PerfilesScalarFieldEnum = {
@@ -585,12 +561,6 @@ exports.Prisma.ProveedorScalarFieldEnum = {
   TenantId: 'TenantId'
 };
 
-exports.Prisma.ProvinciaScalarFieldEnum = {
-  Id: 'Id',
-  Descripcion: 'Descripcion',
-  EstaEliminado: 'EstaEliminado'
-};
-
 exports.Prisma.PuestoTrabajoScalarFieldEnum = {
   Id: 'Id',
   Codigo: 'Codigo',
@@ -615,14 +585,6 @@ exports.Prisma.StockScalarFieldEnum = {
   TenantId: 'TenantId'
 };
 
-exports.Prisma.SysdiagramsScalarFieldEnum = {
-  name: 'name',
-  principal_id: 'principal_id',
-  diagram_id: 'diagram_id',
-  version: 'version',
-  definition: 'definition'
-};
-
 exports.Prisma.TarjetaScalarFieldEnum = {
   Id: 'Id',
   Descripcion: 'Descripcion',
@@ -641,15 +603,43 @@ exports.Prisma.UsuarioScalarFieldEnum = {
   Id: 'Id',
   EmpleadoId: 'EmpleadoId',
   Nombre: 'Nombre',
-  Password: 'Password',
+  AuthUserId: 'AuthUserId',
   EstaBloqueado: 'EstaBloqueado',
   EstaEliminado: 'EstaEliminado',
   TenantId: 'TenantId'
 };
 
+exports.Prisma.MovimientoScalarFieldEnum = {
+  Id: 'Id',
+  CajaId: 'CajaId',
+  ComprobanteId: 'ComprobanteId',
+  UsuarioId: 'UsuarioId',
+  Monto: 'Monto',
+  Fecha: 'Fecha',
+  Descripcion: 'Descripcion',
+  TipoMovimiento: 'TipoMovimiento',
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
+};
+
+exports.Prisma.Movimiento_CuentaCorrienteScalarFieldEnum = {
+  Id: 'Id',
+  ClienteId: 'ClienteId'
+};
+
+exports.Prisma.Movimiento_CuentaCorrienteProveedorScalarFieldEnum = {
+  Id: 'Id',
+  ProveedorId: 'ProveedorId'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
 };
 
 exports.Prisma.NullsOrder = {
@@ -659,7 +649,6 @@ exports.Prisma.NullsOrder = {
 
 
 exports.Prisma.ModelName = {
-  MigrationHistory: 'MigrationHistory',
   Tenant: 'Tenant',
   PlanSaaS: 'PlanSaaS',
   Log: 'Log',
@@ -681,7 +670,9 @@ exports.Prisma.ModelName = {
   Configuracion: 'Configuracion',
   Contador: 'Contador',
   CuentaBancarias: 'CuentaBancarias',
+  Provincia: 'Provincia',
   Departamento: 'Departamento',
+  Localidad: 'Localidad',
   Deposito: 'Deposito',
   DepositoCheques: 'DepositoCheques',
   DetalleCaja: 'DetalleCaja',
@@ -694,12 +685,8 @@ exports.Prisma.ModelName = {
   Formularios: 'Formularios',
   Gasto: 'Gasto',
   Iva: 'Iva',
-  Localidad: 'Localidad',
   Marca: 'Marca',
   MotivoBajas: 'MotivoBajas',
-  Movimiento: 'Movimiento',
-  Movimiento_CuentaCorriente: 'Movimiento_CuentaCorriente',
-  Movimiento_CuentaCorrienteProveedor: 'Movimiento_CuentaCorrienteProveedor',
   Perfiles: 'Perfiles',
   PerfilUsuario: 'PerfilUsuario',
   Persona: 'Persona',
@@ -707,14 +694,15 @@ exports.Prisma.ModelName = {
   Persona_Empleado: 'Persona_Empleado',
   Precio: 'Precio',
   Proveedor: 'Proveedor',
-  Provincia: 'Provincia',
   PuestoTrabajo: 'PuestoTrabajo',
   Rubro: 'Rubro',
   Stock: 'Stock',
-  sysdiagrams: 'sysdiagrams',
   Tarjeta: 'Tarjeta',
   UnidadMedida: 'UnidadMedida',
-  Usuario: 'Usuario'
+  Usuario: 'Usuario',
+  Movimiento: 'Movimiento',
+  Movimiento_CuentaCorriente: 'Movimiento_CuentaCorriente',
+  Movimiento_CuentaCorrienteProveedor: 'Movimiento_CuentaCorrienteProveedor'
 };
 
 /**

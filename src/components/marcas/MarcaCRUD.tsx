@@ -21,7 +21,8 @@ import {
   useDisclosure,
   addToast,
 } from "@heroui/react";
-import { useSession } from "next-auth/react";
+import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
+import type { TenantUser } from "@/types/auth";
 
 interface Marca {
   Id: number;
@@ -37,7 +38,7 @@ export default function MarcaCRUD() {
   );
   const [modoEdicion, setModoEdicion] = useState(false);
 
-  const session = useSession();
+  const { user } = useSupabaseAuthContext();
 
   // Estado del formulario
   const [formData, setFormData] = useState<Partial<Marca>>({
@@ -46,9 +47,22 @@ export default function MarcaCRUD() {
   });
 
   useEffect(() => {
-    const marcas = fetch("/api/marcas")
-      .then((response) => response.json())
-      .then((data) => setMarcas(data.marcas));
+    const loadMarcas = async () => {
+      try {
+        const response = await fetch("/api/marcas");
+        if (!response.ok) {
+          throw new Error("Error al cargar marcas");
+        }
+        const data = await response.json();
+        const listado = Array.isArray(data?.marcas) ? data.marcas : [];
+        setMarcas(listado);
+      } catch (err) {
+        console.error("Error al obtener marcas:", err);
+        setMarcas([]);
+      }
+    };
+
+    loadMarcas();
   }, []);
 
   // Abrir modal para crear
@@ -96,6 +110,20 @@ export default function MarcaCRUD() {
           color: "success",
         });
       } else {
+        const getTenantId = (u: TenantUser | null) => {
+          if (!u) return process.env.NEXT_PUBLIC_TENANT_ID;
+          const fromMeta =
+            (u.user_metadata?.tenant_id as string | number | undefined) ??
+            (u.user_metadata?.tenantId as string | number | undefined);
+          const fromApp = u.app_metadata?.tenant_id as
+            | string
+            | number
+            | undefined;
+          return u.tenantId ?? fromMeta ?? fromApp ?? process.env.NEXT_PUBLIC_TENANT_ID;
+        };
+
+        const tenantId = getTenantId(user);
+
         const response = await fetch("/api/marcas", {
           method: "POST",
           headers: {
@@ -103,7 +131,7 @@ export default function MarcaCRUD() {
           },
           body: JSON.stringify({
             ...formData,
-            TenantId: session?.data?.user?.tenantId,
+            TenantId: tenantId ? Number(tenantId) : undefined,
           }),
         });
 
@@ -116,7 +144,6 @@ export default function MarcaCRUD() {
           return;
         }
         const data = await response.json();
-        console.log(data);
         setMarcas((prev) => [...prev, data]);
         addToast({
           title: "Éxito",
@@ -126,7 +153,7 @@ export default function MarcaCRUD() {
       }
 
       onClose();
-    } catch (error) {
+    } catch {
       addToast({
         title: "Error",
         description: "Error al guardar la marca",

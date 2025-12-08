@@ -1,5 +1,4 @@
 "use client";
-import { signOut, useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import {
   Dropdown,
@@ -9,23 +8,26 @@ import {
   addToast,
   Button,
 } from "@heroui/react";
+import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 
 export default function DashboardHeader() {
-  const { data: session } = useSession();
+  const { user, supabase } = useSupabaseAuthContext();
 
   const userInitials =
-    session?.user?.name
+    user?.user_metadata?.full_name
       ?.split(" ")
-      .map((n) => n[0])
+      .map((n: string) => n[0])
       .join("")
-      .toUpperCase() || "U";
+      .toUpperCase() ||
+    user?.email?.[0]?.toUpperCase() ||
+    "U";
 
   function handleSignOut(): void {
     addToast({
       title: "Cerrar sesion",
       description: "Confirma que deseas cerrar sesion.",
       endContent: (
-        <Button size="sm" variant="flat" onPress={() => signOut()}>
+        <Button size="sm" variant="flat" onPress={() => supabase.auth.signOut()}>
           Aceptar
         </Button>
       ),
@@ -101,11 +103,9 @@ export default function DashboardHeader() {
                   </div>
                   <div className="text-left hidden md:block">
                     <p className="text-sm font-semibold text-slate-900">
-                      {session?.user?.name || "Usuario"}
+                      {user?.user_metadata?.full_name || user?.email || "Usuario"}
                     </p>
-                    <p className="text-xs text-slate-500">
-                      {session?.user?.email || ""}
-                    </p>
+                    <p className="text-xs text-slate-500">{user?.email || ""}</p>
                   </div>
                   <svg
                     className="w-4 h-4 text-slate-400"

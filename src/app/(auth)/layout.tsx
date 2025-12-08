@@ -1,12 +1,12 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Loading from "@/components/loading/loading";
+import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { status } = useSession();
+  const { status } = useSupabaseAuthContext();
   const router = useRouter();
 
   useEffect(() => {
@@ -15,12 +15,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   }, [status, router]);
 
-  // Mostrar loading mientras se verifica la autenticacion
   if (status === "loading") {
     return <Loading />;
   }
 
-  // Si esta autenticado, no mostrar nada (se redirigira)
   if (status === "authenticated") {
     return null;
   }

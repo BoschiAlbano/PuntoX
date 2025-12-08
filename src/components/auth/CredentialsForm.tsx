@@ -1,24 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
 
 export default function CredentialsForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { login } = useAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log("Entra");
-
     e.preventDefault();
     setError("");
 
     try {
-      await login({ email, password });
-    } catch (error) {
-      console.error("Error al iniciar sesion:", error);
+      const supabase = getSupabaseBrowserClient();
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) {
+        throw authError;
+      }
+
+      router.push("/ventas");
+    } catch (err) {
+      console.error("Error al iniciar sesion:", err);
       setError("Credenciales invalidas");
     }
   };

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import bcrypt from "bcryptjs";
+import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 
 export async function POST(request: NextRequest) {
 	try {
@@ -41,12 +41,11 @@ export async function POST(request: NextRequest) {
 			parsedLocalidadId = BigInt(localidadId);
 		} catch {
 			return NextResponse.json(
-				{ error: "Localidad inválida" },
+				{ error: "Localidad invalida" },
 				{ status: 400 }
 			);
 		}
 
-		// Validaciones basicas
 		if (
 			!apellido ||
 			!nombre ||
@@ -74,7 +73,6 @@ export async function POST(request: NextRequest) {
 		const usernameNormalized =
 			typeof nombreUsuario === "string" ? nombreUsuario.trim() : "";
 
-		// Validar que el Tenant exista
 		const tenantExists = await prisma.tenant.findUnique({
 			where: { Id: parsedTenantId },
 		});
@@ -86,7 +84,6 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		// Validar que la localidad exista y no esté eliminada
 		const localidadValida = await prisma.localidad.findFirst({
 			where: {
 				Id: parsedLocalidadId,
@@ -96,12 +93,11 @@ export async function POST(request: NextRequest) {
 
 		if (!localidadValida) {
 			return NextResponse.json(
-				{ error: "Localidad no válida" },
+				{ error: "Localidad no valida" },
 				{ status: 400 }
 			);
 		}
 
-		// Verificar si el email ya existe
 		const existingPersona = await prisma.persona.findFirst({
 			where: {
 				Mail: mailNormalized,
@@ -117,7 +113,6 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		// Verificar si el nombre de usuario ya existe
 		const existingUsuario = await prisma.usuario.findFirst({
 			where: {
 				Nombre: usernameNormalized,
@@ -133,12 +128,27 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		// Hash de la contrasena
-		const hashedPassword = await bcrypt.hash(password, 12);
+		const supabase = getSupabaseServiceClient();
+		const { data: authUser, error: authError } =
+			await supabase.auth.admin.createUser({
+				email: mailNormalized,
+				password,
+				email_confirm: true,
+				user_metadata: {
+					tenant_id: parsedTenantId.toString(),
+					role: "Empleado",
+				},
+			});
 
-		// Crear transaccion para insertar en todas las tablas
+		if (authError || !authUser?.user) {
+			console.error("Error creando usuario en Supabase:", authError);
+			return NextResponse.json(
+				{ error: "No se pudo crear el usuario en Supabase Auth" },
+				{ status: 500 }
+			);
+		}
+
 		const result = await prisma.$transaction(async (tx) => {
-			// 1. Crear Persona
 			const persona = await tx.persona.create({
 				data: {
 					TenantId: parsedTenantId,
@@ -153,22 +163,20 @@ export async function POST(request: NextRequest) {
 				},
 			});
 
-			// 2. Crear Persona_Empleado
 			const personaEmpleado = await tx.persona_Empleado.create({
 				data: {
 					Id: persona.Id,
-					Legajo: Math.floor(Math.random() * 10000) + 1000, // Generar legajo aleatorio
-					Foto: Buffer.alloc(0), // Foto vacia por defecto
+					Legajo: Math.floor(Math.random() * 10000) + 1000,
+					Foto: Buffer.alloc(0),
 				},
 			});
 
-			// 3. Crear Usuario
 			const usuario = await tx.usuario.create({
 				data: {
 					EmpleadoId: personaEmpleado.Id,
 					TenantId: parsedTenantId,
 					Nombre: usernameNormalized,
-					Password: hashedPassword,
+					AuthUserId: authUser.user.id,
 					EstaBloqueado: false,
 					EstaEliminado: false,
 				},
@@ -181,7 +189,6 @@ export async function POST(request: NextRequest) {
 			};
 		});
 
-		// Serializar los IDs BigInt antes de enviar la respuesta
 		const response = {
 			message: "Usuario registrado exitosamente",
 			userId: Number(result.usuario.Id),

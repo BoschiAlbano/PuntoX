@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Rutas publicas que no pasan por autenticacion
   const publicPaths = [
     "/signin",
     "/signup",
@@ -20,21 +19,53 @@ export async function middleware(req: NextRequest) {
     pathname.match(/\.(ico|png|jpg|jpeg|svg|gif|webp)$/) ||
     publicPaths.some((p) => pathname.startsWith(p));
 
-  if (isPublic) {
-    return NextResponse.next();
-  }
-
-  const token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET,
-    cookieName:
-      process.env.NODE_ENV === "production"
-        ? "__Secure-next-auth.session-token"
-        : "next-auth.session-token",
+  const response = NextResponse.next({
+    request: {
+      headers: req.headers,
+    },
   });
 
-  if (token) {
-    return NextResponse.next();
+  if (isPublic) {
+    return response;
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("Faltan variables de entorno de Supabase para la autenticacion.");
+    return response;
+  }
+
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      get(name: string) {
+        return req.cookies.get(name)?.value;
+      },
+      set(name: string, value: string, options) {
+        response.cookies.set({
+          name,
+          value,
+          ...options,
+        });
+      },
+      remove(name: string, options) {
+        response.cookies.set({
+          name,
+          value: "",
+          ...options,
+          maxAge: 0,
+        });
+      },
+    },
+  });
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session) {
+    return response;
   }
 
   const signInUrl = new URL("/signin", req.url);
