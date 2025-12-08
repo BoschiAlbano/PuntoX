@@ -1,65 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
-import type { TenantUser } from "@/types/auth";
 
-function extractTenantId(user: TenantUser | null) {
-  if (!user) return null;
-
-  const fromDirect = user.tenantId;
-  const meta = user.user_metadata ?? {};
-  const appMeta = user.app_metadata ?? {};
-
-  const fromMeta =
-    (meta["tenant_id"] as string | number | null | undefined) ??
-    (meta["tenantId"] as string | number | null | undefined);
-  const fromApp = appMeta["tenant_id"] as
-    | string
-    | number
-    | null
-    | undefined;
-
-  return (
-    fromDirect ??
-    fromMeta ??
-    fromApp ??
-    process.env.DEFAULT_TENANT_ID ??
-    null
-  );
-}
-
-async function getTenantFromAuth() {
+export async function GET(_req: NextRequest) {
+  // Obtener la session del usuario
   const supabase = await getSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  return extractTenantId(
-    user
-      ? {
-          id: user.id,
-          email: user.email ?? undefined,
-          tenantId: undefined,
-          role: null,
-          user_metadata: (user.user_metadata ?? {}) as Record<string, unknown>,
-          app_metadata: (user.app_metadata ?? {}) as Record<string, unknown>,
-        }
-      : null
-  );
-}
+  console.log(user);
 
-export async function GET(_req: NextRequest) {
-  const tenantId = await getTenantFromAuth();
+  const tenantId = user?.user_metadata?.tenantId;
+
+  console.log(tenantId);
 
   if (!tenantId) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    return NextResponse.json({ message: "No autenticado" }, { status: 401 });
   }
 
   try {
     const marcas = await prisma.marca.findMany({
       where: {
-        EstaEliminado: false,
         TenantId: Number(tenantId),
+        EstaEliminado: false,
       },
       select: {
         Id: true,
@@ -84,10 +48,19 @@ export async function GET(_req: NextRequest) {
 }
 
 export async function POST(req: Request) {
-  const tenantId = await getTenantFromAuth();
+  const supabase = await getSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  console.log(user);
+
+  const tenantId = user?.user_metadata?.tenantId;
+
+  console.log(tenantId);
 
   if (!tenantId) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    return NextResponse.json({ message: "No autenticado" }, { status: 401 });
   }
 
   try {
@@ -115,12 +88,16 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const tenantId = await getTenantFromAuth();
+  const supabase = await getSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const tenantId = user?.user_metadata?.tenantId;
 
   if (!tenantId) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    return NextResponse.json({ message: "No autenticado" }, { status: 401 });
   }
-
   const idParam =
     req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
   const marcaId = idParam ? Number(idParam) : NaN;
@@ -133,14 +110,14 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
-    const marcaActualizada = await prisma.marca.update({
+    const marcaActualizada = await prisma.marca.delete({
       where: {
         Id: marcaId,
         TenantId: Number(tenantId),
       },
-      data: {
-        EstaEliminado: true,
-      },
+      // data: {
+      //   EstaEliminado: true,
+      // },
       select: {
         Id: true,
       },

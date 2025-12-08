@@ -40,6 +40,7 @@ export async function registerTenant(formData: FormData) {
   } = parseResult.data;
 
   try {
+    // Creo el usuario en supabase
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email: adminEmail,
       password: adminPassword,
@@ -59,6 +60,7 @@ export async function registerTenant(formData: FormData) {
     const authUserId = data.user.id;
     const LOCALIDAD_DUMMY_ID = BigInt(1000);
 
+    // Creo todas las tablas del tenant esta relacionado
     const tenant = await prisma.tenant.create({
       data: {
         Nombre: tenantName,
@@ -127,7 +129,7 @@ export async function registerTenant(formData: FormData) {
 
     const deposito = await prisma.deposito.create({
       data: {
-        Descripcion: "Depósito principal",
+        Descripcion: "Depósito principal 2",
         Ubicacion: "Principal",
         EstaEliminado: false,
         TenantId: tenant.Id,
@@ -169,6 +171,29 @@ export async function registerTenant(formData: FormData) {
         TenantId: tenant.Id,
       },
     });
+
+    // actualizo las metadatos del usuario para guardar el id del tenant
+    const { error: metaError } = await supabaseAdmin.auth.admin.updateUserById(
+      authUserId,
+      {
+        user_metadata: {
+          tenantId: tenant.Id.toString(),
+        },
+      }
+    );
+
+    if (metaError) {
+      console.error(
+        "Error actualizando meta de usuario en Supabase",
+        metaError
+      );
+      return {
+        ok: false as const,
+        error:
+          "No se pudo actualizar el meta del usuario en Supabase: " +
+          (metaError?.message ?? "error desconocido"),
+      };
+    }
 
     return {
       ok: true as const,

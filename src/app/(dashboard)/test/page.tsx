@@ -20,6 +20,10 @@ export default function Page() {
       <h1>Email: {user?.email}</h1>
       <h1>Role: {user?.role || roleFromMetadata}</h1>
       <h1>TenantId: {user?.tenantId ?? tenantFromMetadata}</h1>
+
+      {/* user y session */}
+      <pre>{JSON.stringify(user, null, 2)}</pre>
+      <pre>{JSON.stringify(session, null, 2)}</pre>
     </div>
   );
 }
