@@ -4,33 +4,23 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlserver"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-/// Historial de migraciones (heredado de otro sistema / EF). No se usa para lógica de negocio.
-model MigrationHistory {
-  MigrationId    String @db.NVarChar(150)
-  ContextKey     String @db.NVarChar(300)
-  Model          Bytes
-  ProductVersion String @db.NVarChar(32)
-
-  @@id([MigrationId, ContextKey], map: "PK_dbo.__MigrationHistory")
-  @@map("__MigrationHistory")
-}
-
-/// Representa un comercio/cliente del SaaS. Todo lo que tiene TenantId pertenece a este Tenant.
+/// Representa un comercio/cliente del SaaS.
+/// Todo lo que tiene TenantId pertenece a este Tenant.
 model Tenant {
   Id                  BigInt               @id @default(autoincrement())
   Nombre              String               @db.VarChar(250)
-  /// Dominio o subdominio asignado a este tenant (opcional)
-  Dominio             String?              @unique(map: "UX_Tenant_Dominio") @db.VarChar(400)
+  Dominio             String?              @unique @db.VarChar(400)
   RazonSocial         String?              @db.VarChar(250)
   Cuit                String?              @db.VarChar(20)
   Email               String?              @db.VarChar(250)
   Telefono            String?              @db.VarChar(25)
   EstaActivo          Boolean              @default(true)
-  /// Plan comercial asociado (nullable para compatibilidad)
+  OnboardingCompleto  Boolean              @default(false)
   PlanId              BigInt?
   Articulos           Articulo[]
   BajaArticulos       BajaArticulo[]
@@ -54,8 +44,8 @@ model Tenant {
   Marcas              Marca[]
   MotivosBaja         MotivoBajas[]
   Movimientos         Movimiento[]
-  Perfiles            Perfiles[]
   PerfilesUsuarios    PerfilUsuario[]
+  Perfiles            Perfiles[]
   Personas            Persona[]
   Precios             Precio[]
   Proveedores         Proveedor[]
@@ -67,25 +57,25 @@ model Tenant {
   Unidades            UnidadMedida[]
   Usuarios            Usuario[]
 
-  @@index([PlanId], map: "IX_Tenant_PlanId")
+  @@index([PlanId])
 }
 
-/// Planes de suscripciカn SaaS disponibles (global)
+/// Planes de suscripción SaaS disponibles (global)
 model PlanSaaS {
   Id              BigInt   @id @default(autoincrement())
-  Nombre          String   @unique(map: "UX_PlanSaaS_Nombre") @db.VarChar(200)
+  Nombre          String   @unique @db.VarChar(200)
   Descripcion     String?  @db.VarChar(800)
   CostoMensual    Decimal  @db.Decimal(18, 2)
-  /// Caracteristicas adicionales (texto/JSON serializado)
+  /// Características adicionales (texto/JSON serializado)
   Caracteristicas String?  @db.VarChar(4000)
   Tenants         Tenant[]
 }
 
-/// Logs de aplicaciカn; TenantId nullable permite logs globales o por tenant
+/// Logs de aplicacion; TenantId nullable permite logs globales o por tenant
 model Log {
   Id       BigInt   @id @default(autoincrement())
   TenantId BigInt?
-  Fecha    DateTime @default(now()) @db.DateTime
+  Fecha    DateTime @default(now())
   Nivel    String   @db.VarChar(50)
   Servicio String?  @db.VarChar(200)
   Mensaje  String   @db.VarChar(4000)
@@ -98,7 +88,7 @@ model Log {
 
 /// Artículos/Productos del comercio. Incluye datos de stock y atributos comerciales.
 model Articulo {
-  Id                   BigInt               @id(map: "PK_dbo.Articulo") @default(autoincrement())
+  Id                   BigInt               @id @default(autoincrement())
   MarcaId              BigInt
   RubroId              BigInt
   UnidadMedidaId       BigInt
@@ -116,8 +106,8 @@ model Articulo {
   ActivarLimiteVenta   Boolean
   LimiteVenta          Decimal              @db.Decimal(18, 2)
   ActivarHoraVenta     Boolean
-  HoraLimiteVentaDesde DateTime             @db.DateTime
-  HoraLimiteVentaHasta DateTime             @db.DateTime
+  HoraLimiteVentaDesde DateTime
+  HoraLimiteVentaHasta DateTime
   PermiteStockNegativo Boolean
   DescuentaStock       Boolean
   StockMinimo          Decimal              @db.Decimal(18, 2)
@@ -126,47 +116,47 @@ model Articulo {
   EstaEliminado        Boolean
   /// Tenant dueño de este artículo
   TenantId             BigInt
+  Iva                  Iva                  @relation(fields: [IvaId], references: [Id], onUpdate: NoAction)
+  Marca                Marca                @relation(fields: [MarcaId], references: [Id], onUpdate: NoAction)
+  Precio               Precio               @relation(fields: [PrecioId], references: [Id], onUpdate: NoAction)
+  Rubro                Rubro                @relation(fields: [RubroId], references: [Id], onUpdate: NoAction)
   Tenant               Tenant               @relation(fields: [TenantId], references: [Id])
-  Iva                  Iva                  @relation(fields: [IvaId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Articulo_dbo.Iva_IvaId")
-  Marca                Marca                @relation(fields: [MarcaId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Articulo_dbo.Marca_MarcaId")
-  Precio               Precio               @relation(fields: [PrecioId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Articulo_dbo.Precio_PrecioId")
-  Rubro                Rubro                @relation(fields: [RubroId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Articulo_dbo.Rubro_RubroId")
-  UnidadMedida         UnidadMedida         @relation(fields: [UnidadMedidaId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Articulo_dbo.UnidadMedida_UnidadMedidaId")
+  UnidadMedida         UnidadMedida         @relation(fields: [UnidadMedidaId], references: [Id], onUpdate: NoAction)
   BajaArticulo         BajaArticulo[]
   DetalleComprobante   DetalleComprobante[]
   Stock                Stock[]
 
   @@index([TenantId])
-  @@index([IvaId], map: "IX_IvaId")
-  @@index([MarcaId], map: "IX_MarcaId")
-  @@index([PrecioId], map: "IX_PrecioId")
-  @@index([RubroId], map: "IX_RubroId")
-  @@index([UnidadMedidaId], map: "IX_UnidadMedidaId")
+  @@index([IvaId])
+  @@index([MarcaId])
+  @@index([PrecioId])
+  @@index([RubroId])
+  @@index([UnidadMedidaId])
 }
 
 /// Bajas de artículos (ajustes de stock por pérdida, rotura, etc.).
 model BajaArticulo {
-  Id            BigInt      @id(map: "PK_dbo.BajaArticulo") @default(autoincrement())
+  Id            BigInt      @id @default(autoincrement())
   ArticuloId    BigInt
   MotivoBajaId  BigInt
   Cantidad      Decimal     @db.Decimal(18, 2)
-  Fecha         DateTime    @db.DateTime
+  Fecha         DateTime
   Observacion   String      @db.VarChar(400)
   EstaEliminado Boolean
   /// Tenant dueño de esta baja
   TenantId      BigInt
+  Articulo      Articulo    @relation(fields: [ArticuloId], references: [Id], onUpdate: NoAction)
+  MotivoBajas   MotivoBajas @relation(fields: [MotivoBajaId], references: [Id], onUpdate: NoAction)
   Tenant        Tenant      @relation(fields: [TenantId], references: [Id])
-  Articulo      Articulo    @relation(fields: [ArticuloId], references: [Id], onUpdate: NoAction, map: "FK_dbo.BajaArticulo_dbo.Articulo_ArticuloId")
-  MotivoBajas   MotivoBajas @relation(fields: [MotivoBajaId], references: [Id], onUpdate: NoAction, map: "FK_dbo.BajaArticulo_dbo.MotivoBajas_MotivoBajaId")
 
   @@index([TenantId])
-  @@index([ArticuloId], map: "IX_ArticuloId")
-  @@index([MotivoBajaId], map: "IX_MotivoBajaId")
+  @@index([ArticuloId])
+  @@index([MotivoBajaId])
 }
 
 /// Bancos utilizados por el comercio (para cheques, cuentas, etc.).
 model Banco {
-  Id              BigInt            @id(map: "PK_dbo.Banco") @default(autoincrement())
+  Id              BigInt            @id @default(autoincrement())
   Descripcion     String            @db.VarChar(250)
   EstaEliminado   Boolean
   /// Tenant dueño de este banco
@@ -180,12 +170,12 @@ model Banco {
 
 /// Movimientos de caja por turno/apertura-cierre.
 model Caja {
-  Id                                      BigInt        @id(map: "PK_dbo.Caja") @default(autoincrement())
+  Id                                      BigInt        @id @default(autoincrement())
   UsuarioAperturaId                       BigInt
   MontoInicial                            Decimal       @db.Decimal(18, 2)
-  FechaApertura                           DateTime      @db.DateTime
+  FechaApertura                           DateTime
   UsuarioCierreId                         BigInt?
-  FechaCierre                             DateTime?     @db.DateTime
+  FechaCierre                             DateTime?
   MontoCierre                             Decimal?      @db.Decimal(18, 2)
   TotalEntradaEfectivo                    Decimal       @db.Decimal(18, 2)
   TotalSalidaEfectivo                     Decimal       @db.Decimal(18, 2)
@@ -198,49 +188,49 @@ model Caja {
   TotalEntradaTransf                      Decimal       @db.Decimal(18, 2)
   TotalSalidaTransf                       Decimal       @db.Decimal(18, 2)
   EstaEliminado                           Boolean
-  Ganancia                                Decimal       @default(0, map: "DF__Caja__Ganancia__0880433F") @db.Decimal(18, 2)
+  Ganancia                                Decimal       @default(0) @db.Decimal(18, 2)
   /// Tenant dueño de esta caja
   TenantId                                BigInt
   Tenant                                  Tenant        @relation(fields: [TenantId], references: [Id])
-  Usuario_Caja_UsuarioAperturaIdToUsuario Usuario       @relation("Caja_UsuarioAperturaIdToUsuario", fields: [UsuarioAperturaId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Caja_dbo.Usuario_UsuarioAperturaId")
-  Usuario_Caja_UsuarioCierreIdToUsuario   Usuario?      @relation("Caja_UsuarioCierreIdToUsuario", fields: [UsuarioCierreId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_dbo.Caja_dbo.Usuario_UsuarioCierreId")
+  Usuario_Caja_UsuarioAperturaIdToUsuario Usuario       @relation("Caja_UsuarioAperturaIdToUsuario", fields: [UsuarioAperturaId], references: [Id], onUpdate: NoAction)
+  Usuario_Caja_UsuarioCierreIdToUsuario   Usuario?      @relation("Caja_UsuarioCierreIdToUsuario", fields: [UsuarioCierreId], references: [Id], onDelete: NoAction, onUpdate: NoAction)
   DetalleCaja                             DetalleCaja[]
   Gasto                                   Gasto[]
   Movimiento                              Movimiento[]
 
   @@index([TenantId])
-  @@index([UsuarioAperturaId], map: "IX_UsuarioAperturaId")
-  @@index([UsuarioCierreId], map: "IX_UsuarioCierreId")
+  @@index([UsuarioAperturaId])
+  @@index([UsuarioCierreId])
 }
 
 /// Cheques recibidos de clientes.
 model Cheque {
-  Id               BigInt             @id(map: "PK_dbo.Cheque") @default(autoincrement())
+  Id               BigInt             @id @default(autoincrement())
   ClienteId        BigInt
   BancoId          BigInt
   Numero           String             @db.VarChar(100)
-  FechaVencimiento DateTime           @db.DateTime
+  FechaVencimiento DateTime
   EstaRechazado    Boolean
   EstaEliminado    Boolean
   /// Tenant dueño de este cheque
   TenantId         BigInt
+  Banco            Banco              @relation(fields: [BancoId], references: [Id], onUpdate: NoAction)
+  Persona_Cliente  Persona_Cliente    @relation(fields: [ClienteId], references: [Id], onUpdate: NoAction)
   Tenant           Tenant             @relation(fields: [TenantId], references: [Id])
-  Banco            Banco              @relation(fields: [BancoId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Cheque_dbo.Banco_BancoId")
-  Persona_Cliente  Persona_Cliente    @relation(fields: [ClienteId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Cheque_dbo.Persona_Cliente_ClienteId")
   DepositoCheques  DepositoCheques[]
   FormaPago_Cheque FormaPago_Cheque[]
 
   @@index([TenantId])
-  @@index([BancoId], map: "IX_BancoId")
-  @@index([ClienteId], map: "IX_ClienteId")
+  @@index([BancoId])
+  @@index([ClienteId])
 }
 
 /// Cabecera genérica de comprobantes (facturas, notas de crédito, presupuestos, etc.).
 model Comprobante {
-  Id                                                                         BigInt                       @id(map: "PK_dbo.Comprobante") @default(autoincrement())
+  Id                                                                         BigInt                       @id @default(autoincrement())
   EmpleadoId                                                                 BigInt
   UsuarioId                                                                  BigInt
-  Fecha                                                                      DateTime                     @db.DateTime
+  Fecha                                                                      DateTime
   Numero                                                                     Int
   SubTotal                                                                   Decimal                      @db.Decimal(18, 2)
   Descuento                                                                  Decimal                      @db.Decimal(18, 2)
@@ -251,9 +241,9 @@ model Comprobante {
   EstaEliminado                                                              Boolean
   /// Tenant dueño de este comprobante
   TenantId                                                                   BigInt
+  Persona_Empleado                                                           Persona_Empleado             @relation(fields: [EmpleadoId], references: [Id], onUpdate: NoAction)
   Tenant                                                                     Tenant                       @relation(fields: [TenantId], references: [Id])
-  Persona_Empleado                                                           Persona_Empleado             @relation(fields: [EmpleadoId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_dbo.Persona_Empleado_EmpleadoId")
-  Usuario                                                                    Usuario                      @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_dbo.Usuario_UsuarioId")
+  Usuario                                                                    Usuario                      @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
   Comprobante_Compra                                                         Comprobante_Compra?
   Comprobante_CtaCteProveedor                                                Comprobante_CtaCteProveedor?
   Comprobante_CuentaCorriente                                                Comprobante_CuentaCorriente?
@@ -267,112 +257,112 @@ model Comprobante {
   Movimiento                                                                 Movimiento[]
 
   @@index([TenantId])
-  @@index([EmpleadoId], map: "IX_EmpleadoId")
-  @@index([UsuarioId], map: "IX_UsuarioId")
+  @@index([EmpleadoId])
+  @@index([UsuarioId])
 }
 
 /// Datos adicionales de comprobantes de compra.
 model Comprobante_Compra {
-  Id             BigInt      @id(map: "PK_dbo.Comprobante_Compra")
+  Id             BigInt      @id
   /// Hereda TenantId desde Comprobante (Id es PK y FK)
   ProveedorId    BigInt
-  FechaEntrega   DateTime    @db.DateTime
+  FechaEntrega   DateTime
   Iva27          Decimal     @db.Decimal(18, 2)
   PrecepcionTemp Decimal     @db.Decimal(18, 2)
   PrecepcionPyP  Decimal     @db.Decimal(18, 2)
   PrecepcionIva  Decimal     @db.Decimal(18, 2)
   PrecepcionIB   Decimal     @db.Decimal(18, 2)
   EstadoFactura  Int
-  Comprobante    Comprobante @relation(fields: [Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_Compra_dbo.Comprobante_Id")
-  Proveedor      Proveedor   @relation(fields: [ProveedorId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_Compra_dbo.Proveedor_ProveedorId")
+  Comprobante    Comprobante @relation(fields: [Id], references: [Id], onUpdate: NoAction)
+  Proveedor      Proveedor   @relation(fields: [ProveedorId], references: [Id], onUpdate: NoAction)
 
-  @@index([Id], map: "IX_Id")
-  @@index([ProveedorId], map: "IX_ProveedorId")
+  @@index([Id])
+  @@index([ProveedorId])
 }
 
 /// Relación comprobante con cuenta corriente de proveedor.
 model Comprobante_CtaCteProveedor {
-  Id          BigInt      @id(map: "PK_dbo.Comprobante_CtaCteProveedor")
+  Id          BigInt      @id
   /// Hereda TenantId desde Comprobante (Id es PK y FK)
   ProveedorId BigInt
   Estado      Int
-  Comprobante Comprobante @relation(fields: [Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_CtaCteProveedor_dbo.Comprobante_Id")
-  Proveedor   Proveedor   @relation(fields: [ProveedorId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_CtaCteProveedor_dbo.Proveedor_ProveedorId")
+  Comprobante Comprobante @relation(fields: [Id], references: [Id], onUpdate: NoAction)
+  Proveedor   Proveedor   @relation(fields: [ProveedorId], references: [Id], onUpdate: NoAction)
 
-  @@index([Id], map: "IX_Id")
-  @@index([ProveedorId], map: "IX_ProveedorId")
+  @@index([Id])
+  @@index([ProveedorId])
 }
 
 /// Relación comprobante con movimiento de cuenta corriente de cliente.
 model Comprobante_CuentaCorriente {
-  Id                          BigInt                     @id(map: "PK_dbo.Comprobante_CuentaCorriente")
+  Id                          BigInt                     @id
   /// Hereda TenantId desde Comprobante (Id es PK y FK)
   ClienteId                   BigInt
   MovimientoCuentaCorrienteId BigInt
-  Comprobante                 Comprobante                @relation(fields: [Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_CuentaCorriente_dbo.Comprobante_Id")
-  Movimiento_CuentaCorriente  Movimiento_CuentaCorriente @relation(fields: [MovimientoCuentaCorrienteId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_CuentaCorriente_dbo.Movimiento_CuentaCorriente_MovimientoCuentaCorrienteId")
-  Persona_Cliente             Persona_Cliente            @relation(fields: [ClienteId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_CuentaCorriente_dbo.Persona_Cliente_ClienteId")
+  Persona_Cliente             Persona_Cliente            @relation(fields: [ClienteId], references: [Id], onUpdate: NoAction)
+  Comprobante                 Comprobante                @relation(fields: [Id], references: [Id], onUpdate: NoAction)
+  Movimiento_CuentaCorriente  Movimiento_CuentaCorriente @relation(fields: [MovimientoCuentaCorrienteId], references: [Id], onUpdate: NoAction)
 
-  @@index([ClienteId], map: "IX_ClienteId")
-  @@index([Id], map: "IX_Id")
-  @@index([MovimientoCuentaCorrienteId], map: "IX_MovimientoCuentaCorrienteId")
+  @@index([ClienteId])
+  @@index([Id])
+  @@index([MovimientoCuentaCorrienteId])
 }
 
 /// Información de facturas (cliente y puesto de trabajo).
 model Comprobante_Factura {
-  Id              BigInt          @id(map: "PK_dbo.Comprobante_Factura")
+  Id              BigInt          @id
   /// Hereda TenantId desde Comprobante (Id es PK y FK)
   ClienteId       BigInt
   PuestoTrabajoId BigInt
   Estado          Int
-  Comprobante     Comprobante     @relation(fields: [Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_Factura_dbo.Comprobante_Id")
-  Persona_Cliente Persona_Cliente @relation(fields: [ClienteId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_Factura_dbo.Persona_Cliente_ClienteId")
-  PuestoTrabajo   PuestoTrabajo   @relation(fields: [PuestoTrabajoId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_Factura_dbo.PuestoTrabajo_PuestoTrabajoId")
+  Persona_Cliente Persona_Cliente @relation(fields: [ClienteId], references: [Id], onUpdate: NoAction)
+  Comprobante     Comprobante     @relation(fields: [Id], references: [Id], onUpdate: NoAction)
+  PuestoTrabajo   PuestoTrabajo   @relation(fields: [PuestoTrabajoId], references: [Id], onUpdate: NoAction)
 
-  @@index([ClienteId], map: "IX_ClienteId")
-  @@index([Id], map: "IX_Id")
-  @@index([PuestoTrabajoId], map: "IX_PuestoTrabajoId")
+  @@index([ClienteId])
+  @@index([Id])
+  @@index([PuestoTrabajoId])
 }
 
 /// Relación entre nota de crédito y comprobantes.
 model Comprobante_NotaCredito {
-  Id                                                             BigInt      @id(map: "PK_dbo.Comprobante_NotaCredito")
+  Id                                                             BigInt      @id
   /// Hereda TenantId desde Comprobante (Id es PK y FK)
   ComprobanteId                                                  BigInt
-  Comprobante_Comprobante_NotaCredito_ComprobanteIdToComprobante Comprobante @relation("Comprobante_NotaCredito_ComprobanteIdToComprobante", fields: [ComprobanteId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_NotaCredito_dbo.Comprobante_ComprobanteId")
-  Comprobante_Comprobante_NotaCredito_IdToComprobante            Comprobante @relation("Comprobante_NotaCredito_IdToComprobante", fields: [Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_NotaCredito_dbo.Comprobante_Id")
+  Comprobante_Comprobante_NotaCredito_ComprobanteIdToComprobante Comprobante @relation("Comprobante_NotaCredito_ComprobanteIdToComprobante", fields: [ComprobanteId], references: [Id], onUpdate: NoAction)
+  Comprobante_Comprobante_NotaCredito_IdToComprobante            Comprobante @relation("Comprobante_NotaCredito_IdToComprobante", fields: [Id], references: [Id], onUpdate: NoAction)
 
-  @@index([ComprobanteId], map: "IX_ComprobanteId")
-  @@index([Id], map: "IX_Id")
+  @@index([ComprobanteId])
+  @@index([Id])
 }
 
 /// Datos de presupuestos (asociados a cliente).
 model Comprobante_Presupuesto {
-  Id              BigInt          @id(map: "PK_dbo.Comprobante_Presupuesto")
+  Id              BigInt          @id
   /// Hereda TenantId desde Comprobante (Id es PK y FK)
   ClienteId       BigInt
-  Comprobante     Comprobante     @relation(fields: [Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_Presupuesto_dbo.Comprobante_Id")
-  Persona_Cliente Persona_Cliente @relation(fields: [ClienteId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_Presupuesto_dbo.Persona_Cliente_ClienteId")
+  Persona_Cliente Persona_Cliente @relation(fields: [ClienteId], references: [Id], onUpdate: NoAction)
+  Comprobante     Comprobante     @relation(fields: [Id], references: [Id], onUpdate: NoAction)
 
-  @@index([ClienteId], map: "IX_ClienteId")
-  @@index([Id], map: "IX_Id")
+  @@index([ClienteId])
+  @@index([Id])
 }
 
 /// Datos de remitos (asociados a cliente).
 model Comprobante_Remito {
-  Id              BigInt          @id(map: "PK_dbo.Comprobante_Remito")
+  Id              BigInt          @id
   /// Hereda TenantId desde Comprobante (Id es PK y FK)
   ClienteId       BigInt
-  Comprobante     Comprobante     @relation(fields: [Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_Remito_dbo.Comprobante_Id")
-  Persona_Cliente Persona_Cliente @relation(fields: [ClienteId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Comprobante_Remito_dbo.Persona_Cliente_ClienteId")
+  Persona_Cliente Persona_Cliente @relation(fields: [ClienteId], references: [Id], onUpdate: NoAction)
+  Comprobante     Comprobante     @relation(fields: [Id], references: [Id], onUpdate: NoAction)
 
-  @@index([ClienteId], map: "IX_ClienteId")
-  @@index([Id], map: "IX_Id")
+  @@index([ClienteId])
+  @@index([Id])
 }
 
 /// Conceptos utilizados para clasificar gastos.
 model ConceptoGastos {
-  Id            BigInt  @id(map: "PK_dbo.ConceptoGastos") @default(autoincrement())
+  Id            BigInt  @id @default(autoincrement())
   Descripcion   String  @db.VarChar(250)
   EstaEliminado Boolean
   /// Tenant dueño de este concepto
@@ -385,8 +375,8 @@ model ConceptoGastos {
 
 /// Condiciones de IVA (Responsable Inscripto, Monotributista, etc.).
 model CondicionIva {
-  Id              BigInt            @id(map: "PK_dbo.CondicionIva") @default(autoincrement())
-  Descripcion     String            @unique(map: "Index_Descripcion_CondicionIva") @db.VarChar(150)
+  Id              BigInt            @id @default(autoincrement())
+  Descripcion     String            @unique @db.VarChar(150)
   EstaEliminado   Boolean
   Persona_Cliente Persona_Cliente[]
   Proveedor       Proveedor[]
@@ -394,7 +384,7 @@ model CondicionIva {
 
 /// Configuración general del comercio (datos fiscales, parámetros de stock, etc.).
 model Configuracion {
-  Id                                     BigInt    @id(map: "PK_dbo.Configuracion") @default(autoincrement())
+  Id                                     BigInt    @id @default(autoincrement())
   RazonSocial                            String    @db.VarChar(250)
   NombreFantasia                         String?   @db.VarChar(250)
   Cuit                                   String    @db.VarChar(13)
@@ -424,21 +414,21 @@ model Configuracion {
   CodigoBascula                          String?   @db.VarChar(8000)
   EstaEliminado                          Boolean
   Foto                                   Bytes?
-  ShowFoto                               Boolean   @default(false, map: "DF__Configura__ShowF__19AACF41")
+  ShowFoto                               Boolean   @default(false)
   /// Tenant dueño de esta configuración
   TenantId                               BigInt
+  Deposito                               Deposito  @relation(fields: [DepositoId], references: [Id], onUpdate: NoAction)
+  Localidad                              Localidad @relation(fields: [LocalidadId], references: [Id], onUpdate: NoAction)
   Tenant                                 Tenant    @relation(fields: [TenantId], references: [Id])
-  Deposito                               Deposito  @relation(fields: [DepositoId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Configuracion_dbo.Deposito_DepositoId")
-  Localidad                              Localidad @relation(fields: [LocalidadId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Configuracion_dbo.Localidad_LocalidadId")
 
   @@index([TenantId])
-  @@index([DepositoId], map: "IX_DepositoId")
-  @@index([LocalidadId], map: "IX_LocalidadId")
+  @@index([DepositoId])
+  @@index([LocalidadId])
 }
 
 /// Contadores para numeración de comprobantes.
 model Contador {
-  Id              BigInt  @id(map: "PK_dbo.Contador") @default(autoincrement())
+  Id              BigInt  @id @default(autoincrement())
   TipoComprobante Int
   Valor           Int
   EstaEliminado   Boolean
@@ -451,37 +441,61 @@ model Contador {
 
 /// Cuentas bancarias del comercio.
 model CuentaBancarias {
-  Id              BigInt            @id(map: "PK_dbo.CuentaBancarias") @default(autoincrement())
+  Id              BigInt            @id @default(autoincrement())
   BancoId         BigInt
   Numero          String            @db.VarChar(100)
   Titular         String            @db.VarChar(250)
   EstaEliminado   Boolean
   /// Tenant dueño de esta cuenta bancaria
   TenantId        BigInt
+  Banco           Banco             @relation(fields: [BancoId], references: [Id], onUpdate: NoAction)
   Tenant          Tenant            @relation(fields: [TenantId], references: [Id])
-  Banco           Banco             @relation(fields: [BancoId], references: [Id], onUpdate: NoAction, map: "FK_dbo.CuentaBancarias_dbo.Banco_BancoId")
   DepositoCheques DepositoCheques[]
 
   @@index([TenantId])
-  @@index([BancoId], map: "IX_BancoId")
+  @@index([BancoId])
+}
+
+/// Provincias (catálogo fijo, lo carga el sistema).
+/// Los clientes solo seleccionan una provincia, no la crean.
+model Provincia {
+  Id            BigInt         @id @default(autoincrement())
+  Descripcion   String         @unique @db.VarChar(100)
+  EstaEliminado Boolean
+  Departamento  Departamento[]
 }
 
 /// Departamentos (subdivisión de provincia).
+/// Podés tratarlos como catálogo pre-cargado o ir agregando.
 model Departamento {
-  Id            BigInt      @id(map: "PK_dbo.Departamento") @unique(map: "UX_Departamento_Id")
+  Id            BigInt      @id @default(autoincrement())
   ProvinciaId   BigInt
   Descripcion   String      @db.VarChar(250)
   EstaEliminado Boolean
-  Provincia     Provincia   @relation(fields: [ProvinciaId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Departamento_dbo.Provincia_ProvinciaId")
+  Provincia     Provincia   @relation(fields: [ProvinciaId], references: [Id], onUpdate: NoAction)
   Localidad     Localidad[]
 
-  @@unique([ProvinciaId, Descripcion], map: "Index_ProvinciaId_Descripcion_Departamento")
+  @@unique([ProvinciaId, Descripcion])
+}
+
+/// Localidades (ciudad/pueblo).
+/// Estas sí las puede crear el cliente desde el sistema.
+model Localidad {
+  Id             BigInt          @id @default(autoincrement())
+  DepartamentoId BigInt
+  Descripcion    String          @db.VarChar(250)
+  EstaEliminado  Boolean
+  Configuracion  Configuracion[]
+  Departamento   Departamento    @relation(fields: [DepartamentoId], references: [Id], onUpdate: NoAction)
+  Persona        Persona[]
+  Proveedor      Proveedor[]
+
 }
 
 /// Depósitos o almacenes donde se guarda stock.
 model Deposito {
-  Id            BigInt          @id(map: "PK_dbo.Deposito") @default(autoincrement())
-  Descripcion   String          @unique(map: "Index_Descripcion_Deposito") @db.VarChar(250)
+  Id            BigInt          @id @default(autoincrement())
+  Descripcion   String          @unique @db.VarChar(250)
   Ubicacion     String?         @db.VarChar(400)
   EstaEliminado Boolean
   /// Tenant dueño de este depósito
@@ -495,41 +509,41 @@ model Deposito {
 
 /// Depósitos de cheques en cuentas bancarias.
 model DepositoCheques {
-  Id               BigInt          @id(map: "PK_dbo.DepositoCheques") @default(autoincrement())
+  Id               BigInt          @id @default(autoincrement())
   ChequeId         BigInt
   CuentaBancariaId BigInt
-  Fecha            DateTime        @db.DateTime
+  Fecha            DateTime
   EstaEliminado    Boolean
   /// Tenant dueño de este depósito de cheques
   TenantId         BigInt
+  Cheque           Cheque          @relation(fields: [ChequeId], references: [Id], onUpdate: NoAction)
+  CuentaBancarias  CuentaBancarias @relation(fields: [CuentaBancariaId], references: [Id], onUpdate: NoAction)
   Tenant           Tenant          @relation(fields: [TenantId], references: [Id])
-  Cheque           Cheque          @relation(fields: [ChequeId], references: [Id], onUpdate: NoAction, map: "FK_dbo.DepositoCheques_dbo.Cheque_ChequeId")
-  CuentaBancarias  CuentaBancarias @relation(fields: [CuentaBancariaId], references: [Id], onUpdate: NoAction, map: "FK_dbo.DepositoCheques_dbo.CuentaBancarias_CuentaBancariaId")
 
   @@index([TenantId])
-  @@index([ChequeId], map: "IX_ChequeId")
-  @@index([CuentaBancariaId], map: "IX_CuentaBancariaId")
+  @@index([ChequeId])
+  @@index([CuentaBancariaId])
 }
 
 /// Detalle resumido por tipo de pago en la caja.
 model DetalleCaja {
-  Id            BigInt  @id(map: "PK_dbo.DetalleCaja") @default(autoincrement())
+  Id            BigInt  @id @default(autoincrement())
   CajaId        BigInt
   TipoPago      Int
   Monto         Decimal @db.Decimal(18, 2)
   EstaEliminado Boolean
   /// Tenant dueño de este detalle
   TenantId      BigInt
+  Caja          Caja    @relation(fields: [CajaId], references: [Id], onUpdate: NoAction)
   Tenant        Tenant  @relation(fields: [TenantId], references: [Id])
-  Caja          Caja    @relation(fields: [CajaId], references: [Id], onUpdate: NoAction, map: "FK_dbo.DetalleCaja_dbo.Caja_CajaId")
 
   @@index([TenantId])
-  @@index([CajaId], map: "IX_CajaId")
+  @@index([CajaId])
 }
 
 /// Renglones de cada comprobante (detalle de venta/compra).
 model DetalleComprobante {
-  Id            BigInt      @id(map: "PK_dbo.DetalleComprobante") @default(autoincrement())
+  Id            BigInt      @id @default(autoincrement())
   ComprobanteId BigInt
   ArticuloId    BigInt
   Codigo        String      @db.VarChar(8000)
@@ -539,100 +553,100 @@ model DetalleComprobante {
   Precio        Decimal     @db.Decimal(18, 2)
   SubTotal      Decimal     @db.Decimal(18, 2)
   EstaEliminado Boolean
-  Costo         Decimal     @default(0, map: "DF__DetalleCo__Costo__078C1F06") @db.Decimal(18, 2)
+  Costo         Decimal     @default(0) @db.Decimal(18, 2)
   /// Tenant dueño de este detalle
   TenantId      BigInt
+  Articulo      Articulo    @relation(fields: [ArticuloId], references: [Id], onUpdate: NoAction)
+  Comprobante   Comprobante @relation(fields: [ComprobanteId], references: [Id], onUpdate: NoAction)
   Tenant        Tenant      @relation(fields: [TenantId], references: [Id])
-  Articulo      Articulo    @relation(fields: [ArticuloId], references: [Id], onUpdate: NoAction, map: "FK_dbo.DetalleComprobante_dbo.Articulo_ArticuloId")
-  Comprobante   Comprobante @relation(fields: [ComprobanteId], references: [Id], onUpdate: NoAction, map: "FK_dbo.DetalleComprobante_dbo.Comprobante_ComprobanteId")
 
   @@index([TenantId])
-  @@index([ArticuloId], map: "IX_ArticuloId")
-  @@index([ComprobanteId], map: "IX_ComprobanteId")
+  @@index([ArticuloId])
+  @@index([ComprobanteId])
 }
 
 /// Pagos asociados a comprobantes (monto y tipo de pago).
 model FormaPago {
-  Id                BigInt             @id(map: "PK_dbo.FormaPago") @default(autoincrement())
+  Id                BigInt             @id @default(autoincrement())
   ComprobanteId     BigInt
   TipoPago          Int
   Monto             Decimal            @db.Decimal(18, 2)
   EstaEliminado     Boolean
   /// Tenant dueño de esta forma de pago
   TenantId          BigInt
-  Comprobante       Comprobante        @relation(fields: [ComprobanteId], references: [Id], onUpdate: NoAction, map: "FK_dbo.FormaPago_dbo.Comprobante_ComprobanteId")
+  Comprobante       Comprobante        @relation(fields: [ComprobanteId], references: [Id], onUpdate: NoAction)
   Tenant            Tenant             @relation(fields: [TenantId], references: [Id])
   FormaPago_Cheque  FormaPago_Cheque?
   FormaPago_CtaCte  FormaPago_CtaCte?
   FormaPago_Tarjeta FormaPago_Tarjeta?
 
   @@index([TenantId])
-  @@index([ComprobanteId], map: "IX_ComprobanteId")
+  @@index([ComprobanteId])
 }
 
 /// Asociación de forma de pago con un cheque concreto.
 model FormaPago_Cheque {
-  Id        BigInt    @id(map: "PK_dbo.FormaPago_Cheque")
+  Id        BigInt    @id
   /// Hereda TenantId desde FormaPago (Id es PK y FK)
   ChequeId  BigInt
-  Cheque    Cheque    @relation(fields: [ChequeId], references: [Id], onUpdate: NoAction, map: "FK_dbo.FormaPago_Cheque_dbo.Cheque_ChequeId")
-  FormaPago FormaPago @relation(fields: [Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.FormaPago_Cheque_dbo.FormaPago_Id")
+  Cheque    Cheque    @relation(fields: [ChequeId], references: [Id], onUpdate: NoAction)
+  FormaPago FormaPago @relation(fields: [Id], references: [Id], onUpdate: NoAction)
 
-  @@index([ChequeId], map: "IX_ChequeId")
-  @@index([Id], map: "IX_Id")
+  @@index([ChequeId])
+  @@index([Id])
 }
 
 /// Asociación de forma de pago con cuenta corriente de cliente.
 model FormaPago_CtaCte {
-  Id              BigInt          @id(map: "PK_dbo.FormaPago_CtaCte")
+  Id              BigInt          @id
   /// Hereda TenantId desde FormaPago (Id es PK y FK)
   ClienteId       BigInt
-  FormaPago       FormaPago       @relation(fields: [Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.FormaPago_CtaCte_dbo.FormaPago_Id")
-  Persona_Cliente Persona_Cliente @relation(fields: [ClienteId], references: [Id], onUpdate: NoAction, map: "FK_dbo.FormaPago_CtaCte_dbo.Persona_Cliente_ClienteId")
+  Persona_Cliente Persona_Cliente @relation(fields: [ClienteId], references: [Id], onUpdate: NoAction)
+  FormaPago       FormaPago       @relation(fields: [Id], references: [Id], onUpdate: NoAction)
 
-  @@index([ClienteId], map: "IX_ClienteId")
-  @@index([Id], map: "IX_Id")
+  @@index([ClienteId])
+  @@index([Id])
 }
 
 /// Asociación de forma de pago con tarjeta (datos de la operación).
 model FormaPago_Tarjeta {
-  Id             BigInt    @id(map: "PK_dbo.FormaPago_Tarjeta")
+  Id             BigInt    @id
   /// Hereda TenantId desde FormaPago (Id es PK y FK)
   TarjetaId      BigInt
   NumeroTarjeta  String    @db.VarChar(100)
   CuponPago      String    @db.VarChar(100)
   CantidadCuotas Int
-  FormaPago      FormaPago @relation(fields: [Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.FormaPago_Tarjeta_dbo.FormaPago_Id")
-  Tarjeta        Tarjeta   @relation(fields: [TarjetaId], references: [Id], onUpdate: NoAction, map: "FK_dbo.FormaPago_Tarjeta_dbo.Tarjeta_TarjetaId")
+  FormaPago      FormaPago @relation(fields: [Id], references: [Id], onUpdate: NoAction)
+  Tarjeta        Tarjeta   @relation(fields: [TarjetaId], references: [Id], onUpdate: NoAction)
 
-  @@index([Id], map: "IX_Id")
-  @@index([TarjetaId], map: "IX_TarjetaId")
+  @@index([Id])
+  @@index([TarjetaId])
 }
 
 /// Relación muchos a muchos entre formularios y perfiles (permisos por pantalla).
 model FormularioPerfil {
   Formulario_Id BigInt
   Perfil_Id     BigInt
-  /// Tenant dueno de esta relacion formulario-perfil
+  /// Tenant dueño de esta relación formulario-perfil
   TenantId      BigInt
-  Formularios   Formularios @relation(fields: [Formulario_Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.FormularioPerfil_dbo.Formularios_Formulario_Id")
-  Perfiles      Perfiles    @relation(fields: [Perfil_Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.FormularioPerfil_dbo.Perfiles_Perfil_Id")
+  Formularios   Formularios @relation(fields: [Formulario_Id], references: [Id], onUpdate: NoAction)
+  Perfiles      Perfiles    @relation(fields: [Perfil_Id], references: [Id], onUpdate: NoAction)
   Tenant        Tenant      @relation(fields: [TenantId], references: [Id])
 
-  @@id([Formulario_Id, Perfil_Id], map: "PK_dbo.FormularioPerfil")
+  @@id([Formulario_Id, Perfil_Id])
   @@index([TenantId])
-  @@index([Formulario_Id], map: "IX_Formulario_Id")
-  @@index([Perfil_Id], map: "IX_Perfil_Id")
+  @@index([Formulario_Id])
+  @@index([Perfil_Id])
 }
 
 /// Formularios o pantallas del sistema (usados para permisos).
 model Formularios {
-  Id               BigInt             @id(map: "PK_dbo.Formularios") @default(autoincrement())
+  Id               BigInt             @id @default(autoincrement())
   Codigo           Int
   Nombre           String             @db.VarChar(250)
   NombreCompleto   String             @db.VarChar(400)
   EstaEliminado    Boolean
-  /// Tenant dueno de este formulario
+  /// Tenant dueño de este formulario
   TenantId         BigInt
   FormularioPerfil FormularioPerfil[]
   Tenant           Tenant             @relation(fields: [TenantId], references: [Id])
@@ -642,53 +656,39 @@ model Formularios {
 
 /// Gastos registrados en caja, asociados a un concepto.
 model Gasto {
-  Id              BigInt         @id(map: "PK_dbo.Gasto") @default(autoincrement())
+  Id              BigInt         @id @default(autoincrement())
   CajaId          BigInt
   ConceptoGastoId BigInt
-  Fecha           DateTime       @db.DateTime
+  Fecha           DateTime
   Descripcion     String         @db.VarChar(400)
   Monto           Decimal        @db.Decimal(18, 2)
   EstaEliminado   Boolean
   /// Tenant dueño de este gasto
   TenantId        BigInt
-  Caja            Caja           @relation(fields: [CajaId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Gasto_dbo.Caja_CajaId")
-  ConceptoGastos  ConceptoGastos @relation(fields: [ConceptoGastoId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Gasto_dbo.ConceptoGastos_ConceptoGastoId")
+  Caja            Caja           @relation(fields: [CajaId], references: [Id], onUpdate: NoAction)
+  ConceptoGastos  ConceptoGastos @relation(fields: [ConceptoGastoId], references: [Id], onUpdate: NoAction)
   Tenant          Tenant         @relation(fields: [TenantId], references: [Id])
 
   @@index([TenantId])
-  @@index([CajaId], map: "IX_CajaId")
-  @@index([ConceptoGastoId], map: "IX_ConceptoGastoId")
+  @@index([CajaId])
+  @@index([ConceptoGastoId])
 }
 
 /// Tabla de tipos de IVA disponibles.
 model Iva {
-  Id            BigInt     @id(map: "PK_dbo.Iva") @default(autoincrement())
+  Id            BigInt     @id @default(autoincrement())
   Descripcion   String     @db.VarChar(250)
   Porcentaje    Decimal    @db.Decimal(18, 2)
   EstaEliminado Boolean
   Articulo      Articulo[]
 }
 
-/// Localidades (ciudad/pueblo) asociadas a departamento.
-model Localidad {
-  Id             BigInt          @id(map: "PK_dbo.Localidad") @unique(map: "UX_Localidad_Id")
-  DepartamentoId BigInt
-  Descripcion    String          @db.VarChar(250)
-  EstaEliminado  Boolean
-  Configuracion  Configuracion[]
-  Departamento   Departamento    @relation(fields: [DepartamentoId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Localidad_dbo.Departamento_DepartamentoId")
-  Persona        Persona[]
-  Proveedor      Proveedor[]
-
-
-}
-
-/// Marcas de artículos (Nike, Samsung, etc.).
+/// Marcas de articulos (Nike, Samsung, etc.).
 model Marca {
-  Id            BigInt     @id(map: "PK_dbo.Marca") @default(autoincrement())
+  Id            BigInt     @id @default(autoincrement())
   Descripcion   String     @db.VarChar(250)
   EstaEliminado Boolean
-  /// Tenant dueño de esta marca
+  /// Tenant dueno de esta marca
   TenantId      BigInt
   Articulo      Articulo[]
   Tenant        Tenant     @relation(fields: [TenantId], references: [Id])
@@ -696,12 +696,12 @@ model Marca {
   @@index([TenantId])
 }
 
-/// Motivos para dar de baja artículos (vencimiento, rotura, etc.).
+/// Motivos para dar de baja articulos (vencimiento, rotura, etc.).
 model MotivoBajas {
-  Id            BigInt         @id(map: "PK_dbo.MotivoBajas") @default(autoincrement())
+  Id            BigInt         @id @default(autoincrement())
   Descripcion   String         @db.VarChar(250)
   EstaEliminado Boolean
-  /// Tenant dueño de este motivo
+  /// Tenant dueno de este motivo
   TenantId      BigInt
   BajaArticulo  BajaArticulo[]
   Tenant        Tenant         @relation(fields: [TenantId], references: [Id])
@@ -709,67 +709,16 @@ model MotivoBajas {
   @@index([TenantId])
 }
 
-/// Movimientos de caja asociados a comprobantes y usuarios.
-model Movimiento {
-  Id                                  BigInt                               @id(map: "PK_dbo.Movimiento") @default(autoincrement())
-  CajaId                              BigInt
-  ComprobanteId                       BigInt
-  UsuarioId                           BigInt
-  Monto                               Decimal                              @db.Decimal(18, 2)
-  Fecha                               DateTime                             @db.DateTime
-  Descripcion                         String                               @db.VarChar(4000)
-  TipoMovimiento                      Int
-  EstaEliminado                       Boolean
-  /// Tenant dueño de este movimiento
-  TenantId                            BigInt
-  Caja                                Caja                                 @relation(fields: [CajaId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Movimiento_dbo.Caja_CajaId")
-  Comprobante                         Comprobante                          @relation(fields: [ComprobanteId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Movimiento_dbo.Comprobante_ComprobanteId")
-  Usuario                             Usuario                              @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Movimiento_dbo.Usuario_UsuarioId")
-  Tenant                              Tenant                               @relation(fields: [TenantId], references: [Id])
-  Movimiento_CuentaCorriente          Movimiento_CuentaCorriente?
-  Movimiento_CuentaCorrienteProveedor Movimiento_CuentaCorrienteProveedor?
-
-  @@index([TenantId])
-  @@index([CajaId], map: "IX_CajaId")
-  @@index([ComprobanteId], map: "IX_ComprobanteId")
-  @@index([UsuarioId], map: "IX_UsuarioId")
-}
-
-/// Movimiento de cuenta corriente de cliente.
-model Movimiento_CuentaCorriente {
-  Id                          BigInt                        @id(map: "PK_dbo.Movimiento_CuentaCorriente")
-  /// Hereda TenantId desde Movimiento (Id es PK y FK)
-  ClienteId                   BigInt
-  Comprobante_CuentaCorriente Comprobante_CuentaCorriente[]
-  Movimiento                  Movimiento                    @relation(fields: [Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.Movimiento_CuentaCorriente_dbo.Movimiento_Id")
-  Persona_Cliente             Persona_Cliente               @relation(fields: [ClienteId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Movimiento_CuentaCorriente_dbo.Persona_Cliente_ClienteId")
-
-  @@index([ClienteId], map: "IX_ClienteId")
-  @@index([Id], map: "IX_Id")
-}
-
-/// Movimiento de cuenta corriente de proveedor.
-model Movimiento_CuentaCorrienteProveedor {
-  Id          BigInt     @id(map: "PK_dbo.Movimiento_CuentaCorrienteProveedor")
-  /// Hereda TenantId desde Movimiento (Id es PK y FK)
-  ProveedorId BigInt
-  Movimiento  Movimiento @relation(fields: [Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.Movimiento_CuentaCorrienteProveedor_dbo.Movimiento_Id")
-  Proveedor   Proveedor  @relation(fields: [ProveedorId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Movimiento_CuentaCorrienteProveedor_dbo.Proveedor_ProveedorId")
-
-  @@index([Id], map: "IX_Id")
-  @@index([ProveedorId], map: "IX_ProveedorId")
-}
-
 /// Perfiles/roles de usuario (Admin, Cajero, Vendedor, etc.).
 model Perfiles {
-  Id               BigInt             @id(map: "PK_dbo.Perfiles") @default(autoincrement())
+  Id               BigInt             @id @default(autoincrement())
   Descripcion      String             @db.VarChar(250)
   EstaEliminado    Boolean
   /// Tenant dueño de este perfil
   TenantId         BigInt
   FormularioPerfil FormularioPerfil[]
-  Tenant           Tenant             @relation(fields: [TenantId], references: [Id])
   PerfilUsuario    PerfilUsuario[]
+  Tenant           Tenant             @relation(fields: [TenantId], references: [Id])
 
   @@index([TenantId])
 }
@@ -778,21 +727,21 @@ model Perfiles {
 model PerfilUsuario {
   Perfil_Id  BigInt
   Usuario_Id BigInt
-  /// Tenant dueno de esta relacion usuario-perfil
+  /// Tenant dueño de esta relación usuario-perfil
   TenantId   BigInt
-  Perfiles   Perfiles @relation(fields: [Perfil_Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.PerfilUsuario_dbo.Perfiles_Perfil_Id")
-  Usuario    Usuario  @relation(fields: [Usuario_Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.PerfilUsuario_dbo.Usuario_Usuario_Id")
+  Perfiles   Perfiles @relation(fields: [Perfil_Id], references: [Id], onUpdate: NoAction)
   Tenant     Tenant   @relation(fields: [TenantId], references: [Id])
+  Usuario    Usuario  @relation(fields: [Usuario_Id], references: [Id], onUpdate: NoAction)
 
-  @@id([Perfil_Id, Usuario_Id], map: "PK_dbo.PerfilUsuario")
+  @@id([Perfil_Id, Usuario_Id])
   @@index([TenantId])
-  @@index([Perfil_Id], map: "IX_Perfil_Id")
-  @@index([Usuario_Id], map: "IX_Usuario_Id")
+  @@index([Perfil_Id])
+  @@index([Usuario_Id])
 }
 
 /// Persona genérica (base para cliente y empleado).
 model Persona {
-  Id               BigInt            @id(map: "PK_dbo.Persona") @default(autoincrement())
+  Id               BigInt            @id @default(autoincrement())
   Apellido         String            @db.VarChar(150)
   Nombre           String            @db.VarChar(200)
   Dni              String?           @db.VarChar(8)
@@ -803,18 +752,18 @@ model Persona {
   EstaEliminado    Boolean
   /// Tenant dueño de esta persona
   TenantId         BigInt
-  Localidad        Localidad         @relation(fields: [LocalidadId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Persona_dbo.Localidad_LocalidadId")
+  Localidad        Localidad         @relation(fields: [LocalidadId], references: [Id], onUpdate: NoAction)
   Tenant           Tenant            @relation(fields: [TenantId], references: [Id])
   Persona_Cliente  Persona_Cliente?
   Persona_Empleado Persona_Empleado?
 
   @@index([TenantId])
-  @@index([LocalidadId], map: "IX_LocalidadId")
+  @@index([LocalidadId])
 }
 
 /// Información específica de cliente (condición IVA, límites de cuenta corriente, etc.).
 model Persona_Cliente {
-  Id                          BigInt                        @id(map: "PK_dbo.Persona_Cliente")
+  Id                          BigInt                        @id
   /// Hereda TenantId desde Persona (Id es PK y FK)
   CondicionIvaId              BigInt
   ActivarCtaCte               Boolean
@@ -827,36 +776,37 @@ model Persona_Cliente {
   Comprobante_Remito          Comprobante_Remito[]
   FormaPago_CtaCte            FormaPago_CtaCte[]
   Movimiento_CuentaCorriente  Movimiento_CuentaCorriente[]
-  CondicionIva                CondicionIva                  @relation(fields: [CondicionIvaId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Persona_Cliente_dbo.CondicionIva_CondicionIvaId")
-  Persona                     Persona                       @relation(fields: [Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.Persona_Cliente_dbo.Persona_Id")
+  CondicionIva                CondicionIva                  @relation(fields: [CondicionIvaId], references: [Id], onUpdate: NoAction)
+  Persona                     Persona                       @relation(fields: [Id], references: [Id], onUpdate: NoAction)
 
-  @@index([CondicionIvaId], map: "IX_CondicionIvaId")
-  @@index([Id], map: "IX_Id")
+  @@index([CondicionIvaId])
+  @@index([Id])
 }
 
 /// Información específica de empleado (legajo, foto) vinculada a Persona.
 model Persona_Empleado {
-  Id          BigInt        @id(map: "PK_dbo.Persona_Empleado")
+  Id          BigInt        @id
   /// Hereda TenantId desde Persona (Id es PK y FK)
   Legajo      Int
   Foto        Bytes
   Comprobante Comprobante[]
-  Persona     Persona       @relation(fields: [Id], references: [Id], onUpdate: NoAction, map: "FK_dbo.Persona_Empleado_dbo.Persona_Id")
+  Persona     Persona       @relation(fields: [Id], references: [Id], onUpdate: NoAction)
   Usuario     Usuario[]
 
-  @@index([Id], map: "IX_Id")
+  @@index([Id])
 }
 
 /// Precios asociados a artículos (estructura heredada).
+/// OJO: el diseño original es medio raro (Precio <-> Articulo).
 model Precio {
-  Id                  BigInt     @id(map: "PK_dbo.Precio") @default(autoincrement())
+  Id                  BigInt     @id @default(autoincrement())
   ArticuloId          BigInt
   PrecioCosto         Decimal    @db.Decimal(18, 2)
   PorcentajeGanancia  Decimal    @db.Decimal(18, 2)
   PrecioPublico       Decimal    @db.Decimal(18, 2)
   PorcentajeGanancia2 Decimal    @db.Decimal(18, 2)
   PrecioPublico2      Decimal    @db.Decimal(18, 2)
-  FechaActualizacion  DateTime   @db.DateTime
+  FechaActualizacion  DateTime
   EstaEliminado       Boolean
   /// Tenant dueño de este precio
   TenantId            BigInt
@@ -868,7 +818,7 @@ model Precio {
 
 /// Proveedores del comercio.
 model Proveedor {
-  Id                                  BigInt                                @id(map: "PK_dbo.Proveedor") @default(autoincrement())
+  Id                                  BigInt                                @id @default(autoincrement())
   RazonSocial                         String                                @db.VarChar(250)
   CUIT                                String                                @db.VarChar(15)
   Direccion                           String                                @db.VarChar(400)
@@ -882,26 +832,18 @@ model Proveedor {
   Comprobante_Compra                  Comprobante_Compra[]
   Comprobante_CtaCteProveedor         Comprobante_CtaCteProveedor[]
   Movimiento_CuentaCorrienteProveedor Movimiento_CuentaCorrienteProveedor[]
-  CondicionIva                        CondicionIva                          @relation(fields: [CondicionIvaId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Proveedor_dbo.CondicionIva_CondicionIvaId")
-  Localidad                           Localidad                             @relation(fields: [LocalidadId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Proveedor_dbo.Localidad_LocalidadId")
+  CondicionIva                        CondicionIva                          @relation(fields: [CondicionIvaId], references: [Id], onUpdate: NoAction)
+  Localidad                           Localidad                             @relation(fields: [LocalidadId], references: [Id], onUpdate: NoAction)
   Tenant                              Tenant                                @relation(fields: [TenantId], references: [Id])
 
   @@index([TenantId])
-  @@index([CondicionIvaId], map: "IX_CondicionIvaId")
-  @@index([LocalidadId], map: "IX_LocalidadId")
-}
-
-/// Provincias (nivel más alto de la ubicación geográfica).
-model Provincia {
-  Id            BigInt         @id(map: "PK_dbo.Provincia") @unique(map: "UX_Provincia_Id")
-  Descripcion   String         @unique(map: "Index_Descripcion_Provincia") @db.VarChar(100)
-  EstaEliminado Boolean
-  Departamento  Departamento[]
+  @@index([CondicionIvaId])
+  @@index([LocalidadId])
 }
 
 /// Puestos de trabajo del comercio (caja, mostrador, etc.).
 model PuestoTrabajo {
-  Id                  BigInt                @id(map: "PK_dbo.PuestoTrabajo") @default(autoincrement())
+  Id                  BigInt                @id @default(autoincrement())
   Codigo              Int
   Descripcion         String?               @db.VarChar(8000)
   EstaEliminado       Boolean
@@ -915,7 +857,7 @@ model PuestoTrabajo {
 
 /// Rubros o categorías de artículos.
 model Rubro {
-  Id            BigInt     @id(map: "PK_dbo.Rubro") @default(autoincrement())
+  Id            BigInt     @id @default(autoincrement())
   Descripcion   String     @db.VarChar(250)
   EstaEliminado Boolean
   /// Tenant dueño de este rubro
@@ -928,36 +870,25 @@ model Rubro {
 
 /// Stock de artículos por depósito.
 model Stock {
-  Id            BigInt   @id(map: "PK_dbo.Stock") @default(autoincrement())
+  Id            BigInt   @id @default(autoincrement())
   ArticuloId    BigInt
   DepositoId    BigInt
   Cantidad      Decimal  @db.Decimal(18, 3)
   EstaEliminado Boolean
   /// Tenant dueño de este stock
   TenantId      BigInt
-  Articulo      Articulo @relation(fields: [ArticuloId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Stock_dbo.Articulo_ArticuloId")
-  Deposito      Deposito @relation(fields: [DepositoId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Stock_dbo.Deposito_DepositoId")
+  Articulo      Articulo @relation(fields: [ArticuloId], references: [Id], onUpdate: NoAction)
+  Deposito      Deposito @relation(fields: [DepositoId], references: [Id], onUpdate: NoAction)
   Tenant        Tenant   @relation(fields: [TenantId], references: [Id])
 
   @@index([TenantId])
-  @@index([ArticuloId], map: "IX_ArticuloId")
-  @@index([DepositoId], map: "IX_DepositoId")
-}
-
-/// Tabla interna de SQL Server para diagramas (no usada en lógica).
-model sysdiagrams {
-  name         String @db.NVarChar(128)
-  principal_id Int
-  diagram_id   Int    @id(map: "PK__sysdiagr__C2B05B614B68736B") @default(autoincrement())
-  version      Int?
-  definition   Bytes?
-
-  @@unique([principal_id, name], map: "UK_principal_name")
+  @@index([ArticuloId])
+  @@index([DepositoId])
 }
 
 /// Tarjetas de crédito/débito configuradas para el comercio.
 model Tarjeta {
-  Id                BigInt              @id(map: "PK_dbo.Tarjeta") @default(autoincrement())
+  Id                BigInt              @id @default(autoincrement())
   Descripcion       String              @db.VarChar(250)
   EstaEliminado     Boolean
   /// Tenant dueño de esta tarjeta
@@ -970,7 +901,7 @@ model Tarjeta {
 
 /// Unidades de medida para artículos (kg, unidad, litro, etc.).
 model UnidadMedida {
-  Id            BigInt     @id(map: "PK_dbo.UnidadMedida") @default(autoincrement())
+  Id            BigInt     @id @default(autoincrement())
   Descripcion   String     @db.VarChar(250)
   EstaEliminado Boolean
   /// Tenant dueño de esta unidad
@@ -982,11 +913,15 @@ model UnidadMedida {
 }
 
 /// Usuarios del sistema (login), asociados a Persona_Empleado.
+///
+/// IMPORTANTE (Supabase):
+/// - AuthUserId guarda el `auth.users.id` (UUID) de Supabase.
 model Usuario {
-  Id                                   BigInt           @id(map: "PK_dbo.Usuario") @default(autoincrement())
+  Id                                   BigInt           @id @default(autoincrement())
   EmpleadoId                           BigInt
   Nombre                               String           @db.VarChar(50)
-  Password                             String           @db.VarChar(400)
+  /// ID del usuario en Supabase Auth (auth.users.id)
+  AuthUserId                           String           @unique @db.VarChar(255)
   EstaBloqueado                        Boolean
   EstaEliminado                        Boolean
   /// Tenant dueño de este usuario
@@ -996,9 +931,60 @@ model Usuario {
   Comprobante                          Comprobante[]
   Movimiento                           Movimiento[]
   PerfilUsuario                        PerfilUsuario[]
-  Persona_Empleado                     Persona_Empleado @relation(fields: [EmpleadoId], references: [Id], onUpdate: NoAction, map: "FK_dbo.Usuario_dbo.Persona_Empleado_EmpleadoId")
+  Persona_Empleado                     Persona_Empleado @relation(fields: [EmpleadoId], references: [Id], onUpdate: NoAction)
   Tenant                               Tenant           @relation(fields: [TenantId], references: [Id])
 
   @@index([TenantId])
-  @@index([EmpleadoId], map: "IX_EmpleadoId")
+  @@index([EmpleadoId])
+}
+
+/// Movimientos de caja asociados a comprobantes y usuarios.
+model Movimiento {
+  Id                                  BigInt                               @id @default(autoincrement())
+  CajaId                              BigInt
+  ComprobanteId                       BigInt
+  UsuarioId                           BigInt
+  Monto                               Decimal                              @db.Decimal(18, 2)
+  Fecha                               DateTime
+  Descripcion                         String                               @db.VarChar(4000)
+  TipoMovimiento                      Int
+  EstaEliminado                       Boolean
+  /// Tenant dueño de este movimiento
+  TenantId                            BigInt
+  Caja                                Caja                                 @relation(fields: [CajaId], references: [Id], onUpdate: NoAction)
+  Comprobante                         Comprobante                          @relation(fields: [ComprobanteId], references: [Id], onUpdate: NoAction)
+  Tenant                              Tenant                               @relation(fields: [TenantId], references: [Id])
+  Usuario                             Usuario                              @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
+  Movimiento_CuentaCorriente          Movimiento_CuentaCorriente?
+  Movimiento_CuentaCorrienteProveedor Movimiento_CuentaCorrienteProveedor?
+
+  @@index([TenantId])
+  @@index([CajaId])
+  @@index([ComprobanteId])
+  @@index([UsuarioId])
+}
+
+/// Movimiento de cuenta corriente de cliente.
+model Movimiento_CuentaCorriente {
+  Id                          BigInt                        @id
+  /// Hereda TenantId desde Movimiento (Id es PK y FK)
+  ClienteId                   BigInt
+  Comprobante_CuentaCorriente Comprobante_CuentaCorriente[]
+  Persona_Cliente             Persona_Cliente               @relation(fields: [ClienteId], references: [Id], onUpdate: NoAction)
+  Movimiento                  Movimiento                    @relation(fields: [Id], references: [Id], onUpdate: NoAction)
+
+  @@index([ClienteId])
+  @@index([Id])
+}
+
+/// Movimiento de cuenta corriente de proveedor.
+model Movimiento_CuentaCorrienteProveedor {
+  Id          BigInt     @id
+  /// Hereda TenantId desde Movimiento (Id es PK y FK)
+  ProveedorId BigInt
+  Movimiento  Movimiento @relation(fields: [Id], references: [Id], onUpdate: NoAction)
+  Proveedor   Proveedor  @relation(fields: [ProveedorId], references: [Id], onUpdate: NoAction)
+
+  @@index([Id])
+  @@index([ProveedorId])
 }

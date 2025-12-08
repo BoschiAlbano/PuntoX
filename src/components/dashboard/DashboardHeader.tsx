@@ -1,5 +1,4 @@
 "use client";
-import { signOut, useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import {
   Dropdown,
@@ -9,23 +8,39 @@ import {
   addToast,
   Button,
 } from "@heroui/react";
+import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 
 export default function DashboardHeader() {
-  const { data: session } = useSession();
+  const { user, supabase } = useSupabaseAuthContext();
 
+  const fullName =
+    typeof user?.user_metadata?.full_name === "string"
+      ? user.user_metadata.full_name
+      : "";
+  const initialsFromName = fullName
+    ? fullName
+        .split(" ")
+        .filter(Boolean)
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase()
+    : "";
   const userInitials =
-    session?.user?.name
-      ?.split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase() || "U";
+    initialsFromName || user?.email?.[0]?.toUpperCase() || "U";
+
+  const displayName =
+    fullName.trim() ||
+    (typeof user?.email === "string" ? user.email : "") ||
+    "Usuario";
+  const displayEmail =
+    typeof user?.email === "string" ? user.email : "";
 
   function handleSignOut(): void {
     addToast({
       title: "Cerrar sesion",
       description: "Confirma que deseas cerrar sesion.",
       endContent: (
-        <Button size="sm" variant="flat" onPress={() => signOut()}>
+        <Button size="sm" variant="flat" onPress={() => supabase.auth.signOut()}>
           Aceptar
         </Button>
       ),
@@ -101,11 +116,9 @@ export default function DashboardHeader() {
                   </div>
                   <div className="text-left hidden md:block">
                     <p className="text-sm font-semibold text-slate-900">
-                      {session?.user?.name || "Usuario"}
+                      {displayName}
                     </p>
-                    <p className="text-xs text-slate-500">
-                      {session?.user?.email || ""}
-                    </p>
+                    <p className="text-xs text-slate-500">{displayEmail}</p>
                   </div>
                   <svg
                     className="w-4 h-4 text-slate-400"

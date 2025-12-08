@@ -22,7 +22,6 @@ export async function GET() {
 		// Serializar BigInt a Number usando la función utilitaria
 		const localidadesSerializadas = serializeBigIntArray(localidades);
 
-		console.log(localidadesSerializadas);
 		return NextResponse.json(localidadesSerializadas);
 	} catch (error) {
 		console.error("Error al obtener localidades:", error);

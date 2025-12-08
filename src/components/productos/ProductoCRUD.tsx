@@ -189,19 +189,17 @@ export default function ProductoCRUD() {
       if (modoEdicion && productoSeleccionado) {
         // Actualizar
         addToast({
-          title: "Error",
+          title: "Exito",
           description: "Producto actualizado correctamente",
           color: "success",
         });
-        console.log("Actualizar producto:", formData);
       } else {
         // Crear
         addToast({
-          title: "Error",
+          title: "Exito",
           description: "Producto creado correctamente",
           color: "success",
         });
-        console.log("Crear producto:", formData);
       }
 
       onClose();
@@ -220,11 +218,10 @@ export default function ProductoCRUD() {
     try {
       // Aquí iría la llamada a la API
       addToast({
-        title: "Error",
+        title: "Exito",
         description: "Producto eliminado correctamente",
         color: "success",
       });
-      console.log("Eliminar producto:", id);
     } catch (error) {
       addToast({
         title: "Error",

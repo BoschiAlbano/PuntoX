@@ -1,16 +1,25 @@
 "use client";
 import React from "react";
-import { useSession } from "next-auth/react";
+import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 
-export default function page() {
-  const { data: session } = useSession();
+export default function Page() {
+  const { user, session } = useSupabaseAuthContext();
+  const roleFromMetadata =
+    typeof user?.user_metadata?.role === "string"
+      ? user.user_metadata.role
+      : null;
+  const tenantFromMetadata = user?.user_metadata?.tenant_id as
+    | string
+    | number
+    | null
+    | undefined;
 
   return (
     <div>
-      <h1>Session: {session?.user?.name}</h1>
-      <h1>Email: {session?.user?.email}</h1>
-      <h1>Roll: {session?.user?.roll}</h1>
-      <h1>TenantId: {session?.user?.tenantId}</h1>
+      <h1>Session user id: {session?.user?.id}</h1>
+      <h1>Email: {user?.email}</h1>
+      <h1>Role: {user?.role || roleFromMetadata}</h1>
+      <h1>TenantId: {user?.tenantId ?? tenantFromMetadata}</h1>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Card,
@@ -22,7 +22,8 @@ type SectionKey =
   | "notificaciones"
   | "seguridad"
   | "fiscal"
-  | "branding";
+  | "branding"
+  | "usuarios";
 
 const monedas = [
   { value: "ARS", label: "ARS - Peso argentino" },
@@ -65,12 +66,12 @@ function AccordionSection({
       <button
         type="button"
         onClick={() => onToggle(id)}
-        className="w-full text-left focus:outline-none focus-visible:outline-none"
+        className="w-full text-left focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
       >
         <CardHeader className="flex justify-between items-start gap-3 p-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-semibold">{title}</h3>
+              <h3 className="text-lg font-semibold">{title}</h3>
               <Chip size="sm" variant="flat" className="bg-slate-100">
                 {isOpen ? "Editando" : "Resumido"}
               </Chip>
@@ -79,7 +80,7 @@ function AccordionSection({
             <p className="text-sm text-gray-700 line-clamp-2">{summary}</p>
           </div>
           <div
-            className={`flex items-center justify-center w-8 h-8 rounded-full border border-slate-200 bg-white transition-transform ${
+            className={`flex items-center justify-center w-9 h-9 rounded-full border border-slate-200 bg-white transition-transform ${
               isOpen ? "rotate-90" : "rotate-0"
             }`}
           >
@@ -109,21 +110,21 @@ function AccordionSection({
   );
 }
 
-export default function Configuracion() {
+export default function AdminConfiguracionPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [openSection, setOpenSection] = useState<SectionKey | "">("perfil");
-
-  const [configuracion, setConfiguracion] = useState({
-    razonSocial: "Punto X Market",
-    nombreFantasia: "PX Liniers",
-    cuit: "20-12345678-9",
+  const [perfil, setPerfil] = useState({
+    negocio: "Punto X Market",
+    fantasia: "PX Liniers",
     email: "admin@puntox.com",
     telefono: "+54 11 5555 0000",
     direccion: "Av. Siempre Viva 742",
-    localidadId: "Buenos Aires, CABA",
-    observacionPieFactura: "Gracias por tu compra. Vuelve pronto.",
+    mensajeTicket: "Gracias por tu compra. Vuelve pronto.",
+    cuit: "20-12345678-9",
+    condicionIva: "Responsable Inscripto",
+    provincia: "Buenos Aires, CABA",
+    sitio: "https://puntox.com",
   });
-
   const [regional, setRegional] = useState({
     moneda: "ARS",
     zonaHoraria: "America/Argentina/Buenos_Aires",
@@ -132,58 +133,45 @@ export default function Configuracion() {
     puntoVenta: "0001",
     inicioActividades: "",
   });
-
   const [preferencias, setPreferencias] = useState({
     ticketDigital: true,
     mostrarPrecios: true,
     aperturaCaja: true,
     numerarPedidos: true,
   });
-
   const [notificaciones, setNotificaciones] = useState({
     email: true,
     push: true,
     resumenDiario: false,
     stockBajo: true,
   });
-
   const [seguridad, setSeguridad] = useState({
     dobleFactor: false,
     bloqueoAutomatico: true,
     recordarSesion: true,
     alertarDispositivo: true,
   });
-
   const [branding, setBranding] = useState({
     slogan: "Mejor precio, mejor servicio.",
     color: "#90c472",
+    logo: null as File | null,
+    logoPreview: "",
   });
 
-  const descriptionMap: Record<SectionKey, string> = {
-    perfil: "Datos visibles en tickets y comunicaciones.",
-    ventas: "Ajustes rapidos para cajas y mostrador.",
-    notificaciones: "Define que alertas reciben los usuarios.",
-    seguridad: "Protege el panel y controla dispositivos.",
-    fiscal: "Moneda, idioma y datos fiscales para comprobantes.",
-    branding: "Ajusta la imagen de tu negocio en el panel y tickets.",
-  };
+  useEffect(() => {
+    if (!branding.logo) {
+      setBranding((prev) => ({ ...prev, logoPreview: "" }));
+    }
+  }, [branding.logo]);
 
-  const summaryPerfil = `${configuracion.razonSocial} | CUIT ${configuracion.cuit} | ${configuracion.localidadId}`;
-  const summaryVentas = `Ticket digital: ${
-    preferencias.ticketDigital ? "on" : "off"
-  } | Impuestos: ${preferencias.mostrarPrecios ? "incluidos" : "excluidos"}`;
-  const summaryNotificaciones = `Correo: ${
-    notificaciones.email ? "on" : "off"
-  } | Push: ${notificaciones.push ? "on" : "off"} | Resumen diario: ${
-    notificaciones.resumenDiario ? "on" : "off"
-  }`;
-  const summarySeguridad = `2FA: ${
-    seguridad.dobleFactor ? "activo" : "pendiente"
-  } | Bloqueo: 10 min | Recordar sesion: 30 dias`;
-  const summaryFiscal = `${regional.moneda} | ${
-    idiomas.find((i) => i.value === regional.idioma)?.label || "Idioma"
-  } | ${regional.tipoIva} | PV ${regional.puntoVenta}`;
-  const summaryBranding = `Color: ${branding.color} | Logo: pendiente`;
+  const handleLogoChange = (file: File | null) => {
+    if (!file) {
+      setBranding((prev) => ({ ...prev, logo: null, logoPreview: "" }));
+      return;
+    }
+    const previewUrl = URL.createObjectURL(file);
+    setBranding((prev) => ({ ...prev, logo: file, logoPreview: previewUrl }));
+  };
 
   const handleSave = (seccion: string) => {
     setIsSaving(true);
@@ -201,11 +189,32 @@ export default function Configuracion() {
     setOpenSection((prev) => (prev === id ? "" : id));
   };
 
+  const summaryPerfil = `${perfil.negocio} | CUIT ${perfil.cuit} | ${perfil.provincia}`;
+  const summaryVentas = `Ticket digital: ${
+    preferencias.ticketDigital ? "activado" : "desactivado"
+  } | Precios con impuestos: ${
+    preferencias.mostrarPrecios ? "activado" : "desactivado"
+  }`;
+  const summaryNotificaciones = `Correo: ${
+    notificaciones.email ? "activado" : "desactivado"
+  } | Push app: ${notificaciones.push ? "activado" : "desactivado"} | Resumen diario: ${
+    notificaciones.resumenDiario ? "activado" : "desactivado"
+  }`;
+  const summarySeguridad = `2FA: ${
+    seguridad.dobleFactor ? "activo" : "pendiente"
+  } | Bloqueo: 10 min | Recordar sesion: 30 dias`;
+  const summaryFiscal = `${regional.moneda} | ${
+    idiomas.find((i) => i.value === regional.idioma)?.label || "Idioma"
+  } | ${regional.tipoIva} | Punto de venta ${regional.puntoVenta}`;
+  const summaryBranding = `Logo: ${
+    branding.logo ? "cargado" : "no cargado"
+  } | Color principal: ${branding.color}`;
+
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="space-y-6">
       <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 via-blue-800 to-[#90c472] text-white shadow-xl">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),transparent_40%)]" />
-        <div className="relative p-5 md:p-7 space-y-5">
+        <div className="relative p-4 md:p-5 space-y-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="space-y-2">
               <Chip variant="flat" color="success" className="bg-white/10">
@@ -238,51 +247,14 @@ export default function Configuracion() {
               </Button>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="rounded-2xl bg-white/10 p-4 border border-white/10">
-              <p className="text-sm text-white/70">Plan activo</p>
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-lg font-semibold">Business</span>
-                <Chip size="sm" variant="flat" className="bg-white/20">
-                  4 locales
-                </Chip>
-              </div>
-            </div>
-            <div className="rounded-2xl bg-white/10 p-4 border border-white/10">
-              <p className="text-sm text-white/70">Respaldo</p>
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-lg font-semibold">Hoy 03:00</span>
-                <Chip size="sm" variant="flat" className="bg-white/20">
-                  Automatico
-                </Chip>
-              </div>
-            </div>
-            <div className="rounded-2xl bg-white/10 p-4 border border-white/10">
-              <p className="text-sm text-white/70">Seguridad</p>
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-lg font-semibold">
-                  2FA {seguridad.dobleFactor ? "activo" : "pendiente"}
-                </span>
-                <Chip
-                  size="sm"
-                  color={seguridad.dobleFactor ? "success" : "warning"}
-                  variant="flat"
-                  className="bg-white/20 text-white"
-                >
-                  {seguridad.dobleFactor ? "Protegido" : "Habilitar"}
-                </Chip>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
-      <main className="space-y-3">
+      <main className="max-w-5xl mx-auto space-y-4 pb-10">
         <AccordionSection
           id="perfil"
           title="🏢 Perfil del negocio"
-          description={descriptionMap.perfil}
+          description="Datos visibles en tickets y comunicaciones."
           summary={summaryPerfil}
           isOpen={openSection === "perfil"}
           onToggle={toggleSection}
@@ -292,24 +264,18 @@ export default function Configuracion() {
               label="Nombre fiscal"
               variant="bordered"
               classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={configuracion.razonSocial}
+              value={perfil.negocio}
               onChange={(e) =>
-                setConfiguracion((prev) => ({
-                  ...prev,
-                  razonSocial: e.target.value,
-                }))
+                setPerfil((prev) => ({ ...prev, negocio: e.target.value }))
               }
             />
             <Input
               label="Nombre de fantasia"
               variant="bordered"
               classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={configuracion.nombreFantasia}
+              value={perfil.fantasia}
               onChange={(e) =>
-                setConfiguracion((prev) => ({
-                  ...prev,
-                  nombreFantasia: e.target.value,
-                }))
+                setPerfil((prev) => ({ ...prev, fantasia: e.target.value }))
               }
             />
             <Input
@@ -317,24 +283,18 @@ export default function Configuracion() {
               type="email"
               variant="bordered"
               classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={configuracion.email}
+              value={perfil.email}
               onChange={(e) =>
-                setConfiguracion((prev) => ({
-                  ...prev,
-                  email: e.target.value,
-                }))
+                setPerfil((prev) => ({ ...prev, email: e.target.value }))
               }
             />
             <Input
               label="Telefono"
               variant="bordered"
               classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={configuracion.telefono}
+              value={perfil.telefono}
               onChange={(e) =>
-                setConfiguracion((prev) => ({
-                  ...prev,
-                  telefono: e.target.value,
-                }))
+                setPerfil((prev) => ({ ...prev, telefono: e.target.value }))
               }
             />
             <Input
@@ -342,33 +302,45 @@ export default function Configuracion() {
               variant="bordered"
               className="md:col-span-2"
               classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={configuracion.direccion}
+              value={perfil.direccion}
               onChange={(e) =>
-                setConfiguracion((prev) => ({
-                  ...prev,
-                  direccion: e.target.value,
-                }))
+                setPerfil((prev) => ({ ...prev, direccion: e.target.value }))
               }
             />
             <Input
               label="CUIT"
               variant="bordered"
               classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={configuracion.cuit}
+              value={perfil.cuit}
               onChange={(e) =>
-                setConfiguracion((prev) => ({ ...prev, cuit: e.target.value }))
+                setPerfil((prev) => ({ ...prev, cuit: e.target.value }))
               }
             />
             <Input
-              label="Localidad"
+              label="Condicion IVA"
               variant="bordered"
               classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={configuracion.localidadId}
+              value={perfil.condicionIva}
               onChange={(e) =>
-                setConfiguracion((prev) => ({
-                  ...prev,
-                  localidadId: e.target.value,
-                }))
+                setPerfil((prev) => ({ ...prev, condicionIva: e.target.value }))
+              }
+            />
+            <Input
+              label="Provincia / Localidad"
+              variant="bordered"
+              classNames={{ inputWrapper: "bg-white border-slate-200" }}
+              value={perfil.provincia}
+              onChange={(e) =>
+                setPerfil((prev) => ({ ...prev, provincia: e.target.value }))
+              }
+            />
+            <Input
+              label="Sitio web"
+              variant="bordered"
+              classNames={{ inputWrapper: "bg-white border-slate-200" }}
+              value={perfil.sitio}
+              onChange={(e) =>
+                setPerfil((prev) => ({ ...prev, sitio: e.target.value }))
               }
             />
           </div>
@@ -378,12 +350,9 @@ export default function Configuracion() {
             minRows={3}
             variant="bordered"
             classNames={{ inputWrapper: "bg-white border-slate-200" }}
-            value={configuracion.observacionPieFactura}
+            value={perfil.mensajeTicket}
             onChange={(e) =>
-              setConfiguracion((prev) => ({
-                ...prev,
-                observacionPieFactura: e.target.value,
-              }))
+              setPerfil((prev) => ({ ...prev, mensajeTicket: e.target.value }))
             }
           />
           <div className="flex justify-end">
@@ -400,7 +369,7 @@ export default function Configuracion() {
         <AccordionSection
           id="ventas"
           title="🛒 Preferencias de venta"
-          description={descriptionMap.ventas}
+          description="Ajustes rapidos para cajas y mostrador."
           summary={summaryVentas}
           isOpen={openSection === "ventas"}
           onToggle={toggleSection}
@@ -457,7 +426,7 @@ export default function Configuracion() {
         <AccordionSection
           id="notificaciones"
           title="🔔 Notificaciones"
-          description={descriptionMap.notificaciones}
+          description="Define que alertas reciben los usuarios."
           summary={summaryNotificaciones}
           isOpen={openSection === "notificaciones"}
           onToggle={toggleSection}
@@ -513,7 +482,7 @@ export default function Configuracion() {
         <AccordionSection
           id="seguridad"
           title="🔐 Seguridad y acceso"
-          description={descriptionMap.seguridad}
+          description="Protege el panel y controla dispositivos."
           summary={summarySeguridad}
           isOpen={openSection === "seguridad"}
           onToggle={toggleSection}
@@ -530,7 +499,10 @@ export default function Configuracion() {
             <Switch
               isSelected={seguridad.alertarDispositivo}
               onValueChange={(value) =>
-                setSeguridad((prev) => ({ ...prev, alertarDispositivo: value }))
+                setSeguridad((prev) => ({
+                  ...prev,
+                  alertarDispositivo: value,
+                }))
               }
             >
               Avisar inicio de sesion desde nuevos dispositivos
@@ -574,126 +546,143 @@ export default function Configuracion() {
         <AccordionSection
           id="fiscal"
           title="🧾 Facturacion y region"
-          description={descriptionMap.fiscal}
+          description="Moneda, idioma y datos fiscales para comprobantes."
           summary={summaryFiscal}
           isOpen={openSection === "fiscal"}
           onToggle={toggleSection}
         >
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Select
-                label="Moneda"
-                selectedKeys={[regional.moneda]}
-                onChange={(e) =>
-                  setRegional((prev) => ({ ...prev, moneda: e.target.value }))
-                }
-              >
-                {monedas.map((moneda) => (
-                  <SelectItem key={moneda.value}>{moneda.label}</SelectItem>
-                ))}
-              </Select>
-              <Select
-                label="Zona horaria"
-                selectedKeys={[regional.zonaHoraria]}
-                onChange={(e) =>
-                  setRegional((prev) => ({
-                    ...prev,
-                    zonaHoraria: e.target.value,
-                  }))
-                }
-              >
-                {zonasHorarias.map((zona) => (
-                  <SelectItem key={zona}>{zona}</SelectItem>
-                ))}
-              </Select>
-              <Select
-                label="Idioma"
-                selectedKeys={[regional.idioma]}
-                onChange={(e) =>
-                  setRegional((prev) => ({ ...prev, idioma: e.target.value }))
-                }
-              >
-                {idiomas.map((idioma) => (
-                  <SelectItem key={idioma.value}>{idioma.label}</SelectItem>
-                ))}
-              </Select>
-              <Input
-                label="Condicion IVA"
-                value={regional.tipoIva}
-                onChange={(e) =>
-                  setRegional((prev) => ({ ...prev, tipoIva: e.target.value }))
-                }
-              />
-              <Input
-                label="Punto de venta"
-                value={regional.puntoVenta}
-                onChange={(e) =>
-                  setRegional((prev) => ({
-                    ...prev,
-                    puntoVenta: e.target.value,
-                  }))
-                }
-              />
-              <Input
-                label="Inicio de actividades"
-                placeholder="DD/MM/AAAA"
-                value={regional.inicioActividades}
-                onChange={(e) =>
-                  setRegional((prev) => ({
-                    ...prev,
-                    inicioActividades: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="flex justify-end">
-              <Button
-                color="primary"
-                isLoading={isSaving}
-                onPress={() => handleSave("Facturacion y region")}
-              >
-                Guardar configuracion fiscal
-              </Button>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Select
+              label="Moneda"
+              selectedKeys={[regional.moneda]}
+              onChange={(e) =>
+                setRegional((prev) => ({ ...prev, moneda: e.target.value }))
+              }
+            >
+              {monedas.map((moneda) => (
+                <SelectItem key={moneda.value}>{moneda.label}</SelectItem>
+              ))}
+            </Select>
+            <Select
+              label="Zona horaria"
+              selectedKeys={[regional.zonaHoraria]}
+              onChange={(e) =>
+                setRegional((prev) => ({
+                  ...prev,
+                  zonaHoraria: e.target.value,
+                }))
+              }
+            >
+              {zonasHorarias.map((zona) => (
+                <SelectItem key={zona}>{zona}</SelectItem>
+              ))}
+            </Select>
+            <Select
+              label="Idioma"
+              selectedKeys={[regional.idioma]}
+              onChange={(e) =>
+                setRegional((prev) => ({ ...prev, idioma: e.target.value }))
+              }
+            >
+              {idiomas.map((idioma) => (
+                <SelectItem key={idioma.value}>{idioma.label}</SelectItem>
+              ))}
+            </Select>
+            <Input
+              label="Condicion IVA"
+              value={regional.tipoIva}
+              onChange={(e) =>
+                setRegional((prev) => ({ ...prev, tipoIva: e.target.value }))
+              }
+            />
+            <Input
+              label="Punto de venta"
+              value={regional.puntoVenta}
+              onChange={(e) =>
+                setRegional((prev) => ({ ...prev, puntoVenta: e.target.value }))
+              }
+            />
+            <Input
+              label="Inicio de actividades"
+              placeholder="DD/MM/AAAA"
+              value={regional.inicioActividades}
+              onChange={(e) =>
+                setRegional((prev) => ({
+                  ...prev,
+                  inicioActividades: e.target.value,
+                }))
+              }
+            />
+          </div>
+          <div className="flex justify-end">
+            <Button
+              color="primary"
+              isLoading={isSaving}
+              onPress={() => handleSave("Facturacion y region")}
+            >
+              Guardar configuracion fiscal
+            </Button>
           </div>
         </AccordionSection>
 
         <AccordionSection
           id="branding"
           title="🎨 Branding"
-          description={descriptionMap.branding}
+          description="Ajusta la imagen de tu negocio en el panel y tickets."
           summary={summaryBranding}
           isOpen={openSection === "branding"}
           onToggle={toggleSection}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              type="file"
-              label="Logo"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-            />
-            <Input
-              type="color"
-              label="Color principal"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200 h-12" }}
-              value={branding.color}
-              onChange={(e) =>
-                setBranding((prev) => ({ ...prev, color: e.target.value }))
-              }
-            />
-            <Input
-              label="Slogan del negocio"
-              variant="bordered"
-              className="md:col-span-2"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={branding.slogan}
-              onChange={(e) =>
-                setBranding((prev) => ({ ...prev, slogan: e.target.value }))
-              }
-              placeholder="Ej: Mejor precio, mejor servicio."
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+            <div className="space-y-3">
+              <Input
+                type="file"
+                label="Logo"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                onChange={(e) => handleLogoChange(e.target.files?.[0] || null)}
+              />
+              {branding.logoPreview ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-lg border border-slate-200 overflow-hidden bg-white">
+                    <img
+                      src={branding.logoPreview}
+                      alt="Logo preview"
+                      className="object-contain w-full h-full"
+                    />
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {branding.logo?.name || "Logo cargado"}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No hay logo cargado.</p>
+              )}
+            </div>
+            <div className="space-y-3">
+              <Input
+                type="color"
+                label="Color principal"
+                variant="bordered"
+                classNames={{
+                  inputWrapper: "bg-white border-slate-200 h-12",
+                }}
+                value={branding.color}
+                onChange={(e) =>
+                  setBranding((prev) => ({ ...prev, color: e.target.value }))
+                }
+              />
+              <Input
+                label="Slogan del negocio"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={branding.slogan}
+                onChange={(e) =>
+                  setBranding((prev) => ({ ...prev, slogan: e.target.value }))
+                }
+                placeholder="Ej: Mejor precio, mejor servicio."
+              />
+            </div>
           </div>
           <div className="flex justify-end">
             <Button
@@ -702,6 +691,24 @@ export default function Configuracion() {
               onPress={() => handleSave("Branding")}
             >
               Guardar branding
+            </Button>
+          </div>
+        </AccordionSection>
+
+        <AccordionSection
+          id="usuarios"
+          title="Usuarios y roles"
+          description="Administra accesos del equipo."
+          summary="Proximamente"
+          isOpen={openSection === "usuarios"}
+          onToggle={toggleSection}
+        >
+          <div className="text-sm text-gray-600">
+            Proximamente: gestion de usuarios, roles y permisos.
+          </div>
+          <div className="flex justify-end">
+            <Button variant="flat" color="default" isDisabled>
+              Disponible pronto
             </Button>
           </div>
         </AccordionSection>

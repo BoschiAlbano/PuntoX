@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
 
 interface RegistrationData {
-  // Datos de Persona
   apellido: string;
   nombre: string;
   dni: string;
@@ -13,8 +12,6 @@ interface RegistrationData {
   telefono: string;
   mail: string;
   localidadId: string;
-
-  // Datos de Usuario
   nombreUsuario: string;
   password: string;
   confirmPassword: string;
@@ -47,9 +44,8 @@ export default function RegistrationForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const router = useRouter();
-  const { login } = useAuth();
+  const supabase = getSupabaseBrowserClient();
 
-  // Cargar localidades al montar el componente
   useEffect(() => {
     const fetchLocalidades = async () => {
       try {
@@ -58,8 +54,8 @@ export default function RegistrationForm() {
           const data = await response.json();
           setLocalidades(data);
         }
-      } catch (error) {
-        console.error("Error al cargar localidades:", error);
+      } catch (err) {
+        console.error("Error al cargar localidades:", err);
       }
     };
 
@@ -149,20 +145,23 @@ export default function RegistrationForm() {
 
       setSuccess("Usuario registrado exitosamente");
 
-      // Auto-login después del registro
       setTimeout(async () => {
         try {
-          await login({
+          const { error: authError } = await supabase.auth.signInWithPassword({
             email: normalizedMail,
             password: formData.password,
           });
-        } catch (error) {
-          console.error("Error en auto-login:", error);
+          if (authError) {
+            throw authError;
+          }
+          router.push("/ventas");
+        } catch (err) {
+          console.error("Error en auto-login:", err);
           router.push("/signin");
         }
       }, 2000);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Error en el registro");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error en el registro");
     } finally {
       setIsLoading(false);
     }
@@ -384,7 +383,6 @@ export default function RegistrationForm() {
         </div>
       </div>
 
-      {/* Mensajes de Error y Éxito */}
       {error && (
         <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">
           {error}
@@ -397,7 +395,6 @@ export default function RegistrationForm() {
         </div>
       )}
 
-      {/* Botón de Envío */}
       <button
         type="submit"
         disabled={isLoading}
