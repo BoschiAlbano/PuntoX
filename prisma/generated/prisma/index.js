@@ -677,7 +677,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\boschi albano jose\\Desktop\\Punto X Saas\\PuntoX\\prisma\\generated\\prisma",
+      "value": "C:\\Users\\Netic\\Documents\\Agustin Varela\\mis-proyectos\\PuntoX\\prisma\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -691,7 +691,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\boschi albano jose\\Desktop\\Punto X Saas\\PuntoX\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\Netic\\Documents\\Agustin Varela\\mis-proyectos\\PuntoX\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

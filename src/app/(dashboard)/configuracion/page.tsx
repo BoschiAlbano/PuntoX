@@ -1,11 +1,10 @@
-"use client";
+﻿"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Card,
   CardBody,
-  CardHeader,
   Chip,
   Divider,
   Input,
@@ -43,75 +42,47 @@ const idiomas = [
   { value: "en-US", label: "English" },
 ];
 
-function AccordionSection({
+function SectionPanel({
   id,
   title,
   description,
   summary,
-  isOpen,
-  onToggle,
+  isActive,
   children,
 }: {
   id: SectionKey;
   title: string;
   description: string;
   summary: string;
-  isOpen: boolean;
-  onToggle: (id: SectionKey) => void;
+  isActive: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <Card shadow="sm" className="rounded-2xl border border-slate-200">
-      <button
-        type="button"
-        onClick={() => onToggle(id)}
-        className="w-full text-left focus:outline-none focus-visible:outline-none"
-      >
-        <CardHeader className="flex justify-between items-start gap-3 p-3">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-semibold">{title}</h3>
-              <Chip size="sm" variant="flat" className="bg-slate-100">
-                {isOpen ? "Editando" : "Resumido"}
-              </Chip>
-            </div>
-            <p className="text-sm text-gray-500">{description}</p>
-            <p className="text-sm text-gray-700 line-clamp-2">{summary}</p>
-          </div>
-          <div
-            className={`flex items-center justify-center w-8 h-8 rounded-full border border-slate-200 bg-white transition-transform ${
-              isOpen ? "rotate-90" : "rotate-0"
-            }`}
-          >
-            <svg
-              className="w-4 h-4 text-slate-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </div>
-        </CardHeader>
-      </button>
-      {isOpen ? (
-        <>
+    <Card
+      shadow="sm"
+      className={`rounded-2xl border border-slate-200 ${
+        isActive ? "block" : "hidden"
+      }`}
+      id={id}
+    >
+      <CardBody className="p-4 space-y-3">
+        <div className="space-y-1">
+          <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+          <p className="text-sm text-gray-500">{description}</p>
+          <p className="text-sm text-gray-700">{summary}</p>
           <Divider />
-          <CardBody className="p-3 space-y-4">{children}</CardBody>
-        </>
-      ) : null}
+        </div>
+        <div className="space-y-4">{children}</div>
+      </CardBody>
     </Card>
   );
 }
 
 export default function Configuracion() {
-  const [isSaving, setIsSaving] = useState(false);
-  const [openSection, setOpenSection] = useState<SectionKey | "">("perfil");
+  const [isSavingAll, setIsSavingAll] = useState(false);
+  const [isLoadingTenant, setIsLoadingTenant] = useState(true);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+  const [openSection, setOpenSection] = useState<SectionKey>("perfil");
 
   const [configuracion, setConfiguracion] = useState({
     razonSocial: "Punto X Market",
@@ -159,6 +130,89 @@ export default function Configuracion() {
     color: "#90c472",
   });
 
+  const [tenant, setTenant] = useState({
+    nombre: "PX Liniers",
+    dominio: "puntox.com",
+    razonSocial: "Punto X Market",
+    cuit: "20-12345678-9",
+    email: "admin@puntox.com",
+    telefono: "+54 11 5555 0000",
+    planId: "BUSINESS",
+    estaActivo: true,
+    onboardingCompleto: false,
+  });
+
+  useEffect(() => {
+    const loadTenant = async () => {
+      setIsLoadingTenant(true);
+      try {
+        const res = await fetch("/api/tenant");
+        if (!res.ok) {
+          throw new Error("No se pudo cargar el tenant");
+        }
+        const json = await res.json();
+        if (json?.tenant) {
+          setTenant((prev) => ({
+            ...prev,
+            nombre: json.tenant.nombre ?? prev.nombre,
+            dominio: json.tenant.dominio ?? prev.dominio,
+            razonSocial: json.tenant.razonSocial ?? prev.razonSocial,
+            cuit: json.tenant.cuit ?? prev.cuit,
+            email: json.tenant.email ?? prev.email,
+            telefono: json.tenant.telefono ?? prev.telefono,
+          }));
+        }
+      } catch (error) {
+        console.error(error);
+        addToast({
+          title: "Error",
+          description: "No pudimos cargar los datos del negocio.",
+          color: "danger",
+        });
+      } finally {
+        setIsLoadingTenant(false);
+      }
+    };
+
+    const loadConfig = async () => {
+      setIsLoadingConfig(true);
+      try {
+        const res = await fetch("/api/configuracion");
+        if (!res.ok) {
+          throw new Error("No se pudo cargar la configuracion");
+        }
+        const json = await res.json();
+        if (json?.configuracion) {
+          setConfiguracion((prev) => ({
+            ...prev,
+            razonSocial: json.configuracion.razonSocial ?? prev.razonSocial,
+            nombreFantasia:
+              json.configuracion.nombreFantasia ?? prev.nombreFantasia,
+            cuit: json.configuracion.cuit ?? prev.cuit,
+            email: json.configuracion.email ?? prev.email,
+            telefono: json.configuracion.telefono ?? prev.telefono,
+            direccion: json.configuracion.direccion ?? prev.direccion,
+            observacionPieFactura:
+              json.configuracion.observacionPieFactura ??
+              prev.observacionPieFactura,
+          }));
+        }
+      } catch (error) {
+        console.error(error);
+        addToast({
+          title: "Error",
+          description: "No pudimos cargar la configuracion.",
+          color: "danger",
+        });
+      } finally {
+        setIsLoadingConfig(false);
+      }
+    };
+
+    loadTenant();
+    loadConfig();
+  }, []);
+
   const descriptionMap: Record<SectionKey, string> = {
     perfil: "Datos visibles en tickets y comunicaciones.",
     ventas: "Ajustes rapidos para cajas y mostrador.",
@@ -167,8 +221,7 @@ export default function Configuracion() {
     fiscal: "Moneda, idioma y datos fiscales para comprobantes.",
     branding: "Ajusta la imagen de tu negocio en el panel y tickets.",
   };
-
-  const summaryPerfil = `${configuracion.razonSocial} | CUIT ${configuracion.cuit} | ${configuracion.localidadId}`;
+  const summaryPerfil = `Nombre: ${tenant.nombre} | CUIT: ${tenant.cuit}`;
   const summaryVentas = `Ticket digital: ${
     preferencias.ticketDigital ? "on" : "off"
   } | Impuestos: ${preferencias.mostrarPrecios ? "incluidos" : "excluidos"}`;
@@ -179,89 +232,151 @@ export default function Configuracion() {
   }`;
   const summarySeguridad = `2FA: ${
     seguridad.dobleFactor ? "activo" : "pendiente"
-  } | Bloqueo: 10 min | Recordar sesion: 30 dias`;
-  const summaryFiscal = `${regional.moneda} | ${
-    idiomas.find((i) => i.value === regional.idioma)?.label || "Idioma"
-  } | ${regional.tipoIva} | PV ${regional.puntoVenta}`;
+  } | Bloqueo: 10 min | Recordar sesión: 30 días`;
+  const summaryFiscal = `Moneda: ${regional.moneda} | IVA: ${regional.tipoIva} | Punto de venta: ${regional.puntoVenta}`;
   const summaryBranding = `Color: ${branding.color} | Logo: pendiente`;
 
-  const handleSave = (seccion: string) => {
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      addToast({
-        title: "Cambios guardados",
-        description: `${seccion} actualizada`,
-        color: "success",
-      });
-    }, 500);
+  const saveTenant = async () => {
+    const res = await fetch("/api/tenant", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nombre: tenant.nombre,
+        razonSocial: tenant.razonSocial,
+        dominio: tenant.dominio,
+        email: tenant.email,
+        telefono: tenant.telefono,
+        cuit: tenant.cuit,
+      }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      throw new Error(data?.error ?? "No se pudo guardar el tenant");
+    }
   };
 
-  const toggleSection = (id: SectionKey) => {
-    setOpenSection((prev) => (prev === id ? "" : id));
+  const saveConfiguracion = async () => {
+    const res = await fetch("/api/configuracion", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        razonSocial: configuracion.razonSocial,
+        nombreFantasia: configuracion.nombreFantasia,
+        cuit: configuracion.cuit,
+        email: configuracion.email,
+        telefono: configuracion.telefono,
+        direccion: configuracion.direccion,
+        observacionPieFactura: configuracion.observacionPieFactura,
+      }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      throw new Error(data?.error ?? "No se pudo guardar la configuracion");
+    }
   };
+
+  const handleSavePerfil = async () => {
+    setIsSavingAll(true);
+    try {
+      await saveTenant();
+      await saveConfiguracion();
+      addToast({
+        title: "Perfil actualizado",
+        description: "Datos guardados correctamente.",
+        color: "success",
+      });
+    } catch (error) {
+      console.error(error);
+      addToast({
+        title: "Error al guardar",
+        description: "Revisa los datos e intenta nuevamente.",
+        color: "danger",
+      });
+    } finally {
+      setIsSavingAll(false);
+    }
+  };
+
+  const sectionsNav = [
+    { id: "perfil", label: "Perfil del negocio" },
+    { id: "ventas", label: "Preferencias de venta" },
+    { id: "notificaciones", label: "Notificaciones" },
+    { id: "seguridad", label: "Seguridad y acceso" },
+    { id: "fiscal", label: "Facturacion y region" },
+    { id: "branding", label: "Branding" },
+  ];
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 via-blue-800 to-[#90c472] text-white shadow-xl">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),transparent_40%)]" />
-        <div className="relative p-5 md:p-7 space-y-5">
+        <div className="relative p-4 md:p-5 space-y-5">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="space-y-2">
               <Chip variant="flat" color="success" className="bg-white/10">
                 Panel de control
               </Chip>
               <h1 className="text-3xl md:text-[32px] font-bold">
-                Configuracion
+                Configuración
               </h1>
-              <p className="text-white/70 max-w-3xl">
-                Ajusta la identidad del negocio, preferencias de venta y
-                seguridad desde un solo lugar. Los cambios afectan a todas las
-                sucursales activas.
+              <p className="text-white max-w-3xl">
+                Configuracion
+                Ajustes rapidos de identidad, ventas y seguridad en un solo
+                lugar. Los cambios aplican a todas las sucursales activas.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <Button
                 color="primary"
                 className="bg-white text-slate-900"
-                isLoading={isSaving}
-                onPress={() => handleSave("Configuracion general")}
+                isLoading={isSavingAll}
+                isDisabled={isLoadingTenant || isLoadingConfig}
+                onPress={handleSavePerfil}
               >
                 Guardar todo
               </Button>
               <Button
                 variant="bordered"
                 className="border-white/40 text-white"
-                onPress={() => handleSave("Actividad revisada")}
+                onPress={() =>
+                  addToast({
+                    title: "Actividad",
+                    description: "Historial de cambios disponible pronto.",
+                  })
+                }
               >
                 Ver actividad
               </Button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="rounded-2xl bg-white/10 p-4 border border-white/10">
-              <p className="text-sm text-white/70">Plan activo</p>
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-lg font-semibold">Business</span>
-                <Chip size="sm" variant="flat" className="bg-white/20">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 w-full">
+            <div className="rounded-2xl bg-white/10 p-4 border border-white/10 h-full flex flex-col justify-between">
+              <p className="text-sm text-white/80">Plan activo</p>
+              <div className="flex items-center justify-between mt-2 gap-2">
+                <span className="text-lg font-semibold leading-tight">
+                  Business
+                </span>
+                <Chip size="sm" variant="flat" className="bg-white/20 text-white">
                   4 locales
                 </Chip>
               </div>
             </div>
-            <div className="rounded-2xl bg-white/10 p-4 border border-white/10">
-              <p className="text-sm text-white/70">Respaldo</p>
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-lg font-semibold">Hoy 03:00</span>
-                <Chip size="sm" variant="flat" className="bg-white/20">
+            <div className="rounded-2xl bg-white/10 p-4 border border-white/10 h-full flex flex-col justify-between">
+              <p className="text-sm text-white/80">Respaldo</p>
+              <div className="flex items-center justify-between mt-2 gap-2">
+                <span className="text-lg font-semibold leading-tight">
+                  Hoy 03:00
+                </span>
+                <Chip size="sm" variant="flat" className="bg-white/20 text-white">
                   Automatico
                 </Chip>
               </div>
             </div>
-            <div className="rounded-2xl bg-white/10 p-4 border border-white/10">
-              <p className="text-sm text-white/70">Seguridad</p>
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-lg font-semibold">
+            <div className="rounded-2xl bg-white/10 p-4 border border-white/10 h-full flex flex-col justify-between">
+              <p className="text-sm text-white/80">Seguridad</p>
+              <div className="flex items-center justify-between mt-2 gap-2">
+                <span className="text-lg font-semibold leading-tight">
                   2FA {seguridad.dobleFactor ? "activo" : "pendiente"}
                 </span>
                 <Chip
@@ -278,434 +393,375 @@ export default function Configuracion() {
         </div>
       </section>
 
-      <main className="space-y-3">
-        <AccordionSection
-          id="perfil"
-          title="🏢 Perfil del negocio"
-          description={descriptionMap.perfil}
-          summary={summaryPerfil}
-          isOpen={openSection === "perfil"}
-          onToggle={toggleSection}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Nombre fiscal"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={configuracion.razonSocial}
-              onChange={(e) =>
-                setConfiguracion((prev) => ({
-                  ...prev,
-                  razonSocial: e.target.value,
-                }))
-              }
-            />
-            <Input
-              label="Nombre de fantasia"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={configuracion.nombreFantasia}
-              onChange={(e) =>
-                setConfiguracion((prev) => ({
-                  ...prev,
-                  nombreFantasia: e.target.value,
-                }))
-              }
-            />
-            <Input
-              label="Correo"
-              type="email"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={configuracion.email}
-              onChange={(e) =>
-                setConfiguracion((prev) => ({
-                  ...prev,
-                  email: e.target.value,
-                }))
-              }
-            />
-            <Input
-              label="Telefono"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={configuracion.telefono}
-              onChange={(e) =>
-                setConfiguracion((prev) => ({
-                  ...prev,
-                  telefono: e.target.value,
-                }))
-              }
-            />
-            <Input
-              label="Direccion"
-              variant="bordered"
-              className="md:col-span-2"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={configuracion.direccion}
-              onChange={(e) =>
-                setConfiguracion((prev) => ({
-                  ...prev,
-                  direccion: e.target.value,
-                }))
-              }
-            />
-            <Input
-              label="CUIT"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={configuracion.cuit}
-              onChange={(e) =>
-                setConfiguracion((prev) => ({ ...prev, cuit: e.target.value }))
-              }
-            />
-            <Input
-              label="Localidad"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={configuracion.localidadId}
-              onChange={(e) =>
-                setConfiguracion((prev) => ({
-                  ...prev,
-                  localidadId: e.target.value,
-                }))
-              }
-            />
-          </div>
-          <Textarea
-            label="Mensaje en ticket"
-            placeholder="Ej: Gracias por elegirnos"
-            minRows={3}
-            variant="bordered"
-            classNames={{ inputWrapper: "bg-white border-slate-200" }}
-            value={configuracion.observacionPieFactura}
-            onChange={(e) =>
-              setConfiguracion((prev) => ({
-                ...prev,
-                observacionPieFactura: e.target.value,
-              }))
-            }
-          />
-          <div className="flex justify-end">
-            <Button
-              color="primary"
-              isLoading={isSaving}
-              onPress={() => handleSave("Perfil del negocio")}
-            >
-              Guardar perfil
-            </Button>
-          </div>
-        </AccordionSection>
+      <main className="settings-single-column">
+        <div className="settings-tab-bar" role="tablist" aria-label="Configuración">
+          {sectionsNav.map((section) => {
+            const isActive = openSection === section.id;
+            return (
+              <button
+                key={section.id}
+                onClick={() => setOpenSection(section.id as SectionKey)}
+                className={`tab-pill ${isActive ? "active" : ""}`}
+                role="tab"
+                aria-selected={isActive}
+              >
+                <span className="tab-pill-label">{section.label}</span>
+              </button>
+            );
+          })}
+        </div>
 
-        <AccordionSection
-          id="ventas"
-          title="🛒 Preferencias de venta"
-          description={descriptionMap.ventas}
-          summary={summaryVentas}
-          isOpen={openSection === "ventas"}
-          onToggle={toggleSection}
-        >
-          <div className="space-y-3">
-            <Switch
-              isSelected={preferencias.ticketDigital}
-              onValueChange={(value) =>
-                setPreferencias((prev) => ({ ...prev, ticketDigital: value }))
-              }
-              className="px-1 py-1"
-            >
-              Enviar ticket digital por correo
-            </Switch>
-            <Switch
-              isSelected={preferencias.mostrarPrecios}
-              onValueChange={(value) =>
-                setPreferencias((prev) => ({ ...prev, mostrarPrecios: value }))
-              }
-              className="px-1 py-1"
-            >
-              Mostrar precios con impuestos incluidos
-            </Switch>
-            <Switch
-              isSelected={preferencias.aperturaCaja}
-              onValueChange={(value) =>
-                setPreferencias((prev) => ({ ...prev, aperturaCaja: value }))
-              }
-              className="px-1 py-1"
-            >
-              Abrir cajon al cobrar en efectivo
-            </Switch>
-            <Switch
-              isSelected={preferencias.numerarPedidos}
-              onValueChange={(value) =>
-                setPreferencias((prev) => ({ ...prev, numerarPedidos: value }))
-              }
-              className="px-1 py-1"
-            >
-              Numerar pedidos y mostrar en pantalla
-            </Switch>
-          </div>
-          <div className="pt-2 flex justify-end">
-            <Button
-              color="primary"
-              isLoading={isSaving}
-              onPress={() => handleSave("Preferencias de venta")}
-            >
-              Aplicar preferencias
-            </Button>
-          </div>
-        </AccordionSection>
-
-        <AccordionSection
-          id="notificaciones"
-          title="🔔 Notificaciones"
-          description={descriptionMap.notificaciones}
-          summary={summaryNotificaciones}
-          isOpen={openSection === "notificaciones"}
-          onToggle={toggleSection}
-        >
-          <div className="space-y-3">
-            <Switch
-              isSelected={notificaciones.email}
-              onValueChange={(value) =>
-                setNotificaciones((prev) => ({ ...prev, email: value }))
-              }
-            >
-              Enviar alertas por correo
-            </Switch>
-            <Switch
-              isSelected={notificaciones.push}
-              onValueChange={(value) =>
-                setNotificaciones((prev) => ({ ...prev, push: value }))
-              }
-            >
-              Notificaciones push en la app
-            </Switch>
-            <Switch
-              isSelected={notificaciones.stockBajo}
-              onValueChange={(value) =>
-                setNotificaciones((prev) => ({ ...prev, stockBajo: value }))
-              }
-            >
-              Avisar stock critico y roturas
-            </Switch>
-            <Switch
-              isSelected={notificaciones.resumenDiario}
-              onValueChange={(value) =>
-                setNotificaciones((prev) => ({
-                  ...prev,
-                  resumenDiario: value,
-                }))
-              }
-            >
-              Enviar resumen diario a las 20:00
-            </Switch>
-          </div>
-          <div className="pt-2 flex justify-end">
-            <Button
-              color="primary"
-              isLoading={isSaving}
-              onPress={() => handleSave("Notificaciones")}
-            >
-              Guardar alertas
-            </Button>
-          </div>
-        </AccordionSection>
-
-        <AccordionSection
-          id="seguridad"
-          title="🔐 Seguridad y acceso"
-          description={descriptionMap.seguridad}
-          summary={summarySeguridad}
-          isOpen={openSection === "seguridad"}
-          onToggle={toggleSection}
-        >
-          <div className="space-y-3">
-            <Switch
-              isSelected={seguridad.dobleFactor}
-              onValueChange={(value) =>
-                setSeguridad((prev) => ({ ...prev, dobleFactor: value }))
-              }
-            >
-              Habilitar doble factor para usuarios
-            </Switch>
-            <Switch
-              isSelected={seguridad.alertarDispositivo}
-              onValueChange={(value) =>
-                setSeguridad((prev) => ({ ...prev, alertarDispositivo: value }))
-              }
-            >
-              Avisar inicio de sesion desde nuevos dispositivos
-            </Switch>
-            <Switch
-              isSelected={seguridad.bloqueoAutomatico}
-              onValueChange={(value) =>
-                setSeguridad((prev) => ({ ...prev, bloqueoAutomatico: value }))
-              }
-            >
-              Bloquear dashboard despues de 10 minutos
-            </Switch>
-            <Switch
-              isSelected={seguridad.recordarSesion}
-              onValueChange={(value) =>
-                setSeguridad((prev) => ({ ...prev, recordarSesion: value }))
-              }
-            >
-              Recordar sesion por 30 dias en dispositivos confiables
-            </Switch>
-          </div>
-          <div className="flex flex-wrap gap-2 pt-2 justify-end">
-            <Button
-              color="primary"
-              isLoading={isSaving}
-              onPress={() => handleSave("Seguridad")}
-            >
-              Actualizar seguridad
-            </Button>
-            <Button
-              variant="bordered"
-              color="danger"
-              className="border-danger"
-              onPress={() => handleSave("Sesiones cerradas")}
-            >
-              Cerrar todas las sesiones
-            </Button>
-          </div>
-        </AccordionSection>
-
-        <AccordionSection
-          id="fiscal"
-          title="🧾 Facturacion y region"
-          description={descriptionMap.fiscal}
-          summary={summaryFiscal}
-          isOpen={openSection === "fiscal"}
-          onToggle={toggleSection}
-        >
-          <div className="space-y-4">
+        <div className="settings-content-pane space-y-3">
+          <SectionPanel
+            id="perfil"
+            title="Perfil del negocio"
+            description={descriptionMap.perfil}
+            summary={summaryPerfil}
+            isActive={openSection === "perfil"}
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Select
-                label="Moneda"
-                selectedKeys={[regional.moneda]}
-                onChange={(e) =>
-                  setRegional((prev) => ({ ...prev, moneda: e.target.value }))
-                }
-              >
-                {monedas.map((moneda) => (
-                  <SelectItem key={moneda.value}>{moneda.label}</SelectItem>
-                ))}
-              </Select>
-              <Select
-                label="Zona horaria"
-                selectedKeys={[regional.zonaHoraria]}
-                onChange={(e) =>
-                  setRegional((prev) => ({
-                    ...prev,
-                    zonaHoraria: e.target.value,
-                  }))
-                }
-              >
-                {zonasHorarias.map((zona) => (
-                  <SelectItem key={zona}>{zona}</SelectItem>
-                ))}
-              </Select>
-              <Select
-                label="Idioma"
-                selectedKeys={[regional.idioma]}
-                onChange={(e) =>
-                  setRegional((prev) => ({ ...prev, idioma: e.target.value }))
-                }
-              >
-                {idiomas.map((idioma) => (
-                  <SelectItem key={idioma.value}>{idioma.label}</SelectItem>
-                ))}
-              </Select>
               <Input
-                label="Condicion IVA"
-                value={regional.tipoIva}
+                label="Nombre"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={tenant.nombre}
                 onChange={(e) =>
-                  setRegional((prev) => ({ ...prev, tipoIva: e.target.value }))
-                }
-              />
-              <Input
-                label="Punto de venta"
-                value={regional.puntoVenta}
-                onChange={(e) =>
-                  setRegional((prev) => ({
+                  setTenant((prev) => ({
                     ...prev,
-                    puntoVenta: e.target.value,
+                    nombre: e.target.value,
                   }))
                 }
               />
               <Input
-                label="Inicio de actividades"
-                placeholder="DD/MM/AAAA"
-                value={regional.inicioActividades}
+                label="Razon social"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={tenant.razonSocial ?? ""}
                 onChange={(e) =>
-                  setRegional((prev) => ({
+                  setTenant((prev) => ({
                     ...prev,
-                    inicioActividades: e.target.value,
+                    razonSocial: e.target.value,
                   }))
+                }
+              />
+              <Input
+                label="Correo"
+                type="email"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={tenant.email ?? ""}
+                onChange={(e) =>
+                  setTenant((prev) => ({
+                    ...prev,
+                    email: e.target.value,
+                  }))
+                }
+              />
+              <Input
+                label="Telefono"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={tenant.telefono ?? ""}
+                onChange={(e) =>
+                  setTenant((prev) => ({
+                    ...prev,
+                    telefono: e.target.value,
+                  }))
+                }
+              />
+              <Input
+                label="Dominio"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={tenant.dominio ?? ""}
+                onChange={(e) =>
+                  setTenant((prev) => ({
+                    ...prev,
+                    dominio: e.target.value,
+                  }))
+                }
+              />
+              <Input
+                label="CUIT"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={tenant.cuit ?? ""}
+                onChange={(e) =>
+                  setTenant((prev) => ({ ...prev, cuit: e.target.value }))
                 }
               />
             </div>
-            <div className="flex justify-end">
-              <Button
-                color="primary"
-                isLoading={isSaving}
-                onPress={() => handleSave("Facturacion y region")}
-              >
-                Guardar configuracion fiscal
-              </Button>
-            </div>
-          </div>
-        </AccordionSection>
+          </SectionPanel>
 
-        <AccordionSection
-          id="branding"
-          title="🎨 Branding"
-          description={descriptionMap.branding}
-          summary={summaryBranding}
-          isOpen={openSection === "branding"}
-          onToggle={toggleSection}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              type="file"
-              label="Logo"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-            />
-            <Input
-              type="color"
-              label="Color principal"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200 h-12" }}
-              value={branding.color}
-              onChange={(e) =>
-                setBranding((prev) => ({ ...prev, color: e.target.value }))
-              }
-            />
-            <Input
-              label="Slogan del negocio"
-              variant="bordered"
-              className="md:col-span-2"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={branding.slogan}
-              onChange={(e) =>
-                setBranding((prev) => ({ ...prev, slogan: e.target.value }))
-              }
-              placeholder="Ej: Mejor precio, mejor servicio."
-            />
-          </div>
-          <div className="flex justify-end">
-            <Button
-              color="primary"
-              isLoading={isSaving}
-              onPress={() => handleSave("Branding")}
-            >
-              Guardar branding
-            </Button>
-          </div>
-        </AccordionSection>
+          <SectionPanel
+            id="ventas"
+            title="Preferencias de venta"
+            description={descriptionMap.ventas}
+            summary={summaryVentas}
+            isActive={openSection === "ventas"}
+          >
+            <div className="space-y-3">
+              <Switch
+                isSelected={preferencias.ticketDigital}
+                onValueChange={(value) =>
+                  setPreferencias((prev) => ({ ...prev, ticketDigital: value }))
+                }
+                className="px-1 py-1"
+              >
+                Enviar ticket digital por correo
+              </Switch>
+              <Switch
+                isSelected={preferencias.mostrarPrecios}
+                onValueChange={(value) =>
+                  setPreferencias((prev) => ({ ...prev, mostrarPrecios: value }))
+                }
+                className="px-1 py-1"
+              >
+                Mostrar precios con impuestos incluidos
+              </Switch>
+              <Switch
+                isSelected={preferencias.aperturaCaja}
+                onValueChange={(value) =>
+                  setPreferencias((prev) => ({ ...prev, aperturaCaja: value }))
+                }
+                className="px-1 py-1"
+              >
+                Abrir cajon al cobrar en efectivo
+              </Switch>
+              <Switch
+                isSelected={preferencias.numerarPedidos}
+                onValueChange={(value) =>
+                  setPreferencias((prev) => ({ ...prev, numerarPedidos: value }))
+                }
+                className="px-1 py-1"
+              >
+                Numerar pedidos y mostrar en pantalla
+              </Switch>
+            </div>
+          </SectionPanel>
+
+          <SectionPanel
+            id="notificaciones"
+            title="Notificaciones"
+            description={descriptionMap.notificaciones}
+            summary={summaryNotificaciones}
+            isActive={openSection === "notificaciones"}
+          >
+            <div className="space-y-3">
+              <Switch
+                isSelected={notificaciones.email}
+                onValueChange={(value) =>
+                  setNotificaciones((prev) => ({ ...prev, email: value }))
+                }
+              >
+                Enviar alertas por correo
+              </Switch>
+              <Switch
+                isSelected={notificaciones.push}
+                onValueChange={(value) =>
+                  setNotificaciones((prev) => ({ ...prev, push: value }))
+                }
+              >
+                Notificaciones push en la app
+              </Switch>
+              <Switch
+                isSelected={notificaciones.stockBajo}
+                onValueChange={(value) =>
+                  setNotificaciones((prev) => ({ ...prev, stockBajo: value }))
+                }
+              >
+                Avisar stock critico y roturas
+              </Switch>
+              <Switch
+                isSelected={notificaciones.resumenDiario}
+                onValueChange={(value) =>
+                  setNotificaciones((prev) => ({
+                    ...prev,
+                    resumenDiario: value,
+                  }))
+                }
+              >
+                Enviar resumen diario a las 20:00
+              </Switch>
+            </div>
+          </SectionPanel>
+
+          <SectionPanel
+            id="seguridad"
+            title="Seguridad y acceso"
+            description={descriptionMap.seguridad}
+            summary={summarySeguridad}
+            isActive={openSection === "seguridad"}
+          >
+            <div className="space-y-3">
+              <Switch
+                isSelected={seguridad.dobleFactor}
+                onValueChange={(value) =>
+                  setSeguridad((prev) => ({ ...prev, dobleFactor: value }))
+                }
+              >
+                Habilitar doble factor para usuarios
+              </Switch>
+              <Switch
+                isSelected={seguridad.alertarDispositivo}
+                onValueChange={(value) =>
+                  setSeguridad((prev) => ({
+                    ...prev,
+                    alertarDispositivo: value,
+                  }))
+                }
+              >
+                Avisar inicio de sesión desde nuevos dispositivos
+              </Switch>
+              <Switch
+                isSelected={seguridad.bloqueoAutomatico}
+                onValueChange={(value) =>
+                  setSeguridad((prev) => ({ ...prev, bloqueoAutomatico: value }))
+                }
+              >
+                Bloquear dashboard después de 10 minutos
+              </Switch>
+              <Switch
+                isSelected={seguridad.recordarSesion}
+                onValueChange={(value) =>
+                  setSeguridad((prev) => ({ ...prev, recordarSesion: value }))
+                }
+              >
+                Recordar sesión por 30 días en dispositivos confiables
+              </Switch>
+            </div>
+          </SectionPanel>
+
+          <SectionPanel
+            id="fiscal"
+            title="Facturacion y region"
+            description={descriptionMap.fiscal}
+            summary={summaryFiscal}
+            isActive={openSection === "fiscal"}
+          >
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Select
+                  label="Moneda"
+                  selectedKeys={[regional.moneda]}
+                  onChange={(e) =>
+                    setRegional((prev) => ({ ...prev, moneda: e.target.value }))
+                  }
+                >
+                  {monedas.map((moneda) => (
+                    <SelectItem key={moneda.value}>{moneda.label}</SelectItem>
+                  ))}
+                </Select>
+                <Select
+                  label="Zona horaria"
+                  selectedKeys={[regional.zonaHoraria]}
+                  onChange={(e) =>
+                    setRegional((prev) => ({
+                      ...prev,
+                      zonaHoraria: e.target.value,
+                    }))
+                  }
+                >
+                  {zonasHorarias.map((zona) => (
+                    <SelectItem key={zona}>{zona}</SelectItem>
+                  ))}
+                </Select>
+                <Select
+                  label="Idioma"
+                  selectedKeys={[regional.idioma]}
+                  onChange={(e) =>
+                    setRegional((prev) => ({ ...prev, idioma: e.target.value }))
+                  }
+                >
+                  {idiomas.map((idioma) => (
+                    <SelectItem key={idioma.value}>{idioma.label}</SelectItem>
+                  ))}
+                </Select>
+                <Input
+                  label="Condicion IVA"
+                  value={regional.tipoIva}
+                  onChange={(e) =>
+                    setRegional((prev) => ({ ...prev, tipoIva: e.target.value }))
+                  }
+                />
+                <Input
+                  label="Punto de venta"
+                  value={regional.puntoVenta}
+                  onChange={(e) =>
+                    setRegional((prev) => ({
+                      ...prev,
+                      puntoVenta: e.target.value,
+                    }))
+                  }
+                />
+                <Input
+                  label="Inicio de actividades"
+                  placeholder="DD/MM/AAAA"
+                  value={regional.inicioActividades}
+                  onChange={(e) =>
+                    setRegional((prev) => ({
+                      ...prev,
+                      inicioActividades: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          </SectionPanel>
+
+          <SectionPanel
+            id="branding"
+            title="Branding"
+            description={descriptionMap.branding}
+            summary={summaryBranding}
+            isActive={openSection === "branding"}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                type="file"
+                label="Logo"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+              />
+              <Input
+                type="color"
+                label="Color principal"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200 h-12" }}
+                value={branding.color}
+                onChange={(e) =>
+                  setBranding((prev) => ({ ...prev, color: e.target.value }))
+                }
+              />
+              <Input
+                label="Slogan del negocio"
+                variant="bordered"
+                className="md:col-span-2"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={branding.slogan}
+                onChange={(e) =>
+                  setBranding((prev) => ({ ...prev, slogan: e.target.value }))
+                }
+                placeholder="Ej: Mejor precio, mejor servicio."
+              />
+            </div>
+          </SectionPanel>
+        </div>
       </main>
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

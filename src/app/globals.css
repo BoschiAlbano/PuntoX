@@ -61,3 +61,124 @@ body {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
+
+.config-action-module {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 20px;
+  gap: 12px;
+  text-align: left;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  background-color: #ffffff;
+}
+
+.config-action-module:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.config-action-module:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.config-action-module .module-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.config-action-module .module-text-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.config-action-module .module-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.config-action-module .module-summary {
+  font-size: 0.9rem;
+  color: #777;
+  margin: 0;
+}
+
+.config-action-module .module-action-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.settings-single-column {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings-tab-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+}
+
+.tab-pill {
+  position: relative;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  white-space: nowrap;
+}
+
+.tab-pill:hover {
+  background: #f0f4ff;
+  border-color: #dbeafe;
+}
+
+.tab-pill.active {
+  background: #e6f0ff;
+  border-color: #bfdbfe;
+  box-shadow: inset 0 -3px 0 #0099ff;
+  color: #0b152b;
+}
+
+.tab-pill-label {
+  font-size: 0.95rem;
+}
+
+.settings-content-pane {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+@media (max-width: 768px) {
+  .tab-pill {
+    flex: 0 0 auto;
+  }
+}
