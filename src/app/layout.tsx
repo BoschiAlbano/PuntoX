@@ -4,6 +4,7 @@ import "./globals.css";
 import SessionProviderComponent from "@/components/auth/sessionProvider";
 import { HeroUIProvider } from "@heroui/react";
 import { ToastProvider } from "@heroui/toast";
+import QueryProvider from "@/components/tanstack/QueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,8 +48,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <HeroUIProvider>
-          <ToastProvider />
-          <SessionProviderComponent>{children}</SessionProviderComponent>
+          <QueryProvider>
+            <ToastProvider />
+            <SessionProviderComponent>{children}</SessionProviderComponent>
+          </QueryProvider>
         </HeroUIProvider>
       </body>
     </html>

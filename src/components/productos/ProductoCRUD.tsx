@@ -23,7 +23,9 @@ import {
   Tooltip,
   useDisclosure,
   addToast,
+  Spinner,
 } from "@heroui/react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // Tipos para el producto basados en el modelo Articulo de Prisma
 interface Producto {
@@ -55,29 +57,35 @@ interface Producto {
   EstaEliminado: boolean;
 }
 
-// Datos de ejemplo para los selects (estos deberían venir de la API)
-const marcas = [
-  { id: 1, nombre: "Marca 1" },
-  { id: 2, nombre: "Marca 2" },
-  { id: 3, nombre: "Marca 3" },
-];
+interface ApiError {
+  error: string;
+  details?: Array<{ field: string; message: string }>;
+}
 
-const rubros = [
-  { id: 1, nombre: "Rubro 1" },
-  { id: 2, nombre: "Rubro 2" },
-  { id: 3, nombre: "Rubro 3" },
-];
+// Tipos auxiliares
+interface Marca {
+  Id: number;
+  Descripcion: string;
+}
+interface Rubro {
+  Id: number;
+  Descripcion: string;
+}
+interface UnidadMedida {
+  Id: number;
+  Descripcion: string;
+}
+interface Iva {
+  Id: number;
+  Descripcion: string;
+  Porcentaje: number;
+}
 
-const unidadesMedida = [
-  { id: 1, nombre: "Unidad" },
-  { id: 2, nombre: "Kilogramo" },
-  { id: 3, nombre: "Litro" },
-];
-
+// Datos de IVA fijos por ahora (o podrías traerlos de la DB si tienes tabla)
 const ivas = [
-  { id: 1, nombre: "21%", porcentaje: 21 },
-  { id: 2, nombre: "10.5%", porcentaje: 10.5 },
-  { id: 3, nombre: "0%", porcentaje: 0 },
+  { Id: 1, Descripcion: "21%", Porcentaje: 21 },
+  { Id: 2, Descripcion: "10.5%", Porcentaje: 10.5 },
+  { Id: 3, Descripcion: "0%", Porcentaje: 0 },
 ];
 
 const tiposVenta = [
@@ -86,18 +94,89 @@ const tiposVenta = [
   { id: 2, nombre: "Por Unidad" },
 ];
 
+// Funciones fetch
+const fetchProductos = async ({
+  signal,
+}: {
+  signal: AbortSignal;
+}): Promise<Producto[]> => {
+  const response = await fetch("/api/productos", { signal });
+  if (!response.ok) throw new Error("Error al cargar productos");
+  const data = await response.json();
+  return Array.isArray(data?.productos) ? data.productos : [];
+};
+
+const fetchMarcas = async ({
+  signal,
+}: {
+  signal: AbortSignal;
+}): Promise<Marca[]> => {
+  const response = await fetch("/api/marcas", { signal });
+  if (!response.ok) throw new Error("Error");
+  const data = await response.json();
+  return Array.isArray(data?.marcas) ? data.marcas : [];
+};
+
+const fetchRubros = async ({
+  signal,
+}: {
+  signal: AbortSignal;
+}): Promise<Rubro[]> => {
+  const response = await fetch("/api/rubros", { signal });
+  if (!response.ok) throw new Error("Error");
+  const data = await response.json();
+  return Array.isArray(data?.rubros) ? data.rubros : [];
+};
+
+const fetchUnidades = async ({
+  signal,
+}: {
+  signal: AbortSignal;
+}): Promise<UnidadMedida[]> => {
+  const response = await fetch("/api/unidades-medida", { signal });
+  if (!response.ok) throw new Error("Error");
+  const data = await response.json();
+  return Array.isArray(data?.unidades) ? data.unidades : [];
+};
+
 export default function ProductoCRUD() {
+  const queryClient = useQueryClient();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [productos] = useState<Producto[]>([]);
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
+  } = useDisclosure();
+
   const [productoSeleccionado, setProductoSeleccionado] =
     useState<Producto | null>(null);
+  const [productoAEliminar, setProductoAEliminar] = useState<Producto | null>(
+    null
+  );
   const [modoEdicion, setModoEdicion] = useState(false);
+
+  // Queries de datos auxiliares
+  const { data: marcas = [] } = useQuery({
+    queryKey: ["marcas"],
+    queryFn: fetchMarcas,
+    enabled: isOpen,
+  });
+  const { data: rubros = [] } = useQuery({
+    queryKey: ["rubros"],
+    queryFn: fetchRubros,
+    enabled: isOpen,
+  });
+  const { data: unidades = [] } = useQuery({
+    queryKey: ["unidades-medida"],
+    queryFn: fetchUnidades,
+    enabled: isOpen,
+  });
 
   // Estado del formulario
   const [formData, setFormData] = useState<Partial<Producto>>({
-    MarcaId: 1,
-    RubroId: 1,
-    UnidadMedidaId: 1,
+    MarcaId: undefined, // undefined para obligar a seleccionar
+    RubroId: undefined,
+    UnidadMedidaId: undefined,
     IvaId: 1,
     PrecioId: 1,
     Codigo: 0,
@@ -121,7 +200,127 @@ export default function ProductoCRUD() {
     EstaEliminado: false,
   });
 
-  // Abrir modal para crear
+  // Query para obtener productos
+  const {
+    data: productos = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["productos"],
+    queryFn: fetchProductos,
+  });
+
+  // Mutación para crear/actualizar
+  const saveMutation = useMutation({
+    mutationFn: async (data: Partial<Producto>) => {
+      // Validaciones básicas antes de enviar
+      if (!data.Descripcion || data.Descripcion.trim() === "") {
+        throw {
+          error: "Error de validación",
+          details: [
+            { field: "Descripcion", message: "La descripción es obligatoria" },
+          ],
+        } as ApiError;
+      }
+
+      if (!data.CodigoBarra || data.CodigoBarra.trim() === "") {
+        throw {
+          error: "Error de validación",
+          details: [
+            {
+              field: "CodigoBarra",
+              message: "El código de barras es obligatorio",
+            },
+          ],
+        } as ApiError;
+      }
+
+      const isEdit = modoEdicion && productoSeleccionado;
+      const url = isEdit
+        ? `/api/productos/?Id=${productoSeleccionado.Id}`
+        : "/api/productos";
+      const method = isEdit ? "PATCH" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw errorData;
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["productos"] });
+      addToast({
+        title: "Éxito",
+        description: `Producto ${
+          modoEdicion ? "actualizado" : "creado"
+        } correctamente`,
+        color: "success",
+      });
+      onClose();
+    },
+    onError: (error: ApiError) => {
+      if (error.details && error.details.length > 0) {
+        error.details.forEach((detail) => {
+          addToast({
+            title: "Error de validación",
+            description: detail.message,
+            color: "danger",
+          });
+        });
+      } else {
+        addToast({
+          title: "Error",
+          description: error.error || "Error al guardar el producto",
+          color: "danger",
+        });
+      }
+    },
+  });
+
+  // Mutación para eliminar
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      // Nota: Asegúrate de tener implementadaDELETE /api/productos
+      const response = await fetch(`/api/productos/?Id=${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw errorData;
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["productos"] });
+      addToast({
+        title: "Éxito",
+        description: "Producto eliminado correctamente",
+        color: "success",
+      });
+      onDeleteClose();
+      setProductoAEliminar(null);
+    },
+    onError: (error: ApiError) => {
+      addToast({
+        title: "Error",
+        description: error.error || "Error al eliminar el producto",
+        color: "danger",
+      });
+    },
+  });
+
+  // Handlers
   const handleCrear = () => {
     setModoEdicion(false);
     setProductoSeleccionado(null);
@@ -154,7 +353,6 @@ export default function ProductoCRUD() {
     onOpen();
   };
 
-  // Abrir modal para editar
   const handleEditar = (producto: Producto) => {
     setModoEdicion(true);
     setProductoSeleccionado(producto);
@@ -162,73 +360,18 @@ export default function ProductoCRUD() {
     onOpen();
   };
 
-  // Guardar producto (crear o actualizar)
-  const handleGuardar = async () => {
-    try {
-      // Validaciones básicas
-      if (!formData.Descripcion || formData.Descripcion.trim() === "") {
-        addToast({
-          title: "Error",
-          description: "La descripción es obligatoria",
-          color: "danger",
-        });
-
-        return;
-      }
-
-      if (!formData.CodigoBarra || formData.CodigoBarra.trim() === "") {
-        addToast({
-          title: "Error",
-          description: "El código de barras es obligatorio",
-          color: "danger",
-        });
-        return;
-      }
-
-      // Aquí iría la llamada a la API
-      if (modoEdicion && productoSeleccionado) {
-        // Actualizar
-        addToast({
-          title: "Exito",
-          description: "Producto actualizado correctamente",
-          color: "success",
-        });
-      } else {
-        // Crear
-        addToast({
-          title: "Exito",
-          description: "Producto creado correctamente",
-          color: "success",
-        });
-      }
-
-      onClose();
-    } catch (error) {
-      addToast({
-        title: "Error",
-        description: "Error al guardar el producto",
-        color: "danger",
-      });
-      console.error(error);
-    }
+  const handleGuardar = () => {
+    saveMutation.mutate(formData);
   };
 
-  // Eliminar producto
-  const handleEliminar = async (id: number) => {
-    try {
-      // Aquí iría la llamada a la API
-      addToast({
-        title: "Exito",
-        description: "Producto eliminado correctamente",
-        color: "success",
-      });
-    } catch (error) {
-      addToast({
-        title: "Error",
-        description: "Error al eliminar el producto",
-        color: "danger",
-      });
-      console.error(error);
+  const handleConfirmarEliminar = (producto: Producto) => {
+    setProductoAEliminar(producto);
+    onDeleteOpen();
+  };
+
+  const handleEliminar = () => {
+    if (productoAEliminar) {
+      deleteMutation.mutate(productoAEliminar.Id);
     }
   };
 
@@ -241,6 +384,8 @@ export default function ProductoCRUD() {
     }
     return "0.00";
   };
+
+  const isSaving = saveMutation.isPending || deleteMutation.isPending;
 
   return (
     <div className="w-full space-y-4">
@@ -259,6 +404,7 @@ export default function ProductoCRUD() {
           size="lg"
           onPress={handleCrear}
           className="font-semibold"
+          isDisabled={isLoading}
         >
           + Nuevo Producto
         </Button>
@@ -277,7 +423,21 @@ export default function ProductoCRUD() {
             <TableColumn>ESTADO</TableColumn>
             <TableColumn>ACCIONES</TableColumn>
           </TableHeader>
-          <TableBody emptyContent="No hay productos registrados">
+          <TableBody
+            emptyContent={
+              isLoading ? (
+                <div className="flex justify-center items-center py-8">
+                  <Spinner size="lg" />
+                </div>
+              ) : isError ? (
+                <div className="text-danger flex justify-center py-4">
+                  Error al cargar datos
+                </div>
+              ) : (
+                "No hay productos registrados"
+              )
+            }
+          >
             {productos.map((producto) => (
               <TableRow key={producto.Id}>
                 <TableCell>{producto.Codigo}</TableCell>
@@ -292,7 +452,7 @@ export default function ProductoCRUD() {
                     )}
                   </div>
                 </TableCell>
-                <TableCell>${producto.PrecioCosto.toFixed(2)}</TableCell>
+                <TableCell>${producto.PrecioCosto}</TableCell>
                 <TableCell>{producto.PorcentajeGanancia}%</TableCell>
                 <TableCell>{producto.StockMinimo}</TableCell>
                 <TableCell>
@@ -312,6 +472,7 @@ export default function ProductoCRUD() {
                         size="sm"
                         variant="light"
                         onPress={() => handleEditar(producto)}
+                        isDisabled={isSaving}
                       >
                         ✏️
                       </Button>
@@ -322,7 +483,8 @@ export default function ProductoCRUD() {
                         size="sm"
                         color="danger"
                         variant="light"
-                        onPress={() => handleEliminar(producto.Id)}
+                        onPress={() => handleConfirmarEliminar(producto)}
+                        isDisabled={isSaving}
                       >
                         🗑️
                       </Button>
@@ -342,6 +504,7 @@ export default function ProductoCRUD() {
         size="4xl"
         scrollBehavior="inside"
         backdrop="opaque"
+        isDismissable={!isSaving}
         classNames={{
           backdrop: "bg-black/50 backdrop-blur-sm",
           base: "bg-white max-h-[90vh]",
@@ -379,6 +542,7 @@ export default function ProductoCRUD() {
                       })
                     }
                     isRequired
+                    isDisabled={isSaving}
                   />
                   <Input
                     label="Código de Barras"
@@ -388,6 +552,7 @@ export default function ProductoCRUD() {
                       setFormData({ ...formData, CodigoBarra: e.target.value })
                     }
                     isRequired
+                    isDisabled={isSaving}
                   />
                   <Input
                     label="Abreviatura"
@@ -396,6 +561,7 @@ export default function ProductoCRUD() {
                     onChange={(e) =>
                       setFormData({ ...formData, Abreviatura: e.target.value })
                     }
+                    isDisabled={isSaving}
                   />
                   <Input
                     label="Descripción"
@@ -405,6 +571,7 @@ export default function ProductoCRUD() {
                       setFormData({ ...formData, Descripcion: e.target.value })
                     }
                     isRequired
+                    isDisabled={isSaving}
                   />
                 </div>
                 <Textarea
@@ -415,6 +582,7 @@ export default function ProductoCRUD() {
                     setFormData({ ...formData, Detalle: e.target.value })
                   }
                   minRows={3}
+                  isDisabled={isSaving}
                 />
                 <Input
                   label="Ubicación"
@@ -423,6 +591,7 @@ export default function ProductoCRUD() {
                   onChange={(e) =>
                     setFormData({ ...formData, Ubicacion: e.target.value })
                   }
+                  isDisabled={isSaving}
                 />
               </div>
 
@@ -435,61 +604,74 @@ export default function ProductoCRUD() {
                   <Select
                     label="Marca"
                     placeholder="Seleccione una marca"
-                    selectedKeys={[formData.MarcaId?.toString() || "1"]}
+                    selectedKeys={
+                      formData.MarcaId ? [formData.MarcaId.toString()] : []
+                    }
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        MarcaId: parseInt(e.target.value) || 1,
+                        MarcaId: parseInt(e.target.value) || undefined,
                       })
                     }
                     isRequired
+                    isDisabled={isSaving}
                   >
                     {marcas.map((marca) => (
-                      <SelectItem key={marca.id.toString()}>
-                        {marca.nombre}
+                      <SelectItem key={marca.Id.toString()}>
+                        {marca.Descripcion}
                       </SelectItem>
                     ))}
                   </Select>
                   <Select
                     label="Rubro"
                     placeholder="Seleccione un rubro"
-                    selectedKeys={[formData.RubroId?.toString() || "1"]}
+                    selectedKeys={
+                      formData.RubroId ? [formData.RubroId.toString()] : []
+                    }
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        RubroId: parseInt(e.target.value) || 1,
+                        RubroId: parseInt(e.target.value) || undefined,
                       })
                     }
                     isRequired
+                    isDisabled={isSaving}
                   >
                     {rubros.map((rubro) => (
-                      <SelectItem key={rubro.id.toString()}>
-                        {rubro.nombre}
+                      <SelectItem key={rubro.Id.toString()}>
+                        {rubro.Descripcion}
                       </SelectItem>
                     ))}
                   </Select>
                   <Select
                     label="Unidad de Medida"
                     placeholder="Seleccione unidad"
-                    selectedKeys={[formData.UnidadMedidaId?.toString() || "1"]}
+                    selectedKeys={
+                      formData.UnidadMedidaId
+                        ? [formData.UnidadMedidaId.toString()]
+                        : []
+                    }
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        UnidadMedidaId: parseInt(e.target.value) || 1,
+                        UnidadMedidaId: parseInt(e.target.value) || undefined,
                       })
                     }
                     isRequired
+                    isDisabled={isSaving}
                   >
-                    {unidadesMedida.map((unidad) => (
-                      <SelectItem key={unidad.id.toString()}>
-                        {unidad.nombre}
+                    {unidades.map((unidad) => (
+                      <SelectItem key={unidad.Id.toString()}>
+                        {unidad.Descripcion}
                       </SelectItem>
                     ))}
                   </Select>
                   <Select
                     label="IVA"
                     placeholder="Seleccione IVA"
-                    selectedKeys={[formData.IvaId?.toString() || "1"]}
+                    selectedKeys={
+                      formData.IvaId ? [formData.IvaId.toString()] : []
+                    }
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -497,10 +679,11 @@ export default function ProductoCRUD() {
                       })
                     }
                     isRequired
+                    isDisabled={isSaving}
                   >
                     {ivas.map((iva) => (
-                      <SelectItem key={iva.id.toString()}>
-                        {iva.nombre}
+                      <SelectItem key={iva.Id.toString()}>
+                        {iva.Descripcion}
                       </SelectItem>
                     ))}
                   </Select>
@@ -514,6 +697,7 @@ export default function ProductoCRUD() {
                         TipoVenta: parseInt(e.target.value) || 0,
                       })
                     }
+                    isDisabled={isSaving}
                   >
                     {tiposVenta.map((tipo) => (
                       <SelectItem key={tipo.id.toString()}>
@@ -544,6 +728,7 @@ export default function ProductoCRUD() {
                       })
                     }
                     isRequired
+                    isDisabled={isSaving}
                   />
                   <Input
                     label="% Ganancia"
@@ -559,6 +744,7 @@ export default function ProductoCRUD() {
                       })
                     }
                     isRequired
+                    isDisabled={isSaving}
                   />
                   <Input
                     label="Precio de Venta"
@@ -567,6 +753,7 @@ export default function ProductoCRUD() {
                     startContent={<span className="text-gray-500">$</span>}
                     value={calcularPrecioVenta()}
                     isReadOnly
+                    isDisabled={isSaving}
                     classNames={{
                       input: "bg-gray-100 font-semibold text-green-600",
                     }}
@@ -592,6 +779,7 @@ export default function ProductoCRUD() {
                         StockMinimo: parseFloat(e.target.value) || 0,
                       })
                     }
+                    isDisabled={isSaving}
                   />
                   <Input
                     label="Días de Vencimiento"
@@ -604,6 +792,7 @@ export default function ProductoCRUD() {
                         VencimientoDias: parseInt(e.target.value) || 0,
                       })
                     }
+                    isDisabled={isSaving}
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -612,14 +801,19 @@ export default function ProductoCRUD() {
                     onValueChange={(value) =>
                       setFormData({ ...formData, DescuentaStock: value })
                     }
+                    isDisabled={isSaving}
                   >
                     Descuenta Stock
                   </Switch>
                   <Switch
                     isSelected={formData.PermiteStockNegativo}
                     onValueChange={(value) =>
-                      setFormData({ ...formData, PermiteStockNegativo: value })
+                      setFormData({
+                        ...formData,
+                        PermiteStockNegativo: value,
+                      })
                     }
+                    isDisabled={isSaving}
                   >
                     Permite Stock Negativo
                   </Switch>
@@ -636,8 +830,12 @@ export default function ProductoCRUD() {
                     <Switch
                       isSelected={formData.ActivarLimiteVenta}
                       onValueChange={(value) =>
-                        setFormData({ ...formData, ActivarLimiteVenta: value })
+                        setFormData({
+                          ...formData,
+                          ActivarLimiteVenta: value,
+                        })
                       }
+                      isDisabled={isSaving}
                     >
                       Activar Límite de Venta
                     </Switch>
@@ -655,6 +853,7 @@ export default function ProductoCRUD() {
                           })
                         }
                         className="max-w-xs"
+                        isDisabled={isSaving}
                       />
                     )}
                   </div>
@@ -663,8 +862,12 @@ export default function ProductoCRUD() {
                     <Switch
                       isSelected={formData.ActivarHoraVenta}
                       onValueChange={(value) =>
-                        setFormData({ ...formData, ActivarHoraVenta: value })
+                        setFormData({
+                          ...formData,
+                          ActivarHoraVenta: value,
+                        })
                       }
+                      isDisabled={isSaving}
                     >
                       Activar Horario de Venta
                     </Switch>
@@ -680,6 +883,7 @@ export default function ProductoCRUD() {
                               HoraLimiteVentaDesde: e.target.value,
                             })
                           }
+                          isDisabled={isSaving}
                         />
                         <Input
                           label="Hora Hasta"
@@ -691,6 +895,7 @@ export default function ProductoCRUD() {
                               HoraLimiteVentaHasta: e.target.value,
                             })
                           }
+                          isDisabled={isSaving}
                         />
                       </div>
                     )}
@@ -709,6 +914,7 @@ export default function ProductoCRUD() {
                     setFormData({ ...formData, EstaEliminado: !value })
                   }
                   color={formData.EstaEliminado ? "danger" : "success"}
+                  isDisabled={isSaving}
                 >
                   {formData.EstaEliminado
                     ? "Producto Inactivo"
@@ -718,11 +924,62 @@ export default function ProductoCRUD() {
             </div>
           </ModalBody>
           <ModalFooter className="bg-white border-t border-gray-200">
-            <Button color="danger" variant="light" onPress={onClose}>
+            <Button
+              color="danger"
+              variant="light"
+              onPress={onClose}
+              isDisabled={isSaving}
+            >
               Cancelar
             </Button>
-            <Button color="primary" onPress={handleGuardar}>
+            <Button
+              color="primary"
+              onPress={handleGuardar}
+              isLoading={isSaving}
+            >
               {modoEdicion ? "Actualizar" : "Crear"} Producto
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal de confirmación de eliminación */}
+      <Modal
+        isOpen={isDeleteOpen}
+        onClose={onDeleteClose}
+        size="sm"
+        backdrop="opaque"
+        isDismissable={!isSaving}
+      >
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            <h3 className="text-xl font-bold text-danger">
+              Confirmar eliminación
+            </h3>
+          </ModalHeader>
+          <ModalBody>
+            <p>
+              ¿Estás seguro de que deseas eliminar el producto{" "}
+              <strong>{productoAEliminar?.Descripcion}</strong>?
+            </p>
+            <p className="text-sm text-gray-600">
+              Esta acción no se puede deshacer.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="light"
+              onPress={onDeleteClose}
+              isDisabled={isSaving}
+            >
+              Cancelar
+            </Button>
+            <Button
+              color="danger"
+              onPress={handleEliminar}
+              isLoading={isSaving}
+            >
+              Eliminar
             </Button>
           </ModalFooter>
         </ModalContent>

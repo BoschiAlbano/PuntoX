@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
-import { createMarcaSchema } from "@/lib/validations/marca.schema";
+import { createRubroSchema } from "@/lib/validations/rubro.schema";
 import { ZodError } from "zod";
 
 export async function GET(_req: NextRequest) {
@@ -13,7 +13,7 @@ export async function GET(_req: NextRequest) {
   }
 
   try {
-    const marcas = await prisma.marca.findMany({
+    const rubros = await prisma.rubro.findMany({
       where: {
         TenantId: tenantId,
       },
@@ -28,10 +28,11 @@ export async function GET(_req: NextRequest) {
     });
 
     return NextResponse.json(
-      { marcas: marcas.map((marca) => ({ ...marca, Id: Number(marca.Id) })) },
+      { rubros: rubros.map((rubro) => ({ ...rubro, Id: Number(rubro.Id) })) },
       { status: 200 }
     );
   } catch (error) {
+    console.error("Error al obtener rubros:", error);
     return NextResponse.json(
       { error: "Error al obtener marcas" },
       { status: 500 }
@@ -50,10 +51,10 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     // Validar el body con Zod
-    const validatedData = createMarcaSchema.parse(body);
+    const validatedData = createRubroSchema.parse(body);
 
     // Crear la marca con datos validados
-    const marca = await prisma.marca.create({
+    const rubro = await prisma.rubro.create({
       data: {
         Descripcion: validatedData.Descripcion,
         EstaEliminado: validatedData.EstaEliminado,
@@ -63,8 +64,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       {
-        ...marca,
-        Id: Number(marca.Id),
+        ...rubro,
+        Id: Number(rubro.Id),
         TenantId: tenantId,
       },
       { status: 201 }
@@ -85,7 +86,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(
-      { error: "Error al crear marca" },
+      { error: "Error al crear rubro" },
       { status: 500 }
     );
   }
@@ -99,21 +100,21 @@ export async function DELETE(req: NextRequest) {
   }
   const idParam =
     req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
-  const marcaId = idParam ? Number(idParam) : NaN;
+  const rubroId = idParam ? Number(idParam) : NaN;
 
-  console.log("Marca ID:", marcaId);
+  console.log("Rubro ID:", rubroId);
 
-  if (!Number.isInteger(marcaId)) {
+  if (!Number.isInteger(rubroId)) {
     return NextResponse.json(
-      { error: "Id de marca invalido" },
+      { error: "Id de rubro invalido" },
       { status: 400 }
     );
   }
 
   try {
-    const marcaActualizada = await prisma.marca.delete({
+    const rubroActualizado = await prisma.rubro.delete({
       where: {
-        Id: marcaId,
+        Id: rubroId,
         TenantId: tenantId,
       },
       select: {
@@ -122,7 +123,7 @@ export async function DELETE(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { success: true, Id: Number(marcaActualizada.Id) },
+      { success: true, Id: Number(rubroActualizado.Id) },
       { status: 200 }
     );
   } catch (error) {
@@ -131,13 +132,13 @@ export async function DELETE(req: NextRequest) {
       error.message.toLowerCase().includes("record to update")
     ) {
       return NextResponse.json(
-        { error: "Marca no encontrada" },
+        { error: "Rubro no encontrado" },
         { status: 404 }
       );
     }
 
     return NextResponse.json(
-      { error: "Error al eliminar marca" },
+      { error: "Error al eliminar rubro" },
       { status: 500 }
     );
   }
@@ -152,11 +153,11 @@ export async function PATCH(req: NextRequest) {
 
   const idParam =
     req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
-  const marcaId = idParam ? Number(idParam) : NaN;
+  const rubroId = idParam ? Number(idParam) : NaN;
 
-  if (!Number.isInteger(marcaId)) {
+  if (!Number.isInteger(rubroId)) {
     return NextResponse.json(
-      { error: "Id de marca invalido" },
+      { error: "Id de rubro invalido" },
       { status: 400 }
     );
   }
@@ -165,12 +166,12 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
 
     // Validar el body con Zod
-    const validatedData = createMarcaSchema.parse(body);
+    const validatedData = createRubroSchema.parse(body);
 
     // Crear la marca con datos validados
-    const marca = await prisma.marca.update({
+    const rubro = await prisma.rubro.update({
       where: {
-        Id: marcaId,
+        Id: rubroId,
         TenantId: tenantId,
       },
       data: {
@@ -182,8 +183,8 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json(
       {
-        ...marca,
-        Id: Number(marca.Id),
+        ...rubro,
+        Id: Number(rubro.Id),
         TenantId: tenantId,
       },
       { status: 201 }
@@ -204,7 +205,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: "Error al actualizar marca" },
+      { error: "Error al actualizar rubro" },
       { status: 500 }
     );
   }

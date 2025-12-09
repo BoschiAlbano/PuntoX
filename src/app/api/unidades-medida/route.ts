@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
-import { createMarcaSchema } from "@/lib/validations/marca.schema";
+import { createUnidadMedidaSchema } from "@/lib/validations/unidad-medida.schema";
 import { ZodError } from "zod";
 
 export async function GET(_req: NextRequest) {
@@ -13,7 +13,7 @@ export async function GET(_req: NextRequest) {
   }
 
   try {
-    const marcas = await prisma.marca.findMany({
+    const unidades = await prisma.unidadMedida.findMany({
       where: {
         TenantId: tenantId,
       },
@@ -28,12 +28,18 @@ export async function GET(_req: NextRequest) {
     });
 
     return NextResponse.json(
-      { marcas: marcas.map((marca) => ({ ...marca, Id: Number(marca.Id) })) },
+      {
+        unidades: unidades.map((unidad) => ({
+          ...unidad,
+          Id: Number(unidad.Id),
+        })),
+      },
       { status: 200 }
     );
   } catch (error) {
+    console.error("Error al obtener unidades de medida:", error);
     return NextResponse.json(
-      { error: "Error al obtener marcas" },
+      { error: "Error al obtener unidades de medida" },
       { status: 500 }
     );
   }
@@ -50,10 +56,10 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     // Validar el body con Zod
-    const validatedData = createMarcaSchema.parse(body);
+    const validatedData = createUnidadMedidaSchema.parse(body);
 
-    // Crear la marca con datos validados
-    const marca = await prisma.marca.create({
+    // Crear la unidad de medida con datos validados
+    const unidad = await prisma.unidadMedida.create({
       data: {
         Descripcion: validatedData.Descripcion,
         EstaEliminado: validatedData.EstaEliminado,
@@ -63,8 +69,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       {
-        ...marca,
-        Id: Number(marca.Id),
+        ...unidad,
+        Id: Number(unidad.Id),
         TenantId: tenantId,
       },
       { status: 201 }
@@ -85,7 +91,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(
-      { error: "Error al crear marca" },
+      { error: "Error al crear unidad de medida" },
       { status: 500 }
     );
   }
@@ -97,23 +103,22 @@ export async function DELETE(req: NextRequest) {
   if (error) {
     return error;
   }
+
   const idParam =
     req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
-  const marcaId = idParam ? Number(idParam) : NaN;
+  const unidadId = idParam ? Number(idParam) : NaN;
 
-  console.log("Marca ID:", marcaId);
-
-  if (!Number.isInteger(marcaId)) {
+  if (!Number.isInteger(unidadId)) {
     return NextResponse.json(
-      { error: "Id de marca invalido" },
+      { error: "Id de unidad de medida inválido" },
       { status: 400 }
     );
   }
 
   try {
-    const marcaActualizada = await prisma.marca.delete({
+    const unidadActualizada = await prisma.unidadMedida.delete({
       where: {
-        Id: marcaId,
+        Id: unidadId,
         TenantId: tenantId,
       },
       select: {
@@ -122,7 +127,7 @@ export async function DELETE(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { success: true, Id: Number(marcaActualizada.Id) },
+      { success: true, Id: Number(unidadActualizada.Id) },
       { status: 200 }
     );
   } catch (error) {
@@ -131,13 +136,13 @@ export async function DELETE(req: NextRequest) {
       error.message.toLowerCase().includes("record to update")
     ) {
       return NextResponse.json(
-        { error: "Marca no encontrada" },
+        { error: "Unidad de medida no encontrada" },
         { status: 404 }
       );
     }
 
     return NextResponse.json(
-      { error: "Error al eliminar marca" },
+      { error: "Error al eliminar unidad de medida" },
       { status: 500 }
     );
   }
@@ -152,11 +157,11 @@ export async function PATCH(req: NextRequest) {
 
   const idParam =
     req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
-  const marcaId = idParam ? Number(idParam) : NaN;
+  const unidadId = idParam ? Number(idParam) : NaN;
 
-  if (!Number.isInteger(marcaId)) {
+  if (!Number.isInteger(unidadId)) {
     return NextResponse.json(
-      { error: "Id de marca invalido" },
+      { error: "Id de unidad de medida inválido" },
       { status: 400 }
     );
   }
@@ -165,12 +170,12 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
 
     // Validar el body con Zod
-    const validatedData = createMarcaSchema.parse(body);
+    const validatedData = createUnidadMedidaSchema.parse(body);
 
-    // Crear la marca con datos validados
-    const marca = await prisma.marca.update({
+    // Actualizar la unidad de medida con datos validados
+    const unidad = await prisma.unidadMedida.update({
       where: {
-        Id: marcaId,
+        Id: unidadId,
         TenantId: tenantId,
       },
       data: {
@@ -182,11 +187,11 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json(
       {
-        ...marca,
-        Id: Number(marca.Id),
+        ...unidad,
+        Id: Number(unidad.Id),
         TenantId: tenantId,
       },
-      { status: 201 }
+      { status: 200 }
     );
   } catch (error) {
     // Manejo de errores de validación de Zod
@@ -204,7 +209,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: "Error al actualizar marca" },
+      { error: "Error al actualizar unidad de medida" },
       { status: 500 }
     );
   }
