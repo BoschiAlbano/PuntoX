@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Card,
@@ -79,7 +79,9 @@ function SectionPanel({
 }
 
 export default function Configuracion() {
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSavingAll, setIsSavingAll] = useState(false);
+  const [isLoadingTenant, setIsLoadingTenant] = useState(true);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
   const [openSection, setOpenSection] = useState<SectionKey>("perfil");
 
   const [configuracion, setConfiguracion] = useState({
@@ -128,16 +130,98 @@ export default function Configuracion() {
     color: "#90c472",
   });
 
+  const [tenant, setTenant] = useState({
+    nombre: "PX Liniers",
+    dominio: "puntox.com",
+    razonSocial: "Punto X Market",
+    cuit: "20-12345678-9",
+    email: "admin@puntox.com",
+    telefono: "+54 11 5555 0000",
+    planId: "BUSINESS",
+    estaActivo: true,
+    onboardingCompleto: false,
+  });
+
+  useEffect(() => {
+    const loadTenant = async () => {
+      setIsLoadingTenant(true);
+      try {
+        const res = await fetch("/api/tenant");
+        if (!res.ok) {
+          throw new Error("No se pudo cargar el tenant");
+        }
+        const json = await res.json();
+        if (json?.tenant) {
+          setTenant((prev) => ({
+            ...prev,
+            nombre: json.tenant.nombre ?? prev.nombre,
+            dominio: json.tenant.dominio ?? prev.dominio,
+            razonSocial: json.tenant.razonSocial ?? prev.razonSocial,
+            cuit: json.tenant.cuit ?? prev.cuit,
+            email: json.tenant.email ?? prev.email,
+            telefono: json.tenant.telefono ?? prev.telefono,
+          }));
+        }
+      } catch (error) {
+        console.error(error);
+        addToast({
+          title: "Error",
+          description: "No pudimos cargar los datos del negocio.",
+          color: "danger",
+        });
+      } finally {
+        setIsLoadingTenant(false);
+      }
+    };
+
+    const loadConfig = async () => {
+      setIsLoadingConfig(true);
+      try {
+        const res = await fetch("/api/configuracion");
+        if (!res.ok) {
+          throw new Error("No se pudo cargar la configuracion");
+        }
+        const json = await res.json();
+        if (json?.configuracion) {
+          setConfiguracion((prev) => ({
+            ...prev,
+            razonSocial: json.configuracion.razonSocial ?? prev.razonSocial,
+            nombreFantasia:
+              json.configuracion.nombreFantasia ?? prev.nombreFantasia,
+            cuit: json.configuracion.cuit ?? prev.cuit,
+            email: json.configuracion.email ?? prev.email,
+            telefono: json.configuracion.telefono ?? prev.telefono,
+            direccion: json.configuracion.direccion ?? prev.direccion,
+            observacionPieFactura:
+              json.configuracion.observacionPieFactura ??
+              prev.observacionPieFactura,
+          }));
+        }
+      } catch (error) {
+        console.error(error);
+        addToast({
+          title: "Error",
+          description: "No pudimos cargar la configuracion.",
+          color: "danger",
+        });
+      } finally {
+        setIsLoadingConfig(false);
+      }
+    };
+
+    loadTenant();
+    loadConfig();
+  }, []);
+
   const descriptionMap: Record<SectionKey, string> = {
     perfil: "Datos visibles en tickets y comunicaciones.",
-  const descriptionMap: Record<SectionKey, string> = {
-    perfil: "Datos visibles en tickets y comunicaciones.",
-    ventas: "Ajustes rápidos para cajas y mostrador.",
-    notificaciones: "Define qué alertas reciben los usuarios.",
+    ventas: "Ajustes rapidos para cajas y mostrador.",
+    notificaciones: "Define que alertas reciben los usuarios.",
     seguridad: "Protege el panel y controla dispositivos.",
     fiscal: "Moneda, idioma y datos fiscales para comprobantes.",
     branding: "Ajusta la imagen de tu negocio en el panel y tickets.",
   };
+  const summaryPerfil = `Nombre: ${tenant.nombre} | CUIT: ${tenant.cuit}`;
   const summaryVentas = `Ticket digital: ${
     preferencias.ticketDigital ? "on" : "off"
   } | Impuestos: ${preferencias.mostrarPrecios ? "incluidos" : "excluidos"}`;
@@ -149,18 +233,68 @@ export default function Configuracion() {
   const summarySeguridad = `2FA: ${
     seguridad.dobleFactor ? "activo" : "pendiente"
   } | Bloqueo: 10 min | Recordar sesión: 30 días`;
+  const summaryFiscal = `Moneda: ${regional.moneda} | IVA: ${regional.tipoIva} | Punto de venta: ${regional.puntoVenta}`;
   const summaryBranding = `Color: ${branding.color} | Logo: pendiente`;
 
-  const handleSave = (seccion: string) => {
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
+  const saveTenant = async () => {
+    const res = await fetch("/api/tenant", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nombre: tenant.nombre,
+        razonSocial: tenant.razonSocial,
+        dominio: tenant.dominio,
+        email: tenant.email,
+        telefono: tenant.telefono,
+        cuit: tenant.cuit,
+      }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      throw new Error(data?.error ?? "No se pudo guardar el tenant");
+    }
+  };
+
+  const saveConfiguracion = async () => {
+    const res = await fetch("/api/configuracion", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        razonSocial: configuracion.razonSocial,
+        nombreFantasia: configuracion.nombreFantasia,
+        cuit: configuracion.cuit,
+        email: configuracion.email,
+        telefono: configuracion.telefono,
+        direccion: configuracion.direccion,
+        observacionPieFactura: configuracion.observacionPieFactura,
+      }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      throw new Error(data?.error ?? "No se pudo guardar la configuracion");
+    }
+  };
+
+  const handleSavePerfil = async () => {
+    setIsSavingAll(true);
+    try {
+      await saveTenant();
+      await saveConfiguracion();
       addToast({
-        title: "Cambios guardados",
-        description: `${seccion} actualizada`,
+        title: "Perfil actualizado",
+        description: "Datos guardados correctamente.",
         color: "success",
       });
-    }, 500);
+    } catch (error) {
+      console.error(error);
+      addToast({
+        title: "Error al guardar",
+        description: "Revisa los datos e intenta nuevamente.",
+        color: "danger",
+      });
+    } finally {
+      setIsSavingAll(false);
+    }
   };
 
   const sectionsNav = [
@@ -168,8 +302,8 @@ export default function Configuracion() {
     { id: "ventas", label: "Preferencias de venta" },
     { id: "notificaciones", label: "Notificaciones" },
     { id: "seguridad", label: "Seguridad y acceso" },
-    { id: "fiscal", label: "Facturación y región" },
-    { id: "fiscal", label: "Facturación y región" },
+    { id: "fiscal", label: "Facturacion y region" },
+    { id: "branding", label: "Branding" },
   ];
 
   return (
@@ -186,23 +320,30 @@ export default function Configuracion() {
                 Configuración
               </h1>
               <p className="text-white max-w-3xl">
-                Configuración
-                Ajustes rápidos de identidad, ventas y seguridad en un solo
+                Configuracion
+                Ajustes rapidos de identidad, ventas y seguridad en un solo
                 lugar. Los cambios aplican a todas las sucursales activas.
+              </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <Button
                 color="primary"
                 className="bg-white text-slate-900"
-                isLoading={isSaving}
-                onPress={() => handleSave("Configuración general")}
+                isLoading={isSavingAll}
+                isDisabled={isLoadingTenant || isLoadingConfig}
+                onPress={handleSavePerfil}
               >
                 Guardar todo
               </Button>
               <Button
                 variant="bordered"
                 className="border-white/40 text-white"
-                onPress={() => handleSave("Actividad revisada")}
+                onPress={() =>
+                  addToast({
+                    title: "Actividad",
+                    description: "Historial de cambios disponible pronto.",
+                  })
+                }
               >
                 Ver actividad
               </Button>
@@ -280,26 +421,26 @@ export default function Configuracion() {
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Nombre fiscal"
+                label="Nombre"
                 variant="bordered"
                 classNames={{ inputWrapper: "bg-white border-slate-200" }}
-                value={configuracion.razonSocial}
+                value={tenant.nombre}
                 onChange={(e) =>
-                  setConfiguracion((prev) => ({
+                  setTenant((prev) => ({
                     ...prev,
-                    razonSocial: e.target.value,
+                    nombre: e.target.value,
                   }))
                 }
               />
               <Input
-                label="Nombre de fantasia"
+                label="Razon social"
                 variant="bordered"
                 classNames={{ inputWrapper: "bg-white border-slate-200" }}
-                value={configuracion.nombreFantasia}
+                value={tenant.razonSocial ?? ""}
                 onChange={(e) =>
-                  setConfiguracion((prev) => ({
+                  setTenant((prev) => ({
                     ...prev,
-                    nombreFantasia: e.target.value,
+                    razonSocial: e.target.value,
                   }))
                 }
               />
@@ -308,9 +449,9 @@ export default function Configuracion() {
                 type="email"
                 variant="bordered"
                 classNames={{ inputWrapper: "bg-white border-slate-200" }}
-                value={configuracion.email}
+                value={tenant.email ?? ""}
                 onChange={(e) =>
-                  setConfiguracion((prev) => ({
+                  setTenant((prev) => ({
                     ...prev,
                     email: e.target.value,
                   }))
@@ -320,24 +461,23 @@ export default function Configuracion() {
                 label="Telefono"
                 variant="bordered"
                 classNames={{ inputWrapper: "bg-white border-slate-200" }}
-                value={configuracion.telefono}
+                value={tenant.telefono ?? ""}
                 onChange={(e) =>
-                  setConfiguracion((prev) => ({
+                  setTenant((prev) => ({
                     ...prev,
                     telefono: e.target.value,
                   }))
                 }
               />
               <Input
-                label="Direccion"
+                label="Dominio"
                 variant="bordered"
-                className="md:col-span-2"
                 classNames={{ inputWrapper: "bg-white border-slate-200" }}
-                value={configuracion.direccion}
+                value={tenant.dominio ?? ""}
                 onChange={(e) =>
-                  setConfiguracion((prev) => ({
+                  setTenant((prev) => ({
                     ...prev,
-                    direccion: e.target.value,
+                    dominio: e.target.value,
                   }))
                 }
               />
@@ -345,46 +485,11 @@ export default function Configuracion() {
                 label="CUIT"
                 variant="bordered"
                 classNames={{ inputWrapper: "bg-white border-slate-200" }}
-                value={configuracion.cuit}
+                value={tenant.cuit ?? ""}
                 onChange={(e) =>
-                  setConfiguracion((prev) => ({ ...prev, cuit: e.target.value }))
+                  setTenant((prev) => ({ ...prev, cuit: e.target.value }))
                 }
               />
-              <Input
-                label="Localidad"
-                variant="bordered"
-                classNames={{ inputWrapper: "bg-white border-slate-200" }}
-                value={configuracion.localidadId}
-                onChange={(e) =>
-                  setConfiguracion((prev) => ({
-                    ...prev,
-                    localidadId: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <Textarea
-              label="Mensaje en ticket"
-              placeholder="Ej: Gracias por elegirnos"
-              minRows={3}
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={configuracion.observacionPieFactura}
-              onChange={(e) =>
-                setConfiguracion((prev) => ({
-                  ...prev,
-                  observacionPieFactura: e.target.value,
-                }))
-              }
-            />
-            <div className="flex justify-end">
-              <Button
-                color="primary"
-                isLoading={isSaving}
-                onPress={() => handleSave("Perfil del negocio")}
-              >
-                Guardar perfil
-              </Button>
             </div>
           </SectionPanel>
 
@@ -433,15 +538,6 @@ export default function Configuracion() {
                 Numerar pedidos y mostrar en pantalla
               </Switch>
             </div>
-            <div className="pt-2 flex justify-end">
-              <Button
-                color="primary"
-                isLoading={isSaving}
-                onPress={() => handleSave("Preferencias de venta")}
-              >
-                Aplicar preferencias
-              </Button>
-            </div>
           </SectionPanel>
 
           <SectionPanel
@@ -487,15 +583,6 @@ export default function Configuracion() {
               >
                 Enviar resumen diario a las 20:00
               </Switch>
-            </div>
-            <div className="pt-2 flex justify-end">
-              <Button
-                color="primary"
-                isLoading={isSaving}
-                onPress={() => handleSave("Notificaciones")}
-              >
-                Guardar alertas
-              </Button>
             </div>
           </SectionPanel>
 
@@ -543,29 +630,12 @@ export default function Configuracion() {
                 Recordar sesión por 30 días en dispositivos confiables
               </Switch>
             </div>
-            <div className="flex flex-wrap gap-2 pt-2 justify-end">
-              <Button
-                color="primary"
-                isLoading={isSaving}
-                onPress={() => handleSave("Seguridad")}
-              >
-                Actualizar seguridad
-              </Button>
-              <Button
-                variant="bordered"
-                color="danger"
-                className="border-danger"
-                onPress={() => handleSave("Sesiones cerradas")}
-              >
-                Cerrar todas las sesiones
-              </Button>
-            </div>
           </SectionPanel>
 
           <SectionPanel
             id="fiscal"
-            title="Facturación y región"
-            title="Facturación y región"
+            title="Facturacion y region"
+            description={descriptionMap.fiscal}
             summary={summaryFiscal}
             isActive={openSection === "fiscal"}
           >
@@ -636,15 +706,6 @@ export default function Configuracion() {
                   }
                 />
               </div>
-              <div className="flex justify-end">
-                <Button
-                  color="primary"
-                  isLoading={isSaving}
-                  onPress={() => handleSave("Facturación y región")}
-                  onPress={() => handleSave("Facturación y región")}
-                  Guardar configuración fiscal
-                </Button>
-              </div>
             </div>
           </SectionPanel>
 
@@ -684,21 +745,14 @@ export default function Configuracion() {
                 placeholder="Ej: Mejor precio, mejor servicio."
               />
             </div>
-            <div className="flex justify-end">
-              <Button
-                color="primary"
-                isLoading={isSaving}
-                onPress={() => handleSave("Branding")}
-              >
-                Guardar branding
-              </Button>
-            </div>
           </SectionPanel>
         </div>
       </main>
     </div>
   );
 }
+
+
 
 
 
