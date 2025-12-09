@@ -8,7 +8,7 @@ declare global {
   }
 }
 
-// @ts-ignore
+// La extensión de interfaz global hace que esto sea válido sin @ts-ignore
 BigInt.prototype.toJSON = function () {
   return Number(this);
 };

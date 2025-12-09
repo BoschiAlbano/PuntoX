@@ -10,7 +10,7 @@ export default function SignIn() {
         <div className="text-center">
           <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-500 to-[#90c472] rounded-full flex items-center justify-center mb-4">
             <img
-              src="/XPDark.ico"
+              src="/XPdark.ico"
               alt="Punto X"
               className="h-10 w-10 object-contain"
             />
@@ -26,13 +26,17 @@ export default function SignIn() {
 
         {/* Registro deshabilitado: indicar vía copy */}
         <div className="text-center text-sm text-gray-600">
-          <p>El registro de usuarios está deshabilitado. Solicita acceso a un administrador.</p>
+          <p>
+            El registro de usuarios está deshabilitado. Solicita acceso a un
+            administrador.
+          </p>
         </div>
 
         {/* Additional Info */}
         <div className="text-center text-xs text-gray-500">
           <p>
-            Al continuar, aceptas nuestros terminos de servicio y politica de privacidad
+            Al continuar, aceptas nuestros terminos de servicio y politica de
+            privacidad
           </p>
         </div>
       </div>

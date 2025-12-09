@@ -205,7 +205,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                     <span className="text-white font-bold text-lg">P</span>
                   </div> */}
                 <img
-                  src="/XPDark.ico"
+                  src="/XPdark.ico"
                   alt="Punto X"
                   className="w-7 h-7 object-contain"
                 />

@@ -75,11 +75,6 @@ interface UnidadMedida {
   Id: number;
   Descripcion: string;
 }
-interface Iva {
-  Id: number;
-  Descripcion: string;
-  Porcentaje: number;
-}
 
 // Datos de IVA fijos por ahora (o podrías traerlos de la DB si tienes tabla)
 const ivas = [
