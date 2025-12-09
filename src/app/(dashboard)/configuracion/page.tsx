@@ -130,14 +130,14 @@ export default function Configuracion() {
 
   const descriptionMap: Record<SectionKey, string> = {
     perfil: "Datos visibles en tickets y comunicaciones.",
-    ventas: "Ajustes r\\u00e1pidos para cajas y mostrador.",
-    notificaciones: "Define qu\\u00e9 alertas reciben los usuarios.",
+  const descriptionMap: Record<SectionKey, string> = {
+    perfil: "Datos visibles en tickets y comunicaciones.",
+    ventas: "Ajustes rápidos para cajas y mostrador.",
+    notificaciones: "Define qué alertas reciben los usuarios.",
     seguridad: "Protege el panel y controla dispositivos.",
     fiscal: "Moneda, idioma y datos fiscales para comprobantes.",
     branding: "Ajusta la imagen de tu negocio en el panel y tickets.",
   };
-
-  const summaryPerfil = `${configuracion.razonSocial} | CUIT ${configuracion.cuit} | ${configuracion.localidadId}`;
   const summaryVentas = `Ticket digital: ${
     preferencias.ticketDigital ? "on" : "off"
   } | Impuestos: ${preferencias.mostrarPrecios ? "incluidos" : "excluidos"}`;
@@ -148,10 +148,7 @@ export default function Configuracion() {
   }`;
   const summarySeguridad = `2FA: ${
     seguridad.dobleFactor ? "activo" : "pendiente"
-  } | Bloqueo: 10 min | Recordar sesi\u00f3n: 30 d\u00edas`;
-  const summaryFiscal = `${regional.moneda} | ${
-    idiomas.find((i) => i.value === regional.idioma)?.label || "Idioma"
-  } | ${regional.tipoIva} | PV ${regional.puntoVenta}`;
+  } | Bloqueo: 10 min | Recordar sesión: 30 días`;
   const summaryBranding = `Color: ${branding.color} | Logo: pendiente`;
 
   const handleSave = (seccion: string) => {
@@ -171,8 +168,8 @@ export default function Configuracion() {
     { id: "ventas", label: "Preferencias de venta" },
     { id: "notificaciones", label: "Notificaciones" },
     { id: "seguridad", label: "Seguridad y acceso" },
-    { id: "fiscal", label: "Facturaci\u00f3n y regi\u00f3n" },
-    { id: "branding", label: "Branding" },
+    { id: "fiscal", label: "Facturación y región" },
+    { id: "fiscal", label: "Facturación y región" },
   ];
 
   return (
@@ -186,19 +183,19 @@ export default function Configuracion() {
                 Panel de control
               </Chip>
               <h1 className="text-3xl md:text-[32px] font-bold">
-                Configuraci\u00f3n
+                Configuración
               </h1>
               <p className="text-white max-w-3xl">
+                Configuración
                 Ajustes rápidos de identidad, ventas y seguridad en un solo
                 lugar. Los cambios aplican a todas las sucursales activas.
-              </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <Button
                 color="primary"
                 className="bg-white text-slate-900"
                 isLoading={isSaving}
-                onPress={() => handleSave("Configuraci\u00f3n general")}
+                onPress={() => handleSave("Configuración general")}
               >
                 Guardar todo
               </Button>
@@ -527,7 +524,7 @@ export default function Configuracion() {
                   }))
                 }
               >
-                Avisar inicio de sesi\u00f3n desde nuevos dispositivos
+                Avisar inicio de sesión desde nuevos dispositivos
               </Switch>
               <Switch
                 isSelected={seguridad.bloqueoAutomatico}
@@ -535,7 +532,7 @@ export default function Configuracion() {
                   setSeguridad((prev) => ({ ...prev, bloqueoAutomatico: value }))
                 }
               >
-                Bloquear dashboard despues de 10 minutos
+                Bloquear dashboard después de 10 minutos
               </Switch>
               <Switch
                 isSelected={seguridad.recordarSesion}
@@ -543,7 +540,7 @@ export default function Configuracion() {
                   setSeguridad((prev) => ({ ...prev, recordarSesion: value }))
                 }
               >
-                Recordar sesi\u00f3n por 30 d\u00edas en dispositivos confiables
+                Recordar sesión por 30 días en dispositivos confiables
               </Switch>
             </div>
             <div className="flex flex-wrap gap-2 pt-2 justify-end">
@@ -567,8 +564,8 @@ export default function Configuracion() {
 
           <SectionPanel
             id="fiscal"
-            title="Facturaci\u00f3n y regi\u00f3n"
-            description={descriptionMap.fiscal}
+            title="Facturación y región"
+            title="Facturación y región"
             summary={summaryFiscal}
             isActive={openSection === "fiscal"}
           >
@@ -643,9 +640,9 @@ export default function Configuracion() {
                 <Button
                   color="primary"
                   isLoading={isSaving}
-                  onPress={() => handleSave("Facturaci\u00f3n y regi\u00f3n")}
-                >
-                  Guardar configuraci\u00f3n fiscal
+                  onPress={() => handleSave("Facturación y región")}
+                  onPress={() => handleSave("Facturación y región")}
+                  Guardar configuración fiscal
                 </Button>
               </div>
             </div>
@@ -702,6 +699,7 @@ export default function Configuracion() {
     </div>
   );
 }
+
 
 
 
