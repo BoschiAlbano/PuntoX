@@ -58,7 +58,7 @@ export async function registerTenant(formData: FormData) {
     }
 
     const authUserId = data.user.id;
-    const LOCALIDAD_DUMMY_ID = BigInt(1000);
+    const LOCALIDAD_DUMMY_ID = 2014010;
 
     // Creo todas las tablas del tenant esta relacionado
     const tenant = await prisma.tenant.create({

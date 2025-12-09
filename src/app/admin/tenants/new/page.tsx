@@ -92,12 +92,7 @@ export default async function NewTenantPage({
                 <Input name="adminNombre" label="Nombre" isRequired />
                 <Input name="adminApellido" label="Apellido" isRequired />
               </div>
-              <Input
-                name="adminEmail"
-                type="email"
-                label="Email"
-                isRequired
-              />
+              <Input name="adminEmail" type="email" label="Email" isRequired />
               <Input
                 name="adminPassword"
                 type="password"
