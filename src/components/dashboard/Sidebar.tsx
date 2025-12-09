@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
@@ -153,7 +153,7 @@ const menuItems: MenuItem[] = [
         />
       </svg>
     ),
-    label: "Configuración",
+    label: "Configuraci\u00f3n",
     href: "/configuracion",
   },
 ];
@@ -252,15 +252,15 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               <motion.button
                 key={item.href}
                 onClick={() => router.push(item.href)}
-                whileHover={{ x: isCollapsed ? 0 : 4 }}
+                whileHover={{ x: isCollapsed ? 0 : 2, scale: isCollapsed ? 1 : 1.01 }}
                 whileTap={{ scale: 0.98 }}
                 className={`
                     w-full flex items-center gap-3 px-4 py-3 rounded-xl
                     transition-all duration-200 relative group
                     ${
                       isActive
-                        ? "bg-gradient-to-r from-blue-500/20 to-[#90c472] text-white shadow-lg shadow-blue-500/10"
-                        : "text-slate-400 hover:text-white hover:bg-slate-700/30"
+                        ? "bg-slate-800/80 text-white border-l-2 border-blue-400 shadow-none"
+                        : "text-slate-300 hover:text-white hover:bg-slate-700/30"
                     }
                   `}
               >
@@ -268,7 +268,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 {isActive && (
                   <motion.div
                     layoutId="activeIndicator"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-500 to-[#90c472] rounded-r-full"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-400 rounded-r-full"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
                 )}
@@ -276,7 +276,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 <div className="relative">
                   {item.icon}
                   {item.badge && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#90c472] text-white text-xs rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
                       {item.badge}
                     </span>
                   )}
@@ -291,11 +291,11 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                       transition={{ duration: 0.2 }}
                       className="flex items-center justify-between flex-1 overflow-hidden"
                     >
-                      <span className="font-medium whitespace-nowrap">
+                      <span className="font-semibold whitespace-nowrap text-[15px] text-slate-100">
                         {item.label}
                       </span>
                       {item.badge && (
-                        <span className="px-2 py-0.5 bg-[#90c472]/20 text-[#fff] text-xs rounded-full border border-[#fff]/30">
+                        <span className="px-2 py-0.5 bg-blue-500/15 text-blue-100 text-xs rounded-full border border-blue-300/40">
                           {item.badge}
                         </span>
                       )}
@@ -325,8 +325,8 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 exit={{ opacity: 0 }}
                 className="p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20"
               >
-                <p className="text-xs text-slate-400 mb-2">Versión 1.0.0</p>
-                <p className="text-xs text-slate-500">© 2024 Punto X SaaS</p>
+                <p className="text-xs text-slate-400 mb-2">Versi\u00f3n 1.0.0</p>
+                <p className="text-xs text-slate-500">(c) 2024 Punto X SaaS</p>
               </motion.div>
             ) : (
               <motion.div
@@ -346,3 +346,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     // </section>
   );
 }
+
+
+
+

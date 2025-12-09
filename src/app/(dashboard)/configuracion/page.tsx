@@ -189,7 +189,7 @@ export default function Configuracion() {
                 Configuraci\u00f3n
               </h1>
               <p className="text-white max-w-3xl">
-                Ajustes r\u00e1pidos de identidad, ventas y seguridad en un solo
+                Ajustes rápidos de identidad, ventas y seguridad en un solo
                 lugar. Los cambios aplican a todas las sucursales activas.
               </p>
             </div>
@@ -255,21 +255,23 @@ export default function Configuracion() {
         </div>
       </section>
 
-      <main className="settings-two-column-layout">
-        <nav className="settings-nav-tabs">
+      <main className="settings-single-column">
+        <div className="settings-tab-bar" role="tablist" aria-label="Configuración">
           {sectionsNav.map((section) => {
             const isActive = openSection === section.id;
             return (
               <button
                 key={section.id}
                 onClick={() => setOpenSection(section.id as SectionKey)}
-                className={`nav-tab-item ${isActive ? "active" : ""}`}
+                className={`tab-pill ${isActive ? "active" : ""}`}
+                role="tab"
+                aria-selected={isActive}
               >
-                <span className="nav-tab-label">{section.label}</span>
+                <span className="tab-pill-label">{section.label}</span>
               </button>
             );
           })}
-        </nav>
+        </div>
 
         <div className="settings-content-pane space-y-3">
           <SectionPanel
