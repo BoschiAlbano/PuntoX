@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -29,7 +29,7 @@ import {
 import { addToast } from "@heroui/react";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 
-// Página funcional de empleados: alta rápida, roles y tabla conectada a las APIs.
+// PÃ¡gina funcional de empleados: alta rÃ¡pida, roles y tabla conectada a las APIs.
 type EstadoEmpleado = "Activo" | "Invitado" | "Suspendido";
 
 type Empleado = {
@@ -400,30 +400,10 @@ export default function Empleados() {
         setEmpleados((prev) => [...prev, data.empleado]);
       }
 
-      if (nuevoUsuario.autoInvitar) {
-        const inviteRes = await fetch("/api/users", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: nuevoUsuario.email.trim(),
-            password: nuevoUsuario.password,
-            nombre: `${nuevoUsuario.nombre.trim()} ${nuevoUsuario.apellido.trim()}`,
-          }),
-        });
-
-        if (!inviteRes.ok) {
-          const inviteErr = await inviteRes.json().catch(() => null);
-          throw new Error(
-            inviteErr?.error ??
-              "El empleado se creó, pero falló la creación del usuario de acceso."
-          );
-        }
-      }
-
       addToast({
         title: "Usuario creado",
         description: nuevoUsuario.autoInvitar
-          ? "Se envió la invitación. Podrás ajustar permisos desde roles."
+          ? "Se enviÃ³ la invitaciÃ³n. PodrÃ¡s ajustar permisos desde roles."
           : "Usuario listo. Recuerda compartir las credenciales.",
         color: "success",
       });
@@ -613,7 +593,7 @@ export default function Empleados() {
                 onPress={() =>
                   addToast({
                     title: "Exportar",
-                    description: "Exportaremos en la siguiente iteración.",
+                    description: "Exportaremos en la siguiente iteraciÃ³n.",
                   })
                 }
               >
@@ -674,7 +654,7 @@ export default function Empleados() {
                 }
               />
               <Input
-                label="Contraseña"
+                label="ContraseÃ±a"
                 type="password"
                 placeholder="Minimo 8 caracteres"
                 value={nuevoUsuario.password}
@@ -692,7 +672,7 @@ export default function Empleados() {
               />
               <Input
                 label="Direccion"
-                placeholder="Calle y número"
+                placeholder="Calle y nÃºmero"
                 value={nuevoUsuario.direccion}
                 onChange={(e) =>
                   setNuevoUsuario((prev) => ({ ...prev, direccion: e.target.value }))
@@ -854,7 +834,7 @@ export default function Empleados() {
                   onPress={() =>
                     addToast({
                       title: "Checklist descargado",
-                      description: "Se guardó como CSV.",
+                      description: "Se guardÃ³ como CSV.",
                       color: "success",
                     })
                   }
@@ -946,7 +926,7 @@ export default function Empleados() {
                           {empleado.nombreCompleto}
                         </span>
                         <span className="text-xs text-gray-500">
-                          Legajo {empleado.legajo ?? "—"} •{" "}
+                          Legajo {empleado.legajo ?? "â€”"} â€¢{" "}
                           {empleado.localidad ?? "Localidad pendiente"}
                         </span>
                       </div>
@@ -954,7 +934,7 @@ export default function Empleados() {
                     <TableCell>
                       <Chip size="sm" variant="flat">
                         {empleado.rolNombre ?? getRolNombre(empleado.rolId) ?? "Sin rol"}{" "}
-                        ·{" "}
+                        Â·{" "}
                         {empleado.rolTipo ??
                           getRolTipo(empleado.rolId) ??
                           "Empleado"}
@@ -980,7 +960,7 @@ export default function Empleados() {
                             variant="light"
                             onPress={() => setDetalleEmpleado(empleado)}
                           >
-                            👁
+                            ðŸ‘
                           </Button>
                         </Tooltip>
                         <Tooltip content="Suspender/activar">
@@ -997,7 +977,7 @@ export default function Empleados() {
                               )
                             }
                           >
-                            ⚡
+                            âš¡
                           </Button>
                         </Tooltip>
                         <Tooltip content="Reenviar invitacion">
@@ -1013,7 +993,7 @@ export default function Empleados() {
                               })
                             }
                           >
-                            ✉
+                            âœ‰
                           </Button>
                         </Tooltip>
                       </div>
@@ -1233,7 +1213,7 @@ export default function Empleados() {
                 {detalleEmpleado?.rolNombre ??
                   getRolNombre(detalleEmpleado?.rolId ?? null) ??
                   "Sin rol"}{" "}
-                ·{" "}
+                Â·{" "}
                 {detalleEmpleado?.rolTipo ??
                   getRolTipo(detalleEmpleado?.rolId ?? null) ??
                   "Empleado"}
@@ -1254,25 +1234,25 @@ export default function Empleados() {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Legajo</span>
               <span className="font-medium text-slate-900">
-                {detalleEmpleado?.legajo ?? "—"}
+                {detalleEmpleado?.legajo ?? "â€”"}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Localidad</span>
               <span className="font-medium text-slate-900">
-                {detalleEmpleado?.localidad ?? "—"}
+                {detalleEmpleado?.localidad ?? "â€”"}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Telefono</span>
               <span className="font-medium text-slate-900">
-                {detalleEmpleado?.telefono ?? "—"}
+                {detalleEmpleado?.telefono ?? "â€”"}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Direccion</span>
               <span className="font-medium text-slate-900">
-                {detalleEmpleado?.direccion ?? "—"}
+                {detalleEmpleado?.direccion ?? "â€”"}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -1304,4 +1284,5 @@ export default function Empleados() {
     </div>
   );
 }
+
 
