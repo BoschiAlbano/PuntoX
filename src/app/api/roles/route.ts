@@ -1,148 +1,178 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
-import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+import { requirePermiso } from "@/lib/requirePermiso";
 
-// Helper para obtener tenant y permisos (SuperAdmin/Admin del tenant).
-async function getAuthContext(req?: NextRequest) {
-  const supabase = await getSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+type RolTipo = "ADMINISTRADOR" | "EMPLEADO";
 
-  if (!user) {
-    return { error: { status: 401, message: "No autenticado" } } as const;
-  }
+const rolSchema = z.object({
+  nombre: z.string().min(1),
+  descripcion: z.string().optional().nullable(),
+  tipo: z.enum(["ADMINISTRADOR", "EMPLEADO"]).default("EMPLEADO"),
+  permisos: z.array(z.string().min(1)).optional().default([]),
+});
 
-  const meta = user.user_metadata as Record<string, unknown> | undefined;
-  const roleMeta = (meta?.role as string | undefined) ?? user.role ?? "";
-  const roleLower = roleMeta.toString().toLowerCase();
-  const isSuperAdmin = roleLower === "superadmin";
-  const isAdmin = isSuperAdmin || roleLower === "administrador" || roleLower === "admin";
+function normalizePermisoKey(label: string) {
+  return label
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
-  const tenantFromQuery = req?.nextUrl.searchParams.get("tenantId");
-  const tenantRaw = meta?.tenantId ?? meta?.tenant_id ?? (user as any)?.tenantId;
-  const resolved = tenantFromQuery ?? tenantRaw ?? process.env.DEFAULT_TENANT_ID;
-  if (!resolved) return { error: { status: 401, message: "Falta tenant" } } as const;
-
-  const parsed = Number(resolved);
-  if (Number.isNaN(parsed)) {
-    return { error: { status: 400, message: "Tenant invalido" } } as const;
-  }
-
-  return { tenantId: parsed, isSuperAdmin, isAdmin } as const;
+function mapRolTipo(tipo?: string | null): RolTipo {
+  if (tipo === "ADMINISTRADOR" || tipo === "EMPLEADO") return tipo;
+  return "EMPLEADO";
 }
 
 export async function GET(req: NextRequest) {
-  const auth = await getAuthContext(req);
-  if ("error" in auth) {
-    return NextResponse.json({ error: auth.error.message }, { status: auth.error.status });
-  }
-  const { tenantId } = auth;
-
   try {
-    let roles;
-    try {
-      roles = await prisma.perfiles.findMany({
-        where: { TenantId: BigInt(tenantId), EstaEliminado: false },
-        select: {
-          Id: true,
-          Descripcion: true,
-          Tipo: true,
-          _count: { select: { PerfilUsuario: true } },
-        },
-        orderBy: { Descripcion: "asc" },
-      });
-    } catch (err) {
-      // Fallback si la columna Tipo no existe (migración pendiente).
-      roles = await prisma.perfiles.findMany({
-        where: { TenantId: BigInt(tenantId), EstaEliminado: false },
-        select: {
-          Id: true,
-          Descripcion: true,
-          _count: { select: { PerfilUsuario: true } },
-        },
-        orderBy: { Descripcion: "asc" },
-      });
-      console.warn("[roles] usando fallback sin campo Tipo (¿falta migración?)", err);
-    }
+    const { tenantId } = await requirePermiso("empleados:admin");
 
-    return NextResponse.json({
-      roles: roles.map((rol: any) => ({
-        id: Number(rol.Id),
-        nombre: rol.Descripcion,
-        tipo: rol.Tipo ?? "EMPLEADO",
-        usuarios: rol._count?.PerfilUsuario ?? 0,
-      })),
+    const roles = await prisma.perfiles.findMany({
+      where: { TenantId: BigInt(tenantId), EstaEliminado: false },
+      select: {
+        Id: true,
+        Descripcion: true,
+        Tipo: true,
+        PerfilUsuario: { select: { Usuario_Id: true } },
+        PerfilPermiso: {
+          select: {
+            Permiso: {
+              select: { Clave: true, Descripcion: true, EstaEliminado: true },
+            },
+          },
+        },
+      },
+      orderBy: { Descripcion: "asc" },
     });
+
+    const response = roles.map((rol) => ({
+      id: Number(rol.Id),
+      nombre: rol.Descripcion,
+      tipo: mapRolTipo((rol as any).Tipo as string | undefined),
+      descripcion: null as string | null,
+      usuarios: rol.PerfilUsuario.length,
+      permisos: rol.PerfilPermiso.filter(
+        (pp) => !pp.Permiso?.EstaEliminado
+      ).map((pp) => pp.Permiso?.Descripcion ?? pp.Permiso?.Clave ?? ""),
+    }));
+
+    return NextResponse.json({ roles: response }, { status: 200 });
   } catch (error) {
     console.error("Error al obtener roles", error);
-    return NextResponse.json({ error: "Error al obtener roles" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error al obtener roles" },
+      { status: 500 }
+    );
   }
 }
 
-const rolSchema = z.object({
-  nombre: z.string().min(2, "Nombre requerido"),
-  tipo: z.enum(["ADMINISTRADOR", "EMPLEADO"]).default("EMPLEADO"),
-});
-
 export async function POST(req: NextRequest) {
-  const auth = await getAuthContext(req);
-  if ("error" in auth) {
-    return NextResponse.json({ error: auth.error.message }, { status: auth.error.status });
-  }
-  const { tenantId, isAdmin, isSuperAdmin } = auth;
-  // SuperAdmin siempre puede crear roles; admins solo en su tenant.
-  if (!isSuperAdmin && !isAdmin) {
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
-  }
-
-  const json = await req.json().catch(() => null);
-  const parsed = rolSchema.safeParse(json);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Datos invalidos" }, { status: 400 });
-  }
-
   try {
-    let created;
-    try {
-      created = await prisma.perfiles.create({
-        data: {
-          Descripcion: parsed.data.nombre.trim(),
-          Tipo: parsed.data.tipo,
-          EstaEliminado: false,
-          TenantId: BigInt(tenantId),
-        },
-        select: { Id: true, Descripcion: true, Tipo: true },
-      });
-    } catch (err) {
-      // Fallback si la columna Tipo no existe (migración pendiente).
-      created = await prisma.perfiles.create({
-        data: {
-          Descripcion: parsed.data.nombre.trim(),
-          EstaEliminado: false,
-          TenantId: BigInt(tenantId),
-        },
-        select: { Id: true, Descripcion: true },
-      });
-      console.warn("[roles] creación sin campo Tipo (¿falta migración?)", err);
+    const { tenantId } = await requirePermiso("empleados:admin");
+    const json = await req.json().catch(() => null);
+    const parsed = rolSchema.safeParse(json);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Datos invalidos" }, { status: 400 });
     }
 
-    return NextResponse.json(
-      {
-        rol: {
-          id: Number(created.Id),
-          nombre: created.Descripcion,
-          tipo: (created as any).Tipo ?? parsed.data.tipo ?? "EMPLEADO",
-          usuarios: 0,
-        },
-      },
-      { status: 201 }
+    const data = parsed.data;
+    // Si es rol administrador, nos aseguramos de incluir el permiso core de empleados.
+    const permisosSolicitados = Array.from(
+      new Set([
+        ...(data.permisos ?? []),
+        ...(data.tipo === "ADMINISTRADOR" ? ["empleados:admin"] : []),
+      ])
     );
+
+    const tenantIdBigInt = BigInt(tenantId);
+
+    const existing = await prisma.perfiles.findFirst({
+      where: {
+        TenantId: tenantIdBigInt,
+        Descripcion: data.nombre.trim(),
+        EstaEliminado: false,
+      },
+    });
+
+    if (existing) {
+      return NextResponse.json(
+        { error: "Ya existe un rol con ese nombre" },
+        { status: 400 }
+      );
+    }
+
+    const permisosUnicos = Array.from(
+      new Set(
+        permisosSolicitados
+          .map((p) => p.trim())
+          .filter((p) => p.length > 0)
+      )
+    );
+
+    const created = await prisma.$transaction(async (tx) => {
+      const rol = await tx.perfiles.create({
+        data: {
+          Descripcion: data.nombre.trim(),
+          Tipo: data.tipo,
+          EstaEliminado: false,
+          TenantId: tenantIdBigInt,
+        },
+      });
+
+      let permisos = [] as {
+        Id: bigint;
+        Clave: string;
+        Descripcion: string | null;
+      }[];
+
+      if (permisosUnicos.length) {
+        permisos = await Promise.all(
+          permisosUnicos.map((permisoLabel) => {
+            const clave =
+              normalizePermisoKey(permisoLabel) || permisoLabel.toLowerCase();
+            return tx.permiso.upsert({
+              where: {
+                Clave_TenantId: { Clave: clave, TenantId: tenantIdBigInt },
+              },
+              update: { Descripcion: permisoLabel, EstaEliminado: false },
+              create: {
+                Clave: clave,
+                Descripcion: permisoLabel,
+                TenantId: tenantIdBigInt,
+              },
+            });
+          })
+        );
+
+        await tx.perfilPermiso.createMany({
+          data: permisos.map((permiso) => ({
+            PerfilId: rol.Id,
+            PermisoId: permiso.Id,
+            TenantId: tenantIdBigInt,
+          })),
+          skipDuplicates: true,
+        });
+      }
+
+      return { rol, permisos };
+    });
+
+    const rolResponse = {
+      id: Number(created.rol.Id),
+      nombre: created.rol.Descripcion,
+      tipo: mapRolTipo((created.rol as any).Tipo as string | undefined),
+      descripcion: data.descripcion ?? null,
+      usuarios: 0,
+      permisos: created.permisos.map((p) => p.Descripcion ?? p.Clave),
+    };
+
+    return NextResponse.json({ rol: rolResponse }, { status: 201 });
   } catch (error) {
-    console.error("Error creando rol", error);
+    console.error("Error al crear rol", error);
     return NextResponse.json(
-      { error: "No se pudo crear el rol" },
+      { error: "Error al crear rol" },
       { status: 500 }
     );
   }

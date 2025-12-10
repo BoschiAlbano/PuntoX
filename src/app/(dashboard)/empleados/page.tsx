@@ -58,6 +58,8 @@ type Rol = {
   nombre: string;
   usuarios: number;
   tipo: "ADMINISTRADOR" | "EMPLEADO";
+  descripcion?: string | null;
+  permisos?: string[];
 };
 
 type Localidad = {
@@ -80,9 +82,9 @@ type Departamento = {
 const permisosDisponibles = [
   "Ventas",
   "Caja",
-  "Inventario",
-  "Reportes",
   "Clientes",
+  "Productos",
+  "Analiticas",
   "Configuracion",
   "Empleados",
 ];
@@ -103,6 +105,7 @@ export default function Empleados() {
   const { user } = useSupabaseAuthContext();
 
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(true);
   const [isSavingUser, setIsSavingUser] = useState(false);
   const [isSavingRole, setIsSavingRole] = useState(false);
 
@@ -194,8 +197,20 @@ export default function Empleados() {
   const loadData = async () => {
     setIsLoadingData(true);
     const fallbackRoles: Rol[] = [
-      { id: -1, nombre: "Administrador", tipo: "ADMINISTRADOR", usuarios: 0 },
-      { id: -2, nombre: "Empleado", tipo: "EMPLEADO", usuarios: 0 },
+      {
+        id: -1,
+        nombre: "Administrador",
+        tipo: "ADMINISTRADOR",
+        usuarios: 0,
+        permisos: permisosDisponibles,
+      },
+      {
+        id: -2,
+        nombre: "Empleado",
+        tipo: "EMPLEADO",
+        usuarios: 0,
+        permisos: ["Ventas", "Caja", "Clientes"],
+      },
     ];
     try {
       const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
@@ -210,6 +225,17 @@ export default function Empleados() {
 
       // Roles: si falla, cargamos fallback y seguimos.
       if (!rolesRes || !rolesRes.ok) {
+        const status = rolesRes?.status;
+        if (status === 401 || status === 403) {
+          setIsAuthorized(false);
+          setIsLoadingData(false);
+          addToast({
+            title: "Sin permisos",
+            description: "Necesitas empleados:admin para acceder.",
+            color: "danger",
+          });
+          return;
+        }
         const rolesErr = await rolesRes?.json().catch(() => null);
         addToast({
           title: "Error al obtener roles",
@@ -223,6 +249,9 @@ export default function Empleados() {
           ? rolesJson.roles.map((rol: any) => ({
               ...rol,
               tipo: rol.tipo ?? "EMPLEADO",
+              permisos: Array.isArray(rol.permisos) ? rol.permisos : [],
+              descripcion: rol.descripcion ?? null,
+              usuarios: Number(rol.usuarios ?? 0),
             }))
           : [];
         setRoles(parsedRoles.length ? parsedRoles : fallbackRoles);
@@ -246,12 +275,22 @@ export default function Empleados() {
         const empJson = await empRes.json();
         setEmpleados(Array.isArray(empJson?.empleados) ? empJson.empleados : []);
       } else {
-        const empErr = await empRes?.json().catch(() => null);
-        addToast({
-          title: "Error al obtener empleados",
-          description: empErr?.error ?? "No pudimos cargar empleados.",
-          color: "warning",
-        });
+        if (empRes?.status === 401 || empRes?.status === 403) {
+          setIsAuthorized(false);
+          setIsLoadingData(false);
+          addToast({
+            title: "Sin permisos",
+            description: "Necesitas empleados:admin para acceder.",
+            color: "danger",
+          });
+        } else {
+          const empErr = await empRes?.json().catch(() => null);
+          addToast({
+            title: "Error al obtener empleados",
+            description: empErr?.error ?? "No pudimos cargar empleados.",
+            color: "warning",
+          });
+        }
         setEmpleados([]);
       }
 
@@ -451,10 +490,15 @@ export default function Empleados() {
     try {
       const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
       const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
-      const res = await fetch("/api/roles", {
+      const res = await fetch(`/api/roles${tenantQuery}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre: nuevoRol.nombre, tipo: nuevoRol.tipo }),
+        body: JSON.stringify({
+          nombre: nuevoRol.nombre,
+          descripcion: nuevoRol.descripcion,
+          tipo: nuevoRol.tipo,
+          permisos: nuevoRol.permisos,
+        }),
       });
 
       if (!res.ok) {
@@ -464,7 +508,15 @@ export default function Empleados() {
 
       const data = await res.json();
       if (data?.rol) {
-        setRoles((prev) => [...prev, data.rol]);
+        const rolCreado: Rol = {
+          id: Number(data.rol.id),
+          nombre: data.rol.nombre,
+          tipo: data.rol.tipo ?? "EMPLEADO",
+          usuarios: Number(data.rol.usuarios ?? 0),
+          descripcion: data.rol.descripcion ?? null,
+          permisos: Array.isArray(data.rol.permisos) ? data.rol.permisos : [],
+        };
+        setRoles((prev) => [...prev, rolCreado]);
       }
 
       addToast({
@@ -551,6 +603,17 @@ export default function Empleados() {
     if (!rolId) return null;
     return roles.find((r) => r.id === rolId)?.tipo ?? null;
   };
+
+  if (!isAuthorized) {
+    return (
+      <div className="max-w-4xl mx-auto py-16 text-center space-y-3">
+        <h1 className="text-2xl font-semibold text-slate-900">Sin permisos</h1>
+        <p className="text-gray-600">
+          Necesitas el permiso empleados:admin para acceder a esta sección.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -1043,22 +1106,24 @@ export default function Empleados() {
                       <p className="text-sm text-gray-600">
                         Rol disponible para asignar a los usuarios del tenant.
                       </p>
-                    </div>
-                    <Chip size="sm" variant="flat">
-                      {rol.usuarios} usuarios
-                    </Chip>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {nuevoRol.permisos.map((permiso) => (
-                      <Chip key={`${rol.id}-${permiso}`} size="sm" variant="bordered">
-                        {permiso}
-                      </Chip>
-                    ))}
-                  </div>
                 </div>
-              ))}
-            </CardBody>
-          </Card>
+                <Chip size="sm" variant="flat">
+                  {rol.usuarios} usuarios
+                </Chip>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(rol.permisos?.length ? rol.permisos : permisosDisponibles.slice(0, 2)).map(
+                  (permiso) => (
+                    <Chip key={`${rol.id}-${permiso}`} size="sm" variant="bordered">
+                      {permiso}
+                    </Chip>
+                  )
+                )}
+              </div>
+            </div>
+          ))}
+        </CardBody>
+      </Card>
 
           <Card className="shadow-sm border border-slate-200">
             <CardHeader className="flex items-center justify-between">

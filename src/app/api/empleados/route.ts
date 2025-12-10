@@ -1,8 +1,8 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
-import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
+import { requirePermiso, PermisoError } from "@/lib/requirePermiso";
 
 // API de empleados: lista, alta (con Supabase Auth) y suspensión/activación.
 async function resolveTenantId(req?: NextRequest) {
@@ -42,12 +42,9 @@ function mapEstado(estaBloqueado: boolean | null | undefined) {
 type EstadoEmpleado = "Activo" | "Suspendido" | "Invitado";
 
 export async function GET(req: NextRequest) {
-  const tenantId = await resolveTenantId(req);
-  if (!tenantId) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-  }
-
   try {
+    const { tenantId } = await requirePermiso("empleados:admin");
+
     let empleados;
     try {
       empleados = await prisma.persona.findMany({
@@ -173,6 +170,9 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ empleados: response }, { status: 200 });
   } catch (error) {
+    if (error instanceof PermisoError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Error al obtener empleados", error);
     return NextResponse.json(
       { error: "Error al obtener empleados" },
@@ -197,54 +197,51 @@ const createEmpleadoSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const tenantId = await resolveTenantId(req);
-  if (!tenantId) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-  }
-
-  const json = await req.json().catch(() => null);
-  const parsed = createEmpleadoSchema.safeParse(json);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Datos invalidos" }, { status: 400 });
-  }
-
-  const data = parsed.data;
-  const tenantIdBigInt = BigInt(tenantId);
-
-  const localidadIdNumber = Number(data.localidadId);
-  if (!Number.isInteger(localidadIdNumber)) {
-    return NextResponse.json({ error: "Localidad invalida" }, { status: 400 });
-  }
-
-  const departamentoIdNumber =
-    data.departamentoId === null || data.departamentoId === undefined
-      ? null
-      : Number(data.departamentoId);
-  if (data.departamentoId !== undefined && departamentoIdNumber !== null) {
-    if (!Number.isInteger(departamentoIdNumber)) {
-      return NextResponse.json({ error: "Departamento invalido" }, { status: 400 });
-    }
-  }
-
-  const provinciaIdNumber =
-    data.provinciaId === null || data.provinciaId === undefined
-      ? null
-      : Number(data.provinciaId);
-  if (data.provinciaId !== undefined && provinciaIdNumber !== null) {
-    if (!Number.isInteger(provinciaIdNumber)) {
-      return NextResponse.json({ error: "Provincia invalida" }, { status: 400 });
-    }
-  }
-
-  const rolIdNumber =
-    data.rolId === null || data.rolId === undefined
-      ? null
-      : Number(data.rolId);
-  if (data.rolId !== undefined && Number.isNaN(Number(rolIdNumber))) {
-    return NextResponse.json({ error: "Rol invalido" }, { status: 400 });
-  }
-
   try {
+    const { tenantId } = await requirePermiso("empleados:admin");
+    const tenantIdBigInt = BigInt(tenantId);
+
+    const json = await req.json().catch(() => null);
+    const parsed = createEmpleadoSchema.safeParse(json);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Datos invalidos" }, { status: 400 });
+    }
+
+    const data = parsed.data;
+
+    const localidadIdNumber = Number(data.localidadId);
+    if (!Number.isInteger(localidadIdNumber)) {
+      return NextResponse.json({ error: "Localidad invalida" }, { status: 400 });
+    }
+
+    const departamentoIdNumber =
+      data.departamentoId === null || data.departamentoId === undefined
+        ? null
+        : Number(data.departamentoId);
+    if (data.departamentoId !== undefined && departamentoIdNumber !== null) {
+      if (!Number.isInteger(departamentoIdNumber)) {
+        return NextResponse.json({ error: "Departamento invalido" }, { status: 400 });
+      }
+    }
+
+    const provinciaIdNumber =
+      data.provinciaId === null || data.provinciaId === undefined
+        ? null
+        : Number(data.provinciaId);
+    if (data.provinciaId !== undefined && provinciaIdNumber !== null) {
+      if (!Number.isInteger(provinciaIdNumber)) {
+        return NextResponse.json({ error: "Provincia invalida" }, { status: 400 });
+      }
+    }
+
+    const rolIdNumber =
+      data.rolId === null || data.rolId === undefined
+        ? null
+        : Number(data.rolId);
+    if (data.rolId !== undefined && Number.isNaN(Number(rolIdNumber))) {
+      return NextResponse.json({ error: "Rol invalido" }, { status: 400 });
+    }
+
     const localidadValida = await prisma.localidad.findFirst({
       where: { Id: BigInt(localidadIdNumber), EstaEliminado: false },
       select: {
@@ -444,23 +441,20 @@ const updateEstadoSchema = z.object({
 });
 
 export async function PATCH(req: NextRequest) {
-  const tenantId = await resolveTenantId(req);
-  if (!tenantId) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-  }
-
-  const json = await req.json().catch(() => null);
-  const parsed = updateEstadoSchema.safeParse(json);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Datos invalidos" }, { status: 400 });
-  }
-
-  const usuarioId = Number(parsed.data.usuarioId);
-  if (!Number.isInteger(usuarioId)) {
-    return NextResponse.json({ error: "Usuario invalido" }, { status: 400 });
-  }
-
   try {
+    const { tenantId } = await requirePermiso("empleados:admin");
+
+    const json = await req.json().catch(() => null);
+    const parsed = updateEstadoSchema.safeParse(json);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Datos invalidos" }, { status: 400 });
+    }
+
+    const usuarioId = Number(parsed.data.usuarioId);
+    if (!Number.isInteger(usuarioId)) {
+      return NextResponse.json({ error: "Usuario invalido" }, { status: 400 });
+    }
+
     const updated = await prisma.usuario.update({
       where: { Id: BigInt(usuarioId), TenantId: BigInt(tenantId) },
       data: { EstaBloqueado: parsed.data.bloquear },
@@ -472,6 +466,9 @@ export async function PATCH(req: NextRequest) {
       estado: mapEstado(updated.EstaBloqueado),
     });
   } catch (error) {
+    if (error instanceof PermisoError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Error actualizando estado de empleado", error);
     return NextResponse.json(
       { error: "No se pudo actualizar el estado" },
