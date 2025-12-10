@@ -478,7 +478,7 @@ export default function Empleados() {
       addToast({
         title: "Usuario creado",
         description: nuevoUsuario.autoInvitar
-          ? "Se enviÃ³ la invitaciÃ³n. PodrÃ¡s ajustar permisos desde roles."
+          ? "Se envió la invitación. Podrás ajustar permisos desde roles."
           : "Usuario listo. Recuerda compartir las credenciales.",
         color: "success",
       });
@@ -753,9 +753,9 @@ export default function Empleados() {
                 }
               />
               <Input
-                label="ContraseÃ±a"
+                label="Contraseña"
                 type="password"
-                placeholder="Minimo 8 caracteres"
+                placeholder="Mínimo 8 caracteres"
                 value={nuevoUsuario.password}
                 onChange={(e) =>
                   setNuevoUsuario((prev) => ({ ...prev, password: e.target.value }))
@@ -771,7 +771,7 @@ export default function Empleados() {
               />
               <Input
                 label="Direccion"
-                placeholder="Calle y nÃºmero"
+                placeholder="Calle y número"
                 value={nuevoUsuario.direccion}
                 onChange={(e) =>
                   setNuevoUsuario((prev) => ({ ...prev, direccion: e.target.value }))
