@@ -1024,21 +1024,21 @@ export default function Empleados() {
                           {empleado.nombreCompleto}
                         </span>
                         <span className="text-xs text-gray-500">
-                          Legajo {empleado.legajo ?? "â€”"} â€¢{" "}
+                          Legajo {empleado.legajo ?? "-"} ·{" "}
                           {empleado.localidad ?? "Localidad pendiente"}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <Chip size="sm" variant="flat">
-                        {empleado.rolNombre ?? getRolNombre(empleado.rolId) ?? "Sin rol"}{" "}
-                        Â·{" "}
+                        {empleado.rolNombre ?? getRolNombre(empleado.rolId) ?? "Sin rol"} ·{" "}
                         {empleado.rolTipo ??
                           getRolTipo(empleado.rolId) ??
                           "Empleado"}
                       </Chip>
                     </TableCell>
                     <TableCell>{empleado.email}</TableCell>
+
                     <TableCell>
                       <Chip
                         size="sm"
@@ -1058,7 +1058,7 @@ export default function Empleados() {
                             variant="light"
                             onPress={() => setDetalleEmpleado(empleado)}
                           >
-                            ðŸ‘
+                            Ver
                           </Button>
                         </Tooltip>
                         <Tooltip content="Suspender/activar">
@@ -1075,7 +1075,7 @@ export default function Empleados() {
                               )
                             }
                           >
-                            âš¡
+                            Estado
                           </Button>
                         </Tooltip>
                         <Tooltip content="Reenviar invitacion">
@@ -1091,7 +1091,7 @@ export default function Empleados() {
                               })
                             }
                           >
-                            âœ‰
+                            Mail
                           </Button>
                         </Tooltip>
                       </div>
@@ -1334,13 +1334,13 @@ export default function Empleados() {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Legajo</span>
               <span className="font-medium text-slate-900">
-                {detalleEmpleado?.legajo ?? "â€”"}
+                {detalleEmpleado?.legajo ?? "-"}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Localidad</span>
               <span className="font-medium text-slate-900">
-                {detalleEmpleado?.localidad ?? "â€”"}
+                {detalleEmpleado?.localidad ?? "-"}
               </span>
             </div>
             <div className="flex items-center justify-between">
