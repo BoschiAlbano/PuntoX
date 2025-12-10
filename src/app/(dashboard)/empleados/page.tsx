@@ -456,6 +456,7 @@ export default function Empleados() {
         nombreUsuario: nuevoUsuario.usuario.trim(),
         password: nuevoUsuario.password,
         rolId: nuevoUsuario.rolId ? Number(nuevoUsuario.rolId) : undefined,
+        autoInvitar: nuevoUsuario.autoInvitar,
       };
 
       const res = await fetch(`/api/empleados${tenantQuery}`, {

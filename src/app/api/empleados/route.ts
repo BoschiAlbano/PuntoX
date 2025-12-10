@@ -194,6 +194,7 @@ const createEmpleadoSchema = z.object({
   nombreUsuario: z.string().min(3),
   password: z.string().min(8),
   rolId: z.union([z.number(), z.string()]).optional().nullable(),
+  autoInvitar: z.boolean().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -342,7 +343,7 @@ export async function POST(req: NextRequest) {
       await supabaseService.auth.admin.createUser({
         email: mailNormalized,
         password: data.password,
-        email_confirm: true,
+        email_confirm: data.autoInvitar ?? true,
         user_metadata: {
           tenant_id: tenantId.toString(),
           role: rolTipo === "ADMINISTRADOR" ? "Administrador" : "Empleado",
