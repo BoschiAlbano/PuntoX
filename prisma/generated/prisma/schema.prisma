@@ -45,6 +45,8 @@ model Tenant {
   Movimientos         Movimiento[]
   PerfilesUsuarios    PerfilUsuario[]
   Perfiles            Perfiles[]
+  Permisos            Permiso[]
+  PerfilPermisos      PerfilPermiso[]
   Personas            Persona[]
   Precios             Precio[]
   Proveedores         Proveedor[]
@@ -277,6 +279,11 @@ model Comprobante_Compra {
 
   @@index([Id])
   @@index([ProveedorId])
+}
+
+enum PerfilTipo {
+  ADMINISTRADOR
+  EMPLEADO
 }
 
 /// Relación comprobante con cuenta corriente de proveedor.
@@ -693,13 +700,43 @@ model MotivoBajas {
 model Perfiles {
   Id               BigInt             @id @default(autoincrement())
   Descripcion      String             @db.VarChar(250)
+  Tipo             PerfilTipo         @default(EMPLEADO)
   EstaEliminado    Boolean
   /// Tenant dueño de este perfil
   TenantId         BigInt
   FormularioPerfil FormularioPerfil[]
   PerfilUsuario    PerfilUsuario[]
   Tenant           Tenant             @relation(fields: [TenantId], references: [Id])
+  PerfilPermiso    PerfilPermiso[]
 
+  @@index([TenantId])
+}
+
+/// Permisos disponibles por tenant (permisos funcionales que se pueden asignar a un rol).
+model Permiso {
+  Id             BigInt          @id @default(autoincrement())
+  Clave          String          @db.VarChar(100)
+  Descripcion    String?         @db.VarChar(250)
+  EstaEliminado  Boolean         @default(false)
+  TenantId       BigInt
+  PerfilPermisos PerfilPermiso[]
+  Tenant         Tenant          @relation(fields: [TenantId], references: [Id])
+
+  @@unique([Clave, TenantId])
+  @@index([TenantId])
+}
+
+/// RelaciГіn muchos a muchos entre perfiles (roles) y permisos.
+model PerfilPermiso {
+  PerfilId  BigInt
+  PermisoId BigInt
+  TenantId  BigInt
+
+  Perfil  Perfiles @relation(fields: [PerfilId], references: [Id], onDelete: Cascade)
+  Permiso Permiso  @relation(fields: [PermisoId], references: [Id], onDelete: Cascade)
+  Tenant  Tenant   @relation(fields: [TenantId], references: [Id])
+
+  @@id([PerfilId, PermisoId])
   @@index([TenantId])
 }
 
