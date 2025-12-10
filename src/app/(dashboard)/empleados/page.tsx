@@ -1346,13 +1346,13 @@ export default function Empleados() {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Telefono</span>
               <span className="font-medium text-slate-900">
-                {detalleEmpleado?.telefono ?? "â€”"}
+                {detalleEmpleado?.telefono ?? "—"}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Direccion</span>
               <span className="font-medium text-slate-900">
-                {detalleEmpleado?.direccion ?? "â€”"}
+                {detalleEmpleado?.direccion ?? "—"}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -1384,5 +1384,6 @@ export default function Empleados() {
     </div>
   );
 }
+
 
 
