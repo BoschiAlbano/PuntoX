@@ -538,17 +538,26 @@ export default function Empleados() {
   };
 
   const handleCrearRol = async () => {
-    if (!nuevoRol.nombre.trim()) {
-      addToast({
-        title: "Nombre requerido",
-        description: "Define un nombre para el rol.",
-        color: "warning",
-      });
-      return;
-    }
+  if (!nuevoRol.nombre.trim()) {
+    addToast({
+      title: "Nombre requerido",
+      description: "Define un nombre para el rol.",
+      color: "warning",
+    });
+    return;
+  }
 
-    setIsSavingRole(true);
-    try {
+  if (!nuevoRol.permisos.length) {
+    addToast({
+      title: "Selecciona permisos",
+      description: "El rol debe tener al menos un permiso.",
+      color: "warning",
+    });
+    return;
+  }
+
+  setIsSavingRole(true);
+  try {
       const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
       const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
       const res = await fetch(`/api/roles${tenantQuery}`, {
@@ -1177,47 +1186,60 @@ export default function Empleados() {
             </CardHeader>
             <Divider />
             <CardBody className="space-y-3">
-              {roles.map((rol) => (
-                <div
-                  key={rol.id}
-                  className="p-3 rounded-xl border border-slate-200 flex flex-col gap-2"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-semibold text-slate-900">{rol.nombre}</h4>
-                        <Chip size="sm" variant="flat">
-                          {rol.tipo === "ADMINISTRADOR" ? "Administrador" : "Empleado"}
-                        </Chip>
+              {roles.map((rol) => {
+                const permisosVisibles = (rol.permisos ?? permisosDisponibles).slice(0, 5);
+                const permisosRestantes = Math.max(
+                  (rol.permisos ?? permisosDisponibles).length - permisosVisibles.length,
+                  0
+                );
+                const descripcionRol =
+                  rol.tipo === "ADMINISTRADOR"
+                    ? "Acceso completo a la configuración y gestión del negocio."
+                    : "Puede operar ventas, caja y reportes básicos.";
+                return (
+                  <div
+                    key={rol.id}
+                    className="p-3 rounded-xl border border-slate-200 flex flex-col gap-2 hover:shadow-sm transition-shadow"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="font-semibold text-slate-900">{rol.nombre}</h4>
+                      <Chip size="sm" color={rolChipColor(rol.tipo)} variant="flat">
+                        {rol.tipo === "ADMINISTRADOR" ? "Administrador" : "Empleado"}
+                      </Chip>
                         <Chip
                           size="sm"
-                          color={criticidadColor(rol.usuarios)}
+                          color={rol.usuarios > 0 ? "success" : "default"}
                           variant="flat"
                         >
-                          Uso {rol.usuarios}
+                          {rol.usuarios > 0 ? `Asignado (${rol.usuarios})` : "Sin usar"}
                         </Chip>
-                      </div>
-                      <p className="text-sm text-gray-600">
-                        Rol disponible para asignar a los usuarios del tenant.
-                      </p>
-                </div>
-                <Chip size="sm" variant="flat">
-                  {rol.usuarios} usuarios
-                </Chip>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {(rol.permisos?.length ? rol.permisos : permisosDisponibles.slice(0, 2)).map(
-                  (permiso) => (
-                    <Chip key={`${rol.id}-${permiso}`} size="sm" variant="bordered">
-                      {permiso}
-                    </Chip>
-                  )
-                )}
-              </div>
-            </div>
-          ))}
-        </CardBody>
-      </Card>
+                        <Chip size="sm" variant="flat" className="bg-gray-100 text-gray-700">
+                          👤 {rol.usuarios} {rol.usuarios === 1 ? "usuario" : "usuarios"}
+                        </Chip>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600">{descripcionRol}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {permisosVisibles.map((permiso) => (
+                        <span
+                          key={`${rol.id}-${permiso}`}
+                          className="inline-flex items-center rounded-full bg-gray-100 text-gray-700 px-3 py-1 text-xs font-medium"
+                        >
+                          {permiso}
+                        </span>
+                      ))}
+                      {permisosRestantes > 0 && (
+                        <span className="inline-flex items-center rounded-full bg-gray-200 text-gray-700 px-3 py-1 text-xs font-medium">
+                          +{permisosRestantes} más
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </CardBody>
+          </Card>
 
           <Card className="shadow-sm border border-slate-200">
             <CardHeader className="flex items-center justify-between">
