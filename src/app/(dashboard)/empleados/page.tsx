@@ -17,12 +17,6 @@ import {
   Select,
   SelectItem,
   Switch,
-  Table,
-  TableBody,
-  TableCell,
-  TableColumn,
-  TableHeader,
-  TableRow,
   Textarea,
   Tooltip,
 } from "@heroui/react";
@@ -99,6 +93,37 @@ function criticidadColor(usuarios: number) {
   if (usuarios > 5) return "danger";
   if (usuarios > 0) return "warning";
   return "success";
+}
+
+function rolChipColor(tipo?: string | null) {
+  if (tipo === "ADMINISTRADOR") return "secondary";
+  if (tipo === "INVITADO") return "default";
+  return "primary";
+}
+
+function estadoPill(estado: EstadoEmpleado) {
+  const map: Record<EstadoEmpleado, { text: string; className: string }> = {
+    Activo: {
+      text: "Activo",
+      className: "bg-green-100 text-green-700",
+    },
+    Invitado: {
+      text: "Invitado",
+      className: "bg-yellow-100 text-yellow-700",
+    },
+    Suspendido: {
+      text: "Suspendido",
+      className: "bg-red-100 text-red-700",
+    },
+  };
+  const cfg = map[estado];
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${cfg.className}`}
+    >
+      {cfg.text}
+    </span>
+  );
 }
 
 export default function Empleados() {
@@ -630,6 +655,42 @@ export default function Empleados() {
     }
   };
 
+  const handleEliminar = async (empleado: Empleado) => {
+    const confirmDelete = window.confirm(
+      `Eliminar definitivamente a ${empleado.nombreCompleto}? Esta acción no se puede deshacer.`
+    );
+    if (!confirmDelete) return;
+
+    try {
+      const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
+      const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
+      const res = await fetch(`/api/empleados${tenantQuery}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ personaId: empleado.personaId }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "No se pudo eliminar el empleado");
+      }
+
+      setEmpleados((prev) => prev.filter((e) => e.personaId !== empleado.personaId));
+      addToast({
+        title: "Empleado eliminado",
+        description: `${empleado.nombreCompleto} fue eliminado.`,
+        color: "success",
+      });
+    } catch (error) {
+      console.error(error);
+      addToast({
+        title: "Error",
+        description: (error as Error).message,
+        color: "danger",
+      });
+    }
+  };
+
   const getRolNombre = (rolId: number | null) => {
     if (!rolId) return null;
     return roles.find((r) => r.id === rolId)?.nombre ?? null;
@@ -664,7 +725,6 @@ export default function Empleados() {
               <h1 className="text-3xl font-bold">Empleados y roles</h1>
               <p className="text-white/80 max-w-2xl">
                 Crea usuarios, asigna roles y controla quien puede operar tu negocio.
-                Tenant: {user?.user_metadata?.tenant_id ?? "no definido"}.
               </p>
               <div className="flex gap-3 flex-wrap">
                 <Chip size="sm" className="bg-white/15 text-white" variant="flat">
@@ -960,6 +1020,7 @@ export default function Empleados() {
                 <Input
                   size="sm"
                   placeholder="Buscar por nombre o correo"
+                  startContent={<span className="text-gray-500">🔍</span>}
                   value={filtros.busqueda}
                   onChange={(e) =>
                     setFiltros((prev) => ({ ...prev, busqueda: e.target.value }))
@@ -994,113 +1055,110 @@ export default function Empleados() {
             </div>
           </CardHeader>
           <Divider />
-          <CardBody className="overflow-x-auto">
-            <Table
-              aria-label="Empleados"
-              removeWrapper
-              isHeaderSticky={false}
-              bottomContentPlacement="outside"
-              bottomContent={
-                <p className="text-xs text-gray-500 px-2">
-                  Usa los filtros para segmentar por rol o estado.
-                </p>
-              }
-            >
-              <TableHeader>
-                <TableColumn>NOMBRE</TableColumn>
-                <TableColumn>ROL</TableColumn>
-                <TableColumn>EMAIL</TableColumn>
-                <TableColumn>ESTADO</TableColumn>
-                <TableColumn>ULTIMA ACTIVIDAD</TableColumn>
-                <TableColumn>ACCIONES</TableColumn>
-              </TableHeader>
-              <TableBody
-                emptyContent={isLoadingData ? "Cargando..." : "Sin coincidencias"}
-              >
-                {empleadosFiltrados.map((empleado) => (
-                  <TableRow key={empleado.id}>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-slate-900">
-                          {empleado.nombreCompleto}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          Legajo {empleado.legajo ?? "-"} ·{" "}
-                          {empleado.localidad ?? "Localidad pendiente"}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Chip size="sm" variant="flat">
-                        {empleado.rolNombre ?? getRolNombre(empleado.rolId) ?? "Sin rol"} ·{" "}
-                        {empleado.rolTipo ??
-                          getRolTipo(empleado.rolId) ??
-                          "Empleado"}
-                      </Chip>
-                    </TableCell>
-                    <TableCell>{empleado.email}</TableCell>
-
-                    <TableCell>
+          <CardBody className="space-y-3">
+            {empleadosFiltrados.map((empleado) => {
+              const rolNombre = empleado.rolNombre ?? getRolNombre(empleado.rolId) ?? "Sin rol";
+              const rolTipo = empleado.rolTipo ?? getRolTipo(empleado.rolId) ?? "Empleado";
+              return (
+                <div
+                  key={empleado.id}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                >
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-slate-900 text-sm sm:text-base">
+                        {empleado.nombreCompleto}
+                      </span>
                       <Chip
                         size="sm"
-                        color={estadoColor(empleado.estado)}
+                        color={rolChipColor(rolTipo)}
                         variant="flat"
                       >
-                        {empleado.estado}
+                        {rolNombre} ({rolTipo})
                       </Chip>
-                    </TableCell>
-                    <TableCell>{empleado.ultimaActividad ?? "Pendiente"}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Tooltip content="Ver ficha">
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            variant="light"
-                            onPress={() => setDetalleEmpleado(empleado)}
-                          >
-                            Ver
-                          </Button>
-                        </Tooltip>
-                        <Tooltip content="Suspender/activar">
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            variant="light"
-                            onPress={() =>
-                              handleEstado(
-                                empleado,
-                                empleado.estado === "Suspendido"
-                                  ? "Activo"
-                                  : "Suspendido"
-                              )
-                            }
-                          >
-                            Estado
-                          </Button>
-                        </Tooltip>
-                        <Tooltip content="Reenviar invitacion">
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            variant="light"
-                            onPress={() =>
-                              addToast({
-                                title: "Invitacion reenviada",
-                                description: `Enviada a ${empleado.email}`,
-                                color: "success",
-                              })
-                            }
-                          >
-                            Mail
-                          </Button>
-                        </Tooltip>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Legajo {empleado.legajo ?? "-"} ·{" "}
+                      {empleado.localidad ?? "Localidad pendiente"}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-slate-700">
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500">✉️</span>
+                      <span>{empleado.email}</span>
+                    </div>
+                    <div>{estadoPill(empleado.estado)}</div>
+                    <div className="flex items-center gap-1 text-gray-500">
+                      <span>⏳</span>
+                      <span>{empleado.ultimaActividad ?? "Pendiente"}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Tooltip content="Ver ficha">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        onPress={() => setDetalleEmpleado(empleado)}
+                      >
+                        🔍
+                      </Button>
+                    </Tooltip>
+                    <Tooltip content="Suspender/activar">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        onPress={() =>
+                          handleEstado(
+                            empleado,
+                            empleado.estado === "Suspendido"
+                              ? "Activo"
+                              : "Suspendido"
+                          )
+                        }
+                      >
+                        ⚡
+                      </Button>
+                    </Tooltip>
+                    <Tooltip content="Enviar email">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        onPress={() =>
+                          addToast({
+                            title: "Invitacion reenviada",
+                            description: `Enviada a ${empleado.email}`,
+                            color: "success",
+                          })
+                        }
+                      >
+                        ✉️
+                      </Button>
+                    </Tooltip>
+                    <Tooltip content="Eliminar">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        color="danger"
+                        variant="light"
+                        onPress={() => handleEliminar(empleado)}
+                      >
+                        🗑
+                      </Button>
+                    </Tooltip>
+                  </div>
+                </div>
+              );
+            })}
+            {empleadosFiltrados.length === 0 && (
+              <p className="text-sm text-gray-500 px-2">
+                {isLoadingData ? "Cargando..." : "Sin coincidencias"}
+              </p>
+            )}
           </CardBody>
         </Card>
 

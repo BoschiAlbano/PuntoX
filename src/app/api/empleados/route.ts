@@ -441,6 +441,10 @@ const updateEstadoSchema = z.object({
   bloquear: z.boolean(),
 });
 
+const deleteEmpleadoSchema = z.object({
+  personaId: z.union([z.number(), z.string()]),
+});
+
 export async function PATCH(req: NextRequest) {
   try {
     const { tenantId } = await requirePermiso("empleados:admin");
@@ -473,6 +477,99 @@ export async function PATCH(req: NextRequest) {
     console.error("Error actualizando estado de empleado", error);
     return NextResponse.json(
       { error: "No se pudo actualizar el estado" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { tenantId, usuarioId } = await requirePermiso("empleados:admin");
+
+    const json = await req.json().catch(() => null);
+    const parsed = deleteEmpleadoSchema.safeParse(json);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Datos invalidos" }, { status: 400 });
+    }
+
+    const personaIdNum = Number(parsed.data.personaId);
+    if (!Number.isInteger(personaIdNum)) {
+      return NextResponse.json({ error: "Empleado invalido" }, { status: 400 });
+    }
+    const personaId = BigInt(personaIdNum);
+    const tenantIdBig = BigInt(tenantId);
+
+    const persona = await prisma.persona.findFirst({
+      where: { Id: personaId, TenantId: tenantIdBig, EstaEliminado: false },
+      select: {
+        Persona_Empleado: {
+          select: {
+            Usuario: {
+              select: { Id: true, AuthUserId: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!persona) {
+      return NextResponse.json({ error: "Empleado no encontrado" }, { status: 404 });
+    }
+
+    // Evitar que un admin se borre a sí mismo.
+    const usuarioActual = await prisma.usuario.findFirst({
+      where: { Id: BigInt(usuarioId), TenantId: tenantIdBig, EstaEliminado: false },
+      select: { Persona_Empleado: { select: { Id: true } } },
+    });
+    const personaActualId = usuarioActual?.Persona_Empleado?.Id;
+    if (personaActualId && personaActualId === personaId) {
+      return NextResponse.json(
+        { error: "No puedes eliminar tu propio usuario." },
+        { status: 400 }
+      );
+    }
+
+    const usuarios = persona.Persona_Empleado?.Usuario ?? [];
+    const usuarioIds = usuarios.map((u) => u.Id);
+    const authIds = usuarios.map((u) => u.AuthUserId).filter(Boolean) as string[];
+
+    await prisma.$transaction(async (tx) => {
+      if (usuarioIds.length) {
+        await tx.perfilUsuario.deleteMany({
+          where: { Usuario_Id: { in: usuarioIds } },
+        });
+        await tx.usuario.deleteMany({
+          where: { Id: { in: usuarioIds }, TenantId: tenantIdBig },
+        });
+      }
+
+      await tx.persona_Empleado.deleteMany({
+        where: { Id: personaId },
+      });
+
+      await tx.persona.delete({
+        where: { Id: personaId, TenantId: tenantIdBig },
+      });
+    });
+
+    // Borramos en Supabase Auth de forma no bloqueante.
+    if (authIds.length) {
+      const supabase = getSupabaseServiceClient();
+      for (const authId of authIds) {
+        supabase.auth.admin.deleteUser(authId).catch((err) => {
+          console.warn("No se pudo borrar usuario auth", authId, err);
+        });
+      }
+    }
+
+    return NextResponse.json({ ok: true, personaId: personaIdNum });
+  } catch (error) {
+    if (error instanceof PermisoError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    console.error("Error eliminando empleado", error);
+    return NextResponse.json(
+      { error: "No se pudo eliminar el empleado" },
       { status: 500 }
     );
   }
