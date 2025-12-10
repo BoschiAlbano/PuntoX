@@ -196,6 +196,41 @@ export default function Empleados() {
 
   const loadData = async () => {
     setIsLoadingData(true);
+    // Paso 0: verificar permisos explícitos antes de cargar todo.
+    try {
+      const permisosRes = await fetch("/api/permisos", { cache: "no-store" }).catch(() => null);
+      if (!permisosRes || !permisosRes.ok) {
+        const status = permisosRes?.status;
+        if (status === 401 || status === 403) {
+          setIsAuthorized(false);
+          setIsLoadingData(false);
+          addToast({
+            title: "Sin permisos",
+            description: "Necesitas empleados:admin para acceder.",
+            color: "danger",
+          });
+          return;
+        }
+      } else {
+        const permisosJson = await permisosRes.json().catch(() => null);
+        const tienePermiso = Array.isArray(permisosJson?.permisos)
+          ? permisosJson.permisos.includes("empleados:admin")
+          : true;
+        if (!tienePermiso) {
+          setIsAuthorized(false);
+          setIsLoadingData(false);
+          addToast({
+            title: "Sin permisos",
+            description: "Necesitas empleados:admin para acceder.",
+            color: "danger",
+          });
+          return;
+        }
+      }
+    } catch {
+      // Si falla, continuamos pero marcaremos no autorizado al primer 401/403.
+    }
+
     const fallbackRoles: Rol[] = [
       {
         id: -1,
