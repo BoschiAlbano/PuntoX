@@ -24,13 +24,10 @@ import {
 } from "@heroui/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
-
-import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
-
-interface Marca {
+interface Iva {
   Id: number;
   Descripcion: string;
+  Porcentaje: number;
   EstaEliminado: boolean;
 }
 
@@ -39,29 +36,21 @@ interface ApiError {
   details?: Array<{ field: string; message: string }>;
 }
 
-// Función para obtener marcas
-const fetchMarcas = async ({
+// Función para obtener IVAs
+const fetchIvas = async ({
   signal,
 }: {
   signal: AbortSignal;
-}): Promise<Marca[]> => {
-  const supabase = getSupabaseBrowserClient();
-  let { data: marcas, error } = await supabase.from("Marca").select("*");
-  if (error) {
-    throw new Error(error.message);
+}): Promise<Iva[]> => {
+  const response = await fetch("/api/ivas", { signal });
+  if (!response.ok) {
+    throw new Error("Error al cargar IVAs");
   }
-  return marcas ? marcas : [];
-  // const response = await fetch("/api/marcas", { signal });
-  // if (!response.ok) {
-  //   throw new Error("Error al cargar marcas");
-  // }
-  // const data = await response.json();
-  // return Array.isArray(data?.marcas) ? data.marcas : [];
+  const data = await response.json();
+  return Array.isArray(data?.ivas) ? data.ivas : [];
 };
 
-export default function MarcaCRUD() {
-  const { user, session } = useSupabaseAuthContext();
-
+export default function IvaCRUD() {
   const queryClient = useQueryClient();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
@@ -70,87 +59,55 @@ export default function MarcaCRUD() {
     onClose: onDeleteClose,
   } = useDisclosure();
 
-  const [marcaSeleccionada, setMarcaSeleccionada] = useState<Marca | null>(
-    null
-  );
-  const [marcaAEliminar, setMarcaAEliminar] = useState<Marca | null>(null);
+  const [ivaSeleccionado, setIvaSeleccionado] = useState<Iva | null>(null);
+  const [ivaAEliminar, setIvaAEliminar] = useState<Iva | null>(null);
   const [modoEdicion, setModoEdicion] = useState(false);
 
   // Estado del formulario
-  const [formData, setFormData] = useState<Partial<Marca>>({
+  const [formData, setFormData] = useState<Partial<Iva>>({
     Descripcion: "",
+    Porcentaje: 0,
     EstaEliminado: false,
   });
 
-  // Query para obtener marcas
+  // Query para obtener IVAs
   const {
-    data: marcas = [],
+    data: ivas = [],
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["marcas"],
-    queryFn: fetchMarcas,
-    // Usa el staleTime global (5 min)
+    queryKey: ["ivas"],
+    queryFn: fetchIvas,
   });
 
   // Mutación para crear/actualizar
   const saveMutation = useMutation({
-    mutationFn: async (data: Partial<Marca>) => {
-      // const isEdit = modoEdicion && marcaSeleccionada;
-      // const url = isEdit
-      //   ? `/api/marcas/?Id=${marcaSeleccionada.Id}`
-      //   : "/api/marcas";
-      // const method = isEdit ? "PATCH" : "POST";
+    mutationFn: async (data: Partial<Iva>) => {
+      const isEdit = modoEdicion && ivaSeleccionado;
+      const url = isEdit ? `/api/ivas/?Id=${ivaSeleccionado.Id}` : "/api/ivas";
+      const method = isEdit ? "PATCH" : "POST";
 
-      // const response = await fetch(url, {
-      //   method,
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify(data),
-      // });
-
-      // if (!response.ok) {
-      //   const errorData = await response.json();
-      //   throw errorData;
-      // }
-
-      // return response.json();
-
-      console.log(user);
-
-      if (modoEdicion) {
-        const supabase = getSupabaseBrowserClient();
-        let { data: marcas, error } = await supabase
-          .from("Marca")
-          .update({
-            Descripcion: data.Descripcion,
-            EstaEliminado: data.EstaEliminado,
-            TenantId: user?.tenantId,
-          })
-          .eq("Id", marcaSeleccionada?.Id);
-        if (error) {
-          throw error;
-        }
-        return marcas ? marcas : [];
-      }
-      const supabase = getSupabaseBrowserClient();
-      let { data: marcas, error } = await supabase.from("Marca").insert({
-        Descripcion: data.Descripcion,
-        EstaEliminado: data.EstaEliminado,
-        TenantId: user?.tenantId,
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
       });
-      if (error) {
-        throw error;
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw errorData;
       }
-      return marcas ? marcas : [];
+
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["marcas"] });
+      queryClient.invalidateQueries({ queryKey: ["ivas"] });
       addToast({
         title: "Éxito",
-        description: `Marca ${
-          modoEdicion ? "actualizada" : "creada"
+        description: `IVA ${
+          modoEdicion ? "actualizado" : "creado"
         } correctamente`,
         color: "success",
       });
@@ -168,7 +125,7 @@ export default function MarcaCRUD() {
       } else {
         addToast({
           title: "Error",
-          description: error.error || "Error al guardar la marca",
+          description: error.error || "Error al guardar el IVA",
           color: "danger",
         });
       }
@@ -178,40 +135,31 @@ export default function MarcaCRUD() {
   // Mutación para eliminar
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      // const response = await fetch(`/api/marcas/?Id=${id}`, {
-      //   method: "DELETE",
-      // });
+      const response = await fetch(`/api/ivas/?Id=${id}`, {
+        method: "DELETE",
+      });
 
-      // if (!response.ok) {
-      //   const errorData = await response.json();
-      //   throw errorData;
-      // }
-
-      // return response.json();
-      const supabase = getSupabaseBrowserClient();
-      let { data: marcas, error } = await supabase
-        .from("Marca")
-        .delete()
-        .eq("Id", id);
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw errorData;
       }
-      return marcas ? marcas : [];
+
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["marcas"] });
+      queryClient.invalidateQueries({ queryKey: ["ivas"] });
       addToast({
         title: "Éxito",
-        description: "Marca eliminada correctamente",
+        description: "IVA eliminado correctamente",
         color: "success",
       });
       onDeleteClose();
-      setMarcaAEliminar(null);
+      setIvaAEliminar(null);
     },
     onError: (error: ApiError) => {
       addToast({
         title: "Error",
-        description: error.error || "Error al eliminar la marca",
+        description: error.error || "Error al eliminar el IVA",
         color: "danger",
       });
     },
@@ -220,18 +168,19 @@ export default function MarcaCRUD() {
   // Handlers
   const handleCrear = () => {
     setModoEdicion(false);
-    setMarcaSeleccionada(null);
+    setIvaSeleccionado(null);
     setFormData({
       Descripcion: "",
+      Porcentaje: 0,
       EstaEliminado: false,
     });
     onOpen();
   };
 
-  const handleEditar = (marca: Marca) => {
+  const handleEditar = (iva: Iva) => {
     setModoEdicion(true);
-    setMarcaSeleccionada(marca);
-    setFormData(marca);
+    setIvaSeleccionado(iva);
+    setFormData(iva);
     onOpen();
   };
 
@@ -239,14 +188,14 @@ export default function MarcaCRUD() {
     saveMutation.mutate(formData);
   };
 
-  const handleConfirmarEliminar = (marca: Marca) => {
-    setMarcaAEliminar(marca);
+  const handleConfirmarEliminar = (iva: Iva) => {
+    setIvaAEliminar(iva);
     onDeleteOpen();
   };
 
   const handleEliminar = () => {
-    if (marcaAEliminar) {
-      deleteMutation.mutate(marcaAEliminar.Id);
+    if (ivaAEliminar) {
+      deleteMutation.mutate(ivaAEliminar.Id);
     }
   };
 
@@ -257,11 +206,9 @@ export default function MarcaCRUD() {
       {/* Header con botón crear */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            Gestión de Marcas
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900">Gestión de IVAs</h2>
           <p className="text-gray-600 mt-1">
-            Administra las marcas de tus productos
+            Administra las tasas de IVA disponibles
           </p>
         </div>
         <Button
@@ -271,16 +218,17 @@ export default function MarcaCRUD() {
           className="font-semibold"
           isDisabled={isLoading}
         >
-          + Nueva Marca
+          + Nuevo IVA
         </Button>
       </div>
 
-      {/* Tabla de marcas */}
+      {/* Tabla de IVAs */}
       <div className="bg-white rounded-lg shadow-sm">
-        <Table aria-label="Tabla de marcas">
+        <Table aria-label="Tabla de IVAs">
           <TableHeader>
             <TableColumn>ID</TableColumn>
             <TableColumn>DESCRIPCIÓN</TableColumn>
+            <TableColumn>PORCENTAJE</TableColumn>
             <TableColumn>ESTADO</TableColumn>
             <TableColumn>ACCIONES</TableColumn>
           </TableHeader>
@@ -293,21 +241,22 @@ export default function MarcaCRUD() {
               ) : isError ? (
                 <div className="text-danger">Error al cargar datos</div>
               ) : (
-                "No hay marcas registradas"
+                "No hay IVAs registrados"
               )
             }
           >
-            {marcas.map((marca) => (
-              <TableRow key={marca.Id}>
-                <TableCell>{marca.Id}</TableCell>
-                <TableCell>{marca.Descripcion}</TableCell>
+            {ivas.map((iva) => (
+              <TableRow key={iva.Id}>
+                <TableCell>{iva.Id}</TableCell>
+                <TableCell>{iva.Descripcion}</TableCell>
+                <TableCell>{iva.Porcentaje}%</TableCell>
                 <TableCell>
                   <Chip
-                    color={marca.EstaEliminado ? "danger" : "success"}
+                    color={iva.EstaEliminado ? "danger" : "success"}
                     variant="flat"
                     size="sm"
                   >
-                    {marca.EstaEliminado ? "Inactivo" : "Activo"}
+                    {iva.EstaEliminado ? "Inactivo" : "Activo"}
                   </Chip>
                 </TableCell>
                 <TableCell>
@@ -317,7 +266,7 @@ export default function MarcaCRUD() {
                         isIconOnly
                         size="sm"
                         variant="light"
-                        onPress={() => handleEditar(marca)}
+                        onPress={() => handleEditar(iva)}
                         isDisabled={isSaving}
                       >
                         ✏️
@@ -329,7 +278,7 @@ export default function MarcaCRUD() {
                         size="sm"
                         color="danger"
                         variant="light"
-                        onPress={() => handleConfirmarEliminar(marca)}
+                        onPress={() => handleConfirmarEliminar(iva)}
                         isDisabled={isSaving}
                       >
                         🗑️
@@ -358,14 +307,14 @@ export default function MarcaCRUD() {
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1 border-b border-gray-200">
             <h3 className="text-xl font-bold">
-              {modoEdicion ? "Editar Marca" : "Nueva Marca"}
+              {modoEdicion ? "Editar IVA" : "Nuevo IVA"}
             </h3>
           </ModalHeader>
           <ModalBody className="py-6">
             <div className="space-y-4">
               <Input
                 label="Descripción"
-                placeholder="Nombre de la marca"
+                placeholder="Ej: IVA 21%"
                 value={formData.Descripcion || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, Descripcion: e.target.value })
@@ -377,6 +326,25 @@ export default function MarcaCRUD() {
                   formData.Descripcion?.length || 0
                 }/250 caracteres`}
               />
+              <Input
+                label="Porcentaje"
+                placeholder="0.00"
+                type="number"
+                value={formData.Porcentaje?.toString() || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    Porcentaje: parseFloat(e.target.value) || 0,
+                  })
+                }
+                endContent={
+                  <div className="pointer-events-none flex items-center">
+                    <span className="text-default-400 text-small">%</span>
+                  </div>
+                }
+                isRequired
+                isDisabled={isSaving}
+              />
               <div className="flex items-center gap-2">
                 <Switch
                   isSelected={!formData.EstaEliminado}
@@ -386,7 +354,7 @@ export default function MarcaCRUD() {
                   color={formData.EstaEliminado ? "danger" : "success"}
                   isDisabled={isSaving}
                 >
-                  {formData.EstaEliminado ? "Marca Inactiva" : "Marca Activa"}
+                  {formData.EstaEliminado ? "Inactivo" : "Activo"}
                 </Switch>
               </div>
             </div>
@@ -427,8 +395,8 @@ export default function MarcaCRUD() {
           </ModalHeader>
           <ModalBody>
             <p>
-              ¿Estás seguro de que deseas eliminar la marca{" "}
-              <strong>{marcaAEliminar?.Descripcion}</strong>?
+              ¿Estás seguro de que deseas eliminar el IVA{" "}
+              <strong>{ivaAEliminar?.Descripcion}</strong>?
             </p>
             <p className="text-sm text-gray-600">
               Esta acción no se puede deshacer.

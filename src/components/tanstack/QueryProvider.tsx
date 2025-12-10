@@ -14,7 +14,8 @@ export default function QueryProvider({
         defaultOptions: {
           queries: {
             // Tiempo que los datos se consideran frescos (no se re-fetch)
-            staleTime: 5 * 60 * 1000, // 5 minutos de caché global
+            // staleTime: 5 * 60 * 1000, // 5 minutos de caché global
+            staleTime: Infinity,
             // Reintentar 1 vez si falla
             retry: 1,
             // No re-fetch al cambiar de ventana por defecto (opcional)

@@ -43,6 +43,9 @@ interface Producto {
   Ubicacion?: string;
   PrecioCosto: number;
   PorcentajeGanancia: number;
+  PorcentajeGanancia2: number;
+  PrecioPublico: number;
+  PrecioPublico2: number;
   Foto?: string; // Base64 o URL
   ActivarLimiteVenta: boolean;
   LimiteVenta: number;
@@ -55,6 +58,13 @@ interface Producto {
   VencimientoDias: number;
   TipoVenta: number;
   EstaEliminado: boolean;
+  Precio: {
+    PorcentajeGanancia: number;
+    PorcentajeGanancia2: number;
+    PrecioPublico: number;
+    PrecioPublico2: number;
+    PrecioCosto: number;
+  };
 }
 
 interface ApiError {
@@ -75,13 +85,11 @@ interface UnidadMedida {
   Id: number;
   Descripcion: string;
 }
-
-// Datos de IVA fijos por ahora (o podrías traerlos de la DB si tienes tabla)
-const ivas = [
-  { Id: 1, Descripcion: "21%", Porcentaje: 21 },
-  { Id: 2, Descripcion: "10.5%", Porcentaje: 10.5 },
-  { Id: 3, Descripcion: "0%", Porcentaje: 0 },
-];
+interface Iva {
+  Id: number;
+  Descripcion: string;
+  Porcentaje: number;
+}
 
 const tiposVenta = [
   { id: 0, nombre: "Normal" },
@@ -134,6 +142,17 @@ const fetchUnidades = async ({
   return Array.isArray(data?.unidades) ? data.unidades : [];
 };
 
+const fetchIvas = async ({
+  signal,
+}: {
+  signal: AbortSignal;
+}): Promise<Iva[]> => {
+  const response = await fetch("/api/ivas", { signal });
+  if (!response.ok) throw new Error("Error");
+  const data = await response.json();
+  return Array.isArray(data?.ivas) ? data.ivas : [];
+};
+
 export default function ProductoCRUD() {
   const queryClient = useQueryClient();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -167,6 +186,11 @@ export default function ProductoCRUD() {
     enabled: isOpen,
   });
 
+  const { data: ivas = [] } = useQuery({
+    queryKey: ["ivas"],
+    queryFn: fetchIvas,
+    enabled: isOpen,
+  });
   // Estado del formulario
   const [formData, setFormData] = useState<Partial<Producto>>({
     MarcaId: undefined, // undefined para obligar a seleccionar
@@ -182,6 +206,9 @@ export default function ProductoCRUD() {
     Ubicacion: "",
     PrecioCosto: 0,
     PorcentajeGanancia: 0,
+    PorcentajeGanancia2: 0,
+    PrecioPublico: 0,
+    PrecioPublico2: 0,
     ActivarLimiteVenta: false,
     LimiteVenta: 0,
     ActivarHoraVenta: false,
@@ -231,9 +258,7 @@ export default function ProductoCRUD() {
       }
 
       const isEdit = modoEdicion && productoSeleccionado;
-      const url = isEdit
-        ? `/api/productos/?Id=${productoSeleccionado.Id}`
-        : "/api/productos";
+      const url = "/api/productos";
       const method = isEdit ? "PATCH" : "POST";
 
       const response = await fetch(url, {
@@ -333,6 +358,9 @@ export default function ProductoCRUD() {
       Ubicacion: "",
       PrecioCosto: 0,
       PorcentajeGanancia: 0,
+      PorcentajeGanancia2: 0,
+      PrecioPublico: 0,
+      PrecioPublico2: 0,
       ActivarLimiteVenta: false,
       LimiteVenta: 0,
       ActivarHoraVenta: false,
@@ -356,6 +384,7 @@ export default function ProductoCRUD() {
   };
 
   const handleGuardar = () => {
+    console.log(formData);
     saveMutation.mutate(formData);
   };
 
@@ -372,10 +401,24 @@ export default function ProductoCRUD() {
 
   // Calcular precio de venta
   const calcularPrecioVenta = () => {
-    if (formData.PrecioCosto && formData.PorcentajeGanancia) {
+    if (formData?.Precio?.PrecioCosto && formData?.Precio?.PorcentajeGanancia) {
       const precioVenta =
-        formData.PrecioCosto * (1 + formData.PorcentajeGanancia / 100);
+        formData.Precio.PrecioCosto *
+        (1 + formData.Precio.PorcentajeGanancia / 100);
       return precioVenta.toFixed(2);
+    }
+    return "0.00";
+  };
+
+  const calcularPrecioVenta2 = () => {
+    if (
+      formData?.Precio?.PrecioCosto &&
+      formData?.Precio?.PorcentajeGanancia2
+    ) {
+      const precioVenta2 =
+        formData.Precio.PrecioCosto *
+        (1 + formData.Precio.PorcentajeGanancia2 / 100);
+      return precioVenta2.toFixed(2);
     }
     return "0.00";
   };
@@ -715,7 +758,7 @@ export default function ProductoCRUD() {
                     type="number"
                     step="0.01"
                     startContent={<span className="text-gray-500">$</span>}
-                    value={formData.PrecioCosto?.toString() || ""}
+                    value={formData.Precio?.PrecioCosto.toString() || ""}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -731,7 +774,9 @@ export default function ProductoCRUD() {
                     type="number"
                     step="0.01"
                     endContent={<span className="text-gray-500">%</span>}
-                    value={formData.PorcentajeGanancia?.toString() || ""}
+                    value={
+                      formData?.Precio?.PorcentajeGanancia.toString() || ""
+                    }
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -749,6 +794,50 @@ export default function ProductoCRUD() {
                     value={calcularPrecioVenta()}
                     isReadOnly
                     isDisabled={isSaving}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        PrecioPublico: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    classNames={{
+                      input: "bg-gray-100 font-semibold text-green-600",
+                    }}
+                  />
+
+                  {/* Porcentaje de ganancia 2 y precio de venta 2 */}
+                  <Input
+                    label="% Ganancia"
+                    placeholder="0"
+                    type="number"
+                    step="0.01"
+                    endContent={<span className="text-gray-500">%</span>}
+                    value={
+                      formData?.Precio?.PorcentajeGanancia2?.toString() || ""
+                    }
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        PorcentajeGanancia2: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    isRequired
+                    isDisabled={isSaving}
+                  />
+                  <Input
+                    label="Precio de Venta"
+                    placeholder="0.00"
+                    type="text"
+                    startContent={<span className="text-gray-500">$</span>}
+                    value={calcularPrecioVenta2()}
+                    isReadOnly
+                    isDisabled={isSaving}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        PrecioPublico2: parseFloat(e.target.value) || 0,
+                      })
+                    }
                     classNames={{
                       input: "bg-gray-100 font-semibold text-green-600",
                     }}

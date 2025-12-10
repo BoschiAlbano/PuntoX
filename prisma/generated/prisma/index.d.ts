@@ -288,6 +288,23 @@ export type Movimiento_CuentaCorriente = $Result.DefaultSelection<Prisma.$Movimi
 export type Movimiento_CuentaCorrienteProveedor = $Result.DefaultSelection<Prisma.$Movimiento_CuentaCorrienteProveedorPayload>
 
 /**
+ * Enums
+ */
+export namespace $Enums {
+  export const PerfilTipo: {
+  ADMINISTRADOR: 'ADMINISTRADOR',
+  EMPLEADO: 'EMPLEADO'
+};
+
+export type PerfilTipo = (typeof PerfilTipo)[keyof typeof PerfilTipo]
+
+}
+
+export type PerfilTipo = $Enums.PerfilTipo
+
+export const PerfilTipo: typeof $Enums.PerfilTipo
+
+/**
  * ##  Prisma Client ʲˢ
  *
  * Type-safe database client for TypeScript & Node.js
@@ -51090,6 +51107,7 @@ export namespace Prisma {
   export type PerfilesMinAggregateOutputType = {
     Id: bigint | null
     Descripcion: string | null
+    Tipo: $Enums.PerfilTipo | null
     EstaEliminado: boolean | null
     TenantId: bigint | null
   }
@@ -51097,6 +51115,7 @@ export namespace Prisma {
   export type PerfilesMaxAggregateOutputType = {
     Id: bigint | null
     Descripcion: string | null
+    Tipo: $Enums.PerfilTipo | null
     EstaEliminado: boolean | null
     TenantId: bigint | null
   }
@@ -51104,6 +51123,7 @@ export namespace Prisma {
   export type PerfilesCountAggregateOutputType = {
     Id: number
     Descripcion: number
+    Tipo: number
     EstaEliminado: number
     TenantId: number
     _all: number
@@ -51123,6 +51143,7 @@ export namespace Prisma {
   export type PerfilesMinAggregateInputType = {
     Id?: true
     Descripcion?: true
+    Tipo?: true
     EstaEliminado?: true
     TenantId?: true
   }
@@ -51130,6 +51151,7 @@ export namespace Prisma {
   export type PerfilesMaxAggregateInputType = {
     Id?: true
     Descripcion?: true
+    Tipo?: true
     EstaEliminado?: true
     TenantId?: true
   }
@@ -51137,6 +51159,7 @@ export namespace Prisma {
   export type PerfilesCountAggregateInputType = {
     Id?: true
     Descripcion?: true
+    Tipo?: true
     EstaEliminado?: true
     TenantId?: true
     _all?: true
@@ -51231,6 +51254,7 @@ export namespace Prisma {
   export type PerfilesGroupByOutputType = {
     Id: bigint
     Descripcion: string
+    Tipo: $Enums.PerfilTipo
     EstaEliminado: boolean
     TenantId: bigint
     _count: PerfilesCountAggregateOutputType | null
@@ -51257,6 +51281,7 @@ export namespace Prisma {
   export type PerfilesSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     Id?: boolean
     Descripcion?: boolean
+    Tipo?: boolean
     EstaEliminado?: boolean
     TenantId?: boolean
     FormularioPerfil?: boolean | Perfiles$FormularioPerfilArgs<ExtArgs>
@@ -51268,6 +51293,7 @@ export namespace Prisma {
   export type PerfilesSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     Id?: boolean
     Descripcion?: boolean
+    Tipo?: boolean
     EstaEliminado?: boolean
     TenantId?: boolean
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
@@ -51276,6 +51302,7 @@ export namespace Prisma {
   export type PerfilesSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     Id?: boolean
     Descripcion?: boolean
+    Tipo?: boolean
     EstaEliminado?: boolean
     TenantId?: boolean
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
@@ -51284,11 +51311,12 @@ export namespace Prisma {
   export type PerfilesSelectScalar = {
     Id?: boolean
     Descripcion?: boolean
+    Tipo?: boolean
     EstaEliminado?: boolean
     TenantId?: boolean
   }
 
-  export type PerfilesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id" | "Descripcion" | "EstaEliminado" | "TenantId", ExtArgs["result"]["perfiles"]>
+  export type PerfilesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id" | "Descripcion" | "Tipo" | "EstaEliminado" | "TenantId", ExtArgs["result"]["perfiles"]>
   export type PerfilesInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     FormularioPerfil?: boolean | Perfiles$FormularioPerfilArgs<ExtArgs>
     PerfilUsuario?: boolean | Perfiles$PerfilUsuarioArgs<ExtArgs>
@@ -51312,6 +51340,7 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       Id: bigint
       Descripcion: string
+      Tipo: $Enums.PerfilTipo
       EstaEliminado: boolean
       /**
        * Tenant dueño de este perfil
@@ -51745,6 +51774,7 @@ export namespace Prisma {
   interface PerfilesFieldRefs {
     readonly Id: FieldRef<"Perfiles", 'BigInt'>
     readonly Descripcion: FieldRef<"Perfiles", 'String'>
+    readonly Tipo: FieldRef<"Perfiles", 'PerfilTipo'>
     readonly EstaEliminado: FieldRef<"Perfiles", 'Boolean'>
     readonly TenantId: FieldRef<"Perfiles", 'BigInt'>
   }
@@ -70248,6 +70278,7 @@ export namespace Prisma {
   export const PerfilesScalarFieldEnum: {
     Id: 'Id',
     Descripcion: 'Descripcion',
+    Tipo: 'Tipo',
     EstaEliminado: 'EstaEliminado',
     TenantId: 'TenantId'
   };
@@ -70546,6 +70577,20 @@ export namespace Prisma {
    * Reference to a field of type 'Bytes[]'
    */
   export type ListBytesFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Bytes[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'PerfilTipo'
+   */
+  export type EnumPerfilTipoFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PerfilTipo'>
+    
+
+
+  /**
+   * Reference to a field of type 'PerfilTipo[]'
+   */
+  export type ListEnumPerfilTipoFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PerfilTipo[]'>
     
 
 
@@ -73342,6 +73387,7 @@ export namespace Prisma {
     NOT?: PerfilesWhereInput | PerfilesWhereInput[]
     Id?: BigIntFilter<"Perfiles"> | bigint | number
     Descripcion?: StringFilter<"Perfiles"> | string
+    Tipo?: EnumPerfilTipoFilter<"Perfiles"> | $Enums.PerfilTipo
     EstaEliminado?: BoolFilter<"Perfiles"> | boolean
     TenantId?: BigIntFilter<"Perfiles"> | bigint | number
     FormularioPerfil?: FormularioPerfilListRelationFilter
@@ -73352,6 +73398,7 @@ export namespace Prisma {
   export type PerfilesOrderByWithRelationInput = {
     Id?: SortOrder
     Descripcion?: SortOrder
+    Tipo?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
     FormularioPerfil?: FormularioPerfilOrderByRelationAggregateInput
@@ -73365,6 +73412,7 @@ export namespace Prisma {
     OR?: PerfilesWhereInput[]
     NOT?: PerfilesWhereInput | PerfilesWhereInput[]
     Descripcion?: StringFilter<"Perfiles"> | string
+    Tipo?: EnumPerfilTipoFilter<"Perfiles"> | $Enums.PerfilTipo
     EstaEliminado?: BoolFilter<"Perfiles"> | boolean
     TenantId?: BigIntFilter<"Perfiles"> | bigint | number
     FormularioPerfil?: FormularioPerfilListRelationFilter
@@ -73375,6 +73423,7 @@ export namespace Prisma {
   export type PerfilesOrderByWithAggregationInput = {
     Id?: SortOrder
     Descripcion?: SortOrder
+    Tipo?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
     _count?: PerfilesCountOrderByAggregateInput
@@ -73390,6 +73439,7 @@ export namespace Prisma {
     NOT?: PerfilesScalarWhereWithAggregatesInput | PerfilesScalarWhereWithAggregatesInput[]
     Id?: BigIntWithAggregatesFilter<"Perfiles"> | bigint | number
     Descripcion?: StringWithAggregatesFilter<"Perfiles"> | string
+    Tipo?: EnumPerfilTipoWithAggregatesFilter<"Perfiles"> | $Enums.PerfilTipo
     EstaEliminado?: BoolWithAggregatesFilter<"Perfiles"> | boolean
     TenantId?: BigIntWithAggregatesFilter<"Perfiles"> | bigint | number
   }
@@ -77197,6 +77247,7 @@ export namespace Prisma {
   export type PerfilesCreateInput = {
     Id?: bigint | number
     Descripcion: string
+    Tipo?: $Enums.PerfilTipo
     EstaEliminado: boolean
     FormularioPerfil?: FormularioPerfilCreateNestedManyWithoutPerfilesInput
     PerfilUsuario?: PerfilUsuarioCreateNestedManyWithoutPerfilesInput
@@ -77206,6 +77257,7 @@ export namespace Prisma {
   export type PerfilesUncheckedCreateInput = {
     Id?: bigint | number
     Descripcion: string
+    Tipo?: $Enums.PerfilTipo
     EstaEliminado: boolean
     TenantId: bigint | number
     FormularioPerfil?: FormularioPerfilUncheckedCreateNestedManyWithoutPerfilesInput
@@ -77215,6 +77267,7 @@ export namespace Prisma {
   export type PerfilesUpdateInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Descripcion?: StringFieldUpdateOperationsInput | string
+    Tipo?: EnumPerfilTipoFieldUpdateOperationsInput | $Enums.PerfilTipo
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     FormularioPerfil?: FormularioPerfilUpdateManyWithoutPerfilesNestedInput
     PerfilUsuario?: PerfilUsuarioUpdateManyWithoutPerfilesNestedInput
@@ -77224,6 +77277,7 @@ export namespace Prisma {
   export type PerfilesUncheckedUpdateInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Descripcion?: StringFieldUpdateOperationsInput | string
+    Tipo?: EnumPerfilTipoFieldUpdateOperationsInput | $Enums.PerfilTipo
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
     FormularioPerfil?: FormularioPerfilUncheckedUpdateManyWithoutPerfilesNestedInput
@@ -77233,6 +77287,7 @@ export namespace Prisma {
   export type PerfilesCreateManyInput = {
     Id?: bigint | number
     Descripcion: string
+    Tipo?: $Enums.PerfilTipo
     EstaEliminado: boolean
     TenantId: bigint | number
   }
@@ -77240,12 +77295,14 @@ export namespace Prisma {
   export type PerfilesUpdateManyMutationInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Descripcion?: StringFieldUpdateOperationsInput | string
+    Tipo?: EnumPerfilTipoFieldUpdateOperationsInput | $Enums.PerfilTipo
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type PerfilesUncheckedUpdateManyInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Descripcion?: StringFieldUpdateOperationsInput | string
+    Tipo?: EnumPerfilTipoFieldUpdateOperationsInput | $Enums.PerfilTipo
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
   }
@@ -80780,9 +80837,17 @@ export namespace Prisma {
     TenantId?: SortOrder
   }
 
+  export type EnumPerfilTipoFilter<$PrismaModel = never> = {
+    equals?: $Enums.PerfilTipo | EnumPerfilTipoFieldRefInput<$PrismaModel>
+    in?: $Enums.PerfilTipo[] | ListEnumPerfilTipoFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PerfilTipo[] | ListEnumPerfilTipoFieldRefInput<$PrismaModel>
+    not?: NestedEnumPerfilTipoFilter<$PrismaModel> | $Enums.PerfilTipo
+  }
+
   export type PerfilesCountOrderByAggregateInput = {
     Id?: SortOrder
     Descripcion?: SortOrder
+    Tipo?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
   }
@@ -80795,6 +80860,7 @@ export namespace Prisma {
   export type PerfilesMaxOrderByAggregateInput = {
     Id?: SortOrder
     Descripcion?: SortOrder
+    Tipo?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
   }
@@ -80802,6 +80868,7 @@ export namespace Prisma {
   export type PerfilesMinOrderByAggregateInput = {
     Id?: SortOrder
     Descripcion?: SortOrder
+    Tipo?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
   }
@@ -80809,6 +80876,16 @@ export namespace Prisma {
   export type PerfilesSumOrderByAggregateInput = {
     Id?: SortOrder
     TenantId?: SortOrder
+  }
+
+  export type EnumPerfilTipoWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PerfilTipo | EnumPerfilTipoFieldRefInput<$PrismaModel>
+    in?: $Enums.PerfilTipo[] | ListEnumPerfilTipoFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PerfilTipo[] | ListEnumPerfilTipoFieldRefInput<$PrismaModel>
+    not?: NestedEnumPerfilTipoWithAggregatesFilter<$PrismaModel> | $Enums.PerfilTipo
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumPerfilTipoFilter<$PrismaModel>
+    _max?: NestedEnumPerfilTipoFilter<$PrismaModel>
   }
 
   export type PerfilUsuarioPerfil_IdUsuario_IdCompoundUniqueInput = {
@@ -85464,6 +85541,10 @@ export namespace Prisma {
     connect?: PerfilUsuarioWhereUniqueInput | PerfilUsuarioWhereUniqueInput[]
   }
 
+  export type EnumPerfilTipoFieldUpdateOperationsInput = {
+    set?: $Enums.PerfilTipo
+  }
+
   export type FormularioPerfilUpdateManyWithoutPerfilesNestedInput = {
     create?: XOR<FormularioPerfilCreateWithoutPerfilesInput, FormularioPerfilUncheckedCreateWithoutPerfilesInput> | FormularioPerfilCreateWithoutPerfilesInput[] | FormularioPerfilUncheckedCreateWithoutPerfilesInput[]
     connectOrCreate?: FormularioPerfilCreateOrConnectWithoutPerfilesInput | FormularioPerfilCreateOrConnectWithoutPerfilesInput[]
@@ -87357,6 +87438,23 @@ export namespace Prisma {
     _max?: NestedBytesNullableFilter<$PrismaModel>
   }
 
+  export type NestedEnumPerfilTipoFilter<$PrismaModel = never> = {
+    equals?: $Enums.PerfilTipo | EnumPerfilTipoFieldRefInput<$PrismaModel>
+    in?: $Enums.PerfilTipo[] | ListEnumPerfilTipoFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PerfilTipo[] | ListEnumPerfilTipoFieldRefInput<$PrismaModel>
+    not?: NestedEnumPerfilTipoFilter<$PrismaModel> | $Enums.PerfilTipo
+  }
+
+  export type NestedEnumPerfilTipoWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PerfilTipo | EnumPerfilTipoFieldRefInput<$PrismaModel>
+    in?: $Enums.PerfilTipo[] | ListEnumPerfilTipoFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PerfilTipo[] | ListEnumPerfilTipoFieldRefInput<$PrismaModel>
+    not?: NestedEnumPerfilTipoWithAggregatesFilter<$PrismaModel> | $Enums.PerfilTipo
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumPerfilTipoFilter<$PrismaModel>
+    _max?: NestedEnumPerfilTipoFilter<$PrismaModel>
+  }
+
   export type ArticuloCreateWithoutTenantInput = {
     Id?: bigint | number
     Codigo: number
@@ -88132,6 +88230,7 @@ export namespace Prisma {
   export type PerfilesCreateWithoutTenantInput = {
     Id?: bigint | number
     Descripcion: string
+    Tipo?: $Enums.PerfilTipo
     EstaEliminado: boolean
     FormularioPerfil?: FormularioPerfilCreateNestedManyWithoutPerfilesInput
     PerfilUsuario?: PerfilUsuarioCreateNestedManyWithoutPerfilesInput
@@ -88140,6 +88239,7 @@ export namespace Prisma {
   export type PerfilesUncheckedCreateWithoutTenantInput = {
     Id?: bigint | number
     Descripcion: string
+    Tipo?: $Enums.PerfilTipo
     EstaEliminado: boolean
     FormularioPerfil?: FormularioPerfilUncheckedCreateNestedManyWithoutPerfilesInput
     PerfilUsuario?: PerfilUsuarioUncheckedCreateNestedManyWithoutPerfilesInput
@@ -89157,6 +89257,7 @@ export namespace Prisma {
     NOT?: PerfilesScalarWhereInput | PerfilesScalarWhereInput[]
     Id?: BigIntFilter<"Perfiles"> | bigint | number
     Descripcion?: StringFilter<"Perfiles"> | string
+    Tipo?: EnumPerfilTipoFilter<"Perfiles"> | $Enums.PerfilTipo
     EstaEliminado?: BoolFilter<"Perfiles"> | boolean
     TenantId?: BigIntFilter<"Perfiles"> | bigint | number
   }
@@ -97486,6 +97587,7 @@ export namespace Prisma {
   export type PerfilesCreateWithoutFormularioPerfilInput = {
     Id?: bigint | number
     Descripcion: string
+    Tipo?: $Enums.PerfilTipo
     EstaEliminado: boolean
     PerfilUsuario?: PerfilUsuarioCreateNestedManyWithoutPerfilesInput
     Tenant: TenantCreateNestedOneWithoutPerfilesInput
@@ -97494,6 +97596,7 @@ export namespace Prisma {
   export type PerfilesUncheckedCreateWithoutFormularioPerfilInput = {
     Id?: bigint | number
     Descripcion: string
+    Tipo?: $Enums.PerfilTipo
     EstaEliminado: boolean
     TenantId: bigint | number
     PerfilUsuario?: PerfilUsuarioUncheckedCreateNestedManyWithoutPerfilesInput
@@ -97640,6 +97743,7 @@ export namespace Prisma {
   export type PerfilesUpdateWithoutFormularioPerfilInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Descripcion?: StringFieldUpdateOperationsInput | string
+    Tipo?: EnumPerfilTipoFieldUpdateOperationsInput | $Enums.PerfilTipo
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     PerfilUsuario?: PerfilUsuarioUpdateManyWithoutPerfilesNestedInput
     Tenant?: TenantUpdateOneRequiredWithoutPerfilesNestedInput
@@ -97648,6 +97752,7 @@ export namespace Prisma {
   export type PerfilesUncheckedUpdateWithoutFormularioPerfilInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Descripcion?: StringFieldUpdateOperationsInput | string
+    Tipo?: EnumPerfilTipoFieldUpdateOperationsInput | $Enums.PerfilTipo
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
     PerfilUsuario?: PerfilUsuarioUncheckedUpdateManyWithoutPerfilesNestedInput
@@ -99209,6 +99314,7 @@ export namespace Prisma {
   export type PerfilesCreateWithoutPerfilUsuarioInput = {
     Id?: bigint | number
     Descripcion: string
+    Tipo?: $Enums.PerfilTipo
     EstaEliminado: boolean
     FormularioPerfil?: FormularioPerfilCreateNestedManyWithoutPerfilesInput
     Tenant: TenantCreateNestedOneWithoutPerfilesInput
@@ -99217,6 +99323,7 @@ export namespace Prisma {
   export type PerfilesUncheckedCreateWithoutPerfilUsuarioInput = {
     Id?: bigint | number
     Descripcion: string
+    Tipo?: $Enums.PerfilTipo
     EstaEliminado: boolean
     TenantId: bigint | number
     FormularioPerfil?: FormularioPerfilUncheckedCreateNestedManyWithoutPerfilesInput
@@ -99367,6 +99474,7 @@ export namespace Prisma {
   export type PerfilesUpdateWithoutPerfilUsuarioInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Descripcion?: StringFieldUpdateOperationsInput | string
+    Tipo?: EnumPerfilTipoFieldUpdateOperationsInput | $Enums.PerfilTipo
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     FormularioPerfil?: FormularioPerfilUpdateManyWithoutPerfilesNestedInput
     Tenant?: TenantUpdateOneRequiredWithoutPerfilesNestedInput
@@ -99375,6 +99483,7 @@ export namespace Prisma {
   export type PerfilesUncheckedUpdateWithoutPerfilUsuarioInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Descripcion?: StringFieldUpdateOperationsInput | string
+    Tipo?: EnumPerfilTipoFieldUpdateOperationsInput | $Enums.PerfilTipo
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
     FormularioPerfil?: FormularioPerfilUncheckedUpdateManyWithoutPerfilesNestedInput
@@ -104304,6 +104413,7 @@ export namespace Prisma {
   export type PerfilesCreateManyTenantInput = {
     Id?: bigint | number
     Descripcion: string
+    Tipo?: $Enums.PerfilTipo
     EstaEliminado: boolean
   }
 
@@ -105184,6 +105294,7 @@ export namespace Prisma {
   export type PerfilesUpdateWithoutTenantInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Descripcion?: StringFieldUpdateOperationsInput | string
+    Tipo?: EnumPerfilTipoFieldUpdateOperationsInput | $Enums.PerfilTipo
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     FormularioPerfil?: FormularioPerfilUpdateManyWithoutPerfilesNestedInput
     PerfilUsuario?: PerfilUsuarioUpdateManyWithoutPerfilesNestedInput
@@ -105192,6 +105303,7 @@ export namespace Prisma {
   export type PerfilesUncheckedUpdateWithoutTenantInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Descripcion?: StringFieldUpdateOperationsInput | string
+    Tipo?: EnumPerfilTipoFieldUpdateOperationsInput | $Enums.PerfilTipo
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     FormularioPerfil?: FormularioPerfilUncheckedUpdateManyWithoutPerfilesNestedInput
     PerfilUsuario?: PerfilUsuarioUncheckedUpdateManyWithoutPerfilesNestedInput
@@ -105200,6 +105312,7 @@ export namespace Prisma {
   export type PerfilesUncheckedUpdateManyWithoutTenantInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Descripcion?: StringFieldUpdateOperationsInput | string
+    Tipo?: EnumPerfilTipoFieldUpdateOperationsInput | $Enums.PerfilTipo
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
   }
 

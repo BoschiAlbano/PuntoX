@@ -1,8 +1,10 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
 
 export default function Page() {
+  const supabase = getSupabaseBrowserClient();
   const { user, session } = useSupabaseAuthContext();
   const roleFromMetadata =
     typeof user?.user_metadata?.role === "string"
@@ -13,6 +15,24 @@ export default function Page() {
     | number
     | null
     | undefined;
+
+  // En tu componente React/Next.js o similar
+  useEffect(() => {
+    async function getArticulos() {
+      // Aquí asumo que 'supabase' es tu cliente ya inicializado y autenticado
+      let { data: Articulo, error } = await supabase
+        .from("Articulo")
+        .select("*");
+
+      if (error) {
+        console.error("Error al obtener artículos:", error);
+      } else {
+        console.log("Artículos recibidos:", Articulo);
+      }
+    }
+
+    getArticulos();
+  }, []);
 
   return (
     <div>

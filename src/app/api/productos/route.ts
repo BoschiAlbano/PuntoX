@@ -1,7 +1,10 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { createProductoSchema } from "@/lib/validations/producto.schema";
+import {
+  createProductoSchema,
+  updateProductoSchema,
+} from "@/lib/validations/producto.schema";
 import { ZodError } from "zod";
 
 export async function GET(_req: NextRequest) {
@@ -16,6 +19,9 @@ export async function GET(_req: NextRequest) {
       where: {
         TenantId: tenantId,
       },
+      include: {
+        Precio: true,
+      },
       orderBy: {
         Descripcion: "asc",
       },
@@ -28,6 +34,7 @@ export async function GET(_req: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
+    console.log(error);
     return NextResponse.json(
       { error: "Error al obtener productos" },
       { status: 500 }
@@ -45,8 +52,6 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    console.log(body);
-
     const validarProducto = createProductoSchema.parse(body);
 
     const precio = await prisma.precio.create({
@@ -54,14 +59,9 @@ export async function POST(req: NextRequest) {
         ArticuloId: 1,
         PrecioCosto: validarProducto.PrecioCosto,
         PorcentajeGanancia: validarProducto.PorcentajeGanancia,
-        PrecioPublico:
-          validarProducto.PrecioCosto +
-          (validarProducto.PrecioCosto * validarProducto.PorcentajeGanancia) /
-            100,
-        PorcentajeGanancia2: 50,
-        PrecioPublico2:
-          validarProducto.PrecioCosto +
-          (validarProducto.PrecioCosto * 50) / 100,
+        PrecioPublico: validarProducto.PrecioPublico,
+        PorcentajeGanancia2: validarProducto.PorcentajeGanancia2,
+        PrecioPublico2: validarProducto.PrecioPublico2,
         FechaActualizacion: new Date(),
         EstaEliminado: false,
         TenantId: Number(tenantId) || 1,
@@ -118,6 +118,139 @@ export async function POST(req: NextRequest) {
         UnidadMedida: {
           connect: {
             Id: validarProducto.UnidadMedidaId,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(
+      {
+        producto: {
+          ...producto,
+          Id: Number(producto.Id),
+        },
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.log(error);
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        {
+          error: "Datos inválidos",
+          details: error.issues.map((issue) => ({
+            field: issue.path.join("."),
+            message: issue.message,
+          })),
+        },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json(
+      { error: "Error al crear producto" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const { tenantId, error } = await getAuthUser();
+
+    if (error) {
+      return error;
+    }
+
+    const body = await req.json();
+
+    const validarProducto = updateProductoSchema.parse(body);
+
+    // buscar articulo
+    const articulo = await prisma.articulo.findUnique({
+      where: {
+        Id: Number(validarProducto.Id),
+      },
+      include: {
+        Precio: true,
+      },
+    });
+
+    if (!articulo) {
+      return NextResponse.json(
+        { error: "Articulo no encontrado" },
+        { status: 404 }
+      );
+    }
+
+    // modificar precio
+    const precio = await prisma.precio.update({
+      where: {
+        Id: articulo.Precio.Id,
+      },
+      data: {
+        PrecioCosto: validarProducto.PrecioCosto,
+        PorcentajeGanancia: validarProducto.PorcentajeGanancia,
+        PrecioPublico: validarProducto.PrecioPublico,
+        PorcentajeGanancia2: validarProducto.PorcentajeGanancia2,
+        PrecioPublico2: validarProducto.PrecioPublico2,
+        FechaActualizacion: new Date(),
+        EstaEliminado: false,
+        TenantId: Number(tenantId) || 1,
+      },
+    });
+
+    // modificar articulo
+    const producto = await prisma.articulo.update({
+      where: {
+        Id: Number(validarProducto.Id),
+      },
+      data: {
+        Id: Number(validarProducto.Id),
+        Codigo: validarProducto.Codigo,
+        CodigoBarra: validarProducto.CodigoBarra,
+        Abreviatura: validarProducto.Abreviatura,
+        Descripcion: validarProducto.Descripcion,
+        Detalle: validarProducto.Detalle,
+        DescuentaStock: validarProducto.DescuentaStock,
+        EstaEliminado: validarProducto.EstaEliminado,
+        HoraLimiteVentaDesde: parseTime(validarProducto.HoraLimiteVentaDesde),
+        HoraLimiteVentaHasta: parseTime(validarProducto.HoraLimiteVentaHasta),
+        LimiteVenta: validarProducto.LimiteVenta,
+        PermiteStockNegativo: validarProducto.PermiteStockNegativo,
+        StockMinimo: validarProducto.StockMinimo,
+        VencimientoDias: validarProducto.VencimientoDias,
+        TipoVenta: validarProducto.TipoVenta,
+        PorcentajeGanancia: validarProducto.PorcentajeGanancia,
+        PrecioCosto: validarProducto.PrecioCosto,
+        Ubicacion: validarProducto.Ubicacion,
+        Tenant: {
+          connect: {
+            Id: Number(tenantId) || 1,
+          },
+        },
+        Iva: {
+          connect: {
+            Id: validarProducto.IvaId,
+          },
+        },
+        Marca: {
+          connect: {
+            Id: validarProducto.MarcaId,
+          },
+        },
+        Rubro: {
+          connect: {
+            Id: validarProducto.RubroId,
+          },
+        },
+        UnidadMedida: {
+          connect: {
+            Id: validarProducto.UnidadMedidaId,
+          },
+        },
+        Precio: {
+          connect: {
+            Id: precio.Id,
           },
         },
       },

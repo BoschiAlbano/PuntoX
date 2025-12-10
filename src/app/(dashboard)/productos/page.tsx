@@ -5,6 +5,7 @@ import MarcaCRUD from "@/components/marcas/MarcaCRUD";
 import ProductoCRUD from "@/components/productos/ProductoCRUD";
 import RubroCRUD from "@/components/rubros/RubroCRUD";
 import UnidadMedidaCRUD from "@/components/unidad-medida/UnidadMedidaCRUD";
+import IvaCRUD from "@/components/Ivas/IvaCRUD";
 
 export default function ProductosPage() {
   return (
@@ -95,6 +96,23 @@ export default function ProductosPage() {
             </CardBody>
           </Card>
         </Tab>
+
+        {/* Solo el Super Admin tendria acceso a esta seccion */}
+        {/* <Tab
+          key="iva"
+          title={
+            <div className="flex items-center space-x-2">
+              <span>⚖️</span>
+              <span>IVAS</span>
+            </div>
+          }
+        >
+          <Card className="mt-6 shadow-none border-none bg-transparent">
+            <CardBody className="p-0">
+              <IvaCRUD />
+            </CardBody>
+          </Card>
+        </Tab> */}
       </Tabs>
     </div>
   );

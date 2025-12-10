@@ -18,12 +18,16 @@ async function getAuthContext(req?: NextRequest) {
   const roleMeta = (meta?.role as string | undefined) ?? user.role ?? "";
   const roleLower = roleMeta.toString().toLowerCase();
   const isSuperAdmin = roleLower === "superadmin";
-  const isAdmin = isSuperAdmin || roleLower === "administrador" || roleLower === "admin";
+  const isAdmin =
+    isSuperAdmin || roleLower === "administrador" || roleLower === "admin";
 
   const tenantFromQuery = req?.nextUrl.searchParams.get("tenantId");
-  const tenantRaw = meta?.tenantId ?? meta?.tenant_id ?? (user as any)?.tenantId;
-  const resolved = tenantFromQuery ?? tenantRaw ?? process.env.DEFAULT_TENANT_ID;
-  if (!resolved) return { error: { status: 401, message: "Falta tenant" } } as const;
+  const tenantRaw =
+    meta?.tenantId ?? meta?.tenant_id ?? (user as any)?.tenantId;
+  const resolved =
+    tenantFromQuery ?? tenantRaw ?? process.env.DEFAULT_TENANT_ID;
+  if (!resolved)
+    return { error: { status: 401, message: "Falta tenant" } } as const;
 
   const parsed = Number(resolved);
   if (Number.isNaN(parsed)) {
@@ -36,7 +40,10 @@ async function getAuthContext(req?: NextRequest) {
 export async function GET(req: NextRequest) {
   const auth = await getAuthContext(req);
   if ("error" in auth) {
-    return NextResponse.json({ error: auth.error.message }, { status: auth.error.status });
+    return NextResponse.json(
+      { error: auth.error.message },
+      { status: auth.error.status }
+    );
   }
   const { tenantId } = auth;
 
@@ -64,7 +71,10 @@ export async function GET(req: NextRequest) {
         },
         orderBy: { Descripcion: "asc" },
       });
-      console.warn("[roles] usando fallback sin campo Tipo (¿falta migración?)", err);
+      console.warn(
+        "[roles] usando fallback sin campo Tipo (¿falta migración?)",
+        err
+      );
     }
 
     return NextResponse.json({
@@ -77,7 +87,10 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error("Error al obtener roles", error);
-    return NextResponse.json({ error: "Error al obtener roles" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error al obtener roles" },
+      { status: 500 }
+    );
   }
 }
 
@@ -89,7 +102,10 @@ const rolSchema = z.object({
 export async function POST(req: NextRequest) {
   const auth = await getAuthContext(req);
   if ("error" in auth) {
-    return NextResponse.json({ error: auth.error.message }, { status: auth.error.status });
+    return NextResponse.json(
+      { error: auth.error.message },
+      { status: auth.error.status }
+    );
   }
   const { tenantId, isAdmin, isSuperAdmin } = auth;
   // SuperAdmin siempre puede crear roles; admins solo en su tenant.

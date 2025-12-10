@@ -489,6 +489,7 @@ exports.Prisma.MotivoBajasScalarFieldEnum = {
 exports.Prisma.PerfilesScalarFieldEnum = {
   Id: 'Id',
   Descripcion: 'Descripcion',
+  Tipo: 'Tipo',
   EstaEliminado: 'EstaEliminado',
   TenantId: 'TenantId'
 };
@@ -636,7 +637,10 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
-
+exports.PerfilTipo = exports.$Enums.PerfilTipo = {
+  ADMINISTRADOR: 'ADMINISTRADOR',
+  EMPLEADO: 'EMPLEADO'
+};
 
 exports.Prisma.ModelName = {
   Tenant: 'Tenant',
