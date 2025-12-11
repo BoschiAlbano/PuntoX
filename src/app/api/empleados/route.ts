@@ -3,39 +3,39 @@ import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { requirePermiso, PermisoError } from "@/lib/requirePermiso";
-import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+// import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 
 // API de empleados: lista, alta (con Supabase Auth) y suspensión/activación.
-async function resolveTenantId(req?: NextRequest) {
-  const supabase = await getSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+// async function resolveTenantId(req?: NextRequest) {
+//   const supabase = await getSupabaseServerClient();
+//   const {
+//     data: { user },
+//   } = await supabase.auth.getUser();
 
-  const isSuperAdmin =
-    user?.role === "superadmin" ||
-    user?.role === "SuperAdmin" ||
-    (user?.user_metadata as Record<string, unknown> | undefined)?.role ===
-      "SuperAdmin";
+//   const isSuperAdmin =
+//     user?.role === "superadmin" ||
+//     user?.role === "SuperAdmin" ||
+//     (user?.user_metadata as Record<string, unknown> | undefined)?.role ===
+//       "SuperAdmin";
 
-  const tenantFromQuery = req?.nextUrl.searchParams.get("tenantId");
-  const tenantRaw =
-    (user?.user_metadata as Record<string, unknown> | undefined)?.tenantId ??
-    (user?.user_metadata as Record<string, unknown> | undefined)?.tenant_id ??
-    (user as any)?.tenantId;
-  const resolved =
-    tenantFromQuery ?? tenantRaw ?? process.env.DEFAULT_TENANT_ID;
+//   const tenantFromQuery = req?.nextUrl.searchParams.get("tenantId");
+//   const tenantRaw =
+//     (user?.user_metadata as Record<string, unknown> | undefined)?.tenantId ??
+//     (user?.user_metadata as Record<string, unknown> | undefined)?.tenant_id ??
+//     (user as unknown as any)?.tenantId;
+//   const resolved =
+//     tenantFromQuery ?? tenantRaw ?? process.env.DEFAULT_TENANT_ID;
 
-  if (isSuperAdmin) {
-    if (!resolved) return null;
-    const parsed = Number(resolved);
-    return Number.isNaN(parsed) ? null : parsed;
-  }
+//   if (isSuperAdmin) {
+//     if (!resolved) return null;
+//     const parsed = Number(resolved);
+//     return Number.isNaN(parsed) ? null : parsed;
+//   }
 
-  if (!tenantRaw) return null;
-  const parsed = Number(tenantRaw);
-  return Number.isNaN(parsed) ? null : parsed;
-}
+//   if (!tenantRaw) return null;
+//   const parsed = Number(tenantRaw);
+//   return Number.isNaN(parsed) ? null : parsed;
+// }
 
 function mapEstado(estaBloqueado: boolean | null | undefined) {
   if (estaBloqueado) return "Suspendido" as const;
@@ -297,7 +297,7 @@ export async function POST(req: NextRequest) {
 
     let rolTipo: "ADMINISTRADOR" | "EMPLEADO" = "EMPLEADO";
     if (rolIdNumber) {
-      let rolValido;
+      let rolValido: PerfilesTipo | null | { Id: bigint } | null;
       try {
         rolValido = await prisma.perfiles.findFirst({
           where: {
@@ -309,6 +309,8 @@ export async function POST(req: NextRequest) {
             Tipo: true,
           },
         });
+
+        rolTipo = rolValido?.Tipo ?? "EMPLEADO";
       } catch {
         rolValido = await prisma.perfiles.findFirst({
           where: {
@@ -325,7 +327,8 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-      rolTipo = (rolValido as any).Tipo ?? "EMPLEADO";
+
+      // rolTipo = rolValido.Tipo ?? "EMPLEADO";
     }
 
     const mailNormalized = data.mail.trim().toLowerCase();
@@ -610,3 +613,7 @@ export async function DELETE(req: NextRequest) {
     );
   }
 }
+
+type PerfilesTipo = {
+  Tipo: "ADMINISTRADOR" | "EMPLEADO";
+};

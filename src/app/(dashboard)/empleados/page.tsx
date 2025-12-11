@@ -213,7 +213,7 @@ export default function Empleados() {
     const meta = user?.user_metadata as Record<string, unknown> | undefined;
     const tenantMeta =
       (meta?.tenant_id as string | number | undefined) ?? meta?.tenantId;
-    const fromUser = (user as any)?.tenantId as string | number | undefined;
+    const fromUser = user?.tenantId as string | number | undefined;
     const fromEnv =
       typeof process !== "undefined"
         ? (process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID as string | undefined) ??
@@ -315,7 +315,7 @@ export default function Empleados() {
       } else {
         const rolesJson = await rolesRes.json();
         const parsedRoles = Array.isArray(rolesJson?.roles)
-          ? rolesJson.roles.map((rol: any) => ({
+          ? rolesJson.roles.map((rol: Rol) => ({
               ...rol,
               tipo: rol.tipo ?? "EMPLEADO",
               permisos: Array.isArray(rol.permisos) ? rol.permisos : [],
@@ -1373,7 +1373,7 @@ export default function Empleados() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-semibold text-slate-900">
-                    Se creo rol "Supervisor de turno"
+                    Se creo rol Supervisor de turno
                   </p>
                   <p className="text-sm text-gray-500">Hace 1h</p>
                 </div>

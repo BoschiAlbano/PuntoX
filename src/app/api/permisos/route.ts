@@ -40,7 +40,10 @@ export async function GET(_req: NextRequest) {
     });
 
     if (!usuario || !usuario.TenantId) {
-      return NextResponse.json({ error: "Usuario no encontrado" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Usuario no encontrado" },
+        { status: 401 }
+      );
     }
 
     const permisos = usuario.PerfilUsuario.flatMap((pu) =>
@@ -52,7 +55,7 @@ export async function GET(_req: NextRequest) {
     const roles = usuario.PerfilUsuario.map((pu) => ({
       id: Number(pu.Perfiles.Id),
       nombre: pu.Perfiles.Descripcion,
-      tipo: (pu.Perfiles as any).Tipo ?? "EMPLEADO",
+      tipo: pu.Perfiles.Tipo ?? "EMPLEADO",
     }));
 
     return NextResponse.json(

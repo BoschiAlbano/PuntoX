@@ -106,7 +106,7 @@ export async function requirePermiso(
 
   // Si no lo tiene pero es admin, intentar asignarlo automáticamente a los roles admin del tenant.
   const esAdmin = usuario.PerfilUsuario.some(
-    (pu) => (pu.Perfiles as any).Tipo === "ADMINISTRADOR"
+    (pu) => pu.Perfiles.Tipo === "ADMINISTRADOR"
   );
   if (!tienePermiso && esAdmin) {
     await ensurePermisoParaAdmins(

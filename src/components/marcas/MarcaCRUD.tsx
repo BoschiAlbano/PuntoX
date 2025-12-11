@@ -46,7 +46,7 @@ const fetchMarcas = async ({
   signal: AbortSignal;
 }): Promise<Marca[]> => {
   const supabase = getSupabaseBrowserClient();
-  let { data: marcas, error } = await supabase.from("Marca").select("*");
+  const { data: marcas, error } = await supabase.from("Marca").select("*");
   if (error) {
     throw new Error(error.message);
   }
@@ -121,7 +121,7 @@ export default function MarcaCRUD() {
 
       if (modoEdicion) {
         const supabase = getSupabaseBrowserClient();
-        let { data: marcas, error } = await supabase
+        const { data: marcas, error } = await supabase
           .from("Marca")
           .update({
             Descripcion: data.Descripcion,
@@ -135,7 +135,7 @@ export default function MarcaCRUD() {
         return marcas ? marcas : [];
       }
       const supabase = getSupabaseBrowserClient();
-      let { data: marcas, error } = await supabase.from("Marca").insert({
+      const { data: marcas, error } = await supabase.from("Marca").insert({
         Descripcion: data.Descripcion,
         EstaEliminado: data.EstaEliminado,
         TenantId: user?.tenantId,
@@ -189,7 +189,7 @@ export default function MarcaCRUD() {
 
       // return response.json();
       const supabase = getSupabaseBrowserClient();
-      let { data: marcas, error } = await supabase
+      const { data: marcas, error } = await supabase
         .from("Marca")
         .delete()
         .eq("Id", id);

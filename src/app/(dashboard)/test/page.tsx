@@ -20,7 +20,7 @@ export default function Page() {
   useEffect(() => {
     async function getArticulos() {
       // Aquí asumo que 'supabase' es tu cliente ya inicializado y autenticado
-      let { data: Articulo, error } = await supabase
+      const { data: Articulo, error } = await supabase
         .from("Articulo")
         .select("*");
 
