@@ -208,6 +208,16 @@ export type MotivoBajas = $Result.DefaultSelection<Prisma.$MotivoBajasPayload>
  */
 export type Perfiles = $Result.DefaultSelection<Prisma.$PerfilesPayload>
 /**
+ * Model Permiso
+ * Permisos disponibles por tenant (permisos funcionales que se pueden asignar a un rol).
+ */
+export type Permiso = $Result.DefaultSelection<Prisma.$PermisoPayload>
+/**
+ * Model PerfilPermiso
+ * RelaciГіn muchos a muchos entre perfiles (roles) y permisos.
+ */
+export type PerfilPermiso = $Result.DefaultSelection<Prisma.$PerfilPermisoPayload>
+/**
  * Model PerfilUsuario
  * Relación muchos a muchos entre usuario y perfil.
  */
@@ -801,6 +811,26 @@ export class PrismaClient<
     * ```
     */
   get perfiles(): Prisma.PerfilesDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.permiso`: Exposes CRUD operations for the **Permiso** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Permisos
+    * const permisos = await prisma.permiso.findMany()
+    * ```
+    */
+  get permiso(): Prisma.PermisoDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.perfilPermiso`: Exposes CRUD operations for the **PerfilPermiso** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PerfilPermisos
+    * const perfilPermisos = await prisma.perfilPermiso.findMany()
+    * ```
+    */
+  get perfilPermiso(): Prisma.PerfilPermisoDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.perfilUsuario`: Exposes CRUD operations for the **PerfilUsuario** model.
@@ -1429,6 +1459,8 @@ export namespace Prisma {
     Marca: 'Marca',
     MotivoBajas: 'MotivoBajas',
     Perfiles: 'Perfiles',
+    Permiso: 'Permiso',
+    PerfilPermiso: 'PerfilPermiso',
     PerfilUsuario: 'PerfilUsuario',
     Persona: 'Persona',
     Persona_Cliente: 'Persona_Cliente',
@@ -1462,7 +1494,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "tenant" | "planSaaS" | "log" | "articulo" | "bajaArticulo" | "banco" | "caja" | "cheque" | "comprobante" | "comprobante_Compra" | "comprobante_CtaCteProveedor" | "comprobante_CuentaCorriente" | "comprobante_Factura" | "comprobante_NotaCredito" | "comprobante_Presupuesto" | "comprobante_Remito" | "conceptoGastos" | "condicionIva" | "configuracion" | "contador" | "cuentaBancarias" | "provincia" | "departamento" | "localidad" | "depositoCheques" | "detalleCaja" | "detalleComprobante" | "formaPago" | "formaPago_Cheque" | "formaPago_CtaCte" | "formaPago_Tarjeta" | "formularioPerfil" | "formularios" | "gasto" | "iva" | "marca" | "motivoBajas" | "perfiles" | "perfilUsuario" | "persona" | "persona_Cliente" | "persona_Empleado" | "precio" | "proveedor" | "puestoTrabajo" | "rubro" | "stock" | "tarjeta" | "unidadMedida" | "usuario" | "movimiento" | "movimiento_CuentaCorriente" | "movimiento_CuentaCorrienteProveedor"
+      modelProps: "tenant" | "planSaaS" | "log" | "articulo" | "bajaArticulo" | "banco" | "caja" | "cheque" | "comprobante" | "comprobante_Compra" | "comprobante_CtaCteProveedor" | "comprobante_CuentaCorriente" | "comprobante_Factura" | "comprobante_NotaCredito" | "comprobante_Presupuesto" | "comprobante_Remito" | "conceptoGastos" | "condicionIva" | "configuracion" | "contador" | "cuentaBancarias" | "provincia" | "departamento" | "localidad" | "depositoCheques" | "detalleCaja" | "detalleComprobante" | "formaPago" | "formaPago_Cheque" | "formaPago_CtaCte" | "formaPago_Tarjeta" | "formularioPerfil" | "formularios" | "gasto" | "iva" | "marca" | "motivoBajas" | "perfiles" | "permiso" | "perfilPermiso" | "perfilUsuario" | "persona" | "persona_Cliente" | "persona_Empleado" | "precio" | "proveedor" | "puestoTrabajo" | "rubro" | "stock" | "tarjeta" | "unidadMedida" | "usuario" | "movimiento" | "movimiento_CuentaCorriente" | "movimiento_CuentaCorrienteProveedor"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -4278,6 +4310,154 @@ export namespace Prisma {
           }
         }
       }
+      Permiso: {
+        payload: Prisma.$PermisoPayload<ExtArgs>
+        fields: Prisma.PermisoFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PermisoFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PermisoPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PermisoFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PermisoPayload>
+          }
+          findFirst: {
+            args: Prisma.PermisoFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PermisoPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PermisoFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PermisoPayload>
+          }
+          findMany: {
+            args: Prisma.PermisoFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PermisoPayload>[]
+          }
+          create: {
+            args: Prisma.PermisoCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PermisoPayload>
+          }
+          createMany: {
+            args: Prisma.PermisoCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PermisoCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PermisoPayload>[]
+          }
+          delete: {
+            args: Prisma.PermisoDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PermisoPayload>
+          }
+          update: {
+            args: Prisma.PermisoUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PermisoPayload>
+          }
+          deleteMany: {
+            args: Prisma.PermisoDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PermisoUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.PermisoUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PermisoPayload>[]
+          }
+          upsert: {
+            args: Prisma.PermisoUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PermisoPayload>
+          }
+          aggregate: {
+            args: Prisma.PermisoAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePermiso>
+          }
+          groupBy: {
+            args: Prisma.PermisoGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PermisoGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PermisoCountArgs<ExtArgs>
+            result: $Utils.Optional<PermisoCountAggregateOutputType> | number
+          }
+        }
+      }
+      PerfilPermiso: {
+        payload: Prisma.$PerfilPermisoPayload<ExtArgs>
+        fields: Prisma.PerfilPermisoFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PerfilPermisoFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PerfilPermisoPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PerfilPermisoFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PerfilPermisoPayload>
+          }
+          findFirst: {
+            args: Prisma.PerfilPermisoFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PerfilPermisoPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PerfilPermisoFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PerfilPermisoPayload>
+          }
+          findMany: {
+            args: Prisma.PerfilPermisoFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PerfilPermisoPayload>[]
+          }
+          create: {
+            args: Prisma.PerfilPermisoCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PerfilPermisoPayload>
+          }
+          createMany: {
+            args: Prisma.PerfilPermisoCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PerfilPermisoCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PerfilPermisoPayload>[]
+          }
+          delete: {
+            args: Prisma.PerfilPermisoDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PerfilPermisoPayload>
+          }
+          update: {
+            args: Prisma.PerfilPermisoUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PerfilPermisoPayload>
+          }
+          deleteMany: {
+            args: Prisma.PerfilPermisoDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PerfilPermisoUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.PerfilPermisoUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PerfilPermisoPayload>[]
+          }
+          upsert: {
+            args: Prisma.PerfilPermisoUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PerfilPermisoPayload>
+          }
+          aggregate: {
+            args: Prisma.PerfilPermisoAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePerfilPermiso>
+          }
+          groupBy: {
+            args: Prisma.PerfilPermisoGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PerfilPermisoGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PerfilPermisoCountArgs<ExtArgs>
+            result: $Utils.Optional<PerfilPermisoCountAggregateOutputType> | number
+          }
+        }
+      }
       PerfilUsuario: {
         payload: Prisma.$PerfilUsuarioPayload<ExtArgs>
         fields: Prisma.PerfilUsuarioFieldRefs
@@ -5518,6 +5698,8 @@ export namespace Prisma {
     marca?: MarcaOmit
     motivoBajas?: MotivoBajasOmit
     perfiles?: PerfilesOmit
+    permiso?: PermisoOmit
+    perfilPermiso?: PerfilPermisoOmit
     perfilUsuario?: PerfilUsuarioOmit
     persona?: PersonaOmit
     persona_Cliente?: Persona_ClienteOmit
@@ -5636,6 +5818,8 @@ export namespace Prisma {
     Movimientos: number
     PerfilesUsuarios: number
     Perfiles: number
+    Permisos: number
+    PerfilPermisos: number
     Personas: number
     Precios: number
     Proveedores: number
@@ -5671,6 +5855,8 @@ export namespace Prisma {
     Movimientos?: boolean | TenantCountOutputTypeCountMovimientosArgs
     PerfilesUsuarios?: boolean | TenantCountOutputTypeCountPerfilesUsuariosArgs
     Perfiles?: boolean | TenantCountOutputTypeCountPerfilesArgs
+    Permisos?: boolean | TenantCountOutputTypeCountPermisosArgs
+    PerfilPermisos?: boolean | TenantCountOutputTypeCountPerfilPermisosArgs
     Personas?: boolean | TenantCountOutputTypeCountPersonasArgs
     Precios?: boolean | TenantCountOutputTypeCountPreciosArgs
     Proveedores?: boolean | TenantCountOutputTypeCountProveedoresArgs
@@ -5852,6 +6038,20 @@ export namespace Prisma {
    */
   export type TenantCountOutputTypeCountPerfilesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: PerfilesWhereInput
+  }
+
+  /**
+   * TenantCountOutputType without action
+   */
+  export type TenantCountOutputTypeCountPermisosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PermisoWhereInput
+  }
+
+  /**
+   * TenantCountOutputType without action
+   */
+  export type TenantCountOutputTypeCountPerfilPermisosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PerfilPermisoWhereInput
   }
 
   /**
@@ -6529,11 +6729,13 @@ export namespace Prisma {
   export type PerfilesCountOutputType = {
     FormularioPerfil: number
     PerfilUsuario: number
+    PerfilPermiso: number
   }
 
   export type PerfilesCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     FormularioPerfil?: boolean | PerfilesCountOutputTypeCountFormularioPerfilArgs
     PerfilUsuario?: boolean | PerfilesCountOutputTypeCountPerfilUsuarioArgs
+    PerfilPermiso?: boolean | PerfilesCountOutputTypeCountPerfilPermisoArgs
   }
 
   // Custom InputTypes
@@ -6559,6 +6761,44 @@ export namespace Prisma {
    */
   export type PerfilesCountOutputTypeCountPerfilUsuarioArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: PerfilUsuarioWhereInput
+  }
+
+  /**
+   * PerfilesCountOutputType without action
+   */
+  export type PerfilesCountOutputTypeCountPerfilPermisoArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PerfilPermisoWhereInput
+  }
+
+
+  /**
+   * Count Type PermisoCountOutputType
+   */
+
+  export type PermisoCountOutputType = {
+    PerfilPermisos: number
+  }
+
+  export type PermisoCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    PerfilPermisos?: boolean | PermisoCountOutputTypeCountPerfilPermisosArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * PermisoCountOutputType without action
+   */
+  export type PermisoCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PermisoCountOutputType
+     */
+    select?: PermisoCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * PermisoCountOutputType without action
+   */
+  export type PermisoCountOutputTypeCountPerfilPermisosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PerfilPermisoWhereInput
   }
 
 
@@ -7258,6 +7498,8 @@ export namespace Prisma {
     Movimientos?: boolean | Tenant$MovimientosArgs<ExtArgs>
     PerfilesUsuarios?: boolean | Tenant$PerfilesUsuariosArgs<ExtArgs>
     Perfiles?: boolean | Tenant$PerfilesArgs<ExtArgs>
+    Permisos?: boolean | Tenant$PermisosArgs<ExtArgs>
+    PerfilPermisos?: boolean | Tenant$PerfilPermisosArgs<ExtArgs>
     Personas?: boolean | Tenant$PersonasArgs<ExtArgs>
     Precios?: boolean | Tenant$PreciosArgs<ExtArgs>
     Proveedores?: boolean | Tenant$ProveedoresArgs<ExtArgs>
@@ -7337,6 +7579,8 @@ export namespace Prisma {
     Movimientos?: boolean | Tenant$MovimientosArgs<ExtArgs>
     PerfilesUsuarios?: boolean | Tenant$PerfilesUsuariosArgs<ExtArgs>
     Perfiles?: boolean | Tenant$PerfilesArgs<ExtArgs>
+    Permisos?: boolean | Tenant$PermisosArgs<ExtArgs>
+    PerfilPermisos?: boolean | Tenant$PerfilPermisosArgs<ExtArgs>
     Personas?: boolean | Tenant$PersonasArgs<ExtArgs>
     Precios?: boolean | Tenant$PreciosArgs<ExtArgs>
     Proveedores?: boolean | Tenant$ProveedoresArgs<ExtArgs>
@@ -7382,6 +7626,8 @@ export namespace Prisma {
       Movimientos: Prisma.$MovimientoPayload<ExtArgs>[]
       PerfilesUsuarios: Prisma.$PerfilUsuarioPayload<ExtArgs>[]
       Perfiles: Prisma.$PerfilesPayload<ExtArgs>[]
+      Permisos: Prisma.$PermisoPayload<ExtArgs>[]
+      PerfilPermisos: Prisma.$PerfilPermisoPayload<ExtArgs>[]
       Personas: Prisma.$PersonaPayload<ExtArgs>[]
       Precios: Prisma.$PrecioPayload<ExtArgs>[]
       Proveedores: Prisma.$ProveedorPayload<ExtArgs>[]
@@ -7821,6 +8067,8 @@ export namespace Prisma {
     Movimientos<T extends Tenant$MovimientosArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$MovimientosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MovimientoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     PerfilesUsuarios<T extends Tenant$PerfilesUsuariosArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$PerfilesUsuariosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PerfilUsuarioPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     Perfiles<T extends Tenant$PerfilesArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$PerfilesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PerfilesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    Permisos<T extends Tenant$PermisosArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$PermisosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PermisoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    PerfilPermisos<T extends Tenant$PerfilPermisosArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$PerfilPermisosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PerfilPermisoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     Personas<T extends Tenant$PersonasArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$PersonasArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PersonaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     Precios<T extends Tenant$PreciosArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$PreciosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PrecioPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     Proveedores<T extends Tenant$ProveedoresArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$ProveedoresArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProveedorPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -8815,6 +9063,54 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: PerfilesScalarFieldEnum | PerfilesScalarFieldEnum[]
+  }
+
+  /**
+   * Tenant.Permisos
+   */
+  export type Tenant$PermisosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Permiso
+     */
+    select?: PermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Permiso
+     */
+    omit?: PermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PermisoInclude<ExtArgs> | null
+    where?: PermisoWhereInput
+    orderBy?: PermisoOrderByWithRelationInput | PermisoOrderByWithRelationInput[]
+    cursor?: PermisoWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PermisoScalarFieldEnum | PermisoScalarFieldEnum[]
+  }
+
+  /**
+   * Tenant.PerfilPermisos
+   */
+  export type Tenant$PerfilPermisosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PerfilPermiso
+     */
+    select?: PerfilPermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PerfilPermiso
+     */
+    omit?: PerfilPermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PerfilPermisoInclude<ExtArgs> | null
+    where?: PerfilPermisoWhereInput
+    orderBy?: PerfilPermisoOrderByWithRelationInput | PerfilPermisoOrderByWithRelationInput[]
+    cursor?: PerfilPermisoWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PerfilPermisoScalarFieldEnum | PerfilPermisoScalarFieldEnum[]
   }
 
   /**
@@ -51287,6 +51583,7 @@ export namespace Prisma {
     FormularioPerfil?: boolean | Perfiles$FormularioPerfilArgs<ExtArgs>
     PerfilUsuario?: boolean | Perfiles$PerfilUsuarioArgs<ExtArgs>
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+    PerfilPermiso?: boolean | Perfiles$PerfilPermisoArgs<ExtArgs>
     _count?: boolean | PerfilesCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["perfiles"]>
 
@@ -51321,6 +51618,7 @@ export namespace Prisma {
     FormularioPerfil?: boolean | Perfiles$FormularioPerfilArgs<ExtArgs>
     PerfilUsuario?: boolean | Perfiles$PerfilUsuarioArgs<ExtArgs>
     Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+    PerfilPermiso?: boolean | Perfiles$PerfilPermisoArgs<ExtArgs>
     _count?: boolean | PerfilesCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type PerfilesIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -51336,6 +51634,7 @@ export namespace Prisma {
       FormularioPerfil: Prisma.$FormularioPerfilPayload<ExtArgs>[]
       PerfilUsuario: Prisma.$PerfilUsuarioPayload<ExtArgs>[]
       Tenant: Prisma.$TenantPayload<ExtArgs>
+      PerfilPermiso: Prisma.$PerfilPermisoPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       Id: bigint
@@ -51743,6 +52042,7 @@ export namespace Prisma {
     FormularioPerfil<T extends Perfiles$FormularioPerfilArgs<ExtArgs> = {}>(args?: Subset<T, Perfiles$FormularioPerfilArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FormularioPerfilPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     PerfilUsuario<T extends Perfiles$PerfilUsuarioArgs<ExtArgs> = {}>(args?: Subset<T, Perfiles$PerfilUsuarioArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PerfilUsuarioPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     Tenant<T extends TenantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TenantDefaultArgs<ExtArgs>>): Prisma__TenantClient<$Result.GetResult<Prisma.$TenantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    PerfilPermiso<T extends Perfiles$PerfilPermisoArgs<ExtArgs> = {}>(args?: Subset<T, Perfiles$PerfilPermisoArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PerfilPermisoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -52221,6 +52521,30 @@ export namespace Prisma {
   }
 
   /**
+   * Perfiles.PerfilPermiso
+   */
+  export type Perfiles$PerfilPermisoArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PerfilPermiso
+     */
+    select?: PerfilPermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PerfilPermiso
+     */
+    omit?: PerfilPermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PerfilPermisoInclude<ExtArgs> | null
+    where?: PerfilPermisoWhereInput
+    orderBy?: PerfilPermisoOrderByWithRelationInput | PerfilPermisoOrderByWithRelationInput[]
+    cursor?: PerfilPermisoWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PerfilPermisoScalarFieldEnum | PerfilPermisoScalarFieldEnum[]
+  }
+
+  /**
    * Perfiles without action
    */
   export type PerfilesDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -52236,6 +52560,2222 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: PerfilesInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Permiso
+   */
+
+  export type AggregatePermiso = {
+    _count: PermisoCountAggregateOutputType | null
+    _avg: PermisoAvgAggregateOutputType | null
+    _sum: PermisoSumAggregateOutputType | null
+    _min: PermisoMinAggregateOutputType | null
+    _max: PermisoMaxAggregateOutputType | null
+  }
+
+  export type PermisoAvgAggregateOutputType = {
+    Id: number | null
+    TenantId: number | null
+  }
+
+  export type PermisoSumAggregateOutputType = {
+    Id: bigint | null
+    TenantId: bigint | null
+  }
+
+  export type PermisoMinAggregateOutputType = {
+    Id: bigint | null
+    Clave: string | null
+    Descripcion: string | null
+    EstaEliminado: boolean | null
+    TenantId: bigint | null
+  }
+
+  export type PermisoMaxAggregateOutputType = {
+    Id: bigint | null
+    Clave: string | null
+    Descripcion: string | null
+    EstaEliminado: boolean | null
+    TenantId: bigint | null
+  }
+
+  export type PermisoCountAggregateOutputType = {
+    Id: number
+    Clave: number
+    Descripcion: number
+    EstaEliminado: number
+    TenantId: number
+    _all: number
+  }
+
+
+  export type PermisoAvgAggregateInputType = {
+    Id?: true
+    TenantId?: true
+  }
+
+  export type PermisoSumAggregateInputType = {
+    Id?: true
+    TenantId?: true
+  }
+
+  export type PermisoMinAggregateInputType = {
+    Id?: true
+    Clave?: true
+    Descripcion?: true
+    EstaEliminado?: true
+    TenantId?: true
+  }
+
+  export type PermisoMaxAggregateInputType = {
+    Id?: true
+    Clave?: true
+    Descripcion?: true
+    EstaEliminado?: true
+    TenantId?: true
+  }
+
+  export type PermisoCountAggregateInputType = {
+    Id?: true
+    Clave?: true
+    Descripcion?: true
+    EstaEliminado?: true
+    TenantId?: true
+    _all?: true
+  }
+
+  export type PermisoAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Permiso to aggregate.
+     */
+    where?: PermisoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Permisos to fetch.
+     */
+    orderBy?: PermisoOrderByWithRelationInput | PermisoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PermisoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Permisos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Permisos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Permisos
+    **/
+    _count?: true | PermisoCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: PermisoAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: PermisoSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PermisoMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PermisoMaxAggregateInputType
+  }
+
+  export type GetPermisoAggregateType<T extends PermisoAggregateArgs> = {
+        [P in keyof T & keyof AggregatePermiso]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePermiso[P]>
+      : GetScalarType<T[P], AggregatePermiso[P]>
+  }
+
+
+
+
+  export type PermisoGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PermisoWhereInput
+    orderBy?: PermisoOrderByWithAggregationInput | PermisoOrderByWithAggregationInput[]
+    by: PermisoScalarFieldEnum[] | PermisoScalarFieldEnum
+    having?: PermisoScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PermisoCountAggregateInputType | true
+    _avg?: PermisoAvgAggregateInputType
+    _sum?: PermisoSumAggregateInputType
+    _min?: PermisoMinAggregateInputType
+    _max?: PermisoMaxAggregateInputType
+  }
+
+  export type PermisoGroupByOutputType = {
+    Id: bigint
+    Clave: string
+    Descripcion: string | null
+    EstaEliminado: boolean
+    TenantId: bigint
+    _count: PermisoCountAggregateOutputType | null
+    _avg: PermisoAvgAggregateOutputType | null
+    _sum: PermisoSumAggregateOutputType | null
+    _min: PermisoMinAggregateOutputType | null
+    _max: PermisoMaxAggregateOutputType | null
+  }
+
+  type GetPermisoGroupByPayload<T extends PermisoGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PermisoGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PermisoGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PermisoGroupByOutputType[P]>
+            : GetScalarType<T[P], PermisoGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PermisoSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    Id?: boolean
+    Clave?: boolean
+    Descripcion?: boolean
+    EstaEliminado?: boolean
+    TenantId?: boolean
+    PerfilPermisos?: boolean | Permiso$PerfilPermisosArgs<ExtArgs>
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+    _count?: boolean | PermisoCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["permiso"]>
+
+  export type PermisoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    Id?: boolean
+    Clave?: boolean
+    Descripcion?: boolean
+    EstaEliminado?: boolean
+    TenantId?: boolean
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["permiso"]>
+
+  export type PermisoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    Id?: boolean
+    Clave?: boolean
+    Descripcion?: boolean
+    EstaEliminado?: boolean
+    TenantId?: boolean
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["permiso"]>
+
+  export type PermisoSelectScalar = {
+    Id?: boolean
+    Clave?: boolean
+    Descripcion?: boolean
+    EstaEliminado?: boolean
+    TenantId?: boolean
+  }
+
+  export type PermisoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id" | "Clave" | "Descripcion" | "EstaEliminado" | "TenantId", ExtArgs["result"]["permiso"]>
+  export type PermisoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    PerfilPermisos?: boolean | Permiso$PerfilPermisosArgs<ExtArgs>
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+    _count?: boolean | PermisoCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type PermisoIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }
+  export type PermisoIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }
+
+  export type $PermisoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Permiso"
+    objects: {
+      PerfilPermisos: Prisma.$PerfilPermisoPayload<ExtArgs>[]
+      Tenant: Prisma.$TenantPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      Id: bigint
+      Clave: string
+      Descripcion: string | null
+      EstaEliminado: boolean
+      TenantId: bigint
+    }, ExtArgs["result"]["permiso"]>
+    composites: {}
+  }
+
+  type PermisoGetPayload<S extends boolean | null | undefined | PermisoDefaultArgs> = $Result.GetResult<Prisma.$PermisoPayload, S>
+
+  type PermisoCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<PermisoFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: PermisoCountAggregateInputType | true
+    }
+
+  export interface PermisoDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Permiso'], meta: { name: 'Permiso' } }
+    /**
+     * Find zero or one Permiso that matches the filter.
+     * @param {PermisoFindUniqueArgs} args - Arguments to find a Permiso
+     * @example
+     * // Get one Permiso
+     * const permiso = await prisma.permiso.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PermisoFindUniqueArgs>(args: SelectSubset<T, PermisoFindUniqueArgs<ExtArgs>>): Prisma__PermisoClient<$Result.GetResult<Prisma.$PermisoPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Permiso that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {PermisoFindUniqueOrThrowArgs} args - Arguments to find a Permiso
+     * @example
+     * // Get one Permiso
+     * const permiso = await prisma.permiso.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PermisoFindUniqueOrThrowArgs>(args: SelectSubset<T, PermisoFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PermisoClient<$Result.GetResult<Prisma.$PermisoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Permiso that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PermisoFindFirstArgs} args - Arguments to find a Permiso
+     * @example
+     * // Get one Permiso
+     * const permiso = await prisma.permiso.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PermisoFindFirstArgs>(args?: SelectSubset<T, PermisoFindFirstArgs<ExtArgs>>): Prisma__PermisoClient<$Result.GetResult<Prisma.$PermisoPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Permiso that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PermisoFindFirstOrThrowArgs} args - Arguments to find a Permiso
+     * @example
+     * // Get one Permiso
+     * const permiso = await prisma.permiso.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PermisoFindFirstOrThrowArgs>(args?: SelectSubset<T, PermisoFindFirstOrThrowArgs<ExtArgs>>): Prisma__PermisoClient<$Result.GetResult<Prisma.$PermisoPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Permisos that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PermisoFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Permisos
+     * const permisos = await prisma.permiso.findMany()
+     * 
+     * // Get first 10 Permisos
+     * const permisos = await prisma.permiso.findMany({ take: 10 })
+     * 
+     * // Only select the `Id`
+     * const permisoWithIdOnly = await prisma.permiso.findMany({ select: { Id: true } })
+     * 
+     */
+    findMany<T extends PermisoFindManyArgs>(args?: SelectSubset<T, PermisoFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PermisoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Permiso.
+     * @param {PermisoCreateArgs} args - Arguments to create a Permiso.
+     * @example
+     * // Create one Permiso
+     * const Permiso = await prisma.permiso.create({
+     *   data: {
+     *     // ... data to create a Permiso
+     *   }
+     * })
+     * 
+     */
+    create<T extends PermisoCreateArgs>(args: SelectSubset<T, PermisoCreateArgs<ExtArgs>>): Prisma__PermisoClient<$Result.GetResult<Prisma.$PermisoPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Permisos.
+     * @param {PermisoCreateManyArgs} args - Arguments to create many Permisos.
+     * @example
+     * // Create many Permisos
+     * const permiso = await prisma.permiso.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PermisoCreateManyArgs>(args?: SelectSubset<T, PermisoCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Permisos and returns the data saved in the database.
+     * @param {PermisoCreateManyAndReturnArgs} args - Arguments to create many Permisos.
+     * @example
+     * // Create many Permisos
+     * const permiso = await prisma.permiso.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Permisos and only return the `Id`
+     * const permisoWithIdOnly = await prisma.permiso.createManyAndReturn({
+     *   select: { Id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PermisoCreateManyAndReturnArgs>(args?: SelectSubset<T, PermisoCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PermisoPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Permiso.
+     * @param {PermisoDeleteArgs} args - Arguments to delete one Permiso.
+     * @example
+     * // Delete one Permiso
+     * const Permiso = await prisma.permiso.delete({
+     *   where: {
+     *     // ... filter to delete one Permiso
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PermisoDeleteArgs>(args: SelectSubset<T, PermisoDeleteArgs<ExtArgs>>): Prisma__PermisoClient<$Result.GetResult<Prisma.$PermisoPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Permiso.
+     * @param {PermisoUpdateArgs} args - Arguments to update one Permiso.
+     * @example
+     * // Update one Permiso
+     * const permiso = await prisma.permiso.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PermisoUpdateArgs>(args: SelectSubset<T, PermisoUpdateArgs<ExtArgs>>): Prisma__PermisoClient<$Result.GetResult<Prisma.$PermisoPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Permisos.
+     * @param {PermisoDeleteManyArgs} args - Arguments to filter Permisos to delete.
+     * @example
+     * // Delete a few Permisos
+     * const { count } = await prisma.permiso.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PermisoDeleteManyArgs>(args?: SelectSubset<T, PermisoDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Permisos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PermisoUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Permisos
+     * const permiso = await prisma.permiso.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PermisoUpdateManyArgs>(args: SelectSubset<T, PermisoUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Permisos and returns the data updated in the database.
+     * @param {PermisoUpdateManyAndReturnArgs} args - Arguments to update many Permisos.
+     * @example
+     * // Update many Permisos
+     * const permiso = await prisma.permiso.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Permisos and only return the `Id`
+     * const permisoWithIdOnly = await prisma.permiso.updateManyAndReturn({
+     *   select: { Id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends PermisoUpdateManyAndReturnArgs>(args: SelectSubset<T, PermisoUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PermisoPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Permiso.
+     * @param {PermisoUpsertArgs} args - Arguments to update or create a Permiso.
+     * @example
+     * // Update or create a Permiso
+     * const permiso = await prisma.permiso.upsert({
+     *   create: {
+     *     // ... data to create a Permiso
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Permiso we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PermisoUpsertArgs>(args: SelectSubset<T, PermisoUpsertArgs<ExtArgs>>): Prisma__PermisoClient<$Result.GetResult<Prisma.$PermisoPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Permisos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PermisoCountArgs} args - Arguments to filter Permisos to count.
+     * @example
+     * // Count the number of Permisos
+     * const count = await prisma.permiso.count({
+     *   where: {
+     *     // ... the filter for the Permisos we want to count
+     *   }
+     * })
+    **/
+    count<T extends PermisoCountArgs>(
+      args?: Subset<T, PermisoCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PermisoCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Permiso.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PermisoAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PermisoAggregateArgs>(args: Subset<T, PermisoAggregateArgs>): Prisma.PrismaPromise<GetPermisoAggregateType<T>>
+
+    /**
+     * Group by Permiso.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PermisoGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PermisoGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PermisoGroupByArgs['orderBy'] }
+        : { orderBy?: PermisoGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PermisoGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPermisoGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Permiso model
+   */
+  readonly fields: PermisoFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Permiso.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PermisoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    PerfilPermisos<T extends Permiso$PerfilPermisosArgs<ExtArgs> = {}>(args?: Subset<T, Permiso$PerfilPermisosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PerfilPermisoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    Tenant<T extends TenantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TenantDefaultArgs<ExtArgs>>): Prisma__TenantClient<$Result.GetResult<Prisma.$TenantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Permiso model
+   */
+  interface PermisoFieldRefs {
+    readonly Id: FieldRef<"Permiso", 'BigInt'>
+    readonly Clave: FieldRef<"Permiso", 'String'>
+    readonly Descripcion: FieldRef<"Permiso", 'String'>
+    readonly EstaEliminado: FieldRef<"Permiso", 'Boolean'>
+    readonly TenantId: FieldRef<"Permiso", 'BigInt'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Permiso findUnique
+   */
+  export type PermisoFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Permiso
+     */
+    select?: PermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Permiso
+     */
+    omit?: PermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PermisoInclude<ExtArgs> | null
+    /**
+     * Filter, which Permiso to fetch.
+     */
+    where: PermisoWhereUniqueInput
+  }
+
+  /**
+   * Permiso findUniqueOrThrow
+   */
+  export type PermisoFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Permiso
+     */
+    select?: PermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Permiso
+     */
+    omit?: PermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PermisoInclude<ExtArgs> | null
+    /**
+     * Filter, which Permiso to fetch.
+     */
+    where: PermisoWhereUniqueInput
+  }
+
+  /**
+   * Permiso findFirst
+   */
+  export type PermisoFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Permiso
+     */
+    select?: PermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Permiso
+     */
+    omit?: PermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PermisoInclude<ExtArgs> | null
+    /**
+     * Filter, which Permiso to fetch.
+     */
+    where?: PermisoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Permisos to fetch.
+     */
+    orderBy?: PermisoOrderByWithRelationInput | PermisoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Permisos.
+     */
+    cursor?: PermisoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Permisos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Permisos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Permisos.
+     */
+    distinct?: PermisoScalarFieldEnum | PermisoScalarFieldEnum[]
+  }
+
+  /**
+   * Permiso findFirstOrThrow
+   */
+  export type PermisoFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Permiso
+     */
+    select?: PermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Permiso
+     */
+    omit?: PermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PermisoInclude<ExtArgs> | null
+    /**
+     * Filter, which Permiso to fetch.
+     */
+    where?: PermisoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Permisos to fetch.
+     */
+    orderBy?: PermisoOrderByWithRelationInput | PermisoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Permisos.
+     */
+    cursor?: PermisoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Permisos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Permisos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Permisos.
+     */
+    distinct?: PermisoScalarFieldEnum | PermisoScalarFieldEnum[]
+  }
+
+  /**
+   * Permiso findMany
+   */
+  export type PermisoFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Permiso
+     */
+    select?: PermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Permiso
+     */
+    omit?: PermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PermisoInclude<ExtArgs> | null
+    /**
+     * Filter, which Permisos to fetch.
+     */
+    where?: PermisoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Permisos to fetch.
+     */
+    orderBy?: PermisoOrderByWithRelationInput | PermisoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Permisos.
+     */
+    cursor?: PermisoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Permisos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Permisos.
+     */
+    skip?: number
+    distinct?: PermisoScalarFieldEnum | PermisoScalarFieldEnum[]
+  }
+
+  /**
+   * Permiso create
+   */
+  export type PermisoCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Permiso
+     */
+    select?: PermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Permiso
+     */
+    omit?: PermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PermisoInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Permiso.
+     */
+    data: XOR<PermisoCreateInput, PermisoUncheckedCreateInput>
+  }
+
+  /**
+   * Permiso createMany
+   */
+  export type PermisoCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Permisos.
+     */
+    data: PermisoCreateManyInput | PermisoCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Permiso createManyAndReturn
+   */
+  export type PermisoCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Permiso
+     */
+    select?: PermisoSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Permiso
+     */
+    omit?: PermisoOmit<ExtArgs> | null
+    /**
+     * The data used to create many Permisos.
+     */
+    data: PermisoCreateManyInput | PermisoCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PermisoIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Permiso update
+   */
+  export type PermisoUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Permiso
+     */
+    select?: PermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Permiso
+     */
+    omit?: PermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PermisoInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Permiso.
+     */
+    data: XOR<PermisoUpdateInput, PermisoUncheckedUpdateInput>
+    /**
+     * Choose, which Permiso to update.
+     */
+    where: PermisoWhereUniqueInput
+  }
+
+  /**
+   * Permiso updateMany
+   */
+  export type PermisoUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Permisos.
+     */
+    data: XOR<PermisoUpdateManyMutationInput, PermisoUncheckedUpdateManyInput>
+    /**
+     * Filter which Permisos to update
+     */
+    where?: PermisoWhereInput
+    /**
+     * Limit how many Permisos to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Permiso updateManyAndReturn
+   */
+  export type PermisoUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Permiso
+     */
+    select?: PermisoSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Permiso
+     */
+    omit?: PermisoOmit<ExtArgs> | null
+    /**
+     * The data used to update Permisos.
+     */
+    data: XOR<PermisoUpdateManyMutationInput, PermisoUncheckedUpdateManyInput>
+    /**
+     * Filter which Permisos to update
+     */
+    where?: PermisoWhereInput
+    /**
+     * Limit how many Permisos to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PermisoIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Permiso upsert
+   */
+  export type PermisoUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Permiso
+     */
+    select?: PermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Permiso
+     */
+    omit?: PermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PermisoInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Permiso to update in case it exists.
+     */
+    where: PermisoWhereUniqueInput
+    /**
+     * In case the Permiso found by the `where` argument doesn't exist, create a new Permiso with this data.
+     */
+    create: XOR<PermisoCreateInput, PermisoUncheckedCreateInput>
+    /**
+     * In case the Permiso was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PermisoUpdateInput, PermisoUncheckedUpdateInput>
+  }
+
+  /**
+   * Permiso delete
+   */
+  export type PermisoDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Permiso
+     */
+    select?: PermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Permiso
+     */
+    omit?: PermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PermisoInclude<ExtArgs> | null
+    /**
+     * Filter which Permiso to delete.
+     */
+    where: PermisoWhereUniqueInput
+  }
+
+  /**
+   * Permiso deleteMany
+   */
+  export type PermisoDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Permisos to delete
+     */
+    where?: PermisoWhereInput
+    /**
+     * Limit how many Permisos to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Permiso.PerfilPermisos
+   */
+  export type Permiso$PerfilPermisosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PerfilPermiso
+     */
+    select?: PerfilPermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PerfilPermiso
+     */
+    omit?: PerfilPermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PerfilPermisoInclude<ExtArgs> | null
+    where?: PerfilPermisoWhereInput
+    orderBy?: PerfilPermisoOrderByWithRelationInput | PerfilPermisoOrderByWithRelationInput[]
+    cursor?: PerfilPermisoWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PerfilPermisoScalarFieldEnum | PerfilPermisoScalarFieldEnum[]
+  }
+
+  /**
+   * Permiso without action
+   */
+  export type PermisoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Permiso
+     */
+    select?: PermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Permiso
+     */
+    omit?: PermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PermisoInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PerfilPermiso
+   */
+
+  export type AggregatePerfilPermiso = {
+    _count: PerfilPermisoCountAggregateOutputType | null
+    _avg: PerfilPermisoAvgAggregateOutputType | null
+    _sum: PerfilPermisoSumAggregateOutputType | null
+    _min: PerfilPermisoMinAggregateOutputType | null
+    _max: PerfilPermisoMaxAggregateOutputType | null
+  }
+
+  export type PerfilPermisoAvgAggregateOutputType = {
+    PerfilId: number | null
+    PermisoId: number | null
+    TenantId: number | null
+  }
+
+  export type PerfilPermisoSumAggregateOutputType = {
+    PerfilId: bigint | null
+    PermisoId: bigint | null
+    TenantId: bigint | null
+  }
+
+  export type PerfilPermisoMinAggregateOutputType = {
+    PerfilId: bigint | null
+    PermisoId: bigint | null
+    TenantId: bigint | null
+  }
+
+  export type PerfilPermisoMaxAggregateOutputType = {
+    PerfilId: bigint | null
+    PermisoId: bigint | null
+    TenantId: bigint | null
+  }
+
+  export type PerfilPermisoCountAggregateOutputType = {
+    PerfilId: number
+    PermisoId: number
+    TenantId: number
+    _all: number
+  }
+
+
+  export type PerfilPermisoAvgAggregateInputType = {
+    PerfilId?: true
+    PermisoId?: true
+    TenantId?: true
+  }
+
+  export type PerfilPermisoSumAggregateInputType = {
+    PerfilId?: true
+    PermisoId?: true
+    TenantId?: true
+  }
+
+  export type PerfilPermisoMinAggregateInputType = {
+    PerfilId?: true
+    PermisoId?: true
+    TenantId?: true
+  }
+
+  export type PerfilPermisoMaxAggregateInputType = {
+    PerfilId?: true
+    PermisoId?: true
+    TenantId?: true
+  }
+
+  export type PerfilPermisoCountAggregateInputType = {
+    PerfilId?: true
+    PermisoId?: true
+    TenantId?: true
+    _all?: true
+  }
+
+  export type PerfilPermisoAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PerfilPermiso to aggregate.
+     */
+    where?: PerfilPermisoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PerfilPermisos to fetch.
+     */
+    orderBy?: PerfilPermisoOrderByWithRelationInput | PerfilPermisoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PerfilPermisoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PerfilPermisos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PerfilPermisos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PerfilPermisos
+    **/
+    _count?: true | PerfilPermisoCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: PerfilPermisoAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: PerfilPermisoSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PerfilPermisoMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PerfilPermisoMaxAggregateInputType
+  }
+
+  export type GetPerfilPermisoAggregateType<T extends PerfilPermisoAggregateArgs> = {
+        [P in keyof T & keyof AggregatePerfilPermiso]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePerfilPermiso[P]>
+      : GetScalarType<T[P], AggregatePerfilPermiso[P]>
+  }
+
+
+
+
+  export type PerfilPermisoGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PerfilPermisoWhereInput
+    orderBy?: PerfilPermisoOrderByWithAggregationInput | PerfilPermisoOrderByWithAggregationInput[]
+    by: PerfilPermisoScalarFieldEnum[] | PerfilPermisoScalarFieldEnum
+    having?: PerfilPermisoScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PerfilPermisoCountAggregateInputType | true
+    _avg?: PerfilPermisoAvgAggregateInputType
+    _sum?: PerfilPermisoSumAggregateInputType
+    _min?: PerfilPermisoMinAggregateInputType
+    _max?: PerfilPermisoMaxAggregateInputType
+  }
+
+  export type PerfilPermisoGroupByOutputType = {
+    PerfilId: bigint
+    PermisoId: bigint
+    TenantId: bigint
+    _count: PerfilPermisoCountAggregateOutputType | null
+    _avg: PerfilPermisoAvgAggregateOutputType | null
+    _sum: PerfilPermisoSumAggregateOutputType | null
+    _min: PerfilPermisoMinAggregateOutputType | null
+    _max: PerfilPermisoMaxAggregateOutputType | null
+  }
+
+  type GetPerfilPermisoGroupByPayload<T extends PerfilPermisoGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PerfilPermisoGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PerfilPermisoGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PerfilPermisoGroupByOutputType[P]>
+            : GetScalarType<T[P], PerfilPermisoGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PerfilPermisoSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    PerfilId?: boolean
+    PermisoId?: boolean
+    TenantId?: boolean
+    Perfil?: boolean | PerfilesDefaultArgs<ExtArgs>
+    Permiso?: boolean | PermisoDefaultArgs<ExtArgs>
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["perfilPermiso"]>
+
+  export type PerfilPermisoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    PerfilId?: boolean
+    PermisoId?: boolean
+    TenantId?: boolean
+    Perfil?: boolean | PerfilesDefaultArgs<ExtArgs>
+    Permiso?: boolean | PermisoDefaultArgs<ExtArgs>
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["perfilPermiso"]>
+
+  export type PerfilPermisoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    PerfilId?: boolean
+    PermisoId?: boolean
+    TenantId?: boolean
+    Perfil?: boolean | PerfilesDefaultArgs<ExtArgs>
+    Permiso?: boolean | PermisoDefaultArgs<ExtArgs>
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["perfilPermiso"]>
+
+  export type PerfilPermisoSelectScalar = {
+    PerfilId?: boolean
+    PermisoId?: boolean
+    TenantId?: boolean
+  }
+
+  export type PerfilPermisoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"PerfilId" | "PermisoId" | "TenantId", ExtArgs["result"]["perfilPermiso"]>
+  export type PerfilPermisoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    Perfil?: boolean | PerfilesDefaultArgs<ExtArgs>
+    Permiso?: boolean | PermisoDefaultArgs<ExtArgs>
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }
+  export type PerfilPermisoIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    Perfil?: boolean | PerfilesDefaultArgs<ExtArgs>
+    Permiso?: boolean | PermisoDefaultArgs<ExtArgs>
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }
+  export type PerfilPermisoIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    Perfil?: boolean | PerfilesDefaultArgs<ExtArgs>
+    Permiso?: boolean | PermisoDefaultArgs<ExtArgs>
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }
+
+  export type $PerfilPermisoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PerfilPermiso"
+    objects: {
+      Perfil: Prisma.$PerfilesPayload<ExtArgs>
+      Permiso: Prisma.$PermisoPayload<ExtArgs>
+      Tenant: Prisma.$TenantPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      PerfilId: bigint
+      PermisoId: bigint
+      TenantId: bigint
+    }, ExtArgs["result"]["perfilPermiso"]>
+    composites: {}
+  }
+
+  type PerfilPermisoGetPayload<S extends boolean | null | undefined | PerfilPermisoDefaultArgs> = $Result.GetResult<Prisma.$PerfilPermisoPayload, S>
+
+  type PerfilPermisoCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<PerfilPermisoFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: PerfilPermisoCountAggregateInputType | true
+    }
+
+  export interface PerfilPermisoDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PerfilPermiso'], meta: { name: 'PerfilPermiso' } }
+    /**
+     * Find zero or one PerfilPermiso that matches the filter.
+     * @param {PerfilPermisoFindUniqueArgs} args - Arguments to find a PerfilPermiso
+     * @example
+     * // Get one PerfilPermiso
+     * const perfilPermiso = await prisma.perfilPermiso.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PerfilPermisoFindUniqueArgs>(args: SelectSubset<T, PerfilPermisoFindUniqueArgs<ExtArgs>>): Prisma__PerfilPermisoClient<$Result.GetResult<Prisma.$PerfilPermisoPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one PerfilPermiso that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {PerfilPermisoFindUniqueOrThrowArgs} args - Arguments to find a PerfilPermiso
+     * @example
+     * // Get one PerfilPermiso
+     * const perfilPermiso = await prisma.perfilPermiso.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PerfilPermisoFindUniqueOrThrowArgs>(args: SelectSubset<T, PerfilPermisoFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PerfilPermisoClient<$Result.GetResult<Prisma.$PerfilPermisoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PerfilPermiso that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PerfilPermisoFindFirstArgs} args - Arguments to find a PerfilPermiso
+     * @example
+     * // Get one PerfilPermiso
+     * const perfilPermiso = await prisma.perfilPermiso.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PerfilPermisoFindFirstArgs>(args?: SelectSubset<T, PerfilPermisoFindFirstArgs<ExtArgs>>): Prisma__PerfilPermisoClient<$Result.GetResult<Prisma.$PerfilPermisoPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PerfilPermiso that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PerfilPermisoFindFirstOrThrowArgs} args - Arguments to find a PerfilPermiso
+     * @example
+     * // Get one PerfilPermiso
+     * const perfilPermiso = await prisma.perfilPermiso.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PerfilPermisoFindFirstOrThrowArgs>(args?: SelectSubset<T, PerfilPermisoFindFirstOrThrowArgs<ExtArgs>>): Prisma__PerfilPermisoClient<$Result.GetResult<Prisma.$PerfilPermisoPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more PerfilPermisos that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PerfilPermisoFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PerfilPermisos
+     * const perfilPermisos = await prisma.perfilPermiso.findMany()
+     * 
+     * // Get first 10 PerfilPermisos
+     * const perfilPermisos = await prisma.perfilPermiso.findMany({ take: 10 })
+     * 
+     * // Only select the `PerfilId`
+     * const perfilPermisoWithPerfilIdOnly = await prisma.perfilPermiso.findMany({ select: { PerfilId: true } })
+     * 
+     */
+    findMany<T extends PerfilPermisoFindManyArgs>(args?: SelectSubset<T, PerfilPermisoFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PerfilPermisoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a PerfilPermiso.
+     * @param {PerfilPermisoCreateArgs} args - Arguments to create a PerfilPermiso.
+     * @example
+     * // Create one PerfilPermiso
+     * const PerfilPermiso = await prisma.perfilPermiso.create({
+     *   data: {
+     *     // ... data to create a PerfilPermiso
+     *   }
+     * })
+     * 
+     */
+    create<T extends PerfilPermisoCreateArgs>(args: SelectSubset<T, PerfilPermisoCreateArgs<ExtArgs>>): Prisma__PerfilPermisoClient<$Result.GetResult<Prisma.$PerfilPermisoPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many PerfilPermisos.
+     * @param {PerfilPermisoCreateManyArgs} args - Arguments to create many PerfilPermisos.
+     * @example
+     * // Create many PerfilPermisos
+     * const perfilPermiso = await prisma.perfilPermiso.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PerfilPermisoCreateManyArgs>(args?: SelectSubset<T, PerfilPermisoCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PerfilPermisos and returns the data saved in the database.
+     * @param {PerfilPermisoCreateManyAndReturnArgs} args - Arguments to create many PerfilPermisos.
+     * @example
+     * // Create many PerfilPermisos
+     * const perfilPermiso = await prisma.perfilPermiso.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PerfilPermisos and only return the `PerfilId`
+     * const perfilPermisoWithPerfilIdOnly = await prisma.perfilPermiso.createManyAndReturn({
+     *   select: { PerfilId: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PerfilPermisoCreateManyAndReturnArgs>(args?: SelectSubset<T, PerfilPermisoCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PerfilPermisoPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a PerfilPermiso.
+     * @param {PerfilPermisoDeleteArgs} args - Arguments to delete one PerfilPermiso.
+     * @example
+     * // Delete one PerfilPermiso
+     * const PerfilPermiso = await prisma.perfilPermiso.delete({
+     *   where: {
+     *     // ... filter to delete one PerfilPermiso
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PerfilPermisoDeleteArgs>(args: SelectSubset<T, PerfilPermisoDeleteArgs<ExtArgs>>): Prisma__PerfilPermisoClient<$Result.GetResult<Prisma.$PerfilPermisoPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one PerfilPermiso.
+     * @param {PerfilPermisoUpdateArgs} args - Arguments to update one PerfilPermiso.
+     * @example
+     * // Update one PerfilPermiso
+     * const perfilPermiso = await prisma.perfilPermiso.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PerfilPermisoUpdateArgs>(args: SelectSubset<T, PerfilPermisoUpdateArgs<ExtArgs>>): Prisma__PerfilPermisoClient<$Result.GetResult<Prisma.$PerfilPermisoPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more PerfilPermisos.
+     * @param {PerfilPermisoDeleteManyArgs} args - Arguments to filter PerfilPermisos to delete.
+     * @example
+     * // Delete a few PerfilPermisos
+     * const { count } = await prisma.perfilPermiso.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PerfilPermisoDeleteManyArgs>(args?: SelectSubset<T, PerfilPermisoDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PerfilPermisos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PerfilPermisoUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PerfilPermisos
+     * const perfilPermiso = await prisma.perfilPermiso.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PerfilPermisoUpdateManyArgs>(args: SelectSubset<T, PerfilPermisoUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PerfilPermisos and returns the data updated in the database.
+     * @param {PerfilPermisoUpdateManyAndReturnArgs} args - Arguments to update many PerfilPermisos.
+     * @example
+     * // Update many PerfilPermisos
+     * const perfilPermiso = await prisma.perfilPermiso.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more PerfilPermisos and only return the `PerfilId`
+     * const perfilPermisoWithPerfilIdOnly = await prisma.perfilPermiso.updateManyAndReturn({
+     *   select: { PerfilId: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends PerfilPermisoUpdateManyAndReturnArgs>(args: SelectSubset<T, PerfilPermisoUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PerfilPermisoPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one PerfilPermiso.
+     * @param {PerfilPermisoUpsertArgs} args - Arguments to update or create a PerfilPermiso.
+     * @example
+     * // Update or create a PerfilPermiso
+     * const perfilPermiso = await prisma.perfilPermiso.upsert({
+     *   create: {
+     *     // ... data to create a PerfilPermiso
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PerfilPermiso we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PerfilPermisoUpsertArgs>(args: SelectSubset<T, PerfilPermisoUpsertArgs<ExtArgs>>): Prisma__PerfilPermisoClient<$Result.GetResult<Prisma.$PerfilPermisoPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of PerfilPermisos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PerfilPermisoCountArgs} args - Arguments to filter PerfilPermisos to count.
+     * @example
+     * // Count the number of PerfilPermisos
+     * const count = await prisma.perfilPermiso.count({
+     *   where: {
+     *     // ... the filter for the PerfilPermisos we want to count
+     *   }
+     * })
+    **/
+    count<T extends PerfilPermisoCountArgs>(
+      args?: Subset<T, PerfilPermisoCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PerfilPermisoCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PerfilPermiso.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PerfilPermisoAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PerfilPermisoAggregateArgs>(args: Subset<T, PerfilPermisoAggregateArgs>): Prisma.PrismaPromise<GetPerfilPermisoAggregateType<T>>
+
+    /**
+     * Group by PerfilPermiso.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PerfilPermisoGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PerfilPermisoGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PerfilPermisoGroupByArgs['orderBy'] }
+        : { orderBy?: PerfilPermisoGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PerfilPermisoGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPerfilPermisoGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PerfilPermiso model
+   */
+  readonly fields: PerfilPermisoFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PerfilPermiso.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PerfilPermisoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    Perfil<T extends PerfilesDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PerfilesDefaultArgs<ExtArgs>>): Prisma__PerfilesClient<$Result.GetResult<Prisma.$PerfilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    Permiso<T extends PermisoDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PermisoDefaultArgs<ExtArgs>>): Prisma__PermisoClient<$Result.GetResult<Prisma.$PermisoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    Tenant<T extends TenantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TenantDefaultArgs<ExtArgs>>): Prisma__TenantClient<$Result.GetResult<Prisma.$TenantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PerfilPermiso model
+   */
+  interface PerfilPermisoFieldRefs {
+    readonly PerfilId: FieldRef<"PerfilPermiso", 'BigInt'>
+    readonly PermisoId: FieldRef<"PerfilPermiso", 'BigInt'>
+    readonly TenantId: FieldRef<"PerfilPermiso", 'BigInt'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PerfilPermiso findUnique
+   */
+  export type PerfilPermisoFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PerfilPermiso
+     */
+    select?: PerfilPermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PerfilPermiso
+     */
+    omit?: PerfilPermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PerfilPermisoInclude<ExtArgs> | null
+    /**
+     * Filter, which PerfilPermiso to fetch.
+     */
+    where: PerfilPermisoWhereUniqueInput
+  }
+
+  /**
+   * PerfilPermiso findUniqueOrThrow
+   */
+  export type PerfilPermisoFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PerfilPermiso
+     */
+    select?: PerfilPermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PerfilPermiso
+     */
+    omit?: PerfilPermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PerfilPermisoInclude<ExtArgs> | null
+    /**
+     * Filter, which PerfilPermiso to fetch.
+     */
+    where: PerfilPermisoWhereUniqueInput
+  }
+
+  /**
+   * PerfilPermiso findFirst
+   */
+  export type PerfilPermisoFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PerfilPermiso
+     */
+    select?: PerfilPermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PerfilPermiso
+     */
+    omit?: PerfilPermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PerfilPermisoInclude<ExtArgs> | null
+    /**
+     * Filter, which PerfilPermiso to fetch.
+     */
+    where?: PerfilPermisoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PerfilPermisos to fetch.
+     */
+    orderBy?: PerfilPermisoOrderByWithRelationInput | PerfilPermisoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PerfilPermisos.
+     */
+    cursor?: PerfilPermisoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PerfilPermisos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PerfilPermisos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PerfilPermisos.
+     */
+    distinct?: PerfilPermisoScalarFieldEnum | PerfilPermisoScalarFieldEnum[]
+  }
+
+  /**
+   * PerfilPermiso findFirstOrThrow
+   */
+  export type PerfilPermisoFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PerfilPermiso
+     */
+    select?: PerfilPermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PerfilPermiso
+     */
+    omit?: PerfilPermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PerfilPermisoInclude<ExtArgs> | null
+    /**
+     * Filter, which PerfilPermiso to fetch.
+     */
+    where?: PerfilPermisoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PerfilPermisos to fetch.
+     */
+    orderBy?: PerfilPermisoOrderByWithRelationInput | PerfilPermisoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PerfilPermisos.
+     */
+    cursor?: PerfilPermisoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PerfilPermisos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PerfilPermisos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PerfilPermisos.
+     */
+    distinct?: PerfilPermisoScalarFieldEnum | PerfilPermisoScalarFieldEnum[]
+  }
+
+  /**
+   * PerfilPermiso findMany
+   */
+  export type PerfilPermisoFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PerfilPermiso
+     */
+    select?: PerfilPermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PerfilPermiso
+     */
+    omit?: PerfilPermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PerfilPermisoInclude<ExtArgs> | null
+    /**
+     * Filter, which PerfilPermisos to fetch.
+     */
+    where?: PerfilPermisoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PerfilPermisos to fetch.
+     */
+    orderBy?: PerfilPermisoOrderByWithRelationInput | PerfilPermisoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PerfilPermisos.
+     */
+    cursor?: PerfilPermisoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PerfilPermisos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PerfilPermisos.
+     */
+    skip?: number
+    distinct?: PerfilPermisoScalarFieldEnum | PerfilPermisoScalarFieldEnum[]
+  }
+
+  /**
+   * PerfilPermiso create
+   */
+  export type PerfilPermisoCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PerfilPermiso
+     */
+    select?: PerfilPermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PerfilPermiso
+     */
+    omit?: PerfilPermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PerfilPermisoInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PerfilPermiso.
+     */
+    data: XOR<PerfilPermisoCreateInput, PerfilPermisoUncheckedCreateInput>
+  }
+
+  /**
+   * PerfilPermiso createMany
+   */
+  export type PerfilPermisoCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PerfilPermisos.
+     */
+    data: PerfilPermisoCreateManyInput | PerfilPermisoCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * PerfilPermiso createManyAndReturn
+   */
+  export type PerfilPermisoCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PerfilPermiso
+     */
+    select?: PerfilPermisoSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PerfilPermiso
+     */
+    omit?: PerfilPermisoOmit<ExtArgs> | null
+    /**
+     * The data used to create many PerfilPermisos.
+     */
+    data: PerfilPermisoCreateManyInput | PerfilPermisoCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PerfilPermisoIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PerfilPermiso update
+   */
+  export type PerfilPermisoUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PerfilPermiso
+     */
+    select?: PerfilPermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PerfilPermiso
+     */
+    omit?: PerfilPermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PerfilPermisoInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PerfilPermiso.
+     */
+    data: XOR<PerfilPermisoUpdateInput, PerfilPermisoUncheckedUpdateInput>
+    /**
+     * Choose, which PerfilPermiso to update.
+     */
+    where: PerfilPermisoWhereUniqueInput
+  }
+
+  /**
+   * PerfilPermiso updateMany
+   */
+  export type PerfilPermisoUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PerfilPermisos.
+     */
+    data: XOR<PerfilPermisoUpdateManyMutationInput, PerfilPermisoUncheckedUpdateManyInput>
+    /**
+     * Filter which PerfilPermisos to update
+     */
+    where?: PerfilPermisoWhereInput
+    /**
+     * Limit how many PerfilPermisos to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * PerfilPermiso updateManyAndReturn
+   */
+  export type PerfilPermisoUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PerfilPermiso
+     */
+    select?: PerfilPermisoSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PerfilPermiso
+     */
+    omit?: PerfilPermisoOmit<ExtArgs> | null
+    /**
+     * The data used to update PerfilPermisos.
+     */
+    data: XOR<PerfilPermisoUpdateManyMutationInput, PerfilPermisoUncheckedUpdateManyInput>
+    /**
+     * Filter which PerfilPermisos to update
+     */
+    where?: PerfilPermisoWhereInput
+    /**
+     * Limit how many PerfilPermisos to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PerfilPermisoIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PerfilPermiso upsert
+   */
+  export type PerfilPermisoUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PerfilPermiso
+     */
+    select?: PerfilPermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PerfilPermiso
+     */
+    omit?: PerfilPermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PerfilPermisoInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PerfilPermiso to update in case it exists.
+     */
+    where: PerfilPermisoWhereUniqueInput
+    /**
+     * In case the PerfilPermiso found by the `where` argument doesn't exist, create a new PerfilPermiso with this data.
+     */
+    create: XOR<PerfilPermisoCreateInput, PerfilPermisoUncheckedCreateInput>
+    /**
+     * In case the PerfilPermiso was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PerfilPermisoUpdateInput, PerfilPermisoUncheckedUpdateInput>
+  }
+
+  /**
+   * PerfilPermiso delete
+   */
+  export type PerfilPermisoDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PerfilPermiso
+     */
+    select?: PerfilPermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PerfilPermiso
+     */
+    omit?: PerfilPermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PerfilPermisoInclude<ExtArgs> | null
+    /**
+     * Filter which PerfilPermiso to delete.
+     */
+    where: PerfilPermisoWhereUniqueInput
+  }
+
+  /**
+   * PerfilPermiso deleteMany
+   */
+  export type PerfilPermisoDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PerfilPermisos to delete
+     */
+    where?: PerfilPermisoWhereInput
+    /**
+     * Limit how many PerfilPermisos to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * PerfilPermiso without action
+   */
+  export type PerfilPermisoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PerfilPermiso
+     */
+    select?: PerfilPermisoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PerfilPermiso
+     */
+    omit?: PerfilPermisoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PerfilPermisoInclude<ExtArgs> | null
   }
 
 
@@ -70286,6 +72826,26 @@ export namespace Prisma {
   export type PerfilesScalarFieldEnum = (typeof PerfilesScalarFieldEnum)[keyof typeof PerfilesScalarFieldEnum]
 
 
+  export const PermisoScalarFieldEnum: {
+    Id: 'Id',
+    Clave: 'Clave',
+    Descripcion: 'Descripcion',
+    EstaEliminado: 'EstaEliminado',
+    TenantId: 'TenantId'
+  };
+
+  export type PermisoScalarFieldEnum = (typeof PermisoScalarFieldEnum)[keyof typeof PermisoScalarFieldEnum]
+
+
+  export const PerfilPermisoScalarFieldEnum: {
+    PerfilId: 'PerfilId',
+    PermisoId: 'PermisoId',
+    TenantId: 'TenantId'
+  };
+
+  export type PerfilPermisoScalarFieldEnum = (typeof PerfilPermisoScalarFieldEnum)[keyof typeof PerfilPermisoScalarFieldEnum]
+
+
   export const PerfilUsuarioScalarFieldEnum: {
     Perfil_Id: 'Perfil_Id',
     Usuario_Id: 'Usuario_Id',
@@ -70648,6 +73208,8 @@ export namespace Prisma {
     Movimientos?: MovimientoListRelationFilter
     PerfilesUsuarios?: PerfilUsuarioListRelationFilter
     Perfiles?: PerfilesListRelationFilter
+    Permisos?: PermisoListRelationFilter
+    PerfilPermisos?: PerfilPermisoListRelationFilter
     Personas?: PersonaListRelationFilter
     Precios?: PrecioListRelationFilter
     Proveedores?: ProveedorListRelationFilter
@@ -70694,6 +73256,8 @@ export namespace Prisma {
     Movimientos?: MovimientoOrderByRelationAggregateInput
     PerfilesUsuarios?: PerfilUsuarioOrderByRelationAggregateInput
     Perfiles?: PerfilesOrderByRelationAggregateInput
+    Permisos?: PermisoOrderByRelationAggregateInput
+    PerfilPermisos?: PerfilPermisoOrderByRelationAggregateInput
     Personas?: PersonaOrderByRelationAggregateInput
     Precios?: PrecioOrderByRelationAggregateInput
     Proveedores?: ProveedorOrderByRelationAggregateInput
@@ -70743,6 +73307,8 @@ export namespace Prisma {
     Movimientos?: MovimientoListRelationFilter
     PerfilesUsuarios?: PerfilUsuarioListRelationFilter
     Perfiles?: PerfilesListRelationFilter
+    Permisos?: PermisoListRelationFilter
+    PerfilPermisos?: PerfilPermisoListRelationFilter
     Personas?: PersonaListRelationFilter
     Precios?: PrecioListRelationFilter
     Proveedores?: ProveedorListRelationFilter
@@ -73393,6 +75959,7 @@ export namespace Prisma {
     FormularioPerfil?: FormularioPerfilListRelationFilter
     PerfilUsuario?: PerfilUsuarioListRelationFilter
     Tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
+    PerfilPermiso?: PerfilPermisoListRelationFilter
   }
 
   export type PerfilesOrderByWithRelationInput = {
@@ -73404,6 +75971,7 @@ export namespace Prisma {
     FormularioPerfil?: FormularioPerfilOrderByRelationAggregateInput
     PerfilUsuario?: PerfilUsuarioOrderByRelationAggregateInput
     Tenant?: TenantOrderByWithRelationInput
+    PerfilPermiso?: PerfilPermisoOrderByRelationAggregateInput
   }
 
   export type PerfilesWhereUniqueInput = Prisma.AtLeast<{
@@ -73418,6 +75986,7 @@ export namespace Prisma {
     FormularioPerfil?: FormularioPerfilListRelationFilter
     PerfilUsuario?: PerfilUsuarioListRelationFilter
     Tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
+    PerfilPermiso?: PerfilPermisoListRelationFilter
   }, "Id">
 
   export type PerfilesOrderByWithAggregationInput = {
@@ -73442,6 +76011,121 @@ export namespace Prisma {
     Tipo?: EnumPerfilTipoWithAggregatesFilter<"Perfiles"> | $Enums.PerfilTipo
     EstaEliminado?: BoolWithAggregatesFilter<"Perfiles"> | boolean
     TenantId?: BigIntWithAggregatesFilter<"Perfiles"> | bigint | number
+  }
+
+  export type PermisoWhereInput = {
+    AND?: PermisoWhereInput | PermisoWhereInput[]
+    OR?: PermisoWhereInput[]
+    NOT?: PermisoWhereInput | PermisoWhereInput[]
+    Id?: BigIntFilter<"Permiso"> | bigint | number
+    Clave?: StringFilter<"Permiso"> | string
+    Descripcion?: StringNullableFilter<"Permiso"> | string | null
+    EstaEliminado?: BoolFilter<"Permiso"> | boolean
+    TenantId?: BigIntFilter<"Permiso"> | bigint | number
+    PerfilPermisos?: PerfilPermisoListRelationFilter
+    Tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
+  }
+
+  export type PermisoOrderByWithRelationInput = {
+    Id?: SortOrder
+    Clave?: SortOrder
+    Descripcion?: SortOrderInput | SortOrder
+    EstaEliminado?: SortOrder
+    TenantId?: SortOrder
+    PerfilPermisos?: PerfilPermisoOrderByRelationAggregateInput
+    Tenant?: TenantOrderByWithRelationInput
+  }
+
+  export type PermisoWhereUniqueInput = Prisma.AtLeast<{
+    Id?: bigint | number
+    Clave_TenantId?: PermisoClaveTenantIdCompoundUniqueInput
+    AND?: PermisoWhereInput | PermisoWhereInput[]
+    OR?: PermisoWhereInput[]
+    NOT?: PermisoWhereInput | PermisoWhereInput[]
+    Clave?: StringFilter<"Permiso"> | string
+    Descripcion?: StringNullableFilter<"Permiso"> | string | null
+    EstaEliminado?: BoolFilter<"Permiso"> | boolean
+    TenantId?: BigIntFilter<"Permiso"> | bigint | number
+    PerfilPermisos?: PerfilPermisoListRelationFilter
+    Tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
+  }, "Id" | "Clave_TenantId">
+
+  export type PermisoOrderByWithAggregationInput = {
+    Id?: SortOrder
+    Clave?: SortOrder
+    Descripcion?: SortOrderInput | SortOrder
+    EstaEliminado?: SortOrder
+    TenantId?: SortOrder
+    _count?: PermisoCountOrderByAggregateInput
+    _avg?: PermisoAvgOrderByAggregateInput
+    _max?: PermisoMaxOrderByAggregateInput
+    _min?: PermisoMinOrderByAggregateInput
+    _sum?: PermisoSumOrderByAggregateInput
+  }
+
+  export type PermisoScalarWhereWithAggregatesInput = {
+    AND?: PermisoScalarWhereWithAggregatesInput | PermisoScalarWhereWithAggregatesInput[]
+    OR?: PermisoScalarWhereWithAggregatesInput[]
+    NOT?: PermisoScalarWhereWithAggregatesInput | PermisoScalarWhereWithAggregatesInput[]
+    Id?: BigIntWithAggregatesFilter<"Permiso"> | bigint | number
+    Clave?: StringWithAggregatesFilter<"Permiso"> | string
+    Descripcion?: StringNullableWithAggregatesFilter<"Permiso"> | string | null
+    EstaEliminado?: BoolWithAggregatesFilter<"Permiso"> | boolean
+    TenantId?: BigIntWithAggregatesFilter<"Permiso"> | bigint | number
+  }
+
+  export type PerfilPermisoWhereInput = {
+    AND?: PerfilPermisoWhereInput | PerfilPermisoWhereInput[]
+    OR?: PerfilPermisoWhereInput[]
+    NOT?: PerfilPermisoWhereInput | PerfilPermisoWhereInput[]
+    PerfilId?: BigIntFilter<"PerfilPermiso"> | bigint | number
+    PermisoId?: BigIntFilter<"PerfilPermiso"> | bigint | number
+    TenantId?: BigIntFilter<"PerfilPermiso"> | bigint | number
+    Perfil?: XOR<PerfilesScalarRelationFilter, PerfilesWhereInput>
+    Permiso?: XOR<PermisoScalarRelationFilter, PermisoWhereInput>
+    Tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
+  }
+
+  export type PerfilPermisoOrderByWithRelationInput = {
+    PerfilId?: SortOrder
+    PermisoId?: SortOrder
+    TenantId?: SortOrder
+    Perfil?: PerfilesOrderByWithRelationInput
+    Permiso?: PermisoOrderByWithRelationInput
+    Tenant?: TenantOrderByWithRelationInput
+  }
+
+  export type PerfilPermisoWhereUniqueInput = Prisma.AtLeast<{
+    PerfilId_PermisoId?: PerfilPermisoPerfilIdPermisoIdCompoundUniqueInput
+    AND?: PerfilPermisoWhereInput | PerfilPermisoWhereInput[]
+    OR?: PerfilPermisoWhereInput[]
+    NOT?: PerfilPermisoWhereInput | PerfilPermisoWhereInput[]
+    PerfilId?: BigIntFilter<"PerfilPermiso"> | bigint | number
+    PermisoId?: BigIntFilter<"PerfilPermiso"> | bigint | number
+    TenantId?: BigIntFilter<"PerfilPermiso"> | bigint | number
+    Perfil?: XOR<PerfilesScalarRelationFilter, PerfilesWhereInput>
+    Permiso?: XOR<PermisoScalarRelationFilter, PermisoWhereInput>
+    Tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
+  }, "PerfilId_PermisoId">
+
+  export type PerfilPermisoOrderByWithAggregationInput = {
+    PerfilId?: SortOrder
+    PermisoId?: SortOrder
+    TenantId?: SortOrder
+    _count?: PerfilPermisoCountOrderByAggregateInput
+    _avg?: PerfilPermisoAvgOrderByAggregateInput
+    _max?: PerfilPermisoMaxOrderByAggregateInput
+    _min?: PerfilPermisoMinOrderByAggregateInput
+    _sum?: PerfilPermisoSumOrderByAggregateInput
+  }
+
+  export type PerfilPermisoScalarWhereWithAggregatesInput = {
+    AND?: PerfilPermisoScalarWhereWithAggregatesInput | PerfilPermisoScalarWhereWithAggregatesInput[]
+    OR?: PerfilPermisoScalarWhereWithAggregatesInput[]
+    NOT?: PerfilPermisoScalarWhereWithAggregatesInput | PerfilPermisoScalarWhereWithAggregatesInput[]
+    PerfilId?: BigIntWithAggregatesFilter<"PerfilPermiso"> | bigint | number
+    PermisoId?: BigIntWithAggregatesFilter<"PerfilPermiso"> | bigint | number
+    TenantId?: BigIntWithAggregatesFilter<"PerfilPermiso"> | bigint | number
   }
 
   export type PerfilUsuarioWhereInput = {
@@ -74498,6 +77182,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -74544,6 +77230,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -74588,6 +77276,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -74634,6 +77324,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -77252,6 +79944,7 @@ export namespace Prisma {
     FormularioPerfil?: FormularioPerfilCreateNestedManyWithoutPerfilesInput
     PerfilUsuario?: PerfilUsuarioCreateNestedManyWithoutPerfilesInput
     Tenant: TenantCreateNestedOneWithoutPerfilesInput
+    PerfilPermiso?: PerfilPermisoCreateNestedManyWithoutPerfilInput
   }
 
   export type PerfilesUncheckedCreateInput = {
@@ -77262,6 +79955,7 @@ export namespace Prisma {
     TenantId: bigint | number
     FormularioPerfil?: FormularioPerfilUncheckedCreateNestedManyWithoutPerfilesInput
     PerfilUsuario?: PerfilUsuarioUncheckedCreateNestedManyWithoutPerfilesInput
+    PerfilPermiso?: PerfilPermisoUncheckedCreateNestedManyWithoutPerfilInput
   }
 
   export type PerfilesUpdateInput = {
@@ -77272,6 +79966,7 @@ export namespace Prisma {
     FormularioPerfil?: FormularioPerfilUpdateManyWithoutPerfilesNestedInput
     PerfilUsuario?: PerfilUsuarioUpdateManyWithoutPerfilesNestedInput
     Tenant?: TenantUpdateOneRequiredWithoutPerfilesNestedInput
+    PerfilPermiso?: PerfilPermisoUpdateManyWithoutPerfilNestedInput
   }
 
   export type PerfilesUncheckedUpdateInput = {
@@ -77282,6 +79977,7 @@ export namespace Prisma {
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
     FormularioPerfil?: FormularioPerfilUncheckedUpdateManyWithoutPerfilesNestedInput
     PerfilUsuario?: PerfilUsuarioUncheckedUpdateManyWithoutPerfilesNestedInput
+    PerfilPermiso?: PerfilPermisoUncheckedUpdateManyWithoutPerfilNestedInput
   }
 
   export type PerfilesCreateManyInput = {
@@ -77304,6 +80000,105 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Tipo?: EnumPerfilTipoFieldUpdateOperationsInput | $Enums.PerfilTipo
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+  }
+
+  export type PermisoCreateInput = {
+    Id?: bigint | number
+    Clave: string
+    Descripcion?: string | null
+    EstaEliminado?: boolean
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutPermisoInput
+    Tenant: TenantCreateNestedOneWithoutPermisosInput
+  }
+
+  export type PermisoUncheckedCreateInput = {
+    Id?: bigint | number
+    Clave: string
+    Descripcion?: string | null
+    EstaEliminado?: boolean
+    TenantId: bigint | number
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutPermisoInput
+  }
+
+  export type PermisoUpdateInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    Clave?: StringFieldUpdateOperationsInput | string
+    Descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutPermisoNestedInput
+    Tenant?: TenantUpdateOneRequiredWithoutPermisosNestedInput
+  }
+
+  export type PermisoUncheckedUpdateInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    Clave?: StringFieldUpdateOperationsInput | string
+    Descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutPermisoNestedInput
+  }
+
+  export type PermisoCreateManyInput = {
+    Id?: bigint | number
+    Clave: string
+    Descripcion?: string | null
+    EstaEliminado?: boolean
+    TenantId: bigint | number
+  }
+
+  export type PermisoUpdateManyMutationInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    Clave?: StringFieldUpdateOperationsInput | string
+    Descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type PermisoUncheckedUpdateManyInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    Clave?: StringFieldUpdateOperationsInput | string
+    Descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+  }
+
+  export type PerfilPermisoCreateInput = {
+    Perfil: PerfilesCreateNestedOneWithoutPerfilPermisoInput
+    Permiso: PermisoCreateNestedOneWithoutPerfilPermisosInput
+    Tenant: TenantCreateNestedOneWithoutPerfilPermisosInput
+  }
+
+  export type PerfilPermisoUncheckedCreateInput = {
+    PerfilId: bigint | number
+    PermisoId: bigint | number
+    TenantId: bigint | number
+  }
+
+  export type PerfilPermisoUpdateInput = {
+    Perfil?: PerfilesUpdateOneRequiredWithoutPerfilPermisoNestedInput
+    Permiso?: PermisoUpdateOneRequiredWithoutPerfilPermisosNestedInput
+    Tenant?: TenantUpdateOneRequiredWithoutPerfilPermisosNestedInput
+  }
+
+  export type PerfilPermisoUncheckedUpdateInput = {
+    PerfilId?: BigIntFieldUpdateOperationsInput | bigint | number
+    PermisoId?: BigIntFieldUpdateOperationsInput | bigint | number
+    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+  }
+
+  export type PerfilPermisoCreateManyInput = {
+    PerfilId: bigint | number
+    PermisoId: bigint | number
+    TenantId: bigint | number
+  }
+
+  export type PerfilPermisoUpdateManyMutationInput = {
+
+  }
+
+  export type PerfilPermisoUncheckedUpdateManyInput = {
+    PerfilId?: BigIntFieldUpdateOperationsInput | bigint | number
+    PermisoId?: BigIntFieldUpdateOperationsInput | bigint | number
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
   }
 
@@ -78488,6 +81283,18 @@ export namespace Prisma {
     none?: PerfilesWhereInput
   }
 
+  export type PermisoListRelationFilter = {
+    every?: PermisoWhereInput
+    some?: PermisoWhereInput
+    none?: PermisoWhereInput
+  }
+
+  export type PerfilPermisoListRelationFilter = {
+    every?: PerfilPermisoWhereInput
+    some?: PerfilPermisoWhereInput
+    none?: PerfilPermisoWhereInput
+  }
+
   export type PersonaListRelationFilter = {
     every?: PersonaWhereInput
     some?: PersonaWhereInput
@@ -78641,6 +81448,14 @@ export namespace Prisma {
   }
 
   export type PerfilesOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PermisoOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PerfilPermisoOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -80888,6 +83703,85 @@ export namespace Prisma {
     _max?: NestedEnumPerfilTipoFilter<$PrismaModel>
   }
 
+  export type PermisoClaveTenantIdCompoundUniqueInput = {
+    Clave: string
+    TenantId: bigint | number
+  }
+
+  export type PermisoCountOrderByAggregateInput = {
+    Id?: SortOrder
+    Clave?: SortOrder
+    Descripcion?: SortOrder
+    EstaEliminado?: SortOrder
+    TenantId?: SortOrder
+  }
+
+  export type PermisoAvgOrderByAggregateInput = {
+    Id?: SortOrder
+    TenantId?: SortOrder
+  }
+
+  export type PermisoMaxOrderByAggregateInput = {
+    Id?: SortOrder
+    Clave?: SortOrder
+    Descripcion?: SortOrder
+    EstaEliminado?: SortOrder
+    TenantId?: SortOrder
+  }
+
+  export type PermisoMinOrderByAggregateInput = {
+    Id?: SortOrder
+    Clave?: SortOrder
+    Descripcion?: SortOrder
+    EstaEliminado?: SortOrder
+    TenantId?: SortOrder
+  }
+
+  export type PermisoSumOrderByAggregateInput = {
+    Id?: SortOrder
+    TenantId?: SortOrder
+  }
+
+  export type PermisoScalarRelationFilter = {
+    is?: PermisoWhereInput
+    isNot?: PermisoWhereInput
+  }
+
+  export type PerfilPermisoPerfilIdPermisoIdCompoundUniqueInput = {
+    PerfilId: bigint | number
+    PermisoId: bigint | number
+  }
+
+  export type PerfilPermisoCountOrderByAggregateInput = {
+    PerfilId?: SortOrder
+    PermisoId?: SortOrder
+    TenantId?: SortOrder
+  }
+
+  export type PerfilPermisoAvgOrderByAggregateInput = {
+    PerfilId?: SortOrder
+    PermisoId?: SortOrder
+    TenantId?: SortOrder
+  }
+
+  export type PerfilPermisoMaxOrderByAggregateInput = {
+    PerfilId?: SortOrder
+    PermisoId?: SortOrder
+    TenantId?: SortOrder
+  }
+
+  export type PerfilPermisoMinOrderByAggregateInput = {
+    PerfilId?: SortOrder
+    PermisoId?: SortOrder
+    TenantId?: SortOrder
+  }
+
+  export type PerfilPermisoSumOrderByAggregateInput = {
+    PerfilId?: SortOrder
+    PermisoId?: SortOrder
+    TenantId?: SortOrder
+  }
+
   export type PerfilUsuarioPerfil_IdUsuario_IdCompoundUniqueInput = {
     Perfil_Id: bigint | number
     Usuario_Id: bigint | number
@@ -81766,6 +84660,20 @@ export namespace Prisma {
     connect?: PerfilesWhereUniqueInput | PerfilesWhereUniqueInput[]
   }
 
+  export type PermisoCreateNestedManyWithoutTenantInput = {
+    create?: XOR<PermisoCreateWithoutTenantInput, PermisoUncheckedCreateWithoutTenantInput> | PermisoCreateWithoutTenantInput[] | PermisoUncheckedCreateWithoutTenantInput[]
+    connectOrCreate?: PermisoCreateOrConnectWithoutTenantInput | PermisoCreateOrConnectWithoutTenantInput[]
+    createMany?: PermisoCreateManyTenantInputEnvelope
+    connect?: PermisoWhereUniqueInput | PermisoWhereUniqueInput[]
+  }
+
+  export type PerfilPermisoCreateNestedManyWithoutTenantInput = {
+    create?: XOR<PerfilPermisoCreateWithoutTenantInput, PerfilPermisoUncheckedCreateWithoutTenantInput> | PerfilPermisoCreateWithoutTenantInput[] | PerfilPermisoUncheckedCreateWithoutTenantInput[]
+    connectOrCreate?: PerfilPermisoCreateOrConnectWithoutTenantInput | PerfilPermisoCreateOrConnectWithoutTenantInput[]
+    createMany?: PerfilPermisoCreateManyTenantInputEnvelope
+    connect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+  }
+
   export type PersonaCreateNestedManyWithoutTenantInput = {
     create?: XOR<PersonaCreateWithoutTenantInput, PersonaUncheckedCreateWithoutTenantInput> | PersonaCreateWithoutTenantInput[] | PersonaUncheckedCreateWithoutTenantInput[]
     connectOrCreate?: PersonaCreateOrConnectWithoutTenantInput | PersonaCreateOrConnectWithoutTenantInput[]
@@ -81994,6 +84902,20 @@ export namespace Prisma {
     connectOrCreate?: PerfilesCreateOrConnectWithoutTenantInput | PerfilesCreateOrConnectWithoutTenantInput[]
     createMany?: PerfilesCreateManyTenantInputEnvelope
     connect?: PerfilesWhereUniqueInput | PerfilesWhereUniqueInput[]
+  }
+
+  export type PermisoUncheckedCreateNestedManyWithoutTenantInput = {
+    create?: XOR<PermisoCreateWithoutTenantInput, PermisoUncheckedCreateWithoutTenantInput> | PermisoCreateWithoutTenantInput[] | PermisoUncheckedCreateWithoutTenantInput[]
+    connectOrCreate?: PermisoCreateOrConnectWithoutTenantInput | PermisoCreateOrConnectWithoutTenantInput[]
+    createMany?: PermisoCreateManyTenantInputEnvelope
+    connect?: PermisoWhereUniqueInput | PermisoWhereUniqueInput[]
+  }
+
+  export type PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput = {
+    create?: XOR<PerfilPermisoCreateWithoutTenantInput, PerfilPermisoUncheckedCreateWithoutTenantInput> | PerfilPermisoCreateWithoutTenantInput[] | PerfilPermisoUncheckedCreateWithoutTenantInput[]
+    connectOrCreate?: PerfilPermisoCreateOrConnectWithoutTenantInput | PerfilPermisoCreateOrConnectWithoutTenantInput[]
+    createMany?: PerfilPermisoCreateManyTenantInputEnvelope
+    connect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
   }
 
   export type PersonaUncheckedCreateNestedManyWithoutTenantInput = {
@@ -82399,6 +85321,34 @@ export namespace Prisma {
     update?: PerfilesUpdateWithWhereUniqueWithoutTenantInput | PerfilesUpdateWithWhereUniqueWithoutTenantInput[]
     updateMany?: PerfilesUpdateManyWithWhereWithoutTenantInput | PerfilesUpdateManyWithWhereWithoutTenantInput[]
     deleteMany?: PerfilesScalarWhereInput | PerfilesScalarWhereInput[]
+  }
+
+  export type PermisoUpdateManyWithoutTenantNestedInput = {
+    create?: XOR<PermisoCreateWithoutTenantInput, PermisoUncheckedCreateWithoutTenantInput> | PermisoCreateWithoutTenantInput[] | PermisoUncheckedCreateWithoutTenantInput[]
+    connectOrCreate?: PermisoCreateOrConnectWithoutTenantInput | PermisoCreateOrConnectWithoutTenantInput[]
+    upsert?: PermisoUpsertWithWhereUniqueWithoutTenantInput | PermisoUpsertWithWhereUniqueWithoutTenantInput[]
+    createMany?: PermisoCreateManyTenantInputEnvelope
+    set?: PermisoWhereUniqueInput | PermisoWhereUniqueInput[]
+    disconnect?: PermisoWhereUniqueInput | PermisoWhereUniqueInput[]
+    delete?: PermisoWhereUniqueInput | PermisoWhereUniqueInput[]
+    connect?: PermisoWhereUniqueInput | PermisoWhereUniqueInput[]
+    update?: PermisoUpdateWithWhereUniqueWithoutTenantInput | PermisoUpdateWithWhereUniqueWithoutTenantInput[]
+    updateMany?: PermisoUpdateManyWithWhereWithoutTenantInput | PermisoUpdateManyWithWhereWithoutTenantInput[]
+    deleteMany?: PermisoScalarWhereInput | PermisoScalarWhereInput[]
+  }
+
+  export type PerfilPermisoUpdateManyWithoutTenantNestedInput = {
+    create?: XOR<PerfilPermisoCreateWithoutTenantInput, PerfilPermisoUncheckedCreateWithoutTenantInput> | PerfilPermisoCreateWithoutTenantInput[] | PerfilPermisoUncheckedCreateWithoutTenantInput[]
+    connectOrCreate?: PerfilPermisoCreateOrConnectWithoutTenantInput | PerfilPermisoCreateOrConnectWithoutTenantInput[]
+    upsert?: PerfilPermisoUpsertWithWhereUniqueWithoutTenantInput | PerfilPermisoUpsertWithWhereUniqueWithoutTenantInput[]
+    createMany?: PerfilPermisoCreateManyTenantInputEnvelope
+    set?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    disconnect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    delete?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    connect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    update?: PerfilPermisoUpdateWithWhereUniqueWithoutTenantInput | PerfilPermisoUpdateWithWhereUniqueWithoutTenantInput[]
+    updateMany?: PerfilPermisoUpdateManyWithWhereWithoutTenantInput | PerfilPermisoUpdateManyWithWhereWithoutTenantInput[]
+    deleteMany?: PerfilPermisoScalarWhereInput | PerfilPermisoScalarWhereInput[]
   }
 
   export type PersonaUpdateManyWithoutTenantNestedInput = {
@@ -82865,6 +85815,34 @@ export namespace Prisma {
     update?: PerfilesUpdateWithWhereUniqueWithoutTenantInput | PerfilesUpdateWithWhereUniqueWithoutTenantInput[]
     updateMany?: PerfilesUpdateManyWithWhereWithoutTenantInput | PerfilesUpdateManyWithWhereWithoutTenantInput[]
     deleteMany?: PerfilesScalarWhereInput | PerfilesScalarWhereInput[]
+  }
+
+  export type PermisoUncheckedUpdateManyWithoutTenantNestedInput = {
+    create?: XOR<PermisoCreateWithoutTenantInput, PermisoUncheckedCreateWithoutTenantInput> | PermisoCreateWithoutTenantInput[] | PermisoUncheckedCreateWithoutTenantInput[]
+    connectOrCreate?: PermisoCreateOrConnectWithoutTenantInput | PermisoCreateOrConnectWithoutTenantInput[]
+    upsert?: PermisoUpsertWithWhereUniqueWithoutTenantInput | PermisoUpsertWithWhereUniqueWithoutTenantInput[]
+    createMany?: PermisoCreateManyTenantInputEnvelope
+    set?: PermisoWhereUniqueInput | PermisoWhereUniqueInput[]
+    disconnect?: PermisoWhereUniqueInput | PermisoWhereUniqueInput[]
+    delete?: PermisoWhereUniqueInput | PermisoWhereUniqueInput[]
+    connect?: PermisoWhereUniqueInput | PermisoWhereUniqueInput[]
+    update?: PermisoUpdateWithWhereUniqueWithoutTenantInput | PermisoUpdateWithWhereUniqueWithoutTenantInput[]
+    updateMany?: PermisoUpdateManyWithWhereWithoutTenantInput | PermisoUpdateManyWithWhereWithoutTenantInput[]
+    deleteMany?: PermisoScalarWhereInput | PermisoScalarWhereInput[]
+  }
+
+  export type PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput = {
+    create?: XOR<PerfilPermisoCreateWithoutTenantInput, PerfilPermisoUncheckedCreateWithoutTenantInput> | PerfilPermisoCreateWithoutTenantInput[] | PerfilPermisoUncheckedCreateWithoutTenantInput[]
+    connectOrCreate?: PerfilPermisoCreateOrConnectWithoutTenantInput | PerfilPermisoCreateOrConnectWithoutTenantInput[]
+    upsert?: PerfilPermisoUpsertWithWhereUniqueWithoutTenantInput | PerfilPermisoUpsertWithWhereUniqueWithoutTenantInput[]
+    createMany?: PerfilPermisoCreateManyTenantInputEnvelope
+    set?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    disconnect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    delete?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    connect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    update?: PerfilPermisoUpdateWithWhereUniqueWithoutTenantInput | PerfilPermisoUpdateWithWhereUniqueWithoutTenantInput[]
+    updateMany?: PerfilPermisoUpdateManyWithWhereWithoutTenantInput | PerfilPermisoUpdateManyWithWhereWithoutTenantInput[]
+    deleteMany?: PerfilPermisoScalarWhereInput | PerfilPermisoScalarWhereInput[]
   }
 
   export type PersonaUncheckedUpdateManyWithoutTenantNestedInput = {
@@ -85527,6 +88505,13 @@ export namespace Prisma {
     connect?: TenantWhereUniqueInput
   }
 
+  export type PerfilPermisoCreateNestedManyWithoutPerfilInput = {
+    create?: XOR<PerfilPermisoCreateWithoutPerfilInput, PerfilPermisoUncheckedCreateWithoutPerfilInput> | PerfilPermisoCreateWithoutPerfilInput[] | PerfilPermisoUncheckedCreateWithoutPerfilInput[]
+    connectOrCreate?: PerfilPermisoCreateOrConnectWithoutPerfilInput | PerfilPermisoCreateOrConnectWithoutPerfilInput[]
+    createMany?: PerfilPermisoCreateManyPerfilInputEnvelope
+    connect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+  }
+
   export type FormularioPerfilUncheckedCreateNestedManyWithoutPerfilesInput = {
     create?: XOR<FormularioPerfilCreateWithoutPerfilesInput, FormularioPerfilUncheckedCreateWithoutPerfilesInput> | FormularioPerfilCreateWithoutPerfilesInput[] | FormularioPerfilUncheckedCreateWithoutPerfilesInput[]
     connectOrCreate?: FormularioPerfilCreateOrConnectWithoutPerfilesInput | FormularioPerfilCreateOrConnectWithoutPerfilesInput[]
@@ -85539,6 +88524,13 @@ export namespace Prisma {
     connectOrCreate?: PerfilUsuarioCreateOrConnectWithoutPerfilesInput | PerfilUsuarioCreateOrConnectWithoutPerfilesInput[]
     createMany?: PerfilUsuarioCreateManyPerfilesInputEnvelope
     connect?: PerfilUsuarioWhereUniqueInput | PerfilUsuarioWhereUniqueInput[]
+  }
+
+  export type PerfilPermisoUncheckedCreateNestedManyWithoutPerfilInput = {
+    create?: XOR<PerfilPermisoCreateWithoutPerfilInput, PerfilPermisoUncheckedCreateWithoutPerfilInput> | PerfilPermisoCreateWithoutPerfilInput[] | PerfilPermisoUncheckedCreateWithoutPerfilInput[]
+    connectOrCreate?: PerfilPermisoCreateOrConnectWithoutPerfilInput | PerfilPermisoCreateOrConnectWithoutPerfilInput[]
+    createMany?: PerfilPermisoCreateManyPerfilInputEnvelope
+    connect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
   }
 
   export type EnumPerfilTipoFieldUpdateOperationsInput = {
@@ -85581,6 +88573,20 @@ export namespace Prisma {
     update?: XOR<XOR<TenantUpdateToOneWithWhereWithoutPerfilesInput, TenantUpdateWithoutPerfilesInput>, TenantUncheckedUpdateWithoutPerfilesInput>
   }
 
+  export type PerfilPermisoUpdateManyWithoutPerfilNestedInput = {
+    create?: XOR<PerfilPermisoCreateWithoutPerfilInput, PerfilPermisoUncheckedCreateWithoutPerfilInput> | PerfilPermisoCreateWithoutPerfilInput[] | PerfilPermisoUncheckedCreateWithoutPerfilInput[]
+    connectOrCreate?: PerfilPermisoCreateOrConnectWithoutPerfilInput | PerfilPermisoCreateOrConnectWithoutPerfilInput[]
+    upsert?: PerfilPermisoUpsertWithWhereUniqueWithoutPerfilInput | PerfilPermisoUpsertWithWhereUniqueWithoutPerfilInput[]
+    createMany?: PerfilPermisoCreateManyPerfilInputEnvelope
+    set?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    disconnect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    delete?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    connect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    update?: PerfilPermisoUpdateWithWhereUniqueWithoutPerfilInput | PerfilPermisoUpdateWithWhereUniqueWithoutPerfilInput[]
+    updateMany?: PerfilPermisoUpdateManyWithWhereWithoutPerfilInput | PerfilPermisoUpdateManyWithWhereWithoutPerfilInput[]
+    deleteMany?: PerfilPermisoScalarWhereInput | PerfilPermisoScalarWhereInput[]
+  }
+
   export type FormularioPerfilUncheckedUpdateManyWithoutPerfilesNestedInput = {
     create?: XOR<FormularioPerfilCreateWithoutPerfilesInput, FormularioPerfilUncheckedCreateWithoutPerfilesInput> | FormularioPerfilCreateWithoutPerfilesInput[] | FormularioPerfilUncheckedCreateWithoutPerfilesInput[]
     connectOrCreate?: FormularioPerfilCreateOrConnectWithoutPerfilesInput | FormularioPerfilCreateOrConnectWithoutPerfilesInput[]
@@ -85607,6 +88613,118 @@ export namespace Prisma {
     update?: PerfilUsuarioUpdateWithWhereUniqueWithoutPerfilesInput | PerfilUsuarioUpdateWithWhereUniqueWithoutPerfilesInput[]
     updateMany?: PerfilUsuarioUpdateManyWithWhereWithoutPerfilesInput | PerfilUsuarioUpdateManyWithWhereWithoutPerfilesInput[]
     deleteMany?: PerfilUsuarioScalarWhereInput | PerfilUsuarioScalarWhereInput[]
+  }
+
+  export type PerfilPermisoUncheckedUpdateManyWithoutPerfilNestedInput = {
+    create?: XOR<PerfilPermisoCreateWithoutPerfilInput, PerfilPermisoUncheckedCreateWithoutPerfilInput> | PerfilPermisoCreateWithoutPerfilInput[] | PerfilPermisoUncheckedCreateWithoutPerfilInput[]
+    connectOrCreate?: PerfilPermisoCreateOrConnectWithoutPerfilInput | PerfilPermisoCreateOrConnectWithoutPerfilInput[]
+    upsert?: PerfilPermisoUpsertWithWhereUniqueWithoutPerfilInput | PerfilPermisoUpsertWithWhereUniqueWithoutPerfilInput[]
+    createMany?: PerfilPermisoCreateManyPerfilInputEnvelope
+    set?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    disconnect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    delete?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    connect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    update?: PerfilPermisoUpdateWithWhereUniqueWithoutPerfilInput | PerfilPermisoUpdateWithWhereUniqueWithoutPerfilInput[]
+    updateMany?: PerfilPermisoUpdateManyWithWhereWithoutPerfilInput | PerfilPermisoUpdateManyWithWhereWithoutPerfilInput[]
+    deleteMany?: PerfilPermisoScalarWhereInput | PerfilPermisoScalarWhereInput[]
+  }
+
+  export type PerfilPermisoCreateNestedManyWithoutPermisoInput = {
+    create?: XOR<PerfilPermisoCreateWithoutPermisoInput, PerfilPermisoUncheckedCreateWithoutPermisoInput> | PerfilPermisoCreateWithoutPermisoInput[] | PerfilPermisoUncheckedCreateWithoutPermisoInput[]
+    connectOrCreate?: PerfilPermisoCreateOrConnectWithoutPermisoInput | PerfilPermisoCreateOrConnectWithoutPermisoInput[]
+    createMany?: PerfilPermisoCreateManyPermisoInputEnvelope
+    connect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+  }
+
+  export type TenantCreateNestedOneWithoutPermisosInput = {
+    create?: XOR<TenantCreateWithoutPermisosInput, TenantUncheckedCreateWithoutPermisosInput>
+    connectOrCreate?: TenantCreateOrConnectWithoutPermisosInput
+    connect?: TenantWhereUniqueInput
+  }
+
+  export type PerfilPermisoUncheckedCreateNestedManyWithoutPermisoInput = {
+    create?: XOR<PerfilPermisoCreateWithoutPermisoInput, PerfilPermisoUncheckedCreateWithoutPermisoInput> | PerfilPermisoCreateWithoutPermisoInput[] | PerfilPermisoUncheckedCreateWithoutPermisoInput[]
+    connectOrCreate?: PerfilPermisoCreateOrConnectWithoutPermisoInput | PerfilPermisoCreateOrConnectWithoutPermisoInput[]
+    createMany?: PerfilPermisoCreateManyPermisoInputEnvelope
+    connect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+  }
+
+  export type PerfilPermisoUpdateManyWithoutPermisoNestedInput = {
+    create?: XOR<PerfilPermisoCreateWithoutPermisoInput, PerfilPermisoUncheckedCreateWithoutPermisoInput> | PerfilPermisoCreateWithoutPermisoInput[] | PerfilPermisoUncheckedCreateWithoutPermisoInput[]
+    connectOrCreate?: PerfilPermisoCreateOrConnectWithoutPermisoInput | PerfilPermisoCreateOrConnectWithoutPermisoInput[]
+    upsert?: PerfilPermisoUpsertWithWhereUniqueWithoutPermisoInput | PerfilPermisoUpsertWithWhereUniqueWithoutPermisoInput[]
+    createMany?: PerfilPermisoCreateManyPermisoInputEnvelope
+    set?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    disconnect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    delete?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    connect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    update?: PerfilPermisoUpdateWithWhereUniqueWithoutPermisoInput | PerfilPermisoUpdateWithWhereUniqueWithoutPermisoInput[]
+    updateMany?: PerfilPermisoUpdateManyWithWhereWithoutPermisoInput | PerfilPermisoUpdateManyWithWhereWithoutPermisoInput[]
+    deleteMany?: PerfilPermisoScalarWhereInput | PerfilPermisoScalarWhereInput[]
+  }
+
+  export type TenantUpdateOneRequiredWithoutPermisosNestedInput = {
+    create?: XOR<TenantCreateWithoutPermisosInput, TenantUncheckedCreateWithoutPermisosInput>
+    connectOrCreate?: TenantCreateOrConnectWithoutPermisosInput
+    upsert?: TenantUpsertWithoutPermisosInput
+    connect?: TenantWhereUniqueInput
+    update?: XOR<XOR<TenantUpdateToOneWithWhereWithoutPermisosInput, TenantUpdateWithoutPermisosInput>, TenantUncheckedUpdateWithoutPermisosInput>
+  }
+
+  export type PerfilPermisoUncheckedUpdateManyWithoutPermisoNestedInput = {
+    create?: XOR<PerfilPermisoCreateWithoutPermisoInput, PerfilPermisoUncheckedCreateWithoutPermisoInput> | PerfilPermisoCreateWithoutPermisoInput[] | PerfilPermisoUncheckedCreateWithoutPermisoInput[]
+    connectOrCreate?: PerfilPermisoCreateOrConnectWithoutPermisoInput | PerfilPermisoCreateOrConnectWithoutPermisoInput[]
+    upsert?: PerfilPermisoUpsertWithWhereUniqueWithoutPermisoInput | PerfilPermisoUpsertWithWhereUniqueWithoutPermisoInput[]
+    createMany?: PerfilPermisoCreateManyPermisoInputEnvelope
+    set?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    disconnect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    delete?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    connect?: PerfilPermisoWhereUniqueInput | PerfilPermisoWhereUniqueInput[]
+    update?: PerfilPermisoUpdateWithWhereUniqueWithoutPermisoInput | PerfilPermisoUpdateWithWhereUniqueWithoutPermisoInput[]
+    updateMany?: PerfilPermisoUpdateManyWithWhereWithoutPermisoInput | PerfilPermisoUpdateManyWithWhereWithoutPermisoInput[]
+    deleteMany?: PerfilPermisoScalarWhereInput | PerfilPermisoScalarWhereInput[]
+  }
+
+  export type PerfilesCreateNestedOneWithoutPerfilPermisoInput = {
+    create?: XOR<PerfilesCreateWithoutPerfilPermisoInput, PerfilesUncheckedCreateWithoutPerfilPermisoInput>
+    connectOrCreate?: PerfilesCreateOrConnectWithoutPerfilPermisoInput
+    connect?: PerfilesWhereUniqueInput
+  }
+
+  export type PermisoCreateNestedOneWithoutPerfilPermisosInput = {
+    create?: XOR<PermisoCreateWithoutPerfilPermisosInput, PermisoUncheckedCreateWithoutPerfilPermisosInput>
+    connectOrCreate?: PermisoCreateOrConnectWithoutPerfilPermisosInput
+    connect?: PermisoWhereUniqueInput
+  }
+
+  export type TenantCreateNestedOneWithoutPerfilPermisosInput = {
+    create?: XOR<TenantCreateWithoutPerfilPermisosInput, TenantUncheckedCreateWithoutPerfilPermisosInput>
+    connectOrCreate?: TenantCreateOrConnectWithoutPerfilPermisosInput
+    connect?: TenantWhereUniqueInput
+  }
+
+  export type PerfilesUpdateOneRequiredWithoutPerfilPermisoNestedInput = {
+    create?: XOR<PerfilesCreateWithoutPerfilPermisoInput, PerfilesUncheckedCreateWithoutPerfilPermisoInput>
+    connectOrCreate?: PerfilesCreateOrConnectWithoutPerfilPermisoInput
+    upsert?: PerfilesUpsertWithoutPerfilPermisoInput
+    connect?: PerfilesWhereUniqueInput
+    update?: XOR<XOR<PerfilesUpdateToOneWithWhereWithoutPerfilPermisoInput, PerfilesUpdateWithoutPerfilPermisoInput>, PerfilesUncheckedUpdateWithoutPerfilPermisoInput>
+  }
+
+  export type PermisoUpdateOneRequiredWithoutPerfilPermisosNestedInput = {
+    create?: XOR<PermisoCreateWithoutPerfilPermisosInput, PermisoUncheckedCreateWithoutPerfilPermisosInput>
+    connectOrCreate?: PermisoCreateOrConnectWithoutPerfilPermisosInput
+    upsert?: PermisoUpsertWithoutPerfilPermisosInput
+    connect?: PermisoWhereUniqueInput
+    update?: XOR<XOR<PermisoUpdateToOneWithWhereWithoutPerfilPermisosInput, PermisoUpdateWithoutPerfilPermisosInput>, PermisoUncheckedUpdateWithoutPerfilPermisosInput>
+  }
+
+  export type TenantUpdateOneRequiredWithoutPerfilPermisosNestedInput = {
+    create?: XOR<TenantCreateWithoutPerfilPermisosInput, TenantUncheckedCreateWithoutPerfilPermisosInput>
+    connectOrCreate?: TenantCreateOrConnectWithoutPerfilPermisosInput
+    upsert?: TenantUpsertWithoutPerfilPermisosInput
+    connect?: TenantWhereUniqueInput
+    update?: XOR<XOR<TenantUpdateToOneWithWhereWithoutPerfilPermisosInput, TenantUpdateWithoutPerfilPermisosInput>, TenantUncheckedUpdateWithoutPerfilPermisosInput>
   }
 
   export type PerfilesCreateNestedOneWithoutPerfilUsuarioInput = {
@@ -88234,6 +91352,7 @@ export namespace Prisma {
     EstaEliminado: boolean
     FormularioPerfil?: FormularioPerfilCreateNestedManyWithoutPerfilesInput
     PerfilUsuario?: PerfilUsuarioCreateNestedManyWithoutPerfilesInput
+    PerfilPermiso?: PerfilPermisoCreateNestedManyWithoutPerfilInput
   }
 
   export type PerfilesUncheckedCreateWithoutTenantInput = {
@@ -88243,6 +91362,7 @@ export namespace Prisma {
     EstaEliminado: boolean
     FormularioPerfil?: FormularioPerfilUncheckedCreateNestedManyWithoutPerfilesInput
     PerfilUsuario?: PerfilUsuarioUncheckedCreateNestedManyWithoutPerfilesInput
+    PerfilPermiso?: PerfilPermisoUncheckedCreateNestedManyWithoutPerfilInput
   }
 
   export type PerfilesCreateOrConnectWithoutTenantInput = {
@@ -88252,6 +91372,52 @@ export namespace Prisma {
 
   export type PerfilesCreateManyTenantInputEnvelope = {
     data: PerfilesCreateManyTenantInput | PerfilesCreateManyTenantInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type PermisoCreateWithoutTenantInput = {
+    Id?: bigint | number
+    Clave: string
+    Descripcion?: string | null
+    EstaEliminado?: boolean
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutPermisoInput
+  }
+
+  export type PermisoUncheckedCreateWithoutTenantInput = {
+    Id?: bigint | number
+    Clave: string
+    Descripcion?: string | null
+    EstaEliminado?: boolean
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutPermisoInput
+  }
+
+  export type PermisoCreateOrConnectWithoutTenantInput = {
+    where: PermisoWhereUniqueInput
+    create: XOR<PermisoCreateWithoutTenantInput, PermisoUncheckedCreateWithoutTenantInput>
+  }
+
+  export type PermisoCreateManyTenantInputEnvelope = {
+    data: PermisoCreateManyTenantInput | PermisoCreateManyTenantInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type PerfilPermisoCreateWithoutTenantInput = {
+    Perfil: PerfilesCreateNestedOneWithoutPerfilPermisoInput
+    Permiso: PermisoCreateNestedOneWithoutPerfilPermisosInput
+  }
+
+  export type PerfilPermisoUncheckedCreateWithoutTenantInput = {
+    PerfilId: bigint | number
+    PermisoId: bigint | number
+  }
+
+  export type PerfilPermisoCreateOrConnectWithoutTenantInput = {
+    where: PerfilPermisoWhereUniqueInput
+    create: XOR<PerfilPermisoCreateWithoutTenantInput, PerfilPermisoUncheckedCreateWithoutTenantInput>
+  }
+
+  export type PerfilPermisoCreateManyTenantInputEnvelope = {
+    data: PerfilPermisoCreateManyTenantInput | PerfilPermisoCreateManyTenantInput[]
     skipDuplicates?: boolean
   }
 
@@ -89262,6 +92428,58 @@ export namespace Prisma {
     TenantId?: BigIntFilter<"Perfiles"> | bigint | number
   }
 
+  export type PermisoUpsertWithWhereUniqueWithoutTenantInput = {
+    where: PermisoWhereUniqueInput
+    update: XOR<PermisoUpdateWithoutTenantInput, PermisoUncheckedUpdateWithoutTenantInput>
+    create: XOR<PermisoCreateWithoutTenantInput, PermisoUncheckedCreateWithoutTenantInput>
+  }
+
+  export type PermisoUpdateWithWhereUniqueWithoutTenantInput = {
+    where: PermisoWhereUniqueInput
+    data: XOR<PermisoUpdateWithoutTenantInput, PermisoUncheckedUpdateWithoutTenantInput>
+  }
+
+  export type PermisoUpdateManyWithWhereWithoutTenantInput = {
+    where: PermisoScalarWhereInput
+    data: XOR<PermisoUpdateManyMutationInput, PermisoUncheckedUpdateManyWithoutTenantInput>
+  }
+
+  export type PermisoScalarWhereInput = {
+    AND?: PermisoScalarWhereInput | PermisoScalarWhereInput[]
+    OR?: PermisoScalarWhereInput[]
+    NOT?: PermisoScalarWhereInput | PermisoScalarWhereInput[]
+    Id?: BigIntFilter<"Permiso"> | bigint | number
+    Clave?: StringFilter<"Permiso"> | string
+    Descripcion?: StringNullableFilter<"Permiso"> | string | null
+    EstaEliminado?: BoolFilter<"Permiso"> | boolean
+    TenantId?: BigIntFilter<"Permiso"> | bigint | number
+  }
+
+  export type PerfilPermisoUpsertWithWhereUniqueWithoutTenantInput = {
+    where: PerfilPermisoWhereUniqueInput
+    update: XOR<PerfilPermisoUpdateWithoutTenantInput, PerfilPermisoUncheckedUpdateWithoutTenantInput>
+    create: XOR<PerfilPermisoCreateWithoutTenantInput, PerfilPermisoUncheckedCreateWithoutTenantInput>
+  }
+
+  export type PerfilPermisoUpdateWithWhereUniqueWithoutTenantInput = {
+    where: PerfilPermisoWhereUniqueInput
+    data: XOR<PerfilPermisoUpdateWithoutTenantInput, PerfilPermisoUncheckedUpdateWithoutTenantInput>
+  }
+
+  export type PerfilPermisoUpdateManyWithWhereWithoutTenantInput = {
+    where: PerfilPermisoScalarWhereInput
+    data: XOR<PerfilPermisoUpdateManyMutationInput, PerfilPermisoUncheckedUpdateManyWithoutTenantInput>
+  }
+
+  export type PerfilPermisoScalarWhereInput = {
+    AND?: PerfilPermisoScalarWhereInput | PerfilPermisoScalarWhereInput[]
+    OR?: PerfilPermisoScalarWhereInput[]
+    NOT?: PerfilPermisoScalarWhereInput | PerfilPermisoScalarWhereInput[]
+    PerfilId?: BigIntFilter<"PerfilPermiso"> | bigint | number
+    PermisoId?: BigIntFilter<"PerfilPermiso"> | bigint | number
+    TenantId?: BigIntFilter<"PerfilPermiso"> | bigint | number
+  }
+
   export type PersonaUpsertWithWhereUniqueWithoutTenantInput = {
     where: PersonaWhereUniqueInput
     update: XOR<PersonaUpdateWithoutTenantInput, PersonaUncheckedUpdateWithoutTenantInput>
@@ -89579,6 +92797,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -89623,6 +92843,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -89708,6 +92930,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -89753,6 +92977,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -89812,6 +93038,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -89857,6 +93085,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -89988,6 +93218,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -90033,6 +93265,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -90315,6 +93549,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -90360,6 +93596,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -90564,6 +93802,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -90609,6 +93849,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -90768,6 +94010,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -90813,6 +94057,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -90856,6 +94102,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -90901,6 +94149,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -91022,6 +94272,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -91067,6 +94319,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -91142,6 +94396,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -91187,6 +94443,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -91406,6 +94664,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -91451,6 +94711,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -91674,6 +94936,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -91719,6 +94983,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -91888,6 +95154,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -91933,6 +95201,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -92035,6 +95305,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -92080,6 +95352,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -92436,6 +95710,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -92481,6 +95757,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -94274,6 +97552,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -94319,6 +97599,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -94408,6 +97690,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -94453,6 +97737,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -94656,6 +97942,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -94701,6 +97989,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -94789,6 +98079,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -94834,6 +98126,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -94877,6 +98171,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -94922,6 +98218,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -94981,6 +98279,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -95026,6 +98326,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -95090,6 +98392,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -95135,6 +98439,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -95247,6 +98553,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -95292,6 +98600,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -95793,6 +99103,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -95838,6 +99150,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -95961,6 +99275,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -96006,6 +99322,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -96104,6 +99422,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -96149,6 +99469,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -96269,6 +99591,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -96314,6 +99638,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -96483,6 +99809,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -96528,6 +99856,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -96725,6 +100055,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -96770,6 +100102,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -96870,6 +100204,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -96915,6 +100251,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -97082,6 +100420,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -97127,6 +100467,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -97591,6 +100933,7 @@ export namespace Prisma {
     EstaEliminado: boolean
     PerfilUsuario?: PerfilUsuarioCreateNestedManyWithoutPerfilesInput
     Tenant: TenantCreateNestedOneWithoutPerfilesInput
+    PerfilPermiso?: PerfilPermisoCreateNestedManyWithoutPerfilInput
   }
 
   export type PerfilesUncheckedCreateWithoutFormularioPerfilInput = {
@@ -97600,6 +100943,7 @@ export namespace Prisma {
     EstaEliminado: boolean
     TenantId: bigint | number
     PerfilUsuario?: PerfilUsuarioUncheckedCreateNestedManyWithoutPerfilesInput
+    PerfilPermiso?: PerfilPermisoUncheckedCreateNestedManyWithoutPerfilInput
   }
 
   export type PerfilesCreateOrConnectWithoutFormularioPerfilInput = {
@@ -97639,6 +100983,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -97684,6 +101030,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -97747,6 +101095,7 @@ export namespace Prisma {
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     PerfilUsuario?: PerfilUsuarioUpdateManyWithoutPerfilesNestedInput
     Tenant?: TenantUpdateOneRequiredWithoutPerfilesNestedInput
+    PerfilPermiso?: PerfilPermisoUpdateManyWithoutPerfilNestedInput
   }
 
   export type PerfilesUncheckedUpdateWithoutFormularioPerfilInput = {
@@ -97756,6 +101105,7 @@ export namespace Prisma {
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
     PerfilUsuario?: PerfilUsuarioUncheckedUpdateManyWithoutPerfilesNestedInput
+    PerfilPermiso?: PerfilPermisoUncheckedUpdateManyWithoutPerfilNestedInput
   }
 
   export type TenantUpsertWithoutFormulariosPerfilesInput = {
@@ -97801,6 +101151,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -97846,6 +101198,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -97909,6 +101263,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -97954,6 +101310,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -98029,6 +101387,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -98074,6 +101434,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -98191,6 +101553,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -98236,6 +101600,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -98381,6 +101747,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -98426,6 +101794,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -98633,6 +102003,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -98678,6 +102050,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -98753,6 +102127,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -98798,6 +102174,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -98871,6 +102249,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -98916,6 +102296,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -98991,6 +102373,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -99036,6 +102420,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -99119,6 +102505,8 @@ export namespace Prisma {
     MotivosBaja?: MotivoBajasCreateNestedManyWithoutTenantInput
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -99164,6 +102552,8 @@ export namespace Prisma {
     MotivosBaja?: MotivoBajasUncheckedCreateNestedManyWithoutTenantInput
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -99178,6 +102568,26 @@ export namespace Prisma {
   export type TenantCreateOrConnectWithoutPerfilesInput = {
     where: TenantWhereUniqueInput
     create: XOR<TenantCreateWithoutPerfilesInput, TenantUncheckedCreateWithoutPerfilesInput>
+  }
+
+  export type PerfilPermisoCreateWithoutPerfilInput = {
+    Permiso: PermisoCreateNestedOneWithoutPerfilPermisosInput
+    Tenant: TenantCreateNestedOneWithoutPerfilPermisosInput
+  }
+
+  export type PerfilPermisoUncheckedCreateWithoutPerfilInput = {
+    PermisoId: bigint | number
+    TenantId: bigint | number
+  }
+
+  export type PerfilPermisoCreateOrConnectWithoutPerfilInput = {
+    where: PerfilPermisoWhereUniqueInput
+    create: XOR<PerfilPermisoCreateWithoutPerfilInput, PerfilPermisoUncheckedCreateWithoutPerfilInput>
+  }
+
+  export type PerfilPermisoCreateManyPerfilInputEnvelope = {
+    data: PerfilPermisoCreateManyPerfilInput | PerfilPermisoCreateManyPerfilInput[]
+    skipDuplicates?: boolean
   }
 
   export type FormularioPerfilUpsertWithWhereUniqueWithoutPerfilesInput = {
@@ -99255,6 +102665,8 @@ export namespace Prisma {
     MotivosBaja?: MotivoBajasUpdateManyWithoutTenantNestedInput
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -99300,6 +102712,564 @@ export namespace Prisma {
     MotivosBaja?: MotivoBajasUncheckedUpdateManyWithoutTenantNestedInput
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
+    Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
+    Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
+    Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
+    PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
+    Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
+    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
+    Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
+    Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
+  }
+
+  export type PerfilPermisoUpsertWithWhereUniqueWithoutPerfilInput = {
+    where: PerfilPermisoWhereUniqueInput
+    update: XOR<PerfilPermisoUpdateWithoutPerfilInput, PerfilPermisoUncheckedUpdateWithoutPerfilInput>
+    create: XOR<PerfilPermisoCreateWithoutPerfilInput, PerfilPermisoUncheckedCreateWithoutPerfilInput>
+  }
+
+  export type PerfilPermisoUpdateWithWhereUniqueWithoutPerfilInput = {
+    where: PerfilPermisoWhereUniqueInput
+    data: XOR<PerfilPermisoUpdateWithoutPerfilInput, PerfilPermisoUncheckedUpdateWithoutPerfilInput>
+  }
+
+  export type PerfilPermisoUpdateManyWithWhereWithoutPerfilInput = {
+    where: PerfilPermisoScalarWhereInput
+    data: XOR<PerfilPermisoUpdateManyMutationInput, PerfilPermisoUncheckedUpdateManyWithoutPerfilInput>
+  }
+
+  export type PerfilPermisoCreateWithoutPermisoInput = {
+    Perfil: PerfilesCreateNestedOneWithoutPerfilPermisoInput
+    Tenant: TenantCreateNestedOneWithoutPerfilPermisosInput
+  }
+
+  export type PerfilPermisoUncheckedCreateWithoutPermisoInput = {
+    PerfilId: bigint | number
+    TenantId: bigint | number
+  }
+
+  export type PerfilPermisoCreateOrConnectWithoutPermisoInput = {
+    where: PerfilPermisoWhereUniqueInput
+    create: XOR<PerfilPermisoCreateWithoutPermisoInput, PerfilPermisoUncheckedCreateWithoutPermisoInput>
+  }
+
+  export type PerfilPermisoCreateManyPermisoInputEnvelope = {
+    data: PerfilPermisoCreateManyPermisoInput | PerfilPermisoCreateManyPermisoInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type TenantCreateWithoutPermisosInput = {
+    Id?: bigint | number
+    Nombre: string
+    Dominio?: string | null
+    RazonSocial?: string | null
+    Cuit?: string | null
+    Email?: string | null
+    Telefono?: string | null
+    EstaActivo?: boolean
+    OnboardingCompleto?: boolean
+    Articulos?: ArticuloCreateNestedManyWithoutTenantInput
+    BajaArticulos?: BajaArticuloCreateNestedManyWithoutTenantInput
+    Bancos?: BancoCreateNestedManyWithoutTenantInput
+    Cajas?: CajaCreateNestedManyWithoutTenantInput
+    Cheques?: ChequeCreateNestedManyWithoutTenantInput
+    Comprobantes?: ComprobanteCreateNestedManyWithoutTenantInput
+    ConceptosGasto?: ConceptoGastosCreateNestedManyWithoutTenantInput
+    Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
+    Contadores?: ContadorCreateNestedManyWithoutTenantInput
+    CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
+    DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
+    DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
+    DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
+    FormasPago?: FormaPagoCreateNestedManyWithoutTenantInput
+    FormulariosPerfiles?: FormularioPerfilCreateNestedManyWithoutTenantInput
+    FormulariosPermisos?: FormulariosCreateNestedManyWithoutTenantInput
+    Gastos?: GastoCreateNestedManyWithoutTenantInput
+    Logs?: LogCreateNestedManyWithoutTenantInput
+    Marcas?: MarcaCreateNestedManyWithoutTenantInput
+    MotivosBaja?: MotivoBajasCreateNestedManyWithoutTenantInput
+    Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
+    PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
+    Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
+    Personas?: PersonaCreateNestedManyWithoutTenantInput
+    Precios?: PrecioCreateNestedManyWithoutTenantInput
+    Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
+    PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
+    Rubros?: RubroCreateNestedManyWithoutTenantInput
+    Stocks?: StockCreateNestedManyWithoutTenantInput
+    Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
+    Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
+    Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
+  }
+
+  export type TenantUncheckedCreateWithoutPermisosInput = {
+    Id?: bigint | number
+    Nombre: string
+    Dominio?: string | null
+    RazonSocial?: string | null
+    Cuit?: string | null
+    Email?: string | null
+    Telefono?: string | null
+    EstaActivo?: boolean
+    PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
+    Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
+    BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
+    Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
+    Cajas?: CajaUncheckedCreateNestedManyWithoutTenantInput
+    Cheques?: ChequeUncheckedCreateNestedManyWithoutTenantInput
+    Comprobantes?: ComprobanteUncheckedCreateNestedManyWithoutTenantInput
+    ConceptosGasto?: ConceptoGastosUncheckedCreateNestedManyWithoutTenantInput
+    Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
+    Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
+    CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
+    DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
+    DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
+    DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
+    FormasPago?: FormaPagoUncheckedCreateNestedManyWithoutTenantInput
+    FormulariosPerfiles?: FormularioPerfilUncheckedCreateNestedManyWithoutTenantInput
+    FormulariosPermisos?: FormulariosUncheckedCreateNestedManyWithoutTenantInput
+    Gastos?: GastoUncheckedCreateNestedManyWithoutTenantInput
+    Logs?: LogUncheckedCreateNestedManyWithoutTenantInput
+    Marcas?: MarcaUncheckedCreateNestedManyWithoutTenantInput
+    MotivosBaja?: MotivoBajasUncheckedCreateNestedManyWithoutTenantInput
+    Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
+    Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
+    Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
+    Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
+    Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
+    PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
+    Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
+    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
+    Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
+    Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
+  }
+
+  export type TenantCreateOrConnectWithoutPermisosInput = {
+    where: TenantWhereUniqueInput
+    create: XOR<TenantCreateWithoutPermisosInput, TenantUncheckedCreateWithoutPermisosInput>
+  }
+
+  export type PerfilPermisoUpsertWithWhereUniqueWithoutPermisoInput = {
+    where: PerfilPermisoWhereUniqueInput
+    update: XOR<PerfilPermisoUpdateWithoutPermisoInput, PerfilPermisoUncheckedUpdateWithoutPermisoInput>
+    create: XOR<PerfilPermisoCreateWithoutPermisoInput, PerfilPermisoUncheckedCreateWithoutPermisoInput>
+  }
+
+  export type PerfilPermisoUpdateWithWhereUniqueWithoutPermisoInput = {
+    where: PerfilPermisoWhereUniqueInput
+    data: XOR<PerfilPermisoUpdateWithoutPermisoInput, PerfilPermisoUncheckedUpdateWithoutPermisoInput>
+  }
+
+  export type PerfilPermisoUpdateManyWithWhereWithoutPermisoInput = {
+    where: PerfilPermisoScalarWhereInput
+    data: XOR<PerfilPermisoUpdateManyMutationInput, PerfilPermisoUncheckedUpdateManyWithoutPermisoInput>
+  }
+
+  export type TenantUpsertWithoutPermisosInput = {
+    update: XOR<TenantUpdateWithoutPermisosInput, TenantUncheckedUpdateWithoutPermisosInput>
+    create: XOR<TenantCreateWithoutPermisosInput, TenantUncheckedCreateWithoutPermisosInput>
+    where?: TenantWhereInput
+  }
+
+  export type TenantUpdateToOneWithWhereWithoutPermisosInput = {
+    where?: TenantWhereInput
+    data: XOR<TenantUpdateWithoutPermisosInput, TenantUncheckedUpdateWithoutPermisosInput>
+  }
+
+  export type TenantUpdateWithoutPermisosInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    Nombre?: StringFieldUpdateOperationsInput | string
+    Dominio?: NullableStringFieldUpdateOperationsInput | string | null
+    RazonSocial?: NullableStringFieldUpdateOperationsInput | string | null
+    Cuit?: NullableStringFieldUpdateOperationsInput | string | null
+    Email?: NullableStringFieldUpdateOperationsInput | string | null
+    Telefono?: NullableStringFieldUpdateOperationsInput | string | null
+    EstaActivo?: BoolFieldUpdateOperationsInput | boolean
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
+    Articulos?: ArticuloUpdateManyWithoutTenantNestedInput
+    BajaArticulos?: BajaArticuloUpdateManyWithoutTenantNestedInput
+    Bancos?: BancoUpdateManyWithoutTenantNestedInput
+    Cajas?: CajaUpdateManyWithoutTenantNestedInput
+    Cheques?: ChequeUpdateManyWithoutTenantNestedInput
+    Comprobantes?: ComprobanteUpdateManyWithoutTenantNestedInput
+    ConceptosGasto?: ConceptoGastosUpdateManyWithoutTenantNestedInput
+    Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
+    Contadores?: ContadorUpdateManyWithoutTenantNestedInput
+    CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
+    DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
+    DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
+    DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
+    FormasPago?: FormaPagoUpdateManyWithoutTenantNestedInput
+    FormulariosPerfiles?: FormularioPerfilUpdateManyWithoutTenantNestedInput
+    FormulariosPermisos?: FormulariosUpdateManyWithoutTenantNestedInput
+    Gastos?: GastoUpdateManyWithoutTenantNestedInput
+    Logs?: LogUpdateManyWithoutTenantNestedInput
+    Marcas?: MarcaUpdateManyWithoutTenantNestedInput
+    MotivosBaja?: MotivoBajasUpdateManyWithoutTenantNestedInput
+    Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
+    PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
+    Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
+    Personas?: PersonaUpdateManyWithoutTenantNestedInput
+    Precios?: PrecioUpdateManyWithoutTenantNestedInput
+    Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
+    PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
+    Rubros?: RubroUpdateManyWithoutTenantNestedInput
+    Stocks?: StockUpdateManyWithoutTenantNestedInput
+    Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
+    Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
+    Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
+  }
+
+  export type TenantUncheckedUpdateWithoutPermisosInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    Nombre?: StringFieldUpdateOperationsInput | string
+    Dominio?: NullableStringFieldUpdateOperationsInput | string | null
+    RazonSocial?: NullableStringFieldUpdateOperationsInput | string | null
+    Cuit?: NullableStringFieldUpdateOperationsInput | string | null
+    Email?: NullableStringFieldUpdateOperationsInput | string | null
+    Telefono?: NullableStringFieldUpdateOperationsInput | string | null
+    EstaActivo?: BoolFieldUpdateOperationsInput | boolean
+    PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
+    Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
+    BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
+    Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
+    Cajas?: CajaUncheckedUpdateManyWithoutTenantNestedInput
+    Cheques?: ChequeUncheckedUpdateManyWithoutTenantNestedInput
+    Comprobantes?: ComprobanteUncheckedUpdateManyWithoutTenantNestedInput
+    ConceptosGasto?: ConceptoGastosUncheckedUpdateManyWithoutTenantNestedInput
+    Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
+    Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
+    CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
+    DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
+    DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
+    DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
+    FormasPago?: FormaPagoUncheckedUpdateManyWithoutTenantNestedInput
+    FormulariosPerfiles?: FormularioPerfilUncheckedUpdateManyWithoutTenantNestedInput
+    FormulariosPermisos?: FormulariosUncheckedUpdateManyWithoutTenantNestedInput
+    Gastos?: GastoUncheckedUpdateManyWithoutTenantNestedInput
+    Logs?: LogUncheckedUpdateManyWithoutTenantNestedInput
+    Marcas?: MarcaUncheckedUpdateManyWithoutTenantNestedInput
+    MotivosBaja?: MotivoBajasUncheckedUpdateManyWithoutTenantNestedInput
+    Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
+    Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
+    Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
+    Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
+    Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
+    PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
+    Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
+    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
+    Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
+    Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
+  }
+
+  export type PerfilesCreateWithoutPerfilPermisoInput = {
+    Id?: bigint | number
+    Descripcion: string
+    Tipo?: $Enums.PerfilTipo
+    EstaEliminado: boolean
+    FormularioPerfil?: FormularioPerfilCreateNestedManyWithoutPerfilesInput
+    PerfilUsuario?: PerfilUsuarioCreateNestedManyWithoutPerfilesInput
+    Tenant: TenantCreateNestedOneWithoutPerfilesInput
+  }
+
+  export type PerfilesUncheckedCreateWithoutPerfilPermisoInput = {
+    Id?: bigint | number
+    Descripcion: string
+    Tipo?: $Enums.PerfilTipo
+    EstaEliminado: boolean
+    TenantId: bigint | number
+    FormularioPerfil?: FormularioPerfilUncheckedCreateNestedManyWithoutPerfilesInput
+    PerfilUsuario?: PerfilUsuarioUncheckedCreateNestedManyWithoutPerfilesInput
+  }
+
+  export type PerfilesCreateOrConnectWithoutPerfilPermisoInput = {
+    where: PerfilesWhereUniqueInput
+    create: XOR<PerfilesCreateWithoutPerfilPermisoInput, PerfilesUncheckedCreateWithoutPerfilPermisoInput>
+  }
+
+  export type PermisoCreateWithoutPerfilPermisosInput = {
+    Id?: bigint | number
+    Clave: string
+    Descripcion?: string | null
+    EstaEliminado?: boolean
+    Tenant: TenantCreateNestedOneWithoutPermisosInput
+  }
+
+  export type PermisoUncheckedCreateWithoutPerfilPermisosInput = {
+    Id?: bigint | number
+    Clave: string
+    Descripcion?: string | null
+    EstaEliminado?: boolean
+    TenantId: bigint | number
+  }
+
+  export type PermisoCreateOrConnectWithoutPerfilPermisosInput = {
+    where: PermisoWhereUniqueInput
+    create: XOR<PermisoCreateWithoutPerfilPermisosInput, PermisoUncheckedCreateWithoutPerfilPermisosInput>
+  }
+
+  export type TenantCreateWithoutPerfilPermisosInput = {
+    Id?: bigint | number
+    Nombre: string
+    Dominio?: string | null
+    RazonSocial?: string | null
+    Cuit?: string | null
+    Email?: string | null
+    Telefono?: string | null
+    EstaActivo?: boolean
+    OnboardingCompleto?: boolean
+    Articulos?: ArticuloCreateNestedManyWithoutTenantInput
+    BajaArticulos?: BajaArticuloCreateNestedManyWithoutTenantInput
+    Bancos?: BancoCreateNestedManyWithoutTenantInput
+    Cajas?: CajaCreateNestedManyWithoutTenantInput
+    Cheques?: ChequeCreateNestedManyWithoutTenantInput
+    Comprobantes?: ComprobanteCreateNestedManyWithoutTenantInput
+    ConceptosGasto?: ConceptoGastosCreateNestedManyWithoutTenantInput
+    Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
+    Contadores?: ContadorCreateNestedManyWithoutTenantInput
+    CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
+    DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
+    DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
+    DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
+    FormasPago?: FormaPagoCreateNestedManyWithoutTenantInput
+    FormulariosPerfiles?: FormularioPerfilCreateNestedManyWithoutTenantInput
+    FormulariosPermisos?: FormulariosCreateNestedManyWithoutTenantInput
+    Gastos?: GastoCreateNestedManyWithoutTenantInput
+    Logs?: LogCreateNestedManyWithoutTenantInput
+    Marcas?: MarcaCreateNestedManyWithoutTenantInput
+    MotivosBaja?: MotivoBajasCreateNestedManyWithoutTenantInput
+    Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
+    PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
+    Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    Personas?: PersonaCreateNestedManyWithoutTenantInput
+    Precios?: PrecioCreateNestedManyWithoutTenantInput
+    Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
+    PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
+    Rubros?: RubroCreateNestedManyWithoutTenantInput
+    Stocks?: StockCreateNestedManyWithoutTenantInput
+    Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
+    Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
+    Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
+  }
+
+  export type TenantUncheckedCreateWithoutPerfilPermisosInput = {
+    Id?: bigint | number
+    Nombre: string
+    Dominio?: string | null
+    RazonSocial?: string | null
+    Cuit?: string | null
+    Email?: string | null
+    Telefono?: string | null
+    EstaActivo?: boolean
+    PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
+    Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
+    BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
+    Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
+    Cajas?: CajaUncheckedCreateNestedManyWithoutTenantInput
+    Cheques?: ChequeUncheckedCreateNestedManyWithoutTenantInput
+    Comprobantes?: ComprobanteUncheckedCreateNestedManyWithoutTenantInput
+    ConceptosGasto?: ConceptoGastosUncheckedCreateNestedManyWithoutTenantInput
+    Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
+    Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
+    CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
+    DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
+    DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
+    DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
+    FormasPago?: FormaPagoUncheckedCreateNestedManyWithoutTenantInput
+    FormulariosPerfiles?: FormularioPerfilUncheckedCreateNestedManyWithoutTenantInput
+    FormulariosPermisos?: FormulariosUncheckedCreateNestedManyWithoutTenantInput
+    Gastos?: GastoUncheckedCreateNestedManyWithoutTenantInput
+    Logs?: LogUncheckedCreateNestedManyWithoutTenantInput
+    Marcas?: MarcaUncheckedCreateNestedManyWithoutTenantInput
+    MotivosBaja?: MotivoBajasUncheckedCreateNestedManyWithoutTenantInput
+    Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
+    Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
+    Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
+    Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
+    PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
+    Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
+    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
+    Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
+    Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
+  }
+
+  export type TenantCreateOrConnectWithoutPerfilPermisosInput = {
+    where: TenantWhereUniqueInput
+    create: XOR<TenantCreateWithoutPerfilPermisosInput, TenantUncheckedCreateWithoutPerfilPermisosInput>
+  }
+
+  export type PerfilesUpsertWithoutPerfilPermisoInput = {
+    update: XOR<PerfilesUpdateWithoutPerfilPermisoInput, PerfilesUncheckedUpdateWithoutPerfilPermisoInput>
+    create: XOR<PerfilesCreateWithoutPerfilPermisoInput, PerfilesUncheckedCreateWithoutPerfilPermisoInput>
+    where?: PerfilesWhereInput
+  }
+
+  export type PerfilesUpdateToOneWithWhereWithoutPerfilPermisoInput = {
+    where?: PerfilesWhereInput
+    data: XOR<PerfilesUpdateWithoutPerfilPermisoInput, PerfilesUncheckedUpdateWithoutPerfilPermisoInput>
+  }
+
+  export type PerfilesUpdateWithoutPerfilPermisoInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    Descripcion?: StringFieldUpdateOperationsInput | string
+    Tipo?: EnumPerfilTipoFieldUpdateOperationsInput | $Enums.PerfilTipo
+    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    FormularioPerfil?: FormularioPerfilUpdateManyWithoutPerfilesNestedInput
+    PerfilUsuario?: PerfilUsuarioUpdateManyWithoutPerfilesNestedInput
+    Tenant?: TenantUpdateOneRequiredWithoutPerfilesNestedInput
+  }
+
+  export type PerfilesUncheckedUpdateWithoutPerfilPermisoInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    Descripcion?: StringFieldUpdateOperationsInput | string
+    Tipo?: EnumPerfilTipoFieldUpdateOperationsInput | $Enums.PerfilTipo
+    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+    FormularioPerfil?: FormularioPerfilUncheckedUpdateManyWithoutPerfilesNestedInput
+    PerfilUsuario?: PerfilUsuarioUncheckedUpdateManyWithoutPerfilesNestedInput
+  }
+
+  export type PermisoUpsertWithoutPerfilPermisosInput = {
+    update: XOR<PermisoUpdateWithoutPerfilPermisosInput, PermisoUncheckedUpdateWithoutPerfilPermisosInput>
+    create: XOR<PermisoCreateWithoutPerfilPermisosInput, PermisoUncheckedCreateWithoutPerfilPermisosInput>
+    where?: PermisoWhereInput
+  }
+
+  export type PermisoUpdateToOneWithWhereWithoutPerfilPermisosInput = {
+    where?: PermisoWhereInput
+    data: XOR<PermisoUpdateWithoutPerfilPermisosInput, PermisoUncheckedUpdateWithoutPerfilPermisosInput>
+  }
+
+  export type PermisoUpdateWithoutPerfilPermisosInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    Clave?: StringFieldUpdateOperationsInput | string
+    Descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    Tenant?: TenantUpdateOneRequiredWithoutPermisosNestedInput
+  }
+
+  export type PermisoUncheckedUpdateWithoutPerfilPermisosInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    Clave?: StringFieldUpdateOperationsInput | string
+    Descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+  }
+
+  export type TenantUpsertWithoutPerfilPermisosInput = {
+    update: XOR<TenantUpdateWithoutPerfilPermisosInput, TenantUncheckedUpdateWithoutPerfilPermisosInput>
+    create: XOR<TenantCreateWithoutPerfilPermisosInput, TenantUncheckedCreateWithoutPerfilPermisosInput>
+    where?: TenantWhereInput
+  }
+
+  export type TenantUpdateToOneWithWhereWithoutPerfilPermisosInput = {
+    where?: TenantWhereInput
+    data: XOR<TenantUpdateWithoutPerfilPermisosInput, TenantUncheckedUpdateWithoutPerfilPermisosInput>
+  }
+
+  export type TenantUpdateWithoutPerfilPermisosInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    Nombre?: StringFieldUpdateOperationsInput | string
+    Dominio?: NullableStringFieldUpdateOperationsInput | string | null
+    RazonSocial?: NullableStringFieldUpdateOperationsInput | string | null
+    Cuit?: NullableStringFieldUpdateOperationsInput | string | null
+    Email?: NullableStringFieldUpdateOperationsInput | string | null
+    Telefono?: NullableStringFieldUpdateOperationsInput | string | null
+    EstaActivo?: BoolFieldUpdateOperationsInput | boolean
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
+    Articulos?: ArticuloUpdateManyWithoutTenantNestedInput
+    BajaArticulos?: BajaArticuloUpdateManyWithoutTenantNestedInput
+    Bancos?: BancoUpdateManyWithoutTenantNestedInput
+    Cajas?: CajaUpdateManyWithoutTenantNestedInput
+    Cheques?: ChequeUpdateManyWithoutTenantNestedInput
+    Comprobantes?: ComprobanteUpdateManyWithoutTenantNestedInput
+    ConceptosGasto?: ConceptoGastosUpdateManyWithoutTenantNestedInput
+    Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
+    Contadores?: ContadorUpdateManyWithoutTenantNestedInput
+    CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
+    DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
+    DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
+    DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
+    FormasPago?: FormaPagoUpdateManyWithoutTenantNestedInput
+    FormulariosPerfiles?: FormularioPerfilUpdateManyWithoutTenantNestedInput
+    FormulariosPermisos?: FormulariosUpdateManyWithoutTenantNestedInput
+    Gastos?: GastoUpdateManyWithoutTenantNestedInput
+    Logs?: LogUpdateManyWithoutTenantNestedInput
+    Marcas?: MarcaUpdateManyWithoutTenantNestedInput
+    MotivosBaja?: MotivoBajasUpdateManyWithoutTenantNestedInput
+    Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
+    PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
+    Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    Personas?: PersonaUpdateManyWithoutTenantNestedInput
+    Precios?: PrecioUpdateManyWithoutTenantNestedInput
+    Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
+    PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
+    Rubros?: RubroUpdateManyWithoutTenantNestedInput
+    Stocks?: StockUpdateManyWithoutTenantNestedInput
+    Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
+    Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
+    Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
+  }
+
+  export type TenantUncheckedUpdateWithoutPerfilPermisosInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    Nombre?: StringFieldUpdateOperationsInput | string
+    Dominio?: NullableStringFieldUpdateOperationsInput | string | null
+    RazonSocial?: NullableStringFieldUpdateOperationsInput | string | null
+    Cuit?: NullableStringFieldUpdateOperationsInput | string | null
+    Email?: NullableStringFieldUpdateOperationsInput | string | null
+    Telefono?: NullableStringFieldUpdateOperationsInput | string | null
+    EstaActivo?: BoolFieldUpdateOperationsInput | boolean
+    PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
+    Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
+    BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
+    Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
+    Cajas?: CajaUncheckedUpdateManyWithoutTenantNestedInput
+    Cheques?: ChequeUncheckedUpdateManyWithoutTenantNestedInput
+    Comprobantes?: ComprobanteUncheckedUpdateManyWithoutTenantNestedInput
+    ConceptosGasto?: ConceptoGastosUncheckedUpdateManyWithoutTenantNestedInput
+    Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
+    Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
+    CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
+    DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
+    DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
+    DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
+    FormasPago?: FormaPagoUncheckedUpdateManyWithoutTenantNestedInput
+    FormulariosPerfiles?: FormularioPerfilUncheckedUpdateManyWithoutTenantNestedInput
+    FormulariosPermisos?: FormulariosUncheckedUpdateManyWithoutTenantNestedInput
+    Gastos?: GastoUncheckedUpdateManyWithoutTenantNestedInput
+    Logs?: LogUncheckedUpdateManyWithoutTenantNestedInput
+    Marcas?: MarcaUncheckedUpdateManyWithoutTenantNestedInput
+    MotivosBaja?: MotivoBajasUncheckedUpdateManyWithoutTenantNestedInput
+    Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
+    Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -99318,6 +103288,7 @@ export namespace Prisma {
     EstaEliminado: boolean
     FormularioPerfil?: FormularioPerfilCreateNestedManyWithoutPerfilesInput
     Tenant: TenantCreateNestedOneWithoutPerfilesInput
+    PerfilPermiso?: PerfilPermisoCreateNestedManyWithoutPerfilInput
   }
 
   export type PerfilesUncheckedCreateWithoutPerfilUsuarioInput = {
@@ -99327,6 +103298,7 @@ export namespace Prisma {
     EstaEliminado: boolean
     TenantId: bigint | number
     FormularioPerfil?: FormularioPerfilUncheckedCreateNestedManyWithoutPerfilesInput
+    PerfilPermiso?: PerfilPermisoUncheckedCreateNestedManyWithoutPerfilInput
   }
 
   export type PerfilesCreateOrConnectWithoutPerfilUsuarioInput = {
@@ -99366,6 +103338,8 @@ export namespace Prisma {
     MotivosBaja?: MotivoBajasCreateNestedManyWithoutTenantInput
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -99411,6 +103385,8 @@ export namespace Prisma {
     MotivosBaja?: MotivoBajasUncheckedCreateNestedManyWithoutTenantInput
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -99478,6 +103454,7 @@ export namespace Prisma {
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     FormularioPerfil?: FormularioPerfilUpdateManyWithoutPerfilesNestedInput
     Tenant?: TenantUpdateOneRequiredWithoutPerfilesNestedInput
+    PerfilPermiso?: PerfilPermisoUpdateManyWithoutPerfilNestedInput
   }
 
   export type PerfilesUncheckedUpdateWithoutPerfilUsuarioInput = {
@@ -99487,6 +103464,7 @@ export namespace Prisma {
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
     FormularioPerfil?: FormularioPerfilUncheckedUpdateManyWithoutPerfilesNestedInput
+    PerfilPermiso?: PerfilPermisoUncheckedUpdateManyWithoutPerfilNestedInput
   }
 
   export type TenantUpsertWithoutPerfilesUsuariosInput = {
@@ -99532,6 +103510,8 @@ export namespace Prisma {
     MotivosBaja?: MotivoBajasUpdateManyWithoutTenantNestedInput
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -99577,6 +103557,8 @@ export namespace Prisma {
     MotivosBaja?: MotivoBajasUncheckedUpdateManyWithoutTenantNestedInput
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -99683,6 +103665,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
@@ -99728,6 +103712,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
@@ -99868,6 +103854,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
@@ -99913,6 +103901,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
@@ -100727,6 +104717,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
@@ -100772,6 +104764,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
@@ -100847,6 +104841,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
@@ -100892,6 +104888,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
@@ -101047,6 +105045,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
@@ -101092,6 +105092,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
@@ -101285,6 +105287,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
@@ -101330,6 +105334,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
@@ -101395,6 +105401,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -101440,6 +105448,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -101515,6 +105525,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -101560,6 +105572,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -101677,6 +105691,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -101722,6 +105738,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -101797,6 +105815,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -101842,6 +105862,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -101954,6 +105976,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -101999,6 +106023,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -102133,6 +106159,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -102178,6 +106206,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -102245,6 +106275,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -102290,6 +106322,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -102376,6 +106410,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -102421,6 +106457,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -102538,6 +106576,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -102583,6 +106623,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -102658,6 +106700,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -102703,6 +106747,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -103005,6 +107051,8 @@ export namespace Prisma {
     Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -103050,6 +107098,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -103214,6 +107264,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -103259,6 +107311,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -103413,6 +107467,8 @@ export namespace Prisma {
     MotivosBaja?: MotivoBajasCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
     Personas?: PersonaCreateNestedManyWithoutTenantInput
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
@@ -103458,6 +107514,8 @@ export namespace Prisma {
     MotivosBaja?: MotivoBajasUncheckedCreateNestedManyWithoutTenantInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
     Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
     Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
@@ -103702,6 +107760,8 @@ export namespace Prisma {
     MotivosBaja?: MotivoBajasUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -103747,6 +107807,8 @@ export namespace Prisma {
     MotivosBaja?: MotivoBajasUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -104415,6 +108477,18 @@ export namespace Prisma {
     Descripcion: string
     Tipo?: $Enums.PerfilTipo
     EstaEliminado: boolean
+  }
+
+  export type PermisoCreateManyTenantInput = {
+    Id?: bigint | number
+    Clave: string
+    Descripcion?: string | null
+    EstaEliminado?: boolean
+  }
+
+  export type PerfilPermisoCreateManyTenantInput = {
+    PerfilId: bigint | number
+    PermisoId: bigint | number
   }
 
   export type PersonaCreateManyTenantInput = {
@@ -105298,6 +109372,7 @@ export namespace Prisma {
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     FormularioPerfil?: FormularioPerfilUpdateManyWithoutPerfilesNestedInput
     PerfilUsuario?: PerfilUsuarioUpdateManyWithoutPerfilesNestedInput
+    PerfilPermiso?: PerfilPermisoUpdateManyWithoutPerfilNestedInput
   }
 
   export type PerfilesUncheckedUpdateWithoutTenantInput = {
@@ -105307,6 +109382,7 @@ export namespace Prisma {
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     FormularioPerfil?: FormularioPerfilUncheckedUpdateManyWithoutPerfilesNestedInput
     PerfilUsuario?: PerfilUsuarioUncheckedUpdateManyWithoutPerfilesNestedInput
+    PerfilPermiso?: PerfilPermisoUncheckedUpdateManyWithoutPerfilNestedInput
   }
 
   export type PerfilesUncheckedUpdateManyWithoutTenantInput = {
@@ -105314,6 +109390,44 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Tipo?: EnumPerfilTipoFieldUpdateOperationsInput | $Enums.PerfilTipo
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type PermisoUpdateWithoutTenantInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    Clave?: StringFieldUpdateOperationsInput | string
+    Descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutPermisoNestedInput
+  }
+
+  export type PermisoUncheckedUpdateWithoutTenantInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    Clave?: StringFieldUpdateOperationsInput | string
+    Descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutPermisoNestedInput
+  }
+
+  export type PermisoUncheckedUpdateManyWithoutTenantInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    Clave?: StringFieldUpdateOperationsInput | string
+    Descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type PerfilPermisoUpdateWithoutTenantInput = {
+    Perfil?: PerfilesUpdateOneRequiredWithoutPerfilPermisoNestedInput
+    Permiso?: PermisoUpdateOneRequiredWithoutPerfilPermisosNestedInput
+  }
+
+  export type PerfilPermisoUncheckedUpdateWithoutTenantInput = {
+    PerfilId?: BigIntFieldUpdateOperationsInput | bigint | number
+    PermisoId?: BigIntFieldUpdateOperationsInput | bigint | number
+  }
+
+  export type PerfilPermisoUncheckedUpdateManyWithoutTenantInput = {
+    PerfilId?: BigIntFieldUpdateOperationsInput | bigint | number
+    PermisoId?: BigIntFieldUpdateOperationsInput | bigint | number
   }
 
   export type PersonaUpdateWithoutTenantInput = {
@@ -105622,6 +109736,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
@@ -105666,6 +109782,8 @@ export namespace Prisma {
     Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
     PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
     Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
     Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
@@ -107001,6 +111119,11 @@ export namespace Prisma {
     TenantId: bigint | number
   }
 
+  export type PerfilPermisoCreateManyPerfilInput = {
+    PermisoId: bigint | number
+    TenantId: bigint | number
+  }
+
   export type FormularioPerfilUpdateWithoutPerfilesInput = {
     Formularios?: FormulariosUpdateOneRequiredWithoutFormularioPerfilNestedInput
     Tenant?: TenantUpdateOneRequiredWithoutFormulariosPerfilesNestedInput
@@ -107028,6 +111151,41 @@ export namespace Prisma {
 
   export type PerfilUsuarioUncheckedUpdateManyWithoutPerfilesInput = {
     Usuario_Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+  }
+
+  export type PerfilPermisoUpdateWithoutPerfilInput = {
+    Permiso?: PermisoUpdateOneRequiredWithoutPerfilPermisosNestedInput
+    Tenant?: TenantUpdateOneRequiredWithoutPerfilPermisosNestedInput
+  }
+
+  export type PerfilPermisoUncheckedUpdateWithoutPerfilInput = {
+    PermisoId?: BigIntFieldUpdateOperationsInput | bigint | number
+    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+  }
+
+  export type PerfilPermisoUncheckedUpdateManyWithoutPerfilInput = {
+    PermisoId?: BigIntFieldUpdateOperationsInput | bigint | number
+    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+  }
+
+  export type PerfilPermisoCreateManyPermisoInput = {
+    PerfilId: bigint | number
+    TenantId: bigint | number
+  }
+
+  export type PerfilPermisoUpdateWithoutPermisoInput = {
+    Perfil?: PerfilesUpdateOneRequiredWithoutPerfilPermisoNestedInput
+    Tenant?: TenantUpdateOneRequiredWithoutPerfilPermisosNestedInput
+  }
+
+  export type PerfilPermisoUncheckedUpdateWithoutPermisoInput = {
+    PerfilId?: BigIntFieldUpdateOperationsInput | bigint | number
+    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+  }
+
+  export type PerfilPermisoUncheckedUpdateManyWithoutPermisoInput = {
+    PerfilId?: BigIntFieldUpdateOperationsInput | bigint | number
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
   }
 

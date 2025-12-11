@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -17,19 +17,13 @@ import {
   Select,
   SelectItem,
   Switch,
-  Table,
-  TableBody,
-  TableCell,
-  TableColumn,
-  TableHeader,
-  TableRow,
   Textarea,
   Tooltip,
 } from "@heroui/react";
 import { addToast } from "@heroui/react";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 
-// Página funcional de empleados: alta rápida, roles y tabla conectada a las APIs.
+// PÃ¡gina funcional de empleados: alta rÃ¡pida, roles y tabla conectada a las APIs.
 type EstadoEmpleado = "Activo" | "Invitado" | "Suspendido";
 
 type Empleado = {
@@ -58,6 +52,8 @@ type Rol = {
   nombre: string;
   usuarios: number;
   tipo: "ADMINISTRADOR" | "EMPLEADO";
+  descripcion?: string | null;
+  permisos?: string[];
 };
 
 type Localidad = {
@@ -80,9 +76,9 @@ type Departamento = {
 const permisosDisponibles = [
   "Ventas",
   "Caja",
-  "Inventario",
-  "Reportes",
   "Clientes",
+  "Productos",
+  "Analiticas",
   "Configuracion",
   "Empleados",
 ];
@@ -99,10 +95,42 @@ function criticidadColor(usuarios: number) {
   return "success";
 }
 
+function rolChipColor(tipo?: string | null) {
+  if (tipo === "ADMINISTRADOR") return "secondary";
+  if (tipo === "INVITADO") return "default";
+  return "primary";
+}
+
+function estadoPill(estado: EstadoEmpleado) {
+  const map: Record<EstadoEmpleado, { text: string; className: string }> = {
+    Activo: {
+      text: "Activo",
+      className: "bg-green-100 text-green-700",
+    },
+    Invitado: {
+      text: "Invitado",
+      className: "bg-yellow-100 text-yellow-700",
+    },
+    Suspendido: {
+      text: "Suspendido",
+      className: "bg-red-100 text-red-700",
+    },
+  };
+  const cfg = map[estado];
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${cfg.className}`}
+    >
+      {cfg.text}
+    </span>
+  );
+}
+
 export default function Empleados() {
   const { user } = useSupabaseAuthContext();
 
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(true);
   const [isSavingUser, setIsSavingUser] = useState(false);
   const [isSavingRole, setIsSavingRole] = useState(false);
 
@@ -193,9 +221,56 @@ export default function Empleados() {
 
   const loadData = async () => {
     setIsLoadingData(true);
+    // Paso 0: verificar permisos explícitos antes de cargar todo.
+    try {
+      const permisosRes = await fetch("/api/permisos", { cache: "no-store" }).catch(() => null);
+      if (!permisosRes || !permisosRes.ok) {
+        const status = permisosRes?.status;
+        if (status === 401 || status === 403) {
+          setIsAuthorized(false);
+          setIsLoadingData(false);
+          addToast({
+            title: "Sin permisos",
+            description: "Necesitas empleados:admin para acceder.",
+            color: "danger",
+          });
+          return;
+        }
+      } else {
+        const permisosJson = await permisosRes.json().catch(() => null);
+        const tienePermiso = Array.isArray(permisosJson?.permisos)
+          ? permisosJson.permisos.includes("empleados:admin")
+          : true;
+        if (!tienePermiso) {
+          setIsAuthorized(false);
+          setIsLoadingData(false);
+          addToast({
+            title: "Sin permisos",
+            description: "Necesitas empleados:admin para acceder.",
+            color: "danger",
+          });
+          return;
+        }
+      }
+    } catch {
+      // Si falla, continuamos pero marcaremos no autorizado al primer 401/403.
+    }
+
     const fallbackRoles: Rol[] = [
-      { id: -1, nombre: "Administrador", tipo: "ADMINISTRADOR", usuarios: 0 },
-      { id: -2, nombre: "Empleado", tipo: "EMPLEADO", usuarios: 0 },
+      {
+        id: -1,
+        nombre: "Administrador",
+        tipo: "ADMINISTRADOR",
+        usuarios: 0,
+        permisos: permisosDisponibles,
+      },
+      {
+        id: -2,
+        nombre: "Empleado",
+        tipo: "EMPLEADO",
+        usuarios: 0,
+        permisos: ["Ventas", "Caja", "Clientes"],
+      },
     ];
     try {
       const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
@@ -210,6 +285,17 @@ export default function Empleados() {
 
       // Roles: si falla, cargamos fallback y seguimos.
       if (!rolesRes || !rolesRes.ok) {
+        const status = rolesRes?.status;
+        if (status === 401 || status === 403) {
+          setIsAuthorized(false);
+          setIsLoadingData(false);
+          addToast({
+            title: "Sin permisos",
+            description: "Necesitas empleados:admin para acceder.",
+            color: "danger",
+          });
+          return;
+        }
         const rolesErr = await rolesRes?.json().catch(() => null);
         addToast({
           title: "Error al obtener roles",
@@ -223,6 +309,9 @@ export default function Empleados() {
           ? rolesJson.roles.map((rol: any) => ({
               ...rol,
               tipo: rol.tipo ?? "EMPLEADO",
+              permisos: Array.isArray(rol.permisos) ? rol.permisos : [],
+              descripcion: rol.descripcion ?? null,
+              usuarios: Number(rol.usuarios ?? 0),
             }))
           : [];
         setRoles(parsedRoles.length ? parsedRoles : fallbackRoles);
@@ -246,12 +335,22 @@ export default function Empleados() {
         const empJson = await empRes.json();
         setEmpleados(Array.isArray(empJson?.empleados) ? empJson.empleados : []);
       } else {
-        const empErr = await empRes?.json().catch(() => null);
-        addToast({
-          title: "Error al obtener empleados",
-          description: empErr?.error ?? "No pudimos cargar empleados.",
-          color: "warning",
-        });
+        if (empRes?.status === 401 || empRes?.status === 403) {
+          setIsAuthorized(false);
+          setIsLoadingData(false);
+          addToast({
+            title: "Sin permisos",
+            description: "Necesitas empleados:admin para acceder.",
+            color: "danger",
+          });
+        } else {
+          const empErr = await empRes?.json().catch(() => null);
+          addToast({
+            title: "Error al obtener empleados",
+            description: empErr?.error ?? "No pudimos cargar empleados.",
+            color: "warning",
+          });
+        }
         setEmpleados([]);
       }
 
@@ -382,6 +481,7 @@ export default function Empleados() {
         nombreUsuario: nuevoUsuario.usuario.trim(),
         password: nuevoUsuario.password,
         rolId: nuevoUsuario.rolId ? Number(nuevoUsuario.rolId) : undefined,
+        autoInvitar: nuevoUsuario.autoInvitar,
       };
 
       const res = await fetch(`/api/empleados${tenantQuery}`, {
@@ -398,26 +498,6 @@ export default function Empleados() {
       const data = await res.json();
       if (data?.empleado) {
         setEmpleados((prev) => [...prev, data.empleado]);
-      }
-
-      if (nuevoUsuario.autoInvitar) {
-        const inviteRes = await fetch("/api/users", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: nuevoUsuario.email.trim(),
-            password: nuevoUsuario.password,
-            nombre: `${nuevoUsuario.nombre.trim()} ${nuevoUsuario.apellido.trim()}`,
-          }),
-        });
-
-        if (!inviteRes.ok) {
-          const inviteErr = await inviteRes.json().catch(() => null);
-          throw new Error(
-            inviteErr?.error ??
-              "El empleado se creó, pero falló la creación del usuario de acceso."
-          );
-        }
       }
 
       addToast({
@@ -458,23 +538,37 @@ export default function Empleados() {
   };
 
   const handleCrearRol = async () => {
-    if (!nuevoRol.nombre.trim()) {
-      addToast({
-        title: "Nombre requerido",
-        description: "Define un nombre para el rol.",
-        color: "warning",
-      });
-      return;
-    }
+  if (!nuevoRol.nombre.trim()) {
+    addToast({
+      title: "Nombre requerido",
+      description: "Define un nombre para el rol.",
+      color: "warning",
+    });
+    return;
+  }
 
-    setIsSavingRole(true);
-    try {
+  if (!nuevoRol.permisos.length) {
+    addToast({
+      title: "Selecciona permisos",
+      description: "El rol debe tener al menos un permiso.",
+      color: "warning",
+    });
+    return;
+  }
+
+  setIsSavingRole(true);
+  try {
       const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
       const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
-      const res = await fetch("/api/roles", {
+      const res = await fetch(`/api/roles${tenantQuery}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre: nuevoRol.nombre, tipo: nuevoRol.tipo }),
+        body: JSON.stringify({
+          nombre: nuevoRol.nombre,
+          descripcion: nuevoRol.descripcion,
+          tipo: nuevoRol.tipo,
+          permisos: nuevoRol.permisos,
+        }),
       });
 
       if (!res.ok) {
@@ -484,7 +578,15 @@ export default function Empleados() {
 
       const data = await res.json();
       if (data?.rol) {
-        setRoles((prev) => [...prev, data.rol]);
+        const rolCreado: Rol = {
+          id: Number(data.rol.id),
+          nombre: data.rol.nombre,
+          tipo: data.rol.tipo ?? "EMPLEADO",
+          usuarios: Number(data.rol.usuarios ?? 0),
+          descripcion: data.rol.descripcion ?? null,
+          permisos: Array.isArray(data.rol.permisos) ? data.rol.permisos : [],
+        };
+        setRoles((prev) => [...prev, rolCreado]);
       }
 
       addToast({
@@ -562,6 +664,42 @@ export default function Empleados() {
     }
   };
 
+  const handleEliminar = async (empleado: Empleado) => {
+    const confirmDelete = window.confirm(
+      `Eliminar definitivamente a ${empleado.nombreCompleto}? Esta acción no se puede deshacer.`
+    );
+    if (!confirmDelete) return;
+
+    try {
+      const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
+      const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
+      const res = await fetch(`/api/empleados${tenantQuery}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ personaId: empleado.personaId }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "No se pudo eliminar el empleado");
+      }
+
+      setEmpleados((prev) => prev.filter((e) => e.personaId !== empleado.personaId));
+      addToast({
+        title: "Empleado eliminado",
+        description: `${empleado.nombreCompleto} fue eliminado.`,
+        color: "success",
+      });
+    } catch (error) {
+      console.error(error);
+      addToast({
+        title: "Error",
+        description: (error as Error).message,
+        color: "danger",
+      });
+    }
+  };
+
   const getRolNombre = (rolId: number | null) => {
     if (!rolId) return null;
     return roles.find((r) => r.id === rolId)?.nombre ?? null;
@@ -571,6 +709,17 @@ export default function Empleados() {
     if (!rolId) return null;
     return roles.find((r) => r.id === rolId)?.tipo ?? null;
   };
+
+  if (!isAuthorized) {
+    return (
+      <div className="max-w-4xl mx-auto py-16 text-center space-y-3">
+        <h1 className="text-2xl font-semibold text-slate-900">Sin permisos</h1>
+        <p className="text-gray-600">
+          Necesitas el permiso empleados:admin para acceder a esta sección.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -585,7 +734,6 @@ export default function Empleados() {
               <h1 className="text-3xl font-bold">Empleados y roles</h1>
               <p className="text-white/80 max-w-2xl">
                 Crea usuarios, asigna roles y controla quien puede operar tu negocio.
-                Tenant: {user?.user_metadata?.tenant_id ?? "no definido"}.
               </p>
               <div className="flex gap-3 flex-wrap">
                 <Chip size="sm" className="bg-white/15 text-white" variant="flat">
@@ -613,7 +761,7 @@ export default function Empleados() {
                 onPress={() =>
                   addToast({
                     title: "Exportar",
-                    description: "Exportaremos en la siguiente iteración.",
+                    description: "Exportaremos en la siguiente iteraciÃ³n.",
                   })
                 }
               >
@@ -676,7 +824,7 @@ export default function Empleados() {
               <Input
                 label="Contraseña"
                 type="password"
-                placeholder="Minimo 8 caracteres"
+                placeholder="Mínimo 8 caracteres"
                 value={nuevoUsuario.password}
                 onChange={(e) =>
                   setNuevoUsuario((prev) => ({ ...prev, password: e.target.value }))
@@ -854,7 +1002,7 @@ export default function Empleados() {
                   onPress={() =>
                     addToast({
                       title: "Checklist descargado",
-                      description: "Se guardó como CSV.",
+                      description: "Se guardÃ³ como CSV.",
                       color: "success",
                     })
                   }
@@ -881,6 +1029,7 @@ export default function Empleados() {
                 <Input
                   size="sm"
                   placeholder="Buscar por nombre o correo"
+                  startContent={<span className="text-gray-500">🔍</span>}
                   value={filtros.busqueda}
                   onChange={(e) =>
                     setFiltros((prev) => ({ ...prev, busqueda: e.target.value }))
@@ -915,113 +1064,110 @@ export default function Empleados() {
             </div>
           </CardHeader>
           <Divider />
-          <CardBody className="overflow-x-auto">
-            <Table
-              aria-label="Empleados"
-              removeWrapper
-              isHeaderSticky={false}
-              bottomContentPlacement="outside"
-              bottomContent={
-                <p className="text-xs text-gray-500 px-2">
-                  Usa los filtros para segmentar por rol o estado.
-                </p>
-              }
-            >
-              <TableHeader>
-                <TableColumn>NOMBRE</TableColumn>
-                <TableColumn>ROL</TableColumn>
-                <TableColumn>EMAIL</TableColumn>
-                <TableColumn>ESTADO</TableColumn>
-                <TableColumn>ULTIMA ACTIVIDAD</TableColumn>
-                <TableColumn>ACCIONES</TableColumn>
-              </TableHeader>
-              <TableBody
-                emptyContent={isLoadingData ? "Cargando..." : "Sin coincidencias"}
-              >
-                {empleadosFiltrados.map((empleado) => (
-                  <TableRow key={empleado.id}>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-slate-900">
-                          {empleado.nombreCompleto}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          Legajo {empleado.legajo ?? "—"} •{" "}
-                          {empleado.localidad ?? "Localidad pendiente"}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Chip size="sm" variant="flat">
-                        {empleado.rolNombre ?? getRolNombre(empleado.rolId) ?? "Sin rol"}{" "}
-                        ·{" "}
-                        {empleado.rolTipo ??
-                          getRolTipo(empleado.rolId) ??
-                          "Empleado"}
-                      </Chip>
-                    </TableCell>
-                    <TableCell>{empleado.email}</TableCell>
-                    <TableCell>
+          <CardBody className="space-y-3">
+            {empleadosFiltrados.map((empleado) => {
+              const rolNombre = empleado.rolNombre ?? getRolNombre(empleado.rolId) ?? "Sin rol";
+              const rolTipo = empleado.rolTipo ?? getRolTipo(empleado.rolId) ?? "Empleado";
+              return (
+                <div
+                  key={empleado.id}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                >
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-slate-900 text-sm sm:text-base">
+                        {empleado.nombreCompleto}
+                      </span>
                       <Chip
                         size="sm"
-                        color={estadoColor(empleado.estado)}
+                        color={rolChipColor(rolTipo)}
                         variant="flat"
                       >
-                        {empleado.estado}
+                        {rolNombre} ({rolTipo})
                       </Chip>
-                    </TableCell>
-                    <TableCell>{empleado.ultimaActividad ?? "Pendiente"}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Tooltip content="Ver ficha">
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            variant="light"
-                            onPress={() => setDetalleEmpleado(empleado)}
-                          >
-                            👁
-                          </Button>
-                        </Tooltip>
-                        <Tooltip content="Suspender/activar">
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            variant="light"
-                            onPress={() =>
-                              handleEstado(
-                                empleado,
-                                empleado.estado === "Suspendido"
-                                  ? "Activo"
-                                  : "Suspendido"
-                              )
-                            }
-                          >
-                            ⚡
-                          </Button>
-                        </Tooltip>
-                        <Tooltip content="Reenviar invitacion">
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            variant="light"
-                            onPress={() =>
-                              addToast({
-                                title: "Invitacion reenviada",
-                                description: `Enviada a ${empleado.email}`,
-                                color: "success",
-                              })
-                            }
-                          >
-                            ✉
-                          </Button>
-                        </Tooltip>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Legajo {empleado.legajo ?? "-"} ·{" "}
+                      {empleado.localidad ?? "Localidad pendiente"}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-slate-700">
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500">✉️</span>
+                      <span>{empleado.email}</span>
+                    </div>
+                    <div>{estadoPill(empleado.estado)}</div>
+                    <div className="flex items-center gap-1 text-gray-500">
+                      <span>⏳</span>
+                      <span>{empleado.ultimaActividad ?? "Pendiente"}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Tooltip content="Ver ficha">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        onPress={() => setDetalleEmpleado(empleado)}
+                      >
+                        🔍
+                      </Button>
+                    </Tooltip>
+                    <Tooltip content="Suspender/activar">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        onPress={() =>
+                          handleEstado(
+                            empleado,
+                            empleado.estado === "Suspendido"
+                              ? "Activo"
+                              : "Suspendido"
+                          )
+                        }
+                      >
+                        ⚡
+                      </Button>
+                    </Tooltip>
+                    <Tooltip content="Enviar email">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        onPress={() =>
+                          addToast({
+                            title: "Invitacion reenviada",
+                            description: `Enviada a ${empleado.email}`,
+                            color: "success",
+                          })
+                        }
+                      >
+                        ✉️
+                      </Button>
+                    </Tooltip>
+                    <Tooltip content="Eliminar">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        color="danger"
+                        variant="light"
+                        onPress={() => handleEliminar(empleado)}
+                      >
+                        🗑
+                      </Button>
+                    </Tooltip>
+                  </div>
+                </div>
+              );
+            })}
+            {empleadosFiltrados.length === 0 && (
+              <p className="text-sm text-gray-500 px-2">
+                {isLoadingData ? "Cargando..." : "Sin coincidencias"}
+              </p>
+            )}
           </CardBody>
         </Card>
 
@@ -1040,43 +1186,58 @@ export default function Empleados() {
             </CardHeader>
             <Divider />
             <CardBody className="space-y-3">
-              {roles.map((rol) => (
-                <div
-                  key={rol.id}
-                  className="p-3 rounded-xl border border-slate-200 flex flex-col gap-2"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-semibold text-slate-900">{rol.nombre}</h4>
-                        <Chip size="sm" variant="flat">
-                          {rol.tipo === "ADMINISTRADOR" ? "Administrador" : "Empleado"}
-                        </Chip>
+              {roles.map((rol) => {
+                const permisosVisibles = (rol.permisos ?? permisosDisponibles).slice(0, 5);
+                const permisosRestantes = Math.max(
+                  (rol.permisos ?? permisosDisponibles).length - permisosVisibles.length,
+                  0
+                );
+                const descripcionRol =
+                  rol.tipo === "ADMINISTRADOR"
+                    ? "Acceso completo a la configuración y gestión del negocio."
+                    : "Puede operar ventas, caja y reportes básicos.";
+                return (
+                  <div
+                    key={rol.id}
+                    className="p-3 rounded-xl border border-slate-200 flex flex-col gap-2 hover:shadow-sm transition-shadow"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="font-semibold text-slate-900">{rol.nombre}</h4>
+                      <Chip size="sm" color={rolChipColor(rol.tipo)} variant="flat">
+                        {rol.tipo === "ADMINISTRADOR" ? "Administrador" : "Empleado"}
+                      </Chip>
                         <Chip
                           size="sm"
-                          color={criticidadColor(rol.usuarios)}
+                          color={rol.usuarios > 0 ? "success" : "default"}
                           variant="flat"
                         >
-                          Uso {rol.usuarios}
+                          {rol.usuarios > 0 ? `Asignado (${rol.usuarios})` : "Sin usar"}
                         </Chip>
-                      </div>
-                      <p className="text-sm text-gray-600">
-                        Rol disponible para asignar a los usuarios del tenant.
-                      </p>
+                        <Chip size="sm" variant="flat" className="bg-gray-100 text-gray-700">
+                          👤 {rol.usuarios} {rol.usuarios === 1 ? "usuario" : "usuarios"}
+                        </Chip>
                     </div>
-                    <Chip size="sm" variant="flat">
-                      {rol.usuarios} usuarios
-                    </Chip>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {nuevoRol.permisos.map((permiso) => (
-                      <Chip key={`${rol.id}-${permiso}`} size="sm" variant="bordered">
-                        {permiso}
-                      </Chip>
-                    ))}
+                  <p className="text-sm text-gray-600">{descripcionRol}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {permisosVisibles.map((permiso) => (
+                        <span
+                          key={`${rol.id}-${permiso}`}
+                          className="inline-flex items-center rounded-full bg-gray-100 text-gray-700 px-3 py-1 text-xs font-medium"
+                        >
+                          {permiso}
+                        </span>
+                      ))}
+                      {permisosRestantes > 0 && (
+                        <span className="inline-flex items-center rounded-full bg-gray-200 text-gray-700 px-3 py-1 text-xs font-medium">
+                          +{permisosRestantes} más
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </CardBody>
           </Card>
 
@@ -1233,7 +1394,7 @@ export default function Empleados() {
                 {detalleEmpleado?.rolNombre ??
                   getRolNombre(detalleEmpleado?.rolId ?? null) ??
                   "Sin rol"}{" "}
-                ·{" "}
+                Â·{" "}
                 {detalleEmpleado?.rolTipo ??
                   getRolTipo(detalleEmpleado?.rolId ?? null) ??
                   "Empleado"}
@@ -1254,13 +1415,13 @@ export default function Empleados() {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Legajo</span>
               <span className="font-medium text-slate-900">
-                {detalleEmpleado?.legajo ?? "—"}
+                {detalleEmpleado?.legajo ?? "-"}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Localidad</span>
               <span className="font-medium text-slate-900">
-                {detalleEmpleado?.localidad ?? "—"}
+                {detalleEmpleado?.localidad ?? "-"}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -1304,4 +1465,6 @@ export default function Empleados() {
     </div>
   );
 }
+
+
 

@@ -494,6 +494,20 @@ exports.Prisma.PerfilesScalarFieldEnum = {
   TenantId: 'TenantId'
 };
 
+exports.Prisma.PermisoScalarFieldEnum = {
+  Id: 'Id',
+  Clave: 'Clave',
+  Descripcion: 'Descripcion',
+  EstaEliminado: 'EstaEliminado',
+  TenantId: 'TenantId'
+};
+
+exports.Prisma.PerfilPermisoScalarFieldEnum = {
+  PerfilId: 'PerfilId',
+  PermisoId: 'PermisoId',
+  TenantId: 'TenantId'
+};
+
 exports.Prisma.PerfilUsuarioScalarFieldEnum = {
   Perfil_Id: 'Perfil_Id',
   Usuario_Id: 'Usuario_Id',
@@ -681,6 +695,8 @@ exports.Prisma.ModelName = {
   Marca: 'Marca',
   MotivoBajas: 'MotivoBajas',
   Perfiles: 'Perfiles',
+  Permiso: 'Permiso',
+  PerfilPermiso: 'PerfilPermiso',
   PerfilUsuario: 'PerfilUsuario',
   Persona: 'Persona',
   Persona_Cliente: 'Persona_Cliente',
