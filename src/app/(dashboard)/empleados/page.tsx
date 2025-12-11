@@ -159,7 +159,8 @@ export default function Empleados() {
     rolId: "",
     autoInvitar: true,
   });
-  const [provinciaSeleccionada, setProvinciaSeleccionada] = useState<string>("");
+  const [provinciaSeleccionada, setProvinciaSeleccionada] =
+    useState<string>("");
   const [departamentoSeleccionado, setDepartamentoSeleccionado] =
     useState<string>("");
 
@@ -193,7 +194,9 @@ export default function Empleados() {
     return empleados.filter((empleado) => {
       const matchBusqueda =
         filtros.busqueda.trim().length === 0 ||
-        empleado.nombreCompleto.toLowerCase().includes(filtros.busqueda.toLowerCase()) ||
+        empleado.nombreCompleto
+          .toLowerCase()
+          .includes(filtros.busqueda.toLowerCase()) ||
         empleado.email.toLowerCase().includes(filtros.busqueda.toLowerCase());
 
       const matchRol =
@@ -208,7 +211,8 @@ export default function Empleados() {
 
   const resolveTenantIdForRequests = () => {
     const meta = user?.user_metadata as Record<string, unknown> | undefined;
-    const tenantMeta = (meta?.tenant_id as string | number | undefined) ?? meta?.tenantId;
+    const tenantMeta =
+      (meta?.tenant_id as string | number | undefined) ?? meta?.tenantId;
     const fromUser = (user as any)?.tenantId as string | number | undefined;
     const fromEnv =
       typeof process !== "undefined"
@@ -223,7 +227,9 @@ export default function Empleados() {
     setIsLoadingData(true);
     // Paso 0: verificar permisos explícitos antes de cargar todo.
     try {
-      const permisosRes = await fetch("/api/permisos", { cache: "no-store" }).catch(() => null);
+      const permisosRes = await fetch("/api/permisos", {
+        cache: "no-store",
+      }).catch(() => null);
       if (!permisosRes || !permisosRes.ok) {
         const status = permisosRes?.status;
         if (status === 401 || status === 403) {
@@ -275,10 +281,12 @@ export default function Empleados() {
     try {
       const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
       const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
-      const rolesRes = await fetch(`/api/roles${tenantQuery}`, { cache: "no-store" }).catch(
-        () => null
-      );
-      const provRes = await fetch("/api/provincias", { cache: "no-store" }).catch(() => null);
+      const rolesRes = await fetch(`/api/roles${tenantQuery}`, {
+        cache: "no-store",
+      }).catch(() => null);
+      const provRes = await fetch("/api/provincias", {
+        cache: "no-store",
+      }).catch(() => null);
       const empRes = await fetch(`/api/empleados${tenantQuery}`, {
         cache: "no-store",
       }).catch(() => null);
@@ -299,7 +307,8 @@ export default function Empleados() {
         const rolesErr = await rolesRes?.json().catch(() => null);
         addToast({
           title: "Error al obtener roles",
-          description: rolesErr?.error ?? "Usando roles por defecto (Admin/Empleado).",
+          description:
+            rolesErr?.error ?? "Usando roles por defecto (Admin/Empleado).",
           color: "warning",
         });
         setRoles(fallbackRoles);
@@ -333,7 +342,9 @@ export default function Empleados() {
 
       if (empRes && empRes.ok) {
         const empJson = await empRes.json();
-        setEmpleados(Array.isArray(empJson?.empleados) ? empJson.empleados : []);
+        setEmpleados(
+          Array.isArray(empJson?.empleados) ? empJson.empleados : []
+        );
       } else {
         if (empRes?.status === 401 || empRes?.status === 403) {
           setIsAuthorized(false);
@@ -360,7 +371,8 @@ export default function Empleados() {
       console.error(error);
       addToast({
         title: "Error",
-        description: (error as Error).message ?? "No pudimos cargar empleados y roles.",
+        description:
+          (error as Error).message ?? "No pudimos cargar empleados y roles.",
         color: "danger",
       });
     } finally {
@@ -476,7 +488,9 @@ export default function Empleados() {
         departamentoId: departamentoSeleccionado
           ? Number(departamentoSeleccionado)
           : null,
-        provinciaId: provinciaSeleccionada ? Number(provinciaSeleccionada) : null,
+        provinciaId: provinciaSeleccionada
+          ? Number(provinciaSeleccionada)
+          : null,
         dni: nuevoUsuario.dni || null,
         nombreUsuario: nuevoUsuario.usuario.trim(),
         password: nuevoUsuario.password,
@@ -538,26 +552,26 @@ export default function Empleados() {
   };
 
   const handleCrearRol = async () => {
-  if (!nuevoRol.nombre.trim()) {
-    addToast({
-      title: "Nombre requerido",
-      description: "Define un nombre para el rol.",
-      color: "warning",
-    });
-    return;
-  }
+    if (!nuevoRol.nombre.trim()) {
+      addToast({
+        title: "Nombre requerido",
+        description: "Define un nombre para el rol.",
+        color: "warning",
+      });
+      return;
+    }
 
-  if (!nuevoRol.permisos.length) {
-    addToast({
-      title: "Selecciona permisos",
-      description: "El rol debe tener al menos un permiso.",
-      color: "warning",
-    });
-    return;
-  }
+    if (!nuevoRol.permisos.length) {
+      addToast({
+        title: "Selecciona permisos",
+        description: "El rol debe tener al menos un permiso.",
+        color: "warning",
+      });
+      return;
+    }
 
-  setIsSavingRole(true);
-  try {
+    setIsSavingRole(true);
+    try {
       const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
       const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
       const res = await fetch(`/api/roles${tenantQuery}`, {
@@ -613,7 +627,10 @@ export default function Empleados() {
     }
   };
 
-  const handleEstado = async (empleado: Empleado, siguiente: EstadoEmpleado) => {
+  const handleEstado = async (
+    empleado: Empleado,
+    siguiente: EstadoEmpleado
+  ) => {
     if (!empleado.usuarioId) {
       addToast({
         title: "Sin usuario",
@@ -651,7 +668,9 @@ export default function Empleados() {
       addToast({
         title: "Actualizado",
         description:
-          siguiente === "Suspendido" ? "Usuario suspendido." : "Usuario activo.",
+          siguiente === "Suspendido"
+            ? "Usuario suspendido."
+            : "Usuario activo.",
         color: "success",
       });
     } catch (error) {
@@ -684,7 +703,9 @@ export default function Empleados() {
         throw new Error(data?.error ?? "No se pudo eliminar el empleado");
       }
 
-      setEmpleados((prev) => prev.filter((e) => e.personaId !== empleado.personaId));
+      setEmpleados((prev) =>
+        prev.filter((e) => e.personaId !== empleado.personaId)
+      );
       addToast({
         title: "Empleado eliminado",
         description: `${empleado.nombreCompleto} fue eliminado.`,
@@ -733,16 +754,29 @@ export default function Empleados() {
               </Chip>
               <h1 className="text-3xl font-bold">Empleados y roles</h1>
               <p className="text-white/80 max-w-2xl">
-                Crea usuarios, asigna roles y controla quien puede operar tu negocio.
+                Crea usuarios, asigna roles y controla quien puede operar tu
+                negocio.
               </p>
               <div className="flex gap-3 flex-wrap">
-                <Chip size="sm" className="bg-white/15 text-white" variant="flat">
+                <Chip
+                  size="sm"
+                  className="bg-white/15 text-white"
+                  variant="flat"
+                >
                   Activos: {resumen.activos}
                 </Chip>
-                <Chip size="sm" className="bg-white/15 text-white" variant="flat">
+                <Chip
+                  size="sm"
+                  className="bg-white/15 text-white"
+                  variant="flat"
+                >
                   Invitados: {resumen.invitados}
                 </Chip>
-                <Chip size="sm" className="bg-white/15 text-white" variant="flat">
+                <Chip
+                  size="sm"
+                  className="bg-white/15 text-white"
+                  variant="flat"
+                >
                   Roles: {resumen.roles}
                 </Chip>
               </div>
@@ -793,7 +827,10 @@ export default function Empleados() {
                 placeholder="Ej: Sofia"
                 value={nuevoUsuario.nombre}
                 onChange={(e) =>
-                  setNuevoUsuario((prev) => ({ ...prev, nombre: e.target.value }))
+                  setNuevoUsuario((prev) => ({
+                    ...prev,
+                    nombre: e.target.value,
+                  }))
                 }
               />
               <Input
@@ -801,7 +838,10 @@ export default function Empleados() {
                 placeholder="Ej: Romero"
                 value={nuevoUsuario.apellido}
                 onChange={(e) =>
-                  setNuevoUsuario((prev) => ({ ...prev, apellido: e.target.value }))
+                  setNuevoUsuario((prev) => ({
+                    ...prev,
+                    apellido: e.target.value,
+                  }))
                 }
               />
               <Input
@@ -810,7 +850,10 @@ export default function Empleados() {
                 placeholder="correo@puntox.com"
                 value={nuevoUsuario.email}
                 onChange={(e) =>
-                  setNuevoUsuario((prev) => ({ ...prev, email: e.target.value }))
+                  setNuevoUsuario((prev) => ({
+                    ...prev,
+                    email: e.target.value,
+                  }))
                 }
               />
               <Input
@@ -818,7 +861,10 @@ export default function Empleados() {
                 placeholder="usuario de acceso"
                 value={nuevoUsuario.usuario}
                 onChange={(e) =>
-                  setNuevoUsuario((prev) => ({ ...prev, usuario: e.target.value }))
+                  setNuevoUsuario((prev) => ({
+                    ...prev,
+                    usuario: e.target.value,
+                  }))
                 }
               />
               <Input
@@ -827,7 +873,10 @@ export default function Empleados() {
                 placeholder="Mínimo 8 caracteres"
                 value={nuevoUsuario.password}
                 onChange={(e) =>
-                  setNuevoUsuario((prev) => ({ ...prev, password: e.target.value }))
+                  setNuevoUsuario((prev) => ({
+                    ...prev,
+                    password: e.target.value,
+                  }))
                 }
               />
               <Input
@@ -835,7 +884,10 @@ export default function Empleados() {
                 placeholder="+54 11 5555 0000"
                 value={nuevoUsuario.telefono}
                 onChange={(e) =>
-                  setNuevoUsuario((prev) => ({ ...prev, telefono: e.target.value }))
+                  setNuevoUsuario((prev) => ({
+                    ...prev,
+                    telefono: e.target.value,
+                  }))
                 }
               />
               <Input
@@ -843,20 +895,27 @@ export default function Empleados() {
                 placeholder="Calle y número"
                 value={nuevoUsuario.direccion}
                 onChange={(e) =>
-                  setNuevoUsuario((prev) => ({ ...prev, direccion: e.target.value }))
+                  setNuevoUsuario((prev) => ({
+                    ...prev,
+                    direccion: e.target.value,
+                  }))
                 }
               />
               <Select
                 label="Provincia"
-                selectedKeys={provinciaSeleccionada ? [provinciaSeleccionada] : []}
+                selectedKeys={
+                  provinciaSeleccionada ? [provinciaSeleccionada] : []
+                }
                 onChange={(e) => setProvinciaSeleccionada(e.target.value)}
                 placeholder="Selecciona una provincia"
               >
                 {provincias.map((prov) => (
-                  <SelectItem key={String(prov.Id)}>{prov.Descripcion}</SelectItem>
+                  <SelectItem key={String(prov.Id)}>
+                    {prov.Descripcion}
+                  </SelectItem>
                 ))}
               </Select>
-              
+
               <Select
                 label="Departamento"
                 selectedKeys={
@@ -867,15 +926,19 @@ export default function Empleados() {
                 isDisabled={!provinciaSeleccionada}
               >
                 {departamentos.map((dep) => (
-                  <SelectItem key={String(dep.Id)}>{dep.Descripcion}</SelectItem>
+                  <SelectItem key={String(dep.Id)}>
+                    {dep.Descripcion}
+                  </SelectItem>
                 ))}
               </Select>
               {/* Buscador de localidad removido para evitar estados no usados */}
-            <Select
-              label="Localidad"
-              selectedKeys={nuevoUsuario.localidadId ? [nuevoUsuario.localidadId] : []}
-              onChange={(e) =>
-                setNuevoUsuario((prev) => ({
+              <Select
+                label="Localidad"
+                selectedKeys={
+                  nuevoUsuario.localidadId ? [nuevoUsuario.localidadId] : []
+                }
+                onChange={(e) =>
+                  setNuevoUsuario((prev) => ({
                     ...prev,
                     localidadId: e.target.value,
                   }))
@@ -884,7 +947,9 @@ export default function Empleados() {
                 isDisabled={!departamentoSeleccionado}
               >
                 {localidades.map((loc) => (
-                  <SelectItem key={String(loc.Id)}>{loc.Descripcion}</SelectItem>
+                  <SelectItem key={String(loc.Id)}>
+                    {loc.Descripcion}
+                  </SelectItem>
                 ))}
               </Select>
               <Input
@@ -899,7 +964,10 @@ export default function Empleados() {
                 label="Rol"
                 selectedKeys={nuevoUsuario.rolId ? [nuevoUsuario.rolId] : []}
                 onChange={(e) =>
-                  setNuevoUsuario((prev) => ({ ...prev, rolId: e.target.value }))
+                  setNuevoUsuario((prev) => ({
+                    ...prev,
+                    rolId: e.target.value,
+                  }))
                 }
                 placeholder="Selecciona un rol"
               >
@@ -955,15 +1023,21 @@ export default function Empleados() {
                   <Switch size="sm" defaultSelected />
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Expirar sesiones a 30 dias</span>
+                  <span className="text-sm text-gray-700">
+                    Expirar sesiones a 30 dias
+                  </span>
                   <Switch size="sm" defaultSelected />
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Bloquear tras 5 intentos</span>
+                  <span className="text-sm text-gray-700">
+                    Bloquear tras 5 intentos
+                  </span>
                   <Switch size="sm" />
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Alertas de ingreso nuevo device</span>
+                  <span className="text-sm text-gray-700">
+                    Alertas de ingreso nuevo device
+                  </span>
                   <Switch size="sm" defaultSelected />
                 </div>
               </div>
@@ -975,7 +1049,9 @@ export default function Empleados() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Atajos</p>
-                  <h3 className="text-lg font-semibold text-slate-900">Acciones rapidas</h3>
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    Acciones rapidas
+                  </h3>
                 </div>
                 <Chip size="sm" variant="flat">
                   Beta
@@ -1032,10 +1108,14 @@ export default function Empleados() {
                   startContent={<span className="text-gray-500">🔍</span>}
                   value={filtros.busqueda}
                   onChange={(e) =>
-                    setFiltros((prev) => ({ ...prev, busqueda: e.target.value }))
+                    setFiltros((prev) => ({
+                      ...prev,
+                      busqueda: e.target.value,
+                    }))
                   }
                   className="max-w-xs"
                 />
+
                 <Select
                   size="sm"
                   selectedKeys={[filtros.rol]}
@@ -1043,7 +1123,7 @@ export default function Empleados() {
                     setFiltros((prev) => ({ ...prev, rol: e.target.value }))
                   }
                 >
-                  <SelectItem key="todos">Todos los roles</SelectItem>
+                  {/* <SelectItem key="todos">Todos los roles</SelectItem> */}
                   {roles.map((rol) => (
                     <SelectItem key={String(rol.id)}>{rol.nombre}</SelectItem>
                   ))}
@@ -1066,8 +1146,10 @@ export default function Empleados() {
           <Divider />
           <CardBody className="space-y-3">
             {empleadosFiltrados.map((empleado) => {
-              const rolNombre = empleado.rolNombre ?? getRolNombre(empleado.rolId) ?? "Sin rol";
-              const rolTipo = empleado.rolTipo ?? getRolTipo(empleado.rolId) ?? "Empleado";
+              const rolNombre =
+                empleado.rolNombre ?? getRolNombre(empleado.rolId) ?? "Sin rol";
+              const rolTipo =
+                empleado.rolTipo ?? getRolTipo(empleado.rolId) ?? "Empleado";
               return (
                 <div
                   key={empleado.id}
@@ -1180,16 +1262,23 @@ export default function Empleados() {
                   Libreria de roles
                 </h3>
               </div>
-              <Button size="sm" variant="flat" onPress={() => setOpenRolModal(true)}>
+              <Button
+                size="sm"
+                variant="flat"
+                onPress={() => setOpenRolModal(true)}
+              >
                 + Crear rol
               </Button>
             </CardHeader>
             <Divider />
             <CardBody className="space-y-3">
               {roles.map((rol) => {
-                const permisosVisibles = (rol.permisos ?? permisosDisponibles).slice(0, 5);
+                const permisosVisibles = (
+                  rol.permisos ?? permisosDisponibles
+                ).slice(0, 5);
                 const permisosRestantes = Math.max(
-                  (rol.permisos ?? permisosDisponibles).length - permisosVisibles.length,
+                  (rol.permisos ?? permisosDisponibles).length -
+                    permisosVisibles.length,
                   0
                 );
                 const descripcionRol =
@@ -1202,24 +1291,39 @@ export default function Empleados() {
                     className="p-3 rounded-xl border border-slate-200 flex flex-col gap-2 hover:shadow-sm transition-shadow"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h4 className="font-semibold text-slate-900">{rol.nombre}</h4>
-                      <Chip size="sm" color={rolChipColor(rol.tipo)} variant="flat">
-                        {rol.tipo === "ADMINISTRADOR" ? "Administrador" : "Empleado"}
-                      </Chip>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="font-semibold text-slate-900">
+                          {rol.nombre}
+                        </h4>
+                        <Chip
+                          size="sm"
+                          color={rolChipColor(rol.tipo)}
+                          variant="flat"
+                        >
+                          {rol.tipo === "ADMINISTRADOR"
+                            ? "Administrador"
+                            : "Empleado"}
+                        </Chip>
                         <Chip
                           size="sm"
                           color={rol.usuarios > 0 ? "success" : "default"}
                           variant="flat"
                         >
-                          {rol.usuarios > 0 ? `Asignado (${rol.usuarios})` : "Sin usar"}
+                          {rol.usuarios > 0
+                            ? `Asignado (${rol.usuarios})`
+                            : "Sin usar"}
                         </Chip>
-                        <Chip size="sm" variant="flat" className="bg-gray-100 text-gray-700">
-                          👤 {rol.usuarios} {rol.usuarios === 1 ? "usuario" : "usuarios"}
+                        <Chip
+                          size="sm"
+                          variant="flat"
+                          className="bg-gray-100 text-gray-700"
+                        >
+                          👤 {rol.usuarios}{" "}
+                          {rol.usuarios === 1 ? "usuario" : "usuarios"}
                         </Chip>
+                      </div>
                     </div>
-                  </div>
-                  <p className="text-sm text-gray-600">{descripcionRol}</p>
+                    <p className="text-sm text-gray-600">{descripcionRol}</p>
                     <div className="flex flex-wrap gap-2">
                       {permisosVisibles.map((permiso) => (
                         <span
@@ -1303,7 +1407,11 @@ export default function Empleados() {
         </div>
       </div>
 
-      <Modal isOpen={openRolModal} onClose={() => setOpenRolModal(false)} size="lg">
+      <Modal
+        isOpen={openRolModal}
+        onClose={() => setOpenRolModal(false)}
+        size="lg"
+      >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
             <h3 className="text-xl font-semibold">Nuevo rol</h3>
@@ -1325,7 +1433,10 @@ export default function Empleados() {
               placeholder="Que puede y que no puede hacer este rol"
               value={nuevoRol.descripcion}
               onChange={(e) =>
-                setNuevoRol((prev) => ({ ...prev, descripcion: e.target.value }))
+                setNuevoRol((prev) => ({
+                  ...prev,
+                  descripcion: e.target.value,
+                }))
               }
             />
             <Select
@@ -1372,14 +1483,21 @@ export default function Empleados() {
             <Button variant="light" onPress={() => setOpenRolModal(false)}>
               Cancelar
             </Button>
-            <Button color="primary" onPress={handleCrearRol} isLoading={isSavingRole}>
+            <Button
+              color="primary"
+              onPress={handleCrearRol}
+              isLoading={isSavingRole}
+            >
               Crear rol
             </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
 
-      <Modal isOpen={!!detalleEmpleado} onClose={() => setDetalleEmpleado(null)}>
+      <Modal
+        isOpen={!!detalleEmpleado}
+        onClose={() => setDetalleEmpleado(null)}
+      >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
             <h3 className="text-xl font-semibold">
@@ -1405,7 +1523,9 @@ export default function Empleados() {
               <Chip
                 size="sm"
                 color={
-                  detalleEmpleado ? estadoColor(detalleEmpleado.estado) : "default"
+                  detalleEmpleado
+                    ? estadoColor(detalleEmpleado.estado)
+                    : "default"
                 }
                 variant="flat"
               >
@@ -1453,11 +1573,15 @@ export default function Empleados() {
                 detalleEmpleado &&
                 handleEstado(
                   detalleEmpleado,
-                  detalleEmpleado.estado === "Suspendido" ? "Activo" : "Suspendido"
+                  detalleEmpleado.estado === "Suspendido"
+                    ? "Activo"
+                    : "Suspendido"
                 )
               }
             >
-              {detalleEmpleado?.estado === "Suspendido" ? "Reactivar" : "Suspender"}
+              {detalleEmpleado?.estado === "Suspendido"
+                ? "Reactivar"
+                : "Suspender"}
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -1465,6 +1589,3 @@ export default function Empleados() {
     </div>
   );
 }
-
-
-

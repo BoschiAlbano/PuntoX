@@ -11,7 +11,6 @@ import {
   Select,
   SelectItem,
   Switch,
-  Textarea,
 } from "@heroui/react";
 import { addToast } from "@heroui/react";
 
@@ -320,9 +319,9 @@ export default function Configuracion() {
                 Configuración
               </h1>
               <p className="text-white max-w-3xl">
-                Configuracion
-                Ajustes rapidos de identidad, ventas y seguridad en un solo
-                lugar. Los cambios aplican a todas las sucursales activas.
+                Configuracion Ajustes rapidos de identidad, ventas y seguridad
+                en un solo lugar. Los cambios aplican a todas las sucursales
+                activas.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -357,7 +356,11 @@ export default function Configuracion() {
                 <span className="text-lg font-semibold leading-tight">
                   Business
                 </span>
-                <Chip size="sm" variant="flat" className="bg-white/20 text-white">
+                <Chip
+                  size="sm"
+                  variant="flat"
+                  className="bg-white/20 text-white"
+                >
                   4 locales
                 </Chip>
               </div>
@@ -368,7 +371,11 @@ export default function Configuracion() {
                 <span className="text-lg font-semibold leading-tight">
                   Hoy 03:00
                 </span>
-                <Chip size="sm" variant="flat" className="bg-white/20 text-white">
+                <Chip
+                  size="sm"
+                  variant="flat"
+                  className="bg-white/20 text-white"
+                >
                   Automatico
                 </Chip>
               </div>
@@ -394,7 +401,11 @@ export default function Configuracion() {
       </section>
 
       <main className="settings-single-column">
-        <div className="settings-tab-bar" role="tablist" aria-label="Configuración">
+        <div
+          className="settings-tab-bar"
+          role="tablist"
+          aria-label="Configuración"
+        >
           {sectionsNav.map((section) => {
             const isActive = openSection === section.id;
             return (
@@ -513,7 +524,10 @@ export default function Configuracion() {
               <Switch
                 isSelected={preferencias.mostrarPrecios}
                 onValueChange={(value) =>
-                  setPreferencias((prev) => ({ ...prev, mostrarPrecios: value }))
+                  setPreferencias((prev) => ({
+                    ...prev,
+                    mostrarPrecios: value,
+                  }))
                 }
                 className="px-1 py-1"
               >
@@ -531,7 +545,10 @@ export default function Configuracion() {
               <Switch
                 isSelected={preferencias.numerarPedidos}
                 onValueChange={(value) =>
-                  setPreferencias((prev) => ({ ...prev, numerarPedidos: value }))
+                  setPreferencias((prev) => ({
+                    ...prev,
+                    numerarPedidos: value,
+                  }))
                 }
                 className="px-1 py-1"
               >
@@ -616,7 +633,10 @@ export default function Configuracion() {
               <Switch
                 isSelected={seguridad.bloqueoAutomatico}
                 onValueChange={(value) =>
-                  setSeguridad((prev) => ({ ...prev, bloqueoAutomatico: value }))
+                  setSeguridad((prev) => ({
+                    ...prev,
+                    bloqueoAutomatico: value,
+                  }))
                 }
               >
                 Bloquear dashboard después de 10 minutos
@@ -681,7 +701,10 @@ export default function Configuracion() {
                   label="Condicion IVA"
                   value={regional.tipoIva}
                   onChange={(e) =>
-                    setRegional((prev) => ({ ...prev, tipoIva: e.target.value }))
+                    setRegional((prev) => ({
+                      ...prev,
+                      tipoIva: e.target.value,
+                    }))
                   }
                 />
                 <Input
@@ -751,17 +774,3 @@ export default function Configuracion() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

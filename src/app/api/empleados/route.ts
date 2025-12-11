@@ -3,6 +3,7 @@ import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { requirePermiso, PermisoError } from "@/lib/requirePermiso";
+import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 
 // API de empleados: lista, alta (con Supabase Auth) y suspensión/activación.
 async function resolveTenantId(req?: NextRequest) {
@@ -14,14 +15,16 @@ async function resolveTenantId(req?: NextRequest) {
   const isSuperAdmin =
     user?.role === "superadmin" ||
     user?.role === "SuperAdmin" ||
-    (user?.user_metadata as Record<string, unknown> | undefined)?.role === "SuperAdmin";
+    (user?.user_metadata as Record<string, unknown> | undefined)?.role ===
+      "SuperAdmin";
 
   const tenantFromQuery = req?.nextUrl.searchParams.get("tenantId");
   const tenantRaw =
     (user?.user_metadata as Record<string, unknown> | undefined)?.tenantId ??
     (user?.user_metadata as Record<string, unknown> | undefined)?.tenant_id ??
     (user as any)?.tenantId;
-  const resolved = tenantFromQuery ?? tenantRaw ?? process.env.DEFAULT_TENANT_ID;
+  const resolved =
+    tenantFromQuery ?? tenantRaw ?? process.env.DEFAULT_TENANT_ID;
 
   if (isSuperAdmin) {
     if (!resolved) return null;
@@ -134,7 +137,10 @@ export async function GET(req: NextRequest) {
         },
         orderBy: { Nombre: "asc" },
       });
-      console.warn("[empleados] usando fallback sin campo Tipo en Perfiles", err);
+      console.warn(
+        "[empleados] usando fallback sin campo Tipo en Perfiles",
+        err
+      );
     }
 
     const response = empleados.map((persona) => {
@@ -171,7 +177,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ empleados: response }, { status: 200 });
   } catch (error) {
     if (error instanceof PermisoError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status }
+      );
     }
     console.error("Error al obtener empleados", error);
     return NextResponse.json(
@@ -212,7 +221,10 @@ export async function POST(req: NextRequest) {
 
     const localidadIdNumber = Number(data.localidadId);
     if (!Number.isInteger(localidadIdNumber)) {
-      return NextResponse.json({ error: "Localidad invalida" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Localidad invalida" },
+        { status: 400 }
+      );
     }
 
     const departamentoIdNumber =
@@ -221,7 +233,10 @@ export async function POST(req: NextRequest) {
         : Number(data.departamentoId);
     if (data.departamentoId !== undefined && departamentoIdNumber !== null) {
       if (!Number.isInteger(departamentoIdNumber)) {
-        return NextResponse.json({ error: "Departamento invalido" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Departamento invalido" },
+          { status: 400 }
+        );
       }
     }
 
@@ -231,7 +246,10 @@ export async function POST(req: NextRequest) {
         : Number(data.provinciaId);
     if (data.provinciaId !== undefined && provinciaIdNumber !== null) {
       if (!Number.isInteger(provinciaIdNumber)) {
-        return NextResponse.json({ error: "Provincia invalida" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Provincia invalida" },
+          { status: 400 }
+        );
       }
     }
 
@@ -257,7 +275,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (departamentoIdNumber && localidadValida.Departamento.Id !== BigInt(departamentoIdNumber)) {
+    if (
+      departamentoIdNumber &&
+      localidadValida.Departamento.Id !== BigInt(departamentoIdNumber)
+    ) {
       return NextResponse.json(
         { error: "La localidad no pertenece al departamento indicado" },
         { status: 400 }
@@ -472,7 +493,10 @@ export async function PATCH(req: NextRequest) {
     });
   } catch (error) {
     if (error instanceof PermisoError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status }
+      );
     }
     console.error("Error actualizando estado de empleado", error);
     return NextResponse.json(
@@ -513,12 +537,19 @@ export async function DELETE(req: NextRequest) {
     });
 
     if (!persona) {
-      return NextResponse.json({ error: "Empleado no encontrado" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Empleado no encontrado" },
+        { status: 404 }
+      );
     }
 
     // Evitar que un admin se borre a sí mismo.
     const usuarioActual = await prisma.usuario.findFirst({
-      where: { Id: BigInt(usuarioId), TenantId: tenantIdBig, EstaEliminado: false },
+      where: {
+        Id: BigInt(usuarioId),
+        TenantId: tenantIdBig,
+        EstaEliminado: false,
+      },
       select: { Persona_Empleado: { select: { Id: true } } },
     });
     const personaActualId = usuarioActual?.Persona_Empleado?.Id;
@@ -531,7 +562,9 @@ export async function DELETE(req: NextRequest) {
 
     const usuarios = persona.Persona_Empleado?.Usuario ?? [];
     const usuarioIds = usuarios.map((u) => u.Id);
-    const authIds = usuarios.map((u) => u.AuthUserId).filter(Boolean) as string[];
+    const authIds = usuarios
+      .map((u) => u.AuthUserId)
+      .filter(Boolean) as string[];
 
     await prisma.$transaction(async (tx) => {
       if (usuarioIds.length) {
@@ -565,7 +598,10 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ ok: true, personaId: personaIdNum });
   } catch (error) {
     if (error instanceof PermisoError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status }
+      );
     }
     console.error("Error eliminando empleado", error);
     return NextResponse.json(
