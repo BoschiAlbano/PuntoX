@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Button,
   Card,
@@ -135,6 +136,7 @@ function estadoPill(estado: EstadoEmpleado) {
 
 export default function Empleados() {
   const { user } = useSupabaseAuthContext();
+  const router = useRouter();
 
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(true);
@@ -1536,73 +1538,20 @@ export default function Empleados() {
         </Tab>
 
         <Tab
-          key="seguridad"
-          title={
-            <div className="flex items-center space-x-2">
-              <span>🔒</span>
-              <span>Seguridad</span>
-            </div>
-          }
-        >
-          <Card className="mt-6 shadow-sm border border-slate-200">
-            <CardBody className="space-y-4 p-6">
-              <div className="flex items-center justify-between pb-2">
-                <div>
-                  <p className="text-sm text-gray-500">Salud del equipo</p>
-                  <h3 className="text-lg font-semibold text-slate-900">
-                    Checklist de seguridad
-                  </h3>
-                </div>
-                <Chip variant="flat" color="success" size="sm">
-                  3/4 ok
-                </Chip>
-              </div>
-              <Divider />
-              <div className="space-y-4 pt-2">
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    Forzar 2FA
-                  </span>
-                  <Switch size="sm" defaultSelected />
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    Expirar sesiones a 30 días
-                  </span>
-                  <Switch size="sm" defaultSelected />
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    Bloquear tras 5 intentos
-                  </span>
-                  <Switch size="sm" />
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    Alertas de ingreso nuevo device
-                  </span>
-                  <Switch size="sm" defaultSelected />
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-        </Tab>
-
-        <Tab
           key="auditoria"
           title={
             <div className="flex items-center space-x-2">
               <span>📊</span>
-              <span>Auditoría</span>
+              <span>Auditoría de accesos</span>
             </div>
           }
         >
           <Card className="mt-6 shadow-sm border border-slate-200">
             <CardHeader className="flex items-center justify-between pb-3">
               <div>
-                <p className="text-sm text-gray-500">Últimos movimientos</p>
+                <p className="text-sm text-gray-500">Preview</p>
                 <h3 className="text-lg font-semibold text-slate-900">
-                  Auditoría rápida
+                  Auditoría de accesos
                 </h3>
               </div>
               <Chip size="sm" variant="flat" color="warning">
@@ -1611,47 +1560,97 @@ export default function Empleados() {
             </CardHeader>
             <Divider />
             <CardBody className="space-y-4 pt-4">
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <p className="font-semibold text-slate-900">
-                    Lucas activo 2FA para cajas
-                  </p>
-                  <p className="text-sm text-gray-500">Hace 15 min</p>
+              {/* Mock data - máximo 10 items para preview */}
+              {[
+                {
+                  id: 1,
+                  accion: "Lucas activo 2FA para cajas",
+                  tiempo: "Hace 15 min",
+                  categoria: "Seguridad",
+                  color: "success",
+                },
+                {
+                  id: 2,
+                  accion: "Se creó rol Supervisor de turno",
+                  tiempo: "Hace 1h",
+                  categoria: "Roles",
+                  color: "primary",
+                },
+                {
+                  id: 3,
+                  accion: "2 invitaciones pendientes de aceptación",
+                  tiempo: "Hoy",
+                  categoria: "Invitaciones",
+                  color: "warning",
+                },
+                {
+                  id: 4,
+                  accion: "Usuario suspendido: Juan Pérez",
+                  tiempo: "Hace 2h",
+                  categoria: "Usuarios",
+                  color: "danger",
+                },
+                {
+                  id: 5,
+                  accion: "Cambio de permisos en rol Empleado",
+                  tiempo: "Hace 3h",
+                  categoria: "Roles",
+                  color: "primary",
+                },
+                {
+                  id: 6,
+                  accion: "Nuevo usuario creado: María García",
+                  tiempo: "Ayer",
+                  categoria: "Usuarios",
+                  color: "success",
+                },
+                {
+                  id: 7,
+                  accion: "Sesión expirada por inactividad",
+                  tiempo: "Ayer",
+                  categoria: "Seguridad",
+                  color: "warning",
+                },
+                {
+                  id: 8,
+                  accion: "Rol eliminado: Vendedor temporal",
+                  tiempo: "Hace 2 días",
+                  categoria: "Roles",
+                  color: "danger",
+                },
+                {
+                  id: 9,
+                  accion: "Actualización de configuración de seguridad",
+                  tiempo: "Hace 2 días",
+                  categoria: "Seguridad",
+                  color: "primary",
+                },
+                {
+                  id: 10,
+                  accion: "Exportación de lista de empleados",
+                  tiempo: "Hace 3 días",
+                  categoria: "Usuarios",
+                  color: "default",
+                },
+              ].map((item) => (
+                <div key={item.id} className="flex items-center justify-between py-2">
+                  <div>
+                    <p className="font-semibold text-slate-900">{item.accion}</p>
+                    <p className="text-sm text-gray-500">{item.tiempo}</p>
+                  </div>
+                  <Chip size="sm" color={item.color as any} variant="flat">
+                    {item.categoria}
+                  </Chip>
                 </div>
-                <Chip size="sm" color="success" variant="flat">
-                  Seguridad
-                </Chip>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <p className="font-semibold text-slate-900">
-                    Se creó rol Supervisor de turno
-                  </p>
-                  <p className="text-sm text-gray-500">Hace 1h</p>
-                </div>
-                <Chip size="sm" color="primary" variant="flat">
-                  Roles
-                </Chip>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <p className="font-semibold text-slate-900">
-                    2 invitaciones pendientes de aceptación
-                  </p>
-                  <p className="text-sm text-gray-500">Hoy</p>
-                </div>
+              ))}
+              <Divider className="my-4" />
+              <div className="flex justify-center pt-2">
                 <Button
-                  size="sm"
+                  color="primary"
                   variant="flat"
-                  onPress={() =>
-                    addToast({
-                      title: "Recordatorio enviado",
-                      description: "Notificamos a pendientes.",
-                      color: "success",
-                    })
-                  }
+                  onPress={() => router.push("/analiticas?tab=logs")}
                 >
-                  Reenviar
+                  Ver logs completos
                 </Button>
               </div>
             </CardBody>

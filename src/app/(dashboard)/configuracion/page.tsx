@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   CardBody,
+  CardHeader,
   Chip,
   Divider,
   Input,
@@ -13,6 +14,8 @@ import {
   Switch,
 } from "@heroui/react";
 import { addToast } from "@heroui/react";
+import { Lock, Shield, Eye } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type SectionKey =
   | "perfil"
@@ -78,10 +81,12 @@ function SectionPanel({
 }
 
 export default function Configuracion() {
+  const router = useRouter();
   const [isSavingAll, setIsSavingAll] = useState(false);
   const [isLoadingTenant, setIsLoadingTenant] = useState(true);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
   const [openSection, setOpenSection] = useState<SectionKey>("perfil");
+  const [isOffline, setIsOffline] = useState(false);
 
   const [configuracion, setConfiguracion] = useState({
     razonSocial: "Punto X Market",
@@ -119,9 +124,10 @@ export default function Configuracion() {
 
   const [seguridad, setSeguridad] = useState({
     dobleFactor: false,
-    bloqueoAutomatico: true,
-    recordarSesion: true,
-    alertarDispositivo: true,
+    alertarNuevoDispositivo: true,
+    bloquearPorInactividad: true,
+    bloquearTrasIntentos: "5", // "nunca" | "5" | "10"
+    recordarSesion30Dias: true,
   });
 
   const [branding, setBranding] = useState({
@@ -147,8 +153,45 @@ export default function Configuracion() {
       try {
         const res = await fetch("/api/tenant");
         if (!res.ok) {
-          throw new Error("No se pudo cargar el tenant");
+          const errorData = await res.json().catch(() => null);
+          const errorMessage =
+            errorData?.error ?? "No se pudo cargar el tenant";
+          
+          // Diferenciar entre errores de conexión (503) y errores de permisos (401/403)
+          if (res.status === 503) {
+            // Error de conexión a la base de datos
+            setIsOffline(true);
+            console.error("Error de conexión a la base de datos:", errorMessage);
+            addToast({
+              title: "Modo offline",
+              description:
+                "No se pudo conectar a la base de datos. Se están usando valores por defecto.",
+              color: "warning",
+            });
+          } else if (res.status === 401 || res.status === 403) {
+            // Error de autenticación/autorización
+            setIsOffline(false);
+            console.error("Error de permisos:", errorMessage);
+            addToast({
+              title: "Sin permisos",
+              description: errorMessage || "No tienes permisos para acceder a estos datos.",
+              color: "danger",
+            });
+          } else {
+            // Otros errores (404, 500, etc.)
+            setIsOffline(false);
+            console.error("Error cargando tenant:", errorMessage);
+            addToast({
+              title: "Error",
+              description: errorMessage,
+              color: "danger",
+            });
+          }
+          return;
         }
+        
+        // Si llegamos aquí, la conexión fue exitosa
+        setIsOffline(false);
         const json = await res.json();
         if (json?.tenant) {
           setTenant((prev) => ({
@@ -162,11 +205,14 @@ export default function Configuracion() {
           }));
         }
       } catch (error) {
-        console.error(error);
+        // Errores de red o timeouts también se consideran offline
+        setIsOffline(true);
+        console.error("Error inesperado cargando tenant:", error);
         addToast({
-          title: "Error",
-          description: "No pudimos cargar los datos del negocio.",
-          color: "danger",
+          title: "Modo offline",
+          description:
+            "No se pudo conectar al servidor. La página continuará con valores por defecto.",
+          color: "warning",
         });
       } finally {
         setIsLoadingTenant(false);
@@ -178,8 +224,48 @@ export default function Configuracion() {
       try {
         const res = await fetch("/api/configuracion");
         if (!res.ok) {
-          throw new Error("No se pudo cargar la configuracion");
+          const errorData = await res.json().catch(() => null);
+          const errorMessage =
+            errorData?.error ?? "No se pudo cargar la configuracion";
+          
+          // Diferenciar entre errores de conexión (503) y errores de permisos (401/403)
+          if (res.status === 503) {
+            // Error de conexión a la base de datos
+            setIsOffline(true);
+            console.error("Error de conexión a la base de datos:", errorMessage);
+            // No mostrar toast duplicado si ya se mostró en loadTenant
+            if (!isLoadingTenant) {
+              addToast({
+                title: "Modo offline",
+                description:
+                  "No se pudo conectar a la base de datos. Se están usando valores por defecto.",
+                color: "warning",
+              });
+            }
+          } else if (res.status === 401 || res.status === 403) {
+            // Error de autenticación/autorización
+            setIsOffline(false);
+            console.error("Error de permisos:", errorMessage);
+            addToast({
+              title: "Sin permisos",
+              description: errorMessage || "No tienes permisos para acceder a esta configuración.",
+              color: "danger",
+            });
+          } else {
+            // Otros errores (404, 500, etc.)
+            setIsOffline(false);
+            console.error("Error cargando configuración:", errorMessage);
+            addToast({
+              title: "Error",
+              description: errorMessage,
+              color: "danger",
+            });
+          }
+          return;
         }
+        
+        // Si llegamos aquí, la conexión fue exitosa
+        setIsOffline(false);
         const json = await res.json();
         if (json?.configuracion) {
           setConfiguracion((prev) => ({
@@ -197,12 +283,18 @@ export default function Configuracion() {
           }));
         }
       } catch (error) {
-        console.error(error);
-        addToast({
-          title: "Error",
-          description: "No pudimos cargar la configuracion.",
-          color: "danger",
-        });
+        // Errores de red o timeouts también se consideran offline
+        setIsOffline(true);
+        console.error("Error inesperado cargando configuración:", error);
+        // No mostrar toast duplicado si ya se mostró en loadTenant
+        if (!isLoadingTenant) {
+          addToast({
+            title: "Modo offline",
+            description:
+              "No se pudo conectar al servidor. La página continuará con valores por defecto.",
+            color: "warning",
+          });
+        }
       } finally {
         setIsLoadingConfig(false);
       }
@@ -231,7 +323,7 @@ export default function Configuracion() {
   }`;
   const summarySeguridad = `2FA: ${
     seguridad.dobleFactor ? "activo" : "pendiente"
-  } | Bloqueo: 10 min | Recordar sesión: 30 días`;
+  } | Bloqueo: ${seguridad.bloquearTrasIntentos === "nunca" ? "desactivado" : `${seguridad.bloquearTrasIntentos} intentos`} | Recordar sesión: ${seguridad.recordarSesion30Dias ? "30 días" : "off"}`;
   const summaryFiscal = `Moneda: ${regional.moneda} | IVA: ${regional.tipoIva} | Punto de venta: ${regional.puntoVenta}`;
   const summaryBranding = `Color: ${branding.color} | Logo: pendiente`;
 
@@ -325,11 +417,21 @@ export default function Configuracion() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
+              {isOffline && (
+                <Chip
+                  variant="flat"
+                  color="warning"
+                  size="sm"
+                  className="bg-yellow-100 text-yellow-800"
+                >
+                  Modo offline: valores por defecto
+                </Chip>
+              )}
               <Button
                 color="primary"
                 className="bg-white text-slate-900"
                 isLoading={isSavingAll}
-                isDisabled={isLoadingTenant || isLoadingConfig}
+                isDisabled={isLoadingTenant || isLoadingConfig || isOffline}
                 onPress={handleSavePerfil}
               >
                 Guardar todo
@@ -518,6 +620,7 @@ export default function Configuracion() {
                   setPreferencias((prev) => ({ ...prev, ticketDigital: value }))
                 }
                 className="px-1 py-1"
+                aria-label="Enviar ticket digital por correo"
               >
                 Enviar ticket digital por correo
               </Switch>
@@ -530,6 +633,7 @@ export default function Configuracion() {
                   }))
                 }
                 className="px-1 py-1"
+                aria-label="Mostrar precios con impuestos incluidos"
               >
                 Mostrar precios con impuestos incluidos
               </Switch>
@@ -539,6 +643,7 @@ export default function Configuracion() {
                   setPreferencias((prev) => ({ ...prev, aperturaCaja: value }))
                 }
                 className="px-1 py-1"
+                aria-label="Abrir cajon al cobrar en efectivo"
               >
                 Abrir cajon al cobrar en efectivo
               </Switch>
@@ -551,6 +656,7 @@ export default function Configuracion() {
                   }))
                 }
                 className="px-1 py-1"
+                aria-label="Numerar pedidos y mostrar en pantalla"
               >
                 Numerar pedidos y mostrar en pantalla
               </Switch>
@@ -570,6 +676,7 @@ export default function Configuracion() {
                 onValueChange={(value) =>
                   setNotificaciones((prev) => ({ ...prev, email: value }))
                 }
+                aria-label="Enviar alertas por correo"
               >
                 Enviar alertas por correo
               </Switch>
@@ -578,6 +685,7 @@ export default function Configuracion() {
                 onValueChange={(value) =>
                   setNotificaciones((prev) => ({ ...prev, push: value }))
                 }
+                aria-label="Notificaciones push en la app"
               >
                 Notificaciones push en la app
               </Switch>
@@ -586,6 +694,7 @@ export default function Configuracion() {
                 onValueChange={(value) =>
                   setNotificaciones((prev) => ({ ...prev, stockBajo: value }))
                 }
+                aria-label="Avisar stock critico y roturas"
               >
                 Avisar stock critico y roturas
               </Switch>
@@ -597,6 +706,7 @@ export default function Configuracion() {
                     resumenDiario: value,
                   }))
                 }
+                aria-label="Enviar resumen diario a las 20:00"
               >
                 Enviar resumen diario a las 20:00
               </Switch>
@@ -610,45 +720,240 @@ export default function Configuracion() {
             summary={summarySeguridad}
             isActive={openSection === "seguridad"}
           >
-            <div className="space-y-3">
-              <Switch
-                isSelected={seguridad.dobleFactor}
-                onValueChange={(value) =>
-                  setSeguridad((prev) => ({ ...prev, dobleFactor: value }))
-                }
-              >
-                Habilitar doble factor para usuarios
-              </Switch>
-              <Switch
-                isSelected={seguridad.alertarDispositivo}
-                onValueChange={(value) =>
-                  setSeguridad((prev) => ({
-                    ...prev,
-                    alertarDispositivo: value,
-                  }))
-                }
-              >
-                Avisar inicio de sesión desde nuevos dispositivos
-              </Switch>
-              <Switch
-                isSelected={seguridad.bloqueoAutomatico}
-                onValueChange={(value) =>
-                  setSeguridad((prev) => ({
-                    ...prev,
-                    bloqueoAutomatico: value,
-                  }))
-                }
-              >
-                Bloquear dashboard después de 10 minutos
-              </Switch>
-              <Switch
-                isSelected={seguridad.recordarSesion}
-                onValueChange={(value) =>
-                  setSeguridad((prev) => ({ ...prev, recordarSesion: value }))
-                }
-              >
-                Recordar sesión por 30 días en dispositivos confiables
-              </Switch>
+            <div className="space-y-6">
+              {/* Card: Acceso y autenticación */}
+              <Card className="shadow-sm border border-slate-200">
+                <CardHeader className="flex items-center gap-3 pb-3">
+                  <div className="p-2 rounded-lg bg-blue-100">
+                    <Lock size={20} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-semibold text-slate-900">
+                      Acceso y autenticación
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      Configura cómo los usuarios acceden al sistema
+                    </p>
+                  </div>
+                </CardHeader>
+                <Divider />
+                <CardBody className="space-y-4 pt-4">
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-700">
+                        Habilitar doble factor (2FA)
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Requiere que todos los usuarios configuren autenticación
+                        de dos factores en su próxima sesión
+                      </p>
+                    </div>
+                    <Switch
+                      size="sm"
+                      isSelected={seguridad.dobleFactor}
+                      onValueChange={(value) => {
+                        setSeguridad((prev) => ({
+                          ...prev,
+                          dobleFactor: value,
+                        }));
+                        // TODO: Implementar guardado en API cuando esté disponible
+                        // await fetch('/api/configuracion/seguridad', { method: 'PATCH', body: JSON.stringify({ dobleFactor: value }) })
+                      }}
+                      aria-label="Habilitar doble factor de autenticación"
+                    />
+                  </div>
+                  <Divider />
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-700">
+                        Avisar inicio de sesión desde nuevos dispositivos
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Envía notificaciones cuando un usuario inicie sesión
+                        desde un dispositivo o ubicación no reconocida
+                      </p>
+                    </div>
+                    <Switch
+                      size="sm"
+                      isSelected={seguridad.alertarNuevoDispositivo}
+                      onValueChange={(value) => {
+                        setSeguridad((prev) => ({
+                          ...prev,
+                          alertarNuevoDispositivo: value,
+                        }));
+                        // TODO: Implementar guardado en API cuando esté disponible
+                      }}
+                      aria-label="Avisar inicio de sesión desde nuevos dispositivos"
+                    />
+                  </div>
+                  <Divider />
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-700">
+                        Bloquear dashboard por inactividad
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Cierra la sesión automáticamente después de 10 minutos
+                        de inactividad
+                      </p>
+                    </div>
+                    <Switch
+                      size="sm"
+                      isSelected={seguridad.bloquearPorInactividad}
+                      onValueChange={(value) => {
+                        setSeguridad((prev) => ({
+                          ...prev,
+                          bloquearPorInactividad: value,
+                        }));
+                        // TODO: Implementar guardado en API cuando esté disponible
+                      }}
+                      aria-label="Bloquear dashboard por inactividad"
+                    />
+                  </div>
+                  <Divider />
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-700">
+                        Bloquear cuenta tras intentos fallidos
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Bloquea temporalmente la cuenta después de múltiples
+                        intentos de inicio de sesión fallidos
+                      </p>
+                    </div>
+                    <Select
+                      size="sm"
+                      selectedKeys={[seguridad.bloquearTrasIntentos]}
+                      onChange={(e) => {
+                        setSeguridad((prev) => ({
+                          ...prev,
+                          bloquearTrasIntentos: e.target.value,
+                        }));
+                        // TODO: Implementar guardado en API cuando esté disponible
+                      }}
+                      className="min-w-[140px]"
+                      aria-label="Bloquear cuenta tras intentos fallidos"
+                      label=""
+                    >
+                      <SelectItem key="nunca">Nunca</SelectItem>
+                      <SelectItem key="5">5 intentos</SelectItem>
+                      <SelectItem key="10">10 intentos</SelectItem>
+                    </Select>
+                  </div>
+                  <Divider />
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-700">
+                        Recordar sesión por 30 días en dispositivos confiables
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Mantiene la sesión activa durante 30 días en
+                        dispositivos marcados como confiables
+                      </p>
+                    </div>
+                    <Switch
+                      size="sm"
+                      isSelected={seguridad.recordarSesion30Dias}
+                      onValueChange={(value) => {
+                        setSeguridad((prev) => ({
+                          ...prev,
+                          recordarSesion30Dias: value,
+                        }));
+                        // TODO: Implementar guardado en API cuando esté disponible
+                      }}
+                      aria-label="Recordar sesión por 30 días en dispositivos confiables"
+                    />
+                  </div>
+                </CardBody>
+              </Card>
+
+              {/* Card: Estado de seguridad */}
+              <Card className="shadow-sm border border-slate-200">
+                <CardHeader className="flex items-center gap-3 pb-3">
+                  <div className="p-2 rounded-lg bg-green-100">
+                    <Shield size={20} className="text-green-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-semibold text-slate-900">
+                      Estado de seguridad
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      Información sobre sesiones y dispositivos activos
+                    </p>
+                  </div>
+                </CardHeader>
+                <Divider />
+                <CardBody className="space-y-4 pt-4">
+                  {/* TODO: Reemplazar con datos reales del API cuando esté disponible */}
+                  {/* Endpoint esperado: GET /api/configuracion/seguridad/estado */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                      <p className="text-xs text-gray-500 mb-1">
+                        Sesiones activas
+                      </p>
+                      <p className="text-2xl font-semibold text-slate-900">8</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                      <p className="text-xs text-gray-500 mb-1">
+                        Dispositivos activos
+                      </p>
+                      <p className="text-2xl font-semibold text-slate-900">5</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                      <p className="text-xs text-gray-500 mb-1">
+                        Último acceso
+                      </p>
+                      <p className="text-lg font-semibold text-slate-900">
+                        Hace 12 minutos
+                      </p>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+
+              {/* Card: Auditoría */}
+              <Card className="shadow-sm border border-slate-200">
+                <CardHeader className="flex items-center gap-3 pb-3">
+                  <div className="p-2 rounded-lg bg-purple-100">
+                    <Eye size={20} className="text-purple-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-semibold text-slate-900">
+                      Auditoría
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      Visualiza y monitorea la actividad de seguridad
+                    </p>
+                  </div>
+                </CardHeader>
+                <Divider />
+                <CardBody className="space-y-4 pt-4">
+                  <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                    <p className="text-sm text-gray-700">
+                      El sistema registra automáticamente todos los eventos de
+                      seguridad y accesos para mantener un historial completo
+                      de la actividad del negocio. Los logs incluyen inicios de
+                      sesión, cambios de configuración, intentos fallidos y
+                      acciones administrativas.
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-gray-600">
+                      Para ver los logs completos, visita la sección de
+                      Analíticas
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      color="primary"
+                      onPress={() => router.push("/analiticas?tab=logs")}
+                      aria-label="Ver logs completos de auditoría"
+                    >
+                      Ver logs completos
+                    </Button>
+                  </div>
+                </CardBody>
+              </Card>
             </div>
           </SectionPanel>
 

@@ -28,42 +28,72 @@ export async function GET() {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
-  const config = await prisma.configuracion.findFirst({
-    where: { TenantId: tenantId },
-    select: {
-      Id: true,
-      RazonSocial: true,
-      NombreFantasia: true,
-      Cuit: true,
-      Email: true,
-      Telefono: true,
-      Direccion: true,
-      ObservacionEnPieFactura: true,
-    },
-  });
+  try {
+    const config = await prisma.configuracion.findFirst({
+      where: { TenantId: tenantId },
+      select: {
+        Id: true,
+        RazonSocial: true,
+        NombreFantasia: true,
+        Cuit: true,
+        Email: true,
+        Telefono: true,
+        Direccion: true,
+        ObservacionEnPieFactura: true,
+      },
+    });
 
-  if (!config) {
+    if (!config) {
+      return NextResponse.json(
+        { error: "Configuracion no encontrada" },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
-      { error: "Configuracion no encontrada" },
-      { status: 404 }
+      {
+        configuracion: {
+          id: Number(config.Id),
+          razonSocial: config.RazonSocial ?? "",
+          nombreFantasia: config.NombreFantasia ?? "",
+          cuit: config.Cuit ?? "",
+          email: config.Email ?? "",
+          telefono: config.Telefono ?? "",
+          direccion: config.Direccion ?? "",
+          observacionPieFactura: config.ObservacionEnPieFactura ?? "",
+        },
+      },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error("Error en GET /api/configuracion:", error);
+    // Detectar errores reales de conexión a la base de datos
+    // Solo retornar 503 para errores de conexión específicos de Prisma
+    const isConnectionError =
+      error?.code === "P1001" || // Can't reach database server
+      error?.code === "P1002" || // Database timeout
+      error?.code === "P1003" || // Database does not exist
+      error?.message?.toLowerCase().includes("can't reach database server") ||
+      error?.message?.toLowerCase().includes("connection timeout") ||
+      error?.message?.toLowerCase().includes("connection refused") ||
+      error?.message?.toLowerCase().includes("econnrefused") ||
+      error?.message?.toLowerCase().includes("etimedout");
+
+    if (isConnectionError) {
+      return NextResponse.json(
+        {
+          error: "Error de conexión a la base de datos. Verifica tu conexión.",
+        },
+        { status: 503 }
+      );
+    }
+    
+    // Para otros errores, retornar 500 (error interno del servidor)
+    return NextResponse.json(
+      { error: "Error al cargar la configuración" },
+      { status: 500 }
     );
   }
-
-  return NextResponse.json(
-    {
-      configuracion: {
-        id: Number(config.Id),
-        razonSocial: config.RazonSocial ?? "",
-        nombreFantasia: config.NombreFantasia ?? "",
-        cuit: config.Cuit ?? "",
-        email: config.Email ?? "",
-        telefono: config.Telefono ?? "",
-        direccion: config.Direccion ?? "",
-        observacionPieFactura: config.ObservacionEnPieFactura ?? "",
-      },
-    },
-    { status: 200 }
-  );
 }
 
 export async function PUT(req: Request) {
@@ -81,19 +111,18 @@ export async function PUT(req: Request) {
 
   const data = parsed.data;
 
-  const config = await prisma.configuracion.findFirst({
-    where: { TenantId: tenantId },
-    select: { Id: true },
-  });
-
-  if (!config) {
-    return NextResponse.json(
-      { error: "Configuracion no encontrada" },
-      { status: 404 }
-    );
-  }
-
   try {
+    const config = await prisma.configuracion.findFirst({
+      where: { TenantId: tenantId },
+      select: { Id: true },
+    });
+
+    if (!config) {
+      return NextResponse.json(
+        { error: "Configuracion no encontrada" },
+        { status: 404 }
+      );
+    }
     const updated = await prisma.configuracion.update({
       where: { Id: config.Id, TenantId: tenantId },
       data: {
@@ -132,8 +161,29 @@ export async function PUT(req: Request) {
       },
       { status: 200 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error actualizando configuracion", error);
+    
+    // Detectar errores reales de conexión a la base de datos
+    const isConnectionError =
+      error?.code === "P1001" || // Can't reach database server
+      error?.code === "P1002" || // Database timeout
+      error?.code === "P1003" || // Database does not exist
+      error?.message?.toLowerCase().includes("can't reach database server") ||
+      error?.message?.toLowerCase().includes("connection timeout") ||
+      error?.message?.toLowerCase().includes("connection refused") ||
+      error?.message?.toLowerCase().includes("econnrefused") ||
+      error?.message?.toLowerCase().includes("etimedout");
+
+    if (isConnectionError) {
+      return NextResponse.json(
+        {
+          error: "Error de conexión a la base de datos. Verifica tu conexión.",
+        },
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
       { error: "No se pudo actualizar la configuracion" },
       { status: 500 }

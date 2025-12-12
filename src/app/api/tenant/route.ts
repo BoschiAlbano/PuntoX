@@ -31,37 +31,67 @@ export async function GET() {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
-  const tenant = await prisma.tenant.findUnique({
-    where: { Id: tenantId },
-    select: {
-      Id: true,
-      Nombre: true,
-      RazonSocial: true,
-      Dominio: true,
-      Email: true,
-      Telefono: true,
-      Cuit: true,
-    },
-  });
-
-  if (!tenant) {
-    return tenantNotFound();
-  }
-
-  return NextResponse.json(
-    {
-      tenant: {
-        id: Number(tenant.Id),
-        nombre: tenant.Nombre,
-        razonSocial: tenant.RazonSocial ?? "",
-        dominio: tenant.Dominio ?? "",
-        email: tenant.Email ?? "",
-        telefono: tenant.Telefono ?? "",
-        cuit: tenant.Cuit ?? "",
+  try {
+    const tenant = await prisma.tenant.findUnique({
+      where: { Id: tenantId },
+      select: {
+        Id: true,
+        Nombre: true,
+        RazonSocial: true,
+        Dominio: true,
+        Email: true,
+        Telefono: true,
+        Cuit: true,
       },
-    },
-    { status: 200 }
-  );
+    });
+
+    if (!tenant) {
+      return tenantNotFound();
+    }
+
+    return NextResponse.json(
+      {
+        tenant: {
+          id: Number(tenant.Id),
+          nombre: tenant.Nombre,
+          razonSocial: tenant.RazonSocial ?? "",
+          dominio: tenant.Dominio ?? "",
+          email: tenant.Email ?? "",
+          telefono: tenant.Telefono ?? "",
+          cuit: tenant.Cuit ?? "",
+        },
+      },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error("Error en GET /api/tenant:", error);
+    // Detectar errores reales de conexión a la base de datos
+    // Solo retornar 503 para errores de conexión específicos de Prisma
+    const isConnectionError =
+      error?.code === "P1001" || // Can't reach database server
+      error?.code === "P1002" || // Database timeout
+      error?.code === "P1003" || // Database does not exist
+      error?.message?.toLowerCase().includes("can't reach database server") ||
+      error?.message?.toLowerCase().includes("connection timeout") ||
+      error?.message?.toLowerCase().includes("connection refused") ||
+      error?.message?.toLowerCase().includes("econnrefused") ||
+      error?.message?.toLowerCase().includes("etimedout");
+
+    if (isConnectionError) {
+      return NextResponse.json(
+        {
+          error: "Error de conexión a la base de datos. Verifica tu conexión.",
+        },
+        { status: 503 }
+      );
+    }
+    
+    // Para otros errores, retornar 500 (error interno del servidor)
+    return NextResponse.json(
+      { error: "Error al cargar el tenant" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function PUT(req: NextRequest) {
@@ -116,14 +146,36 @@ export async function PUT(req: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (err) {
+  } catch (err: any) {
     if (
       err instanceof Error &&
       err.message.toLowerCase().includes("record to update")
     ) {
       return tenantNotFound();
     }
+    
     console.error("Error actualizando tenant", err);
+    
+    // Detectar errores reales de conexión a la base de datos
+    const isConnectionError =
+      err?.code === "P1001" || // Can't reach database server
+      err?.code === "P1002" || // Database timeout
+      err?.code === "P1003" || // Database does not exist
+      err?.message?.toLowerCase().includes("can't reach database server") ||
+      err?.message?.toLowerCase().includes("connection timeout") ||
+      err?.message?.toLowerCase().includes("connection refused") ||
+      err?.message?.toLowerCase().includes("econnrefused") ||
+      err?.message?.toLowerCase().includes("etimedout");
+
+    if (isConnectionError) {
+      return NextResponse.json(
+        {
+          error: "Error de conexión a la base de datos. Verifica tu conexión.",
+        },
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
       { error: "No se pudo actualizar el tenant" },
       { status: 500 }
