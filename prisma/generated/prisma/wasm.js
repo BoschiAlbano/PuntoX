@@ -637,6 +637,17 @@ exports.Prisma.Movimiento_CuentaCorrienteProveedorScalarFieldEnum = {
   ProveedorId: 'ProveedorId'
 };
 
+exports.Prisma.PreferenciasVentaScalarFieldEnum = {
+  Id: 'Id',
+  TenantId: 'TenantId',
+  TicketDigitalPorCorreo: 'TicketDigitalPorCorreo',
+  MostrarPreciosConIva: 'MostrarPreciosConIva',
+  AbrirCajonEfectivo: 'AbrirCajonEfectivo',
+  NumerarPedidosPantalla: 'NumerarPedidosPantalla',
+  CreatedAt: 'CreatedAt',
+  UpdatedAt: 'UpdatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -711,7 +722,8 @@ exports.Prisma.ModelName = {
   Usuario: 'Usuario',
   Movimiento: 'Movimiento',
   Movimiento_CuentaCorriente: 'Movimiento_CuentaCorriente',
-  Movimiento_CuentaCorrienteProveedor: 'Movimiento_CuentaCorrienteProveedor'
+  Movimiento_CuentaCorrienteProveedor: 'Movimiento_CuentaCorrienteProveedor',
+  PreferenciasVenta: 'PreferenciasVenta'
 };
 
 /**

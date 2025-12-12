@@ -296,6 +296,11 @@ export type Movimiento_CuentaCorriente = $Result.DefaultSelection<Prisma.$Movimi
  * Movimiento de cuenta corriente de proveedor.
  */
 export type Movimiento_CuentaCorrienteProveedor = $Result.DefaultSelection<Prisma.$Movimiento_CuentaCorrienteProveedorPayload>
+/**
+ * Model PreferenciasVenta
+ * Preferencias de venta del tenant (relación 1:1 con Tenant)
+ */
+export type PreferenciasVenta = $Result.DefaultSelection<Prisma.$PreferenciasVentaPayload>
 
 /**
  * Enums
@@ -981,6 +986,16 @@ export class PrismaClient<
     * ```
     */
   get movimiento_CuentaCorrienteProveedor(): Prisma.Movimiento_CuentaCorrienteProveedorDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.preferenciasVenta`: Exposes CRUD operations for the **PreferenciasVenta** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PreferenciasVentas
+    * const preferenciasVentas = await prisma.preferenciasVenta.findMany()
+    * ```
+    */
+  get preferenciasVenta(): Prisma.PreferenciasVentaDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1475,7 +1490,8 @@ export namespace Prisma {
     Usuario: 'Usuario',
     Movimiento: 'Movimiento',
     Movimiento_CuentaCorriente: 'Movimiento_CuentaCorriente',
-    Movimiento_CuentaCorrienteProveedor: 'Movimiento_CuentaCorrienteProveedor'
+    Movimiento_CuentaCorrienteProveedor: 'Movimiento_CuentaCorrienteProveedor',
+    PreferenciasVenta: 'PreferenciasVenta'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1494,7 +1510,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "tenant" | "planSaaS" | "log" | "articulo" | "bajaArticulo" | "banco" | "caja" | "cheque" | "comprobante" | "comprobante_Compra" | "comprobante_CtaCteProveedor" | "comprobante_CuentaCorriente" | "comprobante_Factura" | "comprobante_NotaCredito" | "comprobante_Presupuesto" | "comprobante_Remito" | "conceptoGastos" | "condicionIva" | "configuracion" | "contador" | "cuentaBancarias" | "provincia" | "departamento" | "localidad" | "depositoCheques" | "detalleCaja" | "detalleComprobante" | "formaPago" | "formaPago_Cheque" | "formaPago_CtaCte" | "formaPago_Tarjeta" | "formularioPerfil" | "formularios" | "gasto" | "iva" | "marca" | "motivoBajas" | "perfiles" | "permiso" | "perfilPermiso" | "perfilUsuario" | "persona" | "persona_Cliente" | "persona_Empleado" | "precio" | "proveedor" | "puestoTrabajo" | "rubro" | "stock" | "tarjeta" | "unidadMedida" | "usuario" | "movimiento" | "movimiento_CuentaCorriente" | "movimiento_CuentaCorrienteProveedor"
+      modelProps: "tenant" | "planSaaS" | "log" | "articulo" | "bajaArticulo" | "banco" | "caja" | "cheque" | "comprobante" | "comprobante_Compra" | "comprobante_CtaCteProveedor" | "comprobante_CuentaCorriente" | "comprobante_Factura" | "comprobante_NotaCredito" | "comprobante_Presupuesto" | "comprobante_Remito" | "conceptoGastos" | "condicionIva" | "configuracion" | "contador" | "cuentaBancarias" | "provincia" | "departamento" | "localidad" | "depositoCheques" | "detalleCaja" | "detalleComprobante" | "formaPago" | "formaPago_Cheque" | "formaPago_CtaCte" | "formaPago_Tarjeta" | "formularioPerfil" | "formularios" | "gasto" | "iva" | "marca" | "motivoBajas" | "perfiles" | "permiso" | "perfilPermiso" | "perfilUsuario" | "persona" | "persona_Cliente" | "persona_Empleado" | "precio" | "proveedor" | "puestoTrabajo" | "rubro" | "stock" | "tarjeta" | "unidadMedida" | "usuario" | "movimiento" | "movimiento_CuentaCorriente" | "movimiento_CuentaCorrienteProveedor" | "preferenciasVenta"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -5568,6 +5584,80 @@ export namespace Prisma {
           }
         }
       }
+      PreferenciasVenta: {
+        payload: Prisma.$PreferenciasVentaPayload<ExtArgs>
+        fields: Prisma.PreferenciasVentaFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PreferenciasVentaFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PreferenciasVentaPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PreferenciasVentaFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PreferenciasVentaPayload>
+          }
+          findFirst: {
+            args: Prisma.PreferenciasVentaFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PreferenciasVentaPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PreferenciasVentaFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PreferenciasVentaPayload>
+          }
+          findMany: {
+            args: Prisma.PreferenciasVentaFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PreferenciasVentaPayload>[]
+          }
+          create: {
+            args: Prisma.PreferenciasVentaCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PreferenciasVentaPayload>
+          }
+          createMany: {
+            args: Prisma.PreferenciasVentaCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PreferenciasVentaCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PreferenciasVentaPayload>[]
+          }
+          delete: {
+            args: Prisma.PreferenciasVentaDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PreferenciasVentaPayload>
+          }
+          update: {
+            args: Prisma.PreferenciasVentaUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PreferenciasVentaPayload>
+          }
+          deleteMany: {
+            args: Prisma.PreferenciasVentaDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PreferenciasVentaUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.PreferenciasVentaUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PreferenciasVentaPayload>[]
+          }
+          upsert: {
+            args: Prisma.PreferenciasVentaUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PreferenciasVentaPayload>
+          }
+          aggregate: {
+            args: Prisma.PreferenciasVentaAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePreferenciasVenta>
+          }
+          groupBy: {
+            args: Prisma.PreferenciasVentaGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PreferenciasVentaGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PreferenciasVentaCountArgs<ExtArgs>
+            result: $Utils.Optional<PreferenciasVentaCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -5715,6 +5805,7 @@ export namespace Prisma {
     movimiento?: MovimientoOmit
     movimiento_CuentaCorriente?: Movimiento_CuentaCorrienteOmit
     movimiento_CuentaCorrienteProveedor?: Movimiento_CuentaCorrienteProveedorOmit
+    preferenciasVenta?: PreferenciasVentaOmit
   }
 
   /* Types for Logging */
@@ -7508,6 +7599,7 @@ export namespace Prisma {
     Stocks?: boolean | Tenant$StocksArgs<ExtArgs>
     Tarjetas?: boolean | Tenant$TarjetasArgs<ExtArgs>
     Plan?: boolean | Tenant$PlanArgs<ExtArgs>
+    PreferenciasVenta?: boolean | Tenant$PreferenciasVentaArgs<ExtArgs>
     Unidades?: boolean | Tenant$UnidadesArgs<ExtArgs>
     Usuarios?: boolean | Tenant$UsuariosArgs<ExtArgs>
     _count?: boolean | TenantCountOutputTypeDefaultArgs<ExtArgs>
@@ -7589,6 +7681,7 @@ export namespace Prisma {
     Stocks?: boolean | Tenant$StocksArgs<ExtArgs>
     Tarjetas?: boolean | Tenant$TarjetasArgs<ExtArgs>
     Plan?: boolean | Tenant$PlanArgs<ExtArgs>
+    PreferenciasVenta?: boolean | Tenant$PreferenciasVentaArgs<ExtArgs>
     Unidades?: boolean | Tenant$UnidadesArgs<ExtArgs>
     Usuarios?: boolean | Tenant$UsuariosArgs<ExtArgs>
     _count?: boolean | TenantCountOutputTypeDefaultArgs<ExtArgs>
@@ -7636,6 +7729,7 @@ export namespace Prisma {
       Stocks: Prisma.$StockPayload<ExtArgs>[]
       Tarjetas: Prisma.$TarjetaPayload<ExtArgs>[]
       Plan: Prisma.$PlanSaaSPayload<ExtArgs> | null
+      PreferenciasVenta: Prisma.$PreferenciasVentaPayload<ExtArgs> | null
       Unidades: Prisma.$UnidadMedidaPayload<ExtArgs>[]
       Usuarios: Prisma.$UsuarioPayload<ExtArgs>[]
     }
@@ -8077,6 +8171,7 @@ export namespace Prisma {
     Stocks<T extends Tenant$StocksArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$StocksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     Tarjetas<T extends Tenant$TarjetasArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$TarjetasArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TarjetaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     Plan<T extends Tenant$PlanArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$PlanArgs<ExtArgs>>): Prisma__PlanSaaSClient<$Result.GetResult<Prisma.$PlanSaaSPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    PreferenciasVenta<T extends Tenant$PreferenciasVentaArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$PreferenciasVentaArgs<ExtArgs>>): Prisma__PreferenciasVentaClient<$Result.GetResult<Prisma.$PreferenciasVentaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     Unidades<T extends Tenant$UnidadesArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$UnidadesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UnidadMedidaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     Usuarios<T extends Tenant$UsuariosArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$UsuariosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UsuarioPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
@@ -9298,6 +9393,25 @@ export namespace Prisma {
      */
     include?: PlanSaaSInclude<ExtArgs> | null
     where?: PlanSaaSWhereInput
+  }
+
+  /**
+   * Tenant.PreferenciasVenta
+   */
+  export type Tenant$PreferenciasVentaArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PreferenciasVenta
+     */
+    select?: PreferenciasVentaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PreferenciasVenta
+     */
+    omit?: PreferenciasVentaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PreferenciasVentaInclude<ExtArgs> | null
+    where?: PreferenciasVentaWhereInput
   }
 
   /**
@@ -72325,6 +72439,1141 @@ export namespace Prisma {
 
 
   /**
+   * Model PreferenciasVenta
+   */
+
+  export type AggregatePreferenciasVenta = {
+    _count: PreferenciasVentaCountAggregateOutputType | null
+    _avg: PreferenciasVentaAvgAggregateOutputType | null
+    _sum: PreferenciasVentaSumAggregateOutputType | null
+    _min: PreferenciasVentaMinAggregateOutputType | null
+    _max: PreferenciasVentaMaxAggregateOutputType | null
+  }
+
+  export type PreferenciasVentaAvgAggregateOutputType = {
+    Id: number | null
+    TenantId: number | null
+  }
+
+  export type PreferenciasVentaSumAggregateOutputType = {
+    Id: bigint | null
+    TenantId: bigint | null
+  }
+
+  export type PreferenciasVentaMinAggregateOutputType = {
+    Id: bigint | null
+    TenantId: bigint | null
+    TicketDigitalPorCorreo: boolean | null
+    MostrarPreciosConIva: boolean | null
+    AbrirCajonEfectivo: boolean | null
+    NumerarPedidosPantalla: boolean | null
+    CreatedAt: Date | null
+    UpdatedAt: Date | null
+  }
+
+  export type PreferenciasVentaMaxAggregateOutputType = {
+    Id: bigint | null
+    TenantId: bigint | null
+    TicketDigitalPorCorreo: boolean | null
+    MostrarPreciosConIva: boolean | null
+    AbrirCajonEfectivo: boolean | null
+    NumerarPedidosPantalla: boolean | null
+    CreatedAt: Date | null
+    UpdatedAt: Date | null
+  }
+
+  export type PreferenciasVentaCountAggregateOutputType = {
+    Id: number
+    TenantId: number
+    TicketDigitalPorCorreo: number
+    MostrarPreciosConIva: number
+    AbrirCajonEfectivo: number
+    NumerarPedidosPantalla: number
+    CreatedAt: number
+    UpdatedAt: number
+    _all: number
+  }
+
+
+  export type PreferenciasVentaAvgAggregateInputType = {
+    Id?: true
+    TenantId?: true
+  }
+
+  export type PreferenciasVentaSumAggregateInputType = {
+    Id?: true
+    TenantId?: true
+  }
+
+  export type PreferenciasVentaMinAggregateInputType = {
+    Id?: true
+    TenantId?: true
+    TicketDigitalPorCorreo?: true
+    MostrarPreciosConIva?: true
+    AbrirCajonEfectivo?: true
+    NumerarPedidosPantalla?: true
+    CreatedAt?: true
+    UpdatedAt?: true
+  }
+
+  export type PreferenciasVentaMaxAggregateInputType = {
+    Id?: true
+    TenantId?: true
+    TicketDigitalPorCorreo?: true
+    MostrarPreciosConIva?: true
+    AbrirCajonEfectivo?: true
+    NumerarPedidosPantalla?: true
+    CreatedAt?: true
+    UpdatedAt?: true
+  }
+
+  export type PreferenciasVentaCountAggregateInputType = {
+    Id?: true
+    TenantId?: true
+    TicketDigitalPorCorreo?: true
+    MostrarPreciosConIva?: true
+    AbrirCajonEfectivo?: true
+    NumerarPedidosPantalla?: true
+    CreatedAt?: true
+    UpdatedAt?: true
+    _all?: true
+  }
+
+  export type PreferenciasVentaAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PreferenciasVenta to aggregate.
+     */
+    where?: PreferenciasVentaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PreferenciasVentas to fetch.
+     */
+    orderBy?: PreferenciasVentaOrderByWithRelationInput | PreferenciasVentaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PreferenciasVentaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PreferenciasVentas from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PreferenciasVentas.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PreferenciasVentas
+    **/
+    _count?: true | PreferenciasVentaCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: PreferenciasVentaAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: PreferenciasVentaSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PreferenciasVentaMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PreferenciasVentaMaxAggregateInputType
+  }
+
+  export type GetPreferenciasVentaAggregateType<T extends PreferenciasVentaAggregateArgs> = {
+        [P in keyof T & keyof AggregatePreferenciasVenta]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePreferenciasVenta[P]>
+      : GetScalarType<T[P], AggregatePreferenciasVenta[P]>
+  }
+
+
+
+
+  export type PreferenciasVentaGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PreferenciasVentaWhereInput
+    orderBy?: PreferenciasVentaOrderByWithAggregationInput | PreferenciasVentaOrderByWithAggregationInput[]
+    by: PreferenciasVentaScalarFieldEnum[] | PreferenciasVentaScalarFieldEnum
+    having?: PreferenciasVentaScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PreferenciasVentaCountAggregateInputType | true
+    _avg?: PreferenciasVentaAvgAggregateInputType
+    _sum?: PreferenciasVentaSumAggregateInputType
+    _min?: PreferenciasVentaMinAggregateInputType
+    _max?: PreferenciasVentaMaxAggregateInputType
+  }
+
+  export type PreferenciasVentaGroupByOutputType = {
+    Id: bigint
+    TenantId: bigint
+    TicketDigitalPorCorreo: boolean
+    MostrarPreciosConIva: boolean
+    AbrirCajonEfectivo: boolean
+    NumerarPedidosPantalla: boolean
+    CreatedAt: Date
+    UpdatedAt: Date
+    _count: PreferenciasVentaCountAggregateOutputType | null
+    _avg: PreferenciasVentaAvgAggregateOutputType | null
+    _sum: PreferenciasVentaSumAggregateOutputType | null
+    _min: PreferenciasVentaMinAggregateOutputType | null
+    _max: PreferenciasVentaMaxAggregateOutputType | null
+  }
+
+  type GetPreferenciasVentaGroupByPayload<T extends PreferenciasVentaGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PreferenciasVentaGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PreferenciasVentaGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PreferenciasVentaGroupByOutputType[P]>
+            : GetScalarType<T[P], PreferenciasVentaGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PreferenciasVentaSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    Id?: boolean
+    TenantId?: boolean
+    TicketDigitalPorCorreo?: boolean
+    MostrarPreciosConIva?: boolean
+    AbrirCajonEfectivo?: boolean
+    NumerarPedidosPantalla?: boolean
+    CreatedAt?: boolean
+    UpdatedAt?: boolean
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["preferenciasVenta"]>
+
+  export type PreferenciasVentaSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    Id?: boolean
+    TenantId?: boolean
+    TicketDigitalPorCorreo?: boolean
+    MostrarPreciosConIva?: boolean
+    AbrirCajonEfectivo?: boolean
+    NumerarPedidosPantalla?: boolean
+    CreatedAt?: boolean
+    UpdatedAt?: boolean
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["preferenciasVenta"]>
+
+  export type PreferenciasVentaSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    Id?: boolean
+    TenantId?: boolean
+    TicketDigitalPorCorreo?: boolean
+    MostrarPreciosConIva?: boolean
+    AbrirCajonEfectivo?: boolean
+    NumerarPedidosPantalla?: boolean
+    CreatedAt?: boolean
+    UpdatedAt?: boolean
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["preferenciasVenta"]>
+
+  export type PreferenciasVentaSelectScalar = {
+    Id?: boolean
+    TenantId?: boolean
+    TicketDigitalPorCorreo?: boolean
+    MostrarPreciosConIva?: boolean
+    AbrirCajonEfectivo?: boolean
+    NumerarPedidosPantalla?: boolean
+    CreatedAt?: boolean
+    UpdatedAt?: boolean
+  }
+
+  export type PreferenciasVentaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id" | "TenantId" | "TicketDigitalPorCorreo" | "MostrarPreciosConIva" | "AbrirCajonEfectivo" | "NumerarPedidosPantalla" | "CreatedAt" | "UpdatedAt", ExtArgs["result"]["preferenciasVenta"]>
+  export type PreferenciasVentaInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }
+  export type PreferenciasVentaIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }
+  export type PreferenciasVentaIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }
+
+  export type $PreferenciasVentaPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PreferenciasVenta"
+    objects: {
+      Tenant: Prisma.$TenantPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      Id: bigint
+      TenantId: bigint
+      TicketDigitalPorCorreo: boolean
+      MostrarPreciosConIva: boolean
+      AbrirCajonEfectivo: boolean
+      NumerarPedidosPantalla: boolean
+      CreatedAt: Date
+      UpdatedAt: Date
+    }, ExtArgs["result"]["preferenciasVenta"]>
+    composites: {}
+  }
+
+  type PreferenciasVentaGetPayload<S extends boolean | null | undefined | PreferenciasVentaDefaultArgs> = $Result.GetResult<Prisma.$PreferenciasVentaPayload, S>
+
+  type PreferenciasVentaCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<PreferenciasVentaFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: PreferenciasVentaCountAggregateInputType | true
+    }
+
+  export interface PreferenciasVentaDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PreferenciasVenta'], meta: { name: 'PreferenciasVenta' } }
+    /**
+     * Find zero or one PreferenciasVenta that matches the filter.
+     * @param {PreferenciasVentaFindUniqueArgs} args - Arguments to find a PreferenciasVenta
+     * @example
+     * // Get one PreferenciasVenta
+     * const preferenciasVenta = await prisma.preferenciasVenta.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PreferenciasVentaFindUniqueArgs>(args: SelectSubset<T, PreferenciasVentaFindUniqueArgs<ExtArgs>>): Prisma__PreferenciasVentaClient<$Result.GetResult<Prisma.$PreferenciasVentaPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one PreferenciasVenta that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {PreferenciasVentaFindUniqueOrThrowArgs} args - Arguments to find a PreferenciasVenta
+     * @example
+     * // Get one PreferenciasVenta
+     * const preferenciasVenta = await prisma.preferenciasVenta.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PreferenciasVentaFindUniqueOrThrowArgs>(args: SelectSubset<T, PreferenciasVentaFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PreferenciasVentaClient<$Result.GetResult<Prisma.$PreferenciasVentaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PreferenciasVenta that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PreferenciasVentaFindFirstArgs} args - Arguments to find a PreferenciasVenta
+     * @example
+     * // Get one PreferenciasVenta
+     * const preferenciasVenta = await prisma.preferenciasVenta.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PreferenciasVentaFindFirstArgs>(args?: SelectSubset<T, PreferenciasVentaFindFirstArgs<ExtArgs>>): Prisma__PreferenciasVentaClient<$Result.GetResult<Prisma.$PreferenciasVentaPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PreferenciasVenta that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PreferenciasVentaFindFirstOrThrowArgs} args - Arguments to find a PreferenciasVenta
+     * @example
+     * // Get one PreferenciasVenta
+     * const preferenciasVenta = await prisma.preferenciasVenta.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PreferenciasVentaFindFirstOrThrowArgs>(args?: SelectSubset<T, PreferenciasVentaFindFirstOrThrowArgs<ExtArgs>>): Prisma__PreferenciasVentaClient<$Result.GetResult<Prisma.$PreferenciasVentaPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more PreferenciasVentas that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PreferenciasVentaFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PreferenciasVentas
+     * const preferenciasVentas = await prisma.preferenciasVenta.findMany()
+     * 
+     * // Get first 10 PreferenciasVentas
+     * const preferenciasVentas = await prisma.preferenciasVenta.findMany({ take: 10 })
+     * 
+     * // Only select the `Id`
+     * const preferenciasVentaWithIdOnly = await prisma.preferenciasVenta.findMany({ select: { Id: true } })
+     * 
+     */
+    findMany<T extends PreferenciasVentaFindManyArgs>(args?: SelectSubset<T, PreferenciasVentaFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PreferenciasVentaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a PreferenciasVenta.
+     * @param {PreferenciasVentaCreateArgs} args - Arguments to create a PreferenciasVenta.
+     * @example
+     * // Create one PreferenciasVenta
+     * const PreferenciasVenta = await prisma.preferenciasVenta.create({
+     *   data: {
+     *     // ... data to create a PreferenciasVenta
+     *   }
+     * })
+     * 
+     */
+    create<T extends PreferenciasVentaCreateArgs>(args: SelectSubset<T, PreferenciasVentaCreateArgs<ExtArgs>>): Prisma__PreferenciasVentaClient<$Result.GetResult<Prisma.$PreferenciasVentaPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many PreferenciasVentas.
+     * @param {PreferenciasVentaCreateManyArgs} args - Arguments to create many PreferenciasVentas.
+     * @example
+     * // Create many PreferenciasVentas
+     * const preferenciasVenta = await prisma.preferenciasVenta.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PreferenciasVentaCreateManyArgs>(args?: SelectSubset<T, PreferenciasVentaCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PreferenciasVentas and returns the data saved in the database.
+     * @param {PreferenciasVentaCreateManyAndReturnArgs} args - Arguments to create many PreferenciasVentas.
+     * @example
+     * // Create many PreferenciasVentas
+     * const preferenciasVenta = await prisma.preferenciasVenta.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PreferenciasVentas and only return the `Id`
+     * const preferenciasVentaWithIdOnly = await prisma.preferenciasVenta.createManyAndReturn({
+     *   select: { Id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PreferenciasVentaCreateManyAndReturnArgs>(args?: SelectSubset<T, PreferenciasVentaCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PreferenciasVentaPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a PreferenciasVenta.
+     * @param {PreferenciasVentaDeleteArgs} args - Arguments to delete one PreferenciasVenta.
+     * @example
+     * // Delete one PreferenciasVenta
+     * const PreferenciasVenta = await prisma.preferenciasVenta.delete({
+     *   where: {
+     *     // ... filter to delete one PreferenciasVenta
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PreferenciasVentaDeleteArgs>(args: SelectSubset<T, PreferenciasVentaDeleteArgs<ExtArgs>>): Prisma__PreferenciasVentaClient<$Result.GetResult<Prisma.$PreferenciasVentaPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one PreferenciasVenta.
+     * @param {PreferenciasVentaUpdateArgs} args - Arguments to update one PreferenciasVenta.
+     * @example
+     * // Update one PreferenciasVenta
+     * const preferenciasVenta = await prisma.preferenciasVenta.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PreferenciasVentaUpdateArgs>(args: SelectSubset<T, PreferenciasVentaUpdateArgs<ExtArgs>>): Prisma__PreferenciasVentaClient<$Result.GetResult<Prisma.$PreferenciasVentaPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more PreferenciasVentas.
+     * @param {PreferenciasVentaDeleteManyArgs} args - Arguments to filter PreferenciasVentas to delete.
+     * @example
+     * // Delete a few PreferenciasVentas
+     * const { count } = await prisma.preferenciasVenta.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PreferenciasVentaDeleteManyArgs>(args?: SelectSubset<T, PreferenciasVentaDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PreferenciasVentas.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PreferenciasVentaUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PreferenciasVentas
+     * const preferenciasVenta = await prisma.preferenciasVenta.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PreferenciasVentaUpdateManyArgs>(args: SelectSubset<T, PreferenciasVentaUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PreferenciasVentas and returns the data updated in the database.
+     * @param {PreferenciasVentaUpdateManyAndReturnArgs} args - Arguments to update many PreferenciasVentas.
+     * @example
+     * // Update many PreferenciasVentas
+     * const preferenciasVenta = await prisma.preferenciasVenta.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more PreferenciasVentas and only return the `Id`
+     * const preferenciasVentaWithIdOnly = await prisma.preferenciasVenta.updateManyAndReturn({
+     *   select: { Id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends PreferenciasVentaUpdateManyAndReturnArgs>(args: SelectSubset<T, PreferenciasVentaUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PreferenciasVentaPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one PreferenciasVenta.
+     * @param {PreferenciasVentaUpsertArgs} args - Arguments to update or create a PreferenciasVenta.
+     * @example
+     * // Update or create a PreferenciasVenta
+     * const preferenciasVenta = await prisma.preferenciasVenta.upsert({
+     *   create: {
+     *     // ... data to create a PreferenciasVenta
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PreferenciasVenta we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PreferenciasVentaUpsertArgs>(args: SelectSubset<T, PreferenciasVentaUpsertArgs<ExtArgs>>): Prisma__PreferenciasVentaClient<$Result.GetResult<Prisma.$PreferenciasVentaPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of PreferenciasVentas.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PreferenciasVentaCountArgs} args - Arguments to filter PreferenciasVentas to count.
+     * @example
+     * // Count the number of PreferenciasVentas
+     * const count = await prisma.preferenciasVenta.count({
+     *   where: {
+     *     // ... the filter for the PreferenciasVentas we want to count
+     *   }
+     * })
+    **/
+    count<T extends PreferenciasVentaCountArgs>(
+      args?: Subset<T, PreferenciasVentaCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PreferenciasVentaCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PreferenciasVenta.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PreferenciasVentaAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PreferenciasVentaAggregateArgs>(args: Subset<T, PreferenciasVentaAggregateArgs>): Prisma.PrismaPromise<GetPreferenciasVentaAggregateType<T>>
+
+    /**
+     * Group by PreferenciasVenta.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PreferenciasVentaGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PreferenciasVentaGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PreferenciasVentaGroupByArgs['orderBy'] }
+        : { orderBy?: PreferenciasVentaGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PreferenciasVentaGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPreferenciasVentaGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PreferenciasVenta model
+   */
+  readonly fields: PreferenciasVentaFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PreferenciasVenta.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PreferenciasVentaClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    Tenant<T extends TenantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TenantDefaultArgs<ExtArgs>>): Prisma__TenantClient<$Result.GetResult<Prisma.$TenantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PreferenciasVenta model
+   */
+  interface PreferenciasVentaFieldRefs {
+    readonly Id: FieldRef<"PreferenciasVenta", 'BigInt'>
+    readonly TenantId: FieldRef<"PreferenciasVenta", 'BigInt'>
+    readonly TicketDigitalPorCorreo: FieldRef<"PreferenciasVenta", 'Boolean'>
+    readonly MostrarPreciosConIva: FieldRef<"PreferenciasVenta", 'Boolean'>
+    readonly AbrirCajonEfectivo: FieldRef<"PreferenciasVenta", 'Boolean'>
+    readonly NumerarPedidosPantalla: FieldRef<"PreferenciasVenta", 'Boolean'>
+    readonly CreatedAt: FieldRef<"PreferenciasVenta", 'DateTime'>
+    readonly UpdatedAt: FieldRef<"PreferenciasVenta", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PreferenciasVenta findUnique
+   */
+  export type PreferenciasVentaFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PreferenciasVenta
+     */
+    select?: PreferenciasVentaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PreferenciasVenta
+     */
+    omit?: PreferenciasVentaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PreferenciasVentaInclude<ExtArgs> | null
+    /**
+     * Filter, which PreferenciasVenta to fetch.
+     */
+    where: PreferenciasVentaWhereUniqueInput
+  }
+
+  /**
+   * PreferenciasVenta findUniqueOrThrow
+   */
+  export type PreferenciasVentaFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PreferenciasVenta
+     */
+    select?: PreferenciasVentaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PreferenciasVenta
+     */
+    omit?: PreferenciasVentaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PreferenciasVentaInclude<ExtArgs> | null
+    /**
+     * Filter, which PreferenciasVenta to fetch.
+     */
+    where: PreferenciasVentaWhereUniqueInput
+  }
+
+  /**
+   * PreferenciasVenta findFirst
+   */
+  export type PreferenciasVentaFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PreferenciasVenta
+     */
+    select?: PreferenciasVentaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PreferenciasVenta
+     */
+    omit?: PreferenciasVentaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PreferenciasVentaInclude<ExtArgs> | null
+    /**
+     * Filter, which PreferenciasVenta to fetch.
+     */
+    where?: PreferenciasVentaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PreferenciasVentas to fetch.
+     */
+    orderBy?: PreferenciasVentaOrderByWithRelationInput | PreferenciasVentaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PreferenciasVentas.
+     */
+    cursor?: PreferenciasVentaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PreferenciasVentas from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PreferenciasVentas.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PreferenciasVentas.
+     */
+    distinct?: PreferenciasVentaScalarFieldEnum | PreferenciasVentaScalarFieldEnum[]
+  }
+
+  /**
+   * PreferenciasVenta findFirstOrThrow
+   */
+  export type PreferenciasVentaFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PreferenciasVenta
+     */
+    select?: PreferenciasVentaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PreferenciasVenta
+     */
+    omit?: PreferenciasVentaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PreferenciasVentaInclude<ExtArgs> | null
+    /**
+     * Filter, which PreferenciasVenta to fetch.
+     */
+    where?: PreferenciasVentaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PreferenciasVentas to fetch.
+     */
+    orderBy?: PreferenciasVentaOrderByWithRelationInput | PreferenciasVentaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PreferenciasVentas.
+     */
+    cursor?: PreferenciasVentaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PreferenciasVentas from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PreferenciasVentas.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PreferenciasVentas.
+     */
+    distinct?: PreferenciasVentaScalarFieldEnum | PreferenciasVentaScalarFieldEnum[]
+  }
+
+  /**
+   * PreferenciasVenta findMany
+   */
+  export type PreferenciasVentaFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PreferenciasVenta
+     */
+    select?: PreferenciasVentaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PreferenciasVenta
+     */
+    omit?: PreferenciasVentaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PreferenciasVentaInclude<ExtArgs> | null
+    /**
+     * Filter, which PreferenciasVentas to fetch.
+     */
+    where?: PreferenciasVentaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PreferenciasVentas to fetch.
+     */
+    orderBy?: PreferenciasVentaOrderByWithRelationInput | PreferenciasVentaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PreferenciasVentas.
+     */
+    cursor?: PreferenciasVentaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PreferenciasVentas from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PreferenciasVentas.
+     */
+    skip?: number
+    distinct?: PreferenciasVentaScalarFieldEnum | PreferenciasVentaScalarFieldEnum[]
+  }
+
+  /**
+   * PreferenciasVenta create
+   */
+  export type PreferenciasVentaCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PreferenciasVenta
+     */
+    select?: PreferenciasVentaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PreferenciasVenta
+     */
+    omit?: PreferenciasVentaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PreferenciasVentaInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PreferenciasVenta.
+     */
+    data: XOR<PreferenciasVentaCreateInput, PreferenciasVentaUncheckedCreateInput>
+  }
+
+  /**
+   * PreferenciasVenta createMany
+   */
+  export type PreferenciasVentaCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PreferenciasVentas.
+     */
+    data: PreferenciasVentaCreateManyInput | PreferenciasVentaCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * PreferenciasVenta createManyAndReturn
+   */
+  export type PreferenciasVentaCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PreferenciasVenta
+     */
+    select?: PreferenciasVentaSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PreferenciasVenta
+     */
+    omit?: PreferenciasVentaOmit<ExtArgs> | null
+    /**
+     * The data used to create many PreferenciasVentas.
+     */
+    data: PreferenciasVentaCreateManyInput | PreferenciasVentaCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PreferenciasVentaIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PreferenciasVenta update
+   */
+  export type PreferenciasVentaUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PreferenciasVenta
+     */
+    select?: PreferenciasVentaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PreferenciasVenta
+     */
+    omit?: PreferenciasVentaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PreferenciasVentaInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PreferenciasVenta.
+     */
+    data: XOR<PreferenciasVentaUpdateInput, PreferenciasVentaUncheckedUpdateInput>
+    /**
+     * Choose, which PreferenciasVenta to update.
+     */
+    where: PreferenciasVentaWhereUniqueInput
+  }
+
+  /**
+   * PreferenciasVenta updateMany
+   */
+  export type PreferenciasVentaUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PreferenciasVentas.
+     */
+    data: XOR<PreferenciasVentaUpdateManyMutationInput, PreferenciasVentaUncheckedUpdateManyInput>
+    /**
+     * Filter which PreferenciasVentas to update
+     */
+    where?: PreferenciasVentaWhereInput
+    /**
+     * Limit how many PreferenciasVentas to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * PreferenciasVenta updateManyAndReturn
+   */
+  export type PreferenciasVentaUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PreferenciasVenta
+     */
+    select?: PreferenciasVentaSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PreferenciasVenta
+     */
+    omit?: PreferenciasVentaOmit<ExtArgs> | null
+    /**
+     * The data used to update PreferenciasVentas.
+     */
+    data: XOR<PreferenciasVentaUpdateManyMutationInput, PreferenciasVentaUncheckedUpdateManyInput>
+    /**
+     * Filter which PreferenciasVentas to update
+     */
+    where?: PreferenciasVentaWhereInput
+    /**
+     * Limit how many PreferenciasVentas to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PreferenciasVentaIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PreferenciasVenta upsert
+   */
+  export type PreferenciasVentaUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PreferenciasVenta
+     */
+    select?: PreferenciasVentaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PreferenciasVenta
+     */
+    omit?: PreferenciasVentaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PreferenciasVentaInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PreferenciasVenta to update in case it exists.
+     */
+    where: PreferenciasVentaWhereUniqueInput
+    /**
+     * In case the PreferenciasVenta found by the `where` argument doesn't exist, create a new PreferenciasVenta with this data.
+     */
+    create: XOR<PreferenciasVentaCreateInput, PreferenciasVentaUncheckedCreateInput>
+    /**
+     * In case the PreferenciasVenta was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PreferenciasVentaUpdateInput, PreferenciasVentaUncheckedUpdateInput>
+  }
+
+  /**
+   * PreferenciasVenta delete
+   */
+  export type PreferenciasVentaDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PreferenciasVenta
+     */
+    select?: PreferenciasVentaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PreferenciasVenta
+     */
+    omit?: PreferenciasVentaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PreferenciasVentaInclude<ExtArgs> | null
+    /**
+     * Filter which PreferenciasVenta to delete.
+     */
+    where: PreferenciasVentaWhereUniqueInput
+  }
+
+  /**
+   * PreferenciasVenta deleteMany
+   */
+  export type PreferenciasVentaDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PreferenciasVentas to delete
+     */
+    where?: PreferenciasVentaWhereInput
+    /**
+     * Limit how many PreferenciasVentas to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * PreferenciasVenta without action
+   */
+  export type PreferenciasVentaDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PreferenciasVenta
+     */
+    select?: PreferenciasVentaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PreferenciasVenta
+     */
+    omit?: PreferenciasVentaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PreferenciasVentaInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -73020,6 +74269,20 @@ export namespace Prisma {
   export type Movimiento_CuentaCorrienteProveedorScalarFieldEnum = (typeof Movimiento_CuentaCorrienteProveedorScalarFieldEnum)[keyof typeof Movimiento_CuentaCorrienteProveedorScalarFieldEnum]
 
 
+  export const PreferenciasVentaScalarFieldEnum: {
+    Id: 'Id',
+    TenantId: 'TenantId',
+    TicketDigitalPorCorreo: 'TicketDigitalPorCorreo',
+    MostrarPreciosConIva: 'MostrarPreciosConIva',
+    AbrirCajonEfectivo: 'AbrirCajonEfectivo',
+    NumerarPedidosPantalla: 'NumerarPedidosPantalla',
+    CreatedAt: 'CreatedAt',
+    UpdatedAt: 'UpdatedAt'
+  };
+
+  export type PreferenciasVentaScalarFieldEnum = (typeof PreferenciasVentaScalarFieldEnum)[keyof typeof PreferenciasVentaScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -73218,6 +74481,7 @@ export namespace Prisma {
     Stocks?: StockListRelationFilter
     Tarjetas?: TarjetaListRelationFilter
     Plan?: XOR<PlanSaaSNullableScalarRelationFilter, PlanSaaSWhereInput> | null
+    PreferenciasVenta?: XOR<PreferenciasVentaNullableScalarRelationFilter, PreferenciasVentaWhereInput> | null
     Unidades?: UnidadMedidaListRelationFilter
     Usuarios?: UsuarioListRelationFilter
   }
@@ -73266,6 +74530,7 @@ export namespace Prisma {
     Stocks?: StockOrderByRelationAggregateInput
     Tarjetas?: TarjetaOrderByRelationAggregateInput
     Plan?: PlanSaaSOrderByWithRelationInput
+    PreferenciasVenta?: PreferenciasVentaOrderByWithRelationInput
     Unidades?: UnidadMedidaOrderByRelationAggregateInput
     Usuarios?: UsuarioOrderByRelationAggregateInput
   }
@@ -73317,6 +74582,7 @@ export namespace Prisma {
     Stocks?: StockListRelationFilter
     Tarjetas?: TarjetaListRelationFilter
     Plan?: XOR<PlanSaaSNullableScalarRelationFilter, PlanSaaSWhereInput> | null
+    PreferenciasVenta?: XOR<PreferenciasVentaNullableScalarRelationFilter, PreferenciasVentaWhereInput> | null
     Unidades?: UnidadMedidaListRelationFilter
     Usuarios?: UsuarioListRelationFilter
   }, "Id" | "Dominio">
@@ -77149,6 +78415,78 @@ export namespace Prisma {
     ProveedorId?: BigIntWithAggregatesFilter<"Movimiento_CuentaCorrienteProveedor"> | bigint | number
   }
 
+  export type PreferenciasVentaWhereInput = {
+    AND?: PreferenciasVentaWhereInput | PreferenciasVentaWhereInput[]
+    OR?: PreferenciasVentaWhereInput[]
+    NOT?: PreferenciasVentaWhereInput | PreferenciasVentaWhereInput[]
+    Id?: BigIntFilter<"PreferenciasVenta"> | bigint | number
+    TenantId?: BigIntFilter<"PreferenciasVenta"> | bigint | number
+    TicketDigitalPorCorreo?: BoolFilter<"PreferenciasVenta"> | boolean
+    MostrarPreciosConIva?: BoolFilter<"PreferenciasVenta"> | boolean
+    AbrirCajonEfectivo?: BoolFilter<"PreferenciasVenta"> | boolean
+    NumerarPedidosPantalla?: BoolFilter<"PreferenciasVenta"> | boolean
+    CreatedAt?: DateTimeFilter<"PreferenciasVenta"> | Date | string
+    UpdatedAt?: DateTimeFilter<"PreferenciasVenta"> | Date | string
+    Tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
+  }
+
+  export type PreferenciasVentaOrderByWithRelationInput = {
+    Id?: SortOrder
+    TenantId?: SortOrder
+    TicketDigitalPorCorreo?: SortOrder
+    MostrarPreciosConIva?: SortOrder
+    AbrirCajonEfectivo?: SortOrder
+    NumerarPedidosPantalla?: SortOrder
+    CreatedAt?: SortOrder
+    UpdatedAt?: SortOrder
+    Tenant?: TenantOrderByWithRelationInput
+  }
+
+  export type PreferenciasVentaWhereUniqueInput = Prisma.AtLeast<{
+    Id?: bigint | number
+    TenantId?: bigint | number
+    AND?: PreferenciasVentaWhereInput | PreferenciasVentaWhereInput[]
+    OR?: PreferenciasVentaWhereInput[]
+    NOT?: PreferenciasVentaWhereInput | PreferenciasVentaWhereInput[]
+    TicketDigitalPorCorreo?: BoolFilter<"PreferenciasVenta"> | boolean
+    MostrarPreciosConIva?: BoolFilter<"PreferenciasVenta"> | boolean
+    AbrirCajonEfectivo?: BoolFilter<"PreferenciasVenta"> | boolean
+    NumerarPedidosPantalla?: BoolFilter<"PreferenciasVenta"> | boolean
+    CreatedAt?: DateTimeFilter<"PreferenciasVenta"> | Date | string
+    UpdatedAt?: DateTimeFilter<"PreferenciasVenta"> | Date | string
+    Tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
+  }, "Id" | "TenantId">
+
+  export type PreferenciasVentaOrderByWithAggregationInput = {
+    Id?: SortOrder
+    TenantId?: SortOrder
+    TicketDigitalPorCorreo?: SortOrder
+    MostrarPreciosConIva?: SortOrder
+    AbrirCajonEfectivo?: SortOrder
+    NumerarPedidosPantalla?: SortOrder
+    CreatedAt?: SortOrder
+    UpdatedAt?: SortOrder
+    _count?: PreferenciasVentaCountOrderByAggregateInput
+    _avg?: PreferenciasVentaAvgOrderByAggregateInput
+    _max?: PreferenciasVentaMaxOrderByAggregateInput
+    _min?: PreferenciasVentaMinOrderByAggregateInput
+    _sum?: PreferenciasVentaSumOrderByAggregateInput
+  }
+
+  export type PreferenciasVentaScalarWhereWithAggregatesInput = {
+    AND?: PreferenciasVentaScalarWhereWithAggregatesInput | PreferenciasVentaScalarWhereWithAggregatesInput[]
+    OR?: PreferenciasVentaScalarWhereWithAggregatesInput[]
+    NOT?: PreferenciasVentaScalarWhereWithAggregatesInput | PreferenciasVentaScalarWhereWithAggregatesInput[]
+    Id?: BigIntWithAggregatesFilter<"PreferenciasVenta"> | bigint | number
+    TenantId?: BigIntWithAggregatesFilter<"PreferenciasVenta"> | bigint | number
+    TicketDigitalPorCorreo?: BoolWithAggregatesFilter<"PreferenciasVenta"> | boolean
+    MostrarPreciosConIva?: BoolWithAggregatesFilter<"PreferenciasVenta"> | boolean
+    AbrirCajonEfectivo?: BoolWithAggregatesFilter<"PreferenciasVenta"> | boolean
+    NumerarPedidosPantalla?: BoolWithAggregatesFilter<"PreferenciasVenta"> | boolean
+    CreatedAt?: DateTimeWithAggregatesFilter<"PreferenciasVenta"> | Date | string
+    UpdatedAt?: DateTimeWithAggregatesFilter<"PreferenciasVenta"> | Date | string
+  }
+
   export type TenantCreateInput = {
     Id?: bigint | number
     Nombre: string
@@ -77192,6 +78530,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -77239,6 +78578,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -77286,6 +78626,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -77333,6 +78674,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -81088,6 +82430,82 @@ export namespace Prisma {
     ProveedorId?: BigIntFieldUpdateOperationsInput | bigint | number
   }
 
+  export type PreferenciasVentaCreateInput = {
+    Id?: bigint | number
+    TicketDigitalPorCorreo?: boolean
+    MostrarPreciosConIva?: boolean
+    AbrirCajonEfectivo?: boolean
+    NumerarPedidosPantalla?: boolean
+    CreatedAt?: Date | string
+    UpdatedAt?: Date | string
+    Tenant: TenantCreateNestedOneWithoutPreferenciasVentaInput
+  }
+
+  export type PreferenciasVentaUncheckedCreateInput = {
+    Id?: bigint | number
+    TenantId: bigint | number
+    TicketDigitalPorCorreo?: boolean
+    MostrarPreciosConIva?: boolean
+    AbrirCajonEfectivo?: boolean
+    NumerarPedidosPantalla?: boolean
+    CreatedAt?: Date | string
+    UpdatedAt?: Date | string
+  }
+
+  export type PreferenciasVentaUpdateInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    TicketDigitalPorCorreo?: BoolFieldUpdateOperationsInput | boolean
+    MostrarPreciosConIva?: BoolFieldUpdateOperationsInput | boolean
+    AbrirCajonEfectivo?: BoolFieldUpdateOperationsInput | boolean
+    NumerarPedidosPantalla?: BoolFieldUpdateOperationsInput | boolean
+    CreatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    UpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    Tenant?: TenantUpdateOneRequiredWithoutPreferenciasVentaNestedInput
+  }
+
+  export type PreferenciasVentaUncheckedUpdateInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+    TicketDigitalPorCorreo?: BoolFieldUpdateOperationsInput | boolean
+    MostrarPreciosConIva?: BoolFieldUpdateOperationsInput | boolean
+    AbrirCajonEfectivo?: BoolFieldUpdateOperationsInput | boolean
+    NumerarPedidosPantalla?: BoolFieldUpdateOperationsInput | boolean
+    CreatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    UpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PreferenciasVentaCreateManyInput = {
+    Id?: bigint | number
+    TenantId: bigint | number
+    TicketDigitalPorCorreo?: boolean
+    MostrarPreciosConIva?: boolean
+    AbrirCajonEfectivo?: boolean
+    NumerarPedidosPantalla?: boolean
+    CreatedAt?: Date | string
+    UpdatedAt?: Date | string
+  }
+
+  export type PreferenciasVentaUpdateManyMutationInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    TicketDigitalPorCorreo?: BoolFieldUpdateOperationsInput | boolean
+    MostrarPreciosConIva?: BoolFieldUpdateOperationsInput | boolean
+    AbrirCajonEfectivo?: BoolFieldUpdateOperationsInput | boolean
+    NumerarPedidosPantalla?: BoolFieldUpdateOperationsInput | boolean
+    CreatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    UpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PreferenciasVentaUncheckedUpdateManyInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
+    TicketDigitalPorCorreo?: BoolFieldUpdateOperationsInput | boolean
+    MostrarPreciosConIva?: BoolFieldUpdateOperationsInput | boolean
+    AbrirCajonEfectivo?: BoolFieldUpdateOperationsInput | boolean
+    NumerarPedidosPantalla?: BoolFieldUpdateOperationsInput | boolean
+    CreatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    UpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type BigIntFilter<$PrismaModel = never> = {
     equals?: bigint | number | BigIntFieldRefInput<$PrismaModel>
     in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
@@ -81340,6 +82758,11 @@ export namespace Prisma {
   export type PlanSaaSNullableScalarRelationFilter = {
     is?: PlanSaaSWhereInput | null
     isNot?: PlanSaaSWhereInput | null
+  }
+
+  export type PreferenciasVentaNullableScalarRelationFilter = {
+    is?: PreferenciasVentaWhereInput | null
+    isNot?: PreferenciasVentaWhereInput | null
   }
 
   export type UnidadMedidaListRelationFilter = {
@@ -84499,6 +85922,49 @@ export namespace Prisma {
     ProveedorId?: SortOrder
   }
 
+  export type PreferenciasVentaCountOrderByAggregateInput = {
+    Id?: SortOrder
+    TenantId?: SortOrder
+    TicketDigitalPorCorreo?: SortOrder
+    MostrarPreciosConIva?: SortOrder
+    AbrirCajonEfectivo?: SortOrder
+    NumerarPedidosPantalla?: SortOrder
+    CreatedAt?: SortOrder
+    UpdatedAt?: SortOrder
+  }
+
+  export type PreferenciasVentaAvgOrderByAggregateInput = {
+    Id?: SortOrder
+    TenantId?: SortOrder
+  }
+
+  export type PreferenciasVentaMaxOrderByAggregateInput = {
+    Id?: SortOrder
+    TenantId?: SortOrder
+    TicketDigitalPorCorreo?: SortOrder
+    MostrarPreciosConIva?: SortOrder
+    AbrirCajonEfectivo?: SortOrder
+    NumerarPedidosPantalla?: SortOrder
+    CreatedAt?: SortOrder
+    UpdatedAt?: SortOrder
+  }
+
+  export type PreferenciasVentaMinOrderByAggregateInput = {
+    Id?: SortOrder
+    TenantId?: SortOrder
+    TicketDigitalPorCorreo?: SortOrder
+    MostrarPreciosConIva?: SortOrder
+    AbrirCajonEfectivo?: SortOrder
+    NumerarPedidosPantalla?: SortOrder
+    CreatedAt?: SortOrder
+    UpdatedAt?: SortOrder
+  }
+
+  export type PreferenciasVentaSumOrderByAggregateInput = {
+    Id?: SortOrder
+    TenantId?: SortOrder
+  }
+
   export type ArticuloCreateNestedManyWithoutTenantInput = {
     create?: XOR<ArticuloCreateWithoutTenantInput, ArticuloUncheckedCreateWithoutTenantInput> | ArticuloCreateWithoutTenantInput[] | ArticuloUncheckedCreateWithoutTenantInput[]
     connectOrCreate?: ArticuloCreateOrConnectWithoutTenantInput | ArticuloCreateOrConnectWithoutTenantInput[]
@@ -84727,6 +86193,12 @@ export namespace Prisma {
     create?: XOR<PlanSaaSCreateWithoutTenantsInput, PlanSaaSUncheckedCreateWithoutTenantsInput>
     connectOrCreate?: PlanSaaSCreateOrConnectWithoutTenantsInput
     connect?: PlanSaaSWhereUniqueInput
+  }
+
+  export type PreferenciasVentaCreateNestedOneWithoutTenantInput = {
+    create?: XOR<PreferenciasVentaCreateWithoutTenantInput, PreferenciasVentaUncheckedCreateWithoutTenantInput>
+    connectOrCreate?: PreferenciasVentaCreateOrConnectWithoutTenantInput
+    connect?: PreferenciasVentaWhereUniqueInput
   }
 
   export type UnidadMedidaCreateNestedManyWithoutTenantInput = {
@@ -84965,6 +86437,12 @@ export namespace Prisma {
     connectOrCreate?: TarjetaCreateOrConnectWithoutTenantInput | TarjetaCreateOrConnectWithoutTenantInput[]
     createMany?: TarjetaCreateManyTenantInputEnvelope
     connect?: TarjetaWhereUniqueInput | TarjetaWhereUniqueInput[]
+  }
+
+  export type PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput = {
+    create?: XOR<PreferenciasVentaCreateWithoutTenantInput, PreferenciasVentaUncheckedCreateWithoutTenantInput>
+    connectOrCreate?: PreferenciasVentaCreateOrConnectWithoutTenantInput
+    connect?: PreferenciasVentaWhereUniqueInput
   }
 
   export type UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput = {
@@ -85459,6 +86937,16 @@ export namespace Prisma {
     update?: XOR<XOR<PlanSaaSUpdateToOneWithWhereWithoutTenantsInput, PlanSaaSUpdateWithoutTenantsInput>, PlanSaaSUncheckedUpdateWithoutTenantsInput>
   }
 
+  export type PreferenciasVentaUpdateOneWithoutTenantNestedInput = {
+    create?: XOR<PreferenciasVentaCreateWithoutTenantInput, PreferenciasVentaUncheckedCreateWithoutTenantInput>
+    connectOrCreate?: PreferenciasVentaCreateOrConnectWithoutTenantInput
+    upsert?: PreferenciasVentaUpsertWithoutTenantInput
+    disconnect?: PreferenciasVentaWhereInput | boolean
+    delete?: PreferenciasVentaWhereInput | boolean
+    connect?: PreferenciasVentaWhereUniqueInput
+    update?: XOR<XOR<PreferenciasVentaUpdateToOneWithWhereWithoutTenantInput, PreferenciasVentaUpdateWithoutTenantInput>, PreferenciasVentaUncheckedUpdateWithoutTenantInput>
+  }
+
   export type UnidadMedidaUpdateManyWithoutTenantNestedInput = {
     create?: XOR<UnidadMedidaCreateWithoutTenantInput, UnidadMedidaUncheckedCreateWithoutTenantInput> | UnidadMedidaCreateWithoutTenantInput[] | UnidadMedidaUncheckedCreateWithoutTenantInput[]
     connectOrCreate?: UnidadMedidaCreateOrConnectWithoutTenantInput | UnidadMedidaCreateOrConnectWithoutTenantInput[]
@@ -85941,6 +87429,16 @@ export namespace Prisma {
     update?: TarjetaUpdateWithWhereUniqueWithoutTenantInput | TarjetaUpdateWithWhereUniqueWithoutTenantInput[]
     updateMany?: TarjetaUpdateManyWithWhereWithoutTenantInput | TarjetaUpdateManyWithWhereWithoutTenantInput[]
     deleteMany?: TarjetaScalarWhereInput | TarjetaScalarWhereInput[]
+  }
+
+  export type PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput = {
+    create?: XOR<PreferenciasVentaCreateWithoutTenantInput, PreferenciasVentaUncheckedCreateWithoutTenantInput>
+    connectOrCreate?: PreferenciasVentaCreateOrConnectWithoutTenantInput
+    upsert?: PreferenciasVentaUpsertWithoutTenantInput
+    disconnect?: PreferenciasVentaWhereInput | boolean
+    delete?: PreferenciasVentaWhereInput | boolean
+    connect?: PreferenciasVentaWhereUniqueInput
+    update?: XOR<XOR<PreferenciasVentaUpdateToOneWithWhereWithoutTenantInput, PreferenciasVentaUpdateWithoutTenantInput>, PreferenciasVentaUncheckedUpdateWithoutTenantInput>
   }
 
   export type UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput = {
@@ -90213,6 +91711,20 @@ export namespace Prisma {
     update?: XOR<XOR<ProveedorUpdateToOneWithWhereWithoutMovimiento_CuentaCorrienteProveedorInput, ProveedorUpdateWithoutMovimiento_CuentaCorrienteProveedorInput>, ProveedorUncheckedUpdateWithoutMovimiento_CuentaCorrienteProveedorInput>
   }
 
+  export type TenantCreateNestedOneWithoutPreferenciasVentaInput = {
+    create?: XOR<TenantCreateWithoutPreferenciasVentaInput, TenantUncheckedCreateWithoutPreferenciasVentaInput>
+    connectOrCreate?: TenantCreateOrConnectWithoutPreferenciasVentaInput
+    connect?: TenantWhereUniqueInput
+  }
+
+  export type TenantUpdateOneRequiredWithoutPreferenciasVentaNestedInput = {
+    create?: XOR<TenantCreateWithoutPreferenciasVentaInput, TenantUncheckedCreateWithoutPreferenciasVentaInput>
+    connectOrCreate?: TenantCreateOrConnectWithoutPreferenciasVentaInput
+    upsert?: TenantUpsertWithoutPreferenciasVentaInput
+    connect?: TenantWhereUniqueInput
+    update?: XOR<XOR<TenantUpdateToOneWithWhereWithoutPreferenciasVentaInput, TenantUpdateWithoutPreferenciasVentaInput>, TenantUncheckedUpdateWithoutPreferenciasVentaInput>
+  }
+
   export type NestedBigIntFilter<$PrismaModel = never> = {
     equals?: bigint | number | BigIntFieldRefInput<$PrismaModel>
     in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
@@ -91654,6 +93166,31 @@ export namespace Prisma {
     create: XOR<PlanSaaSCreateWithoutTenantsInput, PlanSaaSUncheckedCreateWithoutTenantsInput>
   }
 
+  export type PreferenciasVentaCreateWithoutTenantInput = {
+    Id?: bigint | number
+    TicketDigitalPorCorreo?: boolean
+    MostrarPreciosConIva?: boolean
+    AbrirCajonEfectivo?: boolean
+    NumerarPedidosPantalla?: boolean
+    CreatedAt?: Date | string
+    UpdatedAt?: Date | string
+  }
+
+  export type PreferenciasVentaUncheckedCreateWithoutTenantInput = {
+    Id?: bigint | number
+    TicketDigitalPorCorreo?: boolean
+    MostrarPreciosConIva?: boolean
+    AbrirCajonEfectivo?: boolean
+    NumerarPedidosPantalla?: boolean
+    CreatedAt?: Date | string
+    UpdatedAt?: Date | string
+  }
+
+  export type PreferenciasVentaCreateOrConnectWithoutTenantInput = {
+    where: PreferenciasVentaWhereUniqueInput
+    create: XOR<PreferenciasVentaCreateWithoutTenantInput, PreferenciasVentaUncheckedCreateWithoutTenantInput>
+  }
+
   export type UnidadMedidaCreateWithoutTenantInput = {
     Id?: bigint | number
     Descripcion: string
@@ -92709,6 +94246,37 @@ export namespace Prisma {
     Caracteristicas?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type PreferenciasVentaUpsertWithoutTenantInput = {
+    update: XOR<PreferenciasVentaUpdateWithoutTenantInput, PreferenciasVentaUncheckedUpdateWithoutTenantInput>
+    create: XOR<PreferenciasVentaCreateWithoutTenantInput, PreferenciasVentaUncheckedCreateWithoutTenantInput>
+    where?: PreferenciasVentaWhereInput
+  }
+
+  export type PreferenciasVentaUpdateToOneWithWhereWithoutTenantInput = {
+    where?: PreferenciasVentaWhereInput
+    data: XOR<PreferenciasVentaUpdateWithoutTenantInput, PreferenciasVentaUncheckedUpdateWithoutTenantInput>
+  }
+
+  export type PreferenciasVentaUpdateWithoutTenantInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    TicketDigitalPorCorreo?: BoolFieldUpdateOperationsInput | boolean
+    MostrarPreciosConIva?: BoolFieldUpdateOperationsInput | boolean
+    AbrirCajonEfectivo?: BoolFieldUpdateOperationsInput | boolean
+    NumerarPedidosPantalla?: BoolFieldUpdateOperationsInput | boolean
+    CreatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    UpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PreferenciasVentaUncheckedUpdateWithoutTenantInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    TicketDigitalPorCorreo?: BoolFieldUpdateOperationsInput | boolean
+    MostrarPreciosConIva?: BoolFieldUpdateOperationsInput | boolean
+    AbrirCajonEfectivo?: BoolFieldUpdateOperationsInput | boolean
+    NumerarPedidosPantalla?: BoolFieldUpdateOperationsInput | boolean
+    CreatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    UpdatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type UnidadMedidaUpsertWithWhereUniqueWithoutTenantInput = {
     where: UnidadMedidaWhereUniqueInput
     update: XOR<UnidadMedidaUpdateWithoutTenantInput, UnidadMedidaUncheckedUpdateWithoutTenantInput>
@@ -92806,6 +94374,7 @@ export namespace Prisma {
     Rubros?: RubroCreateNestedManyWithoutTenantInput
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -92852,6 +94421,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -92940,6 +94510,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -92986,6 +94557,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -93048,6 +94620,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -93094,6 +94667,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -93228,6 +94802,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -93274,6 +94849,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -93559,6 +95135,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -93605,6 +95182,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -93812,6 +95390,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -93858,6 +95437,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -94020,6 +95600,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -94066,6 +95647,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -94112,6 +95694,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -94158,6 +95741,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -94282,6 +95866,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -94328,6 +95913,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -94406,6 +95992,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -94452,6 +96039,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -94674,6 +96262,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -94720,6 +96309,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -94946,6 +96536,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -94992,6 +96583,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -95164,6 +96756,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -95210,6 +96803,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -95315,6 +96909,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -95361,6 +96956,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -95720,6 +97316,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -95766,6 +97363,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -97562,6 +99160,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -97608,6 +99207,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -97700,6 +99300,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -97746,6 +99347,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -97952,6 +99554,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -97998,6 +99601,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -98089,6 +99693,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -98135,6 +99740,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -98181,6 +99787,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -98227,6 +99834,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -98289,6 +99897,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -98335,6 +99944,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -98402,6 +100012,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -98448,6 +100059,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -98563,6 +100175,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -98609,6 +100222,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -99113,6 +100727,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -99159,6 +100774,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -99285,6 +100901,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -99331,6 +100948,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -99432,6 +101050,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -99478,6 +101097,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -99601,6 +101221,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -99647,6 +101268,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -99819,6 +101441,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -99865,6 +101488,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -100065,6 +101689,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -100111,6 +101736,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -100214,6 +101840,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -100260,6 +101887,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -100430,6 +102058,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -100476,6 +102105,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -100993,6 +102623,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -101039,6 +102670,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -101161,6 +102793,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -101207,6 +102840,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -101273,6 +102907,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -101319,6 +102954,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -101397,6 +103033,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -101443,6 +103080,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -101563,6 +103201,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -101609,6 +103248,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -101757,6 +103397,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -101803,6 +103444,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -102013,6 +103655,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -102059,6 +103702,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -102137,6 +103781,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -102183,6 +103828,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -102259,6 +103905,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -102305,6 +103952,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -102383,6 +104031,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -102429,6 +104078,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -102515,6 +104165,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -102561,6 +104212,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -102675,6 +104327,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -102721,6 +104374,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -102803,6 +104457,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -102849,6 +104504,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -102927,6 +104583,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -102973,6 +104630,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -103065,6 +104723,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -103111,6 +104770,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -103231,6 +104891,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -103277,6 +104938,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -103348,6 +105010,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -103394,6 +105057,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -103520,6 +105184,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -103566,6 +105231,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -103674,6 +105340,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -103720,6 +105387,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -103863,6 +105531,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -103909,6 +105578,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -104726,6 +106396,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -104772,6 +106443,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -104850,6 +106522,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -104896,6 +106569,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -105054,6 +106728,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -105100,6 +106775,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -105296,6 +106972,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -105342,6 +107019,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -105410,6 +107088,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -105456,6 +107135,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -105534,6 +107214,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -105580,6 +107261,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -105700,6 +107382,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -105746,6 +107429,7 @@ export namespace Prisma {
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -105824,6 +107508,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -105870,6 +107555,7 @@ export namespace Prisma {
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -105985,6 +107671,7 @@ export namespace Prisma {
     Rubros?: RubroCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -106031,6 +107718,7 @@ export namespace Prisma {
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -106168,6 +107856,7 @@ export namespace Prisma {
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -106214,6 +107903,7 @@ export namespace Prisma {
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -106284,6 +107974,7 @@ export namespace Prisma {
     Rubros?: RubroCreateNestedManyWithoutTenantInput
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -106330,6 +108021,7 @@ export namespace Prisma {
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -106419,6 +108111,7 @@ export namespace Prisma {
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -106465,6 +108158,7 @@ export namespace Prisma {
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -106586,6 +108280,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
 
@@ -106632,6 +108327,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
 
@@ -106710,6 +108406,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
 
@@ -106756,6 +108453,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
 
@@ -107061,6 +108759,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
   }
 
@@ -107107,6 +108806,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
   }
 
@@ -107274,6 +108974,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
   }
 
@@ -107320,6 +109021,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
   }
 
@@ -107477,6 +109179,7 @@ export namespace Prisma {
     Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    PreferenciasVenta?: PreferenciasVentaCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
   }
@@ -107523,6 +109226,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
     Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedCreateNestedOneWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -107770,6 +109474,7 @@ export namespace Prisma {
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -107816,6 +109521,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -108225,6 +109931,210 @@ export namespace Prisma {
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
     Comprobante_Compra?: Comprobante_CompraUncheckedUpdateManyWithoutProveedorNestedInput
     Comprobante_CtaCteProveedor?: Comprobante_CtaCteProveedorUncheckedUpdateManyWithoutProveedorNestedInput
+  }
+
+  export type TenantCreateWithoutPreferenciasVentaInput = {
+    Id?: bigint | number
+    Nombre: string
+    Dominio?: string | null
+    RazonSocial?: string | null
+    Cuit?: string | null
+    Email?: string | null
+    Telefono?: string | null
+    EstaActivo?: boolean
+    OnboardingCompleto?: boolean
+    Articulos?: ArticuloCreateNestedManyWithoutTenantInput
+    BajaArticulos?: BajaArticuloCreateNestedManyWithoutTenantInput
+    Bancos?: BancoCreateNestedManyWithoutTenantInput
+    Cajas?: CajaCreateNestedManyWithoutTenantInput
+    Cheques?: ChequeCreateNestedManyWithoutTenantInput
+    Comprobantes?: ComprobanteCreateNestedManyWithoutTenantInput
+    ConceptosGasto?: ConceptoGastosCreateNestedManyWithoutTenantInput
+    Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
+    Contadores?: ContadorCreateNestedManyWithoutTenantInput
+    CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
+    DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
+    DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
+    DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
+    FormasPago?: FormaPagoCreateNestedManyWithoutTenantInput
+    FormulariosPerfiles?: FormularioPerfilCreateNestedManyWithoutTenantInput
+    FormulariosPermisos?: FormulariosCreateNestedManyWithoutTenantInput
+    Gastos?: GastoCreateNestedManyWithoutTenantInput
+    Logs?: LogCreateNestedManyWithoutTenantInput
+    Marcas?: MarcaCreateNestedManyWithoutTenantInput
+    MotivosBaja?: MotivoBajasCreateNestedManyWithoutTenantInput
+    Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
+    PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
+    Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
+    Personas?: PersonaCreateNestedManyWithoutTenantInput
+    Precios?: PrecioCreateNestedManyWithoutTenantInput
+    Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
+    PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
+    Rubros?: RubroCreateNestedManyWithoutTenantInput
+    Stocks?: StockCreateNestedManyWithoutTenantInput
+    Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
+    Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
+    Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
+    Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
+  }
+
+  export type TenantUncheckedCreateWithoutPreferenciasVentaInput = {
+    Id?: bigint | number
+    Nombre: string
+    Dominio?: string | null
+    RazonSocial?: string | null
+    Cuit?: string | null
+    Email?: string | null
+    Telefono?: string | null
+    EstaActivo?: boolean
+    PlanId?: bigint | number | null
+    OnboardingCompleto?: boolean
+    Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
+    BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
+    Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
+    Cajas?: CajaUncheckedCreateNestedManyWithoutTenantInput
+    Cheques?: ChequeUncheckedCreateNestedManyWithoutTenantInput
+    Comprobantes?: ComprobanteUncheckedCreateNestedManyWithoutTenantInput
+    ConceptosGasto?: ConceptoGastosUncheckedCreateNestedManyWithoutTenantInput
+    Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
+    Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
+    CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
+    DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
+    DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
+    DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
+    FormasPago?: FormaPagoUncheckedCreateNestedManyWithoutTenantInput
+    FormulariosPerfiles?: FormularioPerfilUncheckedCreateNestedManyWithoutTenantInput
+    FormulariosPermisos?: FormulariosUncheckedCreateNestedManyWithoutTenantInput
+    Gastos?: GastoUncheckedCreateNestedManyWithoutTenantInput
+    Logs?: LogUncheckedCreateNestedManyWithoutTenantInput
+    Marcas?: MarcaUncheckedCreateNestedManyWithoutTenantInput
+    MotivosBaja?: MotivoBajasUncheckedCreateNestedManyWithoutTenantInput
+    Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
+    Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
+    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
+    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
+    Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
+    Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
+    Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
+    PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
+    Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
+    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
+    Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
+    Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
+    Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
+  }
+
+  export type TenantCreateOrConnectWithoutPreferenciasVentaInput = {
+    where: TenantWhereUniqueInput
+    create: XOR<TenantCreateWithoutPreferenciasVentaInput, TenantUncheckedCreateWithoutPreferenciasVentaInput>
+  }
+
+  export type TenantUpsertWithoutPreferenciasVentaInput = {
+    update: XOR<TenantUpdateWithoutPreferenciasVentaInput, TenantUncheckedUpdateWithoutPreferenciasVentaInput>
+    create: XOR<TenantCreateWithoutPreferenciasVentaInput, TenantUncheckedCreateWithoutPreferenciasVentaInput>
+    where?: TenantWhereInput
+  }
+
+  export type TenantUpdateToOneWithWhereWithoutPreferenciasVentaInput = {
+    where?: TenantWhereInput
+    data: XOR<TenantUpdateWithoutPreferenciasVentaInput, TenantUncheckedUpdateWithoutPreferenciasVentaInput>
+  }
+
+  export type TenantUpdateWithoutPreferenciasVentaInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    Nombre?: StringFieldUpdateOperationsInput | string
+    Dominio?: NullableStringFieldUpdateOperationsInput | string | null
+    RazonSocial?: NullableStringFieldUpdateOperationsInput | string | null
+    Cuit?: NullableStringFieldUpdateOperationsInput | string | null
+    Email?: NullableStringFieldUpdateOperationsInput | string | null
+    Telefono?: NullableStringFieldUpdateOperationsInput | string | null
+    EstaActivo?: BoolFieldUpdateOperationsInput | boolean
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
+    Articulos?: ArticuloUpdateManyWithoutTenantNestedInput
+    BajaArticulos?: BajaArticuloUpdateManyWithoutTenantNestedInput
+    Bancos?: BancoUpdateManyWithoutTenantNestedInput
+    Cajas?: CajaUpdateManyWithoutTenantNestedInput
+    Cheques?: ChequeUpdateManyWithoutTenantNestedInput
+    Comprobantes?: ComprobanteUpdateManyWithoutTenantNestedInput
+    ConceptosGasto?: ConceptoGastosUpdateManyWithoutTenantNestedInput
+    Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
+    Contadores?: ContadorUpdateManyWithoutTenantNestedInput
+    CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
+    DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
+    DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
+    DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
+    FormasPago?: FormaPagoUpdateManyWithoutTenantNestedInput
+    FormulariosPerfiles?: FormularioPerfilUpdateManyWithoutTenantNestedInput
+    FormulariosPermisos?: FormulariosUpdateManyWithoutTenantNestedInput
+    Gastos?: GastoUpdateManyWithoutTenantNestedInput
+    Logs?: LogUpdateManyWithoutTenantNestedInput
+    Marcas?: MarcaUpdateManyWithoutTenantNestedInput
+    MotivosBaja?: MotivoBajasUpdateManyWithoutTenantNestedInput
+    Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
+    PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
+    Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
+    Personas?: PersonaUpdateManyWithoutTenantNestedInput
+    Precios?: PrecioUpdateManyWithoutTenantNestedInput
+    Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
+    PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
+    Rubros?: RubroUpdateManyWithoutTenantNestedInput
+    Stocks?: StockUpdateManyWithoutTenantNestedInput
+    Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
+    Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
+    Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
+    Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
+  }
+
+  export type TenantUncheckedUpdateWithoutPreferenciasVentaInput = {
+    Id?: BigIntFieldUpdateOperationsInput | bigint | number
+    Nombre?: StringFieldUpdateOperationsInput | string
+    Dominio?: NullableStringFieldUpdateOperationsInput | string | null
+    RazonSocial?: NullableStringFieldUpdateOperationsInput | string | null
+    Cuit?: NullableStringFieldUpdateOperationsInput | string | null
+    Email?: NullableStringFieldUpdateOperationsInput | string | null
+    Telefono?: NullableStringFieldUpdateOperationsInput | string | null
+    EstaActivo?: BoolFieldUpdateOperationsInput | boolean
+    PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
+    Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
+    BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
+    Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
+    Cajas?: CajaUncheckedUpdateManyWithoutTenantNestedInput
+    Cheques?: ChequeUncheckedUpdateManyWithoutTenantNestedInput
+    Comprobantes?: ComprobanteUncheckedUpdateManyWithoutTenantNestedInput
+    ConceptosGasto?: ConceptoGastosUncheckedUpdateManyWithoutTenantNestedInput
+    Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
+    Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
+    CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
+    DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
+    DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
+    DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
+    FormasPago?: FormaPagoUncheckedUpdateManyWithoutTenantNestedInput
+    FormulariosPerfiles?: FormularioPerfilUncheckedUpdateManyWithoutTenantNestedInput
+    FormulariosPermisos?: FormulariosUncheckedUpdateManyWithoutTenantNestedInput
+    Gastos?: GastoUncheckedUpdateManyWithoutTenantNestedInput
+    Logs?: LogUncheckedUpdateManyWithoutTenantNestedInput
+    Marcas?: MarcaUncheckedUpdateManyWithoutTenantNestedInput
+    MotivosBaja?: MotivoBajasUncheckedUpdateManyWithoutTenantNestedInput
+    Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
+    Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
+    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
+    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
+    Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
+    Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
+    Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
+    PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
+    Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
+    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
+    Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
+    Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
 
   export type ArticuloCreateManyTenantInput = {
@@ -109745,6 +111655,7 @@ export namespace Prisma {
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
     Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
   }
@@ -109791,6 +111702,7 @@ export namespace Prisma {
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
+    PreferenciasVenta?: PreferenciasVentaUncheckedUpdateOneWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }

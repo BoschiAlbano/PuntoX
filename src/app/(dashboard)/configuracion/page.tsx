@@ -16,6 +16,11 @@ import {
 import { addToast } from "@heroui/react";
 import { Lock, Shield, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
+import {
+  getPreferenciasVenta,
+  savePreferenciasVenta,
+  type PreferenciasVentaDTO,
+} from "./actions-preferencias-venta";
 
 type SectionKey =
   | "perfil"
@@ -108,12 +113,16 @@ export default function Configuracion() {
     inicioActividades: "",
   });
 
-  const [preferencias, setPreferencias] = useState({
-    ticketDigital: true,
-    mostrarPrecios: true,
-    aperturaCaja: true,
-    numerarPedidos: true,
+  const [preferencias, setPreferencias] = useState<PreferenciasVentaDTO>({
+    ticketDigitalPorCorreo: true,
+    mostrarPreciosConIva: true,
+    abrirCajonEfectivo: true,
+    numerarPedidosPantalla: true,
   });
+  const [preferenciasOriginales, setPreferenciasOriginales] =
+    useState<PreferenciasVentaDTO | null>(null);
+  const [isLoadingPreferencias, setIsLoadingPreferencias] = useState(true);
+  const [isSavingPreferencias, setIsSavingPreferencias] = useState(false);
 
   const [notificaciones, setNotificaciones] = useState({
     email: true,
@@ -302,7 +311,57 @@ export default function Configuracion() {
 
     loadTenant();
     loadConfig();
+    loadPreferenciasVenta();
   }, []);
+
+  const loadPreferenciasVenta = async () => {
+    setIsLoadingPreferencias(true);
+    try {
+      const data = await getPreferenciasVenta();
+      setPreferencias(data);
+      setPreferenciasOriginales(data);
+    } catch (error) {
+      console.error("Error cargando preferencias de venta:", error);
+      addToast({
+        title: "Error",
+        description:
+          "No se pudieron cargar las preferencias de venta. Se usarán valores por defecto.",
+        color: "warning",
+      });
+    } finally {
+      setIsLoadingPreferencias(false);
+    }
+  };
+
+  const handleSavePreferenciasVenta = async () => {
+    setIsSavingPreferencias(true);
+    try {
+      const result = await savePreferenciasVenta(preferencias);
+      if (result.success) {
+        setPreferenciasOriginales(preferencias);
+        addToast({
+          title: "Preferencias guardadas",
+          description: "Las preferencias de venta se guardaron correctamente.",
+          color: "success",
+        });
+      } else {
+        addToast({
+          title: "Error al guardar",
+          description: result.error || "No se pudieron guardar las preferencias.",
+          color: "danger",
+        });
+      }
+    } catch (error) {
+      console.error("Error guardando preferencias de venta:", error);
+      addToast({
+        title: "Error al guardar",
+        description: "Ocurrió un error inesperado al guardar las preferencias.",
+        color: "danger",
+      });
+    } finally {
+      setIsSavingPreferencias(false);
+    }
+  };
 
   const descriptionMap: Record<SectionKey, string> = {
     perfil: "Datos visibles en tickets y comunicaciones.",
@@ -314,8 +373,13 @@ export default function Configuracion() {
   };
   const summaryPerfil = `Nombre: ${tenant.nombre} | CUIT: ${tenant.cuit}`;
   const summaryVentas = `Ticket digital: ${
-    preferencias.ticketDigital ? "on" : "off"
-  } | Impuestos: ${preferencias.mostrarPrecios ? "incluidos" : "excluidos"}`;
+    preferencias.ticketDigitalPorCorreo ? "activado" : "desactivado"
+  } | Impuestos: ${preferencias.mostrarPreciosConIva ? "incluidos" : "excluidos"}`;
+
+  // Detectar si hay cambios en preferencias
+  const hasPreferenciasChanges = preferenciasOriginales
+    ? JSON.stringify(preferencias) !== JSON.stringify(preferenciasOriginales)
+    : false;
   const summaryNotificaciones = `Correo: ${
     notificaciones.email ? "on" : "off"
   } | Push: ${notificaciones.push ? "on" : "off"} | Resumen diario: ${
@@ -613,53 +677,87 @@ export default function Configuracion() {
             summary={summaryVentas}
             isActive={openSection === "ventas"}
           >
-            <div className="space-y-3">
-              <Switch
-                isSelected={preferencias.ticketDigital}
-                onValueChange={(value) =>
-                  setPreferencias((prev) => ({ ...prev, ticketDigital: value }))
-                }
-                className="px-1 py-1"
-                aria-label="Enviar ticket digital por correo"
-              >
-                Enviar ticket digital por correo
-              </Switch>
-              <Switch
-                isSelected={preferencias.mostrarPrecios}
-                onValueChange={(value) =>
-                  setPreferencias((prev) => ({
-                    ...prev,
-                    mostrarPrecios: value,
-                  }))
-                }
-                className="px-1 py-1"
-                aria-label="Mostrar precios con impuestos incluidos"
-              >
-                Mostrar precios con impuestos incluidos
-              </Switch>
-              <Switch
-                isSelected={preferencias.aperturaCaja}
-                onValueChange={(value) =>
-                  setPreferencias((prev) => ({ ...prev, aperturaCaja: value }))
-                }
-                className="px-1 py-1"
-                aria-label="Abrir cajon al cobrar en efectivo"
-              >
-                Abrir cajon al cobrar en efectivo
-              </Switch>
-              <Switch
-                isSelected={preferencias.numerarPedidos}
-                onValueChange={(value) =>
-                  setPreferencias((prev) => ({
-                    ...prev,
-                    numerarPedidos: value,
-                  }))
-                }
-                className="px-1 py-1"
-                aria-label="Numerar pedidos y mostrar en pantalla"
-              >
-                Numerar pedidos y mostrar en pantalla
-              </Switch>
+            <div className="space-y-4">
+              {isOffline && (
+                <Chip
+                  variant="flat"
+                  color="warning"
+                  size="sm"
+                  className="bg-yellow-100 text-yellow-800"
+                >
+                  Modo offline: valores por defecto
+                </Chip>
+              )}
+              <div className="space-y-3">
+                <Switch
+                  isSelected={preferencias.ticketDigitalPorCorreo}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => ({
+                      ...prev,
+                      ticketDigitalPorCorreo: value,
+                    }))
+                  }
+                  className="px-1 py-1"
+                  aria-label="Enviar ticket digital por correo"
+                  isDisabled={isLoadingPreferencias || isOffline}
+                >
+                  Enviar ticket digital por correo
+                </Switch>
+                <Switch
+                  isSelected={preferencias.mostrarPreciosConIva}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => ({
+                      ...prev,
+                      mostrarPreciosConIva: value,
+                    }))
+                  }
+                  className="px-1 py-1"
+                  aria-label="Mostrar precios con impuestos incluidos"
+                  isDisabled={isLoadingPreferencias || isOffline}
+                >
+                  Mostrar precios con impuestos incluidos
+                </Switch>
+                <Switch
+                  isSelected={preferencias.abrirCajonEfectivo}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => ({
+                      ...prev,
+                      abrirCajonEfectivo: value,
+                    }))
+                  }
+                  className="px-1 py-1"
+                  aria-label="Abrir cajon al cobrar en efectivo"
+                  isDisabled={isLoadingPreferencias || isOffline}
+                >
+                  Abrir cajon al cobrar en efectivo
+                </Switch>
+                <Switch
+                  isSelected={preferencias.numerarPedidosPantalla}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => ({
+                      ...prev,
+                      numerarPedidosPantalla: value,
+                    }))
+                  }
+                  className="px-1 py-1"
+                  aria-label="Numerar pedidos y mostrar en pantalla"
+                  isDisabled={isLoadingPreferencias || isOffline}
+                >
+                  Numerar pedidos y mostrar en pantalla
+                </Switch>
+              </div>
+              {hasPreferenciasChanges && (
+                <div className="flex justify-end pt-2">
+                  <Button
+                    color="primary"
+                    onPress={handleSavePreferenciasVenta}
+                    isLoading={isSavingPreferencias}
+                    isDisabled={isOffline}
+                  >
+                    Guardar cambios
+                  </Button>
+                </div>
+              )}
             </div>
           </SectionPanel>
 
