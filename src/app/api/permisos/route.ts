@@ -49,11 +49,14 @@ export async function GET(_req: NextRequest) {
       )
     ).filter((c) => c);
 
-    const roles = usuario.PerfilUsuario.map((pu) => ({
-      id: Number(pu.Perfiles.Id),
-      nombre: pu.Perfiles.Descripcion,
-      tipo: (pu.Perfiles as any).Tipo ?? "EMPLEADO",
-    }));
+    const roles = usuario.PerfilUsuario.map((pu) => {
+      const perfil = pu.Perfiles as { Tipo?: string; Id?: bigint; Descripcion?: string };
+      return {
+        id: Number(perfil.Id ?? 0),
+        nombre: perfil.Descripcion ?? "",
+        tipo: (perfil.Tipo as string | undefined) ?? "EMPLEADO",
+      };
+    });
 
     return NextResponse.json(
       {

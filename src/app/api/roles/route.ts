@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
     const response = roles.map((rol) => ({
       id: Number(rol.Id),
       nombre: rol.Descripcion,
-      tipo: mapRolTipo((rol as any).Tipo as string | undefined),
+      tipo: mapRolTipo((rol.Tipo as string | undefined) ?? "EMPLEADO"),
       descripcion: null as string | null,
       usuarios: rol.PerfilUsuario.length,
       permisos: rol.PerfilPermiso.filter(
@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
     const rolResponse = {
       id: Number(created.rol.Id),
       nombre: created.rol.Descripcion,
-      tipo: mapRolTipo((created.rol as any).Tipo as string | undefined),
+      tipo: mapRolTipo((created.rol.Tipo as string | undefined) ?? "EMPLEADO"),
       descripcion: data.descripcion ?? null,
       usuarios: 0,
       permisos: created.permisos.map((p) => p.Descripcion ?? p.Clave),

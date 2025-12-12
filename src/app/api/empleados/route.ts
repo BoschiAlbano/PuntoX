@@ -22,7 +22,7 @@ async function resolveTenantId(req?: NextRequest) {
   const tenantRaw =
     (user?.user_metadata as Record<string, unknown> | undefined)?.tenantId ??
     (user?.user_metadata as Record<string, unknown> | undefined)?.tenant_id ??
-    (user as any)?.tenantId;
+    (user as unknown as { tenantId?: string | number } | undefined)?.tenantId;
   const resolved =
     tenantFromQuery ?? tenantRaw ?? process.env.DEFAULT_TENANT_ID;
 
@@ -325,7 +325,9 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-      rolTipo = (rolValido as any).Tipo ?? "EMPLEADO";
+      rolTipo = ((rolValido as unknown as { Tipo?: string }).Tipo as
+        | string
+        | undefined) ?? "EMPLEADO";
     }
 
     const mailNormalized = data.mail.trim().toLowerCase();
