@@ -384,7 +384,6 @@ export default function ProductoCRUD() {
   };
 
   const handleGuardar = () => {
-    console.log(formData);
     saveMutation.mutate(formData);
   };
 

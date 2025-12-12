@@ -440,7 +440,7 @@ export default function Empleados() {
       setDepartamentos([]);
       setLocalidades([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [provinciaSeleccionada]);
 
   useEffect(() => {
@@ -450,7 +450,7 @@ export default function Empleados() {
     } else {
       setLocalidades([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [departamentoSeleccionado]);
 
   const handleCrearUsuario = async () => {
