@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   Card,
@@ -15,16 +16,113 @@ import {
   Textarea,
 } from "@heroui/react";
 import { addToast } from "@heroui/react";
-import {
-  getPerfilNegocio,
-  savePerfilNegocio,
-  type PerfilNegocioDTO,
-} from "./actions-perfil-negocio";
-import {
-  getPreferenciasVenta,
-  savePreferenciasVenta,
-  type PreferenciasVentaDTO,
-} from "./actions-preferencias-venta";
+
+// Types
+type PerfilNegocioDTO = {
+  existsConfiguracion: boolean;
+  nombre: string;
+  razonSocial: string;
+  correo: string;
+  telefono: string;
+  dominio: string;
+  cuit: string;
+};
+
+type PreferenciasVentaDTO = {
+  existsConfiguracion: boolean;
+  imprimir: boolean;
+  unificarRenglonesProducto: boolean;
+  tipoFormaPagoDefault: number;
+  facturaDescuentaStock: boolean;
+  presupuestoDescuentaStock: boolean;
+  remitoDescuentaStock: boolean;
+  ingresoManualCajaInicial: boolean;
+  puestoCajaSeparado: boolean;
+  activarRetiroDeCaja: boolean;
+  montoMaximoRetiroCaja: number;
+  activarBascula: boolean;
+  etiquetaPorPeso: boolean;
+  codigoBascula: string | null;
+  mostrarPreciosConIva: boolean;
+  abrirCajonEfectivo: boolean;
+  numerarPedidosPantalla: boolean;
+};
+
+// API functions
+async function fetchPerfilNegocio(): Promise<PerfilNegocioDTO> {
+  const res = await fetch("/api/admin/configuracion/perfil");
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Error al cargar perfil");
+  }
+  return res.json();
+}
+
+async function savePerfilNegocio(data: {
+  nombre: string;
+  razonSocial: string;
+  correo: string;
+  telefono: string;
+  dominio: string;
+  cuit: string;
+}): Promise<PerfilNegocioDTO> {
+  const res = await fetch("/api/admin/configuracion/perfil", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Error al guardar perfil");
+  }
+  return res.json();
+}
+
+async function fetchPreferenciasVenta(): Promise<PreferenciasVentaDTO> {
+  const res = await fetch("/api/admin/configuracion/preferencias-venta");
+  if (!res.ok) {
+    const error = await res.json();
+    if (error.code === "CONFIG_MISSING") {
+      // Retornar objeto con existsConfiguracion: false
+      return {
+        existsConfiguracion: false,
+        imprimir: false,
+        unificarRenglonesProducto: true,
+        tipoFormaPagoDefault: 0,
+        facturaDescuentaStock: true,
+        presupuestoDescuentaStock: false,
+        remitoDescuentaStock: true,
+        ingresoManualCajaInicial: false,
+        puestoCajaSeparado: false,
+        activarRetiroDeCaja: false,
+        montoMaximoRetiroCaja: 0,
+        activarBascula: false,
+        etiquetaPorPeso: false,
+        codigoBascula: null,
+        mostrarPreciosConIva: true,
+        abrirCajonEfectivo: true,
+        numerarPedidosPantalla: true,
+      };
+    }
+    throw new Error(error.error || "Error al cargar preferencias");
+  }
+  return res.json();
+}
+
+async function savePreferenciasVenta(
+  data: Omit<PreferenciasVentaDTO, "existsConfiguracion">
+): Promise<PreferenciasVentaDTO> {
+  const res = await fetch("/api/admin/configuracion/preferencias-venta", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Error al guardar preferencias");
+  }
+  return res.json();
+}
 
 type SectionKey =
   | "perfil"
@@ -121,11 +219,48 @@ function AccordionSection({
 }
 
 export default function AdminConfiguracionPage() {
-  const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [openSection, setOpenSection] = useState<SectionKey | "">("perfil");
   
-  // Estados para Perfil del negocio
+  // TanStack Query hooks
+  const {
+    data: perfilData,
+    isLoading: isLoadingPerfil,
+    error: errorPerfil,
+  } = useQuery({
+    queryKey: ["perfil-negocio"],
+    queryFn: fetchPerfilNegocio,
+  });
+
+  const {
+    data: preferenciasData,
+    isLoading: isLoadingPreferencias,
+    error: errorPreferencias,
+  } = useQuery({
+    queryKey: ["preferencias-venta"],
+    queryFn: fetchPreferenciasVenta,
+  });
+
+  // Mutations (sin toasts aquí, se manejan en handleSaveAll)
+  // Los datos se actualizan en el cache, lo que automáticamente actualiza perfilData y preferenciasData
+  // y los useEffect sincronizan los estados locales, marcando como limpio
+  const mutationPerfil = useMutation({
+    mutationFn: savePerfilNegocio,
+    onSuccess: (data) => {
+      queryClient.setQueryData(["perfil-negocio"], data);
+      // Los estados locales se sincronizarán automáticamente vía useEffect
+    },
+  });
+
+  const mutationPreferencias = useMutation({
+    mutationFn: savePreferenciasVenta,
+    onSuccess: (data) => {
+      queryClient.setQueryData(["preferencias-venta"], data);
+      // Los estados locales se sincronizarán automáticamente vía useEffect
+    },
+  });
+
+  // Estados locales para edición
   const [perfil, setPerfil] = useState({
     nombre: "",
     razonSocial: "",
@@ -134,20 +269,29 @@ export default function AdminConfiguracionPage() {
     dominio: "",
     cuit: "",
   });
-  const [perfilOriginal, setPerfilOriginal] = useState<PerfilNegocioDTO | null>(null);
-  
-  // Estados para Preferencias de venta
+
   const [preferencias, setPreferencias] = useState<PreferenciasVentaDTO | null>(null);
-  const [preferenciasOriginal, setPreferenciasOriginal] = useState<PreferenciasVentaDTO | null>(null);
-  const [regional, setRegional] = useState({
-    moneda: "ARS",
-    zonaHoraria: "America/Argentina/Buenos_Aires",
-    idioma: "es-AR",
-    tipoIva: "Responsable Inscripto",
-    puntoVenta: "0001",
-    inicioActividades: "",
-  });
-  // Estados para otros tabs (mantener por ahora)
+
+  // Sincronizar estados locales con datos de query
+  useEffect(() => {
+    if (perfilData) {
+      setPerfil({
+        nombre: perfilData.nombre,
+        razonSocial: perfilData.razonSocial,
+        correo: perfilData.correo,
+        telefono: perfilData.telefono,
+        dominio: perfilData.dominio,
+        cuit: perfilData.cuit,
+      });
+    }
+  }, [perfilData]);
+
+  useEffect(() => {
+    if (preferenciasData) {
+      setPreferencias(preferenciasData);
+    }
+  }, [preferenciasData]);
+
   const [regional, setRegional] = useState({
     moneda: "ARS",
     zonaHoraria: "America/Argentina/Buenos_Aires",
@@ -175,41 +319,6 @@ export default function AdminConfiguracionPage() {
     logoPreview: "",
   });
 
-  // Cargar datos al montar
-  useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      try {
-        // Cargar Perfil del negocio
-        const perfilData = await getPerfilNegocio();
-        setPerfil({
-          nombre: perfilData.nombre,
-          razonSocial: perfilData.razonSocial,
-          correo: perfilData.correo,
-          telefono: perfilData.telefono,
-          dominio: perfilData.dominio,
-          cuit: perfilData.cuit,
-        });
-        setPerfilOriginal(perfilData);
-
-        // Cargar Preferencias de venta
-        const ventasData = await getPreferenciasVenta();
-        setPreferencias(ventasData);
-        setPreferenciasOriginal(ventasData);
-      } catch (error: any) {
-        console.error("Error cargando datos:", error);
-        addToast({
-          title: "Error",
-          description: error?.message || "No se pudieron cargar los datos",
-          color: "danger",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadData();
-  }, []);
-
   useEffect(() => {
     if (!branding.logo) {
       setBranding((prev) => ({ ...prev, logoPreview: "" }));
@@ -218,23 +327,25 @@ export default function AdminConfiguracionPage() {
 
   // Dirty state por tab
   const dirtyPerfil = useMemo(() => {
-    if (!perfilOriginal) return false;
+    if (!perfilData) return false;
     return (
-      perfil.nombre !== perfilOriginal.nombre ||
-      perfil.razonSocial !== perfilOriginal.razonSocial ||
-      perfil.correo !== perfilOriginal.correo ||
-      perfil.telefono !== perfilOriginal.telefono ||
-      perfil.dominio !== perfilOriginal.dominio ||
-      perfil.cuit !== perfilOriginal.cuit
+      perfil.nombre !== perfilData.nombre ||
+      perfil.razonSocial !== perfilData.razonSocial ||
+      perfil.correo !== perfilData.correo ||
+      perfil.telefono !== perfilData.telefono ||
+      perfil.dominio !== perfilData.dominio ||
+      perfil.cuit !== perfilData.cuit
     );
-  }, [perfil, perfilOriginal]);
+  }, [perfil, perfilData]);
 
   const dirtyVentas = useMemo(() => {
-    if (!preferencias || !preferenciasOriginal) return false;
-    return JSON.stringify(preferencias) !== JSON.stringify(preferenciasOriginal);
-  }, [preferencias, preferenciasOriginal]);
+    if (!preferencias || !preferenciasData) return false;
+    return JSON.stringify(preferencias) !== JSON.stringify(preferenciasData);
+  }, [preferencias, preferenciasData]);
 
   const hasAnyChanges = dirtyPerfil || dirtyVentas;
+  const isLoading = isLoadingPerfil || isLoadingPreferencias;
+  const isSaving = mutationPerfil.isPending || mutationPreferencias.isPending;
 
   const handleLogoChange = (file: File | null) => {
     if (!file) {
@@ -246,82 +357,68 @@ export default function AdminConfiguracionPage() {
   };
 
   const handleSaveAll = async () => {
-    setIsSaving(true);
-    const errors: string[] = [];
-    const successes: string[] = [];
+    const tasks: Array<{ name: string; promise: Promise<any> }> = [];
 
-    try {
-      // Guardar Perfil del negocio si hay cambios
-      if (dirtyPerfil) {
-        const result = await savePerfilNegocio({
+    // Guardar Perfil del negocio si hay cambios
+    if (dirtyPerfil) {
+      tasks.push({
+        name: "Perfil del negocio",
+        promise: mutationPerfil.mutateAsync({
           nombre: perfil.nombre,
           razonSocial: perfil.razonSocial,
           correo: perfil.correo,
           telefono: perfil.telefono,
           dominio: perfil.dominio,
           cuit: perfil.cuit,
-        });
-        if (result.success) {
-          successes.push("Perfil del negocio");
-          // Recargar perfil para actualizar original
-          const perfilData = await getPerfilNegocio();
-          setPerfilOriginal(perfilData);
-          setPerfil({
-            nombre: perfilData.nombre,
-            razonSocial: perfilData.razonSocial,
-            correo: perfilData.correo,
-            telefono: perfilData.telefono,
-            dominio: perfilData.dominio,
-            cuit: perfilData.cuit,
-          });
-        } else {
-          errors.push(`Perfil del negocio: ${result.error}`);
-        }
-      }
-
-      // Guardar Preferencias de venta si hay cambios
-      if (dirtyVentas && preferencias) {
-        const result = await savePreferenciasVenta(preferencias);
-        if (result.success) {
-          successes.push("Preferencias de venta");
-          // Recargar preferencias para actualizar original
-          const ventasData = await getPreferenciasVenta();
-          setPreferenciasOriginal(ventasData);
-          setPreferencias(ventasData);
-        } else {
-          if (result.code === "CONFIG_MISSING") {
-            errors.push("Preferencias de venta: Completa primero el Perfil del negocio");
-          } else {
-            errors.push(`Preferencias de venta: ${result.error}`);
-          }
-        }
-      }
-
-      // Mostrar toasts
-      if (successes.length > 0) {
-        addToast({
-          title: "Cambios guardados",
-          description: `${successes.join(", ")} actualizado${successes.length > 1 ? "s" : ""}`,
-          color: "success",
-        });
-      }
-      if (errors.length > 0) {
-        errors.forEach((error) => {
-          addToast({
-            title: "Error",
-            description: error,
-            color: "danger",
-          });
-        });
-      }
-    } catch (error: any) {
-      addToast({
-        title: "Error",
-        description: error?.message || "No se pudieron guardar los cambios",
-        color: "danger",
+        }),
       });
-    } finally {
-      setIsSaving(false);
+    }
+
+    // Guardar Preferencias de venta si hay cambios
+    if (dirtyVentas && preferencias) {
+      const { existsConfiguracion, ...preferenciasData } = preferencias;
+      tasks.push({
+        name: "Preferencias de venta",
+        promise: mutationPreferencias.mutateAsync(preferenciasData),
+      });
+    }
+
+    if (tasks.length === 0) return;
+
+    // Ejecutar todas las mutations en paralelo con Promise.allSettled
+    const results = await Promise.allSettled(tasks.map((t) => t.promise));
+
+    const successes: string[] = [];
+    const errors: string[] = [];
+
+    results.forEach((result, index) => {
+      const taskName = tasks[index].name;
+      if (result.status === "fulfilled") {
+        successes.push(taskName);
+      } else {
+        const errorMessage =
+          result.reason?.message || `No se pudo guardar ${taskName}`;
+        errors.push(`${taskName}: ${errorMessage}`);
+      }
+    });
+
+    // Mostrar toasts de resultados parciales
+    if (successes.length > 0) {
+      addToast({
+        title: "Cambios guardados",
+        description: `${successes.join(", ")} actualizado${successes.length > 1 ? "s" : ""}`,
+        color: "success",
+      });
+    }
+
+    if (errors.length > 0) {
+      errors.forEach((error) => {
+        addToast({
+          title: "Error",
+          description: error,
+          color: "danger",
+        });
+      });
     }
   };
 
@@ -329,10 +426,15 @@ export default function AdminConfiguracionPage() {
     setOpenSection((prev) => (prev === id ? "" : id));
   };
 
-  const summaryPerfil = `${perfil.nombre || "Sin nombre"} | CUIT ${perfil.cuit || "Sin CUIT"}`;
-  const summaryVentas = preferencias
-    ? `Imprimir: ${preferencias.imprimir ? "sí" : "no"} | IVA: ${preferencias.mostrarPreciosConIva ? "incluido" : "excluido"} | Stock: ${preferencias.facturaDescuentaStock ? "descuenta" : "no descuenta"}`
-    : "Cargando...";
+  const summaryPerfil = useMemo(() => {
+    if (!perfilData) return "Cargando...";
+    return `${perfilData.nombre || "Sin nombre"} | CUIT ${perfilData.cuit || "Sin CUIT"}`;
+  }, [perfilData]);
+
+  const summaryVentas = useMemo(() => {
+    if (!preferenciasData) return "Cargando...";
+    return `Imprimir: ${preferenciasData.imprimir ? "sí" : "no"} | IVA: ${preferenciasData.mostrarPreciosConIva ? "incluido" : "excluido"} | Stock: ${preferenciasData.facturaDescuentaStock ? "descuenta" : "no descuenta"}`;
+  }, [preferenciasData]);
   const summaryNotificaciones = `Correo: ${
     notificaciones.email ? "activado" : "desactivado"
   } | Push app: ${notificaciones.push ? "activado" : "desactivado"} | Resumen diario: ${
@@ -483,10 +585,29 @@ export default function AdminConfiguracionPage() {
           {isLoading ? (
             <div className="text-center py-4 text-gray-500">Cargando...</div>
           ) : !preferencias?.existsConfiguracion ? (
-            <div className="space-y-3">
-              <Chip color="warning" variant="flat" className="bg-yellow-100 text-yellow-800">
-                Completa primero el Perfil del negocio para habilitar estas preferencias
+            <div className="space-y-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+              <Chip color="warning" variant="flat" className="bg-yellow-100 text-yellow-800 mb-2">
+                Configuración requerida
               </Chip>
+              <p className="text-sm text-gray-700">
+                Para habilitar las preferencias de venta, primero debes completar el{" "}
+                <button
+                  type="button"
+                  onClick={() => setOpenSection("perfil")}
+                  className="text-blue-600 hover:text-blue-800 underline font-medium"
+                >
+                  Perfil del negocio
+                </button>{" "}
+                o la sección de{" "}
+                <button
+                  type="button"
+                  onClick={() => setOpenSection("fiscal")}
+                  className="text-blue-600 hover:text-blue-800 underline font-medium"
+                >
+                  Facturación
+                </button>
+                .
+              </p>
             </div>
           ) : preferencias ? (
             <div className="space-y-4">
