@@ -55,7 +55,6 @@ model Tenant {
   Stocks              Stock[]
   Tarjetas            Tarjeta[]
   Plan                PlanSaaS?            @relation(fields: [PlanId], references: [Id])
-  PreferenciasVenta   PreferenciasVenta?
   Unidades            UnidadMedida[]
   Usuarios            Usuario[]
 
@@ -1007,20 +1006,3 @@ model Movimiento_CuentaCorrienteProveedor {
   @@index([ProveedorId])
 }
 
-/// Preferencias de venta del tenant (relación 1:1 con Tenant)
-model PreferenciasVenta {
-  Id                      BigInt   @id @default(autoincrement())
-  TenantId                BigInt   @unique
-
-  TicketDigitalPorCorreo  Boolean  @default(true)
-  MostrarPreciosConIva    Boolean  @default(true)
-  AbrirCajonEfectivo      Boolean  @default(true)
-  NumerarPedidosPantalla  Boolean  @default(true)
-
-  CreatedAt               DateTime @default(now())
-  UpdatedAt               DateTime @updatedAt
-
-  Tenant                  Tenant   @relation(fields: [TenantId], references: [Id])
-
-  @@index([TenantId])
-}
