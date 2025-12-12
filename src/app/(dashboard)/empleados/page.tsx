@@ -89,6 +89,11 @@ function estadoColor(estado: EstadoEmpleado) {
   return "danger";
 }
 
+function criticidadColor(usuarios: number) {
+  if (usuarios > 5) return "danger";
+  if (usuarios > 0) return "warning";
+  return "success";
+}
 
 function rolChipColor(tipo?: string | null) {
   if (tipo === "ADMINISTRADOR") return "secondary";
@@ -208,8 +213,7 @@ export default function Empleados() {
     const meta = user?.user_metadata as Record<string, unknown> | undefined;
     const tenantMeta =
       (meta?.tenant_id as string | number | undefined) ?? meta?.tenantId;
-    const fromUser = (user as unknown as { tenantId?: string | number } | undefined)
-      ?.tenantId;
+    const fromUser = user?.tenantId as string | number | undefined;
     const fromEnv =
       typeof process !== "undefined"
         ? (process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID as string | undefined) ??
@@ -311,30 +315,13 @@ export default function Empleados() {
       } else {
         const rolesJson = await rolesRes.json();
         const parsedRoles = Array.isArray(rolesJson?.roles)
-          ? rolesJson.roles.map((rol: unknown) => {
-              const r = rol as Record<string, unknown>;
-              const idVal = (r["Id"] ?? r["id"] ?? -1) as string | number;
-              const nombreVal = (r["Descripcion"] ?? r["nombre"] ?? "") as
-                | string
-                | undefined;
-              const tipoVal = (r["tipo"] as string | undefined) ?? "EMPLEADO";
-              const permisosVal = Array.isArray(r["permisos"])
-                ? (r["permisos"] as string[])
-                : [];
-              const descripcionVal =
-                typeof r["descripcion"] === "string"
-                  ? (r["descripcion"] as string)
-                  : null;
-              const usuariosVal = Number(r["usuarios"] ?? 0);
-              return {
-                id: Number(idVal),
-                nombre: nombreVal ?? "",
-                tipo: tipoVal,
-                permisos: permisosVal,
-                descripcion: descripcionVal,
-                usuarios: usuariosVal,
-              } as Rol;
-            })
+          ? rolesJson.roles.map((rol: Rol) => ({
+              ...rol,
+              tipo: rol.tipo ?? "EMPLEADO",
+              permisos: Array.isArray(rol.permisos) ? rol.permisos : [],
+              descripcion: rol.descripcion ?? null,
+              usuarios: Number(rol.usuarios ?? 0),
+            }))
           : [];
         setRoles(parsedRoles.length ? parsedRoles : fallbackRoles);
       }
@@ -393,14 +380,11 @@ export default function Empleados() {
     }
   };
 
-  // `loadData` is intentionally called once on mount. It depends on many
-  // stable helpers and context; adding it to deps would cause unwanted loops.
-   
   useEffect(() => {
     loadData();
   }, []);
 
-  const loadDepartamentos = async (provId: string) => {
+  const loadDepartamentos = async (provId: string, q?: string) => {
     if (!provId) {
       setDepartamentos([]);
       return;
@@ -456,7 +440,7 @@ export default function Empleados() {
       setDepartamentos([]);
       setLocalidades([]);
     }
-     
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provinciaSeleccionada]);
 
   useEffect(() => {
@@ -466,7 +450,7 @@ export default function Empleados() {
     } else {
       setLocalidades([]);
     }
-     
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departamentoSeleccionado]);
 
   const handleCrearUsuario = async () => {
@@ -1389,7 +1373,7 @@ export default function Empleados() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-semibold text-slate-900">
-                    Se creo rol &quot;Supervisor de turno&quot;
+                    Se creo rol Supervisor de turno
                   </p>
                   <p className="text-sm text-gray-500">Hace 1h</p>
                 </div>
