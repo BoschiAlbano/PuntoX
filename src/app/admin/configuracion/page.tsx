@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Button,
   Card,
@@ -15,6 +15,16 @@ import {
   Textarea,
 } from "@heroui/react";
 import { addToast } from "@heroui/react";
+import {
+  getPerfilNegocio,
+  savePerfilNegocio,
+  type PerfilNegocioDTO,
+} from "./actions-perfil-negocio";
+import {
+  getPreferenciasVenta,
+  savePreferenciasVenta,
+  type PreferenciasVentaDTO,
+} from "./actions-preferencias-venta";
 
 type SectionKey =
   | "perfil"
@@ -112,19 +122,23 @@ function AccordionSection({
 
 export default function AdminConfiguracionPage() {
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [openSection, setOpenSection] = useState<SectionKey | "">("perfil");
+  
+  // Estados para Perfil del negocio
   const [perfil, setPerfil] = useState({
-    negocio: "Punto X Market",
-    fantasia: "PX Liniers",
-    email: "admin@puntox.com",
-    telefono: "+54 11 5555 0000",
-    direccion: "Av. Siempre Viva 742",
-    mensajeTicket: "Gracias por tu compra. Vuelve pronto.",
-    cuit: "20-12345678-9",
-    condicionIva: "Responsable Inscripto",
-    provincia: "Buenos Aires, CABA",
-    sitio: "https://puntox.com",
+    nombre: "",
+    razonSocial: "",
+    correo: "",
+    telefono: "",
+    dominio: "",
+    cuit: "",
   });
+  const [perfilOriginal, setPerfilOriginal] = useState<PerfilNegocioDTO | null>(null);
+  
+  // Estados para Preferencias de venta
+  const [preferencias, setPreferencias] = useState<PreferenciasVentaDTO | null>(null);
+  const [preferenciasOriginal, setPreferenciasOriginal] = useState<PreferenciasVentaDTO | null>(null);
   const [regional, setRegional] = useState({
     moneda: "ARS",
     zonaHoraria: "America/Argentina/Buenos_Aires",
@@ -133,11 +147,14 @@ export default function AdminConfiguracionPage() {
     puntoVenta: "0001",
     inicioActividades: "",
   });
-  const [preferencias, setPreferencias] = useState({
-    ticketDigital: true,
-    mostrarPrecios: true,
-    aperturaCaja: true,
-    numerarPedidos: true,
+  // Estados para otros tabs (mantener por ahora)
+  const [regional, setRegional] = useState({
+    moneda: "ARS",
+    zonaHoraria: "America/Argentina/Buenos_Aires",
+    idioma: "es-AR",
+    tipoIva: "Responsable Inscripto",
+    puntoVenta: "0001",
+    inicioActividades: "",
   });
   const [notificaciones, setNotificaciones] = useState({
     email: true,
@@ -158,11 +175,66 @@ export default function AdminConfiguracionPage() {
     logoPreview: "",
   });
 
+  // Cargar datos al montar
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        // Cargar Perfil del negocio
+        const perfilData = await getPerfilNegocio();
+        setPerfil({
+          nombre: perfilData.nombre,
+          razonSocial: perfilData.razonSocial,
+          correo: perfilData.correo,
+          telefono: perfilData.telefono,
+          dominio: perfilData.dominio,
+          cuit: perfilData.cuit,
+        });
+        setPerfilOriginal(perfilData);
+
+        // Cargar Preferencias de venta
+        const ventasData = await getPreferenciasVenta();
+        setPreferencias(ventasData);
+        setPreferenciasOriginal(ventasData);
+      } catch (error: any) {
+        console.error("Error cargando datos:", error);
+        addToast({
+          title: "Error",
+          description: error?.message || "No se pudieron cargar los datos",
+          color: "danger",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
   useEffect(() => {
     if (!branding.logo) {
       setBranding((prev) => ({ ...prev, logoPreview: "" }));
     }
   }, [branding.logo]);
+
+  // Dirty state por tab
+  const dirtyPerfil = useMemo(() => {
+    if (!perfilOriginal) return false;
+    return (
+      perfil.nombre !== perfilOriginal.nombre ||
+      perfil.razonSocial !== perfilOriginal.razonSocial ||
+      perfil.correo !== perfilOriginal.correo ||
+      perfil.telefono !== perfilOriginal.telefono ||
+      perfil.dominio !== perfilOriginal.dominio ||
+      perfil.cuit !== perfilOriginal.cuit
+    );
+  }, [perfil, perfilOriginal]);
+
+  const dirtyVentas = useMemo(() => {
+    if (!preferencias || !preferenciasOriginal) return false;
+    return JSON.stringify(preferencias) !== JSON.stringify(preferenciasOriginal);
+  }, [preferencias, preferenciasOriginal]);
+
+  const hasAnyChanges = dirtyPerfil || dirtyVentas;
 
   const handleLogoChange = (file: File | null) => {
     if (!file) {
@@ -173,28 +245,94 @@ export default function AdminConfiguracionPage() {
     setBranding((prev) => ({ ...prev, logo: file, logoPreview: previewUrl }));
   };
 
-  const handleSave = (seccion: string) => {
+  const handleSaveAll = async () => {
     setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
+    const errors: string[] = [];
+    const successes: string[] = [];
+
+    try {
+      // Guardar Perfil del negocio si hay cambios
+      if (dirtyPerfil) {
+        const result = await savePerfilNegocio({
+          nombre: perfil.nombre,
+          razonSocial: perfil.razonSocial,
+          correo: perfil.correo,
+          telefono: perfil.telefono,
+          dominio: perfil.dominio,
+          cuit: perfil.cuit,
+        });
+        if (result.success) {
+          successes.push("Perfil del negocio");
+          // Recargar perfil para actualizar original
+          const perfilData = await getPerfilNegocio();
+          setPerfilOriginal(perfilData);
+          setPerfil({
+            nombre: perfilData.nombre,
+            razonSocial: perfilData.razonSocial,
+            correo: perfilData.correo,
+            telefono: perfilData.telefono,
+            dominio: perfilData.dominio,
+            cuit: perfilData.cuit,
+          });
+        } else {
+          errors.push(`Perfil del negocio: ${result.error}`);
+        }
+      }
+
+      // Guardar Preferencias de venta si hay cambios
+      if (dirtyVentas && preferencias) {
+        const result = await savePreferenciasVenta(preferencias);
+        if (result.success) {
+          successes.push("Preferencias de venta");
+          // Recargar preferencias para actualizar original
+          const ventasData = await getPreferenciasVenta();
+          setPreferenciasOriginal(ventasData);
+          setPreferencias(ventasData);
+        } else {
+          if (result.code === "CONFIG_MISSING") {
+            errors.push("Preferencias de venta: Completa primero el Perfil del negocio");
+          } else {
+            errors.push(`Preferencias de venta: ${result.error}`);
+          }
+        }
+      }
+
+      // Mostrar toasts
+      if (successes.length > 0) {
+        addToast({
+          title: "Cambios guardados",
+          description: `${successes.join(", ")} actualizado${successes.length > 1 ? "s" : ""}`,
+          color: "success",
+        });
+      }
+      if (errors.length > 0) {
+        errors.forEach((error) => {
+          addToast({
+            title: "Error",
+            description: error,
+            color: "danger",
+          });
+        });
+      }
+    } catch (error: any) {
       addToast({
-        title: "Cambios guardados",
-        description: `${seccion} actualizada`,
-        color: "success",
+        title: "Error",
+        description: error?.message || "No se pudieron guardar los cambios",
+        color: "danger",
       });
-    }, 500);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const toggleSection = (id: SectionKey) => {
     setOpenSection((prev) => (prev === id ? "" : id));
   };
 
-  const summaryPerfil = `${perfil.negocio} | CUIT ${perfil.cuit} | ${perfil.provincia}`;
-  const summaryVentas = `Ticket digital: ${
-    preferencias.ticketDigital ? "activado" : "desactivado"
-  } | Precios con impuestos: ${
-    preferencias.mostrarPrecios ? "activado" : "desactivado"
-  }`;
+  const summaryPerfil = `${perfil.nombre || "Sin nombre"} | CUIT ${perfil.cuit || "Sin CUIT"}`;
+  const summaryVentas = preferencias
+    ? `Imprimir: ${preferencias.imprimir ? "sí" : "no"} | IVA: ${preferencias.mostrarPreciosConIva ? "incluido" : "excluido"} | Stock: ${preferencias.facturaDescuentaStock ? "descuenta" : "no descuenta"}`
+    : "Cargando...";
   const summaryNotificaciones = `Correo: ${
     notificaciones.email ? "activado" : "desactivado"
   } | Push app: ${notificaciones.push ? "activado" : "desactivado"} | Resumen diario: ${
@@ -230,11 +368,17 @@ export default function AdminConfiguracionPage() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
+              {hasAnyChanges && (
+                <Chip size="sm" variant="flat" color="warning" className="bg-yellow-100 text-yellow-800">
+                  Cambios sin guardar
+                </Chip>
+              )}
               <Button
                 color="primary"
                 className="bg-white text-slate-900"
                 isLoading={isSaving}
-                onPress={() => handleSave("Configuracion general")}
+                isDisabled={!hasAnyChanges}
+                onPress={handleSaveAll}
               >
                 Guardar todo
               </Button>
@@ -259,111 +403,73 @@ export default function AdminConfiguracionPage() {
           isOpen={openSection === "perfil"}
           onToggle={toggleSection}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Nombre fiscal"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.negocio}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, negocio: e.target.value }))
-              }
-            />
-            <Input
-              label="Nombre de fantasia"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.fantasia}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, fantasia: e.target.value }))
-              }
-            />
-            <Input
-              label="Correo"
-              type="email"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.email}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, email: e.target.value }))
-              }
-            />
-            <Input
-              label="Telefono"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.telefono}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, telefono: e.target.value }))
-              }
-            />
-            <Input
-              label="Direccion"
-              variant="bordered"
-              className="md:col-span-2"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.direccion}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, direccion: e.target.value }))
-              }
-            />
-            <Input
-              label="CUIT"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.cuit}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, cuit: e.target.value }))
-              }
-            />
-            <Input
-              label="Condicion IVA"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.condicionIva}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, condicionIva: e.target.value }))
-              }
-            />
-            <Input
-              label="Provincia / Localidad"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.provincia}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, provincia: e.target.value }))
-              }
-            />
-            <Input
-              label="Sitio web"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.sitio}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, sitio: e.target.value }))
-              }
-            />
-          </div>
-          <Textarea
-            label="Mensaje en ticket"
-            placeholder="Ej: Gracias por elegirnos"
-            minRows={3}
-            variant="bordered"
-            classNames={{ inputWrapper: "bg-white border-slate-200" }}
-            value={perfil.mensajeTicket}
-            onChange={(e) =>
-              setPerfil((prev) => ({ ...prev, mensajeTicket: e.target.value }))
-            }
-          />
-          <div className="flex justify-end">
-            <Button
-              color="primary"
-              isLoading={isSaving}
-              onPress={() => handleSave("Perfil del negocio")}
-            >
-              Guardar perfil
-            </Button>
-          </div>
+          {isLoading ? (
+            <div className="text-center py-4 text-gray-500">Cargando...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Nombre"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={perfil.nombre}
+                onChange={(e) =>
+                  setPerfil((prev) => ({ ...prev, nombre: e.target.value }))
+                }
+                placeholder="Nombre del negocio"
+              />
+              <Input
+                label="Dominio"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={perfil.dominio}
+                onChange={(e) =>
+                  setPerfil((prev) => ({ ...prev, dominio: e.target.value }))
+                }
+                placeholder="dominio.com"
+              />
+              <Input
+                label="Razón social"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={perfil.razonSocial}
+                onChange={(e) =>
+                  setPerfil((prev) => ({ ...prev, razonSocial: e.target.value }))
+                }
+                placeholder="Razón social fiscal"
+              />
+              <Input
+                label="CUIT"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={perfil.cuit}
+                onChange={(e) =>
+                  setPerfil((prev) => ({ ...prev, cuit: e.target.value }))
+                }
+                placeholder="20-12345678-9"
+              />
+              <Input
+                label="Correo"
+                type="email"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={perfil.correo}
+                onChange={(e) =>
+                  setPerfil((prev) => ({ ...prev, correo: e.target.value }))
+                }
+                placeholder="correo@ejemplo.com"
+              />
+              <Input
+                label="Teléfono"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={perfil.telefono}
+                onChange={(e) =>
+                  setPerfil((prev) => ({ ...prev, telefono: e.target.value }))
+                }
+                placeholder="+54 11 5555 0000"
+              />
+            </div>
+          )}
         </AccordionSection>
 
         <AccordionSection
@@ -374,53 +480,127 @@ export default function AdminConfiguracionPage() {
           isOpen={openSection === "ventas"}
           onToggle={toggleSection}
         >
-          <div className="space-y-3">
-            <Switch
-              isSelected={preferencias.ticketDigital}
-              onValueChange={(value) =>
-                setPreferencias((prev) => ({ ...prev, ticketDigital: value }))
-              }
-              className="px-1 py-1"
-            >
-              Enviar ticket digital por correo
-            </Switch>
-            <Switch
-              isSelected={preferencias.mostrarPrecios}
-              onValueChange={(value) =>
-                setPreferencias((prev) => ({ ...prev, mostrarPrecios: value }))
-              }
-              className="px-1 py-1"
-            >
-              Mostrar precios con impuestos incluidos
-            </Switch>
-            <Switch
-              isSelected={preferencias.aperturaCaja}
-              onValueChange={(value) =>
-                setPreferencias((prev) => ({ ...prev, aperturaCaja: value }))
-              }
-              className="px-1 py-1"
-            >
-              Abrir cajon al cobrar en efectivo
-            </Switch>
-            <Switch
-              isSelected={preferencias.numerarPedidos}
-              onValueChange={(value) =>
-                setPreferencias((prev) => ({ ...prev, numerarPedidos: value }))
-              }
-              className="px-1 py-1"
-            >
-              Numerar pedidos y mostrar en pantalla
-            </Switch>
-          </div>
-          <div className="pt-2 flex justify-end">
-            <Button
-              color="primary"
-              isLoading={isSaving}
-              onPress={() => handleSave("Preferencias de venta")}
-            >
-              Aplicar preferencias
-            </Button>
-          </div>
+          {isLoading ? (
+            <div className="text-center py-4 text-gray-500">Cargando...</div>
+          ) : !preferencias?.existsConfiguracion ? (
+            <div className="space-y-3">
+              <Chip color="warning" variant="flat" className="bg-yellow-100 text-yellow-800">
+                Completa primero el Perfil del negocio para habilitar estas preferencias
+              </Chip>
+            </div>
+          ) : preferencias ? (
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-gray-700">Caja y Ticket</h4>
+                <Switch
+                  isSelected={preferencias.imprimir}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => prev ? { ...prev, imprimir: value } : null)
+                  }
+                  className="px-1 py-1"
+                  aria-label="Imprimir ticket automáticamente"
+                >
+                  Imprimir ticket automáticamente
+                </Switch>
+                <Switch
+                  isSelected={preferencias.abrirCajonEfectivo}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => prev ? { ...prev, abrirCajonEfectivo: value } : null)
+                  }
+                  className="px-1 py-1"
+                  aria-label="Abrir cajón al cobrar en efectivo"
+                >
+                  Abrir cajón al cobrar en efectivo
+                </Switch>
+                <Switch
+                  isSelected={preferencias.numerarPedidosPantalla}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => prev ? { ...prev, numerarPedidosPantalla: value } : null)
+                  }
+                  className="px-1 py-1"
+                  aria-label="Numerar pedidos y mostrar en pantalla"
+                >
+                  Numerar pedidos y mostrar en pantalla
+                </Switch>
+                <Switch
+                  isSelected={preferencias.unificarRenglonesProducto}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => prev ? { ...prev, unificarRenglonesProducto: value } : null)
+                  }
+                  className="px-1 py-1"
+                  aria-label="Unificar renglones del mismo producto"
+                >
+                  Unificar renglones del mismo producto
+                </Switch>
+              </div>
+              <Divider />
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-gray-700">Precios</h4>
+                <Switch
+                  isSelected={preferencias.mostrarPreciosConIva}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => prev ? { ...prev, mostrarPreciosConIva: value } : null)
+                  }
+                  className="px-1 py-1"
+                  aria-label="Mostrar precios con IVA incluido"
+                >
+                  Mostrar precios con impuestos incluidos
+                </Switch>
+              </div>
+              <Divider />
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-gray-700">Stock</h4>
+                <Switch
+                  isSelected={preferencias.facturaDescuentaStock}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => prev ? { ...prev, facturaDescuentaStock: value } : null)
+                  }
+                  className="px-1 py-1"
+                  aria-label="Factura descuenta stock"
+                >
+                  Factura descuenta stock
+                </Switch>
+                <Switch
+                  isSelected={preferencias.presupuestoDescuentaStock}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => prev ? { ...prev, presupuestoDescuentaStock: value } : null)
+                  }
+                  className="px-1 py-1"
+                  aria-label="Presupuesto descuenta stock"
+                >
+                  Presupuesto descuenta stock
+                </Switch>
+                <Switch
+                  isSelected={preferencias.remitoDescuentaStock}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => prev ? { ...prev, remitoDescuentaStock: value } : null)
+                  }
+                  className="px-1 py-1"
+                  aria-label="Remito descuenta stock"
+                >
+                  Remito descuenta stock
+                </Switch>
+              </div>
+              <Divider />
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-gray-700">Forma de pago</h4>
+                <Select
+                  label="Forma de pago por defecto"
+                  selectedKeys={[preferencias.tipoFormaPagoDefault.toString()]}
+                  onSelectionChange={(keys) => {
+                    const value = Array.from(keys)[0] as string;
+                    setPreferencias((prev) => prev ? { ...prev, tipoFormaPagoDefault: parseInt(value) || 0 } : null);
+                  }}
+                  aria-label="Forma de pago por defecto"
+                >
+                  <SelectItem key="0">Efectivo</SelectItem>
+                  <SelectItem key="1">Débito</SelectItem>
+                  <SelectItem key="2">Crédito</SelectItem>
+                  <SelectItem key="3">QR</SelectItem>
+                </Select>
+              </div>
+            </div>
+          ) : null}
         </AccordionSection>
 
         <AccordionSection
@@ -468,15 +648,6 @@ export default function AdminConfiguracionPage() {
               Enviar resumen diario a las 20:00
             </Switch>
           </div>
-          <div className="pt-2 flex justify-end">
-            <Button
-              color="primary"
-              isLoading={isSaving}
-              onPress={() => handleSave("Notificaciones")}
-            >
-              Guardar alertas
-            </Button>
-          </div>
         </AccordionSection>
 
         <AccordionSection
@@ -523,23 +694,6 @@ export default function AdminConfiguracionPage() {
             >
               Recordar sesion por 30 dias en dispositivos confiables
             </Switch>
-          </div>
-          <div className="flex flex-wrap gap-2 pt-2 justify-end">
-            <Button
-              color="primary"
-              isLoading={isSaving}
-              onPress={() => handleSave("Seguridad")}
-            >
-              Actualizar seguridad
-            </Button>
-            <Button
-              variant="bordered"
-              color="danger"
-              className="border-danger"
-              onPress={() => handleSave("Sesiones cerradas")}
-            >
-              Cerrar todas las sesiones
-            </Button>
           </div>
         </AccordionSection>
 
@@ -614,15 +768,6 @@ export default function AdminConfiguracionPage() {
               }
             />
           </div>
-          <div className="flex justify-end">
-            <Button
-              color="primary"
-              isLoading={isSaving}
-              onPress={() => handleSave("Facturacion y region")}
-            >
-              Guardar configuracion fiscal
-            </Button>
-          </div>
         </AccordionSection>
 
         <AccordionSection
@@ -683,15 +828,6 @@ export default function AdminConfiguracionPage() {
                 placeholder="Ej: Mejor precio, mejor servicio."
               />
             </div>
-          </div>
-          <div className="flex justify-end">
-            <Button
-              color="primary"
-              isLoading={isSaving}
-              onPress={() => handleSave("Branding")}
-            >
-              Guardar branding
-            </Button>
           </div>
         </AccordionSection>
 
