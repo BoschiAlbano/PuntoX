@@ -376,6 +376,19 @@ export async function POST(req: NextRequest) {
 
     if (authError || !authUser?.user) {
       console.error("Error creando usuario en Supabase:", authError);
+      
+      // Detectar si el error es por correo duplicado
+      if (
+        authError?.code === "email_exists" ||
+        authError?.message?.toLowerCase().includes("already been registered") ||
+        authError?.message?.toLowerCase().includes("email address has already")
+      ) {
+        return NextResponse.json(
+          { error: "Este correo ya se encuentra registrado" },
+          { status: 400 }
+        );
+      }
+      
       return NextResponse.json(
         { error: "No se pudo crear el usuario en Supabase" },
         { status: 500 }
