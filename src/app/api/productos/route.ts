@@ -32,7 +32,6 @@ export async function GET(_req: NextRequest) {
         Descripcion: true,
         Detalle: true,
         Ubicacion: true,
-        PrecioCosto: true,
         PorcentajeGanancia: true,
         // Foto: excluded to improve performance
         ActivarLimiteVenta: true,
@@ -48,6 +47,7 @@ export async function GET(_req: NextRequest) {
         EstaEliminado: true,
         TenantId: true,
         Precio: true, // Equivalent to include: { Precio: true }
+        Stock: true,
       },
       orderBy: {
         Descripcion: "asc",
@@ -119,8 +119,8 @@ export async function POST(req: NextRequest) {
           TipoVenta: validarProducto.TipoVenta,
           // Redundancia en Articulo
           PorcentajeGanancia: validarProducto.Precio.PorcentajeGanancia,
-          PrecioCosto: validarProducto.Precio.PrecioCosto,
           Ubicacion: validarProducto.Ubicacion,
+          Stock: validarProducto.Stock,
           Tenant: {
             connect: {
               Id: Number(tenantId) || 1,
@@ -207,8 +207,6 @@ export async function PATCH(req: NextRequest) {
 
     const body = await req.json();
 
-    console.log(body);
-
     const validarProducto = updateProductoSchema.parse(body);
 
     // buscar articulo
@@ -266,8 +264,8 @@ export async function PATCH(req: NextRequest) {
           VencimientoDias: validarProducto.VencimientoDias,
           TipoVenta: validarProducto.TipoVenta,
           PorcentajeGanancia: validarProducto.Precio.PorcentajeGanancia,
-          PrecioCosto: validarProducto.Precio.PrecioCosto,
           Ubicacion: validarProducto.Ubicacion,
+          Stock: validarProducto.Stock,
           Tenant: {
             connect: {
               Id: Number(tenantId) || 1,

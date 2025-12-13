@@ -37,6 +37,7 @@ export const productoAdapter = (data: any): Producto => {
       PrecioPublico2: Number(data.Precio?.PrecioPublico2 || 0),
       PrecioCosto: Number(data.Precio?.PrecioCosto || 0),
     },
+    Stock: Number(data.Stock || 0),
   };
 };
 

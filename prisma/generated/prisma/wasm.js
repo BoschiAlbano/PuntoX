@@ -164,7 +164,6 @@ exports.Prisma.ArticuloScalarFieldEnum = {
   Descripcion: 'Descripcion',
   Detalle: 'Detalle',
   Ubicacion: 'Ubicacion',
-  PrecioCosto: 'PrecioCosto',
   PorcentajeGanancia: 'PorcentajeGanancia',
   Foto: 'Foto',
   ActivarLimiteVenta: 'ActivarLimiteVenta',
@@ -177,6 +176,7 @@ exports.Prisma.ArticuloScalarFieldEnum = {
   StockMinimo: 'StockMinimo',
   VencimientoDias: 'VencimientoDias',
   TipoVenta: 'TipoVenta',
+  Stock: 'Stock',
   EstaEliminado: 'EstaEliminado',
   TenantId: 'TenantId'
 };
@@ -582,14 +582,6 @@ exports.Prisma.RubroScalarFieldEnum = {
   TenantId: 'TenantId'
 };
 
-exports.Prisma.StockScalarFieldEnum = {
-  Id: 'Id',
-  ArticuloId: 'ArticuloId',
-  Cantidad: 'Cantidad',
-  EstaEliminado: 'EstaEliminado',
-  TenantId: 'TenantId'
-};
-
 exports.Prisma.TarjetaScalarFieldEnum = {
   Id: 'Id',
   Descripcion: 'Descripcion',
@@ -705,7 +697,6 @@ exports.Prisma.ModelName = {
   Proveedor: 'Proveedor',
   PuestoTrabajo: 'PuestoTrabajo',
   Rubro: 'Rubro',
-  Stock: 'Stock',
   Tarjeta: 'Tarjeta',
   UnidadMedida: 'UnidadMedida',
   Usuario: 'Usuario',

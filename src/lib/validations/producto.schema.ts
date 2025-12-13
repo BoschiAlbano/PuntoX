@@ -43,6 +43,8 @@ export const createProductoSchema = z.object({
   StockMinimo: z.number().min(0).default(0),
   VencimientoDias: z.number().int().min(0).default(0),
 
+  Stock: z.number().min(0).default(0),
+
   // Estado
   EstaEliminado: z.boolean().default(false),
 
@@ -143,6 +145,8 @@ export const updateProductoSchema = z.object({
   StockMinimo: z.number().min(0).default(0).optional(),
   VencimientoDias: z.number().int().min(0).default(0).optional(),
 
+  Stock: z.number().min(0).default(0).optional(),
+
   // Estado
   EstaEliminado: z.boolean().default(false).optional(),
 
@@ -177,6 +181,7 @@ export interface Producto {
   StockMinimo: number;
   VencimientoDias: number;
   TipoVenta: number;
+  Stock: number;
   EstaEliminado: boolean;
   Precio: {
     PorcentajeGanancia: number;

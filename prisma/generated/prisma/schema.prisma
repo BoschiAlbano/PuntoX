@@ -52,7 +52,6 @@ model Tenant {
   Proveedores         Proveedor[]
   PuestosTrabajo      PuestoTrabajo[]
   Rubros              Rubro[]
-  Stocks              Stock[]
   Tarjetas            Tarjeta[]
   Plan                PlanSaaS?            @relation(fields: [PlanId], references: [Id])
   Unidades            UnidadMedida[]
@@ -101,7 +100,6 @@ model Articulo {
   Descripcion          String               @db.VarChar(250)
   Detalle              String?              @db.VarChar(500)
   Ubicacion            String?              @db.VarChar(500)
-  PrecioCosto          Decimal              @db.Decimal(18, 2)
   PorcentajeGanancia   Decimal              @db.Decimal(18, 2)
   Foto                 Bytes
   ActivarLimiteVenta   Boolean
@@ -114,6 +112,7 @@ model Articulo {
   StockMinimo          Decimal              @db.Decimal(18, 2)
   VencimientoDias      Int
   TipoVenta            Int
+  Stock                Decimal              @default(0) @db.Decimal(18, 2)
   EstaEliminado        Boolean
   /// Tenant dueño de este artículo
   TenantId             BigInt
@@ -125,7 +124,6 @@ model Articulo {
   UnidadMedida         UnidadMedida         @relation(fields: [UnidadMedidaId], references: [Id], onUpdate: NoAction)
   BajaArticulo         BajaArticulo[]
   DetalleComprobante   DetalleComprobante[]
-  Stock                Stock[]
 
   @@index([TenantId])
   @@index([IvaId])
@@ -883,21 +881,6 @@ model Rubro {
   Tenant        Tenant     @relation(fields: [TenantId], references: [Id])
 
   @@index([TenantId])
-}
-
-/// Stock de artículos por depósito.
-model Stock {
-  Id            BigInt   @id @default(autoincrement())
-  ArticuloId    BigInt
-  Cantidad      Decimal  @db.Decimal(18, 3)
-  EstaEliminado Boolean
-  /// Tenant dueño de este stock
-  TenantId      BigInt
-  Articulo      Articulo @relation(fields: [ArticuloId], references: [Id], onUpdate: NoAction)
-  Tenant        Tenant   @relation(fields: [TenantId], references: [Id])
-
-  @@index([TenantId])
-  @@index([ArticuloId])
 }
 
 /// Tarjetas de crédito/débito configuradas para el comercio.

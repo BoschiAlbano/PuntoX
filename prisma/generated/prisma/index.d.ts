@@ -259,11 +259,6 @@ export type PuestoTrabajo = $Result.DefaultSelection<Prisma.$PuestoTrabajoPayloa
  */
 export type Rubro = $Result.DefaultSelection<Prisma.$RubroPayload>
 /**
- * Model Stock
- * Stock de artículos por depósito.
- */
-export type Stock = $Result.DefaultSelection<Prisma.$StockPayload>
-/**
  * Model Tarjeta
  * Tarjetas de crédito/débito configuradas para el comercio.
  */
@@ -913,16 +908,6 @@ export class PrismaClient<
   get rubro(): Prisma.RubroDelegate<ExtArgs, ClientOptions>;
 
   /**
-   * `prisma.stock`: Exposes CRUD operations for the **Stock** model.
-    * Example usage:
-    * ```ts
-    * // Fetch zero or more Stocks
-    * const stocks = await prisma.stock.findMany()
-    * ```
-    */
-  get stock(): Prisma.StockDelegate<ExtArgs, ClientOptions>;
-
-  /**
    * `prisma.tarjeta`: Exposes CRUD operations for the **Tarjeta** model.
     * Example usage:
     * ```ts
@@ -1469,7 +1454,6 @@ export namespace Prisma {
     Proveedor: 'Proveedor',
     PuestoTrabajo: 'PuestoTrabajo',
     Rubro: 'Rubro',
-    Stock: 'Stock',
     Tarjeta: 'Tarjeta',
     UnidadMedida: 'UnidadMedida',
     Usuario: 'Usuario',
@@ -1494,7 +1478,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "tenant" | "planSaaS" | "log" | "articulo" | "bajaArticulo" | "banco" | "caja" | "cheque" | "comprobante" | "comprobante_Compra" | "comprobante_CtaCteProveedor" | "comprobante_CuentaCorriente" | "comprobante_Factura" | "comprobante_NotaCredito" | "comprobante_Presupuesto" | "comprobante_Remito" | "conceptoGastos" | "condicionIva" | "configuracion" | "contador" | "cuentaBancarias" | "provincia" | "departamento" | "localidad" | "depositoCheques" | "detalleCaja" | "detalleComprobante" | "formaPago" | "formaPago_Cheque" | "formaPago_CtaCte" | "formaPago_Tarjeta" | "formularioPerfil" | "formularios" | "gasto" | "iva" | "marca" | "motivoBajas" | "perfiles" | "permiso" | "perfilPermiso" | "perfilUsuario" | "persona" | "persona_Cliente" | "persona_Empleado" | "precio" | "proveedor" | "puestoTrabajo" | "rubro" | "stock" | "tarjeta" | "unidadMedida" | "usuario" | "movimiento" | "movimiento_CuentaCorriente" | "movimiento_CuentaCorrienteProveedor"
+      modelProps: "tenant" | "planSaaS" | "log" | "articulo" | "bajaArticulo" | "banco" | "caja" | "cheque" | "comprobante" | "comprobante_Compra" | "comprobante_CtaCteProveedor" | "comprobante_CuentaCorriente" | "comprobante_Factura" | "comprobante_NotaCredito" | "comprobante_Presupuesto" | "comprobante_Remito" | "conceptoGastos" | "condicionIva" | "configuracion" | "contador" | "cuentaBancarias" | "provincia" | "departamento" | "localidad" | "depositoCheques" | "detalleCaja" | "detalleComprobante" | "formaPago" | "formaPago_Cheque" | "formaPago_CtaCte" | "formaPago_Tarjeta" | "formularioPerfil" | "formularios" | "gasto" | "iva" | "marca" | "motivoBajas" | "perfiles" | "permiso" | "perfilPermiso" | "perfilUsuario" | "persona" | "persona_Cliente" | "persona_Empleado" | "precio" | "proveedor" | "puestoTrabajo" | "rubro" | "tarjeta" | "unidadMedida" | "usuario" | "movimiento" | "movimiento_CuentaCorriente" | "movimiento_CuentaCorrienteProveedor"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -5050,80 +5034,6 @@ export namespace Prisma {
           }
         }
       }
-      Stock: {
-        payload: Prisma.$StockPayload<ExtArgs>
-        fields: Prisma.StockFieldRefs
-        operations: {
-          findUnique: {
-            args: Prisma.StockFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$StockPayload> | null
-          }
-          findUniqueOrThrow: {
-            args: Prisma.StockFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$StockPayload>
-          }
-          findFirst: {
-            args: Prisma.StockFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$StockPayload> | null
-          }
-          findFirstOrThrow: {
-            args: Prisma.StockFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$StockPayload>
-          }
-          findMany: {
-            args: Prisma.StockFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$StockPayload>[]
-          }
-          create: {
-            args: Prisma.StockCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$StockPayload>
-          }
-          createMany: {
-            args: Prisma.StockCreateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          createManyAndReturn: {
-            args: Prisma.StockCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$StockPayload>[]
-          }
-          delete: {
-            args: Prisma.StockDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$StockPayload>
-          }
-          update: {
-            args: Prisma.StockUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$StockPayload>
-          }
-          deleteMany: {
-            args: Prisma.StockDeleteManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateMany: {
-            args: Prisma.StockUpdateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.StockUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$StockPayload>[]
-          }
-          upsert: {
-            args: Prisma.StockUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$StockPayload>
-          }
-          aggregate: {
-            args: Prisma.StockAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateStock>
-          }
-          groupBy: {
-            args: Prisma.StockGroupByArgs<ExtArgs>
-            result: $Utils.Optional<StockGroupByOutputType>[]
-          }
-          count: {
-            args: Prisma.StockCountArgs<ExtArgs>
-            result: $Utils.Optional<StockCountAggregateOutputType> | number
-          }
-        }
-      }
       Tarjeta: {
         payload: Prisma.$TarjetaPayload<ExtArgs>
         fields: Prisma.TarjetaFieldRefs
@@ -5708,7 +5618,6 @@ export namespace Prisma {
     proveedor?: ProveedorOmit
     puestoTrabajo?: PuestoTrabajoOmit
     rubro?: RubroOmit
-    stock?: StockOmit
     tarjeta?: TarjetaOmit
     unidadMedida?: UnidadMedidaOmit
     usuario?: UsuarioOmit
@@ -5825,7 +5734,6 @@ export namespace Prisma {
     Proveedores: number
     PuestosTrabajo: number
     Rubros: number
-    Stocks: number
     Tarjetas: number
     Unidades: number
     Usuarios: number
@@ -5862,7 +5770,6 @@ export namespace Prisma {
     Proveedores?: boolean | TenantCountOutputTypeCountProveedoresArgs
     PuestosTrabajo?: boolean | TenantCountOutputTypeCountPuestosTrabajoArgs
     Rubros?: boolean | TenantCountOutputTypeCountRubrosArgs
-    Stocks?: boolean | TenantCountOutputTypeCountStocksArgs
     Tarjetas?: boolean | TenantCountOutputTypeCountTarjetasArgs
     Unidades?: boolean | TenantCountOutputTypeCountUnidadesArgs
     Usuarios?: boolean | TenantCountOutputTypeCountUsuariosArgs
@@ -6092,13 +5999,6 @@ export namespace Prisma {
   /**
    * TenantCountOutputType without action
    */
-  export type TenantCountOutputTypeCountStocksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: StockWhereInput
-  }
-
-  /**
-   * TenantCountOutputType without action
-   */
   export type TenantCountOutputTypeCountTarjetasArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: TarjetaWhereInput
   }
@@ -6156,13 +6056,11 @@ export namespace Prisma {
   export type ArticuloCountOutputType = {
     BajaArticulo: number
     DetalleComprobante: number
-    Stock: number
   }
 
   export type ArticuloCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     BajaArticulo?: boolean | ArticuloCountOutputTypeCountBajaArticuloArgs
     DetalleComprobante?: boolean | ArticuloCountOutputTypeCountDetalleComprobanteArgs
-    Stock?: boolean | ArticuloCountOutputTypeCountStockArgs
   }
 
   // Custom InputTypes
@@ -6188,13 +6086,6 @@ export namespace Prisma {
    */
   export type ArticuloCountOutputTypeCountDetalleComprobanteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: DetalleComprobanteWhereInput
-  }
-
-  /**
-   * ArticuloCountOutputType without action
-   */
-  export type ArticuloCountOutputTypeCountStockArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: StockWhereInput
   }
 
 
@@ -7505,7 +7396,6 @@ export namespace Prisma {
     Proveedores?: boolean | Tenant$ProveedoresArgs<ExtArgs>
     PuestosTrabajo?: boolean | Tenant$PuestosTrabajoArgs<ExtArgs>
     Rubros?: boolean | Tenant$RubrosArgs<ExtArgs>
-    Stocks?: boolean | Tenant$StocksArgs<ExtArgs>
     Tarjetas?: boolean | Tenant$TarjetasArgs<ExtArgs>
     Plan?: boolean | Tenant$PlanArgs<ExtArgs>
     Unidades?: boolean | Tenant$UnidadesArgs<ExtArgs>
@@ -7586,7 +7476,6 @@ export namespace Prisma {
     Proveedores?: boolean | Tenant$ProveedoresArgs<ExtArgs>
     PuestosTrabajo?: boolean | Tenant$PuestosTrabajoArgs<ExtArgs>
     Rubros?: boolean | Tenant$RubrosArgs<ExtArgs>
-    Stocks?: boolean | Tenant$StocksArgs<ExtArgs>
     Tarjetas?: boolean | Tenant$TarjetasArgs<ExtArgs>
     Plan?: boolean | Tenant$PlanArgs<ExtArgs>
     Unidades?: boolean | Tenant$UnidadesArgs<ExtArgs>
@@ -7633,7 +7522,6 @@ export namespace Prisma {
       Proveedores: Prisma.$ProveedorPayload<ExtArgs>[]
       PuestosTrabajo: Prisma.$PuestoTrabajoPayload<ExtArgs>[]
       Rubros: Prisma.$RubroPayload<ExtArgs>[]
-      Stocks: Prisma.$StockPayload<ExtArgs>[]
       Tarjetas: Prisma.$TarjetaPayload<ExtArgs>[]
       Plan: Prisma.$PlanSaaSPayload<ExtArgs> | null
       Unidades: Prisma.$UnidadMedidaPayload<ExtArgs>[]
@@ -8074,7 +7962,6 @@ export namespace Prisma {
     Proveedores<T extends Tenant$ProveedoresArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$ProveedoresArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProveedorPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     PuestosTrabajo<T extends Tenant$PuestosTrabajoArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$PuestosTrabajoArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PuestoTrabajoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     Rubros<T extends Tenant$RubrosArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$RubrosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RubroPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    Stocks<T extends Tenant$StocksArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$StocksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     Tarjetas<T extends Tenant$TarjetasArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$TarjetasArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TarjetaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     Plan<T extends Tenant$PlanArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$PlanArgs<ExtArgs>>): Prisma__PlanSaaSClient<$Result.GetResult<Prisma.$PlanSaaSPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     Unidades<T extends Tenant$UnidadesArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$UnidadesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UnidadMedidaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -9231,30 +9118,6 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: RubroScalarFieldEnum | RubroScalarFieldEnum[]
-  }
-
-  /**
-   * Tenant.Stocks
-   */
-  export type Tenant$StocksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Stock
-     */
-    select?: StockSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Stock
-     */
-    omit?: StockOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: StockInclude<ExtArgs> | null
-    where?: StockWhereInput
-    orderBy?: StockOrderByWithRelationInput | StockOrderByWithRelationInput[]
-    cursor?: StockWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: StockScalarFieldEnum | StockScalarFieldEnum[]
   }
 
   /**
@@ -11639,12 +11502,12 @@ export namespace Prisma {
     IvaId: number | null
     PrecioId: number | null
     Codigo: number | null
-    PrecioCosto: Decimal | null
     PorcentajeGanancia: Decimal | null
     LimiteVenta: Decimal | null
     StockMinimo: Decimal | null
     VencimientoDias: number | null
     TipoVenta: number | null
+    Stock: Decimal | null
     TenantId: number | null
   }
 
@@ -11656,12 +11519,12 @@ export namespace Prisma {
     IvaId: bigint | null
     PrecioId: bigint | null
     Codigo: number | null
-    PrecioCosto: Decimal | null
     PorcentajeGanancia: Decimal | null
     LimiteVenta: Decimal | null
     StockMinimo: Decimal | null
     VencimientoDias: number | null
     TipoVenta: number | null
+    Stock: Decimal | null
     TenantId: bigint | null
   }
 
@@ -11678,7 +11541,6 @@ export namespace Prisma {
     Descripcion: string | null
     Detalle: string | null
     Ubicacion: string | null
-    PrecioCosto: Decimal | null
     PorcentajeGanancia: Decimal | null
     Foto: Uint8Array | null
     ActivarLimiteVenta: boolean | null
@@ -11691,6 +11553,7 @@ export namespace Prisma {
     StockMinimo: Decimal | null
     VencimientoDias: number | null
     TipoVenta: number | null
+    Stock: Decimal | null
     EstaEliminado: boolean | null
     TenantId: bigint | null
   }
@@ -11708,7 +11571,6 @@ export namespace Prisma {
     Descripcion: string | null
     Detalle: string | null
     Ubicacion: string | null
-    PrecioCosto: Decimal | null
     PorcentajeGanancia: Decimal | null
     Foto: Uint8Array | null
     ActivarLimiteVenta: boolean | null
@@ -11721,6 +11583,7 @@ export namespace Prisma {
     StockMinimo: Decimal | null
     VencimientoDias: number | null
     TipoVenta: number | null
+    Stock: Decimal | null
     EstaEliminado: boolean | null
     TenantId: bigint | null
   }
@@ -11738,7 +11601,6 @@ export namespace Prisma {
     Descripcion: number
     Detalle: number
     Ubicacion: number
-    PrecioCosto: number
     PorcentajeGanancia: number
     Foto: number
     ActivarLimiteVenta: number
@@ -11751,6 +11613,7 @@ export namespace Prisma {
     StockMinimo: number
     VencimientoDias: number
     TipoVenta: number
+    Stock: number
     EstaEliminado: number
     TenantId: number
     _all: number
@@ -11765,12 +11628,12 @@ export namespace Prisma {
     IvaId?: true
     PrecioId?: true
     Codigo?: true
-    PrecioCosto?: true
     PorcentajeGanancia?: true
     LimiteVenta?: true
     StockMinimo?: true
     VencimientoDias?: true
     TipoVenta?: true
+    Stock?: true
     TenantId?: true
   }
 
@@ -11782,12 +11645,12 @@ export namespace Prisma {
     IvaId?: true
     PrecioId?: true
     Codigo?: true
-    PrecioCosto?: true
     PorcentajeGanancia?: true
     LimiteVenta?: true
     StockMinimo?: true
     VencimientoDias?: true
     TipoVenta?: true
+    Stock?: true
     TenantId?: true
   }
 
@@ -11804,7 +11667,6 @@ export namespace Prisma {
     Descripcion?: true
     Detalle?: true
     Ubicacion?: true
-    PrecioCosto?: true
     PorcentajeGanancia?: true
     Foto?: true
     ActivarLimiteVenta?: true
@@ -11817,6 +11679,7 @@ export namespace Prisma {
     StockMinimo?: true
     VencimientoDias?: true
     TipoVenta?: true
+    Stock?: true
     EstaEliminado?: true
     TenantId?: true
   }
@@ -11834,7 +11697,6 @@ export namespace Prisma {
     Descripcion?: true
     Detalle?: true
     Ubicacion?: true
-    PrecioCosto?: true
     PorcentajeGanancia?: true
     Foto?: true
     ActivarLimiteVenta?: true
@@ -11847,6 +11709,7 @@ export namespace Prisma {
     StockMinimo?: true
     VencimientoDias?: true
     TipoVenta?: true
+    Stock?: true
     EstaEliminado?: true
     TenantId?: true
   }
@@ -11864,7 +11727,6 @@ export namespace Prisma {
     Descripcion?: true
     Detalle?: true
     Ubicacion?: true
-    PrecioCosto?: true
     PorcentajeGanancia?: true
     Foto?: true
     ActivarLimiteVenta?: true
@@ -11877,6 +11739,7 @@ export namespace Prisma {
     StockMinimo?: true
     VencimientoDias?: true
     TipoVenta?: true
+    Stock?: true
     EstaEliminado?: true
     TenantId?: true
     _all?: true
@@ -11981,7 +11844,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle: string | null
     Ubicacion: string | null
-    PrecioCosto: Decimal
     PorcentajeGanancia: Decimal
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -11994,6 +11856,7 @@ export namespace Prisma {
     StockMinimo: Decimal
     VencimientoDias: number
     TipoVenta: number
+    Stock: Decimal
     EstaEliminado: boolean
     TenantId: bigint
     _count: ArticuloCountAggregateOutputType | null
@@ -12030,7 +11893,6 @@ export namespace Prisma {
     Descripcion?: boolean
     Detalle?: boolean
     Ubicacion?: boolean
-    PrecioCosto?: boolean
     PorcentajeGanancia?: boolean
     Foto?: boolean
     ActivarLimiteVenta?: boolean
@@ -12043,6 +11905,7 @@ export namespace Prisma {
     StockMinimo?: boolean
     VencimientoDias?: boolean
     TipoVenta?: boolean
+    Stock?: boolean
     EstaEliminado?: boolean
     TenantId?: boolean
     Iva?: boolean | IvaDefaultArgs<ExtArgs>
@@ -12053,7 +11916,6 @@ export namespace Prisma {
     UnidadMedida?: boolean | UnidadMedidaDefaultArgs<ExtArgs>
     BajaArticulo?: boolean | Articulo$BajaArticuloArgs<ExtArgs>
     DetalleComprobante?: boolean | Articulo$DetalleComprobanteArgs<ExtArgs>
-    Stock?: boolean | Articulo$StockArgs<ExtArgs>
     _count?: boolean | ArticuloCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["articulo"]>
 
@@ -12070,7 +11932,6 @@ export namespace Prisma {
     Descripcion?: boolean
     Detalle?: boolean
     Ubicacion?: boolean
-    PrecioCosto?: boolean
     PorcentajeGanancia?: boolean
     Foto?: boolean
     ActivarLimiteVenta?: boolean
@@ -12083,6 +11944,7 @@ export namespace Prisma {
     StockMinimo?: boolean
     VencimientoDias?: boolean
     TipoVenta?: boolean
+    Stock?: boolean
     EstaEliminado?: boolean
     TenantId?: boolean
     Iva?: boolean | IvaDefaultArgs<ExtArgs>
@@ -12106,7 +11968,6 @@ export namespace Prisma {
     Descripcion?: boolean
     Detalle?: boolean
     Ubicacion?: boolean
-    PrecioCosto?: boolean
     PorcentajeGanancia?: boolean
     Foto?: boolean
     ActivarLimiteVenta?: boolean
@@ -12119,6 +11980,7 @@ export namespace Prisma {
     StockMinimo?: boolean
     VencimientoDias?: boolean
     TipoVenta?: boolean
+    Stock?: boolean
     EstaEliminado?: boolean
     TenantId?: boolean
     Iva?: boolean | IvaDefaultArgs<ExtArgs>
@@ -12142,7 +12004,6 @@ export namespace Prisma {
     Descripcion?: boolean
     Detalle?: boolean
     Ubicacion?: boolean
-    PrecioCosto?: boolean
     PorcentajeGanancia?: boolean
     Foto?: boolean
     ActivarLimiteVenta?: boolean
@@ -12155,11 +12016,12 @@ export namespace Prisma {
     StockMinimo?: boolean
     VencimientoDias?: boolean
     TipoVenta?: boolean
+    Stock?: boolean
     EstaEliminado?: boolean
     TenantId?: boolean
   }
 
-  export type ArticuloOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id" | "MarcaId" | "RubroId" | "UnidadMedidaId" | "IvaId" | "PrecioId" | "Codigo" | "CodigoBarra" | "Abreviatura" | "Descripcion" | "Detalle" | "Ubicacion" | "PrecioCosto" | "PorcentajeGanancia" | "Foto" | "ActivarLimiteVenta" | "LimiteVenta" | "ActivarHoraVenta" | "HoraLimiteVentaDesde" | "HoraLimiteVentaHasta" | "PermiteStockNegativo" | "DescuentaStock" | "StockMinimo" | "VencimientoDias" | "TipoVenta" | "EstaEliminado" | "TenantId", ExtArgs["result"]["articulo"]>
+  export type ArticuloOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id" | "MarcaId" | "RubroId" | "UnidadMedidaId" | "IvaId" | "PrecioId" | "Codigo" | "CodigoBarra" | "Abreviatura" | "Descripcion" | "Detalle" | "Ubicacion" | "PorcentajeGanancia" | "Foto" | "ActivarLimiteVenta" | "LimiteVenta" | "ActivarHoraVenta" | "HoraLimiteVentaDesde" | "HoraLimiteVentaHasta" | "PermiteStockNegativo" | "DescuentaStock" | "StockMinimo" | "VencimientoDias" | "TipoVenta" | "Stock" | "EstaEliminado" | "TenantId", ExtArgs["result"]["articulo"]>
   export type ArticuloInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     Iva?: boolean | IvaDefaultArgs<ExtArgs>
     Marca?: boolean | MarcaDefaultArgs<ExtArgs>
@@ -12169,7 +12031,6 @@ export namespace Prisma {
     UnidadMedida?: boolean | UnidadMedidaDefaultArgs<ExtArgs>
     BajaArticulo?: boolean | Articulo$BajaArticuloArgs<ExtArgs>
     DetalleComprobante?: boolean | Articulo$DetalleComprobanteArgs<ExtArgs>
-    Stock?: boolean | Articulo$StockArgs<ExtArgs>
     _count?: boolean | ArticuloCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ArticuloIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -12200,7 +12061,6 @@ export namespace Prisma {
       UnidadMedida: Prisma.$UnidadMedidaPayload<ExtArgs>
       BajaArticulo: Prisma.$BajaArticuloPayload<ExtArgs>[]
       DetalleComprobante: Prisma.$DetalleComprobantePayload<ExtArgs>[]
-      Stock: Prisma.$StockPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       Id: bigint
@@ -12215,7 +12075,6 @@ export namespace Prisma {
       Descripcion: string
       Detalle: string | null
       Ubicacion: string | null
-      PrecioCosto: Prisma.Decimal
       PorcentajeGanancia: Prisma.Decimal
       Foto: Uint8Array
       ActivarLimiteVenta: boolean
@@ -12228,6 +12087,7 @@ export namespace Prisma {
       StockMinimo: Prisma.Decimal
       VencimientoDias: number
       TipoVenta: number
+      Stock: Prisma.Decimal
       EstaEliminado: boolean
       /**
        * Tenant dueño de este artículo
@@ -12635,7 +12495,6 @@ export namespace Prisma {
     UnidadMedida<T extends UnidadMedidaDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UnidadMedidaDefaultArgs<ExtArgs>>): Prisma__UnidadMedidaClient<$Result.GetResult<Prisma.$UnidadMedidaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     BajaArticulo<T extends Articulo$BajaArticuloArgs<ExtArgs> = {}>(args?: Subset<T, Articulo$BajaArticuloArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BajaArticuloPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     DetalleComprobante<T extends Articulo$DetalleComprobanteArgs<ExtArgs> = {}>(args?: Subset<T, Articulo$DetalleComprobanteArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DetalleComprobantePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    Stock<T extends Articulo$StockArgs<ExtArgs> = {}>(args?: Subset<T, Articulo$StockArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -12677,7 +12536,6 @@ export namespace Prisma {
     readonly Descripcion: FieldRef<"Articulo", 'String'>
     readonly Detalle: FieldRef<"Articulo", 'String'>
     readonly Ubicacion: FieldRef<"Articulo", 'String'>
-    readonly PrecioCosto: FieldRef<"Articulo", 'Decimal'>
     readonly PorcentajeGanancia: FieldRef<"Articulo", 'Decimal'>
     readonly Foto: FieldRef<"Articulo", 'Bytes'>
     readonly ActivarLimiteVenta: FieldRef<"Articulo", 'Boolean'>
@@ -12690,6 +12548,7 @@ export namespace Prisma {
     readonly StockMinimo: FieldRef<"Articulo", 'Decimal'>
     readonly VencimientoDias: FieldRef<"Articulo", 'Int'>
     readonly TipoVenta: FieldRef<"Articulo", 'Int'>
+    readonly Stock: FieldRef<"Articulo", 'Decimal'>
     readonly EstaEliminado: FieldRef<"Articulo", 'Boolean'>
     readonly TenantId: FieldRef<"Articulo", 'BigInt'>
   }
@@ -13133,30 +12992,6 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: DetalleComprobanteScalarFieldEnum | DetalleComprobanteScalarFieldEnum[]
-  }
-
-  /**
-   * Articulo.Stock
-   */
-  export type Articulo$StockArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Stock
-     */
-    select?: StockSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Stock
-     */
-    omit?: StockOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: StockInclude<ExtArgs> | null
-    where?: StockWhereInput
-    orderBy?: StockOrderByWithRelationInput | StockOrderByWithRelationInput[]
-    cursor?: StockWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: StockScalarFieldEnum | StockScalarFieldEnum[]
   }
 
   /**
@@ -64276,1121 +64111,6 @@ export namespace Prisma {
 
 
   /**
-   * Model Stock
-   */
-
-  export type AggregateStock = {
-    _count: StockCountAggregateOutputType | null
-    _avg: StockAvgAggregateOutputType | null
-    _sum: StockSumAggregateOutputType | null
-    _min: StockMinAggregateOutputType | null
-    _max: StockMaxAggregateOutputType | null
-  }
-
-  export type StockAvgAggregateOutputType = {
-    Id: number | null
-    ArticuloId: number | null
-    Cantidad: Decimal | null
-    TenantId: number | null
-  }
-
-  export type StockSumAggregateOutputType = {
-    Id: bigint | null
-    ArticuloId: bigint | null
-    Cantidad: Decimal | null
-    TenantId: bigint | null
-  }
-
-  export type StockMinAggregateOutputType = {
-    Id: bigint | null
-    ArticuloId: bigint | null
-    Cantidad: Decimal | null
-    EstaEliminado: boolean | null
-    TenantId: bigint | null
-  }
-
-  export type StockMaxAggregateOutputType = {
-    Id: bigint | null
-    ArticuloId: bigint | null
-    Cantidad: Decimal | null
-    EstaEliminado: boolean | null
-    TenantId: bigint | null
-  }
-
-  export type StockCountAggregateOutputType = {
-    Id: number
-    ArticuloId: number
-    Cantidad: number
-    EstaEliminado: number
-    TenantId: number
-    _all: number
-  }
-
-
-  export type StockAvgAggregateInputType = {
-    Id?: true
-    ArticuloId?: true
-    Cantidad?: true
-    TenantId?: true
-  }
-
-  export type StockSumAggregateInputType = {
-    Id?: true
-    ArticuloId?: true
-    Cantidad?: true
-    TenantId?: true
-  }
-
-  export type StockMinAggregateInputType = {
-    Id?: true
-    ArticuloId?: true
-    Cantidad?: true
-    EstaEliminado?: true
-    TenantId?: true
-  }
-
-  export type StockMaxAggregateInputType = {
-    Id?: true
-    ArticuloId?: true
-    Cantidad?: true
-    EstaEliminado?: true
-    TenantId?: true
-  }
-
-  export type StockCountAggregateInputType = {
-    Id?: true
-    ArticuloId?: true
-    Cantidad?: true
-    EstaEliminado?: true
-    TenantId?: true
-    _all?: true
-  }
-
-  export type StockAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which Stock to aggregate.
-     */
-    where?: StockWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of Stocks to fetch.
-     */
-    orderBy?: StockOrderByWithRelationInput | StockOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the start position
-     */
-    cursor?: StockWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` Stocks from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` Stocks.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Count returned Stocks
-    **/
-    _count?: true | StockCountAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to average
-    **/
-    _avg?: StockAvgAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to sum
-    **/
-    _sum?: StockSumAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the minimum value
-    **/
-    _min?: StockMinAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the maximum value
-    **/
-    _max?: StockMaxAggregateInputType
-  }
-
-  export type GetStockAggregateType<T extends StockAggregateArgs> = {
-        [P in keyof T & keyof AggregateStock]: P extends '_count' | 'count'
-      ? T[P] extends true
-        ? number
-        : GetScalarType<T[P], AggregateStock[P]>
-      : GetScalarType<T[P], AggregateStock[P]>
-  }
-
-
-
-
-  export type StockGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: StockWhereInput
-    orderBy?: StockOrderByWithAggregationInput | StockOrderByWithAggregationInput[]
-    by: StockScalarFieldEnum[] | StockScalarFieldEnum
-    having?: StockScalarWhereWithAggregatesInput
-    take?: number
-    skip?: number
-    _count?: StockCountAggregateInputType | true
-    _avg?: StockAvgAggregateInputType
-    _sum?: StockSumAggregateInputType
-    _min?: StockMinAggregateInputType
-    _max?: StockMaxAggregateInputType
-  }
-
-  export type StockGroupByOutputType = {
-    Id: bigint
-    ArticuloId: bigint
-    Cantidad: Decimal
-    EstaEliminado: boolean
-    TenantId: bigint
-    _count: StockCountAggregateOutputType | null
-    _avg: StockAvgAggregateOutputType | null
-    _sum: StockSumAggregateOutputType | null
-    _min: StockMinAggregateOutputType | null
-    _max: StockMaxAggregateOutputType | null
-  }
-
-  type GetStockGroupByPayload<T extends StockGroupByArgs> = Prisma.PrismaPromise<
-    Array<
-      PickEnumerable<StockGroupByOutputType, T['by']> &
-        {
-          [P in ((keyof T) & (keyof StockGroupByOutputType))]: P extends '_count'
-            ? T[P] extends boolean
-              ? number
-              : GetScalarType<T[P], StockGroupByOutputType[P]>
-            : GetScalarType<T[P], StockGroupByOutputType[P]>
-        }
-      >
-    >
-
-
-  export type StockSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    Id?: boolean
-    ArticuloId?: boolean
-    Cantidad?: boolean
-    EstaEliminado?: boolean
-    TenantId?: boolean
-    Articulo?: boolean | ArticuloDefaultArgs<ExtArgs>
-    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["stock"]>
-
-  export type StockSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    Id?: boolean
-    ArticuloId?: boolean
-    Cantidad?: boolean
-    EstaEliminado?: boolean
-    TenantId?: boolean
-    Articulo?: boolean | ArticuloDefaultArgs<ExtArgs>
-    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["stock"]>
-
-  export type StockSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    Id?: boolean
-    ArticuloId?: boolean
-    Cantidad?: boolean
-    EstaEliminado?: boolean
-    TenantId?: boolean
-    Articulo?: boolean | ArticuloDefaultArgs<ExtArgs>
-    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["stock"]>
-
-  export type StockSelectScalar = {
-    Id?: boolean
-    ArticuloId?: boolean
-    Cantidad?: boolean
-    EstaEliminado?: boolean
-    TenantId?: boolean
-  }
-
-  export type StockOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id" | "ArticuloId" | "Cantidad" | "EstaEliminado" | "TenantId", ExtArgs["result"]["stock"]>
-  export type StockInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    Articulo?: boolean | ArticuloDefaultArgs<ExtArgs>
-    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
-  }
-  export type StockIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    Articulo?: boolean | ArticuloDefaultArgs<ExtArgs>
-    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
-  }
-  export type StockIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    Articulo?: boolean | ArticuloDefaultArgs<ExtArgs>
-    Tenant?: boolean | TenantDefaultArgs<ExtArgs>
-  }
-
-  export type $StockPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "Stock"
-    objects: {
-      Articulo: Prisma.$ArticuloPayload<ExtArgs>
-      Tenant: Prisma.$TenantPayload<ExtArgs>
-    }
-    scalars: $Extensions.GetPayloadResult<{
-      Id: bigint
-      ArticuloId: bigint
-      Cantidad: Prisma.Decimal
-      EstaEliminado: boolean
-      /**
-       * Tenant dueño de este stock
-       */
-      TenantId: bigint
-    }, ExtArgs["result"]["stock"]>
-    composites: {}
-  }
-
-  type StockGetPayload<S extends boolean | null | undefined | StockDefaultArgs> = $Result.GetResult<Prisma.$StockPayload, S>
-
-  type StockCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<StockFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: StockCountAggregateInputType | true
-    }
-
-  export interface StockDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Stock'], meta: { name: 'Stock' } }
-    /**
-     * Find zero or one Stock that matches the filter.
-     * @param {StockFindUniqueArgs} args - Arguments to find a Stock
-     * @example
-     * // Get one Stock
-     * const stock = await prisma.stock.findUnique({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUnique<T extends StockFindUniqueArgs>(args: SelectSubset<T, StockFindUniqueArgs<ExtArgs>>): Prisma__StockClient<$Result.GetResult<Prisma.$StockPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find one Stock that matches the filter or throw an error with `error.code='P2025'`
-     * if no matches were found.
-     * @param {StockFindUniqueOrThrowArgs} args - Arguments to find a Stock
-     * @example
-     * // Get one Stock
-     * const stock = await prisma.stock.findUniqueOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUniqueOrThrow<T extends StockFindUniqueOrThrowArgs>(args: SelectSubset<T, StockFindUniqueOrThrowArgs<ExtArgs>>): Prisma__StockClient<$Result.GetResult<Prisma.$StockPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first Stock that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {StockFindFirstArgs} args - Arguments to find a Stock
-     * @example
-     * // Get one Stock
-     * const stock = await prisma.stock.findFirst({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirst<T extends StockFindFirstArgs>(args?: SelectSubset<T, StockFindFirstArgs<ExtArgs>>): Prisma__StockClient<$Result.GetResult<Prisma.$StockPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first Stock that matches the filter or
-     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {StockFindFirstOrThrowArgs} args - Arguments to find a Stock
-     * @example
-     * // Get one Stock
-     * const stock = await prisma.stock.findFirstOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirstOrThrow<T extends StockFindFirstOrThrowArgs>(args?: SelectSubset<T, StockFindFirstOrThrowArgs<ExtArgs>>): Prisma__StockClient<$Result.GetResult<Prisma.$StockPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find zero or more Stocks that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {StockFindManyArgs} args - Arguments to filter and select certain fields only.
-     * @example
-     * // Get all Stocks
-     * const stocks = await prisma.stock.findMany()
-     * 
-     * // Get first 10 Stocks
-     * const stocks = await prisma.stock.findMany({ take: 10 })
-     * 
-     * // Only select the `Id`
-     * const stockWithIdOnly = await prisma.stock.findMany({ select: { Id: true } })
-     * 
-     */
-    findMany<T extends StockFindManyArgs>(args?: SelectSubset<T, StockFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
-
-    /**
-     * Create a Stock.
-     * @param {StockCreateArgs} args - Arguments to create a Stock.
-     * @example
-     * // Create one Stock
-     * const Stock = await prisma.stock.create({
-     *   data: {
-     *     // ... data to create a Stock
-     *   }
-     * })
-     * 
-     */
-    create<T extends StockCreateArgs>(args: SelectSubset<T, StockCreateArgs<ExtArgs>>): Prisma__StockClient<$Result.GetResult<Prisma.$StockPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Create many Stocks.
-     * @param {StockCreateManyArgs} args - Arguments to create many Stocks.
-     * @example
-     * // Create many Stocks
-     * const stock = await prisma.stock.createMany({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     *     
-     */
-    createMany<T extends StockCreateManyArgs>(args?: SelectSubset<T, StockCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Create many Stocks and returns the data saved in the database.
-     * @param {StockCreateManyAndReturnArgs} args - Arguments to create many Stocks.
-     * @example
-     * // Create many Stocks
-     * const stock = await prisma.stock.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many Stocks and only return the `Id`
-     * const stockWithIdOnly = await prisma.stock.createManyAndReturn({
-     *   select: { Id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends StockCreateManyAndReturnArgs>(args?: SelectSubset<T, StockCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Delete a Stock.
-     * @param {StockDeleteArgs} args - Arguments to delete one Stock.
-     * @example
-     * // Delete one Stock
-     * const Stock = await prisma.stock.delete({
-     *   where: {
-     *     // ... filter to delete one Stock
-     *   }
-     * })
-     * 
-     */
-    delete<T extends StockDeleteArgs>(args: SelectSubset<T, StockDeleteArgs<ExtArgs>>): Prisma__StockClient<$Result.GetResult<Prisma.$StockPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Update one Stock.
-     * @param {StockUpdateArgs} args - Arguments to update one Stock.
-     * @example
-     * // Update one Stock
-     * const stock = await prisma.stock.update({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    update<T extends StockUpdateArgs>(args: SelectSubset<T, StockUpdateArgs<ExtArgs>>): Prisma__StockClient<$Result.GetResult<Prisma.$StockPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Delete zero or more Stocks.
-     * @param {StockDeleteManyArgs} args - Arguments to filter Stocks to delete.
-     * @example
-     * // Delete a few Stocks
-     * const { count } = await prisma.stock.deleteMany({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     * 
-     */
-    deleteMany<T extends StockDeleteManyArgs>(args?: SelectSubset<T, StockDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more Stocks.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {StockUpdateManyArgs} args - Arguments to update one or more rows.
-     * @example
-     * // Update many Stocks
-     * const stock = await prisma.stock.updateMany({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    updateMany<T extends StockUpdateManyArgs>(args: SelectSubset<T, StockUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more Stocks and returns the data updated in the database.
-     * @param {StockUpdateManyAndReturnArgs} args - Arguments to update many Stocks.
-     * @example
-     * // Update many Stocks
-     * const stock = await prisma.stock.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more Stocks and only return the `Id`
-     * const stockWithIdOnly = await prisma.stock.updateManyAndReturn({
-     *   select: { Id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends StockUpdateManyAndReturnArgs>(args: SelectSubset<T, StockUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Create or update one Stock.
-     * @param {StockUpsertArgs} args - Arguments to update or create a Stock.
-     * @example
-     * // Update or create a Stock
-     * const stock = await prisma.stock.upsert({
-     *   create: {
-     *     // ... data to create a Stock
-     *   },
-     *   update: {
-     *     // ... in case it already exists, update
-     *   },
-     *   where: {
-     *     // ... the filter for the Stock we want to update
-     *   }
-     * })
-     */
-    upsert<T extends StockUpsertArgs>(args: SelectSubset<T, StockUpsertArgs<ExtArgs>>): Prisma__StockClient<$Result.GetResult<Prisma.$StockPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-
-    /**
-     * Count the number of Stocks.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {StockCountArgs} args - Arguments to filter Stocks to count.
-     * @example
-     * // Count the number of Stocks
-     * const count = await prisma.stock.count({
-     *   where: {
-     *     // ... the filter for the Stocks we want to count
-     *   }
-     * })
-    **/
-    count<T extends StockCountArgs>(
-      args?: Subset<T, StockCountArgs>,
-    ): Prisma.PrismaPromise<
-      T extends $Utils.Record<'select', any>
-        ? T['select'] extends true
-          ? number
-          : GetScalarType<T['select'], StockCountAggregateOutputType>
-        : number
-    >
-
-    /**
-     * Allows you to perform aggregations operations on a Stock.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {StockAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
-     * @example
-     * // Ordered by age ascending
-     * // Where email contains prisma.io
-     * // Limited to the 10 users
-     * const aggregations = await prisma.user.aggregate({
-     *   _avg: {
-     *     age: true,
-     *   },
-     *   where: {
-     *     email: {
-     *       contains: "prisma.io",
-     *     },
-     *   },
-     *   orderBy: {
-     *     age: "asc",
-     *   },
-     *   take: 10,
-     * })
-    **/
-    aggregate<T extends StockAggregateArgs>(args: Subset<T, StockAggregateArgs>): Prisma.PrismaPromise<GetStockAggregateType<T>>
-
-    /**
-     * Group by Stock.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {StockGroupByArgs} args - Group by arguments.
-     * @example
-     * // Group by city, order by createdAt, get count
-     * const result = await prisma.user.groupBy({
-     *   by: ['city', 'createdAt'],
-     *   orderBy: {
-     *     createdAt: true
-     *   },
-     *   _count: {
-     *     _all: true
-     *   },
-     * })
-     * 
-    **/
-    groupBy<
-      T extends StockGroupByArgs,
-      HasSelectOrTake extends Or<
-        Extends<'skip', Keys<T>>,
-        Extends<'take', Keys<T>>
-      >,
-      OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: StockGroupByArgs['orderBy'] }
-        : { orderBy?: StockGroupByArgs['orderBy'] },
-      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
-      ByFields extends MaybeTupleToUnion<T['by']>,
-      ByValid extends Has<ByFields, OrderFields>,
-      HavingFields extends GetHavingFields<T['having']>,
-      HavingValid extends Has<ByFields, HavingFields>,
-      ByEmpty extends T['by'] extends never[] ? True : False,
-      InputErrors extends ByEmpty extends True
-      ? `Error: "by" must not be empty.`
-      : HavingValid extends False
-      ? {
-          [P in HavingFields]: P extends ByFields
-            ? never
-            : P extends string
-            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
-            : [
-                Error,
-                'Field ',
-                P,
-                ` in "having" needs to be provided in "by"`,
-              ]
-        }[HavingFields]
-      : 'take' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "take", you also need to provide "orderBy"'
-      : 'skip' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "skip", you also need to provide "orderBy"'
-      : ByValid extends True
-      ? {}
-      : {
-          [P in OrderFields]: P extends ByFields
-            ? never
-            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-        }[OrderFields]
-    >(args: SubsetIntersection<T, StockGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetStockGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
-  /**
-   * Fields of the Stock model
-   */
-  readonly fields: StockFieldRefs;
-  }
-
-  /**
-   * The delegate class that acts as a "Promise-like" for Stock.
-   * Why is this prefixed with `Prisma__`?
-   * Because we want to prevent naming conflicts as mentioned in
-   * https://github.com/prisma/prisma-client-js/issues/707
-   */
-  export interface Prisma__StockClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
-    readonly [Symbol.toStringTag]: "PrismaPromise"
-    Articulo<T extends ArticuloDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ArticuloDefaultArgs<ExtArgs>>): Prisma__ArticuloClient<$Result.GetResult<Prisma.$ArticuloPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    Tenant<T extends TenantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TenantDefaultArgs<ExtArgs>>): Prisma__TenantClient<$Result.GetResult<Prisma.$TenantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    /**
-     * Attaches callbacks for the resolution and/or rejection of the Promise.
-     * @param onfulfilled The callback to execute when the Promise is resolved.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of which ever callback is executed.
-     */
-    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
-    /**
-     * Attaches a callback for only the rejection of the Promise.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of the callback.
-     */
-    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
-    /**
-     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
-     * resolved value cannot be modified from the callback.
-     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
-     * @returns A Promise for the completion of the callback.
-     */
-    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
-  }
-
-
-
-
-  /**
-   * Fields of the Stock model
-   */
-  interface StockFieldRefs {
-    readonly Id: FieldRef<"Stock", 'BigInt'>
-    readonly ArticuloId: FieldRef<"Stock", 'BigInt'>
-    readonly Cantidad: FieldRef<"Stock", 'Decimal'>
-    readonly EstaEliminado: FieldRef<"Stock", 'Boolean'>
-    readonly TenantId: FieldRef<"Stock", 'BigInt'>
-  }
-    
-
-  // Custom InputTypes
-  /**
-   * Stock findUnique
-   */
-  export type StockFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Stock
-     */
-    select?: StockSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Stock
-     */
-    omit?: StockOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: StockInclude<ExtArgs> | null
-    /**
-     * Filter, which Stock to fetch.
-     */
-    where: StockWhereUniqueInput
-  }
-
-  /**
-   * Stock findUniqueOrThrow
-   */
-  export type StockFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Stock
-     */
-    select?: StockSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Stock
-     */
-    omit?: StockOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: StockInclude<ExtArgs> | null
-    /**
-     * Filter, which Stock to fetch.
-     */
-    where: StockWhereUniqueInput
-  }
-
-  /**
-   * Stock findFirst
-   */
-  export type StockFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Stock
-     */
-    select?: StockSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Stock
-     */
-    omit?: StockOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: StockInclude<ExtArgs> | null
-    /**
-     * Filter, which Stock to fetch.
-     */
-    where?: StockWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of Stocks to fetch.
-     */
-    orderBy?: StockOrderByWithRelationInput | StockOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for Stocks.
-     */
-    cursor?: StockWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` Stocks from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` Stocks.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of Stocks.
-     */
-    distinct?: StockScalarFieldEnum | StockScalarFieldEnum[]
-  }
-
-  /**
-   * Stock findFirstOrThrow
-   */
-  export type StockFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Stock
-     */
-    select?: StockSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Stock
-     */
-    omit?: StockOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: StockInclude<ExtArgs> | null
-    /**
-     * Filter, which Stock to fetch.
-     */
-    where?: StockWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of Stocks to fetch.
-     */
-    orderBy?: StockOrderByWithRelationInput | StockOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for Stocks.
-     */
-    cursor?: StockWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` Stocks from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` Stocks.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of Stocks.
-     */
-    distinct?: StockScalarFieldEnum | StockScalarFieldEnum[]
-  }
-
-  /**
-   * Stock findMany
-   */
-  export type StockFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Stock
-     */
-    select?: StockSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Stock
-     */
-    omit?: StockOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: StockInclude<ExtArgs> | null
-    /**
-     * Filter, which Stocks to fetch.
-     */
-    where?: StockWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of Stocks to fetch.
-     */
-    orderBy?: StockOrderByWithRelationInput | StockOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for listing Stocks.
-     */
-    cursor?: StockWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` Stocks from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` Stocks.
-     */
-    skip?: number
-    distinct?: StockScalarFieldEnum | StockScalarFieldEnum[]
-  }
-
-  /**
-   * Stock create
-   */
-  export type StockCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Stock
-     */
-    select?: StockSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Stock
-     */
-    omit?: StockOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: StockInclude<ExtArgs> | null
-    /**
-     * The data needed to create a Stock.
-     */
-    data: XOR<StockCreateInput, StockUncheckedCreateInput>
-  }
-
-  /**
-   * Stock createMany
-   */
-  export type StockCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to create many Stocks.
-     */
-    data: StockCreateManyInput | StockCreateManyInput[]
-    skipDuplicates?: boolean
-  }
-
-  /**
-   * Stock createManyAndReturn
-   */
-  export type StockCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Stock
-     */
-    select?: StockSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the Stock
-     */
-    omit?: StockOmit<ExtArgs> | null
-    /**
-     * The data used to create many Stocks.
-     */
-    data: StockCreateManyInput | StockCreateManyInput[]
-    skipDuplicates?: boolean
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: StockIncludeCreateManyAndReturn<ExtArgs> | null
-  }
-
-  /**
-   * Stock update
-   */
-  export type StockUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Stock
-     */
-    select?: StockSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Stock
-     */
-    omit?: StockOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: StockInclude<ExtArgs> | null
-    /**
-     * The data needed to update a Stock.
-     */
-    data: XOR<StockUpdateInput, StockUncheckedUpdateInput>
-    /**
-     * Choose, which Stock to update.
-     */
-    where: StockWhereUniqueInput
-  }
-
-  /**
-   * Stock updateMany
-   */
-  export type StockUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to update Stocks.
-     */
-    data: XOR<StockUpdateManyMutationInput, StockUncheckedUpdateManyInput>
-    /**
-     * Filter which Stocks to update
-     */
-    where?: StockWhereInput
-    /**
-     * Limit how many Stocks to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * Stock updateManyAndReturn
-   */
-  export type StockUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Stock
-     */
-    select?: StockSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the Stock
-     */
-    omit?: StockOmit<ExtArgs> | null
-    /**
-     * The data used to update Stocks.
-     */
-    data: XOR<StockUpdateManyMutationInput, StockUncheckedUpdateManyInput>
-    /**
-     * Filter which Stocks to update
-     */
-    where?: StockWhereInput
-    /**
-     * Limit how many Stocks to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: StockIncludeUpdateManyAndReturn<ExtArgs> | null
-  }
-
-  /**
-   * Stock upsert
-   */
-  export type StockUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Stock
-     */
-    select?: StockSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Stock
-     */
-    omit?: StockOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: StockInclude<ExtArgs> | null
-    /**
-     * The filter to search for the Stock to update in case it exists.
-     */
-    where: StockWhereUniqueInput
-    /**
-     * In case the Stock found by the `where` argument doesn't exist, create a new Stock with this data.
-     */
-    create: XOR<StockCreateInput, StockUncheckedCreateInput>
-    /**
-     * In case the Stock was found with the provided `where` argument, update it with this data.
-     */
-    update: XOR<StockUpdateInput, StockUncheckedUpdateInput>
-  }
-
-  /**
-   * Stock delete
-   */
-  export type StockDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Stock
-     */
-    select?: StockSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Stock
-     */
-    omit?: StockOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: StockInclude<ExtArgs> | null
-    /**
-     * Filter which Stock to delete.
-     */
-    where: StockWhereUniqueInput
-  }
-
-  /**
-   * Stock deleteMany
-   */
-  export type StockDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which Stocks to delete
-     */
-    where?: StockWhereInput
-    /**
-     * Limit how many Stocks to delete.
-     */
-    limit?: number
-  }
-
-  /**
-   * Stock without action
-   */
-  export type StockDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Stock
-     */
-    select?: StockSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Stock
-     */
-    omit?: StockOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: StockInclude<ExtArgs> | null
-  }
-
-
-  /**
    * Model Tarjeta
    */
 
@@ -72391,7 +71111,6 @@ export namespace Prisma {
     Descripcion: 'Descripcion',
     Detalle: 'Detalle',
     Ubicacion: 'Ubicacion',
-    PrecioCosto: 'PrecioCosto',
     PorcentajeGanancia: 'PorcentajeGanancia',
     Foto: 'Foto',
     ActivarLimiteVenta: 'ActivarLimiteVenta',
@@ -72404,6 +71123,7 @@ export namespace Prisma {
     StockMinimo: 'StockMinimo',
     VencimientoDias: 'VencimientoDias',
     TipoVenta: 'TipoVenta',
+    Stock: 'Stock',
     EstaEliminado: 'EstaEliminado',
     TenantId: 'TenantId'
   };
@@ -72944,17 +71664,6 @@ export namespace Prisma {
   export type RubroScalarFieldEnum = (typeof RubroScalarFieldEnum)[keyof typeof RubroScalarFieldEnum]
 
 
-  export const StockScalarFieldEnum: {
-    Id: 'Id',
-    ArticuloId: 'ArticuloId',
-    Cantidad: 'Cantidad',
-    EstaEliminado: 'EstaEliminado',
-    TenantId: 'TenantId'
-  };
-
-  export type StockScalarFieldEnum = (typeof StockScalarFieldEnum)[keyof typeof StockScalarFieldEnum]
-
-
   export const TarjetaScalarFieldEnum: {
     Id: 'Id',
     Descripcion: 'Descripcion',
@@ -73215,7 +71924,6 @@ export namespace Prisma {
     Proveedores?: ProveedorListRelationFilter
     PuestosTrabajo?: PuestoTrabajoListRelationFilter
     Rubros?: RubroListRelationFilter
-    Stocks?: StockListRelationFilter
     Tarjetas?: TarjetaListRelationFilter
     Plan?: XOR<PlanSaaSNullableScalarRelationFilter, PlanSaaSWhereInput> | null
     Unidades?: UnidadMedidaListRelationFilter
@@ -73263,7 +71971,6 @@ export namespace Prisma {
     Proveedores?: ProveedorOrderByRelationAggregateInput
     PuestosTrabajo?: PuestoTrabajoOrderByRelationAggregateInput
     Rubros?: RubroOrderByRelationAggregateInput
-    Stocks?: StockOrderByRelationAggregateInput
     Tarjetas?: TarjetaOrderByRelationAggregateInput
     Plan?: PlanSaaSOrderByWithRelationInput
     Unidades?: UnidadMedidaOrderByRelationAggregateInput
@@ -73314,7 +72021,6 @@ export namespace Prisma {
     Proveedores?: ProveedorListRelationFilter
     PuestosTrabajo?: PuestoTrabajoListRelationFilter
     Rubros?: RubroListRelationFilter
-    Stocks?: StockListRelationFilter
     Tarjetas?: TarjetaListRelationFilter
     Plan?: XOR<PlanSaaSNullableScalarRelationFilter, PlanSaaSWhereInput> | null
     Unidades?: UnidadMedidaListRelationFilter
@@ -73495,7 +72201,6 @@ export namespace Prisma {
     Descripcion?: StringFilter<"Articulo"> | string
     Detalle?: StringNullableFilter<"Articulo"> | string | null
     Ubicacion?: StringNullableFilter<"Articulo"> | string | null
-    PrecioCosto?: DecimalFilter<"Articulo"> | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFilter<"Articulo"> | Decimal | DecimalJsLike | number | string
     Foto?: BytesFilter<"Articulo"> | Uint8Array
     ActivarLimiteVenta?: BoolFilter<"Articulo"> | boolean
@@ -73508,6 +72213,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFilter<"Articulo"> | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFilter<"Articulo"> | number
     TipoVenta?: IntFilter<"Articulo"> | number
+    Stock?: DecimalFilter<"Articulo"> | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFilter<"Articulo"> | boolean
     TenantId?: BigIntFilter<"Articulo"> | bigint | number
     Iva?: XOR<IvaScalarRelationFilter, IvaWhereInput>
@@ -73518,7 +72224,6 @@ export namespace Prisma {
     UnidadMedida?: XOR<UnidadMedidaScalarRelationFilter, UnidadMedidaWhereInput>
     BajaArticulo?: BajaArticuloListRelationFilter
     DetalleComprobante?: DetalleComprobanteListRelationFilter
-    Stock?: StockListRelationFilter
   }
 
   export type ArticuloOrderByWithRelationInput = {
@@ -73534,7 +72239,6 @@ export namespace Prisma {
     Descripcion?: SortOrder
     Detalle?: SortOrderInput | SortOrder
     Ubicacion?: SortOrderInput | SortOrder
-    PrecioCosto?: SortOrder
     PorcentajeGanancia?: SortOrder
     Foto?: SortOrder
     ActivarLimiteVenta?: SortOrder
@@ -73547,6 +72251,7 @@ export namespace Prisma {
     StockMinimo?: SortOrder
     VencimientoDias?: SortOrder
     TipoVenta?: SortOrder
+    Stock?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
     Iva?: IvaOrderByWithRelationInput
@@ -73557,7 +72262,6 @@ export namespace Prisma {
     UnidadMedida?: UnidadMedidaOrderByWithRelationInput
     BajaArticulo?: BajaArticuloOrderByRelationAggregateInput
     DetalleComprobante?: DetalleComprobanteOrderByRelationAggregateInput
-    Stock?: StockOrderByRelationAggregateInput
   }
 
   export type ArticuloWhereUniqueInput = Prisma.AtLeast<{
@@ -73576,7 +72280,6 @@ export namespace Prisma {
     Descripcion?: StringFilter<"Articulo"> | string
     Detalle?: StringNullableFilter<"Articulo"> | string | null
     Ubicacion?: StringNullableFilter<"Articulo"> | string | null
-    PrecioCosto?: DecimalFilter<"Articulo"> | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFilter<"Articulo"> | Decimal | DecimalJsLike | number | string
     Foto?: BytesFilter<"Articulo"> | Uint8Array
     ActivarLimiteVenta?: BoolFilter<"Articulo"> | boolean
@@ -73589,6 +72292,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFilter<"Articulo"> | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFilter<"Articulo"> | number
     TipoVenta?: IntFilter<"Articulo"> | number
+    Stock?: DecimalFilter<"Articulo"> | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFilter<"Articulo"> | boolean
     TenantId?: BigIntFilter<"Articulo"> | bigint | number
     Iva?: XOR<IvaScalarRelationFilter, IvaWhereInput>
@@ -73599,7 +72303,6 @@ export namespace Prisma {
     UnidadMedida?: XOR<UnidadMedidaScalarRelationFilter, UnidadMedidaWhereInput>
     BajaArticulo?: BajaArticuloListRelationFilter
     DetalleComprobante?: DetalleComprobanteListRelationFilter
-    Stock?: StockListRelationFilter
   }, "Id">
 
   export type ArticuloOrderByWithAggregationInput = {
@@ -73615,7 +72318,6 @@ export namespace Prisma {
     Descripcion?: SortOrder
     Detalle?: SortOrderInput | SortOrder
     Ubicacion?: SortOrderInput | SortOrder
-    PrecioCosto?: SortOrder
     PorcentajeGanancia?: SortOrder
     Foto?: SortOrder
     ActivarLimiteVenta?: SortOrder
@@ -73628,6 +72330,7 @@ export namespace Prisma {
     StockMinimo?: SortOrder
     VencimientoDias?: SortOrder
     TipoVenta?: SortOrder
+    Stock?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
     _count?: ArticuloCountOrderByAggregateInput
@@ -73653,7 +72356,6 @@ export namespace Prisma {
     Descripcion?: StringWithAggregatesFilter<"Articulo"> | string
     Detalle?: StringNullableWithAggregatesFilter<"Articulo"> | string | null
     Ubicacion?: StringNullableWithAggregatesFilter<"Articulo"> | string | null
-    PrecioCosto?: DecimalWithAggregatesFilter<"Articulo"> | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalWithAggregatesFilter<"Articulo"> | Decimal | DecimalJsLike | number | string
     Foto?: BytesWithAggregatesFilter<"Articulo"> | Uint8Array
     ActivarLimiteVenta?: BoolWithAggregatesFilter<"Articulo"> | boolean
@@ -73666,6 +72368,7 @@ export namespace Prisma {
     StockMinimo?: DecimalWithAggregatesFilter<"Articulo"> | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntWithAggregatesFilter<"Articulo"> | number
     TipoVenta?: IntWithAggregatesFilter<"Articulo"> | number
+    Stock?: DecimalWithAggregatesFilter<"Articulo"> | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolWithAggregatesFilter<"Articulo"> | boolean
     TenantId?: BigIntWithAggregatesFilter<"Articulo"> | bigint | number
   }
@@ -76704,66 +75407,6 @@ export namespace Prisma {
     TenantId?: BigIntWithAggregatesFilter<"Rubro"> | bigint | number
   }
 
-  export type StockWhereInput = {
-    AND?: StockWhereInput | StockWhereInput[]
-    OR?: StockWhereInput[]
-    NOT?: StockWhereInput | StockWhereInput[]
-    Id?: BigIntFilter<"Stock"> | bigint | number
-    ArticuloId?: BigIntFilter<"Stock"> | bigint | number
-    Cantidad?: DecimalFilter<"Stock"> | Decimal | DecimalJsLike | number | string
-    EstaEliminado?: BoolFilter<"Stock"> | boolean
-    TenantId?: BigIntFilter<"Stock"> | bigint | number
-    Articulo?: XOR<ArticuloScalarRelationFilter, ArticuloWhereInput>
-    Tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
-  }
-
-  export type StockOrderByWithRelationInput = {
-    Id?: SortOrder
-    ArticuloId?: SortOrder
-    Cantidad?: SortOrder
-    EstaEliminado?: SortOrder
-    TenantId?: SortOrder
-    Articulo?: ArticuloOrderByWithRelationInput
-    Tenant?: TenantOrderByWithRelationInput
-  }
-
-  export type StockWhereUniqueInput = Prisma.AtLeast<{
-    Id?: bigint | number
-    AND?: StockWhereInput | StockWhereInput[]
-    OR?: StockWhereInput[]
-    NOT?: StockWhereInput | StockWhereInput[]
-    ArticuloId?: BigIntFilter<"Stock"> | bigint | number
-    Cantidad?: DecimalFilter<"Stock"> | Decimal | DecimalJsLike | number | string
-    EstaEliminado?: BoolFilter<"Stock"> | boolean
-    TenantId?: BigIntFilter<"Stock"> | bigint | number
-    Articulo?: XOR<ArticuloScalarRelationFilter, ArticuloWhereInput>
-    Tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
-  }, "Id">
-
-  export type StockOrderByWithAggregationInput = {
-    Id?: SortOrder
-    ArticuloId?: SortOrder
-    Cantidad?: SortOrder
-    EstaEliminado?: SortOrder
-    TenantId?: SortOrder
-    _count?: StockCountOrderByAggregateInput
-    _avg?: StockAvgOrderByAggregateInput
-    _max?: StockMaxOrderByAggregateInput
-    _min?: StockMinOrderByAggregateInput
-    _sum?: StockSumOrderByAggregateInput
-  }
-
-  export type StockScalarWhereWithAggregatesInput = {
-    AND?: StockScalarWhereWithAggregatesInput | StockScalarWhereWithAggregatesInput[]
-    OR?: StockScalarWhereWithAggregatesInput[]
-    NOT?: StockScalarWhereWithAggregatesInput | StockScalarWhereWithAggregatesInput[]
-    Id?: BigIntWithAggregatesFilter<"Stock"> | bigint | number
-    ArticuloId?: BigIntWithAggregatesFilter<"Stock"> | bigint | number
-    Cantidad?: DecimalWithAggregatesFilter<"Stock"> | Decimal | DecimalJsLike | number | string
-    EstaEliminado?: BoolWithAggregatesFilter<"Stock"> | boolean
-    TenantId?: BigIntWithAggregatesFilter<"Stock"> | bigint | number
-  }
-
   export type TarjetaWhereInput = {
     AND?: TarjetaWhereInput | TarjetaWhereInput[]
     OR?: TarjetaWhereInput[]
@@ -77189,7 +75832,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -77237,7 +75879,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -77283,7 +75924,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -77331,7 +75971,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -77512,7 +76151,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -77525,6 +76163,7 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     Iva: IvaCreateNestedOneWithoutArticuloInput
     Marca: MarcaCreateNestedOneWithoutArticuloInput
@@ -77534,7 +76173,6 @@ export namespace Prisma {
     UnidadMedida: UnidadMedidaCreateNestedOneWithoutArticuloInput
     BajaArticulo?: BajaArticuloCreateNestedManyWithoutArticuloInput
     DetalleComprobante?: DetalleComprobanteCreateNestedManyWithoutArticuloInput
-    Stock?: StockCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloUncheckedCreateInput = {
@@ -77550,7 +76188,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -77563,11 +76200,11 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
     BajaArticulo?: BajaArticuloUncheckedCreateNestedManyWithoutArticuloInput
     DetalleComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutArticuloInput
-    Stock?: StockUncheckedCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloUpdateInput = {
@@ -77578,7 +76215,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -77591,6 +76227,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     Iva?: IvaUpdateOneRequiredWithoutArticuloNestedInput
     Marca?: MarcaUpdateOneRequiredWithoutArticuloNestedInput
@@ -77600,7 +76237,6 @@ export namespace Prisma {
     UnidadMedida?: UnidadMedidaUpdateOneRequiredWithoutArticuloNestedInput
     BajaArticulo?: BajaArticuloUpdateManyWithoutArticuloNestedInput
     DetalleComprobante?: DetalleComprobanteUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUpdateManyWithoutArticuloNestedInput
   }
 
   export type ArticuloUncheckedUpdateInput = {
@@ -77616,7 +76252,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -77629,11 +76264,11 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
     BajaArticulo?: BajaArticuloUncheckedUpdateManyWithoutArticuloNestedInput
     DetalleComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUncheckedUpdateManyWithoutArticuloNestedInput
   }
 
   export type ArticuloCreateManyInput = {
@@ -77649,7 +76284,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -77662,6 +76296,7 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
   }
@@ -77674,7 +76309,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -77687,6 +76321,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
   }
 
@@ -77703,7 +76338,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -77716,6 +76350,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
   }
@@ -80675,60 +79310,6 @@ export namespace Prisma {
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
   }
 
-  export type StockCreateInput = {
-    Id?: bigint | number
-    Cantidad: Decimal | DecimalJsLike | number | string
-    EstaEliminado: boolean
-    Articulo: ArticuloCreateNestedOneWithoutStockInput
-    Tenant: TenantCreateNestedOneWithoutStocksInput
-  }
-
-  export type StockUncheckedCreateInput = {
-    Id?: bigint | number
-    ArticuloId: bigint | number
-    Cantidad: Decimal | DecimalJsLike | number | string
-    EstaEliminado: boolean
-    TenantId: bigint | number
-  }
-
-  export type StockUpdateInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    Articulo?: ArticuloUpdateOneRequiredWithoutStockNestedInput
-    Tenant?: TenantUpdateOneRequiredWithoutStocksNestedInput
-  }
-
-  export type StockUncheckedUpdateInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    ArticuloId?: BigIntFieldUpdateOperationsInput | bigint | number
-    Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
-  }
-
-  export type StockCreateManyInput = {
-    Id?: bigint | number
-    ArticuloId: bigint | number
-    Cantidad: Decimal | DecimalJsLike | number | string
-    EstaEliminado: boolean
-    TenantId: bigint | number
-  }
-
-  export type StockUpdateManyMutationInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-  }
-
-  export type StockUncheckedUpdateManyInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    ArticuloId?: BigIntFieldUpdateOperationsInput | bigint | number
-    Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
-  }
-
   export type TarjetaCreateInput = {
     Id?: bigint | number
     Descripcion: string
@@ -81325,12 +79906,6 @@ export namespace Prisma {
     none?: RubroWhereInput
   }
 
-  export type StockListRelationFilter = {
-    every?: StockWhereInput
-    some?: StockWhereInput
-    none?: StockWhereInput
-  }
-
   export type TarjetaListRelationFilter = {
     every?: TarjetaWhereInput
     some?: TarjetaWhereInput
@@ -81476,10 +80051,6 @@ export namespace Prisma {
   }
 
   export type RubroOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
-  export type StockOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -81822,7 +80393,6 @@ export namespace Prisma {
     Descripcion?: SortOrder
     Detalle?: SortOrder
     Ubicacion?: SortOrder
-    PrecioCosto?: SortOrder
     PorcentajeGanancia?: SortOrder
     Foto?: SortOrder
     ActivarLimiteVenta?: SortOrder
@@ -81835,6 +80405,7 @@ export namespace Prisma {
     StockMinimo?: SortOrder
     VencimientoDias?: SortOrder
     TipoVenta?: SortOrder
+    Stock?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
   }
@@ -81847,12 +80418,12 @@ export namespace Prisma {
     IvaId?: SortOrder
     PrecioId?: SortOrder
     Codigo?: SortOrder
-    PrecioCosto?: SortOrder
     PorcentajeGanancia?: SortOrder
     LimiteVenta?: SortOrder
     StockMinimo?: SortOrder
     VencimientoDias?: SortOrder
     TipoVenta?: SortOrder
+    Stock?: SortOrder
     TenantId?: SortOrder
   }
 
@@ -81869,7 +80440,6 @@ export namespace Prisma {
     Descripcion?: SortOrder
     Detalle?: SortOrder
     Ubicacion?: SortOrder
-    PrecioCosto?: SortOrder
     PorcentajeGanancia?: SortOrder
     Foto?: SortOrder
     ActivarLimiteVenta?: SortOrder
@@ -81882,6 +80452,7 @@ export namespace Prisma {
     StockMinimo?: SortOrder
     VencimientoDias?: SortOrder
     TipoVenta?: SortOrder
+    Stock?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
   }
@@ -81899,7 +80470,6 @@ export namespace Prisma {
     Descripcion?: SortOrder
     Detalle?: SortOrder
     Ubicacion?: SortOrder
-    PrecioCosto?: SortOrder
     PorcentajeGanancia?: SortOrder
     Foto?: SortOrder
     ActivarLimiteVenta?: SortOrder
@@ -81912,6 +80482,7 @@ export namespace Prisma {
     StockMinimo?: SortOrder
     VencimientoDias?: SortOrder
     TipoVenta?: SortOrder
+    Stock?: SortOrder
     EstaEliminado?: SortOrder
     TenantId?: SortOrder
   }
@@ -81924,12 +80495,12 @@ export namespace Prisma {
     IvaId?: SortOrder
     PrecioId?: SortOrder
     Codigo?: SortOrder
-    PrecioCosto?: SortOrder
     PorcentajeGanancia?: SortOrder
     LimiteVenta?: SortOrder
     StockMinimo?: SortOrder
     VencimientoDias?: SortOrder
     TipoVenta?: SortOrder
+    Stock?: SortOrder
     TenantId?: SortOrder
   }
 
@@ -84223,44 +82794,6 @@ export namespace Prisma {
     TenantId?: SortOrder
   }
 
-  export type StockCountOrderByAggregateInput = {
-    Id?: SortOrder
-    ArticuloId?: SortOrder
-    Cantidad?: SortOrder
-    EstaEliminado?: SortOrder
-    TenantId?: SortOrder
-  }
-
-  export type StockAvgOrderByAggregateInput = {
-    Id?: SortOrder
-    ArticuloId?: SortOrder
-    Cantidad?: SortOrder
-    TenantId?: SortOrder
-  }
-
-  export type StockMaxOrderByAggregateInput = {
-    Id?: SortOrder
-    ArticuloId?: SortOrder
-    Cantidad?: SortOrder
-    EstaEliminado?: SortOrder
-    TenantId?: SortOrder
-  }
-
-  export type StockMinOrderByAggregateInput = {
-    Id?: SortOrder
-    ArticuloId?: SortOrder
-    Cantidad?: SortOrder
-    EstaEliminado?: SortOrder
-    TenantId?: SortOrder
-  }
-
-  export type StockSumOrderByAggregateInput = {
-    Id?: SortOrder
-    ArticuloId?: SortOrder
-    Cantidad?: SortOrder
-    TenantId?: SortOrder
-  }
-
   export type FormaPago_TarjetaListRelationFilter = {
     every?: FormaPago_TarjetaWhereInput
     some?: FormaPago_TarjetaWhereInput
@@ -84709,13 +83242,6 @@ export namespace Prisma {
     connect?: RubroWhereUniqueInput | RubroWhereUniqueInput[]
   }
 
-  export type StockCreateNestedManyWithoutTenantInput = {
-    create?: XOR<StockCreateWithoutTenantInput, StockUncheckedCreateWithoutTenantInput> | StockCreateWithoutTenantInput[] | StockUncheckedCreateWithoutTenantInput[]
-    connectOrCreate?: StockCreateOrConnectWithoutTenantInput | StockCreateOrConnectWithoutTenantInput[]
-    createMany?: StockCreateManyTenantInputEnvelope
-    connect?: StockWhereUniqueInput | StockWhereUniqueInput[]
-  }
-
   export type TarjetaCreateNestedManyWithoutTenantInput = {
     create?: XOR<TarjetaCreateWithoutTenantInput, TarjetaUncheckedCreateWithoutTenantInput> | TarjetaCreateWithoutTenantInput[] | TarjetaUncheckedCreateWithoutTenantInput[]
     connectOrCreate?: TarjetaCreateOrConnectWithoutTenantInput | TarjetaCreateOrConnectWithoutTenantInput[]
@@ -84951,13 +83477,6 @@ export namespace Prisma {
     connectOrCreate?: RubroCreateOrConnectWithoutTenantInput | RubroCreateOrConnectWithoutTenantInput[]
     createMany?: RubroCreateManyTenantInputEnvelope
     connect?: RubroWhereUniqueInput | RubroWhereUniqueInput[]
-  }
-
-  export type StockUncheckedCreateNestedManyWithoutTenantInput = {
-    create?: XOR<StockCreateWithoutTenantInput, StockUncheckedCreateWithoutTenantInput> | StockCreateWithoutTenantInput[] | StockUncheckedCreateWithoutTenantInput[]
-    connectOrCreate?: StockCreateOrConnectWithoutTenantInput | StockCreateOrConnectWithoutTenantInput[]
-    createMany?: StockCreateManyTenantInputEnvelope
-    connect?: StockWhereUniqueInput | StockWhereUniqueInput[]
   }
 
   export type TarjetaUncheckedCreateNestedManyWithoutTenantInput = {
@@ -85419,20 +83938,6 @@ export namespace Prisma {
     update?: RubroUpdateWithWhereUniqueWithoutTenantInput | RubroUpdateWithWhereUniqueWithoutTenantInput[]
     updateMany?: RubroUpdateManyWithWhereWithoutTenantInput | RubroUpdateManyWithWhereWithoutTenantInput[]
     deleteMany?: RubroScalarWhereInput | RubroScalarWhereInput[]
-  }
-
-  export type StockUpdateManyWithoutTenantNestedInput = {
-    create?: XOR<StockCreateWithoutTenantInput, StockUncheckedCreateWithoutTenantInput> | StockCreateWithoutTenantInput[] | StockUncheckedCreateWithoutTenantInput[]
-    connectOrCreate?: StockCreateOrConnectWithoutTenantInput | StockCreateOrConnectWithoutTenantInput[]
-    upsert?: StockUpsertWithWhereUniqueWithoutTenantInput | StockUpsertWithWhereUniqueWithoutTenantInput[]
-    createMany?: StockCreateManyTenantInputEnvelope
-    set?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    disconnect?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    delete?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    connect?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    update?: StockUpdateWithWhereUniqueWithoutTenantInput | StockUpdateWithWhereUniqueWithoutTenantInput[]
-    updateMany?: StockUpdateManyWithWhereWithoutTenantInput | StockUpdateManyWithWhereWithoutTenantInput[]
-    deleteMany?: StockScalarWhereInput | StockScalarWhereInput[]
   }
 
   export type TarjetaUpdateManyWithoutTenantNestedInput = {
@@ -85915,20 +84420,6 @@ export namespace Prisma {
     deleteMany?: RubroScalarWhereInput | RubroScalarWhereInput[]
   }
 
-  export type StockUncheckedUpdateManyWithoutTenantNestedInput = {
-    create?: XOR<StockCreateWithoutTenantInput, StockUncheckedCreateWithoutTenantInput> | StockCreateWithoutTenantInput[] | StockUncheckedCreateWithoutTenantInput[]
-    connectOrCreate?: StockCreateOrConnectWithoutTenantInput | StockCreateOrConnectWithoutTenantInput[]
-    upsert?: StockUpsertWithWhereUniqueWithoutTenantInput | StockUpsertWithWhereUniqueWithoutTenantInput[]
-    createMany?: StockCreateManyTenantInputEnvelope
-    set?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    disconnect?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    delete?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    connect?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    update?: StockUpdateWithWhereUniqueWithoutTenantInput | StockUpdateWithWhereUniqueWithoutTenantInput[]
-    updateMany?: StockUpdateManyWithWhereWithoutTenantInput | StockUpdateManyWithWhereWithoutTenantInput[]
-    deleteMany?: StockScalarWhereInput | StockScalarWhereInput[]
-  }
-
   export type TarjetaUncheckedUpdateManyWithoutTenantNestedInput = {
     create?: XOR<TarjetaCreateWithoutTenantInput, TarjetaUncheckedCreateWithoutTenantInput> | TarjetaCreateWithoutTenantInput[] | TarjetaUncheckedCreateWithoutTenantInput[]
     connectOrCreate?: TarjetaCreateOrConnectWithoutTenantInput | TarjetaCreateOrConnectWithoutTenantInput[]
@@ -86091,13 +84582,6 @@ export namespace Prisma {
     connect?: DetalleComprobanteWhereUniqueInput | DetalleComprobanteWhereUniqueInput[]
   }
 
-  export type StockCreateNestedManyWithoutArticuloInput = {
-    create?: XOR<StockCreateWithoutArticuloInput, StockUncheckedCreateWithoutArticuloInput> | StockCreateWithoutArticuloInput[] | StockUncheckedCreateWithoutArticuloInput[]
-    connectOrCreate?: StockCreateOrConnectWithoutArticuloInput | StockCreateOrConnectWithoutArticuloInput[]
-    createMany?: StockCreateManyArticuloInputEnvelope
-    connect?: StockWhereUniqueInput | StockWhereUniqueInput[]
-  }
-
   export type BajaArticuloUncheckedCreateNestedManyWithoutArticuloInput = {
     create?: XOR<BajaArticuloCreateWithoutArticuloInput, BajaArticuloUncheckedCreateWithoutArticuloInput> | BajaArticuloCreateWithoutArticuloInput[] | BajaArticuloUncheckedCreateWithoutArticuloInput[]
     connectOrCreate?: BajaArticuloCreateOrConnectWithoutArticuloInput | BajaArticuloCreateOrConnectWithoutArticuloInput[]
@@ -86110,13 +84594,6 @@ export namespace Prisma {
     connectOrCreate?: DetalleComprobanteCreateOrConnectWithoutArticuloInput | DetalleComprobanteCreateOrConnectWithoutArticuloInput[]
     createMany?: DetalleComprobanteCreateManyArticuloInputEnvelope
     connect?: DetalleComprobanteWhereUniqueInput | DetalleComprobanteWhereUniqueInput[]
-  }
-
-  export type StockUncheckedCreateNestedManyWithoutArticuloInput = {
-    create?: XOR<StockCreateWithoutArticuloInput, StockUncheckedCreateWithoutArticuloInput> | StockCreateWithoutArticuloInput[] | StockUncheckedCreateWithoutArticuloInput[]
-    connectOrCreate?: StockCreateOrConnectWithoutArticuloInput | StockCreateOrConnectWithoutArticuloInput[]
-    createMany?: StockCreateManyArticuloInputEnvelope
-    connect?: StockWhereUniqueInput | StockWhereUniqueInput[]
   }
 
   export type IntFieldUpdateOperationsInput = {
@@ -86207,20 +84684,6 @@ export namespace Prisma {
     deleteMany?: DetalleComprobanteScalarWhereInput | DetalleComprobanteScalarWhereInput[]
   }
 
-  export type StockUpdateManyWithoutArticuloNestedInput = {
-    create?: XOR<StockCreateWithoutArticuloInput, StockUncheckedCreateWithoutArticuloInput> | StockCreateWithoutArticuloInput[] | StockUncheckedCreateWithoutArticuloInput[]
-    connectOrCreate?: StockCreateOrConnectWithoutArticuloInput | StockCreateOrConnectWithoutArticuloInput[]
-    upsert?: StockUpsertWithWhereUniqueWithoutArticuloInput | StockUpsertWithWhereUniqueWithoutArticuloInput[]
-    createMany?: StockCreateManyArticuloInputEnvelope
-    set?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    disconnect?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    delete?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    connect?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    update?: StockUpdateWithWhereUniqueWithoutArticuloInput | StockUpdateWithWhereUniqueWithoutArticuloInput[]
-    updateMany?: StockUpdateManyWithWhereWithoutArticuloInput | StockUpdateManyWithWhereWithoutArticuloInput[]
-    deleteMany?: StockScalarWhereInput | StockScalarWhereInput[]
-  }
-
   export type BajaArticuloUncheckedUpdateManyWithoutArticuloNestedInput = {
     create?: XOR<BajaArticuloCreateWithoutArticuloInput, BajaArticuloUncheckedCreateWithoutArticuloInput> | BajaArticuloCreateWithoutArticuloInput[] | BajaArticuloUncheckedCreateWithoutArticuloInput[]
     connectOrCreate?: BajaArticuloCreateOrConnectWithoutArticuloInput | BajaArticuloCreateOrConnectWithoutArticuloInput[]
@@ -86247,20 +84710,6 @@ export namespace Prisma {
     update?: DetalleComprobanteUpdateWithWhereUniqueWithoutArticuloInput | DetalleComprobanteUpdateWithWhereUniqueWithoutArticuloInput[]
     updateMany?: DetalleComprobanteUpdateManyWithWhereWithoutArticuloInput | DetalleComprobanteUpdateManyWithWhereWithoutArticuloInput[]
     deleteMany?: DetalleComprobanteScalarWhereInput | DetalleComprobanteScalarWhereInput[]
-  }
-
-  export type StockUncheckedUpdateManyWithoutArticuloNestedInput = {
-    create?: XOR<StockCreateWithoutArticuloInput, StockUncheckedCreateWithoutArticuloInput> | StockCreateWithoutArticuloInput[] | StockUncheckedCreateWithoutArticuloInput[]
-    connectOrCreate?: StockCreateOrConnectWithoutArticuloInput | StockCreateOrConnectWithoutArticuloInput[]
-    upsert?: StockUpsertWithWhereUniqueWithoutArticuloInput | StockUpsertWithWhereUniqueWithoutArticuloInput[]
-    createMany?: StockCreateManyArticuloInputEnvelope
-    set?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    disconnect?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    delete?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    connect?: StockWhereUniqueInput | StockWhereUniqueInput[]
-    update?: StockUpdateWithWhereUniqueWithoutArticuloInput | StockUpdateWithWhereUniqueWithoutArticuloInput[]
-    updateMany?: StockUpdateManyWithWhereWithoutArticuloInput | StockUpdateManyWithWhereWithoutArticuloInput[]
-    deleteMany?: StockScalarWhereInput | StockScalarWhereInput[]
   }
 
   export type ArticuloCreateNestedOneWithoutBajaArticuloInput = {
@@ -89617,34 +88066,6 @@ export namespace Prisma {
     deleteMany?: ArticuloScalarWhereInput | ArticuloScalarWhereInput[]
   }
 
-  export type ArticuloCreateNestedOneWithoutStockInput = {
-    create?: XOR<ArticuloCreateWithoutStockInput, ArticuloUncheckedCreateWithoutStockInput>
-    connectOrCreate?: ArticuloCreateOrConnectWithoutStockInput
-    connect?: ArticuloWhereUniqueInput
-  }
-
-  export type TenantCreateNestedOneWithoutStocksInput = {
-    create?: XOR<TenantCreateWithoutStocksInput, TenantUncheckedCreateWithoutStocksInput>
-    connectOrCreate?: TenantCreateOrConnectWithoutStocksInput
-    connect?: TenantWhereUniqueInput
-  }
-
-  export type ArticuloUpdateOneRequiredWithoutStockNestedInput = {
-    create?: XOR<ArticuloCreateWithoutStockInput, ArticuloUncheckedCreateWithoutStockInput>
-    connectOrCreate?: ArticuloCreateOrConnectWithoutStockInput
-    upsert?: ArticuloUpsertWithoutStockInput
-    connect?: ArticuloWhereUniqueInput
-    update?: XOR<XOR<ArticuloUpdateToOneWithWhereWithoutStockInput, ArticuloUpdateWithoutStockInput>, ArticuloUncheckedUpdateWithoutStockInput>
-  }
-
-  export type TenantUpdateOneRequiredWithoutStocksNestedInput = {
-    create?: XOR<TenantCreateWithoutStocksInput, TenantUncheckedCreateWithoutStocksInput>
-    connectOrCreate?: TenantCreateOrConnectWithoutStocksInput
-    upsert?: TenantUpsertWithoutStocksInput
-    connect?: TenantWhereUniqueInput
-    update?: XOR<XOR<TenantUpdateToOneWithWhereWithoutStocksInput, TenantUpdateWithoutStocksInput>, TenantUncheckedUpdateWithoutStocksInput>
-  }
-
   export type FormaPago_TarjetaCreateNestedManyWithoutTarjetaInput = {
     create?: XOR<FormaPago_TarjetaCreateWithoutTarjetaInput, FormaPago_TarjetaUncheckedCreateWithoutTarjetaInput> | FormaPago_TarjetaCreateWithoutTarjetaInput[] | FormaPago_TarjetaUncheckedCreateWithoutTarjetaInput[]
     connectOrCreate?: FormaPago_TarjetaCreateOrConnectWithoutTarjetaInput | FormaPago_TarjetaCreateOrConnectWithoutTarjetaInput[]
@@ -90581,7 +89002,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -90594,6 +89014,7 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     Iva: IvaCreateNestedOneWithoutArticuloInput
     Marca: MarcaCreateNestedOneWithoutArticuloInput
@@ -90602,7 +89023,6 @@ export namespace Prisma {
     UnidadMedida: UnidadMedidaCreateNestedOneWithoutArticuloInput
     BajaArticulo?: BajaArticuloCreateNestedManyWithoutArticuloInput
     DetalleComprobante?: DetalleComprobanteCreateNestedManyWithoutArticuloInput
-    Stock?: StockCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloUncheckedCreateWithoutTenantInput = {
@@ -90618,7 +89038,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -90631,10 +89050,10 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     BajaArticulo?: BajaArticuloUncheckedCreateNestedManyWithoutArticuloInput
     DetalleComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutArticuloInput
-    Stock?: StockUncheckedCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloCreateOrConnectWithoutTenantInput = {
@@ -91585,30 +90004,6 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type StockCreateWithoutTenantInput = {
-    Id?: bigint | number
-    Cantidad: Decimal | DecimalJsLike | number | string
-    EstaEliminado: boolean
-    Articulo: ArticuloCreateNestedOneWithoutStockInput
-  }
-
-  export type StockUncheckedCreateWithoutTenantInput = {
-    Id?: bigint | number
-    ArticuloId: bigint | number
-    Cantidad: Decimal | DecimalJsLike | number | string
-    EstaEliminado: boolean
-  }
-
-  export type StockCreateOrConnectWithoutTenantInput = {
-    where: StockWhereUniqueInput
-    create: XOR<StockCreateWithoutTenantInput, StockUncheckedCreateWithoutTenantInput>
-  }
-
-  export type StockCreateManyTenantInputEnvelope = {
-    data: StockCreateManyTenantInput | StockCreateManyTenantInput[]
-    skipDuplicates?: boolean
-  }
-
   export type TarjetaCreateWithoutTenantInput = {
     Id?: bigint | number
     Descripcion: string
@@ -91748,7 +90143,6 @@ export namespace Prisma {
     Descripcion?: StringFilter<"Articulo"> | string
     Detalle?: StringNullableFilter<"Articulo"> | string | null
     Ubicacion?: StringNullableFilter<"Articulo"> | string | null
-    PrecioCosto?: DecimalFilter<"Articulo"> | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFilter<"Articulo"> | Decimal | DecimalJsLike | number | string
     Foto?: BytesFilter<"Articulo"> | Uint8Array
     ActivarLimiteVenta?: BoolFilter<"Articulo"> | boolean
@@ -91761,6 +90155,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFilter<"Articulo"> | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFilter<"Articulo"> | number
     TipoVenta?: IntFilter<"Articulo"> | number
+    Stock?: DecimalFilter<"Articulo"> | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFilter<"Articulo"> | boolean
     TenantId?: BigIntFilter<"Articulo"> | bigint | number
   }
@@ -92629,33 +91024,6 @@ export namespace Prisma {
     TenantId?: BigIntFilter<"Rubro"> | bigint | number
   }
 
-  export type StockUpsertWithWhereUniqueWithoutTenantInput = {
-    where: StockWhereUniqueInput
-    update: XOR<StockUpdateWithoutTenantInput, StockUncheckedUpdateWithoutTenantInput>
-    create: XOR<StockCreateWithoutTenantInput, StockUncheckedCreateWithoutTenantInput>
-  }
-
-  export type StockUpdateWithWhereUniqueWithoutTenantInput = {
-    where: StockWhereUniqueInput
-    data: XOR<StockUpdateWithoutTenantInput, StockUncheckedUpdateWithoutTenantInput>
-  }
-
-  export type StockUpdateManyWithWhereWithoutTenantInput = {
-    where: StockScalarWhereInput
-    data: XOR<StockUpdateManyMutationInput, StockUncheckedUpdateManyWithoutTenantInput>
-  }
-
-  export type StockScalarWhereInput = {
-    AND?: StockScalarWhereInput | StockScalarWhereInput[]
-    OR?: StockScalarWhereInput[]
-    NOT?: StockScalarWhereInput | StockScalarWhereInput[]
-    Id?: BigIntFilter<"Stock"> | bigint | number
-    ArticuloId?: BigIntFilter<"Stock"> | bigint | number
-    Cantidad?: DecimalFilter<"Stock"> | Decimal | DecimalJsLike | number | string
-    EstaEliminado?: BoolFilter<"Stock"> | boolean
-    TenantId?: BigIntFilter<"Stock"> | bigint | number
-  }
-
   export type TarjetaUpsertWithWhereUniqueWithoutTenantInput = {
     where: TarjetaWhereUniqueInput
     update: XOR<TarjetaUpdateWithoutTenantInput, TarjetaUncheckedUpdateWithoutTenantInput>
@@ -92804,7 +91172,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
@@ -92850,7 +91217,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -92937,7 +91303,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -92984,7 +91349,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -93045,7 +91409,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -93092,7 +91455,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -93225,7 +91587,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -93272,7 +91633,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -93367,30 +91727,6 @@ export namespace Prisma {
 
   export type DetalleComprobanteCreateManyArticuloInputEnvelope = {
     data: DetalleComprobanteCreateManyArticuloInput | DetalleComprobanteCreateManyArticuloInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type StockCreateWithoutArticuloInput = {
-    Id?: bigint | number
-    Cantidad: Decimal | DecimalJsLike | number | string
-    EstaEliminado: boolean
-    Tenant: TenantCreateNestedOneWithoutStocksInput
-  }
-
-  export type StockUncheckedCreateWithoutArticuloInput = {
-    Id?: bigint | number
-    Cantidad: Decimal | DecimalJsLike | number | string
-    EstaEliminado: boolean
-    TenantId: bigint | number
-  }
-
-  export type StockCreateOrConnectWithoutArticuloInput = {
-    where: StockWhereUniqueInput
-    create: XOR<StockCreateWithoutArticuloInput, StockUncheckedCreateWithoutArticuloInput>
-  }
-
-  export type StockCreateManyArticuloInputEnvelope = {
-    data: StockCreateManyArticuloInput | StockCreateManyArticuloInput[]
     skipDuplicates?: boolean
   }
 
@@ -93556,7 +91892,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -93603,7 +91938,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -93666,22 +92000,6 @@ export namespace Prisma {
     data: XOR<DetalleComprobanteUpdateManyMutationInput, DetalleComprobanteUncheckedUpdateManyWithoutArticuloInput>
   }
 
-  export type StockUpsertWithWhereUniqueWithoutArticuloInput = {
-    where: StockWhereUniqueInput
-    update: XOR<StockUpdateWithoutArticuloInput, StockUncheckedUpdateWithoutArticuloInput>
-    create: XOR<StockCreateWithoutArticuloInput, StockUncheckedCreateWithoutArticuloInput>
-  }
-
-  export type StockUpdateWithWhereUniqueWithoutArticuloInput = {
-    where: StockWhereUniqueInput
-    data: XOR<StockUpdateWithoutArticuloInput, StockUncheckedUpdateWithoutArticuloInput>
-  }
-
-  export type StockUpdateManyWithWhereWithoutArticuloInput = {
-    where: StockScalarWhereInput
-    data: XOR<StockUpdateManyMutationInput, StockUncheckedUpdateManyWithoutArticuloInput>
-  }
-
   export type ArticuloCreateWithoutBajaArticuloInput = {
     Id?: bigint | number
     Codigo: number
@@ -93690,7 +92008,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -93703,6 +92020,7 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     Iva: IvaCreateNestedOneWithoutArticuloInput
     Marca: MarcaCreateNestedOneWithoutArticuloInput
@@ -93711,7 +92029,6 @@ export namespace Prisma {
     Tenant: TenantCreateNestedOneWithoutArticulosInput
     UnidadMedida: UnidadMedidaCreateNestedOneWithoutArticuloInput
     DetalleComprobante?: DetalleComprobanteCreateNestedManyWithoutArticuloInput
-    Stock?: StockCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloUncheckedCreateWithoutBajaArticuloInput = {
@@ -93727,7 +92044,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -93740,10 +92056,10 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
     DetalleComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutArticuloInput
-    Stock?: StockUncheckedCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloCreateOrConnectWithoutBajaArticuloInput = {
@@ -93809,7 +92125,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -93856,7 +92171,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -93886,7 +92200,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -93899,6 +92212,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     Iva?: IvaUpdateOneRequiredWithoutArticuloNestedInput
     Marca?: MarcaUpdateOneRequiredWithoutArticuloNestedInput
@@ -93907,7 +92221,6 @@ export namespace Prisma {
     Tenant?: TenantUpdateOneRequiredWithoutArticulosNestedInput
     UnidadMedida?: UnidadMedidaUpdateOneRequiredWithoutArticuloNestedInput
     DetalleComprobante?: DetalleComprobanteUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUpdateManyWithoutArticuloNestedInput
   }
 
   export type ArticuloUncheckedUpdateWithoutBajaArticuloInput = {
@@ -93923,7 +92236,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -93936,10 +92248,10 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
     DetalleComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUncheckedUpdateManyWithoutArticuloNestedInput
   }
 
   export type MotivoBajasUpsertWithoutBajaArticuloInput = {
@@ -94017,7 +92329,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -94064,7 +92375,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -94109,7 +92419,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -94156,7 +92465,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -94279,7 +92587,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -94326,7 +92633,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -94403,7 +92709,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -94450,7 +92755,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -94671,7 +92975,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -94718,7 +93021,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -94943,7 +93245,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -94990,7 +93291,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -95161,7 +93461,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -95208,7 +93507,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -95312,7 +93610,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -95359,7 +93656,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -95717,7 +94013,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -95764,7 +94059,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -97559,7 +95853,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -97606,7 +95899,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -97697,7 +95989,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -97744,7 +96035,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -97949,7 +96239,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -97996,7 +96285,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -98086,7 +96374,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -98133,7 +96420,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -98178,7 +96464,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -98225,7 +96510,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -98286,7 +96570,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -98333,7 +96616,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -98399,7 +96681,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -98446,7 +96727,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -98560,7 +96840,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -98607,7 +96886,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -99110,7 +97388,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -99157,7 +97434,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -99282,7 +97558,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -99329,7 +97604,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -99429,7 +97703,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -99476,7 +97749,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -99598,7 +97870,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -99645,7 +97916,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -99659,7 +97929,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -99672,6 +97941,7 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     Iva: IvaCreateNestedOneWithoutArticuloInput
     Marca: MarcaCreateNestedOneWithoutArticuloInput
@@ -99680,7 +97950,6 @@ export namespace Prisma {
     Tenant: TenantCreateNestedOneWithoutArticulosInput
     UnidadMedida: UnidadMedidaCreateNestedOneWithoutArticuloInput
     BajaArticulo?: BajaArticuloCreateNestedManyWithoutArticuloInput
-    Stock?: StockCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloUncheckedCreateWithoutDetalleComprobanteInput = {
@@ -99696,7 +97965,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -99709,10 +97977,10 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
     BajaArticulo?: BajaArticuloUncheckedCreateNestedManyWithoutArticuloInput
-    Stock?: StockUncheckedCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloCreateOrConnectWithoutDetalleComprobanteInput = {
@@ -99816,7 +98084,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -99863,7 +98130,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -99893,7 +98159,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -99906,6 +98171,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     Iva?: IvaUpdateOneRequiredWithoutArticuloNestedInput
     Marca?: MarcaUpdateOneRequiredWithoutArticuloNestedInput
@@ -99914,7 +98180,6 @@ export namespace Prisma {
     Tenant?: TenantUpdateOneRequiredWithoutArticulosNestedInput
     UnidadMedida?: UnidadMedidaUpdateOneRequiredWithoutArticuloNestedInput
     BajaArticulo?: BajaArticuloUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUpdateManyWithoutArticuloNestedInput
   }
 
   export type ArticuloUncheckedUpdateWithoutDetalleComprobanteInput = {
@@ -99930,7 +98195,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -99943,10 +98207,10 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
     BajaArticulo?: BajaArticuloUncheckedUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUncheckedUpdateManyWithoutArticuloNestedInput
   }
 
   export type ComprobanteUpsertWithoutDetalleComprobanteInput = {
@@ -100062,7 +98326,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -100109,7 +98372,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -100211,7 +98473,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -100258,7 +98519,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -100427,7 +98687,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -100474,7 +98733,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -100990,7 +99248,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -101037,7 +99294,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -101158,7 +99414,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -101205,7 +99460,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -101270,7 +99524,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -101317,7 +99570,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -101394,7 +99646,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -101441,7 +99692,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -101560,7 +99810,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -101607,7 +99856,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -101754,7 +100002,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -101801,7 +100048,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -101815,7 +100061,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -101828,6 +100073,7 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     Marca: MarcaCreateNestedOneWithoutArticuloInput
     Precio: PrecioCreateNestedOneWithoutArticuloInput
@@ -101836,7 +100082,6 @@ export namespace Prisma {
     UnidadMedida: UnidadMedidaCreateNestedOneWithoutArticuloInput
     BajaArticulo?: BajaArticuloCreateNestedManyWithoutArticuloInput
     DetalleComprobante?: DetalleComprobanteCreateNestedManyWithoutArticuloInput
-    Stock?: StockCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloUncheckedCreateWithoutIvaInput = {
@@ -101851,7 +100096,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -101864,11 +100108,11 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
     BajaArticulo?: BajaArticuloUncheckedCreateNestedManyWithoutArticuloInput
     DetalleComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutArticuloInput
-    Stock?: StockUncheckedCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloCreateOrConnectWithoutIvaInput = {
@@ -101905,7 +100149,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -101918,6 +100161,7 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     Iva: IvaCreateNestedOneWithoutArticuloInput
     Precio: PrecioCreateNestedOneWithoutArticuloInput
@@ -101926,7 +100170,6 @@ export namespace Prisma {
     UnidadMedida: UnidadMedidaCreateNestedOneWithoutArticuloInput
     BajaArticulo?: BajaArticuloCreateNestedManyWithoutArticuloInput
     DetalleComprobante?: DetalleComprobanteCreateNestedManyWithoutArticuloInput
-    Stock?: StockCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloUncheckedCreateWithoutMarcaInput = {
@@ -101941,7 +100184,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -101954,11 +100196,11 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
     BajaArticulo?: BajaArticuloUncheckedCreateNestedManyWithoutArticuloInput
     DetalleComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutArticuloInput
-    Stock?: StockUncheckedCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloCreateOrConnectWithoutMarcaInput = {
@@ -102010,7 +100252,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -102057,7 +100298,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -102134,7 +100374,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -102181,7 +100420,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -102256,7 +100494,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -102303,7 +100540,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -102380,7 +100616,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -102427,7 +100662,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -102512,7 +100746,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -102559,7 +100792,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -102672,7 +100904,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -102719,7 +100950,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -102800,7 +101030,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -102847,7 +101076,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -102924,7 +101152,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -102971,7 +101198,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -103062,7 +101288,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -103109,7 +101334,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -103228,7 +101452,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -103275,7 +101498,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -103345,7 +101567,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -103392,7 +101613,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -103517,7 +101737,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -103564,7 +101783,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -103671,7 +101889,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -103718,7 +101935,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -103860,7 +102076,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -103907,7 +102122,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -104618,7 +102832,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -104631,6 +102844,7 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     Iva: IvaCreateNestedOneWithoutArticuloInput
     Marca: MarcaCreateNestedOneWithoutArticuloInput
@@ -104639,7 +102853,6 @@ export namespace Prisma {
     UnidadMedida: UnidadMedidaCreateNestedOneWithoutArticuloInput
     BajaArticulo?: BajaArticuloCreateNestedManyWithoutArticuloInput
     DetalleComprobante?: DetalleComprobanteCreateNestedManyWithoutArticuloInput
-    Stock?: StockCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloUncheckedCreateWithoutPrecioInput = {
@@ -104654,7 +102867,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -104667,11 +102879,11 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
     BajaArticulo?: BajaArticuloUncheckedCreateNestedManyWithoutArticuloInput
     DetalleComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutArticuloInput
-    Stock?: StockUncheckedCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloCreateOrConnectWithoutPrecioInput = {
@@ -104723,7 +102935,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -104770,7 +102981,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -104847,7 +103057,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -104894,7 +103103,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -105051,7 +103259,6 @@ export namespace Prisma {
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -105098,7 +103305,6 @@ export namespace Prisma {
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -105293,7 +103499,6 @@ export namespace Prisma {
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -105340,7 +103545,6 @@ export namespace Prisma {
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -105407,7 +103611,6 @@ export namespace Prisma {
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -105454,7 +103657,6 @@ export namespace Prisma {
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -105531,7 +103733,6 @@ export namespace Prisma {
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -105578,7 +103779,6 @@ export namespace Prisma {
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -105592,7 +103792,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -105605,6 +103804,7 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     Iva: IvaCreateNestedOneWithoutArticuloInput
     Marca: MarcaCreateNestedOneWithoutArticuloInput
@@ -105613,7 +103813,6 @@ export namespace Prisma {
     UnidadMedida: UnidadMedidaCreateNestedOneWithoutArticuloInput
     BajaArticulo?: BajaArticuloCreateNestedManyWithoutArticuloInput
     DetalleComprobante?: DetalleComprobanteCreateNestedManyWithoutArticuloInput
-    Stock?: StockCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloUncheckedCreateWithoutRubroInput = {
@@ -105628,7 +103827,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -105641,11 +103839,11 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
     BajaArticulo?: BajaArticuloUncheckedCreateNestedManyWithoutArticuloInput
     DetalleComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutArticuloInput
-    Stock?: StockUncheckedCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloCreateOrConnectWithoutRubroInput = {
@@ -105697,7 +103895,6 @@ export namespace Prisma {
     Precios?: PrecioCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -105744,7 +103941,6 @@ export namespace Prisma {
     Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -105821,7 +104017,6 @@ export namespace Prisma {
     Precios?: PrecioUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -105868,351 +104063,6 @@ export namespace Prisma {
     Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
-    Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
-    Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
-    Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
-  }
-
-  export type ArticuloCreateWithoutStockInput = {
-    Id?: bigint | number
-    Codigo: number
-    CodigoBarra: string
-    Abreviatura?: string | null
-    Descripcion: string
-    Detalle?: string | null
-    Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
-    PorcentajeGanancia: Decimal | DecimalJsLike | number | string
-    Foto: Uint8Array
-    ActivarLimiteVenta: boolean
-    LimiteVenta: Decimal | DecimalJsLike | number | string
-    ActivarHoraVenta: boolean
-    HoraLimiteVentaDesde: Date | string
-    HoraLimiteVentaHasta: Date | string
-    PermiteStockNegativo: boolean
-    DescuentaStock: boolean
-    StockMinimo: Decimal | DecimalJsLike | number | string
-    VencimientoDias: number
-    TipoVenta: number
-    EstaEliminado: boolean
-    Iva: IvaCreateNestedOneWithoutArticuloInput
-    Marca: MarcaCreateNestedOneWithoutArticuloInput
-    Precio: PrecioCreateNestedOneWithoutArticuloInput
-    Rubro: RubroCreateNestedOneWithoutArticuloInput
-    Tenant: TenantCreateNestedOneWithoutArticulosInput
-    UnidadMedida: UnidadMedidaCreateNestedOneWithoutArticuloInput
-    BajaArticulo?: BajaArticuloCreateNestedManyWithoutArticuloInput
-    DetalleComprobante?: DetalleComprobanteCreateNestedManyWithoutArticuloInput
-  }
-
-  export type ArticuloUncheckedCreateWithoutStockInput = {
-    Id?: bigint | number
-    MarcaId: bigint | number
-    RubroId: bigint | number
-    UnidadMedidaId: bigint | number
-    IvaId: bigint | number
-    PrecioId: bigint | number
-    Codigo: number
-    CodigoBarra: string
-    Abreviatura?: string | null
-    Descripcion: string
-    Detalle?: string | null
-    Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
-    PorcentajeGanancia: Decimal | DecimalJsLike | number | string
-    Foto: Uint8Array
-    ActivarLimiteVenta: boolean
-    LimiteVenta: Decimal | DecimalJsLike | number | string
-    ActivarHoraVenta: boolean
-    HoraLimiteVentaDesde: Date | string
-    HoraLimiteVentaHasta: Date | string
-    PermiteStockNegativo: boolean
-    DescuentaStock: boolean
-    StockMinimo: Decimal | DecimalJsLike | number | string
-    VencimientoDias: number
-    TipoVenta: number
-    EstaEliminado: boolean
-    TenantId: bigint | number
-    BajaArticulo?: BajaArticuloUncheckedCreateNestedManyWithoutArticuloInput
-    DetalleComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutArticuloInput
-  }
-
-  export type ArticuloCreateOrConnectWithoutStockInput = {
-    where: ArticuloWhereUniqueInput
-    create: XOR<ArticuloCreateWithoutStockInput, ArticuloUncheckedCreateWithoutStockInput>
-  }
-
-  export type TenantCreateWithoutStocksInput = {
-    Id?: bigint | number
-    Nombre: string
-    Dominio?: string | null
-    RazonSocial?: string | null
-    Cuit?: string | null
-    Email?: string | null
-    Telefono?: string | null
-    EstaActivo?: boolean
-    OnboardingCompleto?: boolean
-    Articulos?: ArticuloCreateNestedManyWithoutTenantInput
-    BajaArticulos?: BajaArticuloCreateNestedManyWithoutTenantInput
-    Bancos?: BancoCreateNestedManyWithoutTenantInput
-    Cajas?: CajaCreateNestedManyWithoutTenantInput
-    Cheques?: ChequeCreateNestedManyWithoutTenantInput
-    Comprobantes?: ComprobanteCreateNestedManyWithoutTenantInput
-    ConceptosGasto?: ConceptoGastosCreateNestedManyWithoutTenantInput
-    Configuraciones?: ConfiguracionCreateNestedManyWithoutTenantInput
-    Contadores?: ContadorCreateNestedManyWithoutTenantInput
-    CuentasBancarias?: CuentaBancariasCreateNestedManyWithoutTenantInput
-    DepositosCheques?: DepositoChequesCreateNestedManyWithoutTenantInput
-    DetallesCaja?: DetalleCajaCreateNestedManyWithoutTenantInput
-    DetallesComprobante?: DetalleComprobanteCreateNestedManyWithoutTenantInput
-    FormasPago?: FormaPagoCreateNestedManyWithoutTenantInput
-    FormulariosPerfiles?: FormularioPerfilCreateNestedManyWithoutTenantInput
-    FormulariosPermisos?: FormulariosCreateNestedManyWithoutTenantInput
-    Gastos?: GastoCreateNestedManyWithoutTenantInput
-    Logs?: LogCreateNestedManyWithoutTenantInput
-    Marcas?: MarcaCreateNestedManyWithoutTenantInput
-    MotivosBaja?: MotivoBajasCreateNestedManyWithoutTenantInput
-    Movimientos?: MovimientoCreateNestedManyWithoutTenantInput
-    PerfilesUsuarios?: PerfilUsuarioCreateNestedManyWithoutTenantInput
-    Perfiles?: PerfilesCreateNestedManyWithoutTenantInput
-    Permisos?: PermisoCreateNestedManyWithoutTenantInput
-    PerfilPermisos?: PerfilPermisoCreateNestedManyWithoutTenantInput
-    Personas?: PersonaCreateNestedManyWithoutTenantInput
-    Precios?: PrecioCreateNestedManyWithoutTenantInput
-    Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
-    PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
-    Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
-    Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
-    Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
-    Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
-  }
-
-  export type TenantUncheckedCreateWithoutStocksInput = {
-    Id?: bigint | number
-    Nombre: string
-    Dominio?: string | null
-    RazonSocial?: string | null
-    Cuit?: string | null
-    Email?: string | null
-    Telefono?: string | null
-    EstaActivo?: boolean
-    PlanId?: bigint | number | null
-    OnboardingCompleto?: boolean
-    Articulos?: ArticuloUncheckedCreateNestedManyWithoutTenantInput
-    BajaArticulos?: BajaArticuloUncheckedCreateNestedManyWithoutTenantInput
-    Bancos?: BancoUncheckedCreateNestedManyWithoutTenantInput
-    Cajas?: CajaUncheckedCreateNestedManyWithoutTenantInput
-    Cheques?: ChequeUncheckedCreateNestedManyWithoutTenantInput
-    Comprobantes?: ComprobanteUncheckedCreateNestedManyWithoutTenantInput
-    ConceptosGasto?: ConceptoGastosUncheckedCreateNestedManyWithoutTenantInput
-    Configuraciones?: ConfiguracionUncheckedCreateNestedManyWithoutTenantInput
-    Contadores?: ContadorUncheckedCreateNestedManyWithoutTenantInput
-    CuentasBancarias?: CuentaBancariasUncheckedCreateNestedManyWithoutTenantInput
-    DepositosCheques?: DepositoChequesUncheckedCreateNestedManyWithoutTenantInput
-    DetallesCaja?: DetalleCajaUncheckedCreateNestedManyWithoutTenantInput
-    DetallesComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutTenantInput
-    FormasPago?: FormaPagoUncheckedCreateNestedManyWithoutTenantInput
-    FormulariosPerfiles?: FormularioPerfilUncheckedCreateNestedManyWithoutTenantInput
-    FormulariosPermisos?: FormulariosUncheckedCreateNestedManyWithoutTenantInput
-    Gastos?: GastoUncheckedCreateNestedManyWithoutTenantInput
-    Logs?: LogUncheckedCreateNestedManyWithoutTenantInput
-    Marcas?: MarcaUncheckedCreateNestedManyWithoutTenantInput
-    MotivosBaja?: MotivoBajasUncheckedCreateNestedManyWithoutTenantInput
-    Movimientos?: MovimientoUncheckedCreateNestedManyWithoutTenantInput
-    PerfilesUsuarios?: PerfilUsuarioUncheckedCreateNestedManyWithoutTenantInput
-    Perfiles?: PerfilesUncheckedCreateNestedManyWithoutTenantInput
-    Permisos?: PermisoUncheckedCreateNestedManyWithoutTenantInput
-    PerfilPermisos?: PerfilPermisoUncheckedCreateNestedManyWithoutTenantInput
-    Personas?: PersonaUncheckedCreateNestedManyWithoutTenantInput
-    Precios?: PrecioUncheckedCreateNestedManyWithoutTenantInput
-    Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
-    PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
-    Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
-    Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
-    Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
-  }
-
-  export type TenantCreateOrConnectWithoutStocksInput = {
-    where: TenantWhereUniqueInput
-    create: XOR<TenantCreateWithoutStocksInput, TenantUncheckedCreateWithoutStocksInput>
-  }
-
-  export type ArticuloUpsertWithoutStockInput = {
-    update: XOR<ArticuloUpdateWithoutStockInput, ArticuloUncheckedUpdateWithoutStockInput>
-    create: XOR<ArticuloCreateWithoutStockInput, ArticuloUncheckedCreateWithoutStockInput>
-    where?: ArticuloWhereInput
-  }
-
-  export type ArticuloUpdateToOneWithWhereWithoutStockInput = {
-    where?: ArticuloWhereInput
-    data: XOR<ArticuloUpdateWithoutStockInput, ArticuloUncheckedUpdateWithoutStockInput>
-  }
-
-  export type ArticuloUpdateWithoutStockInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Codigo?: IntFieldUpdateOperationsInput | number
-    CodigoBarra?: StringFieldUpdateOperationsInput | string
-    Abreviatura?: NullableStringFieldUpdateOperationsInput | string | null
-    Descripcion?: StringFieldUpdateOperationsInput | string
-    Detalle?: NullableStringFieldUpdateOperationsInput | string | null
-    Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    Foto?: BytesFieldUpdateOperationsInput | Uint8Array
-    ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
-    LimiteVenta?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    ActivarHoraVenta?: BoolFieldUpdateOperationsInput | boolean
-    HoraLimiteVentaDesde?: DateTimeFieldUpdateOperationsInput | Date | string
-    HoraLimiteVentaHasta?: DateTimeFieldUpdateOperationsInput | Date | string
-    PermiteStockNegativo?: BoolFieldUpdateOperationsInput | boolean
-    DescuentaStock?: BoolFieldUpdateOperationsInput | boolean
-    StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    VencimientoDias?: IntFieldUpdateOperationsInput | number
-    TipoVenta?: IntFieldUpdateOperationsInput | number
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    Iva?: IvaUpdateOneRequiredWithoutArticuloNestedInput
-    Marca?: MarcaUpdateOneRequiredWithoutArticuloNestedInput
-    Precio?: PrecioUpdateOneRequiredWithoutArticuloNestedInput
-    Rubro?: RubroUpdateOneRequiredWithoutArticuloNestedInput
-    Tenant?: TenantUpdateOneRequiredWithoutArticulosNestedInput
-    UnidadMedida?: UnidadMedidaUpdateOneRequiredWithoutArticuloNestedInput
-    BajaArticulo?: BajaArticuloUpdateManyWithoutArticuloNestedInput
-    DetalleComprobante?: DetalleComprobanteUpdateManyWithoutArticuloNestedInput
-  }
-
-  export type ArticuloUncheckedUpdateWithoutStockInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    MarcaId?: BigIntFieldUpdateOperationsInput | bigint | number
-    RubroId?: BigIntFieldUpdateOperationsInput | bigint | number
-    UnidadMedidaId?: BigIntFieldUpdateOperationsInput | bigint | number
-    IvaId?: BigIntFieldUpdateOperationsInput | bigint | number
-    PrecioId?: BigIntFieldUpdateOperationsInput | bigint | number
-    Codigo?: IntFieldUpdateOperationsInput | number
-    CodigoBarra?: StringFieldUpdateOperationsInput | string
-    Abreviatura?: NullableStringFieldUpdateOperationsInput | string | null
-    Descripcion?: StringFieldUpdateOperationsInput | string
-    Detalle?: NullableStringFieldUpdateOperationsInput | string | null
-    Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    Foto?: BytesFieldUpdateOperationsInput | Uint8Array
-    ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
-    LimiteVenta?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    ActivarHoraVenta?: BoolFieldUpdateOperationsInput | boolean
-    HoraLimiteVentaDesde?: DateTimeFieldUpdateOperationsInput | Date | string
-    HoraLimiteVentaHasta?: DateTimeFieldUpdateOperationsInput | Date | string
-    PermiteStockNegativo?: BoolFieldUpdateOperationsInput | boolean
-    DescuentaStock?: BoolFieldUpdateOperationsInput | boolean
-    StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    VencimientoDias?: IntFieldUpdateOperationsInput | number
-    TipoVenta?: IntFieldUpdateOperationsInput | number
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
-    BajaArticulo?: BajaArticuloUncheckedUpdateManyWithoutArticuloNestedInput
-    DetalleComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutArticuloNestedInput
-  }
-
-  export type TenantUpsertWithoutStocksInput = {
-    update: XOR<TenantUpdateWithoutStocksInput, TenantUncheckedUpdateWithoutStocksInput>
-    create: XOR<TenantCreateWithoutStocksInput, TenantUncheckedCreateWithoutStocksInput>
-    where?: TenantWhereInput
-  }
-
-  export type TenantUpdateToOneWithWhereWithoutStocksInput = {
-    where?: TenantWhereInput
-    data: XOR<TenantUpdateWithoutStocksInput, TenantUncheckedUpdateWithoutStocksInput>
-  }
-
-  export type TenantUpdateWithoutStocksInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Nombre?: StringFieldUpdateOperationsInput | string
-    Dominio?: NullableStringFieldUpdateOperationsInput | string | null
-    RazonSocial?: NullableStringFieldUpdateOperationsInput | string | null
-    Cuit?: NullableStringFieldUpdateOperationsInput | string | null
-    Email?: NullableStringFieldUpdateOperationsInput | string | null
-    Telefono?: NullableStringFieldUpdateOperationsInput | string | null
-    EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
-    Articulos?: ArticuloUpdateManyWithoutTenantNestedInput
-    BajaArticulos?: BajaArticuloUpdateManyWithoutTenantNestedInput
-    Bancos?: BancoUpdateManyWithoutTenantNestedInput
-    Cajas?: CajaUpdateManyWithoutTenantNestedInput
-    Cheques?: ChequeUpdateManyWithoutTenantNestedInput
-    Comprobantes?: ComprobanteUpdateManyWithoutTenantNestedInput
-    ConceptosGasto?: ConceptoGastosUpdateManyWithoutTenantNestedInput
-    Configuraciones?: ConfiguracionUpdateManyWithoutTenantNestedInput
-    Contadores?: ContadorUpdateManyWithoutTenantNestedInput
-    CuentasBancarias?: CuentaBancariasUpdateManyWithoutTenantNestedInput
-    DepositosCheques?: DepositoChequesUpdateManyWithoutTenantNestedInput
-    DetallesCaja?: DetalleCajaUpdateManyWithoutTenantNestedInput
-    DetallesComprobante?: DetalleComprobanteUpdateManyWithoutTenantNestedInput
-    FormasPago?: FormaPagoUpdateManyWithoutTenantNestedInput
-    FormulariosPerfiles?: FormularioPerfilUpdateManyWithoutTenantNestedInput
-    FormulariosPermisos?: FormulariosUpdateManyWithoutTenantNestedInput
-    Gastos?: GastoUpdateManyWithoutTenantNestedInput
-    Logs?: LogUpdateManyWithoutTenantNestedInput
-    Marcas?: MarcaUpdateManyWithoutTenantNestedInput
-    MotivosBaja?: MotivoBajasUpdateManyWithoutTenantNestedInput
-    Movimientos?: MovimientoUpdateManyWithoutTenantNestedInput
-    PerfilesUsuarios?: PerfilUsuarioUpdateManyWithoutTenantNestedInput
-    Perfiles?: PerfilesUpdateManyWithoutTenantNestedInput
-    Permisos?: PermisoUpdateManyWithoutTenantNestedInput
-    PerfilPermisos?: PerfilPermisoUpdateManyWithoutTenantNestedInput
-    Personas?: PersonaUpdateManyWithoutTenantNestedInput
-    Precios?: PrecioUpdateManyWithoutTenantNestedInput
-    Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
-    PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
-    Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
-    Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
-    Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
-    Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
-  }
-
-  export type TenantUncheckedUpdateWithoutStocksInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Nombre?: StringFieldUpdateOperationsInput | string
-    Dominio?: NullableStringFieldUpdateOperationsInput | string | null
-    RazonSocial?: NullableStringFieldUpdateOperationsInput | string | null
-    Cuit?: NullableStringFieldUpdateOperationsInput | string | null
-    Email?: NullableStringFieldUpdateOperationsInput | string | null
-    Telefono?: NullableStringFieldUpdateOperationsInput | string | null
-    EstaActivo?: BoolFieldUpdateOperationsInput | boolean
-    PlanId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    OnboardingCompleto?: BoolFieldUpdateOperationsInput | boolean
-    Articulos?: ArticuloUncheckedUpdateManyWithoutTenantNestedInput
-    BajaArticulos?: BajaArticuloUncheckedUpdateManyWithoutTenantNestedInput
-    Bancos?: BancoUncheckedUpdateManyWithoutTenantNestedInput
-    Cajas?: CajaUncheckedUpdateManyWithoutTenantNestedInput
-    Cheques?: ChequeUncheckedUpdateManyWithoutTenantNestedInput
-    Comprobantes?: ComprobanteUncheckedUpdateManyWithoutTenantNestedInput
-    ConceptosGasto?: ConceptoGastosUncheckedUpdateManyWithoutTenantNestedInput
-    Configuraciones?: ConfiguracionUncheckedUpdateManyWithoutTenantNestedInput
-    Contadores?: ContadorUncheckedUpdateManyWithoutTenantNestedInput
-    CuentasBancarias?: CuentaBancariasUncheckedUpdateManyWithoutTenantNestedInput
-    DepositosCheques?: DepositoChequesUncheckedUpdateManyWithoutTenantNestedInput
-    DetallesCaja?: DetalleCajaUncheckedUpdateManyWithoutTenantNestedInput
-    DetallesComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutTenantNestedInput
-    FormasPago?: FormaPagoUncheckedUpdateManyWithoutTenantNestedInput
-    FormulariosPerfiles?: FormularioPerfilUncheckedUpdateManyWithoutTenantNestedInput
-    FormulariosPermisos?: FormulariosUncheckedUpdateManyWithoutTenantNestedInput
-    Gastos?: GastoUncheckedUpdateManyWithoutTenantNestedInput
-    Logs?: LogUncheckedUpdateManyWithoutTenantNestedInput
-    Marcas?: MarcaUncheckedUpdateManyWithoutTenantNestedInput
-    MotivosBaja?: MotivoBajasUncheckedUpdateManyWithoutTenantNestedInput
-    Movimientos?: MovimientoUncheckedUpdateManyWithoutTenantNestedInput
-    PerfilesUsuarios?: PerfilUsuarioUncheckedUpdateManyWithoutTenantNestedInput
-    Perfiles?: PerfilesUncheckedUpdateManyWithoutTenantNestedInput
-    Permisos?: PermisoUncheckedUpdateManyWithoutTenantNestedInput
-    PerfilPermisos?: PerfilPermisoUncheckedUpdateManyWithoutTenantNestedInput
-    Personas?: PersonaUncheckedUpdateManyWithoutTenantNestedInput
-    Precios?: PrecioUncheckedUpdateManyWithoutTenantNestedInput
-    Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
-    PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
-    Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -106282,7 +104132,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
@@ -106329,7 +104178,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -106417,7 +104265,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
@@ -106464,7 +104311,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -106477,7 +104323,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -106490,6 +104335,7 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     Iva: IvaCreateNestedOneWithoutArticuloInput
     Marca: MarcaCreateNestedOneWithoutArticuloInput
@@ -106498,7 +104344,6 @@ export namespace Prisma {
     Tenant: TenantCreateNestedOneWithoutArticulosInput
     BajaArticulo?: BajaArticuloCreateNestedManyWithoutArticuloInput
     DetalleComprobante?: DetalleComprobanteCreateNestedManyWithoutArticuloInput
-    Stock?: StockCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloUncheckedCreateWithoutUnidadMedidaInput = {
@@ -106513,7 +104358,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -106526,11 +104370,11 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
     BajaArticulo?: BajaArticuloUncheckedCreateNestedManyWithoutArticuloInput
     DetalleComprobante?: DetalleComprobanteUncheckedCreateNestedManyWithoutArticuloInput
-    Stock?: StockUncheckedCreateNestedManyWithoutArticuloInput
   }
 
   export type ArticuloCreateOrConnectWithoutUnidadMedidaInput = {
@@ -106583,7 +104427,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Usuarios?: UsuarioCreateNestedManyWithoutTenantInput
@@ -106630,7 +104473,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -106707,7 +104549,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
@@ -106754,7 +104595,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -107058,7 +104898,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -107105,7 +104944,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
   }
@@ -107271,7 +105109,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -107318,7 +105155,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
   }
@@ -107474,7 +105310,6 @@ export namespace Prisma {
     Proveedores?: ProveedorCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoCreateNestedManyWithoutTenantInput
     Rubros?: RubroCreateNestedManyWithoutTenantInput
-    Stocks?: StockCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaCreateNestedManyWithoutTenantInput
     Plan?: PlanSaaSCreateNestedOneWithoutTenantsInput
     Unidades?: UnidadMedidaCreateNestedManyWithoutTenantInput
@@ -107521,7 +105356,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedCreateNestedManyWithoutTenantInput
     PuestosTrabajo?: PuestoTrabajoUncheckedCreateNestedManyWithoutTenantInput
     Rubros?: RubroUncheckedCreateNestedManyWithoutTenantInput
-    Stocks?: StockUncheckedCreateNestedManyWithoutTenantInput
     Tarjetas?: TarjetaUncheckedCreateNestedManyWithoutTenantInput
     Unidades?: UnidadMedidaUncheckedCreateNestedManyWithoutTenantInput
     Usuarios?: UsuarioUncheckedCreateNestedManyWithoutTenantInput
@@ -107767,7 +105601,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Plan?: PlanSaaSUpdateOneWithoutTenantsNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
@@ -107814,7 +105647,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -108240,7 +106072,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -108253,6 +106084,7 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
   }
 
@@ -108540,13 +106372,6 @@ export namespace Prisma {
     EstaEliminado: boolean
   }
 
-  export type StockCreateManyTenantInput = {
-    Id?: bigint | number
-    ArticuloId: bigint | number
-    Cantidad: Decimal | DecimalJsLike | number | string
-    EstaEliminado: boolean
-  }
-
   export type TarjetaCreateManyTenantInput = {
     Id?: bigint | number
     Descripcion: string
@@ -108576,7 +106401,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -108589,6 +106413,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     Iva?: IvaUpdateOneRequiredWithoutArticuloNestedInput
     Marca?: MarcaUpdateOneRequiredWithoutArticuloNestedInput
@@ -108597,7 +106422,6 @@ export namespace Prisma {
     UnidadMedida?: UnidadMedidaUpdateOneRequiredWithoutArticuloNestedInput
     BajaArticulo?: BajaArticuloUpdateManyWithoutArticuloNestedInput
     DetalleComprobante?: DetalleComprobanteUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUpdateManyWithoutArticuloNestedInput
   }
 
   export type ArticuloUncheckedUpdateWithoutTenantInput = {
@@ -108613,7 +106437,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -108626,10 +106449,10 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     BajaArticulo?: BajaArticuloUncheckedUpdateManyWithoutArticuloNestedInput
     DetalleComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUncheckedUpdateManyWithoutArticuloNestedInput
   }
 
   export type ArticuloUncheckedUpdateManyWithoutTenantInput = {
@@ -108645,7 +106468,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -108658,6 +106480,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
   }
 
@@ -109593,27 +107416,6 @@ export namespace Prisma {
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
   }
 
-  export type StockUpdateWithoutTenantInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    Articulo?: ArticuloUpdateOneRequiredWithoutStockNestedInput
-  }
-
-  export type StockUncheckedUpdateWithoutTenantInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    ArticuloId?: BigIntFieldUpdateOperationsInput | bigint | number
-    Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-  }
-
-  export type StockUncheckedUpdateManyWithoutTenantInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    ArticuloId?: BigIntFieldUpdateOperationsInput | bigint | number
-    Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-  }
-
   export type TarjetaUpdateWithoutTenantInput = {
     Id?: BigIntFieldUpdateOperationsInput | bigint | number
     Descripcion?: StringFieldUpdateOperationsInput | string
@@ -109743,7 +107545,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUpdateManyWithoutTenantNestedInput
@@ -109789,7 +107590,6 @@ export namespace Prisma {
     Proveedores?: ProveedorUncheckedUpdateManyWithoutTenantNestedInput
     PuestosTrabajo?: PuestoTrabajoUncheckedUpdateManyWithoutTenantNestedInput
     Rubros?: RubroUncheckedUpdateManyWithoutTenantNestedInput
-    Stocks?: StockUncheckedUpdateManyWithoutTenantNestedInput
     Tarjetas?: TarjetaUncheckedUpdateManyWithoutTenantNestedInput
     Unidades?: UnidadMedidaUncheckedUpdateManyWithoutTenantNestedInput
     Usuarios?: UsuarioUncheckedUpdateManyWithoutTenantNestedInput
@@ -109828,13 +107628,6 @@ export namespace Prisma {
     SubTotal: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     Costo?: Decimal | DecimalJsLike | number | string
-    TenantId: bigint | number
-  }
-
-  export type StockCreateManyArticuloInput = {
-    Id?: bigint | number
-    Cantidad: Decimal | DecimalJsLike | number | string
-    EstaEliminado: boolean
     TenantId: bigint | number
   }
 
@@ -109907,27 +107700,6 @@ export namespace Prisma {
     SubTotal?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     Costo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
-  }
-
-  export type StockUpdateWithoutArticuloInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    Tenant?: TenantUpdateOneRequiredWithoutStocksNestedInput
-  }
-
-  export type StockUncheckedUpdateWithoutArticuloInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
-    TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
-  }
-
-  export type StockUncheckedUpdateManyWithoutArticuloInput = {
-    Id?: BigIntFieldUpdateOperationsInput | bigint | number
-    Cantidad?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
-    EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
   }
 
@@ -110837,7 +108609,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -110850,6 +108621,7 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
   }
@@ -110862,7 +108634,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -110875,6 +108646,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     Marca?: MarcaUpdateOneRequiredWithoutArticuloNestedInput
     Precio?: PrecioUpdateOneRequiredWithoutArticuloNestedInput
@@ -110883,7 +108655,6 @@ export namespace Prisma {
     UnidadMedida?: UnidadMedidaUpdateOneRequiredWithoutArticuloNestedInput
     BajaArticulo?: BajaArticuloUpdateManyWithoutArticuloNestedInput
     DetalleComprobante?: DetalleComprobanteUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUpdateManyWithoutArticuloNestedInput
   }
 
   export type ArticuloUncheckedUpdateWithoutIvaInput = {
@@ -110898,7 +108669,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -110911,11 +108681,11 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
     BajaArticulo?: BajaArticuloUncheckedUpdateManyWithoutArticuloNestedInput
     DetalleComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUncheckedUpdateManyWithoutArticuloNestedInput
   }
 
   export type ArticuloUncheckedUpdateManyWithoutIvaInput = {
@@ -110930,7 +108700,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -110943,6 +108712,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
   }
@@ -110959,7 +108729,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -110972,6 +108741,7 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
   }
@@ -110984,7 +108754,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -110997,6 +108766,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     Iva?: IvaUpdateOneRequiredWithoutArticuloNestedInput
     Precio?: PrecioUpdateOneRequiredWithoutArticuloNestedInput
@@ -111005,7 +108775,6 @@ export namespace Prisma {
     UnidadMedida?: UnidadMedidaUpdateOneRequiredWithoutArticuloNestedInput
     BajaArticulo?: BajaArticuloUpdateManyWithoutArticuloNestedInput
     DetalleComprobante?: DetalleComprobanteUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUpdateManyWithoutArticuloNestedInput
   }
 
   export type ArticuloUncheckedUpdateWithoutMarcaInput = {
@@ -111020,7 +108789,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -111033,11 +108801,11 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
     BajaArticulo?: BajaArticuloUncheckedUpdateManyWithoutArticuloNestedInput
     DetalleComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUncheckedUpdateManyWithoutArticuloNestedInput
   }
 
   export type ArticuloUncheckedUpdateManyWithoutMarcaInput = {
@@ -111052,7 +108820,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -111065,6 +108832,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
   }
@@ -111483,7 +109251,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -111496,6 +109263,7 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
   }
@@ -111508,7 +109276,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -111521,6 +109288,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     Iva?: IvaUpdateOneRequiredWithoutArticuloNestedInput
     Marca?: MarcaUpdateOneRequiredWithoutArticuloNestedInput
@@ -111529,7 +109297,6 @@ export namespace Prisma {
     UnidadMedida?: UnidadMedidaUpdateOneRequiredWithoutArticuloNestedInput
     BajaArticulo?: BajaArticuloUpdateManyWithoutArticuloNestedInput
     DetalleComprobante?: DetalleComprobanteUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUpdateManyWithoutArticuloNestedInput
   }
 
   export type ArticuloUncheckedUpdateWithoutPrecioInput = {
@@ -111544,7 +109311,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -111557,11 +109323,11 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
     BajaArticulo?: BajaArticuloUncheckedUpdateManyWithoutArticuloNestedInput
     DetalleComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUncheckedUpdateManyWithoutArticuloNestedInput
   }
 
   export type ArticuloUncheckedUpdateManyWithoutPrecioInput = {
@@ -111576,7 +109342,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -111589,6 +109354,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
   }
@@ -111709,7 +109475,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -111722,6 +109487,7 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
   }
@@ -111734,7 +109500,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -111747,6 +109512,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     Iva?: IvaUpdateOneRequiredWithoutArticuloNestedInput
     Marca?: MarcaUpdateOneRequiredWithoutArticuloNestedInput
@@ -111755,7 +109521,6 @@ export namespace Prisma {
     UnidadMedida?: UnidadMedidaUpdateOneRequiredWithoutArticuloNestedInput
     BajaArticulo?: BajaArticuloUpdateManyWithoutArticuloNestedInput
     DetalleComprobante?: DetalleComprobanteUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUpdateManyWithoutArticuloNestedInput
   }
 
   export type ArticuloUncheckedUpdateWithoutRubroInput = {
@@ -111770,7 +109535,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -111783,11 +109547,11 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
     BajaArticulo?: BajaArticuloUncheckedUpdateManyWithoutArticuloNestedInput
     DetalleComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUncheckedUpdateManyWithoutArticuloNestedInput
   }
 
   export type ArticuloUncheckedUpdateManyWithoutRubroInput = {
@@ -111802,7 +109566,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -111815,6 +109578,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
   }
@@ -111859,7 +109623,6 @@ export namespace Prisma {
     Descripcion: string
     Detalle?: string | null
     Ubicacion?: string | null
-    PrecioCosto: Decimal | DecimalJsLike | number | string
     PorcentajeGanancia: Decimal | DecimalJsLike | number | string
     Foto: Uint8Array
     ActivarLimiteVenta: boolean
@@ -111872,6 +109635,7 @@ export namespace Prisma {
     StockMinimo: Decimal | DecimalJsLike | number | string
     VencimientoDias: number
     TipoVenta: number
+    Stock?: Decimal | DecimalJsLike | number | string
     EstaEliminado: boolean
     TenantId: bigint | number
   }
@@ -111884,7 +109648,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -111897,6 +109660,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     Iva?: IvaUpdateOneRequiredWithoutArticuloNestedInput
     Marca?: MarcaUpdateOneRequiredWithoutArticuloNestedInput
@@ -111905,7 +109669,6 @@ export namespace Prisma {
     Tenant?: TenantUpdateOneRequiredWithoutArticulosNestedInput
     BajaArticulo?: BajaArticuloUpdateManyWithoutArticuloNestedInput
     DetalleComprobante?: DetalleComprobanteUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUpdateManyWithoutArticuloNestedInput
   }
 
   export type ArticuloUncheckedUpdateWithoutUnidadMedidaInput = {
@@ -111920,7 +109683,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -111933,11 +109695,11 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
     BajaArticulo?: BajaArticuloUncheckedUpdateManyWithoutArticuloNestedInput
     DetalleComprobante?: DetalleComprobanteUncheckedUpdateManyWithoutArticuloNestedInput
-    Stock?: StockUncheckedUpdateManyWithoutArticuloNestedInput
   }
 
   export type ArticuloUncheckedUpdateManyWithoutUnidadMedidaInput = {
@@ -111952,7 +109714,6 @@ export namespace Prisma {
     Descripcion?: StringFieldUpdateOperationsInput | string
     Detalle?: NullableStringFieldUpdateOperationsInput | string | null
     Ubicacion?: NullableStringFieldUpdateOperationsInput | string | null
-    PrecioCosto?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     PorcentajeGanancia?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     Foto?: BytesFieldUpdateOperationsInput | Uint8Array
     ActivarLimiteVenta?: BoolFieldUpdateOperationsInput | boolean
@@ -111965,6 +109726,7 @@ export namespace Prisma {
     StockMinimo?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     VencimientoDias?: IntFieldUpdateOperationsInput | number
     TipoVenta?: IntFieldUpdateOperationsInput | number
+    Stock?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     EstaEliminado?: BoolFieldUpdateOperationsInput | boolean
     TenantId?: BigIntFieldUpdateOperationsInput | bigint | number
   }
