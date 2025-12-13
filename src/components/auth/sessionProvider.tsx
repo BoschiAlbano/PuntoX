@@ -86,7 +86,7 @@ const SessionProviderComponent = ({
           email: session.user.email ?? undefined,
           tenantId,
           role: typeof role === "string" ? role : null,
-          app_metadata: metadata,
+          // app_metadata: metadata,
           app_metadata: appMetadata,
         }
       : null;
