@@ -30,3 +30,8 @@ export const updateUnidadMedidaSchema = z.object({
  */
 export type CreateUnidadMedidaInput = z.infer<typeof createUnidadMedidaSchema>;
 export type UpdateUnidadMedidaInput = z.infer<typeof updateUnidadMedidaSchema>;
+
+export interface UnidadMedida {
+  Id: number;
+  Descripcion: string;
+}

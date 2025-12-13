@@ -24,80 +24,26 @@ import {
   useDisclosure,
   addToast,
   Spinner,
+  NumberInput,
 } from "@heroui/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-// Tipos para el producto basados en el modelo Articulo de Prisma
-interface Producto {
-  Id: number;
-  MarcaId: number;
-  RubroId: number;
-  UnidadMedidaId: number;
-  IvaId: number;
-  PrecioId: number;
-  Codigo: number;
-  CodigoBarra: string;
-  Abreviatura?: string;
-  Descripcion: string;
-  Detalle?: string;
-  Ubicacion?: string;
-  PrecioCosto: number;
-  PorcentajeGanancia: number;
-  PorcentajeGanancia2: number;
-  PrecioPublico: number;
-  PrecioPublico2: number;
-  Foto?: string; // Base64 o URL
-  ActivarLimiteVenta: boolean;
-  LimiteVenta: number;
-  ActivarHoraVenta: boolean;
-  HoraLimiteVentaDesde: string;
-  HoraLimiteVentaHasta: string;
-  PermiteStockNegativo: boolean;
-  DescuentaStock: boolean;
-  StockMinimo: number;
-  VencimientoDias: number;
-  TipoVenta: number;
-  EstaEliminado: boolean;
-  Precio: {
-    PorcentajeGanancia: number;
-    PorcentajeGanancia2: number;
-    PrecioPublico: number;
-    PrecioPublico2: number;
-    PrecioCosto: number;
-  };
-}
+// Tipos
+import { Producto } from "@/lib/validations/producto.schema";
+import { Iva } from "@/lib/validations/iva.schema";
+import { UnidadMedida } from "@/lib/validations/unidad-medida.schema";
+import { Rubro } from "@/lib/validations/rubro.schema";
+import { Marca } from "@/lib/validations/marca.schema";
+import { tiposVenta } from "@/lib/validations/tiposVenta.schema";
 
 interface ApiError {
   error: string;
   details?: Array<{ field: string; message: string }>;
 }
 
-// Tipos auxiliares
-interface Marca {
-  Id: number;
-  Descripcion: string;
-}
-interface Rubro {
-  Id: number;
-  Descripcion: string;
-}
-interface UnidadMedida {
-  Id: number;
-  Descripcion: string;
-}
-interface Iva {
-  Id: number;
-  Descripcion: string;
-  Porcentaje: number;
-}
-
-const tiposVenta = [
-  { id: 0, nombre: "Normal" },
-  { id: 1, nombre: "Por Peso" },
-  { id: 2, nombre: "Por Unidad" },
-];
-
 // Funciones fetch
+import { productoListAdapter } from "@/lib/adapters/producto.adapter";
+
 const fetchProductos = async ({
   signal,
 }: {
@@ -106,7 +52,7 @@ const fetchProductos = async ({
   const response = await fetch("/api/productos", { signal });
   if (!response.ok) throw new Error("Error al cargar productos");
   const data = await response.json();
-  return Array.isArray(data?.productos) ? data.productos : [];
+  return productoListAdapter(data?.productos);
 };
 
 const fetchMarcas = async ({
@@ -192,10 +138,11 @@ export default function ProductoCRUD() {
     enabled: isOpen,
   });
   // Estado del formulario
-  const [formData, setFormData] = useState<Partial<Producto>>({
-    MarcaId: undefined, // undefined para obligar a seleccionar
-    RubroId: undefined,
-    UnidadMedidaId: undefined,
+  const [formData, setFormData] = useState<Producto>({
+    Id: 0,
+    MarcaId: 1,
+    RubroId: 1,
+    UnidadMedidaId: 1,
     IvaId: 1,
     PrecioId: 1,
     Codigo: 0,
@@ -204,11 +151,6 @@ export default function ProductoCRUD() {
     Descripcion: "",
     Detalle: "",
     Ubicacion: "",
-    PrecioCosto: 0,
-    PorcentajeGanancia: 0,
-    PorcentajeGanancia2: 0,
-    PrecioPublico: 0,
-    PrecioPublico2: 0,
     ActivarLimiteVenta: false,
     LimiteVenta: 0,
     ActivarHoraVenta: false,
@@ -220,6 +162,13 @@ export default function ProductoCRUD() {
     VencimientoDias: 0,
     TipoVenta: 0,
     EstaEliminado: false,
+    Precio: {
+      PorcentajeGanancia: 0,
+      PorcentajeGanancia2: 0,
+      PrecioPublico: 0,
+      PrecioPublico2: 0,
+      PrecioCosto: 0,
+    },
   });
 
   // Query para obtener productos
@@ -345,6 +294,7 @@ export default function ProductoCRUD() {
     setModoEdicion(false);
     setProductoSeleccionado(null);
     setFormData({
+      Id: 0,
       MarcaId: 1,
       RubroId: 1,
       UnidadMedidaId: 1,
@@ -356,11 +306,6 @@ export default function ProductoCRUD() {
       Descripcion: "",
       Detalle: "",
       Ubicacion: "",
-      PrecioCosto: 0,
-      PorcentajeGanancia: 0,
-      PorcentajeGanancia2: 0,
-      PrecioPublico: 0,
-      PrecioPublico2: 0,
       ActivarLimiteVenta: false,
       LimiteVenta: 0,
       ActivarHoraVenta: false,
@@ -372,6 +317,13 @@ export default function ProductoCRUD() {
       VencimientoDias: 0,
       TipoVenta: 0,
       EstaEliminado: false,
+      Precio: {
+        PorcentajeGanancia: 0,
+        PorcentajeGanancia2: 0,
+        PrecioPublico: 0,
+        PrecioPublico2: 0,
+        PrecioCosto: 0,
+      },
     });
     onOpen();
   };
@@ -400,17 +352,19 @@ export default function ProductoCRUD() {
   };
 
   // Calcular precio de venta
-  const calcularPrecioVenta = () => {
+
+  function calcularPrecioVenta(): number {
     if (formData?.Precio?.PrecioCosto && formData?.Precio?.PorcentajeGanancia) {
       const precioVenta =
         formData.Precio.PrecioCosto *
         (1 + formData.Precio.PorcentajeGanancia / 100);
-      return precioVenta.toFixed(2);
+      formData.Precio.PrecioPublico = precioVenta;
+      return parseFloat(precioVenta.toFixed(2));
     }
-    return "0.00";
-  };
+    return 0.0;
+  }
 
-  const calcularPrecioVenta2 = () => {
+  function calcularPrecioVenta2(): number {
     if (
       formData?.Precio?.PrecioCosto &&
       formData?.Precio?.PorcentajeGanancia2
@@ -418,10 +372,11 @@ export default function ProductoCRUD() {
       const precioVenta2 =
         formData.Precio.PrecioCosto *
         (1 + formData.Precio.PorcentajeGanancia2 / 100);
-      return precioVenta2.toFixed(2);
+      formData.Precio.PrecioPublico2 = precioVenta2;
+      return parseFloat(precioVenta2.toFixed(2));
     }
-    return "0.00";
-  };
+    return 0.0;
+  }
 
   const isSaving = saveMutation.isPending || deleteMutation.isPending;
 
@@ -490,8 +445,8 @@ export default function ProductoCRUD() {
                     )}
                   </div>
                 </TableCell>
-                <TableCell>${producto.PrecioCosto}</TableCell>
-                <TableCell>{producto.PorcentajeGanancia}%</TableCell>
+                <TableCell>${producto.Precio.PrecioCosto}</TableCell>
+                <TableCell>{producto.Precio.PorcentajeGanancia}%</TableCell>
                 <TableCell>{producto.StockMinimo}</TableCell>
                 <TableCell>
                   <Chip
@@ -648,7 +603,7 @@ export default function ProductoCRUD() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        MarcaId: parseInt(e.target.value) || undefined,
+                        MarcaId: parseInt(e.target.value),
                       })
                     }
                     isRequired
@@ -669,7 +624,7 @@ export default function ProductoCRUD() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        RubroId: parseInt(e.target.value) || undefined,
+                        RubroId: parseInt(e.target.value),
                       })
                     }
                     isRequired
@@ -692,7 +647,7 @@ export default function ProductoCRUD() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        UnidadMedidaId: parseInt(e.target.value) || undefined,
+                        UnidadMedidaId: parseInt(e.target.value),
                       })
                     }
                     isRequired
@@ -713,7 +668,7 @@ export default function ProductoCRUD() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        IvaId: parseInt(e.target.value) || 1,
+                        IvaId: parseInt(e.target.value),
                       })
                     }
                     isRequired
@@ -732,7 +687,7 @@ export default function ProductoCRUD() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        TipoVenta: parseInt(e.target.value) || 0,
+                        TipoVenta: parseInt(e.target.value),
                       })
                     }
                     isDisabled={isSaving}
@@ -752,44 +707,54 @@ export default function ProductoCRUD() {
                   💰 Precios y Rentabilidad
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Input
+                  <NumberInput
                     label="Precio Costo"
                     placeholder="0.00"
                     type="number"
-                    step="0.01"
                     startContent={<span className="text-gray-500">$</span>}
-                    value={formData.Precio?.PrecioCosto.toString() || ""}
-                    onChange={(e) =>
+                    value={Number(formData.Precio?.PrecioCosto) || 0}
+                    onChange={(e: any) => {
+                      const value =
+                        typeof e === "number"
+                          ? e
+                          : parseFloat(e.target.value) || 0;
                       setFormData({
                         ...formData,
-                        PrecioCosto: parseFloat(e.target.value) || 0,
-                      })
-                    }
+                        Precio: {
+                          ...formData.Precio,
+                          PrecioCosto: value,
+                        },
+                      });
+                    }}
                     isRequired
                     isDisabled={isSaving}
                   />
-                  <Input
+                  <NumberInput
                     label="% Ganancia"
                     placeholder="0"
                     type="number"
-                    step="0.01"
                     endContent={<span className="text-gray-500">%</span>}
-                    value={
-                      formData?.Precio?.PorcentajeGanancia.toString() || ""
-                    }
-                    onChange={(e) =>
+                    value={Number(formData?.Precio?.PorcentajeGanancia) || 0}
+                    onChange={(e: any) => {
+                      const value =
+                        typeof e === "number"
+                          ? e
+                          : parseFloat(e.target.value) || 0;
                       setFormData({
                         ...formData,
-                        PorcentajeGanancia: parseFloat(e.target.value) || 0,
-                      })
-                    }
+                        Precio: {
+                          ...formData.Precio,
+                          PorcentajeGanancia: value,
+                        },
+                      });
+                    }}
                     isRequired
                     isDisabled={isSaving}
                   />
-                  <Input
+                  <NumberInput
                     label="Precio de Venta"
                     placeholder="0.00"
-                    type="text"
+                    type="number"
                     startContent={<span className="text-gray-500">$</span>}
                     value={calcularPrecioVenta()}
                     isReadOnly
@@ -797,7 +762,10 @@ export default function ProductoCRUD() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        PrecioPublico: parseFloat(e.target.value) || 0,
+                        Precio: {
+                          ...formData.Precio,
+                          PrecioPublico: parseFloat(e.toString()),
+                        },
                       })
                     }
                     classNames={{
@@ -806,28 +774,32 @@ export default function ProductoCRUD() {
                   />
 
                   {/* Porcentaje de ganancia 2 y precio de venta 2 */}
-                  <Input
+                  <NumberInput
                     label="% Ganancia"
                     placeholder="0"
                     type="number"
-                    step="0.01"
                     endContent={<span className="text-gray-500">%</span>}
-                    value={
-                      formData?.Precio?.PorcentajeGanancia2?.toString() || ""
-                    }
-                    onChange={(e) =>
+                    value={Number(formData?.Precio?.PorcentajeGanancia2) || 0}
+                    onChange={(e: any) => {
+                      const value =
+                        typeof e === "number"
+                          ? e
+                          : parseFloat(e.target.value) || 0;
                       setFormData({
                         ...formData,
-                        PorcentajeGanancia2: parseFloat(e.target.value) || 0,
-                      })
-                    }
+                        Precio: {
+                          ...formData.Precio,
+                          PorcentajeGanancia2: value,
+                        },
+                      });
+                    }}
                     isRequired
                     isDisabled={isSaving}
                   />
-                  <Input
+                  <NumberInput
                     label="Precio de Venta"
                     placeholder="0.00"
-                    type="text"
+                    type="number"
                     startContent={<span className="text-gray-500">$</span>}
                     value={calcularPrecioVenta2()}
                     isReadOnly
@@ -835,7 +807,10 @@ export default function ProductoCRUD() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        PrecioPublico2: parseFloat(e.target.value) || 0,
+                        Precio: {
+                          ...formData.Precio,
+                          PrecioPublico2: parseFloat(e.toString()),
+                        },
                       })
                     }
                     classNames={{
@@ -924,16 +899,15 @@ export default function ProductoCRUD() {
                       Activar Límite de Venta
                     </Switch>
                     {formData.ActivarLimiteVenta && (
-                      <Input
+                      <NumberInput
                         label="Límite de Venta"
                         placeholder="0.00"
                         type="number"
-                        step="0.01"
-                        value={formData.LimiteVenta?.toString() || ""}
+                        value={Number(formData.LimiteVenta) || 0}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            LimiteVenta: parseFloat(e.target.value) || 0,
+                            LimiteVenta: Number(e.toString()) || 0,
                           })
                         }
                         className="max-w-xs"

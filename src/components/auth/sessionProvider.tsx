@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import type { Session } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
 import type { TenantUser } from "@/types/auth";
@@ -14,7 +20,9 @@ type SupabaseAuthContextValue = {
   status: AuthStatus;
 };
 
-const SupabaseAuthContext = createContext<SupabaseAuthContextValue | undefined>(undefined);
+const SupabaseAuthContext = createContext<SupabaseAuthContextValue | undefined>(
+  undefined
+);
 
 function resolveTenantId(metadata: Record<string, unknown> | undefined) {
   const hasKey = (key: string) =>
@@ -24,13 +32,19 @@ function resolveTenantId(metadata: Record<string, unknown> | undefined) {
 
   const fallback =
     process.env.NEXT_PUBLIC_TENANT_ID || process.env.DEFAULT_TENANT_ID || null;
-  return (fromSnake as string | number | null | undefined) ??
+  return (
+    (fromSnake as string | number | null | undefined) ??
     (fromCamel as string | number | null | undefined) ??
     fallback ??
-    null;
+    null
+  );
 }
 
-const SessionProviderComponent = ({ children }: { children: React.ReactNode }) => {
+const SessionProviderComponent = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
@@ -55,10 +69,14 @@ const SessionProviderComponent = ({ children }: { children: React.ReactNode }) =
   }, [supabase]);
 
   const value = useMemo(() => {
-    const metadata = (session?.user?.user_metadata ??
-      {}) as Record<string, unknown>;
-    const appMetadata = (session?.user?.app_metadata ??
-      {}) as Record<string, unknown>;
+    const metadata = (session?.user?.app_metadata ?? {}) as Record<
+      string,
+      unknown
+    >;
+    const appMetadata = (session?.user?.app_metadata ?? {}) as Record<
+      string,
+      unknown
+    >;
     const tenantId = resolveTenantId(metadata);
     const roleRaw = metadata?.["role"] ?? metadata?.["roll"];
     const role = typeof roleRaw === "string" ? roleRaw : null;
@@ -68,7 +86,7 @@ const SessionProviderComponent = ({ children }: { children: React.ReactNode }) =
           email: session.user.email ?? undefined,
           tenantId,
           role: typeof role === "string" ? role : null,
-          user_metadata: metadata,
+          app_metadata: metadata,
           app_metadata: appMetadata,
         }
       : null;

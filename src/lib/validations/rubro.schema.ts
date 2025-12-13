@@ -30,3 +30,8 @@ export const updateRubroSchema = z.object({
  */
 export type CreateRubroInput = z.infer<typeof createRubroSchema>;
 export type UpdateRubroInput = z.infer<typeof updateRubroSchema>;
+
+export interface Rubro {
+  Id: number;
+  Descripcion: string;
+}

@@ -11,7 +11,7 @@ export async function getAuthUser() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const tenantId = user?.user_metadata?.tenantId;
+  const tenantId = user?.app_metadata?.tenantId;
 
   // Si no hay tenantId, retornamos un objeto con error
   if (!tenantId) {

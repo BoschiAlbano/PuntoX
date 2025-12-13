@@ -11,6 +11,7 @@ export async function middleware(req: NextRequest) {
     "/favicon-light.ico",
     "/favicon-dark.ico",
     "/new-tenant",
+    "/admin/tenants/new",
   ];
 
   const isPublic =
@@ -33,7 +34,9 @@ export async function middleware(req: NextRequest) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.error("Faltan variables de entorno de Supabase para la autenticacion.");
+    console.error(
+      "Faltan variables de entorno de Supabase para la autenticacion."
+    );
     return response;
   }
 

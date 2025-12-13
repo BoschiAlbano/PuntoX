@@ -60,113 +60,118 @@ export async function registerTenant(formData: FormData) {
     const authUserId = data.user.id;
     const LOCALIDAD_DUMMY_ID = 2014010;
 
-    // Creo todas las tablas del tenant esta relacionado
-    const tenant = await prisma.tenant.create({
-      data: {
-        Nombre: tenantName,
-        Email: tenantEmail && tenantEmail.length > 0 ? tenantEmail : null,
-        EstaActivo: true,
-      },
-    });
-
-    const persona = await prisma.persona.create({
-      data: {
-        Apellido: adminApellido,
-        Nombre: adminNombre,
-        Dni: null,
-        Direccion: "Sin dirección",
-        Telefono: null,
-        Mail: adminEmail,
-        LocalidadId: LOCALIDAD_DUMMY_ID,
-        EstaEliminado: false,
-        TenantId: tenant.Id,
-      },
-    });
-
-    await prisma.persona_Empleado.create({
-      data: {
-        Id: persona.Id,
-        Legajo: 1,
-        Foto: Buffer.alloc(0),
-      },
-    });
-
-    const usuario = await prisma.usuario.create({
-      data: {
-        EmpleadoId: persona.Id,
-        Nombre: adminEmail,
-        EstaBloqueado: false,
-        EstaEliminado: false,
-        AuthUserId: authUserId,
-        TenantId: tenant.Id,
-      },
-    });
-
-    let perfilAdmin = await prisma.perfiles.findFirst({
-      where: {
-        Descripcion: "Administrador",
-        TenantId: tenant.Id,
-      },
-    });
-
-    if (!perfilAdmin) {
-      perfilAdmin = await prisma.perfiles.create({
+    // transaccion prisma
+    const tenant = await prisma.$transaction(async (tx) => {
+      // Creo todas las tablas del tenant esta relacionado
+      const newTenant = await tx.tenant.create({
         data: {
-          Descripcion: "Administrador",
-          EstaEliminado: false,
-          TenantId: tenant.Id,
+          Nombre: tenantName,
+          Email: tenantEmail && tenantEmail.length > 0 ? tenantEmail : null,
+          EstaActivo: true,
         },
       });
-    }
 
-    await prisma.perfilUsuario.create({
-      data: {
-        Perfil_Id: perfilAdmin.Id,
-        Usuario_Id: usuario.Id,
-        TenantId: tenant.Id,
-      },
-    });
+      const persona = await tx.persona.create({
+        data: {
+          Apellido: adminApellido,
+          Nombre: adminNombre,
+          Dni: null,
+          Direccion: "Sin dirección",
+          Telefono: null,
+          Mail: adminEmail,
+          LocalidadId: LOCALIDAD_DUMMY_ID,
+          EstaEliminado: false,
+          TenantId: newTenant.Id,
+        },
+      });
 
-    await prisma.configuracion.create({
-      data: {
-        RazonSocial: tenantName,
-        NombreFantasia: tenantName,
-        Cuit: "00000000000",
-        Telefono: null,
-        Celular: null,
-        Direccion: "Sin dirección",
-        Email: tenantEmail && tenantEmail.length > 0 ? tenantEmail : null,
-        LocalidadId: LOCALIDAD_DUMMY_ID,
-        FacturaDescuentaStock: true,
-        PresupuestoDescuentaStock: false,
-        RemitoDescuentaStock: true,
-        ActualizaCostoDesdeCompra: true,
-        ModificaPrecioVentaDesdeCompra: false,
-        Imprimir: false,
-        Instalada: 1,
-        TipoFormaPagoPorDefectoVenta: 0,
-        TipoFormaPagoPorDefectoCompra: 0,
-        ObservacionEnPieFactura: null,
-        UnificarRenglonesIngresarMismoProducto: true,
-        IngresoManualCajaInicial: false,
-        PuestoCajaSeparado: false,
-        ActivarRetiroDeCaja: false,
-        MontoMaximoRetiroCaja: 0,
-        ActivarBascula: false,
-        EtiquetaPorPeso: false,
-        CodigoBascula: null,
-        EstaEliminado: false,
-        Foto: null,
-        ShowFoto: false,
-        TenantId: tenant.Id,
-      },
+      await tx.persona_Empleado.create({
+        data: {
+          Id: persona.Id,
+          Legajo: 1,
+          Foto: Buffer.alloc(0),
+        },
+      });
+
+      const usuario = await tx.usuario.create({
+        data: {
+          EmpleadoId: persona.Id,
+          Nombre: adminEmail,
+          EstaBloqueado: false,
+          EstaEliminado: false,
+          AuthUserId: authUserId,
+          TenantId: newTenant.Id,
+        },
+      });
+
+      let perfilAdmin = await tx.perfiles.findFirst({
+        where: {
+          Descripcion: "Administrador",
+          TenantId: newTenant.Id,
+        },
+      });
+
+      if (!perfilAdmin) {
+        perfilAdmin = await tx.perfiles.create({
+          data: {
+            Descripcion: "Administrador",
+            EstaEliminado: false,
+            TenantId: newTenant.Id,
+          },
+        });
+      }
+
+      await tx.perfilUsuario.create({
+        data: {
+          Perfil_Id: perfilAdmin.Id,
+          Usuario_Id: usuario.Id,
+          TenantId: newTenant.Id,
+        },
+      });
+
+      await tx.configuracion.create({
+        data: {
+          RazonSocial: tenantName,
+          NombreFantasia: tenantName,
+          Cuit: "00000000000",
+          Telefono: null,
+          Celular: null,
+          Direccion: "Sin dirección",
+          Email: tenantEmail && tenantEmail.length > 0 ? tenantEmail : null,
+          LocalidadId: LOCALIDAD_DUMMY_ID,
+          FacturaDescuentaStock: true,
+          PresupuestoDescuentaStock: false,
+          RemitoDescuentaStock: true,
+          ActualizaCostoDesdeCompra: true,
+          ModificaPrecioVentaDesdeCompra: false,
+          Imprimir: false,
+          Instalada: 1,
+          TipoFormaPagoPorDefectoVenta: 0,
+          TipoFormaPagoPorDefectoCompra: 0,
+          ObservacionEnPieFactura: null,
+          UnificarRenglonesIngresarMismoProducto: true,
+          IngresoManualCajaInicial: false,
+          PuestoCajaSeparado: false,
+          ActivarRetiroDeCaja: false,
+          MontoMaximoRetiroCaja: 0,
+          ActivarBascula: false,
+          EtiquetaPorPeso: false,
+          CodigoBascula: null,
+          EstaEliminado: false,
+          Foto: null,
+          ShowFoto: false,
+          TenantId: newTenant.Id,
+        },
+      });
+
+      return newTenant;
     });
 
     // actualizo las metadatos del usuario para guardar el id del tenant
     const { error: metaError } = await supabaseAdmin.auth.admin.updateUserById(
       authUserId,
       {
-        user_metadata: {
+        app_metadata: {
           tenantId: tenant.Id.toString(),
         },
       }

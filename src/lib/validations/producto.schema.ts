@@ -28,18 +28,6 @@ export const createProductoSchema = z.object({
   Detalle: z.string().max(500).optional().nullable(),
   Ubicacion: z.string().max(500).optional().nullable(),
 
-  // Precios (Se reciben como number desde el front, Prisma usa Decimal)
-  PrecioCosto: z
-    .number({ message: "El precio de costo debe ser un número" })
-    .min(0),
-  PorcentajeGanancia: z
-    .number({ message: "El porcentaje de ganancia debe ser un número" })
-    .min(0),
-  PrecioPublico: z.number({ message: "El precio publico debe ser un número" }),
-  PorcentajeGanancia2: z
-    .number({ message: "El porcentaje de ganancia debe ser un número" })
-    .min(0),
-  PrecioPublico2: z.number({ message: "El precio publico debe ser un número" }),
   // Configuración de Venta
   ActivarLimiteVenta: z.boolean().default(false),
   LimiteVenta: z.number().min(0).default(0),
@@ -60,6 +48,24 @@ export const createProductoSchema = z.object({
 
   // Imagen (Opcional, puede ser base64)
   Foto: z.any().optional(), // Se valida aparte o se procesa como Buffer
+
+  Precio: z.object({
+    PrecioCosto: z
+      .number({ message: "El precio de costo debe ser un número" })
+      .min(0),
+    PorcentajeGanancia: z
+      .number({ message: "El porcentaje de ganancia debe ser un número" })
+      .min(0),
+    PrecioPublico: z.number({
+      message: "El precio publico debe ser un número",
+    }),
+    PorcentajeGanancia2: z
+      .number({ message: "El porcentaje de ganancia debe ser un número" })
+      .min(0),
+    PrecioPublico2: z.number({
+      message: "El precio publico debe ser un número",
+    }),
+  }),
 });
 
 export const updateProductoSchema = z.object({
@@ -98,24 +104,30 @@ export const updateProductoSchema = z.object({
   Ubicacion: z.string().max(500).optional().nullable(),
 
   // Precios (Se reciben como number desde el front, Prisma usa Decimal)
-  PrecioCosto: z
-    .number({ message: "El precio de costo debe ser un número" })
-    .min(0)
-    .optional(),
-  PorcentajeGanancia: z
-    .number({ message: "El porcentaje de ganancia debe ser un número" })
-    .min(0)
-    .optional(),
-  PrecioPublico: z
-    .number({ message: "El precio publico debe ser un número" })
-    .optional(),
-  PorcentajeGanancia2: z
-    .number({ message: "El porcentaje de ganancia debe ser un número" })
-    .min(0)
-    .optional(),
-  PrecioPublico2: z
-    .number({ message: "El precio publico debe ser un número" })
-    .optional(),
+  Precio: z.object({
+    PrecioCosto: z
+      .number({ message: "El precio de costo debe ser un número" })
+      .min(0)
+      .optional(),
+    PorcentajeGanancia: z
+      .number({ message: "El porcentaje de ganancia debe ser un número" })
+      .min(0)
+      .optional(),
+    PrecioPublico: z
+      .number({
+        message: "El precio publico debe ser un número",
+      })
+      .optional(),
+    PorcentajeGanancia2: z
+      .number({ message: "El porcentaje de ganancia debe ser un número" })
+      .min(0)
+      .optional(),
+    PrecioPublico2: z
+      .number({
+        message: "El precio publico debe ser un número",
+      })
+      .optional(),
+  }),
   // Configuración de Venta
   ActivarLimiteVenta: z.boolean().default(false).optional(),
   LimiteVenta: z.number().min(0).default(0).optional(),
@@ -140,3 +152,37 @@ export const updateProductoSchema = z.object({
 
 export type CreateProductoInput = z.infer<typeof createProductoSchema>;
 export type UpdateProductoInput = z.infer<typeof updateProductoSchema>;
+
+export interface Producto {
+  Id: number;
+  MarcaId: number;
+  RubroId: number;
+  UnidadMedidaId: number;
+  IvaId: number;
+  PrecioId: number;
+  Codigo: number;
+  CodigoBarra: string;
+  Abreviatura?: string;
+  Descripcion: string;
+  Detalle?: string;
+  Ubicacion?: string;
+  Foto?: string; // Base64 o URL
+  ActivarLimiteVenta: boolean;
+  LimiteVenta: number;
+  ActivarHoraVenta: boolean;
+  HoraLimiteVentaDesde: string;
+  HoraLimiteVentaHasta: string;
+  PermiteStockNegativo: boolean;
+  DescuentaStock: boolean;
+  StockMinimo: number;
+  VencimientoDias: number;
+  TipoVenta: number;
+  EstaEliminado: boolean;
+  Precio: {
+    PorcentajeGanancia: number;
+    PorcentajeGanancia2: number;
+    PrecioPublico: number;
+    PrecioPublico2: number;
+    PrecioCosto: number;
+  };
+}

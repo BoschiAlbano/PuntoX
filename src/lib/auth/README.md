@@ -10,7 +10,7 @@ const {
   data: { user },
 } = await supabase.auth.getUser();
 
-const tenantId = user?.user_metadata?.tenantId;
+const tenantId = user?.app_metadata?.tenantId;
 
 if (!tenantId) {
   return NextResponse.json({ message: "No autenticado" }, { status: 401 });
@@ -28,7 +28,7 @@ export async function getAuthUser() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const tenantId = user?.user_metadata?.tenantId;
+  const tenantId = user?.app_metadata?.tenantId;
 
   if (!tenantId) {
     return {

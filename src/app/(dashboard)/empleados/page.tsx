@@ -177,7 +177,7 @@ export default function Empleados() {
   const isSuperAdmin =
     user?.role === "superadmin" ||
     user?.role === "SuperAdmin" ||
-    (user?.user_metadata as Record<string, unknown> | undefined)?.role ===
+    (user?.app_metadata as Record<string, unknown> | undefined)?.role ===
       "SuperAdmin";
 
   const resumen = useMemo(
@@ -210,7 +210,7 @@ export default function Empleados() {
   }, [empleados, filtros]);
 
   const resolveTenantIdForRequests = () => {
-    const meta = user?.user_metadata as Record<string, unknown> | undefined;
+    const meta = user?.app_metadata as Record<string, unknown> | undefined;
     const tenantMeta =
       (meta?.tenant_id as string | number | undefined) ?? meta?.tenantId;
     const fromUser = user?.tenantId as string | number | undefined;

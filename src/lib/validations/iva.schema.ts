@@ -39,3 +39,9 @@ export const updateIvaSchema = z.object({
  */
 export type CreateIvaInput = z.infer<typeof createIvaSchema>;
 export type UpdateIvaInput = z.infer<typeof updateIvaSchema>;
+
+export interface Iva {
+  Id: number;
+  Descripcion: string;
+  Porcentaje: number;
+}

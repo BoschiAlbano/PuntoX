@@ -21,7 +21,7 @@ async function resolveTenantId() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const tenantId = user?.user_metadata?.tenantId;
+  const tenantId = user?.app_metadata?.tenantId;
   return tenantId ? Number(tenantId) : null;
 }
 
@@ -80,7 +80,9 @@ export async function PUT(req: NextRequest) {
 
   const updateData = {
     ...(data.nombre !== undefined ? { Nombre: data.nombre } : {}),
-    ...(data.razonSocial !== undefined ? { RazonSocial: data.razonSocial } : {}),
+    ...(data.razonSocial !== undefined
+      ? { RazonSocial: data.razonSocial }
+      : {}),
     ...(data.dominio !== undefined ? { Dominio: data.dominio || null } : {}),
     ...(data.email !== undefined ? { Email: data.email || null } : {}),
     ...(data.telefono !== undefined ? { Telefono: data.telefono || null } : {}),

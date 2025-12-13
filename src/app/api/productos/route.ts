@@ -19,8 +19,35 @@ export async function GET(_req: NextRequest) {
       where: {
         TenantId: tenantId,
       },
-      include: {
-        Precio: true,
+      select: {
+        Id: true,
+        MarcaId: true,
+        RubroId: true,
+        UnidadMedidaId: true,
+        IvaId: true,
+        PrecioId: true,
+        Codigo: true,
+        CodigoBarra: true,
+        Abreviatura: true,
+        Descripcion: true,
+        Detalle: true,
+        Ubicacion: true,
+        PrecioCosto: true,
+        PorcentajeGanancia: true,
+        // Foto: excluded to improve performance
+        ActivarLimiteVenta: true,
+        LimiteVenta: true,
+        ActivarHoraVenta: true,
+        HoraLimiteVentaDesde: true,
+        HoraLimiteVentaHasta: true,
+        PermiteStockNegativo: true,
+        DescuentaStock: true,
+        StockMinimo: true,
+        VencimientoDias: true,
+        TipoVenta: true,
+        EstaEliminado: true,
+        TenantId: true,
+        Precio: true, // Equivalent to include: { Precio: true }
       },
       orderBy: {
         Descripcion: "asc",
@@ -54,73 +81,90 @@ export async function POST(req: NextRequest) {
 
     const validarProducto = createProductoSchema.parse(body);
 
-    const precio = await prisma.precio.create({
-      data: {
-        ArticuloId: 1,
-        PrecioCosto: validarProducto.PrecioCosto,
-        PorcentajeGanancia: validarProducto.PorcentajeGanancia,
-        PrecioPublico: validarProducto.PrecioPublico,
-        PorcentajeGanancia2: validarProducto.PorcentajeGanancia2,
-        PrecioPublico2: validarProducto.PrecioPublico2,
-        FechaActualizacion: new Date(),
-        EstaEliminado: false,
-        TenantId: Number(tenantId) || 1,
-      },
-    });
+    // Iniciar transacción para crear Precio y Artículo
+    const producto = await prisma.$transaction(async (tx) => {
+      // 1. Crear Precio primero (con ArticuloId temporal 0 o 1)
+      const nuevoPrecio = await tx.precio.create({
+        data: {
+          ArticuloId: 0, // Se actualizará al final
+          PrecioCosto: validarProducto.Precio.PrecioCosto,
+          PorcentajeGanancia: validarProducto.Precio.PorcentajeGanancia,
+          PrecioPublico: validarProducto.Precio.PrecioPublico,
+          PorcentajeGanancia2: validarProducto.Precio.PorcentajeGanancia2,
+          PrecioPublico2: validarProducto.Precio.PrecioPublico2,
+          FechaActualizacion: new Date(),
+          EstaEliminado: false,
+          TenantId: Number(tenantId) || 1,
+        },
+      });
 
-    const producto = await prisma.articulo.create({
-      data: {
-        ActivarHoraVenta: validarProducto.ActivarHoraVenta,
-        ActivarLimiteVenta: validarProducto.ActivarLimiteVenta,
-        Codigo: validarProducto.Codigo,
-        CodigoBarra: validarProducto.CodigoBarra,
-        Abreviatura: validarProducto.Abreviatura,
-        Descripcion: validarProducto.Descripcion,
-        Detalle: validarProducto.Detalle,
-        DescuentaStock: validarProducto.DescuentaStock,
-        EstaEliminado: validarProducto.EstaEliminado,
-        HoraLimiteVentaDesde: parseTime(validarProducto.HoraLimiteVentaDesde),
-        HoraLimiteVentaHasta: parseTime(validarProducto.HoraLimiteVentaHasta),
-        LimiteVenta: validarProducto.LimiteVenta,
-        PermiteStockNegativo: validarProducto.PermiteStockNegativo,
-        StockMinimo: validarProducto.StockMinimo,
-        VencimientoDias: validarProducto.VencimientoDias,
-        TipoVenta: validarProducto.TipoVenta,
-        PorcentajeGanancia: validarProducto.PorcentajeGanancia,
-        PrecioCosto: validarProducto.PrecioCosto,
-        Ubicacion: validarProducto.Ubicacion,
-        Tenant: {
-          connect: {
-            Id: Number(tenantId) || 1,
+      // 2. Crear Artículo relacionado con el Precio creado
+      const nuevoArticulo = await tx.articulo.create({
+        data: {
+          ActivarHoraVenta: validarProducto.ActivarHoraVenta,
+          ActivarLimiteVenta: validarProducto.ActivarLimiteVenta,
+          Codigo: validarProducto.Codigo,
+          CodigoBarra: validarProducto.CodigoBarra,
+          Abreviatura: validarProducto.Abreviatura,
+          Descripcion: validarProducto.Descripcion,
+          Detalle: validarProducto.Detalle,
+          DescuentaStock: validarProducto.DescuentaStock,
+          EstaEliminado: validarProducto.EstaEliminado,
+          HoraLimiteVentaDesde: parseTime(validarProducto.HoraLimiteVentaDesde),
+          HoraLimiteVentaHasta: parseTime(validarProducto.HoraLimiteVentaHasta),
+          LimiteVenta: validarProducto.LimiteVenta,
+          PermiteStockNegativo: validarProducto.PermiteStockNegativo,
+          StockMinimo: validarProducto.StockMinimo,
+          VencimientoDias: validarProducto.VencimientoDias,
+          TipoVenta: validarProducto.TipoVenta,
+          // Redundancia en Articulo
+          PorcentajeGanancia: validarProducto.Precio.PorcentajeGanancia,
+          PrecioCosto: validarProducto.Precio.PrecioCosto,
+          Ubicacion: validarProducto.Ubicacion,
+          Tenant: {
+            connect: {
+              Id: Number(tenantId) || 1,
+            },
+          },
+          Iva: {
+            connect: {
+              Id: validarProducto.IvaId,
+            },
+          },
+          Foto: fotoDefault(),
+          Precio: {
+            connect: {
+              Id: nuevoPrecio.Id,
+            },
+          },
+          Marca: {
+            connect: {
+              Id: validarProducto.MarcaId,
+            },
+          },
+          Rubro: {
+            connect: {
+              Id: validarProducto.RubroId,
+            },
+          },
+          UnidadMedida: {
+            connect: {
+              Id: validarProducto.UnidadMedidaId,
+            },
           },
         },
-        Iva: {
-          connect: {
-            Id: validarProducto.IvaId,
-          },
+        include: {
+          Precio: true,
         },
-        Foto: fotoDefault(),
-        Precio: {
-          connect: {
-            Id: precio.Id,
-          },
-        },
-        Marca: {
-          connect: {
-            Id: validarProducto.MarcaId,
-          },
-        },
-        Rubro: {
-          connect: {
-            Id: validarProducto.RubroId,
-          },
-        },
-        UnidadMedida: {
-          connect: {
-            Id: validarProducto.UnidadMedidaId,
-          },
-        },
-      },
+      });
+
+      // 3. Actualizar Precio con el ID correcto del Artículo
+      await tx.precio.update({
+        where: { Id: nuevoPrecio.Id },
+        data: { ArticuloId: nuevoArticulo.Id },
+      });
+
+      return nuevoArticulo;
     });
 
     return NextResponse.json(
@@ -163,6 +207,8 @@ export async function PATCH(req: NextRequest) {
 
     const body = await req.json();
 
+    console.log(body);
+
     const validarProducto = updateProductoSchema.parse(body);
 
     // buscar articulo
@@ -182,85 +228,136 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // modificar precio
-    const precio = await prisma.precio.update({
-      where: {
-        Id: articulo.Precio.Id,
-      },
-      data: {
-        PrecioCosto: validarProducto.PrecioCosto,
-        PorcentajeGanancia: validarProducto.PorcentajeGanancia,
-        PrecioPublico: validarProducto.PrecioPublico,
-        PorcentajeGanancia2: validarProducto.PorcentajeGanancia2,
-        PrecioPublico2: validarProducto.PrecioPublico2,
-        FechaActualizacion: new Date(),
-        EstaEliminado: false,
-        TenantId: Number(tenantId) || 1,
-      },
-    });
+    const producto = await prisma.$transaction(async (tx) => {
+      const precioUpdate = await tx.precio.update({
+        where: {
+          Id: articulo.Precio.Id,
+        },
+        data: {
+          PrecioCosto: validarProducto.Precio.PrecioCosto,
+          PorcentajeGanancia: validarProducto.Precio.PorcentajeGanancia,
+          PrecioPublico: validarProducto.Precio.PrecioPublico,
+          PorcentajeGanancia2: validarProducto.Precio.PorcentajeGanancia2,
+          PrecioPublico2: validarProducto.Precio.PrecioPublico2,
+          FechaActualizacion: new Date(),
+          EstaEliminado: false,
+          TenantId: Number(tenantId) || 1,
+        },
+      });
 
-    // modificar articulo
-    const producto = await prisma.articulo.update({
-      where: {
-        Id: Number(validarProducto.Id),
-      },
-      data: {
-        Id: Number(validarProducto.Id),
-        Codigo: validarProducto.Codigo,
-        CodigoBarra: validarProducto.CodigoBarra,
-        Abreviatura: validarProducto.Abreviatura,
-        Descripcion: validarProducto.Descripcion,
-        Detalle: validarProducto.Detalle,
-        DescuentaStock: validarProducto.DescuentaStock,
-        EstaEliminado: validarProducto.EstaEliminado,
-        HoraLimiteVentaDesde: parseTime(validarProducto.HoraLimiteVentaDesde),
-        HoraLimiteVentaHasta: parseTime(validarProducto.HoraLimiteVentaHasta),
-        LimiteVenta: validarProducto.LimiteVenta,
-        PermiteStockNegativo: validarProducto.PermiteStockNegativo,
-        StockMinimo: validarProducto.StockMinimo,
-        VencimientoDias: validarProducto.VencimientoDias,
-        TipoVenta: validarProducto.TipoVenta,
-        PorcentajeGanancia: validarProducto.PorcentajeGanancia,
-        PrecioCosto: validarProducto.PrecioCosto,
-        Ubicacion: validarProducto.Ubicacion,
-        Tenant: {
-          connect: {
-            Id: Number(tenantId) || 1,
+      const articuloUpdate = await tx.articulo.update({
+        where: {
+          Id: Number(validarProducto.Id),
+        },
+        data: {
+          Id: Number(validarProducto.Id),
+          Codigo: validarProducto.Codigo,
+          CodigoBarra: validarProducto.CodigoBarra,
+          Abreviatura: validarProducto.Abreviatura,
+          Descripcion: validarProducto.Descripcion,
+          Detalle: validarProducto.Detalle,
+          DescuentaStock: validarProducto.DescuentaStock,
+          EstaEliminado: validarProducto.EstaEliminado,
+          HoraLimiteVentaDesde: parseTime(validarProducto.HoraLimiteVentaDesde),
+          HoraLimiteVentaHasta: parseTime(validarProducto.HoraLimiteVentaHasta),
+          LimiteVenta: validarProducto.LimiteVenta,
+          PermiteStockNegativo: validarProducto.PermiteStockNegativo,
+          StockMinimo: validarProducto.StockMinimo,
+          VencimientoDias: validarProducto.VencimientoDias,
+          TipoVenta: validarProducto.TipoVenta,
+          PorcentajeGanancia: validarProducto.Precio.PorcentajeGanancia,
+          PrecioCosto: validarProducto.Precio.PrecioCosto,
+          Ubicacion: validarProducto.Ubicacion,
+          Tenant: {
+            connect: {
+              Id: Number(tenantId) || 1,
+            },
+          },
+          Iva: {
+            connect: {
+              Id: validarProducto.IvaId,
+            },
+          },
+          Marca: {
+            connect: {
+              Id: validarProducto.MarcaId,
+            },
+          },
+          Rubro: {
+            connect: {
+              Id: validarProducto.RubroId,
+            },
+          },
+          UnidadMedida: {
+            connect: {
+              Id: validarProducto.UnidadMedidaId,
+            },
+          },
+          Precio: {
+            connect: {
+              Id: precioUpdate.Id,
+            },
           },
         },
-        Iva: {
-          connect: {
-            Id: validarProducto.IvaId,
-          },
+        include: {
+          Precio: true,
         },
-        Marca: {
-          connect: {
-            Id: validarProducto.MarcaId,
-          },
-        },
-        Rubro: {
-          connect: {
-            Id: validarProducto.RubroId,
-          },
-        },
-        UnidadMedida: {
-          connect: {
-            Id: validarProducto.UnidadMedidaId,
-          },
-        },
-        Precio: {
-          connect: {
-            Id: precio.Id,
-          },
-        },
-      },
+      });
+
+      return articuloUpdate;
     });
 
     return NextResponse.json(
       {
         producto: {
           ...producto,
-          Id: Number(producto.Id),
+        },
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.log(error);
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        {
+          error: "Datos inválidos",
+          details: error.issues.map((issue) => ({
+            field: issue.path.join("."),
+            message: issue.message,
+          })),
+        },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json(
+      { error: "Error al crear producto" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { tenantId, error } = await getAuthUser();
+
+    if (error) {
+      return error;
+    }
+
+    const params = req.nextUrl.searchParams;
+    const Id = params.get("Id");
+
+    const articulo = await prisma.articulo.delete({
+      where: {
+        Id: Number(Id),
+        TenantId: Number(tenantId),
+      },
+    });
+
+    return NextResponse.json(
+      {
+        producto: {
+          ...articulo,
         },
       },
       { status: 201 }

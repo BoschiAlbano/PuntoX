@@ -15,13 +15,13 @@ import { requirePermiso, PermisoError } from "@/lib/requirePermiso";
 //   const isSuperAdmin =
 //     user?.role === "superadmin" ||
 //     user?.role === "SuperAdmin" ||
-//     (user?.user_metadata as Record<string, unknown> | undefined)?.role ===
+//     (user?.app_metadata as Record<string, unknown> | undefined)?.role ===
 //       "SuperAdmin";
 
 //   const tenantFromQuery = req?.nextUrl.searchParams.get("tenantId");
 //   const tenantRaw =
-//     (user?.user_metadata as Record<string, unknown> | undefined)?.tenantId ??
-//     (user?.user_metadata as Record<string, unknown> | undefined)?.tenant_id ??
+//     (user?.app_metadata as Record<string, unknown> | undefined)?.tenantId ??
+//     (user?.app_metadata as Record<string, unknown> | undefined)?.tenant_id ??
 //     (user as unknown as any)?.tenantId;
 //   const resolved =
 //     tenantFromQuery ?? tenantRaw ?? process.env.DEFAULT_TENANT_ID;
@@ -368,7 +368,7 @@ export async function POST(req: NextRequest) {
         email: mailNormalized,
         password: data.password,
         email_confirm: data.autoInvitar ?? true,
-        user_metadata: {
+        app_metadata: {
           tenant_id: tenantId.toString(),
           role: rolTipo === "ADMINISTRADOR" ? "Administrador" : "Empleado",
         },

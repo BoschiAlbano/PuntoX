@@ -14,8 +14,8 @@ export default function DashboardHeader() {
   const { user, supabase } = useSupabaseAuthContext();
 
   const fullName =
-    typeof user?.user_metadata?.full_name === "string"
-      ? user.user_metadata.full_name
+    typeof user?.app_metadata?.full_name === "string"
+      ? user.app_metadata.full_name
       : "";
   const initialsFromName = fullName
     ? fullName
@@ -32,15 +32,18 @@ export default function DashboardHeader() {
     fullName.trim() ||
     (typeof user?.email === "string" ? user.email : "") ||
     "Usuario";
-  const displayEmail =
-    typeof user?.email === "string" ? user.email : "";
+  const displayEmail = typeof user?.email === "string" ? user.email : "";
 
   function handleSignOut(): void {
     addToast({
       title: "Cerrar sesion",
       description: "Confirma que deseas cerrar sesion.",
       endContent: (
-        <Button size="sm" variant="flat" onPress={() => supabase.auth.signOut()}>
+        <Button
+          size="sm"
+          variant="flat"
+          onPress={() => supabase.auth.signOut()}
+        >
           Aceptar
         </Button>
       ),

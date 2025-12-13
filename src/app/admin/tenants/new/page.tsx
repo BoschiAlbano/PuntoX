@@ -8,7 +8,7 @@ import {
 } from "@heroui/react";
 import { redirect } from "next/navigation";
 import { registerTenant } from "@/app/actions/register-tenant";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+// import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,7 @@ export default async function NewTenantPage({
 }: {
   searchParams: Promise<{ error?: string; success?: string }>;
 }) {
-  await requireSuperAdmin();
+  // await requireSuperAdmin();
 
   const params = await searchParams;
   const errorMessage = params?.error && decodeURIComponent(params.error);

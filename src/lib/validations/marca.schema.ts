@@ -30,3 +30,8 @@ export const updateMarcaSchema = z.object({
  */
 export type CreateMarcaInput = z.infer<typeof createMarcaSchema>;
 export type UpdateMarcaInput = z.infer<typeof updateMarcaSchema>;
+
+export interface Marca {
+  Id: number;
+  Descripcion: string;
+}

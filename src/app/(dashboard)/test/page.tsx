@@ -7,10 +7,10 @@ export default function Page() {
   const supabase = getSupabaseBrowserClient();
   const { user, session } = useSupabaseAuthContext();
   const roleFromMetadata =
-    typeof user?.user_metadata?.role === "string"
-      ? user.user_metadata.role
+    typeof user?.app_metadata?.role === "string"
+      ? user.app_metadata.role
       : null;
-  const tenantFromMetadata = user?.user_metadata?.tenant_id as
+  const tenantFromMetadata = user?.app_metadata?.tenant_id as
     | string
     | number
     | null
