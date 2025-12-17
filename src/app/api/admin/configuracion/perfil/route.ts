@@ -129,76 +129,79 @@ export async function PUT(req: NextRequest) {
   const data = parsed.data;
 
   try {
-    // Actualizar Tenant
-    await prisma.tenant.update({
-      where: { Id: BigInt(tenantId) },
-      data: {
-        Nombre: data.nombre,
-        Dominio: data.dominio || null,
-      },
-    });
-
-    // Buscar Configuracion vigente
-    const configuracionVigente = await prisma.configuracion.findFirst({
-      where: {
-        TenantId: BigInt(tenantId),
-        EstaEliminado: false,
-      },
-      orderBy: {
-        Id: "desc",
-      },
-    });
-
-    if (configuracionVigente) {
-      // Actualizar Configuracion existente
-      await prisma.configuracion.update({
-        where: { Id: configuracionVigente.Id },
+    // Usar transacción para asegurar atomicidad (actualiza Tenant y Configuracion)
+    await prisma.$transaction(async (tx) => {
+      // Actualizar Tenant
+      await tx.tenant.update({
+        where: { Id: BigInt(tenantId) },
         data: {
-          RazonSocial: data.razonSocial,
-          Cuit: data.cuit,
-          Email: data.correo || null,
-          Telefono: data.telefono || null,
+          Nombre: data.nombre,
+          Dominio: data.dominio || null,
         },
       });
-    } else {
-      // Crear Configuracion mínima válida
-      await prisma.configuracion.create({
-        data: {
+
+      // Buscar Configuracion vigente
+      const configuracionVigente = await tx.configuracion.findFirst({
+        where: {
           TenantId: BigInt(tenantId),
-          RazonSocial: data.razonSocial,
-          Cuit: data.cuit,
-          Email: data.correo || null,
-          Telefono: data.telefono || null,
-          Direccion: "SIN DEFINIR",
-          LocalidadId: BigInt(LOCALIDAD_DUMMY_ID),
-          FacturaDescuentaStock: true,
-          PresupuestoDescuentaStock: false,
-          RemitoDescuentaStock: true,
-          ActualizaCostoDesdeCompra: true,
-          ModificaPrecioVentaDesdeCompra: false,
-          Imprimir: false,
-          Instalada: 1,
-          TipoFormaPagoPorDefectoVenta: 0,
-          TipoFormaPagoPorDefectoCompra: 0,
-          ObservacionEnPieFactura: null,
-          UnificarRenglonesIngresarMismoProducto: true,
-          IngresoManualCajaInicial: false,
-          PuestoCajaSeparado: false,
-          ActivarRetiroDeCaja: false,
-          MontoMaximoRetiroCaja: 0,
-          ActivarBascula: false,
-          EtiquetaPorPeso: false,
-          CodigoBascula: null,
           EstaEliminado: false,
-          ShowFoto: false,
-          MostrarPreciosConIva: true,
-          AbrirCajonEfectivo: true,
-          NumerarPedidosPantalla: true,
+        },
+        orderBy: {
+          Id: "desc",
         },
       });
-    }
 
-    // Retornar datos actualizados
+      if (configuracionVigente) {
+        // Actualizar Configuracion existente
+        await tx.configuracion.update({
+          where: { Id: configuracionVigente.Id },
+          data: {
+            RazonSocial: data.razonSocial,
+            Cuit: data.cuit,
+            Email: data.correo || null,
+            Telefono: data.telefono || null,
+          },
+        });
+      } else {
+        // Crear Configuracion mínima válida
+        await tx.configuracion.create({
+          data: {
+            TenantId: BigInt(tenantId),
+            RazonSocial: data.razonSocial,
+            Cuit: data.cuit,
+            Email: data.correo || null,
+            Telefono: data.telefono || null,
+            Direccion: "SIN DEFINIR",
+            LocalidadId: BigInt(LOCALIDAD_DUMMY_ID),
+            FacturaDescuentaStock: true,
+            PresupuestoDescuentaStock: false,
+            RemitoDescuentaStock: true,
+            ActualizaCostoDesdeCompra: true,
+            ModificaPrecioVentaDesdeCompra: false,
+            Imprimir: false,
+            Instalada: 1,
+            TipoFormaPagoPorDefectoVenta: 0,
+            TipoFormaPagoPorDefectoCompra: 0,
+            ObservacionEnPieFactura: null,
+            UnificarRenglonesIngresarMismoProducto: true,
+            IngresoManualCajaInicial: false,
+            PuestoCajaSeparado: false,
+            ActivarRetiroDeCaja: false,
+            MontoMaximoRetiroCaja: 0,
+            ActivarBascula: false,
+            EtiquetaPorPeso: false,
+            CodigoBascula: null,
+            EstaEliminado: false,
+            ShowFoto: false,
+            MostrarPreciosConIva: true,
+            AbrirCajonEfectivo: true,
+            NumerarPedidosPantalla: true,
+          },
+        });
+      }
+    });
+
+    // Retornar datos actualizados (fuera de la transacción para evitar bloqueos)
     const tenant = await prisma.tenant.findUnique({
       where: { Id: BigInt(tenantId) },
       select: {

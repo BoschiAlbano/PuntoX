@@ -4,7 +4,7 @@ import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
 
 export type PreferenciasVentaDTO = {
-  ticketDigitalPorCorreo: boolean;
+  ticketDigitalPorCorreo: boolean; // Mapea a Imprimir
   mostrarPreciosConIva: boolean;
   abrirCajonEfectivo: boolean;
   numerarPedidosPantalla: boolean;
@@ -18,7 +18,7 @@ const DEFAULT_PREFERENCIAS: PreferenciasVentaDTO = {
 };
 
 /**
- * Obtiene las preferencias de venta del tenant actual.
+ * Obtiene las preferencias de venta del tenant actual desde Configuracion.
  * Si no existen, retorna los valores por defecto sin crear en DB.
  */
 export async function getPreferenciasVenta(): Promise<PreferenciasVentaDTO> {
@@ -30,26 +30,32 @@ export async function getPreferenciasVenta(): Promise<PreferenciasVentaDTO> {
   }
 
   try {
-    const preferencias = await prisma.preferenciasVenta.findUnique({
-      where: { TenantId: BigInt(tenantId) },
+    const config = await prisma.configuracion.findFirst({
+      where: { 
+        TenantId: BigInt(tenantId),
+        EstaEliminado: false,
+      },
       select: {
-        TicketDigitalPorCorreo: true,
+        Imprimir: true,
         MostrarPreciosConIva: true,
         AbrirCajonEfectivo: true,
         NumerarPedidosPantalla: true,
       },
+      orderBy: {
+        Id: 'desc',
+      },
     });
 
-    if (!preferencias) {
+    if (!config) {
       // Si no existe, retornar defaults sin crear en DB
       return DEFAULT_PREFERENCIAS;
     }
 
     return {
-      ticketDigitalPorCorreo: preferencias.TicketDigitalPorCorreo,
-      mostrarPreciosConIva: preferencias.MostrarPreciosConIva,
-      abrirCajonEfectivo: preferencias.AbrirCajonEfectivo,
-      numerarPedidosPantalla: preferencias.NumerarPedidosPantalla,
+      ticketDigitalPorCorreo: config.Imprimir ?? true,
+      mostrarPreciosConIva: config.MostrarPreciosConIva ?? true,
+      abrirCajonEfectivo: config.AbrirCajonEfectivo ?? true,
+      numerarPedidosPantalla: config.NumerarPedidosPantalla ?? true,
     };
   } catch (error) {
     console.error("Error obteniendo preferencias de venta:", error);
@@ -59,8 +65,8 @@ export async function getPreferenciasVenta(): Promise<PreferenciasVentaDTO> {
 }
 
 /**
- * Guarda las preferencias de venta del tenant actual.
- * Usa upsert para crear o actualizar según corresponda.
+ * Guarda las preferencias de venta del tenant actual en Configuracion.
+ * Actualiza la configuración existente o crea una nueva si no existe.
  */
 export async function savePreferenciasVenta(
   data: PreferenciasVentaDTO
@@ -75,21 +81,36 @@ export async function savePreferenciasVenta(
   }
 
   try {
-    await prisma.preferenciasVenta.upsert({
-      where: { TenantId: BigInt(tenantId) },
-      create: {
-        TenantId: BigInt(tenantId),
-        TicketDigitalPorCorreo: data.ticketDigitalPorCorreo,
-        MostrarPreciosConIva: data.mostrarPreciosConIva,
-        AbrirCajonEfectivo: data.abrirCajonEfectivo,
-        NumerarPedidosPantalla: data.numerarPedidosPantalla,
-      },
-      update: {
-        TicketDigitalPorCorreo: data.ticketDigitalPorCorreo,
-        MostrarPreciosConIva: data.mostrarPreciosConIva,
-        AbrirCajonEfectivo: data.abrirCajonEfectivo,
-        NumerarPedidosPantalla: data.numerarPedidosPantalla,
-      },
+    // Usar transacción para asegurar atomicidad
+    await prisma.$transaction(async (tx) => {
+      // Buscar configuración existente
+      const config = await tx.configuracion.findFirst({
+        where: { 
+          TenantId: BigInt(tenantId),
+          EstaEliminado: false,
+        },
+        orderBy: {
+          Id: 'desc',
+        },
+      });
+
+      if (!config) {
+        throw new Error("No se encontró una configuración existente. Por favor, complete primero el perfil del negocio.");
+      }
+
+      // Actualizar la configuración existente dentro de la transacción
+      await tx.configuracion.update({
+        where: { 
+          Id: config.Id,
+          TenantId: BigInt(tenantId),
+        },
+        data: {
+          Imprimir: data.ticketDigitalPorCorreo,
+          MostrarPreciosConIva: data.mostrarPreciosConIva,
+          AbrirCajonEfectivo: data.abrirCajonEfectivo,
+          NumerarPedidosPantalla: data.numerarPedidosPantalla,
+        },
+      });
     });
 
     return { success: true };
