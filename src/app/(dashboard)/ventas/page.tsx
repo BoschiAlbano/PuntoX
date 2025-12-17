@@ -16,12 +16,6 @@ import {
   ModalHeader,
   Select,
   SelectItem,
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
   Tooltip,
   Spinner,
   Badge,
@@ -147,11 +141,13 @@ export default function Ventas() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Estados del formulario
-  const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(
-    CLIENTE_CONSUMIDOR_FINAL
+  const [clienteSeleccionado, setClienteSeleccionado] =
+    useState<Cliente | null>(CLIENTE_CONSUMIDOR_FINAL);
+  const [tipoComprobante, setTipoComprobante] = useState<number>(
+    TIPO_COMPROBANTE.FACTURA
   );
-  const [tipoComprobante, setTipoComprobante] = useState<number>(TIPO_COMPROBANTE.FACTURA);
-  const [puestoTrabajoSeleccionado, setPuestoTrabajoSeleccionado] = useState<string>("");
+  const [puestoTrabajoSeleccionado, setPuestoTrabajoSeleccionado] =
+    useState<string>("");
   const [busquedaCliente, setBusquedaCliente] = useState("");
   const [busquedaProducto, setBusquedaProducto] = useState("");
   const [descuento, setDescuento] = useState<number>(0);
@@ -164,7 +160,9 @@ export default function Ventas() {
   // Estados de modales
   const [openModalFormaPago, setOpenModalFormaPago] = useState(false);
   const [openModalVistaPrevia, setOpenModalVistaPrevia] = useState(false);
-  const [formaPagoActual, setFormaPagoActual] = useState<Partial<FormaPagoVenta>>({
+  const [formaPagoActual, setFormaPagoActual] = useState<
+    Partial<FormaPagoVenta>
+  >({
     tipoPago: TIPO_PAGO.EFECTIVO,
     monto: 0,
   });
@@ -180,12 +178,13 @@ export default function Ventas() {
   const cargarDatos = async () => {
     try {
       setIsLoading(true);
-      const [clientesRes, productosRes, puestosRes, tarjetasRes] = await Promise.all([
-        fetch("/api/clientes"),
-        fetch("/api/productos"),
-        fetch("/api/puestos-trabajo"),
-        fetch("/api/tarjetas"),
-      ]);
+      const [clientesRes, productosRes, puestosRes, tarjetasRes] =
+        await Promise.all([
+          fetch("/api/clientes"),
+          fetch("/api/productos"),
+          fetch("/api/puestos-trabajo"),
+          fetch("/api/tarjetas"),
+        ]);
 
       if (clientesRes.ok) {
         const { clientes } = await clientesRes.json();
@@ -201,7 +200,10 @@ export default function Ventas() {
         const { puestos } = await puestosRes.json();
         setPuestosTrabajo(puestos);
         // Seleccionar el primer puesto por defecto si es factura
-        if (puestos.length > 0 && tipoComprobante === TIPO_COMPROBANTE.FACTURA) {
+        if (
+          puestos.length > 0 &&
+          tipoComprobante === TIPO_COMPROBANTE.FACTURA
+        ) {
           setPuestoTrabajoSeleccionado(puestos[0].id.toString());
         }
       }
@@ -257,7 +259,10 @@ export default function Ventas() {
         busquedaProductoRef.current?.focus();
       }
       // Enter en búsqueda de producto para agregar el primero
-      if (e.key === "Enter" && document.activeElement === busquedaProductoRef.current) {
+      if (
+        e.key === "Enter" &&
+        document.activeElement === busquedaProductoRef.current
+      ) {
         if (productosFiltrados.length > 0) {
           const producto = productosFiltrados[0];
           const stockTotal = producto.Stock.reduce(
@@ -343,7 +348,10 @@ export default function Ventas() {
     const detalle = nuevosDetalles[index];
 
     // Validar stock
-    if (detalle.cantidad < nuevaCantidad && detalle.stockDisponible < nuevaCantidad) {
+    if (
+      detalle.cantidad < nuevaCantidad &&
+      detalle.stockDisponible < nuevaCantidad
+    ) {
       addToast({
         title: "Stock insuficiente",
         description: `Stock disponible: ${detalle.stockDisponible}`,
@@ -369,17 +377,17 @@ export default function Ventas() {
   const totales = useMemo(() => {
     const subtotal = detalles.reduce((sum, d) => sum + d.subtotal, 0);
     const ivaTotal = detalles.reduce((sum, d) => sum + d.iva, 0);
-    
+
     // Calcular descuento
     let descuentoCalculado = descuento;
     if (descuentoPorcentaje > 0 && subtotal > 0) {
       descuentoCalculado = (subtotal * descuentoPorcentaje) / 100;
       setDescuento(descuentoCalculado);
     }
-    
+
     const subtotalConDescuento = subtotal - descuentoCalculado;
     const totalFormasPago = formasPago.reduce((sum, fp) => sum + fp.monto, 0);
-    
+
     return {
       subtotal,
       ivaTotal,
@@ -427,7 +435,8 @@ export default function Ventas() {
     } as FormaPagoVenta;
 
     setFormasPago([...formasPago, formaPagoCompleta]);
-    const montoRestante = totales.total - (totales.totalFormasPago + formaPagoActual.monto!);
+    const montoRestante =
+      totales.total - (totales.totalFormasPago + formaPagoActual.monto!);
     setFormaPagoActual({
       tipoPago: TIPO_PAGO.EFECTIVO,
       monto: montoRestante > 0 ? montoRestante : 0,
@@ -466,7 +475,8 @@ export default function Ventas() {
       detalles.length > 0 &&
       formasPago.length > 0 &&
       Math.abs(totales.diferencia) <= 0.01 &&
-      (tipoComprobante !== TIPO_COMPROBANTE.FACTURA || puestoTrabajoSeleccionado)
+      (tipoComprobante !== TIPO_COMPROBANTE.FACTURA ||
+        puestoTrabajoSeleccionado)
     );
   }, [
     clienteSeleccionado,
@@ -497,7 +507,10 @@ export default function Ventas() {
       return;
     }
 
-    if (tipoComprobante === TIPO_COMPROBANTE.FACTURA && !puestoTrabajoSeleccionado) {
+    if (
+      tipoComprobante === TIPO_COMPROBANTE.FACTURA &&
+      !puestoTrabajoSeleccionado
+    ) {
       addToast({
         title: "Error",
         description: "Debe seleccionar un puesto de trabajo para facturas",
@@ -518,7 +531,9 @@ export default function Ventas() {
     if (Math.abs(totales.diferencia) > 0.01) {
       addToast({
         title: "Error",
-        description: `El total de formas de pago no coincide con el total de la venta. Diferencia: $${totales.diferencia.toFixed(2)}`,
+        description: `El total de formas de pago no coincide con el total de la venta. Diferencia: $${totales.diferencia.toFixed(
+          2
+        )}`,
         color: "danger",
       });
       return;
@@ -548,12 +563,14 @@ export default function Ventas() {
         formasPago: formasPago.map((fp) => ({
           tipoPago: fp.tipoPago,
           monto: fp.monto,
-          tarjetaId: fp.tipoPago === TIPO_PAGO.TARJETA ? fp.tarjetaId : undefined,
+          tarjetaId:
+            fp.tipoPago === TIPO_PAGO.TARJETA ? fp.tarjetaId : undefined,
           numeroTarjeta: fp.numeroTarjeta,
           cuponPago: fp.cuponPago,
           cantidadCuotas: fp.cantidadCuotas,
           clienteId:
-            fp.tipoPago === TIPO_PAGO.CUENTA_CORRIENTE && clienteSeleccionado?.id !== 0
+            fp.tipoPago === TIPO_PAGO.CUENTA_CORRIENTE &&
+            clienteSeleccionado?.id !== 0
               ? clienteSeleccionado.id
               : undefined,
           chequeId: fp.tipoPago === TIPO_PAGO.CHEQUE ? fp.chequeId : undefined,
@@ -587,7 +604,8 @@ export default function Ventas() {
       setDescuento(0);
       setDescuentoPorcentaje(0);
       setPuestoTrabajoSeleccionado(
-        puestosTrabajo.length > 0 && tipoComprobante === TIPO_COMPROBANTE.FACTURA
+        puestosTrabajo.length > 0 &&
+          tipoComprobante === TIPO_COMPROBANTE.FACTURA
           ? puestosTrabajo[0].id.toString()
           : ""
       );
@@ -596,7 +614,9 @@ export default function Ventas() {
       console.error("Error guardando venta", error);
       addToast({
         title: "Error",
-        description: (error instanceof Error ? error.message : String(error)) || "No se pudo guardar la venta",
+        description:
+          (error instanceof Error ? error.message : String(error)) ||
+          "No se pudo guardar la venta",
         color: "danger",
       });
     } finally {
@@ -634,7 +654,7 @@ export default function Ventas() {
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
             <Receipt className="w-8 h-8 text-primary" />
             Nueva Venta
-        </h1>
+          </h1>
           <p className="text-gray-600 mt-2">
             Registra una nueva venta o comprobante
           </p>
@@ -675,7 +695,9 @@ export default function Ventas() {
                     if (Number(selected) !== TIPO_COMPROBANTE.FACTURA) {
                       setPuestoTrabajoSeleccionado("");
                     } else if (puestosTrabajo.length > 0) {
-                      setPuestoTrabajoSeleccionado(puestosTrabajo[0].id.toString());
+                      setPuestoTrabajoSeleccionado(
+                        puestosTrabajo[0].id.toString()
+                      );
                     }
                   }}
                 >
@@ -703,7 +725,9 @@ export default function Ventas() {
                   <Select
                     label="Puesto de trabajo"
                     selectedKeys={
-                      puestoTrabajoSeleccionado ? [puestoTrabajoSeleccionado] : []
+                      puestoTrabajoSeleccionado
+                        ? [puestoTrabajoSeleccionado]
+                        : []
                     }
                     onSelectionChange={(keys) => {
                       const selected = Array.from(keys)[0] as string;
@@ -726,7 +750,9 @@ export default function Ventas() {
                     <Button
                       size="sm"
                       variant="light"
-                      onPress={() => setClienteSeleccionado(CLIENTE_CONSUMIDOR_FINAL)}
+                      onPress={() =>
+                        setClienteSeleccionado(CLIENTE_CONSUMIDOR_FINAL)
+                      }
                     >
                       Cambiar
                     </Button>
@@ -763,7 +789,9 @@ export default function Ventas() {
                           size="sm"
                           variant="light"
                           isIconOnly
-                          onPress={() => setClienteSeleccionado(CLIENTE_CONSUMIDOR_FINAL)}
+                          onPress={() =>
+                            setClienteSeleccionado(CLIENTE_CONSUMIDOR_FINAL)
+                          }
                         >
                           <X className="w-4 h-4" />
                         </Button>
@@ -782,9 +810,16 @@ export default function Ventas() {
                           setBusquedaCliente("");
                         }}
                       >
-                        <div className="font-medium">{cliente.nombreCompleto}</div>
+                        <div className="font-medium">
+                          {cliente.nombreCompleto}
+                        </div>
                         {cliente.activarCtaCte && (
-                          <Chip size="sm" color="success" variant="flat" className="mt-1">
+                          <Chip
+                            size="sm"
+                            color="success"
+                            variant="flat"
+                            className="mt-1"
+                          >
                             Cuenta Corriente
                           </Chip>
                         )}
@@ -834,7 +869,8 @@ export default function Ventas() {
                     const precio = Number(producto.Precio.PrecioPublico);
                     const porcentajeIva = Number(producto.Iva.Porcentaje);
                     const stockBajo = stockTotal < 10;
-                    const sinStock = stockTotal === 0 && !producto.PermiteStockNegativo;
+                    const sinStock =
+                      stockTotal === 0 && !producto.PermiteStockNegativo;
 
                     return (
                       <div
@@ -868,7 +904,9 @@ export default function Ventas() {
                               <span className="font-semibold text-success-600">
                                 ${precio.toFixed(2)}
                               </span>
-                              <span className="text-xs">IVA {porcentajeIva}%</span>
+                              <span className="text-xs">
+                                IVA {porcentajeIva}%
+                              </span>
                             </div>
                           </div>
                           <Button
@@ -913,7 +951,9 @@ export default function Ventas() {
               {detalles.length === 0 ? (
                 <div className="text-center py-12">
                   <ShoppingCart className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                  <p className="text-gray-500 font-medium">El carrito está vacío</p>
+                  <p className="text-gray-500 font-medium">
+                    El carrito está vacío
+                  </p>
                   <p className="text-sm text-gray-400 mt-1">
                     Busca productos y agrégalos al carrito
                   </p>
@@ -924,7 +964,8 @@ export default function Ventas() {
                     const producto = productos.find(
                       (p) => Number(p.Id) === detalle.articuloId
                     );
-                    const stockBajo = detalle.stockDisponible < detalle.cantidad * 2;
+                    const stockBajo =
+                      detalle.stockDisponible < detalle.cantidad * 2;
 
                     return (
                       <div
@@ -942,7 +983,8 @@ export default function Ventas() {
                               )}
                             </div>
                             <div className="text-sm text-gray-500">
-                              Código: {detalle.codigo} | IVA {detalle.porcentajeIva}%
+                              Código: {detalle.codigo} | IVA{" "}
+                              {detalle.porcentajeIva}%
                             </div>
                           </div>
                           <Button
@@ -961,7 +1003,9 @@ export default function Ventas() {
                               size="sm"
                               isIconOnly
                               variant="flat"
-                              onPress={() => actualizarCantidad(index, detalle.cantidad - 1)}
+                              onPress={() =>
+                                actualizarCantidad(index, detalle.cantidad - 1)
+                              }
                             >
                               <Minus className="w-4 h-4" />
                             </Button>
@@ -973,7 +1017,9 @@ export default function Ventas() {
                               isIconOnly
                               variant="flat"
                               color="primary"
-                              onPress={() => actualizarCantidad(index, detalle.cantidad + 1)}
+                              onPress={() =>
+                                actualizarCantidad(index, detalle.cantidad + 1)
+                              }
                             >
                               <Plus className="w-4 h-4" />
                             </Button>
@@ -1016,7 +1062,9 @@ export default function Ventas() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal:</span>
-                  <span className="font-semibold">${totales.subtotal.toFixed(2)}</span>
+                  <span className="font-semibold">
+                    ${totales.subtotal.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">IVA:</span>
@@ -1058,7 +1106,9 @@ export default function Ventas() {
                           const val = Number(e.target.value) || 0;
                           setDescuento(val);
                           if (totales.subtotal > 0) {
-                            setDescuentoPorcentaje((val / totales.subtotal) * 100);
+                            setDescuentoPorcentaje(
+                              (val / totales.subtotal) * 100
+                            );
                           }
                         }}
                         className="w-24"
@@ -1070,13 +1120,17 @@ export default function Ventas() {
                   {totales.descuento > 0 && (
                     <div className="flex justify-between text-danger-600">
                       <span>Descuento aplicado:</span>
-                      <span className="font-semibold">-${totales.descuento.toFixed(2)}</span>
+                      <span className="font-semibold">
+                        -${totales.descuento.toFixed(2)}
+                      </span>
                     </div>
                   )}
                 </div>
                 <Divider />
                 <div className="flex justify-between items-center bg-primary-50 p-3 rounded-lg">
-                  <span className="text-lg font-bold text-primary-700">Total:</span>
+                  <span className="text-lg font-bold text-primary-700">
+                    Total:
+                  </span>
                   <span className="text-2xl font-bold text-primary-700">
                     ${totales.total.toFixed(2)}
                   </span>
@@ -1110,7 +1164,8 @@ export default function Ventas() {
                   size="sm"
                   color="primary"
                   onPress={() => {
-                    const montoRestante = totales.total - totales.totalFormasPago;
+                    const montoRestante =
+                      totales.total - totales.totalFormasPago;
                     setFormaPagoActual({
                       tipoPago: TIPO_PAGO.EFECTIVO,
                       monto: montoRestante > 0 ? montoRestante : 0,
@@ -1161,15 +1216,18 @@ export default function Ventas() {
                           {icono}
                           <div>
                             <div className="font-medium">{tipoPagoNombre}</div>
-                            {fp.tipoPago === TIPO_PAGO.TARJETA && fp.cantidadCuotas && (
-                              <div className="text-xs text-gray-500">
-                                {fp.cantidadCuotas} cuotas
-                              </div>
-                            )}
+                            {fp.tipoPago === TIPO_PAGO.TARJETA &&
+                              fp.cantidadCuotas && (
+                                <div className="text-xs text-gray-500">
+                                  {fp.cantidadCuotas} cuotas
+                                </div>
+                              )}
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="font-bold text-lg">${fp.monto.toFixed(2)}</span>
+                          <span className="font-bold text-lg">
+                            ${fp.monto.toFixed(2)}
+                          </span>
                           <Button
                             size="sm"
                             color="danger"
@@ -1189,7 +1247,9 @@ export default function Ventas() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">Total pagos:</span>
-                  <span className="font-bold text-lg">${totales.totalFormasPago.toFixed(2)}</span>
+                  <span className="font-bold text-lg">
+                    ${totales.totalFormasPago.toFixed(2)}
+                  </span>
                 </div>
                 {Math.abs(totales.diferencia) > 0.01 && (
                   <div
@@ -1207,7 +1267,9 @@ export default function Ventas() {
                       )}
                       <span
                         className={`text-sm font-medium ${
-                          totales.diferencia > 0 ? "text-warning-700" : "text-danger-700"
+                          totales.diferencia > 0
+                            ? "text-warning-700"
+                            : "text-danger-700"
                         }`}
                       >
                         Diferencia:
@@ -1215,21 +1277,24 @@ export default function Ventas() {
                     </div>
                     <span
                       className={`font-bold ${
-                        totales.diferencia > 0 ? "text-warning-700" : "text-danger-700"
+                        totales.diferencia > 0
+                          ? "text-warning-700"
+                          : "text-danger-700"
                       }`}
                     >
                       ${Math.abs(totales.diferencia).toFixed(2)}
                     </span>
                   </div>
                 )}
-                {Math.abs(totales.diferencia) <= 0.01 && formasPago.length > 0 && (
-                  <div className="p-2 rounded-lg bg-success-50 border border-success-200 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-success-600" />
-                    <span className="text-sm font-medium text-success-700">
-                      Pagos completos
-                    </span>
-                  </div>
-                )}
+                {Math.abs(totales.diferencia) <= 0.01 &&
+                  formasPago.length > 0 && (
+                    <div className="p-2 rounded-lg bg-success-50 border border-success-200 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-success-600" />
+                      <span className="text-sm font-medium text-success-700">
+                        Pagos completos
+                      </span>
+                    </div>
+                  )}
               </div>
             </CardBody>
           </Card>
@@ -1242,11 +1307,7 @@ export default function Ventas() {
             onPress={guardarVenta}
             isLoading={isSaving}
             isDisabled={!puedeFinalizar}
-            startContent={
-              !isSaving && (
-                <CheckCircle2 className="w-6 h-6" />
-              )
-            }
+            startContent={!isSaving && <CheckCircle2 className="w-6 h-6" />}
           >
             {isSaving ? (
               "Procesando..."
@@ -1301,21 +1362,11 @@ export default function Ventas() {
                 });
               }}
             >
-              <SelectItem key="1">
-                Efectivo
-              </SelectItem>
-              <SelectItem key="2">
-                Tarjeta
-              </SelectItem>
-              <SelectItem key="3">
-                Cheque
-              </SelectItem>
-                  <SelectItem key="4">
-                Cuenta Corriente
-              </SelectItem>
-                  <SelectItem key="5">
-                Transferencia
-              </SelectItem>
+              <SelectItem key="1">Efectivo</SelectItem>
+              <SelectItem key="2">Tarjeta</SelectItem>
+              <SelectItem key="3">Cheque</SelectItem>
+              <SelectItem key="4">Cuenta Corriente</SelectItem>
+              <SelectItem key="5">Transferencia</SelectItem>
             </Select>
 
             {formaPagoActual.tipoPago === TIPO_PAGO.TARJETA && (
@@ -1336,9 +1387,7 @@ export default function Ventas() {
                   }}
                 >
                   {tarjetas.map((tarjeta) => (
-                    <SelectItem
-                      key={tarjeta.id.toString()}
-                    >
+                    <SelectItem key={tarjeta.id.toString()}>
                       {tarjeta.descripcion}
                     </SelectItem>
                   ))}
@@ -1394,7 +1443,8 @@ export default function Ventas() {
             />
             {totales.total > 0 && (
               <div className="text-sm text-gray-500">
-                Monto restante: ${(totales.total - totales.totalFormasPago).toFixed(2)}
+                Monto restante: $
+                {(totales.total - totales.totalFormasPago).toFixed(2)}
               </div>
             )}
           </ModalBody>
@@ -1429,7 +1479,9 @@ export default function Ventas() {
               </div>
               <div>
                 <p className="font-semibold">Cliente:</p>
-                <p>{clienteSeleccionado?.nombreCompleto || "No seleccionado"}</p>
+                <p>
+                  {clienteSeleccionado?.nombreCompleto || "No seleccionado"}
+                </p>
               </div>
               <div>
                 <p className="font-semibold mb-2">Productos:</p>
@@ -1440,8 +1492,8 @@ export default function Ventas() {
                         <p className="font-medium">{d.descripcion}</p>
                         <p className="text-sm text-gray-500">
                           {d.cantidad} x ${d.precio.toFixed(2)}
-        </p>
-      </div>
+                        </p>
+                      </div>
                       <p className="font-semibold">${d.subtotal.toFixed(2)}</p>
                     </div>
                   ))}
@@ -1467,7 +1519,9 @@ export default function Ventas() {
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button onPress={() => setOpenModalVistaPrevia(false)}>Cerrar</Button>
+            <Button onPress={() => setOpenModalVistaPrevia(false)}>
+              Cerrar
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

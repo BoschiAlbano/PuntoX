@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect } from "react";
 import { registerTenant } from "@/app/actions/register-tenant";
-import { toast } from "sonner";
+import { addToast, Toast } from "@heroui/react";
 import { motion } from "framer-motion";
 
 type RegisterState = {
@@ -20,7 +20,10 @@ const initialState: RegisterState = {
 
 export default function NewTenantPage() {
   const [state, formAction, isPending] = useActionState(
-    async (_prev: RegisterState, formData: FormData): Promise<RegisterState> => {
+    async (
+      _prev: RegisterState,
+      formData: FormData
+    ): Promise<RegisterState> => {
       const result = await registerTenant(formData);
       return {
         ok: result.ok,
@@ -35,10 +38,18 @@ export default function NewTenantPage() {
   useEffect(() => {
     if (!state.message && !state.error) return;
     if (state.ok) {
-      toast.success(state.message || "La tienda fue creada con exito.");
+      addToast({
+        title: "Éxito",
+        description: state.message || "La tienda fue creada con exito.",
+        color: "success",
+      });
       // Optional: Redirect or clear form
     } else {
-      toast.error(state.error || state.message || "Error al crear la tienda");
+      addToast({
+        title: "Error",
+        description: state.error || state.message || "Error al crear la tienda",
+        color: "danger",
+      });
     }
   }, [state]);
 
