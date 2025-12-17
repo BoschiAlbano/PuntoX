@@ -1232,16 +1232,21 @@ export default function Empleados() {
 
                     <Select
                       size="sm"
-                      selectedKeys={[filtros.rol]}
-                      onChange={(e) =>
-                        setFiltros((prev) => ({ ...prev, rol: e.target.value }))
-                      }
+                      selectedKeys={filtros.rol ? [filtros.rol] : []}
+                      onSelectionChange={(keys) => {
+                        const selected = Array.from(keys)[0] as string;
+                        setFiltros((prev) => ({ ...prev, rol: selected || "" }));
+                      }}
                       className="w-full md:min-w-[160px]"
                     >
-                      <SelectItem key="todos">Todos los roles</SelectItem>
-                      {roles.map((rol) => (
-                        <SelectItem key={String(rol.id)}>{rol.nombre}</SelectItem>
-                      ))}
+                      {[
+                        <SelectItem key="todos">Todos los roles</SelectItem>,
+                        ...roles.map((rol) => (
+                          <SelectItem key={String(rol.id)}>
+                            {rol.nombre}
+                          </SelectItem>
+                        )),
+                      ]}
                     </Select>
                     <Select
                       size="sm"
@@ -1638,7 +1643,7 @@ export default function Empleados() {
                     <p className="font-semibold text-slate-900">{item.accion}</p>
                     <p className="text-sm text-gray-500">{item.tiempo}</p>
                   </div>
-                  <Chip size="sm" color={item.color as any} variant="flat">
+                  <Chip size="sm" color={item.color as "default" | "primary" | "secondary" | "success" | "warning" | "danger"} variant="flat">
                     {item.categoria}
                   </Chip>
                 </div>
@@ -2036,7 +2041,7 @@ export default function Empleados() {
             <p className="text-sm text-gray-700">
               ¿Estás seguro de que deseas eliminar el rol{" "}
               <span className="font-semibold text-slate-900">
-                "{rolAEliminar?.nombre}"
+                &quot;{rolAEliminar?.nombre}&quot;
               </span>
               ? Esta acción eliminará permanentemente el rol y todos sus permisos asociados.
             </p>

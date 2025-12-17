@@ -109,18 +109,19 @@ export async function GET() {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error en GET /api/admin/configuracion/preferencias-venta:", error);
 
+    const errorObj = error as { code?: string; message?: string };
     const isConnectionError =
-      error?.code === "P1001" ||
-      error?.code === "P1002" ||
-      error?.code === "P1003" ||
-      error?.message?.toLowerCase().includes("can't reach database server") ||
-      error?.message?.toLowerCase().includes("connection timeout") ||
-      error?.message?.toLowerCase().includes("connection refused") ||
-      error?.message?.toLowerCase().includes("econnrefused") ||
-      error?.message?.toLowerCase().includes("etimedout");
+      errorObj?.code === "P1001" ||
+      errorObj?.code === "P1002" ||
+      errorObj?.code === "P1003" ||
+      errorObj?.message?.toLowerCase().includes("can't reach database server") ||
+      errorObj?.message?.toLowerCase().includes("connection timeout") ||
+      errorObj?.message?.toLowerCase().includes("connection refused") ||
+      errorObj?.message?.toLowerCase().includes("econnrefused") ||
+      errorObj?.message?.toLowerCase().includes("etimedout");
 
     if (isConnectionError) {
       return NextResponse.json(
@@ -152,7 +153,7 @@ export async function PUT(req: NextRequest) {
 
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Datos inválidos", details: parsed.error.errors },
+      { error: "Datos inválidos", details: parsed.error.issues },
       { status: 400 }
     );
   }
@@ -255,18 +256,19 @@ export async function PUT(req: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error en PUT /api/admin/configuracion/preferencias-venta:", error);
 
+    const errorObj = error as { code?: string; message?: string };
     const isConnectionError =
-      error?.code === "P1001" ||
-      error?.code === "P1002" ||
-      error?.code === "P1003" ||
-      error?.message?.toLowerCase().includes("can't reach database server") ||
-      error?.message?.toLowerCase().includes("connection timeout") ||
-      error?.message?.toLowerCase().includes("connection refused") ||
-      error?.message?.toLowerCase().includes("econnrefused") ||
-      error?.message?.toLowerCase().includes("etimedout");
+      errorObj?.code === "P1001" ||
+      errorObj?.code === "P1002" ||
+      errorObj?.code === "P1003" ||
+      errorObj?.message?.toLowerCase().includes("can't reach database server") ||
+      errorObj?.message?.toLowerCase().includes("connection timeout") ||
+      errorObj?.message?.toLowerCase().includes("connection refused") ||
+      errorObj?.message?.toLowerCase().includes("econnrefused") ||
+      errorObj?.message?.toLowerCase().includes("etimedout");
 
     if (isConnectionError) {
       return NextResponse.json(

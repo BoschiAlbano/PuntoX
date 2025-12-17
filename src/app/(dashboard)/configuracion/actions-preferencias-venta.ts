@@ -114,12 +114,12 @@ export async function savePreferenciasVenta(
     });
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error guardando preferencias de venta:", error);
     return {
       success: false,
       error:
-        error?.message || "No se pudieron guardar las preferencias de venta",
+        (error instanceof Error ? error.message : String(error)) || "No se pudieron guardar las preferencias de venta",
     };
   }
 }

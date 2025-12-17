@@ -3,31 +3,11 @@ import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import { z } from "zod";
-
-// Constantes para tipos de comprobante
-export const TIPO_COMPROBANTE = {
-  FACTURA: 1,
-  PRESUPUESTO: 2,
-  REMITO: 3,
-  NOTA_CREDITO: 4,
-  NOTA_DEBITO: 5,
-} as const;
-
-// Constantes para tipos de pago
-export const TIPO_PAGO = {
-  EFECTIVO: 1,
-  TARJETA: 2,
-  CHEQUE: 3,
-  CUENTA_CORRIENTE: 4,
-  TRANSFERENCIA: 5,
-} as const;
-
-// Constantes para estados de factura
-export const ESTADO_FACTURA = {
-  PENDIENTE: 1,
-  CONFIRMADO: 2,
-  ANULADO: 3,
-} as const;
+import {
+  TIPO_COMPROBANTE,
+  TIPO_PAGO,
+  ESTADO_FACTURA,
+} from "@/lib/constants/comprobantes";
 
 // Schema para crear comprobante
 const detalleComprobanteSchema = z.object({
@@ -104,7 +84,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error: "Datos inválidos",
-          details: parsed.error.errors,
+          details: parsed.error.issues,
         },
         { status: 400 }
       );
@@ -132,7 +112,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Preparar clienteIdFinal (se resolverá en la transacción si es Consumidor Final)
-    let clienteIdFinal = data.clienteId || 0;
+    const clienteIdFinal = data.clienteId || 0;
 
     // Validar puesto de trabajo si es factura
     if (data.puestoTrabajoId) {
@@ -286,6 +266,75 @@ export async function POST(req: NextRequest) {
     const fecha = data.fecha ? new Date(data.fecha) : new Date();
 
     const resultado = await prisma.$transaction(async (tx) => {
+      // 0. Resolver cliente (crear Consumidor Final si es necesario)
+      let clienteIdFinalTx = clienteIdFinal;
+
+      if (clienteIdFinal === 0 || clienteIdFinal === null) {
+        // Buscar o crear Consumidor Final
+        const condicionIvaConsumidorFinal = await tx.condicionIva.findFirst({
+          where: {
+            Descripcion: { contains: "Consumidor Final", mode: "insensitive" },
+            EstaEliminado: false,
+          },
+        });
+
+        let condicionIvaId = condicionIvaConsumidorFinal?.Id;
+
+        if (!condicionIvaId) {
+          // Crear condición IVA Consumidor Final si no existe
+          const nuevaCondicionIva = await tx.condicionIva.create({
+            data: {
+              TenantId: tenantIdBigInt,
+              Descripcion: "Consumidor Final",
+              EstaEliminado: false,
+            },
+          });
+          condicionIvaId = nuevaCondicionIva.Id;
+        }
+
+        // Buscar cliente Consumidor Final existente
+        const clienteExistente = await tx.persona_Cliente.findFirst({
+          where: {
+            TenantId: tenantIdBigInt,
+            Persona: {
+              Nombre: "Consumidor",
+              Apellido: "Final",
+            },
+            EstaEliminado: false,
+          },
+          include: {
+            Persona: true,
+          },
+        });
+
+        if (clienteExistente) {
+          clienteIdFinalTx = Number(clienteExistente.Id);
+        } else {
+          // Crear Persona y Persona_Cliente para Consumidor Final
+          const persona = await tx.persona.create({
+            data: {
+              TenantId: tenantIdBigInt,
+              Nombre: "Consumidor",
+              Apellido: "Final",
+              EstaEliminado: false,
+            },
+          });
+
+          const cliente = await tx.persona_Cliente.create({
+            data: {
+              Id: persona.Id,
+              TenantId: tenantIdBigInt,
+              CondicionIvaId: condicionIvaId!,
+              ActivarCtaCte: false,
+              TieneLimiteCompra: false,
+              EstaEliminado: false,
+            },
+          });
+
+          clienteIdFinalTx = Number(cliente.Id);
+        }
+      }
+
       // 1. Crear Comprobante
       const comprobante = await tx.comprobante.create({
         data: {
@@ -440,7 +489,7 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+    } catch (error: unknown) {
     console.error("Error creando comprobante", error);
     return NextResponse.json(
       { error: "Error al crear comprobante", details: error.message },

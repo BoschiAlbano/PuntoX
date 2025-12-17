@@ -357,7 +357,7 @@ export default function AdminConfiguracionPage() {
   };
 
   const handleSaveAll = async () => {
-    const tasks: Array<{ name: string; promise: Promise<any> }> = [];
+    const tasks: Array<{ name: string; promise: Promise<unknown> }> = [];
 
     // Guardar Perfil del negocio si hay cambios
     if (dirtyPerfil) {
@@ -487,7 +487,7 @@ export default function AdminConfiguracionPage() {
               <Button
                 variant="bordered"
                 className="border-white/40 text-white"
-                onPress={() => handleSave("Actividad revisada")}
+                onPress={() => handleSaveAll()}
               >
                 Ver actividad
               </Button>

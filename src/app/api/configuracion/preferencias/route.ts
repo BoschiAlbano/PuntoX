@@ -43,7 +43,7 @@ export async function GET() {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error en GET /api/configuracion/preferencias:", error);
     return NextResponse.json(
       { error: "Error al cargar las preferencias" },
@@ -74,7 +74,7 @@ export async function PUT(req: Request) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error actualizando preferencias", error);
     return NextResponse.json(
       { error: "No se pudieron actualizar las preferencias" },

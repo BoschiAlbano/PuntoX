@@ -63,7 +63,7 @@ export async function GET() {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error en GET /api/tenant:", error);
     // Detectar errores reales de conexión a la base de datos
     // Solo retornar 503 para errores de conexión específicos de Prisma
@@ -146,7 +146,7 @@ export async function PUT(req: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (
       err instanceof Error &&
       err.message.toLowerCase().includes("record to update")

@@ -49,7 +49,7 @@ export async function GET() {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error en GET /api/configuracion/branding:", error);
     return NextResponse.json(
       { error: "Error al cargar el branding" },
@@ -115,7 +115,7 @@ export async function PUT(req: Request) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error actualizando branding", error);
     
     // Detectar errores de conexión

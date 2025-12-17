@@ -45,7 +45,17 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const busqueda = searchParams.get("q")?.trim() || "";
 
-    const where: any = {
+    const where: {
+      TenantId: bigint;
+      EstaEliminado: boolean;
+      Persona_Cliente?: { isNot: null };
+      OR?: Array<{
+        Nombre?: { contains: string; mode: "insensitive" };
+        Apellido?: { contains: string; mode: "insensitive" };
+        Mail?: { contains: string; mode: "insensitive" };
+        Dni?: { contains: string; mode: "insensitive" };
+      }>;
+    } = {
       TenantId: BigInt(tenantId),
       EstaEliminado: false,
       Persona_Cliente: { isNot: null },
@@ -134,15 +144,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ clientes: response }, { status: 200 });
   } catch (error) {
     console.error("Error al obtener clientes", error);
+    const errorObj = error as { code?: string; message?: string };
     const isConnectionError =
-      error?.code === "P1001" ||
-      error?.code === "P1002" ||
-      error?.code === "P1003" ||
-      error?.message?.toLowerCase().includes("can't reach database server") ||
-      error?.message?.toLowerCase().includes("connection timeout") ||
-      error?.message?.toLowerCase().includes("connection refused") ||
-      error?.message?.toLowerCase().includes("econnrefused") ||
-      error?.message?.toLowerCase().includes("etimedout");
+      errorObj?.code === "P1001" ||
+      errorObj?.code === "P1002" ||
+      errorObj?.code === "P1003" ||
+      errorObj?.message?.toLowerCase().includes("can't reach database server") ||
+      errorObj?.message?.toLowerCase().includes("connection timeout") ||
+      errorObj?.message?.toLowerCase().includes("connection refused") ||
+      errorObj?.message?.toLowerCase().includes("econnrefused") ||
+      errorObj?.message?.toLowerCase().includes("etimedout");
 
     if (isConnectionError) {
       return NextResponse.json(
@@ -176,7 +187,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error: "Datos inválidos",
-          details: parsed.error.errors,
+          details: parsed.error.issues,
         },
         { status: 400 }
       );
@@ -337,17 +348,18 @@ export async function POST(req: NextRequest) {
     };
 
     return NextResponse.json({ cliente: clienteResponse }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creando cliente", error);
+    const errorObj = error as { code?: string; message?: string };
     const isConnectionError =
-      error?.code === "P1001" ||
-      error?.code === "P1002" ||
-      error?.code === "P1003" ||
-      error?.message?.toLowerCase().includes("can't reach database server") ||
-      error?.message?.toLowerCase().includes("connection timeout") ||
-      error?.message?.toLowerCase().includes("connection refused") ||
-      error?.message?.toLowerCase().includes("econnrefused") ||
-      error?.message?.toLowerCase().includes("etimedout");
+      errorObj?.code === "P1001" ||
+      errorObj?.code === "P1002" ||
+      errorObj?.code === "P1003" ||
+      errorObj?.message?.toLowerCase().includes("can't reach database server") ||
+      errorObj?.message?.toLowerCase().includes("connection timeout") ||
+      errorObj?.message?.toLowerCase().includes("connection refused") ||
+      errorObj?.message?.toLowerCase().includes("econnrefused") ||
+      errorObj?.message?.toLowerCase().includes("etimedout");
 
     if (isConnectionError) {
       return NextResponse.json(
@@ -381,7 +393,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json(
         {
           error: "Datos inválidos",
-          details: parsed.error.errors,
+          details: parsed.error.issues,
         },
         { status: 400 }
       );
@@ -509,15 +521,23 @@ export async function PATCH(req: NextRequest) {
     // Actualizar Persona y Persona_Cliente en transacción
     const updated = await prisma.$transaction(async (tx) => {
       // Actualizar Persona
-      const updatePersonaData: any = {};
+      const updatePersonaData: {
+        Nombre?: string;
+        Apellido?: string;
+        Dni?: string;
+        Telefono?: string;
+        Mail?: string;
+        Direccion?: string;
+        LocalidadId?: bigint;
+      } = {};
       if (data.nombre !== undefined) updatePersonaData.Nombre = data.nombre.trim();
       if (data.apellido !== undefined)
         updatePersonaData.Apellido = data.apellido.trim();
-      if (data.dni !== undefined) updatePersonaData.Dni = data.dni?.trim() || null;
+      if (data.dni !== undefined) updatePersonaData.Dni = data.dni?.trim() || undefined;
       if (data.direccion !== undefined)
         updatePersonaData.Direccion = data.direccion.trim();
       if (data.telefono !== undefined)
-        updatePersonaData.Telefono = data.telefono?.trim() || null;
+        updatePersonaData.Telefono = data.telefono?.trim() || undefined;
       if (data.mail !== undefined)
         updatePersonaData.Mail = data.mail.trim().toLowerCase();
       if (localidadIdNumber !== null)
@@ -529,7 +549,13 @@ export async function PATCH(req: NextRequest) {
       });
 
       // Actualizar Persona_Cliente
-      const updateClienteData: any = {};
+      const updateClienteData: {
+        CondicionIvaId?: bigint;
+        ActivarCtaCte?: boolean;
+        TieneLimiteCompra?: boolean;
+        LimiteCompra?: number;
+        MontoMaximoCtaCte?: number;
+      } = {};
       if (condicionIvaIdNumber !== null)
         updateClienteData.CondicionIvaId = BigInt(condicionIvaIdNumber);
       if (data.activarCtaCte !== undefined)
@@ -619,17 +645,18 @@ export async function PATCH(req: NextRequest) {
     };
 
     return NextResponse.json({ cliente: clienteResponse }, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error actualizando cliente", error);
+    const errorObj = error as { code?: string; message?: string };
     const isConnectionError =
-      error?.code === "P1001" ||
-      error?.code === "P1002" ||
-      error?.code === "P1003" ||
-      error?.message?.toLowerCase().includes("can't reach database server") ||
-      error?.message?.toLowerCase().includes("connection timeout") ||
-      error?.message?.toLowerCase().includes("connection refused") ||
-      error?.message?.toLowerCase().includes("econnrefused") ||
-      error?.message?.toLowerCase().includes("etimedout");
+      errorObj?.code === "P1001" ||
+      errorObj?.code === "P1002" ||
+      errorObj?.code === "P1003" ||
+      errorObj?.message?.toLowerCase().includes("can't reach database server") ||
+      errorObj?.message?.toLowerCase().includes("connection timeout") ||
+      errorObj?.message?.toLowerCase().includes("connection refused") ||
+      errorObj?.message?.toLowerCase().includes("econnrefused") ||
+      errorObj?.message?.toLowerCase().includes("etimedout");
 
     if (isConnectionError) {
       return NextResponse.json(
@@ -709,17 +736,18 @@ export async function DELETE(req: NextRequest) {
       { ok: true, clienteId: clienteIdNumber },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error eliminando cliente", error);
+    const errorObj = error as { code?: string; message?: string };
     const isConnectionError =
-      error?.code === "P1001" ||
-      error?.code === "P1002" ||
-      error?.code === "P1003" ||
-      error?.message?.toLowerCase().includes("can't reach database server") ||
-      error?.message?.toLowerCase().includes("connection timeout") ||
-      error?.message?.toLowerCase().includes("connection refused") ||
-      error?.message?.toLowerCase().includes("econnrefused") ||
-      error?.message?.toLowerCase().includes("etimedout");
+      errorObj?.code === "P1001" ||
+      errorObj?.code === "P1002" ||
+      errorObj?.code === "P1003" ||
+      errorObj?.message?.toLowerCase().includes("can't reach database server") ||
+      errorObj?.message?.toLowerCase().includes("connection timeout") ||
+      errorObj?.message?.toLowerCase().includes("connection refused") ||
+      errorObj?.message?.toLowerCase().includes("econnrefused") ||
+      errorObj?.message?.toLowerCase().includes("etimedout");
 
     if (isConnectionError) {
       return NextResponse.json(

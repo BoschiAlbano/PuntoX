@@ -133,6 +133,8 @@ type FormaPagoVenta = {
   numeroTarjeta?: string;
   cuponPago?: string;
   cantidadCuotas?: number;
+  clienteId?: number;
+  chequeId?: number;
 };
 
 export default function Ventas() {
@@ -590,11 +592,11 @@ export default function Ventas() {
           : ""
       );
       setBusquedaProducto("");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error guardando venta", error);
       addToast({
         title: "Error",
-        description: error.message || "No se pudo guardar la venta",
+        description: (error instanceof Error ? error.message : String(error)) || "No se pudo guardar la venta",
         color: "danger",
       });
     } finally {
@@ -632,7 +634,7 @@ export default function Ventas() {
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
             <Receipt className="w-8 h-8 text-primary" />
             Nueva Venta
-          </h1>
+        </h1>
           <p className="text-gray-600 mt-2">
             Registra una nueva venta o comprobante
           </p>
@@ -677,19 +679,19 @@ export default function Ventas() {
                     }
                   }}
                 >
-                  <SelectItem key="1" value="1">
+                  <SelectItem key="1">
                     <div className="flex items-center gap-2">
                       <Receipt className="w-4 h-4" />
                       Factura
                     </div>
                   </SelectItem>
-                  <SelectItem key="2" value="2">
+                  <SelectItem key="2">
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4" />
                       Presupuesto
                     </div>
                   </SelectItem>
-                  <SelectItem key="3" value="3">
+                  <SelectItem key="3">
                     <div className="flex items-center gap-2">
                       <Package className="w-4 h-4" />
                       Remito
@@ -709,7 +711,7 @@ export default function Ventas() {
                     }}
                   >
                     {puestosTrabajo.map((puesto) => (
-                      <SelectItem key={puesto.id.toString()} value={puesto.id.toString()}>
+                      <SelectItem key={puesto.id.toString()}>
                         {puesto.descripcion || `Puesto ${puesto.codigo}`}
                       </SelectItem>
                     ))}
@@ -1299,19 +1301,19 @@ export default function Ventas() {
                 });
               }}
             >
-              <SelectItem key="1" value="1">
+              <SelectItem key="1">
                 Efectivo
               </SelectItem>
-              <SelectItem key="2" value="2">
+              <SelectItem key="2">
                 Tarjeta
               </SelectItem>
-              <SelectItem key="3" value="3">
+              <SelectItem key="3">
                 Cheque
               </SelectItem>
-              <SelectItem key="4" value="4">
+                  <SelectItem key="4">
                 Cuenta Corriente
               </SelectItem>
-              <SelectItem key="5" value="5">
+                  <SelectItem key="5">
                 Transferencia
               </SelectItem>
             </Select>
@@ -1336,7 +1338,6 @@ export default function Ventas() {
                   {tarjetas.map((tarjeta) => (
                     <SelectItem
                       key={tarjeta.id.toString()}
-                      value={tarjeta.id.toString()}
                     >
                       {tarjeta.descripcion}
                     </SelectItem>
@@ -1439,8 +1440,8 @@ export default function Ventas() {
                         <p className="font-medium">{d.descripcion}</p>
                         <p className="text-sm text-gray-500">
                           {d.cantidad} x ${d.precio.toFixed(2)}
-                        </p>
-                      </div>
+        </p>
+      </div>
                       <p className="font-semibold">${d.subtotal.toFixed(2)}</p>
                     </div>
                   ))}

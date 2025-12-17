@@ -245,10 +245,10 @@ export default function Clientes() {
       const body = {
         nombre: nuevoCliente.nombre.trim(),
         apellido: nuevoCliente.apellido.trim(),
-        dni: nuevoCliente.dni.trim() || null,
+        dni: nuevoCliente.dni.trim() || undefined,
         direccion: nuevoCliente.direccion.trim(),
-        telefono: nuevoCliente.telefono.trim() || null,
-        mail: nuevoCliente.mail.trim(),
+        telefono: nuevoCliente.telefono.trim() || undefined,
+        email: nuevoCliente.mail.trim(),
         localidadId: Number(nuevoCliente.localidadId),
         condicionIvaId: Number(nuevoCliente.condicionIvaId),
         activarCtaCte: nuevoCliente.activarCtaCte,
@@ -337,20 +337,32 @@ export default function Clientes() {
 
     setIsSavingCliente(true);
     try {
-      const body: any = {
+      const body: {
+        nombre: string;
+        apellido: string;
+        dni?: string;
+        telefono?: string;
+        email?: string;
+        direccion?: string;
+        localidadId?: number;
+        condicionIvaId: number;
+        activarCtaCte: boolean;
+        tieneLimiteCompra: boolean;
+        limiteCompra?: number;
+      } = {
         nombre: nuevoCliente.nombre.trim(),
         apellido: nuevoCliente.apellido.trim(),
-        dni: nuevoCliente.dni.trim() || null,
+        dni: nuevoCliente.dni.trim() || undefined,
         direccion: nuevoCliente.direccion.trim(),
-        telefono: nuevoCliente.telefono.trim() || null,
-        mail: nuevoCliente.mail.trim(),
+        telefono: nuevoCliente.telefono.trim() || undefined,
+        email: nuevoCliente.mail.trim(),
         localidadId: Number(nuevoCliente.localidadId),
         condicionIvaId: Number(nuevoCliente.condicionIvaId),
         activarCtaCte: nuevoCliente.activarCtaCte,
         tieneLimiteCompra: nuevoCliente.tieneLimiteCompra,
-        montoMaximoCtaCte: nuevoCliente.tieneLimiteCompra
+        limiteCompra: nuevoCliente.tieneLimiteCompra
           ? Number(nuevoCliente.montoMaximoCtaCte) || 0
-          : 0,
+          : undefined,
       };
 
       const res = await fetch(`/api/clientes?id=${clienteAEditar.id}`, {

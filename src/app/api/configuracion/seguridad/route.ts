@@ -41,7 +41,7 @@ export async function GET() {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error en GET /api/configuracion/seguridad:", error);
     return NextResponse.json(
       { error: "Error al cargar la configuración de seguridad" },
@@ -72,7 +72,7 @@ export async function PUT(req: Request) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error actualizando seguridad", error);
     return NextResponse.json(
       { error: "No se pudo actualizar la configuración de seguridad" },

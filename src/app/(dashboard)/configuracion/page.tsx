@@ -625,11 +625,11 @@ export default function Configuracion() {
         description: "Todas las preferencias de venta se guardaron correctamente.",
         color: "success",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error guardando preferencias de venta:", error);
       addToast({
         title: "Error al guardar",
-        description: error?.message || "Ocurrió un error inesperado al guardar las preferencias.",
+        description: (error instanceof Error ? error.message : String(error)) || "Ocurrió un error inesperado al guardar las preferencias.",
         color: "danger",
       });
     } finally {
@@ -1301,7 +1301,7 @@ export default function Configuracion() {
                 classNames={{ trigger: "bg-white border-slate-200" }}
               >
                 {localidades.map((localidad) => (
-                  <SelectItem key={localidad.Id.toString()} value={localidad.Id.toString()}>
+                  <SelectItem key={localidad.Id.toString()}>
                     {localidad.Descripcion}
                   </SelectItem>
                 ))}
