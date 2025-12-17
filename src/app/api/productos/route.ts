@@ -169,32 +169,12 @@ export async function POST(req: NextRequest) {
         PrecioCosto: validarProducto.PrecioCosto,
         Ubicacion: validarProducto.Ubicacion,
         TenantId: tenantIdBigInt,
-        Iva: {
-          connect: {
-            Id: BigInt(validarProducto.IvaId),
-          },
-        },
+        IvaId: BigInt(validarProducto.IvaId),
         Foto: fotoDefault(),
-        Precio: {
-          connect: {
-            Id: precio.Id,
-          },
-        },
-        Marca: {
-          connect: {
-            Id: validarProducto.MarcaId,
-          },
-        },
-        Rubro: {
-          connect: {
-            Id: validarProducto.RubroId,
-          },
-        },
-        UnidadMedida: {
-          connect: {
-            Id: validarProducto.UnidadMedidaId,
-          },
-        },
+        PrecioId: precio.Id,
+        MarcaId: validarProducto.MarcaId,
+        RubroId: validarProducto.RubroId,
+        UnidadMedidaId: validarProducto.UnidadMedidaId,
       },
     });
 
@@ -277,54 +257,47 @@ export async function PATCH(req: NextRequest) {
     });
 
     // Modificar artículo
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updateData: any = {
+      Codigo: validarProducto.Codigo,
+      CodigoBarra: validarProducto.CodigoBarra,
+      Abreviatura: validarProducto.Abreviatura,
+      Descripcion: validarProducto.Descripcion,
+      Detalle: validarProducto.Detalle,
+      DescuentaStock: validarProducto.DescuentaStock,
+      EstaEliminado: validarProducto.EstaEliminado,
+      HoraLimiteVentaDesde: parseTime(validarProducto.HoraLimiteVentaDesde),
+      HoraLimiteVentaHasta: parseTime(validarProducto.HoraLimiteVentaHasta),
+      LimiteVenta: validarProducto.LimiteVenta,
+      PermiteStockNegativo: validarProducto.PermiteStockNegativo,
+      StockMinimo: validarProducto.StockMinimo,
+      VencimientoDias: validarProducto.VencimientoDias,
+      TipoVenta: validarProducto.TipoVenta,
+      PorcentajeGanancia: validarProducto.PorcentajeGanancia,
+      PrecioCosto: validarProducto.PrecioCosto,
+      Ubicacion: validarProducto.Ubicacion,
+      PrecioId: precio.Id,
+    };
+
+    // Agregar campos opcionales solo si están presentes
+    if (validarProducto.IvaId !== undefined) {
+      updateData.IvaId = BigInt(validarProducto.IvaId);
+    }
+    if (validarProducto.MarcaId !== undefined) {
+      updateData.MarcaId = validarProducto.MarcaId;
+    }
+    if (validarProducto.RubroId !== undefined) {
+      updateData.RubroId = validarProducto.RubroId;
+    }
+    if (validarProducto.UnidadMedidaId !== undefined) {
+      updateData.UnidadMedidaId = validarProducto.UnidadMedidaId;
+    }
+
     const producto = await prisma.articulo.update({
       where: {
         Id: BigInt(validarProducto.Id),
       },
-      data: {
-        Codigo: validarProducto.Codigo,
-        CodigoBarra: validarProducto.CodigoBarra,
-        Abreviatura: validarProducto.Abreviatura,
-        Descripcion: validarProducto.Descripcion,
-        Detalle: validarProducto.Detalle,
-        DescuentaStock: validarProducto.DescuentaStock,
-        EstaEliminado: validarProducto.EstaEliminado,
-        HoraLimiteVentaDesde: parseTime(validarProducto.HoraLimiteVentaDesde),
-        HoraLimiteVentaHasta: parseTime(validarProducto.HoraLimiteVentaHasta),
-        LimiteVenta: validarProducto.LimiteVenta,
-        PermiteStockNegativo: validarProducto.PermiteStockNegativo,
-        StockMinimo: validarProducto.StockMinimo,
-        VencimientoDias: validarProducto.VencimientoDias,
-        TipoVenta: validarProducto.TipoVenta,
-        PorcentajeGanancia: validarProducto.PorcentajeGanancia,
-        PrecioCosto: validarProducto.PrecioCosto,
-        Ubicacion: validarProducto.Ubicacion,
-        Iva: {
-          connect: {
-            Id: BigInt(validarProducto.IvaId),
-          },
-        },
-        Marca: {
-          connect: {
-            Id: validarProducto.MarcaId,
-          },
-        },
-        Rubro: {
-          connect: {
-            Id: validarProducto.RubroId,
-          },
-        },
-        UnidadMedida: {
-          connect: {
-            Id: validarProducto.UnidadMedidaId,
-          },
-        },
-        Precio: {
-          connect: {
-            Id: precio.Id,
-          },
-        },
-      },
+      data: updateData,
     });
 
     return NextResponse.json(

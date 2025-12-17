@@ -31,8 +31,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Deshabilitar completamente el procesamiento de CSS
-  css: false,
   esbuild: {
     target: "node18",
   },

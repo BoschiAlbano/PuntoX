@@ -3,7 +3,7 @@
  */
 import { NextResponse } from "next/server";
 import { AppErrorClass, createError } from "./types";
-import { Prisma } from "@prisma/client";
+import { PrismaClientKnownRequestError, PrismaClientValidationError } from "@prisma/client/runtime/library";
 
 /**
  * Detecta si un error es de conexión a la base de datos
@@ -26,7 +26,7 @@ export function isDatabaseConnectionError(error: unknown): boolean {
  * Convierte un error de Prisma a AppError
  */
 export function handlePrismaError(error: unknown): AppErrorClass {
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+  if (error instanceof PrismaClientKnownRequestError) {
     switch (error.code) {
       case "P2002":
         return createError.conflict("Ya existe un recurso con estos valores únicos", {
@@ -46,7 +46,7 @@ export function handlePrismaError(error: unknown): AppErrorClass {
     }
   }
 
-  if (error instanceof Prisma.PrismaClientValidationError) {
+  if (error instanceof PrismaClientValidationError) {
     return createError.validation("Error de validación en los datos", {
       message: error.message,
     });
@@ -65,28 +65,42 @@ export function handlePrismaError(error: unknown): AppErrorClass {
 export function handleError(error: unknown): NextResponse {
   // Si ya es un AppErrorClass, usarlo directamente
   if (error instanceof AppErrorClass) {
+    const errorResponse: {
+      code: string;
+      message: string;
+      details?: unknown;
+    } = {
+      code: error.code,
+      message: error.message,
+    };
+    if (error.details) {
+      errorResponse.details = error.details;
+    }
     return NextResponse.json(
       {
-        error: {
-          code: error.code,
-          message: error.message,
-          ...(error.details && { details: error.details }),
-        },
+        error: errorResponse,
       },
       { status: error.statusCode }
     );
   }
 
   // Si es un error de Prisma, convertirlo
-  if (error instanceof Prisma.PrismaClientKnownRequestError || error instanceof Prisma.PrismaClientValidationError) {
+  if (error instanceof PrismaClientKnownRequestError || error instanceof PrismaClientValidationError) {
     const appError = handlePrismaError(error);
+    const errorResponse: {
+      code: string;
+      message: string;
+      details?: unknown;
+    } = {
+      code: appError.code,
+      message: appError.message,
+    };
+    if (appError.details) {
+      errorResponse.details = appError.details;
+    }
     return NextResponse.json(
       {
-        error: {
-          code: appError.code,
-          message: appError.message,
-          ...(appError.details && { details: appError.details }),
-        },
+        error: errorResponse,
       },
       { status: appError.statusCode }
     );
