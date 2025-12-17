@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "tipoComprobante inválido", details: parsed.error.errors },
+        { error: "tipoComprobante inválido", details: parsed.error.issues },
         { status: 400 }
       );
     }

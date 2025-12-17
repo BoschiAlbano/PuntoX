@@ -62,7 +62,7 @@ export async function PUT(req: Request) {
 
     if (!parsed.success) {
       throw createError.validation("Datos inválidos", {
-        errors: parsed.error.errors,
+        errors: parsed.error.issues,
       });
     }
 

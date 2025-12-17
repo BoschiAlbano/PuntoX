@@ -3,6 +3,7 @@ import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import { z } from "zod";
+import { handleError } from "@/lib/errors/handler";
 import {
   TIPO_COMPROBANTE,
   TIPO_PAGO,
@@ -284,7 +285,6 @@ export async function POST(req: NextRequest) {
           // Crear condición IVA Consumidor Final si no existe
           const nuevaCondicionIva = await tx.condicionIva.create({
             data: {
-              TenantId: tenantIdBigInt,
               Descripcion: "Consumidor Final",
               EstaEliminado: false,
             },
@@ -295,12 +295,12 @@ export async function POST(req: NextRequest) {
         // Buscar cliente Consumidor Final existente
         const clienteExistente = await tx.persona_Cliente.findFirst({
           where: {
-            TenantId: tenantIdBigInt,
             Persona: {
+              TenantId: tenantIdBigInt,
               Nombre: "Consumidor",
               Apellido: "Final",
+              EstaEliminado: false,
             },
-            EstaEliminado: false,
           },
           include: {
             Persona: true,
@@ -311,11 +311,16 @@ export async function POST(req: NextRequest) {
           clienteIdFinalTx = Number(clienteExistente.Id);
         } else {
           // Crear Persona y Persona_Cliente para Consumidor Final
+          // Usar LocalidadId dummy (mismo que en configuracion)
+          const LOCALIDAD_DUMMY_ID = 2014010;
           const persona = await tx.persona.create({
             data: {
               TenantId: tenantIdBigInt,
               Nombre: "Consumidor",
               Apellido: "Final",
+              Direccion: "Sin dirección",
+              Mail: "consumidorfinal@example.com",
+              LocalidadId: BigInt(LOCALIDAD_DUMMY_ID),
               EstaEliminado: false,
             },
           });
@@ -323,11 +328,10 @@ export async function POST(req: NextRequest) {
           const cliente = await tx.persona_Cliente.create({
             data: {
               Id: persona.Id,
-              TenantId: tenantIdBigInt,
               CondicionIvaId: condicionIvaId!,
               ActivarCtaCte: false,
               TieneLimiteCompra: false,
-              EstaEliminado: false,
+              MontoMaximoCtaCte: 0,
             },
           });
 
@@ -490,11 +494,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
     } catch (error: unknown) {
-    console.error("Error creando comprobante", error);
-    return NextResponse.json(
-      { error: "Error al crear comprobante", details: error.message },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 

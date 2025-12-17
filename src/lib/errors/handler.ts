@@ -2,7 +2,7 @@
  * Helper para manejo consistente de errores en API Routes
  */
 import { NextResponse } from "next/server";
-import { AppErrorClass, ErrorCode, createError } from "./types";
+import { AppErrorClass, createError } from "./types";
 import { Prisma } from "@prisma/client";
 
 /**
@@ -123,7 +123,7 @@ export function handleError(error: unknown): NextResponse {
 /**
  * Wrapper para manejar errores en funciones async de API Routes
  */
-export function withErrorHandler<T extends (...args: any[]) => Promise<NextResponse>>(
+export function withErrorHandler<T extends (...args: unknown[]) => Promise<NextResponse>>(
   handler: T
 ): T {
   return (async (...args: Parameters<T>) => {

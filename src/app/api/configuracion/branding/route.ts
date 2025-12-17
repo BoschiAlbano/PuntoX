@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+import { handleError } from "@/lib/errors/handler";
 
 async function resolveTenantId() {
   const supabase = await getSupabaseServerClient();
@@ -116,30 +117,7 @@ export async function PUT(req: Request) {
       { status: 200 }
     );
   } catch (error: unknown) {
-    console.error("Error actualizando branding", error);
-    
-    // Detectar errores de conexión
-    const isConnectionError =
-      error?.code === "P1001" ||
-      error?.code === "P1002" ||
-      error?.code === "P1003" ||
-      error?.message?.toLowerCase().includes("can't reach database server") ||
-      error?.message?.toLowerCase().includes("connection timeout") ||
-      error?.message?.toLowerCase().includes("connection refused");
-
-    if (isConnectionError) {
-      return NextResponse.json(
-        {
-          error: "Error de conexión a la base de datos. Verifica tu conexión.",
-        },
-        { status: 503 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: error?.message || "No se pudo actualizar el branding" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 

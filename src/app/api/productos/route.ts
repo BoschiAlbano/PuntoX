@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
         TenantId: tenantIdBigInt,
         Iva: {
           connect: {
-            Id: validarProducto.IvaId,
+            Id: BigInt(validarProducto.IvaId),
           },
         },
         Foto: fotoDefault(),
@@ -301,7 +301,7 @@ export async function PATCH(req: NextRequest) {
         Ubicacion: validarProducto.Ubicacion,
         Iva: {
           connect: {
-            Id: validarProducto.IvaId,
+            Id: BigInt(validarProducto.IvaId),
           },
         },
         Marca: {

@@ -62,7 +62,7 @@ describe("serialization", () => {
     });
 
     it("debe manejar arrays vacíos", () => {
-      const emptyArray: any[] = [];
+      const emptyArray: unknown[] = [];
       const serialized = serializeBigIntArray(emptyArray);
 
       expect(Array.isArray(serialized)).toBe(true);

@@ -5,6 +5,41 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { requirePermiso, PermisoError } from "./requirePermiso";
 import prisma from "@/DB/prisma";
 
+// Tipos para mocks
+type MockUsuario = {
+  Id: bigint;
+  TenantId: bigint;
+  PerfilUsuario: Array<{
+    Perfiles: {
+      Id: bigint;
+      Tipo: "ADMINISTRADOR" | "EMPLEADO";
+      PerfilPermiso: Array<{
+        Permiso: {
+          Clave: string;
+          EstaEliminado: boolean;
+        };
+      }>;
+    };
+  }>;
+};
+
+type MockPermiso = {
+  Id: bigint;
+  Clave: string;
+  TenantId: bigint;
+  EstaEliminado: boolean;
+};
+
+type MockPerfil = {
+  Id: bigint;
+};
+
+type MockPerfilPermiso = {
+  Id: bigint;
+  PerfilId: bigint;
+  PermisoId: bigint;
+};
+
 // Mock de Prisma
 vi.mock("@/DB/prisma", () => ({
   default: {
@@ -76,7 +111,7 @@ describe("requirePermiso", () => {
       ],
     };
 
-    vi.mocked(prisma.usuario.findFirst).mockResolvedValue(mockUsuario as any);
+    vi.mocked(prisma.usuario.findFirst).mockResolvedValue(mockUsuario as MockUsuario);
 
     const result = await requirePermiso("productos:crear");
 
@@ -106,7 +141,7 @@ describe("requirePermiso", () => {
       ],
     };
 
-    vi.mocked(prisma.usuario.findFirst).mockResolvedValue(mockUsuario as any);
+    vi.mocked(prisma.usuario.findFirst).mockResolvedValue(mockUsuario as MockUsuario);
 
     await expect(
       requirePermiso("productos:crear")
@@ -140,15 +175,15 @@ describe("requirePermiso", () => {
       { Id: BigInt(2) },
     ];
 
-    vi.mocked(prisma.usuario.findFirst).mockResolvedValue(mockUsuario as any);
-    vi.mocked(prisma.permiso.upsert).mockResolvedValue(mockPermiso as any);
-    vi.mocked(prisma.perfiles.findMany).mockResolvedValue(mockRolesAdmin as any);
+    vi.mocked(prisma.usuario.findFirst).mockResolvedValue(mockUsuario as MockUsuario);
+    vi.mocked(prisma.permiso.upsert).mockResolvedValue(mockPermiso as MockPermiso);
+    vi.mocked(prisma.perfiles.findMany).mockResolvedValue(mockRolesAdmin as MockPerfil[]);
     vi.mocked(prisma.perfilPermiso.createMany).mockResolvedValue({ count: 2 });
     vi.mocked(prisma.perfilPermiso.findFirst).mockResolvedValue({
       Id: BigInt(1),
       PerfilId: BigInt(1),
       PermisoId: BigInt(1),
-    } as any);
+    } as MockPerfilPermiso);
 
     const result = await requirePermiso("productos:crear");
 
