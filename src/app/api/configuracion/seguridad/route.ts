@@ -1,83 +1,89 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
-import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { handleError, isDatabaseConnectionError } from "@/lib/errors/handler";
+import { createError } from "@/lib/errors/types";
 
 const seguridadSchema = z.object({
-  dobleFactor: z.boolean().optional(),
-  alertarNuevoDispositivo: z.boolean().optional(),
-  bloquearPorInactividad: z.boolean().optional(),
-  bloquearTrasIntentos: z.enum(["nunca", "5", "10"]).optional(),
-  recordarSesion30Dias: z.boolean().optional(),
+  forzar2FA: z.boolean().optional(),
+  expirarSesiones30Dias: z.boolean().optional(),
+  bloquearTras5Intentos: z.boolean().optional(),
+  alertasNuevoDevice: z.boolean().optional(),
 });
 
-async function resolveTenantId() {
-  const supabase = await getSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const tenantId = user?.user_metadata?.tenantId;
-  return tenantId ? Number(tenantId) : null;
-}
-
+/**
+ * GET: Obtiene la configuración de seguridad del tenant
+ * Por ahora usamos valores por defecto, pero la estructura está lista
+ * para cuando se agregue una tabla TenantSeguridad en el futuro
+ */
 export async function GET() {
-  const tenantId = await resolveTenantId();
-  if (!tenantId) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-  }
-
   try {
+    const { tenantId, error } = await getAuthUser();
+
+    if (error) {
+      return error;
+    }
+
     // Por ahora retornamos valores por defecto
-    // En el futuro se puede crear una tabla TenantSeguridad
+    // En el futuro se puede crear una tabla TenantSeguridad o agregar campos a Configuracion
     return NextResponse.json(
       {
-        seguridad: {
-          dobleFactor: false,
-          alertarNuevoDispositivo: true,
-          bloquearPorInactividad: true,
-          bloquearTrasIntentos: "5",
-          recordarSesion30Dias: true,
-        },
+        forzar2FA: false,
+        expirarSesiones30Dias: true,
+        bloquearTras5Intentos: false,
+        alertasNuevoDevice: true,
       },
       { status: 200 }
     );
   } catch (error: unknown) {
-    console.error("Error en GET /api/configuracion/seguridad:", error);
-    return NextResponse.json(
-      { error: "Error al cargar la configuración de seguridad" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
+/**
+ * PUT: Actualiza la configuración de seguridad del tenant
+ */
 export async function PUT(req: Request) {
-  const tenantId = await resolveTenantId();
-  if (!tenantId) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-  }
-
-  const json = await req.json().catch(() => null);
-  const parsed = seguridadSchema.safeParse(json);
-
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Datos invalidos" }, { status: 400 });
-  }
-
   try {
-    // Por ahora solo retornamos éxito
-    // En el futuro se puede guardar en una tabla TenantSeguridad
+    const { tenantId, error } = await getAuthUser();
+
+    if (error) {
+      return error;
+    }
+
+    const json = await req.json().catch(() => null);
+    
+    if (!json) {
+      throw createError.validation("Cuerpo de la petición inválido");
+    }
+
+    const parsed = seguridadSchema.safeParse(json);
+
+    if (!parsed.success) {
+      throw createError.validation("Datos inválidos", {
+        errors: parsed.error.errors,
+      });
+    }
+
+    // Por ahora solo validamos y retornamos éxito
+    // En el futuro se puede guardar en una tabla TenantSeguridad o agregar campos a Configuracion
+    // Ejemplo futuro:
+    // await prisma.tenantSeguridad.upsert({
+    //   where: { TenantId: BigInt(tenantId) },
+    //   update: parsed.data,
+    //   create: { TenantId: BigInt(tenantId), ...parsed.data },
+    // });
+
     return NextResponse.json(
       {
+        message: "Configuración de seguridad actualizada",
         seguridad: parsed.data,
       },
       { status: 200 }
     );
   } catch (error: unknown) {
-    console.error("Error actualizando seguridad", error);
-    return NextResponse.json(
-      { error: "No se pudo actualizar la configuración de seguridad" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 

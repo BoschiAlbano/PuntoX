@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { handleError } from "@/lib/errors/handler";
 
 // GET: Listar tarjetas configuradas
 export async function GET(_req: NextRequest) {
@@ -28,11 +29,7 @@ export async function GET(_req: NextRequest) {
 
     return NextResponse.json({ tarjetas: response }, { status: 200 });
   } catch (error) {
-    console.error("Error al obtener tarjetas", error);
-    return NextResponse.json(
-      { error: "Error al obtener tarjetas" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 

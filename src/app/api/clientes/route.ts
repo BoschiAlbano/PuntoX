@@ -33,6 +33,9 @@ const updateClienteSchema = z.object({
   montoMaximoCtaCte: z.number().min(0).optional(),
 });
 
+import { parsePaginationParams, createPaginationResponse } from "@/lib/pagination";
+import { handleError } from "@/lib/errors/handler";
+
 // GET: Listar clientes
 export async function GET(req: NextRequest) {
   try {
@@ -42,6 +45,7 @@ export async function GET(req: NextRequest) {
       return error;
     }
 
+    const pagination = parsePaginationParams(req);
     const searchParams = req.nextUrl.searchParams;
     const busqueda = searchParams.get("q")?.trim() || "";
 
@@ -71,8 +75,13 @@ export async function GET(req: NextRequest) {
       ];
     }
 
+    // Obtener total para paginación
+    const total = await prisma.persona.count({ where });
+
     const clientes = await prisma.persona.findMany({
       where,
+      skip: pagination.skip,
+      take: pagination.limit,
       select: {
         Id: true,
         Nombre: true,
@@ -141,33 +150,11 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({ clientes: response }, { status: 200 });
+    const paginatedResponse = createPaginationResponse(response, total, pagination);
+
+    return NextResponse.json(paginatedResponse, { status: 200 });
   } catch (error) {
-    console.error("Error al obtener clientes", error);
-    const errorObj = error as { code?: string; message?: string };
-    const isConnectionError =
-      errorObj?.code === "P1001" ||
-      errorObj?.code === "P1002" ||
-      errorObj?.code === "P1003" ||
-      errorObj?.message?.toLowerCase().includes("can't reach database server") ||
-      errorObj?.message?.toLowerCase().includes("connection timeout") ||
-      errorObj?.message?.toLowerCase().includes("connection refused") ||
-      errorObj?.message?.toLowerCase().includes("econnrefused") ||
-      errorObj?.message?.toLowerCase().includes("etimedout");
-
-    if (isConnectionError) {
-      return NextResponse.json(
-        {
-          error: "Error de conexión a la base de datos. Verifica tu conexión.",
-        },
-        { status: 503 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: "Error al obtener clientes" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -349,31 +336,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ cliente: clienteResponse }, { status: 201 });
   } catch (error: unknown) {
-    console.error("Error creando cliente", error);
-    const errorObj = error as { code?: string; message?: string };
-    const isConnectionError =
-      errorObj?.code === "P1001" ||
-      errorObj?.code === "P1002" ||
-      errorObj?.code === "P1003" ||
-      errorObj?.message?.toLowerCase().includes("can't reach database server") ||
-      errorObj?.message?.toLowerCase().includes("connection timeout") ||
-      errorObj?.message?.toLowerCase().includes("connection refused") ||
-      errorObj?.message?.toLowerCase().includes("econnrefused") ||
-      errorObj?.message?.toLowerCase().includes("etimedout");
-
-    if (isConnectionError) {
-      return NextResponse.json(
-        {
-          error: "Error de conexión a la base de datos. Verifica tu conexión.",
-        },
-        { status: 503 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: "No se pudo crear el cliente" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -646,31 +609,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ cliente: clienteResponse }, { status: 200 });
   } catch (error: unknown) {
-    console.error("Error actualizando cliente", error);
-    const errorObj = error as { code?: string; message?: string };
-    const isConnectionError =
-      errorObj?.code === "P1001" ||
-      errorObj?.code === "P1002" ||
-      errorObj?.code === "P1003" ||
-      errorObj?.message?.toLowerCase().includes("can't reach database server") ||
-      errorObj?.message?.toLowerCase().includes("connection timeout") ||
-      errorObj?.message?.toLowerCase().includes("connection refused") ||
-      errorObj?.message?.toLowerCase().includes("econnrefused") ||
-      errorObj?.message?.toLowerCase().includes("etimedout");
-
-    if (isConnectionError) {
-      return NextResponse.json(
-        {
-          error: "Error de conexión a la base de datos. Verifica tu conexión.",
-        },
-        { status: 503 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: "No se pudo actualizar el cliente" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -737,31 +676,7 @@ export async function DELETE(req: NextRequest) {
       { status: 200 }
     );
   } catch (error: unknown) {
-    console.error("Error eliminando cliente", error);
-    const errorObj = error as { code?: string; message?: string };
-    const isConnectionError =
-      errorObj?.code === "P1001" ||
-      errorObj?.code === "P1002" ||
-      errorObj?.code === "P1003" ||
-      errorObj?.message?.toLowerCase().includes("can't reach database server") ||
-      errorObj?.message?.toLowerCase().includes("connection timeout") ||
-      errorObj?.message?.toLowerCase().includes("connection refused") ||
-      errorObj?.message?.toLowerCase().includes("econnrefused") ||
-      errorObj?.message?.toLowerCase().includes("etimedout");
-
-    if (isConnectionError) {
-      return NextResponse.json(
-        {
-          error: "Error de conexión a la base de datos. Verifica tu conexión.",
-        },
-        { status: 503 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: "No se pudo eliminar el cliente" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 

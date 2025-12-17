@@ -286,14 +286,17 @@ export default function Configuracion() {
         const res = await fetch("/api/configuracion");
         if (!res.ok) {
           const errorData = await res.json().catch(() => null);
+          // handleError devuelve { error: { code, message, ... } }
+          // pero también puede venir { error: "mensaje" } en algunos casos
           const errorMessage =
-            errorData?.error ?? "No se pudo cargar la configuracion";
+            (typeof errorData?.error === "string" 
+              ? errorData.error 
+              : errorData?.error?.message) || "No se pudo cargar la configuración";
           
           // Diferenciar entre errores de conexión (503) y errores de permisos (401/403)
           if (res.status === 503) {
             // Error de conexión a la base de datos
             setIsOffline(true);
-            console.error("Error de conexión a la base de datos:", errorMessage);
             // No mostrar toast duplicado si ya se mostró en loadTenant
             if (!isLoadingTenant) {
               addToast({
@@ -306,7 +309,6 @@ export default function Configuracion() {
           } else if (res.status === 401 || res.status === 403) {
             // Error de autenticación/autorización
             setIsOffline(false);
-            console.error("Error de permisos:", errorMessage);
             addToast({
               title: "Sin permisos",
               description: errorMessage || "No tienes permisos para acceder a esta configuración.",
@@ -315,12 +317,10 @@ export default function Configuracion() {
           } else if (res.status === 404) {
             // No hay configuración, usar valores por defecto
             setIsOffline(false);
-            console.log("No se encontró configuración, usando valores por defecto");
             // No mostrar error, simplemente usar valores por defecto
           } else {
             // Otros errores (500, etc.)
             setIsOffline(false);
-            console.error("Error cargando configuración:", errorMessage);
             addToast({
               title: "Error",
               description: errorMessage,

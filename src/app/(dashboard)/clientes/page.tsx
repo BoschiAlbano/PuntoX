@@ -21,6 +21,7 @@ import {
 } from "@heroui/react";
 import { addToast } from "@heroui/react";
 import { Pencil, Trash2, UserPlus } from "lucide-react";
+import Pagination, { PaginationInfo } from "@/components/common/Pagination";
 
 type Cliente = {
   id: number;
@@ -88,6 +89,16 @@ export default function Clientes() {
   const [isSavingCliente, setIsSavingCliente] = useState(false);
   const [isDeletingCliente, setIsDeletingCliente] = useState(false);
   const [busqueda, setBusqueda] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
   const [openModalCrear, setOpenModalCrear] = useState(false);
   const [openModalEditar, setOpenModalEditar] = useState(false);
   const [openModalEliminar, setOpenModalEliminar] = useState(false);
@@ -112,15 +123,40 @@ export default function Clientes() {
   const loadData = async () => {
     setIsLoadingData(true);
     try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+      if (busqueda.trim()) {
+        params.append("q", busqueda.trim());
+      }
+
       const [clientesRes, condicionesRes, provinciasRes] = await Promise.all([
-        fetch("/api/clientes", { cache: "no-store" }),
+        fetch(`/api/clientes?${params.toString()}`, { cache: "no-store" }),
         fetch("/api/condiciones-iva", { cache: "no-store" }),
         fetch("/api/provincias", { cache: "no-store" }),
       ]);
 
       if (clientesRes.ok) {
         const clientesData = await clientesRes.json();
-        setClientes(Array.isArray(clientesData?.clientes) ? clientesData.clientes : []);
+        // Manejar respuesta paginada o formato antiguo
+        if (clientesData?.data && clientesData?.pagination) {
+          setClientes(clientesData.data);
+          setPagination(clientesData.pagination);
+        } else if (Array.isArray(clientesData?.clientes)) {
+          // Formato antiguo (retrocompatibilidad)
+          setClientes(clientesData.clientes);
+          setPagination({
+            page: 1,
+            limit: clientesData.clientes.length,
+            total: clientesData.clientes.length,
+            totalPages: 1,
+            hasNextPage: false,
+            hasPreviousPage: false,
+          });
+        } else {
+          setClientes([]);
+        }
       } else {
         addToast({
           title: "Error",
@@ -156,7 +192,7 @@ export default function Clientes() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [page, limit, busqueda]);
 
   const loadDepartamentos = async (provId: string) => {
     if (!provId) {
@@ -211,17 +247,8 @@ export default function Clientes() {
     }
   }, [departamentoSeleccionado]);
 
-  const clientesFiltrados = useMemo(() => {
-    if (!busqueda.trim()) return clientes;
-    const busquedaLower = busqueda.toLowerCase();
-    return clientes.filter(
-      (cliente) =>
-        cliente.nombreCompleto.toLowerCase().includes(busquedaLower) ||
-        cliente.mail.toLowerCase().includes(busquedaLower) ||
-        (cliente.dni && cliente.dni.toLowerCase().includes(busquedaLower)) ||
-        (cliente.telefono && cliente.telefono.includes(busquedaLower))
-    );
-  }, [clientes, busqueda]);
+  // La búsqueda ahora se hace en el servidor, no necesitamos filtrar en el cliente
+  const clientesFiltrados = clientes;
 
   const handleCrearCliente = async () => {
     if (
@@ -277,7 +304,8 @@ export default function Clientes() {
 
       const data = await res.json();
       if (data?.cliente) {
-        setClientes((prev) => [...prev, data.cliente]);
+        // Recargar datos para actualizar la paginación
+        loadData();
       }
 
       addToast({
@@ -547,7 +575,10 @@ export default function Clientes() {
                 placeholder="Buscar por nombre, email, DNI o teléfono"
                 startContent={<span className="text-gray-500">🔍</span>}
                 value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
+                onChange={(e) => {
+                  setBusqueda(e.target.value);
+                  setPage(1); // Resetear a página 1 al buscar
+                }}
                 className="w-full md:max-w-xs"
               />
               <Button
@@ -650,6 +681,24 @@ export default function Clientes() {
             </p>
           )}
         </CardBody>
+        
+        {/* Paginación */}
+        {pagination.total > 0 && (
+          <div className="p-4 border-t border-gray-200">
+            <Pagination
+              pagination={pagination}
+              onPageChange={(newPage) => {
+                setPage(newPage);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              onLimitChange={(newLimit) => {
+                setLimit(newLimit);
+                setPage(1);
+              }}
+              showLimitSelector={true}
+            />
+          </div>
+        )}
       </Card>
 
       {/* Modal Crear Cliente */}

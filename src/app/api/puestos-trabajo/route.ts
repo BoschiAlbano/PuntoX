@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { handleError } from "@/lib/errors/handler";
 
 // GET: Listar puestos de trabajo
 export async function GET(_req: NextRequest) {
@@ -29,11 +30,7 @@ export async function GET(_req: NextRequest) {
 
     return NextResponse.json({ puestos: response }, { status: 200 });
   } catch (error) {
-    console.error("Error al obtener puestos de trabajo", error);
-    return NextResponse.json(
-      { error: "Error al obtener puestos de trabajo" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 

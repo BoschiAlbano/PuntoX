@@ -30,6 +30,7 @@ import {
 import { addToast } from "@heroui/react";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { Pencil, Trash2 } from "lucide-react";
+import Pagination, { PaginationInfo } from "@/components/common/Pagination";
 
 // PÃ¡gina funcional de empleados: alta rÃ¡pida, roles y tabla conectada a las APIs.
 type EstadoEmpleado = "Activo" | "Invitado" | "Suspendido";
@@ -148,6 +149,18 @@ export default function Empleados() {
   const [localidades, setLocalidades] = useState<Localidad[]>([]);
   const [provincias, setProvincias] = useState<Provincia[]>([]);
   const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
+  
+  // Estado de paginación
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
 
   const [filtros, setFiltros] = useState({
     busqueda: "",
@@ -299,14 +312,27 @@ export default function Empleados() {
     ];
     try {
       const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
-      const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
-      const rolesRes = await fetch(`/api/roles${tenantQuery}`, {
+      
+      // Construir query para roles (sin paginación)
+      const rolesQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
+      
+      // Construir query para empleados (con paginación)
+      const paginationParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+      if (tenantParam) {
+        paginationParams.append("tenantId", tenantParam);
+      }
+      const empleadosQuery = `?${paginationParams.toString()}`;
+      
+      const rolesRes = await fetch(`/api/roles${rolesQuery}`, {
         cache: "no-store",
       }).catch(() => null);
       const provRes = await fetch("/api/provincias", {
         cache: "no-store",
       }).catch(() => null);
-      const empRes = await fetch(`/api/empleados${tenantQuery}`, {
+      const empRes = await fetch(`/api/empleados${empleadosQuery}`, {
         cache: "no-store",
       }).catch(() => null);
 
@@ -361,9 +387,24 @@ export default function Empleados() {
 
       if (empRes && empRes.ok) {
         const empJson = await empRes.json();
-        setEmpleados(
-          Array.isArray(empJson?.empleados) ? empJson.empleados : []
-        );
+        // Manejar respuesta paginada o formato antiguo
+        if (empJson?.data && empJson?.pagination) {
+          setEmpleados(empJson.data);
+          setPagination(empJson.pagination);
+        } else if (Array.isArray(empJson?.empleados)) {
+          // Formato antiguo (retrocompatibilidad)
+          setEmpleados(empJson.empleados);
+          setPagination({
+            page: 1,
+            limit: empJson.empleados.length,
+            total: empJson.empleados.length,
+            totalPages: 1,
+            hasNextPage: false,
+            hasPreviousPage: false,
+          });
+        } else {
+          setEmpleados([]);
+        }
       } else {
         if (empRes?.status === 401 || empRes?.status === 403) {
           setIsAuthorized(false);
@@ -401,7 +442,7 @@ export default function Empleados() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [page, limit]);
 
   const loadDepartamentos = async (provId: string, q?: string) => {
     if (!provId) {
@@ -1221,12 +1262,14 @@ export default function Empleados() {
                       placeholder="Buscar por nombre o correo"
                       startContent={<span className="text-gray-500">🔍</span>}
                       value={filtros.busqueda}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setFiltros((prev) => ({
                           ...prev,
                           busqueda: e.target.value,
-                        }))
-                      }
+                        }));
+                        // Resetear a página 1 al buscar (los filtros se hacen en cliente)
+                        setPage(1);
+                      }}
                       className="w-full md:max-w-xs"
                     />
 
@@ -1372,6 +1415,24 @@ export default function Empleados() {
                   </p>
                 )}
               </CardBody>
+              
+              {/* Paginación */}
+              {pagination.total > 0 && (
+                <div className="p-4 border-t border-gray-200">
+                  <Pagination
+                    pagination={pagination}
+                    onPageChange={(newPage) => {
+                      setPage(newPage);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    onLimitChange={(newLimit) => {
+                      setLimit(newLimit);
+                      setPage(1);
+                    }}
+                    showLimitSelector={true}
+                  />
+                </div>
+              )}
             </Card>
           </div>
         </Tab>

@@ -26,6 +26,7 @@ import {
   Spinner,
 } from "@heroui/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import Pagination, { PaginationInfo } from "@/components/common/Pagination";
 
 // Tipos para el producto basados en el modelo Articulo de Prisma
 interface Producto {
@@ -97,16 +98,59 @@ const tiposVenta = [
   { id: 2, nombre: "Por Unidad" },
 ];
 
+// Tipos para respuesta paginada
+interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
 // Funciones fetch
 const fetchProductos = async ({
   signal,
+  page = 1,
+  limit = 20,
+  search = "",
 }: {
   signal: AbortSignal;
-}): Promise<Producto[]> => {
-  const response = await fetch("/api/productos", { signal });
+  page?: number;
+  limit?: number;
+  search?: string;
+}): Promise<PaginatedResponse<Producto>> => {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  });
+  if (search) {
+    params.append("q", search);
+  }
+
+  const response = await fetch(`/api/productos?${params.toString()}`, { signal });
   if (!response.ok) throw new Error("Error al cargar productos");
   const data = await response.json();
-  return Array.isArray(data?.productos) ? data.productos : [];
+  
+  // Compatibilidad: si viene el formato antiguo, lo convertimos
+  if (data?.productos && Array.isArray(data.productos)) {
+    return {
+      data: data.productos,
+      pagination: {
+        page: 1,
+        limit: data.productos.length,
+        total: data.productos.length,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
+    };
+  }
+  
+  return data;
 };
 
 const fetchMarcas = async ({
@@ -168,6 +212,11 @@ export default function ProductoCRUD() {
     null
   );
   const [modoEdicion, setModoEdicion] = useState(false);
+  
+  // Estado de paginación y búsqueda
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [search, setSearch] = useState("");
 
   // Queries de datos auxiliares
   const { data: marcas = [] } = useQuery({
@@ -222,15 +271,25 @@ export default function ProductoCRUD() {
     EstaEliminado: false,
   });
 
-  // Query para obtener productos
+  // Query para obtener productos con paginación
   const {
-    data: productos = [],
+    data: productosResponse,
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["productos"],
-    queryFn: fetchProductos,
+    queryKey: ["productos", page, limit, search],
+    queryFn: ({ signal }) => fetchProductos({ signal, page, limit, search }),
   });
+
+  const productos = productosResponse?.data || [];
+  const pagination: PaginationInfo = productosResponse?.pagination || {
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  };
 
   // Mutación para crear/actualizar
   const saveMutation = useMutation({
@@ -286,6 +345,8 @@ export default function ProductoCRUD() {
         color: "success",
       });
       onClose();
+      // Resetear a página 1 después de crear/editar
+      setPage(1);
     },
     onError: (error: ApiError) => {
       if (error.details && error.details.length > 0) {
@@ -447,6 +508,20 @@ export default function ProductoCRUD() {
         </Button>
       </div>
 
+      {/* Búsqueda */}
+      <div className="flex gap-2">
+        <Input
+          placeholder="Buscar por descripción o código de barras..."
+          value={search}
+          onValueChange={(value) => {
+            setSearch(value);
+            setPage(1); // Resetear a página 1 al buscar
+          }}
+          className="flex-1"
+          startContent={<span>🔍</span>}
+        />
+      </div>
+
       {/* Tabla de productos */}
       <div className="bg-white rounded-lg shadow-sm">
         <Table aria-label="Tabla de productos">
@@ -532,6 +607,25 @@ export default function ProductoCRUD() {
             ))}
           </TableBody>
         </Table>
+        
+        {/* Paginación */}
+        {pagination.total > 0 && (
+          <div className="p-4">
+            <Pagination
+              pagination={pagination}
+              onPageChange={(newPage) => {
+                setPage(newPage);
+                // Scroll al inicio de la tabla
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              onLimitChange={(newLimit) => {
+                setLimit(newLimit);
+                setPage(1);
+              }}
+              showLimitSelector={true}
+            />
+          </div>
+        )}
       </div>
 
       {/* Modal para crear/editar */}

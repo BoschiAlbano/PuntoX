@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+import { handleError } from "@/lib/errors/handler";
 
 const updateTenantSchema = z.object({
   nombre: z.string().min(1).optional(),
@@ -64,33 +65,7 @@ export async function GET() {
       { status: 200 }
     );
   } catch (error: unknown) {
-    console.error("Error en GET /api/tenant:", error);
-    // Detectar errores reales de conexión a la base de datos
-    // Solo retornar 503 para errores de conexión específicos de Prisma
-    const isConnectionError =
-      error?.code === "P1001" || // Can't reach database server
-      error?.code === "P1002" || // Database timeout
-      error?.code === "P1003" || // Database does not exist
-      error?.message?.toLowerCase().includes("can't reach database server") ||
-      error?.message?.toLowerCase().includes("connection timeout") ||
-      error?.message?.toLowerCase().includes("connection refused") ||
-      error?.message?.toLowerCase().includes("econnrefused") ||
-      error?.message?.toLowerCase().includes("etimedout");
-
-    if (isConnectionError) {
-      return NextResponse.json(
-        {
-          error: "Error de conexión a la base de datos. Verifica tu conexión.",
-        },
-        { status: 503 }
-      );
-    }
-    
-    // Para otros errores, retornar 500 (error interno del servidor)
-    return NextResponse.json(
-      { error: "Error al cargar el tenant" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -154,31 +129,6 @@ export async function PUT(req: NextRequest) {
       return tenantNotFound();
     }
     
-    console.error("Error actualizando tenant", err);
-    
-    // Detectar errores reales de conexión a la base de datos
-    const isConnectionError =
-      err?.code === "P1001" || // Can't reach database server
-      err?.code === "P1002" || // Database timeout
-      err?.code === "P1003" || // Database does not exist
-      err?.message?.toLowerCase().includes("can't reach database server") ||
-      err?.message?.toLowerCase().includes("connection timeout") ||
-      err?.message?.toLowerCase().includes("connection refused") ||
-      err?.message?.toLowerCase().includes("econnrefused") ||
-      err?.message?.toLowerCase().includes("etimedout");
-
-    if (isConnectionError) {
-      return NextResponse.json(
-        {
-          error: "Error de conexión a la base de datos. Verifica tu conexión.",
-        },
-        { status: 503 }
-      );
-    }
-    
-    return NextResponse.json(
-      { error: "No se pudo actualizar el tenant" },
-      { status: 500 }
-    );
+    return handleError(err);
   }
 }

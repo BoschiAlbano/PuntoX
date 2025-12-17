@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
 import { z } from "zod";
+import { handleError } from "@/lib/errors/handler";
 
 // Schema para obtener próximo número
 const getNextNumberSchema = z.object({
@@ -78,11 +79,7 @@ export async function GET(req: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error al obtener próximo número", error);
-    return NextResponse.json(
-      { error: "Error al obtener próximo número de comprobante" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 

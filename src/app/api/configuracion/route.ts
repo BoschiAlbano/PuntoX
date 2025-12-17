@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+import { handleError } from "@/lib/errors/handler";
 
 const LOCALIDAD_DUMMY_ID = 2014010;
 
@@ -142,33 +143,7 @@ export async function GET() {
       { status: 200 }
     );
   } catch (error: unknown) {
-    console.error("Error en GET /api/configuracion:", error);
-    // Detectar errores reales de conexión a la base de datos
-    // Solo retornar 503 para errores de conexión específicos de Prisma
-    const isConnectionError =
-      error?.code === "P1001" || // Can't reach database server
-      error?.code === "P1002" || // Database timeout
-      error?.code === "P1003" || // Database does not exist
-      error?.message?.toLowerCase().includes("can't reach database server") ||
-      error?.message?.toLowerCase().includes("connection timeout") ||
-      error?.message?.toLowerCase().includes("connection refused") ||
-      error?.message?.toLowerCase().includes("econnrefused") ||
-      error?.message?.toLowerCase().includes("etimedout");
-
-    if (isConnectionError) {
-      return NextResponse.json(
-        {
-          error: "Error de conexión a la base de datos. Verifica tu conexión.",
-        },
-        { status: 503 }
-      );
-    }
-    
-    // Para otros errores, retornar 500 (error interno del servidor)
-    return NextResponse.json(
-      { error: "Error al cargar la configuración" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -382,31 +357,6 @@ export async function PUT(req: Request) {
       { status: result.isNew ? 201 : 200 }
     );
   } catch (error: unknown) {
-    console.error("Error actualizando configuracion", error);
-    
-    // Detectar errores reales de conexión a la base de datos
-    const isConnectionError =
-      error?.code === "P1001" || // Can't reach database server
-      error?.code === "P1002" || // Database timeout
-      error?.code === "P1003" || // Database does not exist
-      error?.message?.toLowerCase().includes("can't reach database server") ||
-      error?.message?.toLowerCase().includes("connection timeout") ||
-      error?.message?.toLowerCase().includes("connection refused") ||
-      error?.message?.toLowerCase().includes("econnrefused") ||
-      error?.message?.toLowerCase().includes("etimedout");
-
-    if (isConnectionError) {
-      return NextResponse.json(
-        {
-          error: "Error de conexión a la base de datos. Verifica tu conexión.",
-        },
-        { status: 503 }
-      );
-    }
-    
-    return NextResponse.json(
-      { error: "No se pudo actualizar la configuracion" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }

@@ -58,7 +58,6 @@ export async function getPreferenciasVenta(): Promise<PreferenciasVentaDTO> {
       numerarPedidosPantalla: config.NumerarPedidosPantalla ?? true,
     };
   } catch (error) {
-    console.error("Error obteniendo preferencias de venta:", error);
     // En caso de error, retornar defaults
     return DEFAULT_PREFERENCIAS;
   }

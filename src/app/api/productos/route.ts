@@ -6,8 +6,11 @@ import {
   updateProductoSchema,
 } from "@/lib/validations/producto.schema";
 import { ZodError } from "zod";
+import { parsePaginationParams, createPaginationResponse } from "@/lib/pagination";
+import { handleError } from "@/lib/errors/handler";
+import { createError } from "@/lib/errors/types";
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
     const { tenantId, error } = await getAuthUser();
 
@@ -15,11 +18,36 @@ export async function GET(_req: NextRequest) {
       return error;
     }
 
+    const pagination = parsePaginationParams(req);
+    const search = req.nextUrl.searchParams.get("q")?.trim() || "";
+
+    // Construir where clause
+    const where: {
+      TenantId: bigint;
+      EstaEliminado: boolean;
+      OR?: Array<{
+        Descripcion?: { contains: string; mode: "insensitive" };
+        CodigoBarra?: { contains: string; mode: "insensitive" };
+      }>;
+    } = {
+      TenantId: BigInt(tenantId),
+      EstaEliminado: false,
+    };
+
+    // Agregar búsqueda si existe
+    if (search) {
+      where.OR = [
+        { Descripcion: { contains: search, mode: "insensitive" } },
+        { CodigoBarra: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    // Obtener total para paginación
+    const total = await prisma.articulo.count({ where });
+
+    // Obtener productos paginados
     const productos = await prisma.articulo.findMany({
-      where: {
-        TenantId: BigInt(tenantId),
-        EstaEliminado: false,
-      },
+      where,
       select: {
         Id: true,
         Codigo: true,
@@ -51,6 +79,8 @@ export async function GET(_req: NextRequest) {
       orderBy: {
         Descripcion: "asc",
       },
+      skip: pagination.skip,
+      take: pagination.limit,
     });
 
     // Serializar BigInt a Number para JSON y validar datos
@@ -76,18 +106,11 @@ export async function GET(_req: NextRequest) {
         PermiteStockNegativo: producto.PermiteStockNegativo || false,
       }));
 
-    return NextResponse.json(
-      {
-        productos: productosSerializados,
-      },
-      { status: 200 }
-    );
+    const response = createPaginationResponse(productosSerializados, total, pagination);
+
+    return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.log(error);
-    return NextResponse.json(
-      { error: "Error al obtener productos" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -99,13 +122,20 @@ export async function POST(req: NextRequest) {
       return error;
     }
 
+    // Validar tenantId - NO permitir fallbacks
+    if (!tenantId || tenantId <= 0) {
+      throw createError.unauthorized("TenantId inválido o no proporcionado");
+    }
+
     const body = await req.json();
 
     const validarProducto = createProductoSchema.parse(body);
 
+    const tenantIdBigInt = BigInt(tenantId);
+
     const precio = await prisma.precio.create({
       data: {
-        ArticuloId: 1,
+        ArticuloId: 1, // Temporal, se actualizará después
         PrecioCosto: validarProducto.PrecioCosto,
         PorcentajeGanancia: validarProducto.PorcentajeGanancia,
         PrecioPublico: validarProducto.PrecioPublico,
@@ -113,7 +143,7 @@ export async function POST(req: NextRequest) {
         PrecioPublico2: validarProducto.PrecioPublico2,
         FechaActualizacion: new Date(),
         EstaEliminado: false,
-        TenantId: Number(tenantId) || 1,
+        TenantId: tenantIdBigInt,
       },
     });
 
@@ -138,11 +168,7 @@ export async function POST(req: NextRequest) {
         PorcentajeGanancia: validarProducto.PorcentajeGanancia,
         PrecioCosto: validarProducto.PrecioCosto,
         Ubicacion: validarProducto.Ubicacion,
-        Tenant: {
-          connect: {
-            Id: Number(tenantId) || 1,
-          },
-        },
+        TenantId: tenantIdBigInt,
         Iva: {
           connect: {
             Id: validarProducto.IvaId,
@@ -182,7 +208,6 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.log(error);
     if (error instanceof ZodError) {
       return NextResponse.json(
         {
@@ -195,10 +220,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    return NextResponse.json(
-      { error: "Error al crear producto" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -210,14 +232,23 @@ export async function PATCH(req: NextRequest) {
       return error;
     }
 
+    // Validar tenantId - NO permitir fallbacks
+    if (!tenantId || tenantId <= 0) {
+      throw createError.unauthorized("TenantId inválido o no proporcionado");
+    }
+
     const body = await req.json();
 
     const validarProducto = updateProductoSchema.parse(body);
 
-    // buscar articulo
-    const articulo = await prisma.articulo.findUnique({
+    const tenantIdBigInt = BigInt(tenantId);
+
+    // Buscar artículo y validar que pertenece al tenant
+    const articulo = await prisma.articulo.findFirst({
       where: {
-        Id: Number(validarProducto.Id),
+        Id: BigInt(validarProducto.Id),
+        TenantId: tenantIdBigInt,
+        EstaEliminado: false,
       },
       include: {
         Precio: true,
@@ -225,13 +256,10 @@ export async function PATCH(req: NextRequest) {
     });
 
     if (!articulo) {
-      return NextResponse.json(
-        { error: "Articulo no encontrado" },
-        { status: 404 }
-      );
+      throw createError.notFound("Artículo no encontrado o no pertenece a tu tenant");
     }
 
-    // modificar precio
+    // Modificar precio
     const precio = await prisma.precio.update({
       where: {
         Id: articulo.Precio.Id,
@@ -244,17 +272,16 @@ export async function PATCH(req: NextRequest) {
         PrecioPublico2: validarProducto.PrecioPublico2,
         FechaActualizacion: new Date(),
         EstaEliminado: false,
-        TenantId: Number(tenantId) || 1,
+        TenantId: tenantIdBigInt,
       },
     });
 
-    // modificar articulo
+    // Modificar artículo
     const producto = await prisma.articulo.update({
       where: {
-        Id: Number(validarProducto.Id),
+        Id: BigInt(validarProducto.Id),
       },
       data: {
-        Id: Number(validarProducto.Id),
         Codigo: validarProducto.Codigo,
         CodigoBarra: validarProducto.CodigoBarra,
         Abreviatura: validarProducto.Abreviatura,
@@ -272,11 +299,6 @@ export async function PATCH(req: NextRequest) {
         PorcentajeGanancia: validarProducto.PorcentajeGanancia,
         PrecioCosto: validarProducto.PrecioCosto,
         Ubicacion: validarProducto.Ubicacion,
-        Tenant: {
-          connect: {
-            Id: Number(tenantId) || 1,
-          },
-        },
         Iva: {
           connect: {
             Id: validarProducto.IvaId,
@@ -312,10 +334,9 @@ export async function PATCH(req: NextRequest) {
           Id: Number(producto.Id),
         },
       },
-      { status: 201 }
+      { status: 200 }
     );
   } catch (error) {
-    console.log(error);
     if (error instanceof ZodError) {
       return NextResponse.json(
         {
@@ -328,10 +349,7 @@ export async function PATCH(req: NextRequest) {
         { status: 400 }
       );
     }
-    return NextResponse.json(
-      { error: "Error al crear producto" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 

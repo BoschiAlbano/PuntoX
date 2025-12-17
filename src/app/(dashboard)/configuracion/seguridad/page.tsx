@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardBody,
@@ -8,38 +8,146 @@ import {
   Chip,
   Divider,
   Switch,
+  Button,
+  Spinner,
 } from "@heroui/react";
-import { Shield, Lock, Eye } from "lucide-react";
+import { Shield, Lock, Eye, Save } from "lucide-react";
+import { addToast } from "@heroui/react";
+
+interface PoliticasSeguridad {
+  forzar2FA: boolean;
+  expirarSesiones30Dias: boolean;
+  bloquearTras5Intentos: boolean;
+  alertasNuevoDevice: boolean;
+}
 
 export default function Seguridad() {
-  // TODO: Reemplazar con datos del API cuando esté disponible
-  // Endpoint esperado: GET /api/configuracion/seguridad
-  const [politicas, setPoliticas] = useState({
-    forzar2FA: true,
+  const [politicas, setPoliticas] = useState<PoliticasSeguridad>({
+    forzar2FA: false,
     expirarSesiones30Dias: true,
     bloquearTras5Intentos: false,
     alertasNuevoDevice: true,
   });
+  const [politicasOriginales, setPoliticasOriginales] = useState<PoliticasSeguridad | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
-  const handleToggle = (key: keyof typeof politicas) => {
+  // Cargar configuración al montar
+  useEffect(() => {
+    loadConfiguracion();
+  }, []);
+
+  // Detectar cambios
+  useEffect(() => {
+    if (politicasOriginales) {
+      const changed = Object.keys(politicas).some(
+        (key) => politicas[key as keyof PoliticasSeguridad] !== politicasOriginales[key as keyof PoliticasSeguridad]
+      );
+      setHasChanges(changed);
+    }
+  }, [politicas, politicasOriginales]);
+
+  const loadConfiguracion = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/configuracion/seguridad");
+      
+      if (!response.ok) {
+        throw new Error("Error al cargar la configuración");
+      }
+
+      const data = await response.json();
+      setPoliticas(data);
+      setPoliticasOriginales(data);
+    } catch (error) {
+      console.error("Error cargando configuración:", error);
+      addToast({
+        title: "Error",
+        description: "No se pudo cargar la configuración de seguridad",
+        color: "danger",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleToggle = (key: keyof PoliticasSeguridad) => {
     setPoliticas((prev) => ({
       ...prev,
       [key]: !prev[key],
     }));
-    // TODO: Implementar guardado en API cuando esté disponible
-    // await fetch('/api/configuracion/seguridad', { method: 'PATCH', body: JSON.stringify({ [key]: !politicas[key] }) })
+  };
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      const response = await fetch("/api/configuracion/seguridad", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(politicas),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || "Error al guardar");
+      }
+
+      const data = await response.json();
+      setPoliticasOriginales(politicas);
+      setHasChanges(false);
+
+      addToast({
+        title: "Éxito",
+        description: "Configuración de seguridad guardada correctamente",
+        color: "success",
+      });
+    } catch (error) {
+      console.error("Error guardando configuración:", error);
+      addToast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo guardar la configuración",
+        color: "danger",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const politicasActivas = Object.values(politicas).filter(Boolean).length;
   const totalPoliticas = Object.keys(politicas).length;
 
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Spinner size="lg" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Seguridad</h1>
-        <p className="text-gray-600 mt-2">
-          Configura las políticas de seguridad globales para tu negocio
-        </p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Seguridad</h1>
+          <p className="text-gray-600 mt-2">
+            Configura las políticas de seguridad globales para tu negocio
+          </p>
+        </div>
+        {hasChanges && (
+          <Button
+            color="primary"
+            startContent={<Save size={16} />}
+            onPress={handleSave}
+            isLoading={isSaving}
+          >
+            Guardar cambios
+          </Button>
+        )}
       </div>
 
       <div className="space-y-6">
