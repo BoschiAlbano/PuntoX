@@ -316,3 +316,4 @@ await prisma.$transaction(async (tx) => {
 - **Relaciones**: `Persona_Cliente` hereda `TenantId` desde `Persona` (no tiene campo propio)
 - **Inicialización**: Las condiciones IVA se crean automáticamente si no existen
 
+

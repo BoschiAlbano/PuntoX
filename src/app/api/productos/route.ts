@@ -17,19 +17,68 @@ export async function GET(_req: NextRequest) {
 
     const productos = await prisma.articulo.findMany({
       where: {
-        TenantId: tenantId,
+        TenantId: BigInt(tenantId),
+        EstaEliminado: false,
       },
-      include: {
-        Precio: true,
+      select: {
+        Id: true,
+        Codigo: true,
+        CodigoBarra: true,
+        Descripcion: true,
+        DescuentaStock: true,
+        PermiteStockNegativo: true,
+        Precio: {
+          select: {
+            PrecioPublico: true,
+            PrecioCosto: true,
+          },
+        },
+        Iva: {
+          select: {
+            Id: true,
+            Porcentaje: true,
+          },
+        },
+        Stock: {
+          where: {
+            EstaEliminado: false,
+          },
+          select: {
+            Cantidad: true,
+          },
+        },
       },
       orderBy: {
         Descripcion: "asc",
       },
     });
 
+    // Serializar BigInt a Number para JSON y validar datos
+    const productosSerializados = productos
+      .filter((producto) => producto.Precio && producto.Iva) // Filtrar productos sin precio o IVA
+      .map((producto) => ({
+        Id: Number(producto.Id),
+        Codigo: producto.Codigo,
+        CodigoBarra: producto.CodigoBarra,
+        Descripcion: producto.Descripcion,
+        Precio: {
+          PrecioPublico: Number(producto.Precio?.PrecioPublico || 0),
+          PrecioCosto: Number(producto.Precio?.PrecioCosto || 0),
+        },
+        Iva: {
+          Id: Number(producto.Iva?.Id || 0),
+          Porcentaje: Number(producto.Iva?.Porcentaje || 0),
+        },
+        Stock: (producto.Stock || []).map((stock) => ({
+          Cantidad: Number(stock.Cantidad),
+        })),
+        DescuentaStock: producto.DescuentaStock || false,
+        PermiteStockNegativo: producto.PermiteStockNegativo || false,
+      }));
+
     return NextResponse.json(
       {
-        productos,
+        productos: productosSerializados,
       },
       { status: 200 }
     );
