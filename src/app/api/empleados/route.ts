@@ -44,18 +44,27 @@ function mapEstado(estaBloqueado: boolean | null | undefined) {
 
 type EstadoEmpleado = "Activo" | "Suspendido" | "Invitado";
 
+import { parsePaginationParams, createPaginationResponse } from "@/lib/pagination";
+import { handleError } from "@/lib/errors/handler";
+
 export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await requirePermiso("empleados:admin");
+    const pagination = parsePaginationParams(req);
+
+    const where = {
+      TenantId: BigInt(tenantId),
+      EstaEliminado: false,
+      Persona_Empleado: { isNot: null },
+    };
+
+    // Obtener total para paginación
+    const total = await prisma.persona.count({ where });
 
     let empleados;
     try {
       empleados = await prisma.persona.findMany({
-        where: {
-          TenantId: BigInt(tenantId),
-          EstaEliminado: false,
-          Persona_Empleado: { isNot: null },
-        },
+        where,
         select: {
           Id: true,
           Apellido: true,
@@ -92,15 +101,13 @@ export async function GET(req: NextRequest) {
           },
         },
         orderBy: { Nombre: "asc" },
+        skip: pagination.skip,
+        take: pagination.limit,
       });
     } catch (err) {
       // Fallback si falta columna Tipo en Perfiles.
       empleados = await prisma.persona.findMany({
-        where: {
-          TenantId: BigInt(tenantId),
-          EstaEliminado: false,
-          Persona_Empleado: { isNot: null },
-        },
+        where,
         select: {
           Id: true,
           Apellido: true,
@@ -136,6 +143,8 @@ export async function GET(req: NextRequest) {
           },
         },
         orderBy: { Nombre: "asc" },
+        skip: pagination.skip,
+        take: pagination.limit,
       });
       console.warn(
         "[empleados] usando fallback sin campo Tipo en Perfiles",
@@ -174,7 +183,9 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({ empleados: response }, { status: 200 });
+    const paginatedResponse = createPaginationResponse(response, total, pagination);
+
+    return NextResponse.json(paginatedResponse, { status: 200 });
   } catch (error) {
     if (error instanceof PermisoError) {
       return NextResponse.json(
@@ -182,11 +193,7 @@ export async function GET(req: NextRequest) {
         { status: error.status }
       );
     }
-    console.error("Error al obtener empleados", error);
-    return NextResponse.json(
-      { error: "Error al obtener empleados" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -375,7 +382,18 @@ export async function POST(req: NextRequest) {
       });
 
     if (authError || !authUser?.user) {
-      console.error("Error creando usuario en Supabase:", authError);
+      // Detectar si el error es por correo duplicado
+      if (
+        authError?.code === "email_exists" ||
+        authError?.message?.toLowerCase().includes("already been registered") ||
+        authError?.message?.toLowerCase().includes("email address has already")
+      ) {
+        return NextResponse.json(
+          { error: "Este correo ya se encuentra registrado" },
+          { status: 400 }
+        );
+      }
+      
       return NextResponse.json(
         { error: "No se pudo crear el usuario en Supabase" },
         { status: 500 }
@@ -452,11 +470,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ empleado: empleadoResponse }, { status: 201 });
   } catch (error) {
-    console.error("Error creando empleado", error);
-    return NextResponse.json(
-      { error: "No se pudo crear el empleado" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -501,11 +515,7 @@ export async function PATCH(req: NextRequest) {
         { status: error.status }
       );
     }
-    console.error("Error actualizando estado de empleado", error);
-    return NextResponse.json(
-      { error: "No se pudo actualizar el estado" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -606,11 +616,7 @@ export async function DELETE(req: NextRequest) {
         { status: error.status }
       );
     }
-    console.error("Error eliminando empleado", error);
-    return NextResponse.json(
-      { error: "No se pudo eliminar el empleado" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 

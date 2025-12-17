@@ -6,8 +6,14 @@ import {
   updateProductoSchema,
 } from "@/lib/validations/producto.schema";
 import { ZodError } from "zod";
+import {
+  parsePaginationParams,
+  createPaginationResponse,
+} from "@/lib/pagination";
+import { handleError } from "@/lib/errors/handler";
+import { createError } from "@/lib/errors/types";
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
     const { tenantId, error } = await getAuthUser();
 
@@ -15,6 +21,34 @@ export async function GET(_req: NextRequest) {
       return error;
     }
 
+    const pagination = parsePaginationParams(req);
+    const search = req.nextUrl.searchParams.get("q")?.trim() || "";
+
+    // Construir where clause
+    const where: {
+      TenantId: bigint;
+      EstaEliminado: boolean;
+      OR?: Array<{
+        Descripcion?: { contains: string; mode: "insensitive" };
+        CodigoBarra?: { contains: string; mode: "insensitive" };
+      }>;
+    } = {
+      TenantId: BigInt(tenantId),
+      EstaEliminado: false,
+    };
+
+    // Agregar búsqueda si existe
+    if (search) {
+      where.OR = [
+        { Descripcion: { contains: search, mode: "insensitive" } },
+        { CodigoBarra: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    // Obtener total para paginación
+    const total = await prisma.articulo.count({ where });
+
+    // Obtener productos paginados
     const productos = await prisma.articulo.findMany({
       where: {
         TenantId: tenantId,
@@ -52,20 +86,42 @@ export async function GET(_req: NextRequest) {
       orderBy: {
         Descripcion: "asc",
       },
+      skip: pagination.skip,
+      take: pagination.limit,
     });
 
-    return NextResponse.json(
-      {
-        productos,
-      },
-      { status: 200 }
+    // Serializar BigInt a Number para JSON y validar datos
+    const productosSerializados = productos
+      .filter((producto) => producto.Precio && producto.Iva) // Filtrar productos sin precio o IVA
+      .map((producto) => ({
+        Id: Number(producto.Id),
+        Codigo: producto.Codigo,
+        CodigoBarra: producto.CodigoBarra,
+        Descripcion: producto.Descripcion,
+        Precio: {
+          PrecioPublico: Number(producto.Precio?.PrecioPublico || 0),
+          PrecioCosto: Number(producto.Precio?.PrecioCosto || 0),
+        },
+        Iva: {
+          Id: Number(producto.Iva?.Id || 0),
+          Porcentaje: Number(producto.Iva?.Porcentaje || 0),
+        },
+        Stock: (producto.Stock || []).map((stock) => ({
+          Cantidad: Number(stock.Cantidad),
+        })),
+        DescuentaStock: producto.DescuentaStock || false,
+        PermiteStockNegativo: producto.PermiteStockNegativo || false,
+      }));
+
+    const response = createPaginationResponse(
+      productosSerializados,
+      total,
+      pagination
     );
+
+    return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.log(error);
-    return NextResponse.json(
-      { error: "Error al obtener productos" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -77,9 +133,16 @@ export async function POST(req: NextRequest) {
       return error;
     }
 
+    // Validar tenantId - NO permitir fallbacks
+    if (!tenantId || tenantId <= 0) {
+      throw createError.unauthorized("TenantId inválido o no proporcionado");
+    }
+
     const body = await req.json();
 
     const validarProducto = createProductoSchema.parse(body);
+
+    const tenantIdBigInt = BigInt(tenantId);
 
     // Iniciar transacción para crear Precio y Artículo
     const producto = await prisma.$transaction(async (tx) => {
@@ -177,7 +240,6 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.log(error);
     if (error instanceof ZodError) {
       return NextResponse.json(
         {
@@ -190,10 +252,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    return NextResponse.json(
-      { error: "Error al crear producto" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -205,14 +264,23 @@ export async function PATCH(req: NextRequest) {
       return error;
     }
 
+    // Validar tenantId - NO permitir fallbacks
+    if (!tenantId || tenantId <= 0) {
+      throw createError.unauthorized("TenantId inválido o no proporcionado");
+    }
+
     const body = await req.json();
 
     const validarProducto = updateProductoSchema.parse(body);
 
-    // buscar articulo
-    const articulo = await prisma.articulo.findUnique({
+    const tenantIdBigInt = BigInt(tenantId);
+
+    // Buscar artículo y validar que pertenece al tenant
+    const articulo = await prisma.articulo.findFirst({
       where: {
-        Id: Number(validarProducto.Id),
+        Id: BigInt(validarProducto.Id),
+        TenantId: tenantIdBigInt,
+        EstaEliminado: false,
       },
       include: {
         Precio: true,
@@ -220,9 +288,8 @@ export async function PATCH(req: NextRequest) {
     });
 
     if (!articulo) {
-      return NextResponse.json(
-        { error: "Articulo no encontrado" },
-        { status: 404 }
+      throw createError.notFound(
+        "Artículo no encontrado o no pertenece a tu tenant"
       );
     }
 
@@ -378,6 +445,49 @@ export async function DELETE(req: NextRequest) {
       { error: "Error al crear producto" },
       { status: 500 }
     );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { tenantId, error } = await getAuthUser();
+
+    if (error) {
+      return error;
+    }
+
+    const params = req.nextUrl.searchParams;
+    const Id = params.get("Id");
+
+    const articulo = await prisma.articulo.delete({
+      where: {
+        Id: Number(Id),
+        TenantId: Number(tenantId),
+      },
+    });
+
+    return NextResponse.json(
+      {
+        producto: {
+          ...articulo,
+        },
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        {
+          error: "Datos inválidos",
+          details: error.issues.map((issue) => ({
+            field: issue.path.join("."),
+            message: issue.message,
+          })),
+        },
+        { status: 400 }
+      );
+    }
+    return handleError(error);
   }
 }
 

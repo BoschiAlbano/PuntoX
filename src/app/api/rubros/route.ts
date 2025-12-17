@@ -102,7 +102,7 @@ export async function DELETE(req: NextRequest) {
     req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
   const rubroId = idParam ? Number(idParam) : NaN;
 
-  console.log("Rubro ID:", rubroId);
+  // Depuración eliminada: Rubro ID recibido en parámetro
 
   if (!Number.isInteger(rubroId)) {
     return NextResponse.json(

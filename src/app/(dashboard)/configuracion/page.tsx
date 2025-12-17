@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   CardBody,
+  CardHeader,
   Chip,
   Divider,
   Input,
@@ -13,6 +14,13 @@ import {
   Switch,
 } from "@heroui/react";
 import { addToast } from "@heroui/react";
+import { Lock, Shield, Eye } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  getPreferenciasVenta,
+  savePreferenciasVenta,
+  type PreferenciasVentaDTO,
+} from "./actions-preferencias-venta";
 
 type SectionKey =
   | "perfil"
@@ -78,21 +86,26 @@ function SectionPanel({
 }
 
 export default function Configuracion() {
+  const router = useRouter();
   const [isSavingAll, setIsSavingAll] = useState(false);
   const [isLoadingTenant, setIsLoadingTenant] = useState(true);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
   const [openSection, setOpenSection] = useState<SectionKey>("perfil");
+  const [isOffline, setIsOffline] = useState(false);
 
   const [configuracion, setConfiguracion] = useState({
-    razonSocial: "Punto X Market",
-    nombreFantasia: "PX Liniers",
-    cuit: "20-12345678-9",
-    email: "admin@puntox.com",
-    telefono: "+54 11 5555 0000",
-    direccion: "Av. Siempre Viva 742",
-    localidadId: "Buenos Aires, CABA",
-    observacionPieFactura: "Gracias por tu compra. Vuelve pronto.",
+    razonSocial: "",
+    nombreFantasia: "",
+    cuit: "",
+    email: "",
+    telefono: "",
+    celular: "",
+    direccion: "",
+    localidadId: 0,
+    observacionPieFactura: "",
   });
+  
+  const [localidades, setLocalidades] = useState<Array<{Id: number, Descripcion: string}>>([]);
 
   const [regional, setRegional] = useState({
     moneda: "ARS",
@@ -102,13 +115,55 @@ export default function Configuracion() {
     puntoVenta: "0001",
     inicioActividades: "",
   });
+  const [regionalOriginal, setRegionalOriginal] = useState<typeof regional | null>(null);
+  const [isLoadingFiscal, setIsLoadingFiscal] = useState(false);
+  const [isSavingFiscal, setIsSavingFiscal] = useState(false);
 
-  const [preferencias, setPreferencias] = useState({
-    ticketDigital: true,
-    mostrarPrecios: true,
-    aperturaCaja: true,
-    numerarPedidos: true,
+  const [preferencias, setPreferencias] = useState<PreferenciasVentaDTO>({
+    ticketDigitalPorCorreo: true,
+    mostrarPreciosConIva: true,
+    abrirCajonEfectivo: true,
+    numerarPedidosPantalla: true,
   });
+  const [preferenciasOriginales, setPreferenciasOriginales] =
+    useState<PreferenciasVentaDTO | null>(null);
+  const [isLoadingPreferencias, setIsLoadingPreferencias] = useState(true);
+  const [isSavingPreferencias, setIsSavingPreferencias] = useState(false);
+
+  // Configuración avanzada: Stock y compras
+  const [configStock, setConfigStock] = useState({
+    facturaDescuentaStock: true,
+    presupuestoDescuentaStock: false,
+    remitoDescuentaStock: true,
+    actualizaCostoDesdeCompra: true,
+    modificaPrecioVentaDesdeCompra: false,
+  });
+  const [configStockOriginal, setConfigStockOriginal] = useState<typeof configStock | null>(null);
+
+  // Configuración avanzada: Caja y pagos
+  const [configCaja, setConfigCaja] = useState({
+    tipoFormaPagoPorDefectoVenta: 0, // 0=Efectivo, 1=Débito, 2=Crédito, 3=QR
+    tipoFormaPagoPorDefectoCompra: 0,
+    ingresoManualCajaInicial: false,
+    puestoCajaSeparado: false,
+    activarRetiroDeCaja: false,
+    montoMaximoRetiroCaja: 0,
+  });
+  const [configCajaOriginal, setConfigCajaOriginal] = useState<typeof configCaja | null>(null);
+
+  // Configuración avanzada: Productos
+  const [configProductos, setConfigProductos] = useState({
+    unificarRenglonesIngresarMismoProducto: true,
+  });
+  const [configProductosOriginal, setConfigProductosOriginal] = useState<typeof configProductos | null>(null);
+
+  // Configuración avanzada: Báscula
+  const [configBascula, setConfigBascula] = useState({
+    activarBascula: false,
+    etiquetaPorPeso: false,
+    codigoBascula: "",
+  });
+  const [configBasculaOriginal, setConfigBasculaOriginal] = useState<typeof configBascula | null>(null);
 
   const [notificaciones, setNotificaciones] = useState({
     email: true,
@@ -116,18 +171,30 @@ export default function Configuracion() {
     resumenDiario: false,
     stockBajo: true,
   });
+  const [notificacionesOriginales, setNotificacionesOriginales] = useState<typeof notificaciones | null>(null);
+  const [isLoadingNotificaciones, setIsLoadingNotificaciones] = useState(false);
+  const [isSavingNotificaciones, setIsSavingNotificaciones] = useState(false);
 
   const [seguridad, setSeguridad] = useState({
     dobleFactor: false,
-    bloqueoAutomatico: true,
-    recordarSesion: true,
-    alertarDispositivo: true,
+    alertarNuevoDispositivo: true,
+    bloquearPorInactividad: true,
+    bloquearTrasIntentos: "5" as "nunca" | "5" | "10",
+    recordarSesion30Dias: true,
   });
+  const [seguridadOriginal, setSeguridadOriginal] = useState<typeof seguridad | null>(null);
+  const [isLoadingSeguridad, setIsLoadingSeguridad] = useState(false);
+  const [isSavingSeguridad, setIsSavingSeguridad] = useState(false);
 
   const [branding, setBranding] = useState({
     slogan: "Mejor precio, mejor servicio.",
     color: "#90c472",
+    logo: null as File | null,
+    logoPreview: "",
   });
+  const [brandingOriginal, setBrandingOriginal] = useState<{slogan: string, color: string, logoPreview: string} | null>(null);
+  const [isLoadingBranding, setIsLoadingBranding] = useState(false);
+  const [isSavingBranding, setIsSavingBranding] = useState(false);
 
   const [tenant, setTenant] = useState({
     nombre: "PX Liniers",
@@ -147,8 +214,45 @@ export default function Configuracion() {
       try {
         const res = await fetch("/api/tenant");
         if (!res.ok) {
-          throw new Error("No se pudo cargar el tenant");
+          const errorData = await res.json().catch(() => null);
+          const errorMessage =
+            errorData?.error ?? "No se pudo cargar el tenant";
+          
+          // Diferenciar entre errores de conexión (503) y errores de permisos (401/403)
+          if (res.status === 503) {
+            // Error de conexión a la base de datos
+            setIsOffline(true);
+            console.error("Error de conexión a la base de datos:", errorMessage);
+            addToast({
+              title: "Modo offline",
+              description:
+                "No se pudo conectar a la base de datos. Se están usando valores por defecto.",
+              color: "warning",
+            });
+          } else if (res.status === 401 || res.status === 403) {
+            // Error de autenticación/autorización
+            setIsOffline(false);
+            console.error("Error de permisos:", errorMessage);
+            addToast({
+              title: "Sin permisos",
+              description: errorMessage || "No tienes permisos para acceder a estos datos.",
+              color: "danger",
+            });
+          } else {
+            // Otros errores (404, 500, etc.)
+            setIsOffline(false);
+            console.error("Error cargando tenant:", errorMessage);
+            addToast({
+              title: "Error",
+              description: errorMessage,
+              color: "danger",
+            });
+          }
+          return;
         }
+        
+        // Si llegamos aquí, la conexión fue exitosa
+        setIsOffline(false);
         const json = await res.json();
         if (json?.tenant) {
           setTenant((prev) => ({
@@ -162,11 +266,14 @@ export default function Configuracion() {
           }));
         }
       } catch (error) {
-        console.error(error);
+        // Errores de red o timeouts también se consideran offline
+        setIsOffline(true);
+        console.error("Error inesperado cargando tenant:", error);
         addToast({
-          title: "Error",
-          description: "No pudimos cargar los datos del negocio.",
-          color: "danger",
+          title: "Modo offline",
+          description:
+            "No se pudo conectar al servidor. La página continuará con valores por defecto.",
+          color: "warning",
         });
       } finally {
         setIsLoadingTenant(false);
@@ -178,8 +285,53 @@ export default function Configuracion() {
       try {
         const res = await fetch("/api/configuracion");
         if (!res.ok) {
-          throw new Error("No se pudo cargar la configuracion");
+          const errorData = await res.json().catch(() => null);
+          // handleError devuelve { error: { code, message, ... } }
+          // pero también puede venir { error: "mensaje" } en algunos casos
+          const errorMessage =
+            (typeof errorData?.error === "string" 
+              ? errorData.error 
+              : errorData?.error?.message) || "No se pudo cargar la configuración";
+          
+          // Diferenciar entre errores de conexión (503) y errores de permisos (401/403)
+          if (res.status === 503) {
+            // Error de conexión a la base de datos
+            setIsOffline(true);
+            // No mostrar toast duplicado si ya se mostró en loadTenant
+            if (!isLoadingTenant) {
+              addToast({
+                title: "Modo offline",
+                description:
+                  "No se pudo conectar a la base de datos. Se están usando valores por defecto.",
+                color: "warning",
+              });
+            }
+          } else if (res.status === 401 || res.status === 403) {
+            // Error de autenticación/autorización
+            setIsOffline(false);
+            addToast({
+              title: "Sin permisos",
+              description: errorMessage || "No tienes permisos para acceder a esta configuración.",
+              color: "danger",
+            });
+          } else if (res.status === 404) {
+            // No hay configuración, usar valores por defecto
+            setIsOffline(false);
+            // No mostrar error, simplemente usar valores por defecto
+          } else {
+            // Otros errores (500, etc.)
+            setIsOffline(false);
+            addToast({
+              title: "Error",
+              description: errorMessage,
+              color: "danger",
+            });
+          }
+          return;
         }
+        
+        // Si llegamos aquí, la conexión fue exitosa
+        setIsOffline(false);
         const json = await res.json();
         if (json?.configuracion) {
           setConfiguracion((prev) => ({
@@ -190,27 +342,300 @@ export default function Configuracion() {
             cuit: json.configuracion.cuit ?? prev.cuit,
             email: json.configuracion.email ?? prev.email,
             telefono: json.configuracion.telefono ?? prev.telefono,
+            celular: json.configuracion.celular ?? prev.celular,
             direccion: json.configuracion.direccion ?? prev.direccion,
+            localidadId: json.configuracion.localidadId ?? prev.localidadId,
             observacionPieFactura:
               json.configuracion.observacionPieFactura ??
               prev.observacionPieFactura,
           }));
+          
+          // Actualizar preferencias desde la configuración
+          if (json.configuracion.mostrarPreciosConIva !== undefined) {
+            setPreferencias((prev) => ({
+              ...prev,
+              mostrarPreciosConIva: json.configuracion.mostrarPreciosConIva,
+              abrirCajonEfectivo: json.configuracion.abrirCajonEfectivo ?? prev.abrirCajonEfectivo,
+              numerarPedidosPantalla: json.configuracion.numerarPedidosPantalla ?? prev.numerarPedidosPantalla,
+              ticketDigitalPorCorreo: json.configuracion.imprimir ?? prev.ticketDigitalPorCorreo,
+            }));
+          }
+
+          // Actualizar configuración de stock
+          if (json.configuracion.facturaDescuentaStock !== undefined) {
+            setConfigStock({
+              facturaDescuentaStock: json.configuracion.facturaDescuentaStock ?? true,
+              presupuestoDescuentaStock: json.configuracion.presupuestoDescuentaStock ?? false,
+              remitoDescuentaStock: json.configuracion.remitoDescuentaStock ?? true,
+              actualizaCostoDesdeCompra: json.configuracion.actualizaCostoDesdeCompra ?? true,
+              modificaPrecioVentaDesdeCompra: json.configuracion.modificaPrecioVentaDesdeCompra ?? false,
+            });
+            setConfigStockOriginal({
+              facturaDescuentaStock: json.configuracion.facturaDescuentaStock ?? true,
+              presupuestoDescuentaStock: json.configuracion.presupuestoDescuentaStock ?? false,
+              remitoDescuentaStock: json.configuracion.remitoDescuentaStock ?? true,
+              actualizaCostoDesdeCompra: json.configuracion.actualizaCostoDesdeCompra ?? true,
+              modificaPrecioVentaDesdeCompra: json.configuracion.modificaPrecioVentaDesdeCompra ?? false,
+            });
+          }
+
+          // Actualizar configuración de caja
+          if (json.configuracion.tipoFormaPagoPorDefectoVenta !== undefined) {
+            setConfigCaja({
+              tipoFormaPagoPorDefectoVenta: json.configuracion.tipoFormaPagoPorDefectoVenta ?? 0,
+              tipoFormaPagoPorDefectoCompra: json.configuracion.tipoFormaPagoPorDefectoCompra ?? 0,
+              ingresoManualCajaInicial: json.configuracion.ingresoManualCajaInicial ?? false,
+              puestoCajaSeparado: json.configuracion.puestoCajaSeparado ?? false,
+              activarRetiroDeCaja: json.configuracion.activarRetiroDeCaja ?? false,
+              montoMaximoRetiroCaja: json.configuracion.montoMaximoRetiroCaja ?? 0,
+            });
+            setConfigCajaOriginal({
+              tipoFormaPagoPorDefectoVenta: json.configuracion.tipoFormaPagoPorDefectoVenta ?? 0,
+              tipoFormaPagoPorDefectoCompra: json.configuracion.tipoFormaPagoPorDefectoCompra ?? 0,
+              ingresoManualCajaInicial: json.configuracion.ingresoManualCajaInicial ?? false,
+              puestoCajaSeparado: json.configuracion.puestoCajaSeparado ?? false,
+              activarRetiroDeCaja: json.configuracion.activarRetiroDeCaja ?? false,
+              montoMaximoRetiroCaja: json.configuracion.montoMaximoRetiroCaja ?? 0,
+            });
+          }
+
+          // Actualizar configuración de productos
+          if (json.configuracion.unificarRenglonesIngresarMismoProducto !== undefined) {
+            setConfigProductos({
+              unificarRenglonesIngresarMismoProducto: json.configuracion.unificarRenglonesIngresarMismoProducto ?? true,
+            });
+            setConfigProductosOriginal({
+              unificarRenglonesIngresarMismoProducto: json.configuracion.unificarRenglonesIngresarMismoProducto ?? true,
+            });
+          }
+
+          // Actualizar configuración de báscula
+          if (json.configuracion.activarBascula !== undefined) {
+            setConfigBascula({
+              activarBascula: json.configuracion.activarBascula ?? false,
+              etiquetaPorPeso: json.configuracion.etiquetaPorPeso ?? false,
+              codigoBascula: json.configuracion.codigoBascula ?? "",
+            });
+            setConfigBasculaOriginal({
+              activarBascula: json.configuracion.activarBascula ?? false,
+              etiquetaPorPeso: json.configuracion.etiquetaPorPeso ?? false,
+              codigoBascula: json.configuracion.codigoBascula ?? "",
+            });
+          }
         }
       } catch (error) {
-        console.error(error);
-        addToast({
-          title: "Error",
-          description: "No pudimos cargar la configuracion.",
-          color: "danger",
-        });
+        // Errores de red o timeouts también se consideran offline
+        setIsOffline(true);
+        console.error("Error inesperado cargando configuración:", error);
+        // No mostrar toast duplicado si ya se mostró en loadTenant
+        if (!isLoadingTenant) {
+          addToast({
+            title: "Modo offline",
+            description:
+              "No se pudo conectar al servidor. La página continuará con valores por defecto.",
+            color: "warning",
+          });
+        }
       } finally {
         setIsLoadingConfig(false);
       }
     };
 
+    const loadLocalidades = async () => {
+      try {
+        const res = await fetch("/api/localidades");
+        if (res.ok) {
+          const data = await res.json();
+          setLocalidades(data);
+        }
+      } catch (error) {
+        console.error("Error cargando localidades:", error);
+      }
+    };
+
+    const loadNotificaciones = async () => {
+      setIsLoadingNotificaciones(true);
+      try {
+        const res = await fetch("/api/configuracion/preferencias");
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.preferencias) {
+            setNotificaciones(json.preferencias);
+            setNotificacionesOriginales(json.preferencias);
+          }
+        }
+      } catch (error) {
+        console.error("Error cargando notificaciones:", error);
+      } finally {
+        setIsLoadingNotificaciones(false);
+      }
+    };
+
+    const loadSeguridad = async () => {
+      setIsLoadingSeguridad(true);
+      try {
+        const res = await fetch("/api/configuracion/seguridad");
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.seguridad) {
+            setSeguridad(json.seguridad);
+            setSeguridadOriginal(json.seguridad);
+          }
+        }
+      } catch (error) {
+        console.error("Error cargando seguridad:", error);
+      } finally {
+        setIsLoadingSeguridad(false);
+      }
+    };
+
+    const loadFiscal = async () => {
+      setIsLoadingFiscal(true);
+      try {
+        const res = await fetch("/api/configuracion/fiscal");
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.fiscal) {
+            setRegional(json.fiscal);
+            setRegionalOriginal(json.fiscal);
+          }
+        }
+      } catch (error) {
+        console.error("Error cargando fiscal:", error);
+      } finally {
+        setIsLoadingFiscal(false);
+      }
+    };
+
+    const loadBranding = async () => {
+      setIsLoadingBranding(true);
+      try {
+        const res = await fetch("/api/configuracion/branding");
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.branding) {
+            setBranding({
+              slogan: json.branding.slogan || "",
+              color: json.branding.color || "#90c472",
+              logo: null,
+              logoPreview: json.branding.logoPreview || "",
+            });
+            setBrandingOriginal({
+              slogan: json.branding.slogan || "",
+              color: json.branding.color || "#90c472",
+              logoPreview: json.branding.logoPreview || "",
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error cargando branding:", error);
+      } finally {
+        setIsLoadingBranding(false);
+      }
+    };
+
     loadTenant();
     loadConfig();
+    loadPreferenciasVenta();
+    loadLocalidades();
+    loadNotificaciones();
+    loadSeguridad();
+    loadFiscal();
+    loadBranding();
   }, []);
+
+  const loadPreferenciasVenta = async () => {
+    setIsLoadingPreferencias(true);
+    try {
+      const data = await getPreferenciasVenta();
+      setPreferencias(data);
+      setPreferenciasOriginales(data);
+    } catch (error) {
+      console.error("Error cargando preferencias de venta:", error);
+      addToast({
+        title: "Error",
+        description:
+          "No se pudieron cargar las preferencias de venta. Se usarán valores por defecto.",
+        color: "warning",
+      });
+    } finally {
+      setIsLoadingPreferencias(false);
+    }
+  };
+
+  const handleSavePreferenciasVenta = async () => {
+    setIsSavingPreferencias(true);
+    try {
+      // Guardar preferencias básicas
+      const result = await savePreferenciasVenta(preferencias);
+      if (!result.success) {
+        throw new Error(result.error || "No se pudieron guardar las preferencias básicas");
+      }
+
+      // Guardar configuración avanzada usando la API de configuración
+      const res = await fetch("/api/configuracion", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          razonSocial: configuracion.razonSocial,
+          nombreFantasia: configuracion.nombreFantasia,
+          cuit: configuracion.cuit,
+          email: configuracion.email,
+          telefono: configuracion.telefono,
+          celular: configuracion.celular,
+          direccion: configuracion.direccion,
+          localidadId: configuracion.localidadId,
+          observacionPieFactura: configuracion.observacionPieFactura,
+          mostrarPreciosConIva: preferencias.mostrarPreciosConIva,
+          abrirCajonEfectivo: preferencias.abrirCajonEfectivo,
+          numerarPedidosPantalla: preferencias.numerarPedidosPantalla,
+          imprimir: preferencias.ticketDigitalPorCorreo,
+          facturaDescuentaStock: configStock.facturaDescuentaStock,
+          presupuestoDescuentaStock: configStock.presupuestoDescuentaStock,
+          remitoDescuentaStock: configStock.remitoDescuentaStock,
+          actualizaCostoDesdeCompra: configStock.actualizaCostoDesdeCompra,
+          modificaPrecioVentaDesdeCompra: configStock.modificaPrecioVentaDesdeCompra,
+          tipoFormaPagoPorDefectoVenta: configCaja.tipoFormaPagoPorDefectoVenta,
+          tipoFormaPagoPorDefectoCompra: configCaja.tipoFormaPagoPorDefectoCompra,
+          ingresoManualCajaInicial: configCaja.ingresoManualCajaInicial,
+          puestoCajaSeparado: configCaja.puestoCajaSeparado,
+          activarRetiroDeCaja: configCaja.activarRetiroDeCaja,
+          montoMaximoRetiroCaja: configCaja.montoMaximoRetiroCaja,
+          unificarRenglonesIngresarMismoProducto: configProductos.unificarRenglonesIngresarMismoProducto,
+          activarBascula: configBascula.activarBascula,
+          etiquetaPorPeso: configBascula.etiquetaPorPeso,
+          codigoBascula: configBascula.codigoBascula,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.error || "No se pudo guardar la configuración avanzada");
+      }
+
+      // Actualizar estados originales
+      setPreferenciasOriginales(preferencias);
+      setConfigStockOriginal(configStock);
+      setConfigCajaOriginal(configCaja);
+      setConfigProductosOriginal(configProductos);
+      setConfigBasculaOriginal(configBascula);
+
+      addToast({
+        title: "Preferencias guardadas",
+        description: "Todas las preferencias de venta se guardaron correctamente.",
+        color: "success",
+      });
+    } catch (error: unknown) {
+      console.error("Error guardando preferencias de venta:", error);
+      addToast({
+        title: "Error al guardar",
+        description: (error instanceof Error ? error.message : String(error)) || "Ocurrió un error inesperado al guardar las preferencias.",
+        color: "danger",
+      });
+    } finally {
+      setIsSavingPreferencias(false);
+    }
+  };
 
   const descriptionMap: Record<SectionKey, string> = {
     perfil: "Datos visibles en tickets y comunicaciones.",
@@ -222,8 +647,91 @@ export default function Configuracion() {
   };
   const summaryPerfil = `Nombre: ${tenant.nombre} | CUIT: ${tenant.cuit}`;
   const summaryVentas = `Ticket digital: ${
-    preferencias.ticketDigital ? "on" : "off"
-  } | Impuestos: ${preferencias.mostrarPrecios ? "incluidos" : "excluidos"}`;
+    preferencias.ticketDigitalPorCorreo ? "activado" : "desactivado"
+  } | Impuestos: ${preferencias.mostrarPreciosConIva ? "incluidos" : "excluidos"}`;
+
+  // Detectar si hay cambios en preferencias
+  const hasPreferenciasChanges = preferenciasOriginales
+    ? JSON.stringify(preferencias) !== JSON.stringify(preferenciasOriginales)
+    : false;
+  
+  const hasNotificacionesChanges = notificacionesOriginales
+    ? JSON.stringify(notificaciones) !== JSON.stringify(notificacionesOriginales)
+    : false;
+  
+  const hasSeguridadChanges = seguridadOriginal
+    ? JSON.stringify(seguridad) !== JSON.stringify(seguridadOriginal)
+    : false;
+  
+  const hasFiscalChanges = regionalOriginal
+    ? JSON.stringify(regional) !== JSON.stringify(regionalOriginal)
+    : false;
+  
+  const hasBrandingChanges = brandingOriginal
+    ? branding.slogan !== brandingOriginal.slogan || 
+      branding.color !== brandingOriginal.color ||
+      branding.logo !== null ||
+      branding.logoPreview !== brandingOriginal.logoPreview
+    : false;
+  
+  const hasStockChanges = configStockOriginal
+    ? JSON.stringify(configStock) !== JSON.stringify(configStockOriginal)
+    : false;
+  
+  const hasCajaChanges = configCajaOriginal
+    ? JSON.stringify(configCaja) !== JSON.stringify(configCajaOriginal)
+    : false;
+  
+  const hasProductosChanges = configProductosOriginal
+    ? JSON.stringify(configProductos) !== JSON.stringify(configProductosOriginal)
+    : false;
+  
+  const hasBasculaChanges = configBasculaOriginal
+    ? JSON.stringify(configBascula) !== JSON.stringify(configBasculaOriginal)
+    : false;
+
+  // Detectar si hay cambios en cualquier sección
+  const hasAnyChanges = 
+    hasPreferenciasChanges || 
+    hasStockChanges || 
+    hasCajaChanges || 
+    hasProductosChanges || 
+    hasBasculaChanges ||
+    hasNotificacionesChanges ||
+    hasSeguridadChanges ||
+    hasFiscalChanges ||
+    hasBrandingChanges;
+  
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        addToast({
+          title: "Error",
+          description: "El archivo es demasiado grande. Máximo 5MB.",
+          color: "danger",
+        });
+        return;
+      }
+      if (!file.type.startsWith("image/")) {
+        addToast({
+          title: "Error",
+          description: "Solo se permiten archivos de imagen.",
+          color: "danger",
+        });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBranding((prev) => ({
+          ...prev,
+          logo: file,
+          logoPreview: reader.result as string,
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   const summaryNotificaciones = `Correo: ${
     notificaciones.email ? "on" : "off"
   } | Push: ${notificaciones.push ? "on" : "off"} | Resumen diario: ${
@@ -231,7 +739,7 @@ export default function Configuracion() {
   }`;
   const summarySeguridad = `2FA: ${
     seguridad.dobleFactor ? "activo" : "pendiente"
-  } | Bloqueo: 10 min | Recordar sesión: 30 días`;
+  } | Bloqueo: ${seguridad.bloquearTrasIntentos === "nunca" ? "desactivado" : `${seguridad.bloquearTrasIntentos} intentos`} | Recordar sesión: ${seguridad.recordarSesion30Dias ? "30 días" : "off"}`;
   const summaryFiscal = `Moneda: ${regional.moneda} | IVA: ${regional.tipoIva} | Punto de venta: ${regional.puntoVenta}`;
   const summaryBranding = `Color: ${branding.color} | Logo: pendiente`;
 
@@ -255,6 +763,10 @@ export default function Configuracion() {
   };
 
   const saveConfiguracion = async () => {
+    if (!configuracion.localidadId) {
+      throw new Error("Debe seleccionar una localidad");
+    }
+    
     const res = await fetch("/api/configuracion", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -264,8 +776,33 @@ export default function Configuracion() {
         cuit: configuracion.cuit,
         email: configuracion.email,
         telefono: configuracion.telefono,
+        celular: configuracion.celular,
         direccion: configuracion.direccion,
+        localidadId: configuracion.localidadId,
         observacionPieFactura: configuracion.observacionPieFactura,
+        mostrarPreciosConIva: preferencias.mostrarPreciosConIva,
+        abrirCajonEfectivo: preferencias.abrirCajonEfectivo,
+        numerarPedidosPantalla: preferencias.numerarPedidosPantalla,
+        imprimir: preferencias.ticketDigitalPorCorreo,
+        // Stock y compras
+        facturaDescuentaStock: configStock.facturaDescuentaStock,
+        presupuestoDescuentaStock: configStock.presupuestoDescuentaStock,
+        remitoDescuentaStock: configStock.remitoDescuentaStock,
+        actualizaCostoDesdeCompra: configStock.actualizaCostoDesdeCompra,
+        modificaPrecioVentaDesdeCompra: configStock.modificaPrecioVentaDesdeCompra,
+        // Caja y pagos
+        tipoFormaPagoPorDefectoVenta: configCaja.tipoFormaPagoPorDefectoVenta,
+        tipoFormaPagoPorDefectoCompra: configCaja.tipoFormaPagoPorDefectoCompra,
+        ingresoManualCajaInicial: configCaja.ingresoManualCajaInicial,
+        puestoCajaSeparado: configCaja.puestoCajaSeparado,
+        activarRetiroDeCaja: configCaja.activarRetiroDeCaja,
+        montoMaximoRetiroCaja: configCaja.montoMaximoRetiroCaja,
+        // Productos
+        unificarRenglonesIngresarMismoProducto: configProductos.unificarRenglonesIngresarMismoProducto,
+        // Báscula
+        activarBascula: configBascula.activarBascula,
+        etiquetaPorPeso: configBascula.etiquetaPorPeso,
+        codigoBascula: configBascula.codigoBascula,
       }),
     });
     if (!res.ok) {
@@ -277,11 +814,87 @@ export default function Configuracion() {
   const handleSavePerfil = async () => {
     setIsSavingAll(true);
     try {
+      // Guardar perfil (tenant y configuración básica)
       await saveTenant();
       await saveConfiguracion();
+      
+      // Si hay cambios en preferencias básicas, guardarlas también
+      if (hasPreferenciasChanges) {
+        const result = await savePreferenciasVenta(preferencias);
+        if (result.success) {
+          setPreferenciasOriginales(preferencias);
+        }
+      }
+      
+      // Actualizar estados originales de configuración avanzada (ya se guardaron en saveConfiguracion)
+      if (hasStockChanges || hasCajaChanges || hasProductosChanges || hasBasculaChanges) {
+        setConfigStockOriginal(configStock);
+        setConfigCajaOriginal(configCaja);
+        setConfigProductosOriginal(configProductos);
+        setConfigBasculaOriginal(configBascula);
+      }
+
+      // Guardar notificaciones si hay cambios
+      if (hasNotificacionesChanges) {
+        const res = await fetch("/api/configuracion/preferencias", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(notificaciones),
+        });
+        if (res.ok) {
+          setNotificacionesOriginales(notificaciones);
+        }
+      }
+
+      // Guardar seguridad si hay cambios
+      if (hasSeguridadChanges) {
+        const res = await fetch("/api/configuracion/seguridad", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(seguridad),
+        });
+        if (res.ok) {
+          setSeguridadOriginal(seguridad);
+        }
+      }
+
+      // Guardar fiscal si hay cambios
+      if (hasFiscalChanges) {
+        const res = await fetch("/api/configuracion/fiscal", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(regional),
+        });
+        if (res.ok) {
+          setRegionalOriginal(regional);
+        }
+      }
+
+      // Guardar branding si hay cambios
+      if (hasBrandingChanges) {
+        const formData = new FormData();
+        formData.append("slogan", branding.slogan);
+        formData.append("color", branding.color);
+        if (branding.logo) {
+          formData.append("logo", branding.logo);
+        }
+        const res = await fetch("/api/configuracion/branding", {
+          method: "PUT",
+          body: formData,
+        });
+        if (res.ok) {
+          setBrandingOriginal({
+            slogan: branding.slogan,
+            color: branding.color,
+            logoPreview: branding.logoPreview,
+          });
+          setBranding((prev) => ({ ...prev, logo: null }));
+        }
+      }
+      
       addToast({
-        title: "Perfil actualizado",
-        description: "Datos guardados correctamente.",
+        title: "Configuración actualizada",
+        description: "Todos los datos se guardaron correctamente.",
         color: "success",
       });
     } catch (error) {
@@ -293,6 +906,133 @@ export default function Configuracion() {
       });
     } finally {
       setIsSavingAll(false);
+    }
+  };
+
+  const handleSaveNotificaciones = async () => {
+    setIsSavingNotificaciones(true);
+    try {
+      const res = await fetch("/api/configuracion/preferencias", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(notificaciones),
+      });
+      if (!res.ok) {
+        throw new Error("No se pudieron guardar las notificaciones");
+      }
+      setNotificacionesOriginales(notificaciones);
+      addToast({
+        title: "Notificaciones guardadas",
+        description: "Las preferencias de notificaciones se guardaron correctamente.",
+        color: "success",
+      });
+    } catch (error) {
+      console.error(error);
+      addToast({
+        title: "Error al guardar",
+        description: "No se pudieron guardar las notificaciones.",
+        color: "danger",
+      });
+    } finally {
+      setIsSavingNotificaciones(false);
+    }
+  };
+
+  const handleSaveSeguridad = async () => {
+    setIsSavingSeguridad(true);
+    try {
+      const res = await fetch("/api/configuracion/seguridad", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(seguridad),
+      });
+      if (!res.ok) {
+        throw new Error("No se pudo guardar la configuración de seguridad");
+      }
+      setSeguridadOriginal(seguridad);
+      addToast({
+        title: "Seguridad actualizada",
+        description: "La configuración de seguridad se guardó correctamente.",
+        color: "success",
+      });
+    } catch (error) {
+      console.error(error);
+      addToast({
+        title: "Error al guardar",
+        description: "No se pudo guardar la configuración de seguridad.",
+        color: "danger",
+      });
+    } finally {
+      setIsSavingSeguridad(false);
+    }
+  };
+
+  const handleSaveFiscal = async () => {
+    setIsSavingFiscal(true);
+    try {
+      const res = await fetch("/api/configuracion/fiscal", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(regional),
+      });
+      if (!res.ok) {
+        throw new Error("No se pudo guardar la configuración fiscal");
+      }
+      setRegionalOriginal(regional);
+      addToast({
+        title: "Configuración fiscal guardada",
+        description: "Los datos fiscales se guardaron correctamente.",
+        color: "success",
+      });
+    } catch (error) {
+      console.error(error);
+      addToast({
+        title: "Error al guardar",
+        description: "No se pudo guardar la configuración fiscal.",
+        color: "danger",
+      });
+    } finally {
+      setIsSavingFiscal(false);
+    }
+  };
+
+  const handleSaveBranding = async () => {
+    setIsSavingBranding(true);
+    try {
+      const formData = new FormData();
+      formData.append("slogan", branding.slogan);
+      formData.append("color", branding.color);
+      if (branding.logo) {
+        formData.append("logo", branding.logo);
+      }
+
+      const res = await fetch("/api/configuracion/branding", {
+        method: "PUT",
+        body: formData,
+      });
+      if (!res.ok) {
+        throw new Error("No se pudo guardar el branding");
+      }
+      setBrandingOriginal({
+        slogan: branding.slogan,
+        color: branding.color,
+        logoPreview: branding.logoPreview,
+      });
+      setBranding((prev) => ({ ...prev, logo: null }));
+      addToast({
+        title: "Branding guardado",
+        description: "La configuración de branding se guardó correctamente.",
+        color: "success",
+      });
+    } catch (error) {
+      console.error(error);
+      addToast({
+        title: "Error al guardar",
+        description: "No se pudo guardar el branding.",
+        color: "danger",
+      });
+    } finally {
+      setIsSavingBranding(false);
     }
   };
 
@@ -325,11 +1065,21 @@ export default function Configuracion() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
+              {isOffline && (
+                <Chip
+                  variant="flat"
+                  color="warning"
+                  size="sm"
+                  className="bg-yellow-100 text-yellow-800"
+                >
+                  Modo offline: valores por defecto
+                </Chip>
+              )}
               <Button
                 color="primary"
                 className="bg-white text-slate-900"
                 isLoading={isSavingAll}
-                isDisabled={isLoadingTenant || isLoadingConfig}
+                isDisabled={isLoadingTenant || isLoadingConfig || isOffline || !hasAnyChanges}
                 onPress={handleSavePerfil}
               >
                 Guardar todo
@@ -447,11 +1197,23 @@ export default function Configuracion() {
                 label="Razon social"
                 variant="bordered"
                 classNames={{ inputWrapper: "bg-white border-slate-200" }}
-                value={tenant.razonSocial ?? ""}
+                value={configuracion.razonSocial}
                 onChange={(e) =>
-                  setTenant((prev) => ({
+                  setConfiguracion((prev) => ({
                     ...prev,
                     razonSocial: e.target.value,
+                  }))
+                }
+              />
+              <Input
+                label="Nombre de fantasía"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={configuracion.nombreFantasia}
+                onChange={(e) =>
+                  setConfiguracion((prev) => ({
+                    ...prev,
+                    nombreFantasia: e.target.value,
                   }))
                 }
               />
@@ -460,9 +1222,9 @@ export default function Configuracion() {
                 type="email"
                 variant="bordered"
                 classNames={{ inputWrapper: "bg-white border-slate-200" }}
-                value={tenant.email ?? ""}
+                value={configuracion.email}
                 onChange={(e) =>
-                  setTenant((prev) => ({
+                  setConfiguracion((prev) => ({
                     ...prev,
                     email: e.target.value,
                   }))
@@ -472,11 +1234,23 @@ export default function Configuracion() {
                 label="Telefono"
                 variant="bordered"
                 classNames={{ inputWrapper: "bg-white border-slate-200" }}
-                value={tenant.telefono ?? ""}
+                value={configuracion.telefono}
                 onChange={(e) =>
-                  setTenant((prev) => ({
+                  setConfiguracion((prev) => ({
                     ...prev,
                     telefono: e.target.value,
+                  }))
+                }
+              />
+              <Input
+                label="Celular"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={configuracion.celular}
+                onChange={(e) =>
+                  setConfiguracion((prev) => ({
+                    ...prev,
+                    celular: e.target.value,
                   }))
                 }
               />
@@ -496,10 +1270,55 @@ export default function Configuracion() {
                 label="CUIT"
                 variant="bordered"
                 classNames={{ inputWrapper: "bg-white border-slate-200" }}
-                value={tenant.cuit ?? ""}
+                value={configuracion.cuit}
                 onChange={(e) =>
-                  setTenant((prev) => ({ ...prev, cuit: e.target.value }))
+                  setConfiguracion((prev) => ({ ...prev, cuit: e.target.value }))
                 }
+              />
+              <Input
+                label="Dirección"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={configuracion.direccion}
+                onChange={(e) =>
+                  setConfiguracion((prev) => ({
+                    ...prev,
+                    direccion: e.target.value,
+                  }))
+                }
+              />
+              <Select
+                label="Localidad"
+                variant="bordered"
+                selectedKeys={configuracion.localidadId ? [configuracion.localidadId.toString()] : []}
+                onSelectionChange={(keys) => {
+                  const selected = Array.from(keys)[0];
+                  setConfiguracion((prev) => ({
+                    ...prev,
+                    localidadId: selected ? Number(selected) : 0,
+                  }));
+                }}
+                classNames={{ trigger: "bg-white border-slate-200" }}
+              >
+                {localidades.map((localidad) => (
+                  <SelectItem key={localidad.Id.toString()}>
+                    {localidad.Descripcion}
+                  </SelectItem>
+                ))}
+              </Select>
+              <Input
+                label="Observación en pie de factura"
+                variant="bordered"
+                className="md:col-span-2"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={configuracion.observacionPieFactura}
+                onChange={(e) =>
+                  setConfiguracion((prev) => ({
+                    ...prev,
+                    observacionPieFactura: e.target.value,
+                  }))
+                }
+                placeholder="Ej: Gracias por tu compra. Vuelve pronto."
               />
             </div>
           </SectionPanel>
@@ -511,49 +1330,375 @@ export default function Configuracion() {
             summary={summaryVentas}
             isActive={openSection === "ventas"}
           >
-            <div className="space-y-3">
-              <Switch
-                isSelected={preferencias.ticketDigital}
-                onValueChange={(value) =>
-                  setPreferencias((prev) => ({ ...prev, ticketDigital: value }))
-                }
-                className="px-1 py-1"
-              >
-                Enviar ticket digital por correo
-              </Switch>
-              <Switch
-                isSelected={preferencias.mostrarPrecios}
-                onValueChange={(value) =>
-                  setPreferencias((prev) => ({
-                    ...prev,
-                    mostrarPrecios: value,
-                  }))
-                }
-                className="px-1 py-1"
-              >
-                Mostrar precios con impuestos incluidos
-              </Switch>
-              <Switch
-                isSelected={preferencias.aperturaCaja}
-                onValueChange={(value) =>
-                  setPreferencias((prev) => ({ ...prev, aperturaCaja: value }))
-                }
-                className="px-1 py-1"
-              >
-                Abrir cajon al cobrar en efectivo
-              </Switch>
-              <Switch
-                isSelected={preferencias.numerarPedidos}
-                onValueChange={(value) =>
-                  setPreferencias((prev) => ({
-                    ...prev,
-                    numerarPedidos: value,
-                  }))
-                }
-                className="px-1 py-1"
-              >
-                Numerar pedidos y mostrar en pantalla
-              </Switch>
+            <div className="space-y-6">
+              {isOffline && (
+                <Chip
+                  variant="flat"
+                  color="warning"
+                  size="sm"
+                  className="bg-yellow-100 text-yellow-800"
+                >
+                  Modo offline: valores por defecto
+                </Chip>
+              )}
+
+              {/* Sección: Preferencias básicas */}
+              <Card className="shadow-sm border border-slate-200">
+                <CardHeader className="pb-3">
+                  <h4 className="text-base font-semibold text-slate-900">
+                    Preferencias básicas
+                  </h4>
+                </CardHeader>
+                <Divider />
+                <CardBody className="space-y-3 pt-4">
+                  <Switch
+                    isSelected={preferencias.ticketDigitalPorCorreo}
+                    onValueChange={(value) =>
+                      setPreferencias((prev) => ({
+                        ...prev,
+                        ticketDigitalPorCorreo: value,
+                      }))
+                    }
+                    className="px-1 py-1"
+                    aria-label="Enviar ticket digital por correo"
+                    isDisabled={isLoadingPreferencias || isOffline}
+                  >
+                    Enviar ticket digital por correo
+                  </Switch>
+                  <Switch
+                    isSelected={preferencias.mostrarPreciosConIva}
+                    onValueChange={(value) =>
+                      setPreferencias((prev) => ({
+                        ...prev,
+                        mostrarPreciosConIva: value,
+                      }))
+                    }
+                    className="px-1 py-1"
+                    aria-label="Mostrar precios con impuestos incluidos"
+                    isDisabled={isLoadingPreferencias || isOffline}
+                  >
+                    Mostrar precios con impuestos incluidos
+                  </Switch>
+                  <Switch
+                    isSelected={preferencias.abrirCajonEfectivo}
+                    onValueChange={(value) =>
+                      setPreferencias((prev) => ({
+                        ...prev,
+                        abrirCajonEfectivo: value,
+                      }))
+                    }
+                    className="px-1 py-1"
+                    aria-label="Abrir cajon al cobrar en efectivo"
+                    isDisabled={isLoadingPreferencias || isOffline}
+                  >
+                    Abrir cajon al cobrar en efectivo
+                  </Switch>
+                  <Switch
+                    isSelected={preferencias.numerarPedidosPantalla}
+                    onValueChange={(value) =>
+                      setPreferencias((prev) => ({
+                        ...prev,
+                        numerarPedidosPantalla: value,
+                      }))
+                    }
+                    className="px-1 py-1"
+                    aria-label="Numerar pedidos y mostrar en pantalla"
+                    isDisabled={isLoadingPreferencias || isOffline}
+                  >
+                    Numerar pedidos y mostrar en pantalla
+                  </Switch>
+                </CardBody>
+              </Card>
+
+              {/* Sección: Stock y compras */}
+              <Card className="shadow-sm border border-slate-200">
+                <CardHeader className="pb-3">
+                  <h4 className="text-base font-semibold text-slate-900">
+                    Stock y compras
+                  </h4>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Configura cómo se maneja el stock en diferentes tipos de comprobantes
+                  </p>
+                </CardHeader>
+                <Divider />
+                <CardBody className="space-y-3 pt-4">
+                  <Switch
+                    isSelected={configStock.facturaDescuentaStock}
+                    onValueChange={(value) =>
+                      setConfigStock((prev) => ({
+                        ...prev,
+                        facturaDescuentaStock: value,
+                      }))
+                    }
+                    className="px-1 py-1"
+                    aria-label="Factura descuenta stock"
+                    isDisabled={isOffline}
+                  >
+                    Factura descuenta stock
+                  </Switch>
+                  <Switch
+                    isSelected={configStock.presupuestoDescuentaStock}
+                    onValueChange={(value) =>
+                      setConfigStock((prev) => ({
+                        ...prev,
+                        presupuestoDescuentaStock: value,
+                      }))
+                    }
+                    className="px-1 py-1"
+                    aria-label="Presupuesto descuenta stock"
+                    isDisabled={isOffline}
+                  >
+                    Presupuesto descuenta stock
+                  </Switch>
+                  <Switch
+                    isSelected={configStock.remitoDescuentaStock}
+                    onValueChange={(value) =>
+                      setConfigStock((prev) => ({
+                        ...prev,
+                        remitoDescuentaStock: value,
+                      }))
+                    }
+                    className="px-1 py-1"
+                    aria-label="Remito descuenta stock"
+                    isDisabled={isOffline}
+                  >
+                    Remito descuenta stock
+                  </Switch>
+                  <Switch
+                    isSelected={configStock.actualizaCostoDesdeCompra}
+                    onValueChange={(value) =>
+                      setConfigStock((prev) => ({
+                        ...prev,
+                        actualizaCostoDesdeCompra: value,
+                      }))
+                    }
+                    className="px-1 py-1"
+                    aria-label="Actualizar costo desde compra"
+                    isDisabled={isOffline}
+                  >
+                    Actualizar costo desde compra
+                  </Switch>
+                  <Switch
+                    isSelected={configStock.modificaPrecioVentaDesdeCompra}
+                    onValueChange={(value) =>
+                      setConfigStock((prev) => ({
+                        ...prev,
+                        modificaPrecioVentaDesdeCompra: value,
+                      }))
+                    }
+                    className="px-1 py-1"
+                    aria-label="Modificar precio de venta desde compra"
+                    isDisabled={isOffline}
+                  >
+                    Modificar precio de venta desde compra
+                  </Switch>
+                </CardBody>
+              </Card>
+
+              {/* Sección: Caja y pagos */}
+              <Card className="shadow-sm border border-slate-200">
+                <CardHeader className="pb-3">
+                  <h4 className="text-base font-semibold text-slate-900">
+                    Caja y pagos
+                  </h4>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Configuración de caja y formas de pago por defecto
+                  </p>
+                </CardHeader>
+                <Divider />
+                <CardBody className="space-y-4 pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Select
+                      label="Forma de pago por defecto (Ventas)"
+                      selectedKeys={[configCaja.tipoFormaPagoPorDefectoVenta.toString()]}
+                      onSelectionChange={(keys) => {
+                        const selected = Array.from(keys)[0];
+                        setConfigCaja((prev) => ({
+                          ...prev,
+                          tipoFormaPagoPorDefectoVenta: selected ? Number(selected) : 0,
+                        }));
+                      }}
+                      classNames={{ trigger: "bg-white border-slate-200" }}
+                      isDisabled={isOffline}
+                    >
+                      <SelectItem key="0">Efectivo</SelectItem>
+                      <SelectItem key="1">Débito</SelectItem>
+                      <SelectItem key="2">Crédito</SelectItem>
+                      <SelectItem key="3">QR</SelectItem>
+                    </Select>
+                    <Select
+                      label="Forma de pago por defecto (Compras)"
+                      selectedKeys={[configCaja.tipoFormaPagoPorDefectoCompra.toString()]}
+                      onSelectionChange={(keys) => {
+                        const selected = Array.from(keys)[0];
+                        setConfigCaja((prev) => ({
+                          ...prev,
+                          tipoFormaPagoPorDefectoCompra: selected ? Number(selected) : 0,
+                        }));
+                      }}
+                      classNames={{ trigger: "bg-white border-slate-200" }}
+                      isDisabled={isOffline}
+                    >
+                      <SelectItem key="0">Efectivo</SelectItem>
+                      <SelectItem key="1">Débito</SelectItem>
+                      <SelectItem key="2">Crédito</SelectItem>
+                      <SelectItem key="3">QR</SelectItem>
+                    </Select>
+                  </div>
+                  <Switch
+                    isSelected={configCaja.ingresoManualCajaInicial}
+                    onValueChange={(value) =>
+                      setConfigCaja((prev) => ({
+                        ...prev,
+                        ingresoManualCajaInicial: value,
+                      }))
+                    }
+                    className="px-1 py-1"
+                    aria-label="Ingreso manual de caja inicial"
+                    isDisabled={isOffline}
+                  >
+                    Ingreso manual de caja inicial
+                  </Switch>
+                  <Switch
+                    isSelected={configCaja.puestoCajaSeparado}
+                    onValueChange={(value) =>
+                      setConfigCaja((prev) => ({
+                        ...prev,
+                        puestoCajaSeparado: value,
+                      }))
+                    }
+                    className="px-1 py-1"
+                    aria-label="Puesto de caja separado"
+                    isDisabled={isOffline}
+                  >
+                    Puesto de caja separado
+                  </Switch>
+                  <Switch
+                    isSelected={configCaja.activarRetiroDeCaja}
+                    onValueChange={(value) =>
+                      setConfigCaja((prev) => ({
+                        ...prev,
+                        activarRetiroDeCaja: value,
+                      }))
+                    }
+                    className="px-1 py-1"
+                    aria-label="Activar retiro de caja"
+                    isDisabled={isOffline}
+                  >
+                    Activar retiro de caja
+                  </Switch>
+                  {configCaja.activarRetiroDeCaja && (
+                    <Input
+                      label="Monto máximo de retiro de caja"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      variant="bordered"
+                      classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                      value={configCaja.montoMaximoRetiroCaja.toString()}
+                      onChange={(e) =>
+                        setConfigCaja((prev) => ({
+                          ...prev,
+                          montoMaximoRetiroCaja: parseFloat(e.target.value) || 0,
+                        }))
+                      }
+                      startContent={<span className="text-gray-500">$</span>}
+                      isDisabled={isOffline}
+                    />
+                  )}
+                </CardBody>
+              </Card>
+
+              {/* Sección: Productos */}
+              <Card className="shadow-sm border border-slate-200">
+                <CardHeader className="pb-3">
+                  <h4 className="text-base font-semibold text-slate-900">
+                    Productos
+                  </h4>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Configuración de comportamiento de productos
+                  </p>
+                </CardHeader>
+                <Divider />
+                <CardBody className="space-y-3 pt-4">
+                  <Switch
+                    isSelected={configProductos.unificarRenglonesIngresarMismoProducto}
+                    onValueChange={(value) =>
+                      setConfigProductos((prev) => ({
+                        ...prev,
+                        unificarRenglonesIngresarMismoProducto: value,
+                      }))
+                    }
+                    className="px-1 py-1"
+                    aria-label="Unificar renglones al ingresar el mismo producto"
+                    isDisabled={isOffline}
+                  >
+                    Unificar renglones al ingresar el mismo producto
+                  </Switch>
+                </CardBody>
+              </Card>
+
+              {/* Sección: Báscula */}
+              <Card className="shadow-sm border border-slate-200">
+                <CardHeader className="pb-3">
+                  <h4 className="text-base font-semibold text-slate-900">
+                    Báscula
+                  </h4>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Configuración de báscula para productos a granel
+                  </p>
+                </CardHeader>
+                <Divider />
+                <CardBody className="space-y-4 pt-4">
+                  <Switch
+                    isSelected={configBascula.activarBascula}
+                    onValueChange={(value) =>
+                      setConfigBascula((prev) => ({
+                        ...prev,
+                        activarBascula: value,
+                      }))
+                    }
+                    className="px-1 py-1"
+                    aria-label="Activar báscula"
+                    isDisabled={isOffline}
+                  >
+                    Activar báscula
+                  </Switch>
+                  {configBascula.activarBascula && (
+                    <>
+                      <Switch
+                        isSelected={configBascula.etiquetaPorPeso}
+                        onValueChange={(value) =>
+                          setConfigBascula((prev) => ({
+                            ...prev,
+                            etiquetaPorPeso: value,
+                          }))
+                        }
+                        className="px-1 py-1"
+                        aria-label="Etiqueta por peso"
+                        isDisabled={isOffline}
+                      >
+                        Etiqueta por peso
+                      </Switch>
+                      <Input
+                        label="Código de báscula"
+                        variant="bordered"
+                        classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                        value={configBascula.codigoBascula}
+                        onChange={(e) =>
+                          setConfigBascula((prev) => ({
+                            ...prev,
+                            codigoBascula: e.target.value,
+                          }))
+                        }
+                        placeholder="Ingrese el código de la báscula"
+                        isDisabled={isOffline}
+                      />
+                    </>
+                  )}
+                </CardBody>
+              </Card>
+
             </div>
           </SectionPanel>
 
@@ -570,6 +1715,7 @@ export default function Configuracion() {
                 onValueChange={(value) =>
                   setNotificaciones((prev) => ({ ...prev, email: value }))
                 }
+                aria-label="Enviar alertas por correo"
               >
                 Enviar alertas por correo
               </Switch>
@@ -578,6 +1724,7 @@ export default function Configuracion() {
                 onValueChange={(value) =>
                   setNotificaciones((prev) => ({ ...prev, push: value }))
                 }
+                aria-label="Notificaciones push en la app"
               >
                 Notificaciones push en la app
               </Switch>
@@ -586,6 +1733,7 @@ export default function Configuracion() {
                 onValueChange={(value) =>
                   setNotificaciones((prev) => ({ ...prev, stockBajo: value }))
                 }
+                aria-label="Avisar stock critico y roturas"
               >
                 Avisar stock critico y roturas
               </Switch>
@@ -597,10 +1745,23 @@ export default function Configuracion() {
                     resumenDiario: value,
                   }))
                 }
+                aria-label="Enviar resumen diario a las 20:00"
               >
                 Enviar resumen diario a las 20:00
               </Switch>
             </div>
+            {hasNotificacionesChanges && (
+              <div className="flex justify-end pt-2">
+                <Button
+                  color="primary"
+                  onPress={handleSaveNotificaciones}
+                  isLoading={isSavingNotificaciones}
+                  isDisabled={isOffline}
+                >
+                  Guardar cambios
+                </Button>
+              </div>
+            )}
           </SectionPanel>
 
           <SectionPanel
@@ -610,45 +1771,247 @@ export default function Configuracion() {
             summary={summarySeguridad}
             isActive={openSection === "seguridad"}
           >
-            <div className="space-y-3">
-              <Switch
-                isSelected={seguridad.dobleFactor}
-                onValueChange={(value) =>
-                  setSeguridad((prev) => ({ ...prev, dobleFactor: value }))
-                }
-              >
-                Habilitar doble factor para usuarios
-              </Switch>
-              <Switch
-                isSelected={seguridad.alertarDispositivo}
-                onValueChange={(value) =>
-                  setSeguridad((prev) => ({
-                    ...prev,
-                    alertarDispositivo: value,
-                  }))
-                }
-              >
-                Avisar inicio de sesión desde nuevos dispositivos
-              </Switch>
-              <Switch
-                isSelected={seguridad.bloqueoAutomatico}
-                onValueChange={(value) =>
-                  setSeguridad((prev) => ({
-                    ...prev,
-                    bloqueoAutomatico: value,
-                  }))
-                }
-              >
-                Bloquear dashboard después de 10 minutos
-              </Switch>
-              <Switch
-                isSelected={seguridad.recordarSesion}
-                onValueChange={(value) =>
-                  setSeguridad((prev) => ({ ...prev, recordarSesion: value }))
-                }
-              >
-                Recordar sesión por 30 días en dispositivos confiables
-              </Switch>
+            <div className="space-y-6">
+              {/* Card: Acceso y autenticación */}
+              <Card className="shadow-sm border border-slate-200">
+                <CardHeader className="flex items-center gap-3 pb-3">
+                  <div className="p-2 rounded-lg bg-blue-100">
+                    <Lock size={20} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-semibold text-slate-900">
+                      Acceso y autenticación
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      Configura cómo los usuarios acceden al sistema
+                    </p>
+                  </div>
+                </CardHeader>
+                <Divider />
+                <CardBody className="space-y-4 pt-4">
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-700">
+                        Habilitar doble factor (2FA)
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Requiere que todos los usuarios configuren autenticación
+                        de dos factores en su próxima sesión
+                      </p>
+                    </div>
+                    <Switch
+                      size="sm"
+                      isSelected={seguridad.dobleFactor}
+                      onValueChange={(value) => {
+                        setSeguridad((prev) => ({
+                          ...prev,
+                          dobleFactor: value,
+                        }));
+                      }}
+                      aria-label="Habilitar doble factor de autenticación"
+                    />
+                  </div>
+                  <Divider />
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-700">
+                        Avisar inicio de sesión desde nuevos dispositivos
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Envía notificaciones cuando un usuario inicie sesión
+                        desde un dispositivo o ubicación no reconocida
+                      </p>
+                    </div>
+                    <Switch
+                      size="sm"
+                      isSelected={seguridad.alertarNuevoDispositivo}
+                      onValueChange={(value) => {
+                        setSeguridad((prev) => ({
+                          ...prev,
+                          alertarNuevoDispositivo: value,
+                        }));
+                      }}
+                      aria-label="Avisar inicio de sesión desde nuevos dispositivos"
+                    />
+                  </div>
+                  <Divider />
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-700">
+                        Bloquear dashboard por inactividad
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Cierra la sesión automáticamente después de 10 minutos
+                        de inactividad
+                      </p>
+                    </div>
+                    <Switch
+                      size="sm"
+                      isSelected={seguridad.bloquearPorInactividad}
+                      onValueChange={(value) => {
+                        setSeguridad((prev) => ({
+                          ...prev,
+                          bloquearPorInactividad: value,
+                        }));
+                      }}
+                      aria-label="Bloquear dashboard por inactividad"
+                    />
+                  </div>
+                  <Divider />
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-700">
+                        Bloquear cuenta tras intentos fallidos
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Bloquea temporalmente la cuenta después de múltiples
+                        intentos de inicio de sesión fallidos
+                      </p>
+                    </div>
+                    <Select
+                      size="sm"
+                      selectedKeys={[seguridad.bloquearTrasIntentos]}
+                      onChange={(e) => {
+                        setSeguridad((prev) => ({
+                          ...prev,
+                          bloquearTrasIntentos: e.target.value as "nunca" | "5" | "10",
+                        }));
+                      }}
+                      className="min-w-[140px]"
+                      aria-label="Bloquear cuenta tras intentos fallidos"
+                      label=""
+                    >
+                      <SelectItem key="nunca">Nunca</SelectItem>
+                      <SelectItem key="5">5 intentos</SelectItem>
+                      <SelectItem key="10">10 intentos</SelectItem>
+                    </Select>
+                  </div>
+                  <Divider />
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-700">
+                        Recordar sesión por 30 días en dispositivos confiables
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Mantiene la sesión activa durante 30 días en
+                        dispositivos marcados como confiables
+                      </p>
+                    </div>
+                    <Switch
+                      size="sm"
+                      isSelected={seguridad.recordarSesion30Dias}
+                      onValueChange={(value) => {
+                        setSeguridad((prev) => ({
+                          ...prev,
+                          recordarSesion30Dias: value,
+                        }));
+                      }}
+                      aria-label="Recordar sesión por 30 días en dispositivos confiables"
+                    />
+                  </div>
+                </CardBody>
+              </Card>
+              
+              {hasSeguridadChanges && (
+                <div className="flex justify-end pt-2">
+                  <Button
+                    color="primary"
+                    onPress={handleSaveSeguridad}
+                    isLoading={isSavingSeguridad}
+                    isDisabled={isOffline}
+                  >
+                    Guardar cambios de seguridad
+                  </Button>
+                </div>
+              )}
+
+              {/* Card: Estado de seguridad */}
+              <Card className="shadow-sm border border-slate-200">
+                <CardHeader className="flex items-center gap-3 pb-3">
+                  <div className="p-2 rounded-lg bg-green-100">
+                    <Shield size={20} className="text-green-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-semibold text-slate-900">
+                      Estado de seguridad
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      Información sobre sesiones y dispositivos activos
+                    </p>
+                  </div>
+                </CardHeader>
+                <Divider />
+                <CardBody className="space-y-4 pt-4">
+                  {/* TODO: Reemplazar con datos reales del API cuando esté disponible */}
+                  {/* Endpoint esperado: GET /api/configuracion/seguridad/estado */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                      <p className="text-xs text-gray-500 mb-1">
+                        Sesiones activas
+                      </p>
+                      <p className="text-2xl font-semibold text-slate-900">8</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                      <p className="text-xs text-gray-500 mb-1">
+                        Dispositivos activos
+                      </p>
+                      <p className="text-2xl font-semibold text-slate-900">5</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                      <p className="text-xs text-gray-500 mb-1">
+                        Último acceso
+                      </p>
+                      <p className="text-lg font-semibold text-slate-900">
+                        Hace 12 minutos
+                      </p>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+
+              {/* Card: Auditoría */}
+              <Card className="shadow-sm border border-slate-200">
+                <CardHeader className="flex items-center gap-3 pb-3">
+                  <div className="p-2 rounded-lg bg-purple-100">
+                    <Eye size={20} className="text-purple-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-semibold text-slate-900">
+                      Auditoría
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      Visualiza y monitorea la actividad de seguridad
+                    </p>
+                  </div>
+                </CardHeader>
+                <Divider />
+                <CardBody className="space-y-4 pt-4">
+                  <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                    <p className="text-sm text-gray-700">
+                      El sistema registra automáticamente todos los eventos de
+                      seguridad y accesos para mantener un historial completo
+                      de la actividad del negocio. Los logs incluyen inicios de
+                      sesión, cambios de configuración, intentos fallidos y
+                      acciones administrativas.
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-gray-600">
+                      Para ver los logs completos, visita la sección de
+                      Analíticas
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      color="primary"
+                      onPress={() => router.push("/analiticas?tab=logs")}
+                      aria-label="Ver logs completos de auditoría"
+                    >
+                      Ver logs completos
+                    </Button>
+                  </div>
+                </CardBody>
+              </Card>
             </div>
           </SectionPanel>
 
@@ -730,6 +2093,18 @@ export default function Configuracion() {
                 />
               </div>
             </div>
+            {hasFiscalChanges && (
+              <div className="flex justify-end pt-2">
+                <Button
+                  color="primary"
+                  onPress={handleSaveFiscal}
+                  isLoading={isSavingFiscal}
+                  isDisabled={isOffline}
+                >
+                  Guardar cambios
+                </Button>
+              </div>
+            )}
           </SectionPanel>
 
           <SectionPanel
@@ -739,27 +2114,61 @@ export default function Configuracion() {
             summary={summaryBranding}
             isActive={openSection === "branding"}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                type="file"
-                label="Logo"
-                variant="bordered"
-                classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              />
-              <Input
-                type="color"
-                label="Color principal"
-                variant="bordered"
-                classNames={{ inputWrapper: "bg-white border-slate-200 h-12" }}
-                value={branding.color}
-                onChange={(e) =>
-                  setBranding((prev) => ({ ...prev, color: e.target.value }))
-                }
-              />
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Logo</label>
+                  <div className="flex items-center gap-4">
+                    {branding.logoPreview && (
+                      <div className="relative">
+                        <img
+                          src={branding.logoPreview}
+                          alt="Logo preview"
+                          className="w-24 h-24 object-contain border border-slate-200 rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setBranding((prev) => ({
+                              ...prev,
+                              logo: null,
+                              logoPreview: brandingOriginal?.logoPreview || "",
+                            }));
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        variant="bordered"
+                        classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                        onChange={handleLogoChange}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Formatos: JPG, PNG, GIF. Máximo 5MB
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <Input
+                  type="color"
+                  label="Color principal"
+                  variant="bordered"
+                  classNames={{ inputWrapper: "bg-white border-slate-200 h-12" }}
+                  value={branding.color}
+                  onChange={(e) =>
+                    setBranding((prev) => ({ ...prev, color: e.target.value }))
+                  }
+                />
+              </div>
               <Input
                 label="Slogan del negocio"
                 variant="bordered"
-                className="md:col-span-2"
                 classNames={{ inputWrapper: "bg-white border-slate-200" }}
                 value={branding.slogan}
                 onChange={(e) =>
@@ -768,6 +2177,18 @@ export default function Configuracion() {
                 placeholder="Ej: Mejor precio, mejor servicio."
               />
             </div>
+            {hasBrandingChanges && (
+              <div className="flex justify-end pt-2">
+                <Button
+                  color="primary"
+                  onPress={handleSaveBranding}
+                  isLoading={isSavingBranding}
+                  isDisabled={isOffline}
+                >
+                  Guardar cambios
+                </Button>
+              </div>
+            )}
           </SectionPanel>
         </div>
       </main>

@@ -7,7 +7,7 @@ type PermisoResult = {
   permisos: string[];
 };
 
-class PermisoError extends Error {
+export class PermisoError extends Error {
   status: number;
   constructor(message: string, status: number) {
     super(message);
@@ -139,5 +139,3 @@ export async function requirePermiso(
     permisos,
   };
 }
-
-export { PermisoError };

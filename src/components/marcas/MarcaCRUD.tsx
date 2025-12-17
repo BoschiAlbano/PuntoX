@@ -117,7 +117,7 @@ export default function MarcaCRUD() {
 
       // return response.json();
 
-      console.log(user);
+      // user disponible en este scope; registro de depuración eliminado
 
       if (modoEdicion) {
         const supabase = getSupabaseBrowserClient();

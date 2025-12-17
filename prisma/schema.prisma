@@ -415,6 +415,9 @@ model Configuracion {
   ActivarBascula                         Boolean
   EtiquetaPorPeso                        Boolean
   CodigoBascula                          String?   @db.VarChar(8000)
+  MostrarPreciosConIva                   Boolean   @default(true)
+  AbrirCajonEfectivo                     Boolean   @default(true)
+  NumerarPedidosPantalla                 Boolean   @default(true)
   EstaEliminado                          Boolean
   Foto                                   Bytes?
   ShowFoto                               Boolean   @default(false)
@@ -985,3 +988,4 @@ model Movimiento_CuentaCorrienteProveedor {
   @@index([Id])
   @@index([ProveedorId])
 }
+

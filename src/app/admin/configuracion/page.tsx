@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   Card,
@@ -15,6 +16,113 @@ import {
   Textarea,
 } from "@heroui/react";
 import { addToast } from "@heroui/react";
+
+// Types
+type PerfilNegocioDTO = {
+  existsConfiguracion: boolean;
+  nombre: string;
+  razonSocial: string;
+  correo: string;
+  telefono: string;
+  dominio: string;
+  cuit: string;
+};
+
+type PreferenciasVentaDTO = {
+  existsConfiguracion: boolean;
+  imprimir: boolean;
+  unificarRenglonesProducto: boolean;
+  tipoFormaPagoDefault: number;
+  facturaDescuentaStock: boolean;
+  presupuestoDescuentaStock: boolean;
+  remitoDescuentaStock: boolean;
+  ingresoManualCajaInicial: boolean;
+  puestoCajaSeparado: boolean;
+  activarRetiroDeCaja: boolean;
+  montoMaximoRetiroCaja: number;
+  activarBascula: boolean;
+  etiquetaPorPeso: boolean;
+  codigoBascula: string | null;
+  mostrarPreciosConIva: boolean;
+  abrirCajonEfectivo: boolean;
+  numerarPedidosPantalla: boolean;
+};
+
+// API functions
+async function fetchPerfilNegocio(): Promise<PerfilNegocioDTO> {
+  const res = await fetch("/api/admin/configuracion/perfil");
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Error al cargar perfil");
+  }
+  return res.json();
+}
+
+async function savePerfilNegocio(data: {
+  nombre: string;
+  razonSocial: string;
+  correo: string;
+  telefono: string;
+  dominio: string;
+  cuit: string;
+}): Promise<PerfilNegocioDTO> {
+  const res = await fetch("/api/admin/configuracion/perfil", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Error al guardar perfil");
+  }
+  return res.json();
+}
+
+async function fetchPreferenciasVenta(): Promise<PreferenciasVentaDTO> {
+  const res = await fetch("/api/admin/configuracion/preferencias-venta");
+  if (!res.ok) {
+    const error = await res.json();
+    if (error.code === "CONFIG_MISSING") {
+      // Retornar objeto con existsConfiguracion: false
+      return {
+        existsConfiguracion: false,
+        imprimir: false,
+        unificarRenglonesProducto: true,
+        tipoFormaPagoDefault: 0,
+        facturaDescuentaStock: true,
+        presupuestoDescuentaStock: false,
+        remitoDescuentaStock: true,
+        ingresoManualCajaInicial: false,
+        puestoCajaSeparado: false,
+        activarRetiroDeCaja: false,
+        montoMaximoRetiroCaja: 0,
+        activarBascula: false,
+        etiquetaPorPeso: false,
+        codigoBascula: null,
+        mostrarPreciosConIva: true,
+        abrirCajonEfectivo: true,
+        numerarPedidosPantalla: true,
+      };
+    }
+    throw new Error(error.error || "Error al cargar preferencias");
+  }
+  return res.json();
+}
+
+async function savePreferenciasVenta(
+  data: Omit<PreferenciasVentaDTO, "existsConfiguracion">
+): Promise<PreferenciasVentaDTO> {
+  const res = await fetch("/api/admin/configuracion/preferencias-venta", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Error al guardar preferencias");
+  }
+  return res.json();
+}
 
 type SectionKey =
   | "perfil"
@@ -111,20 +219,79 @@ function AccordionSection({
 }
 
 export default function AdminConfiguracionPage() {
-  const [isSaving, setIsSaving] = useState(false);
+  const queryClient = useQueryClient();
   const [openSection, setOpenSection] = useState<SectionKey | "">("perfil");
-  const [perfil, setPerfil] = useState({
-    negocio: "Punto X Market",
-    fantasia: "PX Liniers",
-    email: "admin@puntox.com",
-    telefono: "+54 11 5555 0000",
-    direccion: "Av. Siempre Viva 742",
-    mensajeTicket: "Gracias por tu compra. Vuelve pronto.",
-    cuit: "20-12345678-9",
-    condicionIva: "Responsable Inscripto",
-    provincia: "Buenos Aires, CABA",
-    sitio: "https://puntox.com",
+  
+  // TanStack Query hooks
+  const {
+    data: perfilData,
+    isLoading: isLoadingPerfil,
+    error: errorPerfil,
+  } = useQuery({
+    queryKey: ["perfil-negocio"],
+    queryFn: fetchPerfilNegocio,
   });
+
+  const {
+    data: preferenciasData,
+    isLoading: isLoadingPreferencias,
+    error: errorPreferencias,
+  } = useQuery({
+    queryKey: ["preferencias-venta"],
+    queryFn: fetchPreferenciasVenta,
+  });
+
+  // Mutations (sin toasts aquí, se manejan en handleSaveAll)
+  // Los datos se actualizan en el cache, lo que automáticamente actualiza perfilData y preferenciasData
+  // y los useEffect sincronizan los estados locales, marcando como limpio
+  const mutationPerfil = useMutation({
+    mutationFn: savePerfilNegocio,
+    onSuccess: (data) => {
+      queryClient.setQueryData(["perfil-negocio"], data);
+      // Los estados locales se sincronizarán automáticamente vía useEffect
+    },
+  });
+
+  const mutationPreferencias = useMutation({
+    mutationFn: savePreferenciasVenta,
+    onSuccess: (data) => {
+      queryClient.setQueryData(["preferencias-venta"], data);
+      // Los estados locales se sincronizarán automáticamente vía useEffect
+    },
+  });
+
+  // Estados locales para edición
+  const [perfil, setPerfil] = useState({
+    nombre: "",
+    razonSocial: "",
+    correo: "",
+    telefono: "",
+    dominio: "",
+    cuit: "",
+  });
+
+  const [preferencias, setPreferencias] = useState<PreferenciasVentaDTO | null>(null);
+
+  // Sincronizar estados locales con datos de query
+  useEffect(() => {
+    if (perfilData) {
+      setPerfil({
+        nombre: perfilData.nombre,
+        razonSocial: perfilData.razonSocial,
+        correo: perfilData.correo,
+        telefono: perfilData.telefono,
+        dominio: perfilData.dominio,
+        cuit: perfilData.cuit,
+      });
+    }
+  }, [perfilData]);
+
+  useEffect(() => {
+    if (preferenciasData) {
+      setPreferencias(preferenciasData);
+    }
+  }, [preferenciasData]);
+
   const [regional, setRegional] = useState({
     moneda: "ARS",
     zonaHoraria: "America/Argentina/Buenos_Aires",
@@ -132,12 +299,6 @@ export default function AdminConfiguracionPage() {
     tipoIva: "Responsable Inscripto",
     puntoVenta: "0001",
     inicioActividades: "",
-  });
-  const [preferencias, setPreferencias] = useState({
-    ticketDigital: true,
-    mostrarPrecios: true,
-    aperturaCaja: true,
-    numerarPedidos: true,
   });
   const [notificaciones, setNotificaciones] = useState({
     email: true,
@@ -164,6 +325,28 @@ export default function AdminConfiguracionPage() {
     }
   }, [branding.logo]);
 
+  // Dirty state por tab
+  const dirtyPerfil = useMemo(() => {
+    if (!perfilData) return false;
+    return (
+      perfil.nombre !== perfilData.nombre ||
+      perfil.razonSocial !== perfilData.razonSocial ||
+      perfil.correo !== perfilData.correo ||
+      perfil.telefono !== perfilData.telefono ||
+      perfil.dominio !== perfilData.dominio ||
+      perfil.cuit !== perfilData.cuit
+    );
+  }, [perfil, perfilData]);
+
+  const dirtyVentas = useMemo(() => {
+    if (!preferencias || !preferenciasData) return false;
+    return JSON.stringify(preferencias) !== JSON.stringify(preferenciasData);
+  }, [preferencias, preferenciasData]);
+
+  const hasAnyChanges = dirtyPerfil || dirtyVentas;
+  const isLoading = isLoadingPerfil || isLoadingPreferencias;
+  const isSaving = mutationPerfil.isPending || mutationPreferencias.isPending;
+
   const handleLogoChange = (file: File | null) => {
     if (!file) {
       setBranding((prev) => ({ ...prev, logo: null, logoPreview: "" }));
@@ -173,28 +356,85 @@ export default function AdminConfiguracionPage() {
     setBranding((prev) => ({ ...prev, logo: file, logoPreview: previewUrl }));
   };
 
-  const handleSave = (seccion: string) => {
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
+  const handleSaveAll = async () => {
+    const tasks: Array<{ name: string; promise: Promise<unknown> }> = [];
+
+    // Guardar Perfil del negocio si hay cambios
+    if (dirtyPerfil) {
+      tasks.push({
+        name: "Perfil del negocio",
+        promise: mutationPerfil.mutateAsync({
+          nombre: perfil.nombre,
+          razonSocial: perfil.razonSocial,
+          correo: perfil.correo,
+          telefono: perfil.telefono,
+          dominio: perfil.dominio,
+          cuit: perfil.cuit,
+        }),
+      });
+    }
+
+    // Guardar Preferencias de venta si hay cambios
+    if (dirtyVentas && preferencias) {
+      const { existsConfiguracion, ...preferenciasData } = preferencias;
+      tasks.push({
+        name: "Preferencias de venta",
+        promise: mutationPreferencias.mutateAsync(preferenciasData),
+      });
+    }
+
+    if (tasks.length === 0) return;
+
+    // Ejecutar todas las mutations en paralelo con Promise.allSettled
+    const results = await Promise.allSettled(tasks.map((t) => t.promise));
+
+    const successes: string[] = [];
+    const errors: string[] = [];
+
+    results.forEach((result, index) => {
+      const taskName = tasks[index].name;
+      if (result.status === "fulfilled") {
+        successes.push(taskName);
+      } else {
+        const errorMessage =
+          result.reason?.message || `No se pudo guardar ${taskName}`;
+        errors.push(`${taskName}: ${errorMessage}`);
+      }
+    });
+
+    // Mostrar toasts de resultados parciales
+    if (successes.length > 0) {
       addToast({
         title: "Cambios guardados",
-        description: `${seccion} actualizada`,
+        description: `${successes.join(", ")} actualizado${successes.length > 1 ? "s" : ""}`,
         color: "success",
       });
-    }, 500);
+    }
+
+    if (errors.length > 0) {
+      errors.forEach((error) => {
+        addToast({
+          title: "Error",
+          description: error,
+          color: "danger",
+        });
+      });
+    }
   };
 
   const toggleSection = (id: SectionKey) => {
     setOpenSection((prev) => (prev === id ? "" : id));
   };
 
-  const summaryPerfil = `${perfil.negocio} | CUIT ${perfil.cuit} | ${perfil.provincia}`;
-  const summaryVentas = `Ticket digital: ${
-    preferencias.ticketDigital ? "activado" : "desactivado"
-  } | Precios con impuestos: ${
-    preferencias.mostrarPrecios ? "activado" : "desactivado"
-  }`;
+  const summaryPerfil = useMemo(() => {
+    if (!perfilData) return "Cargando...";
+    return `${perfilData.nombre || "Sin nombre"} | CUIT ${perfilData.cuit || "Sin CUIT"}`;
+  }, [perfilData]);
+
+  const summaryVentas = useMemo(() => {
+    if (!preferenciasData) return "Cargando...";
+    return `Imprimir: ${preferenciasData.imprimir ? "sí" : "no"} | IVA: ${preferenciasData.mostrarPreciosConIva ? "incluido" : "excluido"} | Stock: ${preferenciasData.facturaDescuentaStock ? "descuenta" : "no descuenta"}`;
+  }, [preferenciasData]);
   const summaryNotificaciones = `Correo: ${
     notificaciones.email ? "activado" : "desactivado"
   } | Push app: ${notificaciones.push ? "activado" : "desactivado"} | Resumen diario: ${
@@ -230,18 +470,24 @@ export default function AdminConfiguracionPage() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
+              {hasAnyChanges && (
+                <Chip size="sm" variant="flat" color="warning" className="bg-yellow-100 text-yellow-800">
+                  Cambios sin guardar
+                </Chip>
+              )}
               <Button
                 color="primary"
                 className="bg-white text-slate-900"
                 isLoading={isSaving}
-                onPress={() => handleSave("Configuracion general")}
+                isDisabled={!hasAnyChanges}
+                onPress={handleSaveAll}
               >
                 Guardar todo
               </Button>
               <Button
                 variant="bordered"
                 className="border-white/40 text-white"
-                onPress={() => handleSave("Actividad revisada")}
+                onPress={() => handleSaveAll()}
               >
                 Ver actividad
               </Button>
@@ -259,111 +505,73 @@ export default function AdminConfiguracionPage() {
           isOpen={openSection === "perfil"}
           onToggle={toggleSection}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Nombre fiscal"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.negocio}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, negocio: e.target.value }))
-              }
-            />
-            <Input
-              label="Nombre de fantasia"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.fantasia}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, fantasia: e.target.value }))
-              }
-            />
-            <Input
-              label="Correo"
-              type="email"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.email}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, email: e.target.value }))
-              }
-            />
-            <Input
-              label="Telefono"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.telefono}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, telefono: e.target.value }))
-              }
-            />
-            <Input
-              label="Direccion"
-              variant="bordered"
-              className="md:col-span-2"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.direccion}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, direccion: e.target.value }))
-              }
-            />
-            <Input
-              label="CUIT"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.cuit}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, cuit: e.target.value }))
-              }
-            />
-            <Input
-              label="Condicion IVA"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.condicionIva}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, condicionIva: e.target.value }))
-              }
-            />
-            <Input
-              label="Provincia / Localidad"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.provincia}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, provincia: e.target.value }))
-              }
-            />
-            <Input
-              label="Sitio web"
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-              value={perfil.sitio}
-              onChange={(e) =>
-                setPerfil((prev) => ({ ...prev, sitio: e.target.value }))
-              }
-            />
-          </div>
-          <Textarea
-            label="Mensaje en ticket"
-            placeholder="Ej: Gracias por elegirnos"
-            minRows={3}
-            variant="bordered"
-            classNames={{ inputWrapper: "bg-white border-slate-200" }}
-            value={perfil.mensajeTicket}
-            onChange={(e) =>
-              setPerfil((prev) => ({ ...prev, mensajeTicket: e.target.value }))
-            }
-          />
-          <div className="flex justify-end">
-            <Button
-              color="primary"
-              isLoading={isSaving}
-              onPress={() => handleSave("Perfil del negocio")}
-            >
-              Guardar perfil
-            </Button>
-          </div>
+          {isLoading ? (
+            <div className="text-center py-4 text-gray-500">Cargando...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Nombre"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={perfil.nombre}
+                onChange={(e) =>
+                  setPerfil((prev) => ({ ...prev, nombre: e.target.value }))
+                }
+                placeholder="Nombre del negocio"
+              />
+              <Input
+                label="Dominio"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={perfil.dominio}
+                onChange={(e) =>
+                  setPerfil((prev) => ({ ...prev, dominio: e.target.value }))
+                }
+                placeholder="dominio.com"
+              />
+              <Input
+                label="Razón social"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={perfil.razonSocial}
+                onChange={(e) =>
+                  setPerfil((prev) => ({ ...prev, razonSocial: e.target.value }))
+                }
+                placeholder="Razón social fiscal"
+              />
+              <Input
+                label="CUIT"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={perfil.cuit}
+                onChange={(e) =>
+                  setPerfil((prev) => ({ ...prev, cuit: e.target.value }))
+                }
+                placeholder="20-12345678-9"
+              />
+              <Input
+                label="Correo"
+                type="email"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={perfil.correo}
+                onChange={(e) =>
+                  setPerfil((prev) => ({ ...prev, correo: e.target.value }))
+                }
+                placeholder="correo@ejemplo.com"
+              />
+              <Input
+                label="Teléfono"
+                variant="bordered"
+                classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                value={perfil.telefono}
+                onChange={(e) =>
+                  setPerfil((prev) => ({ ...prev, telefono: e.target.value }))
+                }
+                placeholder="+54 11 5555 0000"
+              />
+            </div>
+          )}
         </AccordionSection>
 
         <AccordionSection
@@ -374,53 +582,146 @@ export default function AdminConfiguracionPage() {
           isOpen={openSection === "ventas"}
           onToggle={toggleSection}
         >
-          <div className="space-y-3">
-            <Switch
-              isSelected={preferencias.ticketDigital}
-              onValueChange={(value) =>
-                setPreferencias((prev) => ({ ...prev, ticketDigital: value }))
-              }
-              className="px-1 py-1"
-            >
-              Enviar ticket digital por correo
-            </Switch>
-            <Switch
-              isSelected={preferencias.mostrarPrecios}
-              onValueChange={(value) =>
-                setPreferencias((prev) => ({ ...prev, mostrarPrecios: value }))
-              }
-              className="px-1 py-1"
-            >
-              Mostrar precios con impuestos incluidos
-            </Switch>
-            <Switch
-              isSelected={preferencias.aperturaCaja}
-              onValueChange={(value) =>
-                setPreferencias((prev) => ({ ...prev, aperturaCaja: value }))
-              }
-              className="px-1 py-1"
-            >
-              Abrir cajon al cobrar en efectivo
-            </Switch>
-            <Switch
-              isSelected={preferencias.numerarPedidos}
-              onValueChange={(value) =>
-                setPreferencias((prev) => ({ ...prev, numerarPedidos: value }))
-              }
-              className="px-1 py-1"
-            >
-              Numerar pedidos y mostrar en pantalla
-            </Switch>
-          </div>
-          <div className="pt-2 flex justify-end">
-            <Button
-              color="primary"
-              isLoading={isSaving}
-              onPress={() => handleSave("Preferencias de venta")}
-            >
-              Aplicar preferencias
-            </Button>
-          </div>
+          {isLoading ? (
+            <div className="text-center py-4 text-gray-500">Cargando...</div>
+          ) : !preferencias?.existsConfiguracion ? (
+            <div className="space-y-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+              <Chip color="warning" variant="flat" className="bg-yellow-100 text-yellow-800 mb-2">
+                Configuración requerida
+              </Chip>
+              <p className="text-sm text-gray-700">
+                Para habilitar las preferencias de venta, primero debes completar el{" "}
+                <button
+                  type="button"
+                  onClick={() => setOpenSection("perfil")}
+                  className="text-blue-600 hover:text-blue-800 underline font-medium"
+                >
+                  Perfil del negocio
+                </button>{" "}
+                o la sección de{" "}
+                <button
+                  type="button"
+                  onClick={() => setOpenSection("fiscal")}
+                  className="text-blue-600 hover:text-blue-800 underline font-medium"
+                >
+                  Facturación
+                </button>
+                .
+              </p>
+            </div>
+          ) : preferencias ? (
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-gray-700">Caja y Ticket</h4>
+                <Switch
+                  isSelected={preferencias.imprimir}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => prev ? { ...prev, imprimir: value } : null)
+                  }
+                  className="px-1 py-1"
+                  aria-label="Imprimir ticket automáticamente"
+                >
+                  Imprimir ticket automáticamente
+                </Switch>
+                <Switch
+                  isSelected={preferencias.abrirCajonEfectivo}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => prev ? { ...prev, abrirCajonEfectivo: value } : null)
+                  }
+                  className="px-1 py-1"
+                  aria-label="Abrir cajón al cobrar en efectivo"
+                >
+                  Abrir cajón al cobrar en efectivo
+                </Switch>
+                <Switch
+                  isSelected={preferencias.numerarPedidosPantalla}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => prev ? { ...prev, numerarPedidosPantalla: value } : null)
+                  }
+                  className="px-1 py-1"
+                  aria-label="Numerar pedidos y mostrar en pantalla"
+                >
+                  Numerar pedidos y mostrar en pantalla
+                </Switch>
+                <Switch
+                  isSelected={preferencias.unificarRenglonesProducto}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => prev ? { ...prev, unificarRenglonesProducto: value } : null)
+                  }
+                  className="px-1 py-1"
+                  aria-label="Unificar renglones del mismo producto"
+                >
+                  Unificar renglones del mismo producto
+                </Switch>
+              </div>
+              <Divider />
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-gray-700">Precios</h4>
+                <Switch
+                  isSelected={preferencias.mostrarPreciosConIva}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => prev ? { ...prev, mostrarPreciosConIva: value } : null)
+                  }
+                  className="px-1 py-1"
+                  aria-label="Mostrar precios con IVA incluido"
+                >
+                  Mostrar precios con impuestos incluidos
+                </Switch>
+              </div>
+              <Divider />
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-gray-700">Stock</h4>
+                <Switch
+                  isSelected={preferencias.facturaDescuentaStock}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => prev ? { ...prev, facturaDescuentaStock: value } : null)
+                  }
+                  className="px-1 py-1"
+                  aria-label="Factura descuenta stock"
+                >
+                  Factura descuenta stock
+                </Switch>
+                <Switch
+                  isSelected={preferencias.presupuestoDescuentaStock}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => prev ? { ...prev, presupuestoDescuentaStock: value } : null)
+                  }
+                  className="px-1 py-1"
+                  aria-label="Presupuesto descuenta stock"
+                >
+                  Presupuesto descuenta stock
+                </Switch>
+                <Switch
+                  isSelected={preferencias.remitoDescuentaStock}
+                  onValueChange={(value) =>
+                    setPreferencias((prev) => prev ? { ...prev, remitoDescuentaStock: value } : null)
+                  }
+                  className="px-1 py-1"
+                  aria-label="Remito descuenta stock"
+                >
+                  Remito descuenta stock
+                </Switch>
+              </div>
+              <Divider />
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-gray-700">Forma de pago</h4>
+                <Select
+                  label="Forma de pago por defecto"
+                  selectedKeys={[preferencias.tipoFormaPagoDefault.toString()]}
+                  onSelectionChange={(keys) => {
+                    const value = Array.from(keys)[0] as string;
+                    setPreferencias((prev) => prev ? { ...prev, tipoFormaPagoDefault: parseInt(value) || 0 } : null);
+                  }}
+                  aria-label="Forma de pago por defecto"
+                >
+                  <SelectItem key="0">Efectivo</SelectItem>
+                  <SelectItem key="1">Débito</SelectItem>
+                  <SelectItem key="2">Crédito</SelectItem>
+                  <SelectItem key="3">QR</SelectItem>
+                </Select>
+              </div>
+            </div>
+          ) : null}
         </AccordionSection>
 
         <AccordionSection
@@ -468,15 +769,6 @@ export default function AdminConfiguracionPage() {
               Enviar resumen diario a las 20:00
             </Switch>
           </div>
-          <div className="pt-2 flex justify-end">
-            <Button
-              color="primary"
-              isLoading={isSaving}
-              onPress={() => handleSave("Notificaciones")}
-            >
-              Guardar alertas
-            </Button>
-          </div>
         </AccordionSection>
 
         <AccordionSection
@@ -523,23 +815,6 @@ export default function AdminConfiguracionPage() {
             >
               Recordar sesion por 30 dias en dispositivos confiables
             </Switch>
-          </div>
-          <div className="flex flex-wrap gap-2 pt-2 justify-end">
-            <Button
-              color="primary"
-              isLoading={isSaving}
-              onPress={() => handleSave("Seguridad")}
-            >
-              Actualizar seguridad
-            </Button>
-            <Button
-              variant="bordered"
-              color="danger"
-              className="border-danger"
-              onPress={() => handleSave("Sesiones cerradas")}
-            >
-              Cerrar todas las sesiones
-            </Button>
           </div>
         </AccordionSection>
 
@@ -614,15 +889,6 @@ export default function AdminConfiguracionPage() {
               }
             />
           </div>
-          <div className="flex justify-end">
-            <Button
-              color="primary"
-              isLoading={isSaving}
-              onPress={() => handleSave("Facturacion y region")}
-            >
-              Guardar configuracion fiscal
-            </Button>
-          </div>
         </AccordionSection>
 
         <AccordionSection
@@ -683,15 +949,6 @@ export default function AdminConfiguracionPage() {
                 placeholder="Ej: Mejor precio, mejor servicio."
               />
             </div>
-          </div>
-          <div className="flex justify-end">
-            <Button
-              color="primary"
-              isLoading={isSaving}
-              onPress={() => handleSave("Branding")}
-            >
-              Guardar branding
-            </Button>
           </div>
         </AccordionSection>
 

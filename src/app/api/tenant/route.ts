@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+import { handleError } from "@/lib/errors/handler";
 
 const updateTenantSchema = z.object({
   nombre: z.string().min(1).optional(),
@@ -31,37 +32,41 @@ export async function GET() {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
-  const tenant = await prisma.tenant.findUnique({
-    where: { Id: tenantId },
-    select: {
-      Id: true,
-      Nombre: true,
-      RazonSocial: true,
-      Dominio: true,
-      Email: true,
-      Telefono: true,
-      Cuit: true,
-    },
-  });
-
-  if (!tenant) {
-    return tenantNotFound();
-  }
-
-  return NextResponse.json(
-    {
-      tenant: {
-        id: Number(tenant.Id),
-        nombre: tenant.Nombre,
-        razonSocial: tenant.RazonSocial ?? "",
-        dominio: tenant.Dominio ?? "",
-        email: tenant.Email ?? "",
-        telefono: tenant.Telefono ?? "",
-        cuit: tenant.Cuit ?? "",
+  try {
+    const tenant = await prisma.tenant.findUnique({
+      where: { Id: tenantId },
+      select: {
+        Id: true,
+        Nombre: true,
+        RazonSocial: true,
+        Dominio: true,
+        Email: true,
+        Telefono: true,
+        Cuit: true,
       },
-    },
-    { status: 200 }
-  );
+    });
+
+    if (!tenant) {
+      return tenantNotFound();
+    }
+
+    return NextResponse.json(
+      {
+        tenant: {
+          id: Number(tenant.Id),
+          nombre: tenant.Nombre,
+          razonSocial: tenant.RazonSocial ?? "",
+          dominio: tenant.Dominio ?? "",
+          email: tenant.Email ?? "",
+          telefono: tenant.Telefono ?? "",
+          cuit: tenant.Cuit ?? "",
+        },
+      },
+      { status: 200 }
+    );
+  } catch (error: unknown) {
+    return handleError(error);
+  }
 }
 
 export async function PUT(req: NextRequest) {
@@ -118,17 +123,14 @@ export async function PUT(req: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (err) {
+  } catch (err: unknown) {
     if (
       err instanceof Error &&
       err.message.toLowerCase().includes("record to update")
     ) {
       return tenantNotFound();
     }
-    console.error("Error actualizando tenant", err);
-    return NextResponse.json(
-      { error: "No se pudo actualizar el tenant" },
-      { status: 500 }
-    );
+    
+    return handleError(err);
   }
 }
