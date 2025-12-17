@@ -16,6 +16,11 @@ export default function DashboardLayout({
   const { status } = useSupabaseAuthContext();
   const router = useRouter();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [show, setshow] = useState(true);
+
+  useEffect(() => {
+    setshow(window.innerWidth > 768);
+  }, []);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -37,13 +42,21 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 flex">
-      <Sidebar
-        isCollapsed={isSidebarCollapsed}
-        onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-      />
+      <section
+        onClick={() => setshow(false)}
+        className={`z-[99] transition-all duration-300 ease-in-out sm:relative fixed sm:w-auto w-screen  sm:h-auto h-screen  ${
+          show ? `translate-x-[0%]` : `translate-x-[-100%]`
+        }`}
+      >
+        {/* Sidebar */}
+        <Sidebar
+          isCollapsed={isSidebarCollapsed}
+          onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        />
+      </section>
 
       <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
-        <DashboardHeader />
+        <DashboardHeader isShow={setshow} show={show} />
 
         <main className="flex-1 overflow-y-auto">
           <motion.div

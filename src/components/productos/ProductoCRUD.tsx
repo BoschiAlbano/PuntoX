@@ -116,25 +116,16 @@ export default function ProductoCRUD() {
   return (
     <div className="w-full space-y-4">
       {/* Header con botón crear */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            Gestión de Productos
-          </h2>
-          <p className="text-gray-600 mt-1">
-            Administra tu catálogo de productos
-          </p>
-        </div>
-        <Button
-          color="primary"
-          size="lg"
-          onPress={handleCrear}
-          className="font-semibold"
-          isDisabled={isLoadingProductos}
+
+      {/* <div className="absolute flex justify-end items-center w-full right-0 top-[-20px] z-20">
+        <button
+          onClick={handleCrear}
+          className="font-semibold from-blue-500 to-[#90c472] bg-gradient-to-r hover:from-blue-600 hover:to-[#90c472] rounded-full w-[50px] h-[50px] aspect-square text-white"
+          disabled={isLoadingProductos}
         >
-          + Nuevo Producto
-        </Button>
-      </div>
+          +
+        </button>
+      </div> */}
 
       {/* Tabla de productos */}
       <ProductoTable
@@ -143,6 +134,7 @@ export default function ProductoCRUD() {
         isError={isErrorProductos}
         onEdit={handleEditar}
         onDelete={handleConfirmarEliminar}
+        onNew={handleCrear}
         isDisabled={isSaving}
       />
 

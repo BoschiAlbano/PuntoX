@@ -164,9 +164,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
   return (
     // <section className={`z-[99] relative flex flex-col h-auto ${isCollapsed ? "w-[80px]" : "w-[280px]"} transition-all duration-300 ease-in-out`}>
-
+    // hidden
     <motion.section
-      className={`z-[99] sm:relative absolute flex-col h-auto sm:flex hidden ${
+      onClick={(e) => e.stopPropagation()}
+      className={`z-[99] sm:relative absolute flex-col h-auto sm:flex  ${
         isCollapsed ? "sm:w-[80px] w-[0px]" : "w-[280px]"
       }`}
       initial={false}
@@ -252,7 +253,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               <motion.button
                 key={item.href}
                 onClick={() => router.push(item.href)}
-                whileHover={{ x: isCollapsed ? 0 : 2, scale: isCollapsed ? 1 : 1.01 }}
+                whileHover={{
+                  x: isCollapsed ? 0 : 2,
+                  scale: isCollapsed ? 1 : 1.01,
+                }}
                 whileTap={{ scale: 0.98 }}
                 className={`
                     w-full flex items-center gap-3 px-4 py-3 rounded-xl
@@ -302,14 +306,6 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                     </motion.div>
                   )}
                 </AnimatePresence>
-
-                {/* Tooltip para modo colapsado */}
-                {/* {isCollapsed && (
-                    <div className="absolute left-full ml-2 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-slate-700">
-                      {item.label}
-                      <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-800" />
-                    </div>
-                  )} */}
               </motion.button>
             );
           })}
@@ -325,7 +321,9 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 exit={{ opacity: 0 }}
                 className="p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20"
               >
-                <p className="text-xs text-slate-400 mb-2">Versi\u00f3n 1.0.0</p>
+                <p className="text-xs text-slate-400 mb-2">
+                  Versi\u00f3n 1.0.0
+                </p>
                 <p className="text-xs text-slate-500">(c) 2024 Punto X SaaS</p>
               </motion.div>
             ) : (
@@ -346,7 +344,3 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     // </section>
   );
 }
-
-
-
-
