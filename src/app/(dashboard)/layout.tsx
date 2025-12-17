@@ -55,10 +55,10 @@ export default function DashboardLayout({
         />
       </section>
 
-      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col h-screen overflow-y-scroll overflow-x-hidden">
         <DashboardHeader isShow={setshow} show={show} />
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
