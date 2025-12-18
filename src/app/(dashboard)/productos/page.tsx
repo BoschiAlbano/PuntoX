@@ -47,11 +47,7 @@ export default function ProductosPage() {
             </div>
           }
         >
-          <Card className=" shadow-none border-none bg-transparent">
-            <CardBody className="p-0">
-              <ProductoCRUD />
-            </CardBody>
-          </Card>
+          <ProductoCRUD />
         </Tab>
 
         <Tab

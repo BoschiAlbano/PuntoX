@@ -11,15 +11,44 @@ export interface ApiError {
   details?: Array<{ field: string; message: string }>;
 }
 
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ProductosResponse {
+  data: Producto[];
+  meta: PaginationMeta;
+}
+
 const fetchProductos = async ({
   signal,
+  search = "",
+  page = 1,
+  limit = 10,
 }: {
   signal: AbortSignal;
-}): Promise<Producto[]> => {
-  const response = await fetch("/api/productos", { signal });
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<ProductosResponse> => {
+  const params = new URLSearchParams();
+  if (search) params.append("q", search);
+  params.append("page", page.toString());
+  params.append("limit", limit.toString());
+
+  const response = await fetch(`/api/productos?${params.toString()}`, {
+    signal,
+  });
   if (!response.ok) throw new Error("Error al cargar productos");
   const data = await response.json();
-  return productoListAdapter(data?.data);
+
+  return {
+    data: productoListAdapter(data?.data || []),
+    meta: data?.pagination || { total: 0, page: 1, limit: 10, totalPages: 0 },
+  };
 };
 
 const fetchMarcas = async ({
@@ -66,13 +95,18 @@ const fetchIvas = async ({
   return Array.isArray(data?.ivas) ? data.ivas : [];
 };
 
-export function useProductos({ fetchAuxiliary = false } = {}) {
+export function useProductos({
+  fetchAuxiliary = false,
+  search = "",
+  page = 1,
+  limit = 10,
+} = {}) {
   const queryClient = useQueryClient();
 
   // Queries
   const productosQuery = useQuery({
-    queryKey: ["productos"],
-    queryFn: fetchProductos,
+    queryKey: ["productos", { search, page, limit }],
+    queryFn: ({ signal }) => fetchProductos({ signal, search, page, limit }),
   });
 
   const marcasQuery = useQuery({
@@ -172,7 +206,13 @@ export function useProductos({ fetchAuxiliary = false } = {}) {
   });
 
   return {
-    productos: productosQuery.data || [],
+    productos: productosQuery.data?.data || [],
+    paginationMeta: productosQuery.data?.meta || {
+      total: 0,
+      page: 1,
+      limit: 10,
+      totalPages: 0,
+    },
     isLoadingProductos: productosQuery.isLoading,
     isErrorProductos: productosQuery.isError,
     marcas: marcasQuery.data || [],

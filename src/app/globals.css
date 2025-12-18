@@ -24,12 +24,12 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-}
+} */
 
 body {
   background: var(--background);
@@ -181,4 +181,9 @@ body {
   .tab-pill {
     flex: 0 0 auto;
   }
+}
+
+/* tabs */
+#react-aria2110892095-_r_a_-tabpanel-productos {
+  padding: 0;
 }

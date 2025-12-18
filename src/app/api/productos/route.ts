@@ -25,6 +25,8 @@ export async function GET(req: NextRequest) {
     const pagination = parsePaginationParams(req);
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
 
+    console.log(search);
+
     // Construir where clause
     const where: {
       TenantId: bigint;
@@ -51,9 +53,7 @@ export async function GET(req: NextRequest) {
 
     // Obtener productos paginados
     const productos = await prisma.articulo.findMany({
-      where: {
-        TenantId: tenantId,
-      },
+      where,
       select: {
         Id: true,
         MarcaId: true,

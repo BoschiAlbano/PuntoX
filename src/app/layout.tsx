@@ -47,7 +47,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <HeroUIProvider>
+        <HeroUIProvider disableAnimation={false}>
           <QueryProvider>
             <ToastProvider />
             <SessionProviderComponent>{children}</SessionProviderComponent>

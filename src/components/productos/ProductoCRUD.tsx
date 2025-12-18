@@ -23,8 +23,14 @@ export default function ProductoCRUD() {
     null
   );
 
+  // Estados para búsqueda y paginación
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(2);
+
   const {
     productos,
+    paginationMeta,
     isLoadingProductos,
     isErrorProductos,
     marcas,
@@ -33,7 +39,7 @@ export default function ProductoCRUD() {
     ivas,
     saveMutation,
     deleteMutation,
-  } = useProductos({ fetchAuxiliary: isOpen });
+  } = useProductos({ fetchAuxiliary: isOpen, search, page, limit });
 
   const handleCrear = () => {
     setProductoSeleccionado(null);
@@ -114,19 +120,7 @@ export default function ProductoCRUD() {
   const isSaving = saveMutation.isPending || deleteMutation.isPending;
 
   return (
-    <div className="w-full space-y-4">
-      {/* Header con botón crear */}
-
-      {/* <div className="absolute flex justify-end items-center w-full right-0 top-[-20px] z-20">
-        <button
-          onClick={handleCrear}
-          className="font-semibold from-blue-500 to-[#90c472] bg-gradient-to-r hover:from-blue-600 hover:to-[#90c472] rounded-full w-[50px] h-[50px] aspect-square text-white"
-          disabled={isLoadingProductos}
-        >
-          +
-        </button>
-      </div> */}
-
+    <>
       {/* Tabla de productos */}
       <ProductoTable
         productos={productos}
@@ -136,6 +130,11 @@ export default function ProductoCRUD() {
         onDelete={handleConfirmarEliminar}
         onNew={handleCrear}
         isDisabled={isSaving}
+        search={search}
+        onSearchChange={setSearch}
+        page={page}
+        onPageChange={setPage}
+        paginationMeta={paginationMeta}
       />
 
       {/* Modal para crear/editar */}
@@ -159,6 +158,6 @@ export default function ProductoCRUD() {
         onConfirm={handleEliminar}
         isSaving={isSaving}
       />
-    </div>
+    </>
   );
 }
