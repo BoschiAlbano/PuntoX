@@ -206,11 +206,18 @@ export default function Empleados() {
     permisos: [] as string[],
   });
 
-  const isSuperAdmin =
+  // Estado para almacenar si el usuario es SuperAdmin (se obtiene de la API)
+  const [isSuperAdminState, setIsSuperAdminState] = useState(false);
+  
+  // Verificación local como fallback (basada en metadata)
+  const isSuperAdminLocal =
     user?.role === "superadmin" ||
     user?.role === "SuperAdmin" ||
     (user?.app_metadata as Record<string, unknown> | undefined)?.role ===
       "SuperAdmin";
+  
+  // Usar el estado de la API como fuente de verdad, con fallback a la verificación local
+  const isSuperAdmin = isSuperAdminState || isSuperAdminLocal;
 
   const resumen = useMemo(
     () => ({
@@ -276,9 +283,21 @@ export default function Empleados() {
         }
       } else {
         const permisosJson = await permisosRes.json().catch(() => null);
-        const tienePermiso = Array.isArray(permisosJson?.permisos)
-          ? permisosJson.permisos.includes("empleados:admin")
-          : true;
+        
+        // Actualizar el estado de SuperAdmin desde la API
+        if (permisosJson?.isSuperAdmin === true) {
+          setIsSuperAdminState(true);
+        }
+        
+        // Opción B: Solo SuperAdmin tiene bypass automático
+        // Administradores y Empleados necesitan permiso explícito "empleados:admin"
+        const esSuperAdmin = permisosJson?.isSuperAdmin === true || isSuperAdminLocal;
+        const tienePermisoEspecifico = Array.isArray(permisosJson?.permisos) &&
+          permisosJson.permisos.includes("empleados:admin");
+        
+        // Solo SuperAdmin tiene acceso automático, otros necesitan permiso explícito
+        const tienePermiso = esSuperAdmin || tienePermisoEspecifico;
+        
         if (!tienePermiso) {
           setIsAuthorized(false);
           setIsLoadingData(false);

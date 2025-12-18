@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
           Telefono: true,
           Mail: true,
           LocalidadId: true,
-          Localidad: { select: { Descripcion: true } },
+          Localidad: { select: { Descripcion: true, EstaEliminado: true } },
           Persona_Empleado: {
             select: {
               Legajo: true,
@@ -117,7 +117,7 @@ export async function GET(req: NextRequest) {
           Telefono: true,
           Mail: true,
           LocalidadId: true,
-          Localidad: { select: { Descripcion: true } },
+          Localidad: { select: { Descripcion: true, EstaEliminado: true } },
           Persona_Empleado: {
             select: {
               Legajo: true,
@@ -172,7 +172,9 @@ export async function GET(req: NextRequest) {
         telefono: persona.Telefono,
         direccion: persona.Direccion,
         localidadId: persona.LocalidadId ? Number(persona.LocalidadId) : null,
-        localidad: persona.Localidad?.Descripcion ?? null,
+        localidad: persona.Localidad && !persona.Localidad.EstaEliminado 
+          ? persona.Localidad.Descripcion 
+          : null,
         rolId: perfil ? Number(perfil.Id) : null,
         rolNombre: perfil?.Descripcion ?? null,
         rolTipo: (perfil?.Tipo as string | undefined) ?? "EMPLEADO",

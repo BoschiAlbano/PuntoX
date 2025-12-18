@@ -96,6 +96,24 @@ export async function requirePermiso(
   }
 
   const tenantId = usuario.TenantId;
+  
+  // Verificar si es SuperAdmin - tiene acceso completo sin verificar permisos
+  const esSuperAdmin = usuario.PerfilUsuario.some(
+    (pu) => {
+      const descripcion = pu.Perfiles.Descripcion?.trim() || "";
+      return descripcion === "SuperAdmin" || descripcion.toLowerCase() === "superadmin";
+    }
+  );
+  
+  // SuperAdmin tiene acceso a todo, no necesita verificar permisos específicos
+  if (esSuperAdmin) {
+    return {
+      tenantId: Number(tenantId),
+      usuarioId: Number(usuario.Id),
+      permisos: ["*"], // Indica acceso completo
+    };
+  }
+
   const permisos = usuario.PerfilUsuario.flatMap((pu) =>
     pu.Perfiles.PerfilPermiso.filter((pp) => !pp.Permiso?.EstaEliminado).map(
       (pp) => pp.Permiso?.Clave ?? ""
@@ -104,32 +122,11 @@ export async function requirePermiso(
 
   const tienePermiso = permisos.some((p) => p === clavePermiso);
 
-  // Si no lo tiene pero es admin, intentar asignarlo automáticamente a los roles admin del tenant.
-  const esAdmin = usuario.PerfilUsuario.some(
-    (pu) => pu.Perfiles.Tipo === "ADMINISTRADOR"
-  );
-  if (!tienePermiso && esAdmin) {
-    await ensurePermisoParaAdmins(
-      tenantId,
-      clavePermiso,
-      opts?.descripcionPermiso
-    );
-    // Re-evaluar permisos después de asignar.
-    const refreshed = await prisma.perfilPermiso.findFirst({
-      where: {
-        Perfil: {
-          TenantId: tenantId,
-          PerfilUsuario: { some: { Usuario_Id: usuario.Id } },
-        },
-        Permiso: { Clave: clavePermiso, EstaEliminado: false },
-      },
-    });
-    if (refreshed) {
-      permisos.push(clavePermiso);
-    }
-  }
-
-  if (!permisos.includes(clavePermiso)) {
+  // Opción B: Solo SuperAdmin tiene bypass automático
+  // Administradores y Empleados necesitan permisos explícitos asignados
+  // (Removida la auto-asignación de permisos a administradores)
+  
+  if (!tienePermiso) {
     throw new PermisoError("Sin permisos", 403);
   }
 
