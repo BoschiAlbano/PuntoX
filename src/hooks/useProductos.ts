@@ -19,7 +19,7 @@ const fetchProductos = async ({
   const response = await fetch("/api/productos", { signal });
   if (!response.ok) throw new Error("Error al cargar productos");
   const data = await response.json();
-  return productoListAdapter(data?.productos);
+  return productoListAdapter(data?.data);
 };
 
 const fetchMarcas = async ({

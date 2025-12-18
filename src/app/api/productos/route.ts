@@ -12,6 +12,7 @@ import {
 } from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
 import { createError } from "@/lib/errors/types";
+import { fotoDefault } from "@/utilities/fotoDefault";
 
 export async function GET(req: NextRequest) {
   try {
@@ -90,34 +91,7 @@ export async function GET(req: NextRequest) {
       take: pagination.limit,
     });
 
-    // Serializar BigInt a Number para JSON y validar datos
-    const productosSerializados = productos
-      .filter((producto) => producto.Precio && producto.Iva) // Filtrar productos sin precio o IVA
-      .map((producto) => ({
-        Id: Number(producto.Id),
-        Codigo: producto.Codigo,
-        CodigoBarra: producto.CodigoBarra,
-        Descripcion: producto.Descripcion,
-        Precio: {
-          PrecioPublico: Number(producto.Precio?.PrecioPublico || 0),
-          PrecioCosto: Number(producto.Precio?.PrecioCosto || 0),
-        },
-        Iva: {
-          Id: Number(producto.Iva?.Id || 0),
-          Porcentaje: Number(producto.Iva?.Porcentaje || 0),
-        },
-        Stock: (producto.Stock || []).map((stock) => ({
-          Cantidad: Number(stock.Cantidad),
-        })),
-        DescuentaStock: producto.DescuentaStock || false,
-        PermiteStockNegativo: producto.PermiteStockNegativo || false,
-      }));
-
-    const response = createPaginationResponse(
-      productosSerializados,
-      total,
-      pagination
-    );
+    const response = createPaginationResponse(productos, total, pagination);
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
@@ -446,53 +420,6 @@ export async function DELETE(req: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-export async function DELETE(req: NextRequest) {
-  try {
-    const { tenantId, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
-
-    const params = req.nextUrl.searchParams;
-    const Id = params.get("Id");
-
-    const articulo = await prisma.articulo.delete({
-      where: {
-        Id: Number(Id),
-        TenantId: Number(tenantId),
-      },
-    });
-
-    return NextResponse.json(
-      {
-        producto: {
-          ...articulo,
-        },
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        {
-          error: "Datos inválidos",
-          details: error.issues.map((issue) => ({
-            field: issue.path.join("."),
-            message: issue.message,
-          })),
-        },
-        { status: 400 }
-      );
-    }
-    return handleError(error);
-  }
-}
-
-function fotoDefault(): Uint8Array<ArrayBufferLike> {
-  return Buffer.from("/productodefecto.jpg", "base64");
 }
 
 function parseTime(timeString?: string | null): Date {

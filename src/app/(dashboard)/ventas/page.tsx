@@ -838,7 +838,7 @@ export default function Ventas() {
                 <Box className="w-5 h-5" />
                 Productos
                 <Chip size="sm" variant="flat" color="success">
-                  {productos.length} disponibles
+                  {productos?.length} disponibles
                 </Chip>
               </h2>
             </CardHeader>

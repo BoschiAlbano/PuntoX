@@ -40,8 +40,12 @@ const createComprobanteSchema = z.object({
   puestoTrabajoId: z.number().int().positive().optional(), // Requerido solo para facturas
   fecha: z.string().optional(), // ISO date string, opcional (usa fecha actual si no se proporciona)
   descuento: z.number().nonnegative().optional().default(0),
-  detalles: z.array(detalleComprobanteSchema).min(1, "Debe haber al menos un producto"),
-  formasPago: z.array(formaPagoSchema).min(1, "Debe haber al menos una forma de pago"),
+  detalles: z
+    .array(detalleComprobanteSchema)
+    .min(1, "Debe haber al menos un producto"),
+  formasPago: z
+    .array(formaPagoSchema)
+    .min(1, "Debe haber al menos una forma de pago"),
 });
 
 // POST: Crear comprobante (venta)
@@ -142,11 +146,6 @@ export async function POST(req: NextRequest) {
         EstaEliminado: false,
       },
       include: {
-        Stock: {
-          where: {
-            EstaEliminado: false,
-          },
-        },
         Iva: true,
       },
     });
@@ -166,15 +165,13 @@ export async function POST(req: NextRequest) {
       if (!articulo) continue;
 
       if (articulo.DescuentaStock) {
-        const stockTotal = articulo.Stock.reduce(
-          (sum, s) => sum + Number(s.Cantidad),
-          0
-        );
-
-        if (stockTotal < detalle.cantidad && !articulo.PermiteStockNegativo) {
+        if (
+          Number(articulo.Stock) < detalle.cantidad &&
+          !articulo.PermiteStockNegativo
+        ) {
           return NextResponse.json(
             {
-              error: `Stock insuficiente para ${articulo.Descripcion}. Stock disponible: ${stockTotal}`,
+              error: `Stock insuficiente para ${articulo.Descripcion}. Stock disponible: ${articulo.Stock}`,
             },
             { status: 400 }
           );
@@ -219,10 +216,7 @@ export async function POST(req: NextRequest) {
     const { numero } = await numeroResponse.json();
 
     // Calcular totales
-    const subtotal = data.detalles.reduce(
-      (sum, d) => sum + d.subtotal,
-      0
-    );
+    const subtotal = data.detalles.reduce((sum, d) => sum + d.subtotal, 0);
     const descuento = data.descuento || 0;
     const subtotalConDescuento = subtotal - descuento;
 
@@ -382,27 +376,14 @@ export async function POST(req: NextRequest) {
 
         // 3. Actualizar stock si corresponde
         if (descuentaStock && articulo.DescuentaStock) {
-          const stock = articulo.Stock[0];
-          if (stock) {
-            await tx.stock.update({
-              where: { Id: stock.Id },
-              data: {
-                Cantidad: {
-                  decrement: detalle.cantidad,
-                },
+          await tx.articulo.update({
+            where: { Id: articulo.Id },
+            data: {
+              Stock: {
+                decrement: detalle.cantidad,
               },
-            });
-          } else {
-            // Si no hay stock, crear uno negativo
-            await tx.stock.create({
-              data: {
-                TenantId: tenantIdBigInt,
-                ArticuloId: BigInt(detalle.articuloId),
-                Cantidad: -detalle.cantidad,
-                EstaEliminado: false,
-              },
-            });
-          }
+            },
+          });
         }
       }
 
@@ -493,8 +474,7 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
-    } catch (error: unknown) {
+  } catch (error: unknown) {
     return handleError(error);
   }
 }
-

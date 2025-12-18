@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import { handleError } from "@/lib/errors/handler";
+import { fileToBuffer } from "@/utilities/fotoDefault";
 
 async function resolveTenantId() {
   const supabase = await getSupabaseServerClient();
@@ -29,14 +30,16 @@ export async function GET() {
         ShowFoto: true,
       },
       orderBy: {
-        Id: 'desc',
+        Id: "desc",
       },
     });
 
     let logoPreview = "";
     if (config?.Foto && config.ShowFoto) {
       // Convertir Bytes a base64
-      logoPreview = `data:image/png;base64,${Buffer.from(config.Foto).toString('base64')}`;
+      logoPreview = `data:image/png;base64,${Buffer.from(config.Foto).toString(
+        "base64"
+      )}`;
     }
 
     return NextResponse.json(
@@ -80,7 +83,7 @@ export async function PUT(req: Request) {
           EstaEliminado: false,
         },
         orderBy: {
-          Id: 'desc',
+          Id: "desc",
         },
       });
 
@@ -88,17 +91,13 @@ export async function PUT(req: Request) {
         throw new Error("No se encontró una configuración existente");
       }
 
-      let fotoBytes: Buffer | null = null;
-      if (logoFile && logoFile.size > 0) {
-        const arrayBuffer = await logoFile.arrayBuffer();
-        fotoBytes = Buffer.from(arrayBuffer);
-      }
+      const fotoBytes = await fileToBuffer(logoFile);
 
       // Actualizar configuración existente dentro de la transacción
       await tx.configuracion.update({
         where: { Id: config.Id },
         data: {
-          Foto: fotoBytes !== null ? fotoBytes : undefined,
+          Foto: fotoBytes as Uint8Array<ArrayBuffer> | null,
           ShowFoto: fotoBytes !== null,
         },
       });
@@ -120,4 +119,3 @@ export async function PUT(req: Request) {
     return handleError(error);
   }
 }
-
