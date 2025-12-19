@@ -122,6 +122,16 @@ await registrarAuditoria({
   - Usa `useMemo` para sincronizar correctamente el selector de límite con el estado.
   - Diseño mejorado con fondo gris claro, bordes redondeados y mejor espaciado.
   - El cambio de límite resetea automáticamente a la página 1.
+- **Utils de Auditoría** (`src/app/(dashboard)/empleados/auditoria-utils.ts`):
+  - `formatTiempoRelativo`: formatea fechas a tiempo relativo legible (ej: "Hace 2 min", "Ayer").
+  - `formatearAccion`: genera texto descriptivo de acciones de auditoría.
+  - `mapearAccion`: categoriza acciones y asigna colores (Usuarios, Roles, Invitaciones, General).
+  - `mapearSeveridad`: mapea niveles de severidad (CRITICAL/WARNING/INFO) a colores de chip.
+  - Tests unitarios completos en `auditoria-utils.test.ts`.
+- **Tests**:
+  - Tests de `requirePermiso` actualizados para reflejar comportamiento actual (sin auto-asignación de permisos).
+  - Tests de `route.test.ts` corregidos con mocks explícitos de `requirePermiso` y `registrarAuditoria`.
+  - Todos los tests pasan: `npx vitest run` ejecuta exitosamente todos los archivos de test.
 - **Gestión de roles**:
   - Los roles del sistema se identifican por `id < 0` o nombres normalizados como "administrador"/"superadmin".
   - La eliminación de roles realiza hard delete: primero elimina `PerfilPermiso` y luego `Perfiles`.
@@ -139,4 +149,5 @@ await registrarAuditoria({
   - Iconos SVG de lucide-react en todas las acciones: Pencil (editar), Eye (ver ficha), Zap (suspender/activar), Mail (enviar email), Trash2 (eliminar).
   - **Paginación mejorada**: Componente `Pagination` con diseño moderno, selector de límite sincronizado correctamente, fondo gris claro con bordes redondeados, mejor tipografía y espaciado.
   - **Filtrado backend**: Los filtros de búsqueda, rol y estado se procesan en el servidor, mejorando el rendimiento y la precisión de los resultados.
+  - **Refactorización de código**: Lógica de formateo de auditoría extraída a `auditoria-utils.ts` con tests unitarios (`auditoria-utils.test.ts`).
   - Mejoras en responsive design y accesibilidad (aria-labels).
