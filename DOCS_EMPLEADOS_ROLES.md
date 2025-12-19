@@ -6,12 +6,15 @@
 - `GET /api/departamentos?provinciaId=ID&q=texto`: departamentos filtrados por provincia, admite búsqueda parcial.
 - `GET /api/localidades?departamentoId=ID&q=texto`: localidades filtradas por departamento y búsqueda parcial (límite 50).
 - `GET /api/roles`: roles del tenant con tipo (`ADMINISTRADOR` | `EMPLEADO`) y conteo de uso.
-- `POST /api/roles { nombre, tipo }`: crea rol para el tenant.
-- `PATCH /api/roles?id=<rolId> { nombre, descripcion, tipo, permisos }`: actualiza rol existente. No permite modificar nombre/tipo en roles del sistema.
-- `DELETE /api/roles?id=<rolId>`: elimina rol (hard delete). Bloquea si el rol tiene usuarios asignados o es rol del sistema.
+- `POST /api/roles { nombre, tipo }`: crea rol para el tenant. Registra auditoría `CREAR_ROL`.
+- `PATCH /api/roles?id=<rolId> { nombre, descripcion, tipo, permisos }`: actualiza rol existente. No permite modificar nombre/tipo en roles del sistema. Registra auditoría `EDITAR_ROL` con `valorAnterior` y `valorNuevo` (incluye permisos).
+- `DELETE /api/roles?id=<rolId>`: elimina rol (hard delete). Bloquea si el rol tiene usuarios asignados o es rol del sistema. Registra auditoría `ELIMINAR_ROL` antes de eliminar.
 - `GET /api/empleados`: lista empleados del tenant (Persona + Usuario + Rol + Localidad) con estado (Activo/Suspendido/Invitado).
-- `POST /api/empleados`: alta de persona + empleado + usuario + rol; crea usuario en Supabase Auth con metadata `tenant_id` y `role`.
-- `PATCH /api/empleados { usuarioId, bloquear }`: suspende/activa usuario (toggle en `EstaBloqueado`).
+- `POST /api/empleados`: alta de persona + empleado + usuario + rol; crea usuario en Supabase Auth con metadata `tenant_id` y `role`. Registra auditoría `CREAR_USUARIO` y `INVITAR_USUARIO` (si `autoInvitar` es true).
+- `PATCH /api/empleados { usuarioId, bloquear }`: suspende/activa usuario (toggle en `EstaBloqueado`). Registra auditoría `SUSPENDER_USUARIO` o `REACTIVAR_USUARIO`.
+- `DELETE /api/empleados { personaId }`: elimina empleado definitivamente (hard delete). Registra auditoría `ELIMINAR_USUARIO` antes de eliminar.
+- `GET /api/auditoria-empleados`: consulta logs de auditoría con paginación. Filtros opcionales: `accion`, `usuarioId`, `empleadoId`, `fechaDesde`, `fechaHasta`.
+- `POST /api/auditoria-empleados`: registro manual de auditoría (principalmente para testing).
 
 ## Página `src/app/(dashboard)/empleados/page.tsx`
 - **Estructura con Tabs**: La página está organizada en 3 tabs principales:
@@ -28,20 +31,92 @@
   - **Eliminación de roles**: Opción "Eliminar" en menú de acciones con confirmación. Bloquea eliminación si el rol tiene usuarios asignados o es rol del sistema (muestra tooltip explicativo).
   - Se refleja en listado y en selector del alta.
 - Tabla: filtros por búsqueda, rol y estado; acciones ver ficha, suspender/activar (`PATCH`), reenviar invitación (toast).
-- **Auditoría**: Preview de eventos de seguridad y accesos (máximo 10 items). Link a página completa de logs en Analíticas.
+- **Auditoría de accesos**: 
+  - Preview de eventos de seguridad y accesos (máximo 10 items) con chips de severidad (INFO/WARNING/CRITICAL).
+  - Muestra descripción legible, tiempo relativo, categoría y severidad de cada evento.
+  - Recarga automática después de acciones (crear/editar/eliminar usuario, cambiar estado, crear/editar/eliminar rol).
+  - Link a página completa de logs en Analíticas (`/analiticas?tab=logs`).
 - Metadata: usa tenant desde `user_metadata.tenant_id` vía `useSupabaseAuthContext`.
+
+## Sistema de Auditoría
+
+### Tabla `AuditoriaEmpleado`
+
+Registra todas las acciones importantes sobre empleados, usuarios y roles:
+
+- **Campos principales**:
+  - `TenantId`, `Fecha`, `UsuarioId` (actor), `Accion`, `Severidad` (INFO/WARNING/CRITICAL)
+  - `EmpleadoId`, `UsuarioAfectadoId` (entidades afectadas)
+  - `Detalle` (descripción legible), `ValorAnterior`, `ValorNuevo` (JSON para cambios)
+  - `IpAddress`, `UserAgent` (metadata de seguridad)
+
+- **Acciones registradas**:
+  - **Empleados/Usuarios**: `CREAR_USUARIO`, `INVITAR_USUARIO`, `REENVIAR_INVITACION`, `ACEPTAR_INVITACION`, `CAMBIAR_ROL`, `SUSPENDER_USUARIO`, `REACTIVAR_USUARIO`, `ELIMINAR_USUARIO`
+  - **Roles**: `CREAR_ROL`, `EDITAR_ROL`, `ELIMINAR_ROL`
+  - **Configuración**: `CAMBIAR_CONFIG_SEGURIDAD`
+
+- **Severidad automática**:
+  - **CRITICAL**: `ELIMINAR_USUARIO`, `ELIMINAR_ROL`
+  - **WARNING**: `CAMBIAR_ROL`, `EDITAR_ROL`, `SUSPENDER_USUARIO`, `CAMBIAR_CONFIG_SEGURIDAD`
+  - **INFO**: resto de acciones (creaciones, invitaciones, reactivaciones)
+
+### Helper `registrarAuditoria()`
+
+Ubicación: `src/lib/auditoria/registrarAuditoria.ts`
+
+- Función centralizada para registrar auditorías
+- Infiere severidad automáticamente si no se especifica
+- Obtiene IP y User-Agent de headers automáticamente
+- No interrumpe el flujo principal si falla (solo loguea error)
+
+**Uso**:
+```typescript
+await registrarAuditoria({
+  tenantId,
+  usuarioId,
+  accion: "CREAR_USUARIO",
+  empleadoId: empleadoId,
+  usuarioAfectadoId: usuarioId,
+  detalle: "Usuario creado: Juan Pérez",
+  valorNuevo: { nombre: "Juan", email: "juan@example.com" },
+  req, // Opcional: para obtener headers en API routes
+});
+```
+
+### API de Auditoría
+
+- **GET `/api/auditoria-empleados`**: 
+  - Paginación: `page`, `limit`
+  - Filtros: `accion`, `usuarioId`, `empleadoId`, `fechaDesde`, `fechaHasta`
+  - Incluye relaciones: Usuario (actor), Empleado, UsuarioAfectado
+  - Retorna: array de auditorías con severidad, detalles formateados, valores anterior/nuevo parseados
+
+- **POST `/api/auditoria-empleados`**: 
+  - Registro manual (principalmente para testing)
+  - Valida esquema con Zod
 
 ## Notas técnicas
 
-- Prisma: se agregó `PerfilTipo` (enum) y campo `Tipo` en `Perfiles` (default EMPLEADO). Requiere migración y `prisma generate`.
+- Prisma: 
+  - Se agregó `PerfilTipo` (enum) y campo `Tipo` en `Perfiles` (default EMPLEADO)
+  - Se agregó tabla `AuditoriaEmpleado` con campo `Severidad`
+  - Requiere migraciones: `add_auditoria_empleado`, `add_severidad_auditoria`
+  - Después de migraciones: ejecutar `prisma generate` y reiniciar servidor de desarrollo
 - Supabase: al crear usuario se setea `app_metadata.role` según el tipo de rol (Administrador/Empleado).
 - Localidad se valida contra Departamento/Provincia para asegurar consistencia.
 - **Gestión de roles**:
   - Los roles del sistema se identifican por `id < 0` o nombres normalizados como "administrador"/"superadmin".
   - La eliminación de roles realiza hard delete: primero elimina `PerfilPermiso` y luego `Perfiles`.
   - La edición de roles actualiza `Perfiles` y recrea las relaciones `PerfilPermiso` según el array de permisos.
+  - Todas las acciones registran auditoría con severidad apropiada.
+- **Auditoría**:
+  - Se registra automáticamente en todas las acciones críticas
+  - Los logs se muestran en tiempo real en la UI (recarga después de cada acción)
+  - La severidad se infiere automáticamente pero puede sobrescribirse
+  - Los valores anterior/nuevo se guardan como JSON para cambios importantes
 - **UI/UX**:
   - Se eliminó la tab "Seguridad" (movida a Configuración → Seguridad).
-  - Se agregó tab "Auditoría de accesos" con preview limitado y navegación a Analíticas.
+  - Se agregó tab "Auditoría de accesos" con preview limitado (10 items) y navegación a Analíticas.
+  - Chips de severidad con colores: INFO (azul), WARNING (amarillo), CRITICAL (rojo)
   - Iconos de lucide-react (Pencil, Trash2) en acciones de roles.
   - Mejoras en responsive design y accesibilidad (aria-labels).
