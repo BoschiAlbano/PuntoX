@@ -29,7 +29,7 @@ import {
 } from "@heroui/react";
 import { addToast } from "@heroui/react";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Eye, Zap, Mail } from "lucide-react";
 import Pagination, { PaginationInfo } from "@/components/common/Pagination";
 
 // PÃ¡gina funcional de empleados: alta rÃ¡pida, roles y tabla conectada a las APIs.
@@ -47,6 +47,8 @@ type Empleado = {
   direccion: string | null;
   localidadId: number | null;
   localidad: string | null;
+  departamentoId?: number | null;
+  provinciaId?: number | null;
   rolId: number | null;
   rolNombre: string | null;
   rolTipo?: "ADMINISTRADOR" | "EMPLEADO" | null;
@@ -312,6 +314,26 @@ export default function Empleados() {
 
   const [openRolModal, setOpenRolModal] = useState(false);
   const [detalleEmpleado, setDetalleEmpleado] = useState<Empleado | null>(null);
+  const [empleadoAEditar, setEmpleadoAEditar] = useState<Empleado | null>(null);
+  const [isSavingEmpleado, setIsSavingEmpleado] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  
+  // Estado para el formulario de edición
+  const [empleadoEditDraft, setEmpleadoEditDraft] = useState({
+    nombre: "",
+    apellido: "",
+    dni: "",
+    direccion: "",
+    telefono: "",
+    localidadId: "",
+    provinciaId: "",
+    departamentoId: "",
+    rolId: "",
+  });
+  
+  // Estado para cambio de contraseña
+  const [nuevaPassword, setNuevaPassword] = useState("");
+  const [confirmarPassword, setConfirmarPassword] = useState("");
   const [rolAEliminar, setRolAEliminar] = useState<Rol | null>(null);
   const [isDeletingRol, setIsDeletingRol] = useState(false);
   const [rolAEditar, setRolAEditar] = useState<Rol | null>(null);
@@ -353,9 +375,7 @@ export default function Empleados() {
   // Los filtros ahora se aplican en el backend, solo mantenemos empleados tal cual vienen
   // (el filtrado de búsqueda también se hace en backend, pero mantenemos esta variable
   // para compatibilidad con el código existente)
-  const empleadosFiltrados = useMemo(() => {
-    return empleados;
-  }, [empleados]);
+  // Los filtros ahora corren en el servidor, no necesitamos empleadosFiltrados
 
   const resolveTenantIdForRequests = () => {
     const meta = user?.app_metadata as Record<string, unknown> | undefined;
@@ -915,6 +935,8 @@ export default function Empleados() {
 
       // Recargar datos para actualizar roles y conteos
       await loadData();
+      // Recargar auditorías para mostrar la acción recién registrada
+      await loadAuditorias();
       setOpenRolModal(false);
       setNuevoRol({
         nombre: "",
@@ -977,6 +999,8 @@ export default function Empleados() {
 
       // Refrescar datos para actualizar roles y conteos
       await loadData();
+      // Recargar auditorías para mostrar la acción recién registrada
+      await loadAuditorias();
 
       addToast({
         title: "Rol actualizado",
@@ -1025,6 +1049,8 @@ export default function Empleados() {
 
       // Refrescar datos para actualizar roles y conteos
       await loadData();
+      // Recargar auditorías para mostrar la acción recién registrada
+      await loadAuditorias();
 
       addToast({
         title: "Rol eliminado",
@@ -1147,6 +1173,192 @@ export default function Empleados() {
   const getRolTipo = (rolId: number | null) => {
     if (!rolId) return null;
     return roles.find((r) => r.id === rolId)?.tipo ?? null;
+  };
+
+  // Función para editar empleado
+  const handleEditarEmpleado = async () => {
+    if (!empleadoAEditar) return;
+
+    if (!empleadoEditDraft.nombre.trim() || !empleadoEditDraft.apellido.trim()) {
+      addToast({
+        title: "Campos requeridos",
+        description: "Nombre y apellido son obligatorios.",
+        color: "warning",
+      });
+      return;
+    }
+
+    if (!empleadoEditDraft.direccion.trim()) {
+      addToast({
+        title: "Dirección requerida",
+        description: "La dirección es obligatoria.",
+        color: "warning",
+      });
+      return;
+    }
+
+    if (!empleadoEditDraft.localidadId) {
+      addToast({
+        title: "Localidad requerida",
+        description: "Debes seleccionar una localidad.",
+        color: "warning",
+      });
+      return;
+    }
+
+    setIsSavingEmpleado(true);
+    try {
+      const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
+      const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
+
+      const body: any = {
+        personaId: empleadoAEditar.personaId,
+      };
+
+      if (empleadoEditDraft.nombre !== empleadoAEditar.nombre) {
+        body.nombre = empleadoEditDraft.nombre.trim();
+      }
+      if (empleadoEditDraft.apellido !== empleadoAEditar.apellido) {
+        body.apellido = empleadoEditDraft.apellido.trim();
+      }
+      if (empleadoEditDraft.dni !== (empleadoAEditar.dni || "")) {
+        body.dni = empleadoEditDraft.dni || null;
+      }
+      if (empleadoEditDraft.direccion !== (empleadoAEditar.direccion || "")) {
+        body.direccion = empleadoEditDraft.direccion.trim();
+      }
+      if (empleadoEditDraft.telefono !== (empleadoAEditar.telefono || "")) {
+        body.telefono = empleadoEditDraft.telefono || null;
+      }
+      if (Number(empleadoEditDraft.localidadId) !== (empleadoAEditar.localidadId || null)) {
+        body.localidadId = Number(empleadoEditDraft.localidadId);
+      }
+      if (empleadoEditDraft.provinciaId) {
+        body.provinciaId = Number(empleadoEditDraft.provinciaId);
+      }
+      if (empleadoEditDraft.departamentoId) {
+        body.departamentoId = Number(empleadoEditDraft.departamentoId);
+      }
+      if (empleadoEditDraft.rolId !== (empleadoAEditar.rolId ? String(empleadoAEditar.rolId) : "")) {
+        body.rolId = empleadoEditDraft.rolId ? Number(empleadoEditDraft.rolId) : null;
+      }
+
+      const res = await fetch(`/api/empleados${tenantQuery}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "No se pudo actualizar el empleado");
+      }
+
+      addToast({
+        title: "Empleado actualizado",
+        description: `${empleadoEditDraft.nombre} ${empleadoEditDraft.apellido} fue actualizado correctamente.`,
+        color: "success",
+      });
+
+      // Recargar datos
+      await loadData();
+      // Recargar auditorías
+      await loadAuditorias();
+      
+      setEmpleadoAEditar(null);
+      setEmpleadoEditDraft({
+        nombre: "",
+        apellido: "",
+        dni: "",
+        direccion: "",
+        telefono: "",
+        localidadId: "",
+        provinciaId: "",
+        departamentoId: "",
+        rolId: "",
+      });
+    } catch (error) {
+      console.error(error);
+      addToast({
+        title: "Error",
+        description: (error as Error).message,
+        color: "danger",
+      });
+    } finally {
+      setIsSavingEmpleado(false);
+    }
+  };
+
+  // Función para cambiar contraseña
+  const handleCambiarPassword = async () => {
+    if (!empleadoAEditar || !empleadoAEditar.usuarioId) {
+      addToast({
+        title: "Error",
+        description: "Usuario no encontrado",
+        color: "danger",
+      });
+      return;
+    }
+
+    if (!nuevaPassword || nuevaPassword.length < 8) {
+      addToast({
+        title: "Contraseña inválida",
+        description: "La contraseña debe tener al menos 8 caracteres.",
+        color: "warning",
+      });
+      return;
+    }
+
+    if (nuevaPassword !== confirmarPassword) {
+      addToast({
+        title: "Contraseñas no coinciden",
+        description: "Las contraseñas deben ser iguales.",
+        color: "warning",
+      });
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
+      const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
+
+      const res = await fetch(`/api/empleados/cambiar-password${tenantQuery}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          usuarioId: empleadoAEditar.usuarioId,
+          nuevaPassword,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "No se pudo cambiar la contraseña");
+      }
+
+      addToast({
+        title: "Contraseña actualizada",
+        description: "La contraseña fue cambiada correctamente.",
+        color: "success",
+      });
+
+      // Recargar auditorías
+      await loadAuditorias();
+      
+      // Limpiar campos
+      setNuevaPassword("");
+      setConfirmarPassword("");
+    } catch (error) {
+      console.error(error);
+      addToast({
+        title: "Error",
+        description: (error as Error).message,
+        color: "danger",
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   if (!isAuthorized) {
@@ -1499,7 +1711,7 @@ export default function Empleados() {
               </CardHeader>
               <Divider />
               <CardBody className="space-y-3 pt-4">
-                {empleadosFiltrados.map((empleado) => {
+                {empleados.map((empleado) => {
                   const rolNombre =
                     empleado.rolNombre ?? getRolNombre(empleado.rolId) ?? "Sin rol";
                   const rolTipo =
@@ -1545,6 +1757,47 @@ export default function Empleados() {
                       </div>
 
                       <div className="flex items-center gap-2">
+                        <Tooltip content="Editar">
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            variant="light"
+                            onPress={async () => {
+                              setEmpleadoAEditar(empleado);
+                              // Prellenar formulario
+                              const provinciaIdStr = empleado.provinciaId ? String(empleado.provinciaId) : "";
+                              const departamentoIdStr = empleado.departamentoId ? String(empleado.departamentoId) : "";
+                              
+                              setEmpleadoEditDraft({
+                                nombre: empleado.nombre,
+                                apellido: empleado.apellido,
+                                dni: empleado.dni || "",
+                                direccion: empleado.direccion || "",
+                                telefono: empleado.telefono || "",
+                                localidadId: empleado.localidadId ? String(empleado.localidadId) : "",
+                                provinciaId: provinciaIdStr,
+                                departamentoId: departamentoIdStr,
+                                rolId: empleado.rolId ? String(empleado.rolId) : "",
+                              });
+                              
+                              // Cargar departamentos y localidades si hay provincia/departamento
+                              if (provinciaIdStr) {
+                                setProvinciaSeleccionada(provinciaIdStr);
+                                await loadDepartamentos(provinciaIdStr);
+                                if (departamentoIdStr) {
+                                  setDepartamentoSeleccionado(departamentoIdStr);
+                                  await loadLocalidades(departamentoIdStr);
+                                }
+                              }
+                              
+                              // Limpiar contraseñas
+                              setNuevaPassword("");
+                              setConfirmarPassword("");
+                            }}
+                          >
+                            <Pencil size={16} />
+                          </Button>
+                        </Tooltip>
                         <Tooltip content="Ver ficha">
                           <Button
                             isIconOnly
@@ -1552,7 +1805,7 @@ export default function Empleados() {
                             variant="light"
                             onPress={() => setDetalleEmpleado(empleado)}
                           >
-                            🔍
+                            <Eye size={16} />
                           </Button>
                         </Tooltip>
                         <Tooltip content="Suspender/activar">
@@ -1569,7 +1822,7 @@ export default function Empleados() {
                               )
                             }
                           >
-                            ⚡
+                            <Zap size={16} />
                           </Button>
                         </Tooltip>
                         <Tooltip content="Enviar email">
@@ -1585,7 +1838,7 @@ export default function Empleados() {
                               })
                             }
                           >
-                            ✉️
+                            <Mail size={16} />
                           </Button>
                         </Tooltip>
                         <Tooltip content="Eliminar">
@@ -1596,14 +1849,14 @@ export default function Empleados() {
                             variant="light"
                             onPress={() => handleEliminar(empleado)}
                           >
-                            🗑
+                            <Trash2 size={16} />
                           </Button>
                         </Tooltip>
                       </div>
                     </div>
                   );
                 })}
-                {empleadosFiltrados.length === 0 && (
+                {empleados.length === 0 && (
                   <p className="text-sm text-gray-500 px-2 py-4 text-center">
                     {isLoadingData ? "Cargando..." : "Sin coincidencias"}
                   </p>
@@ -1612,7 +1865,7 @@ export default function Empleados() {
               
               {/* Paginación */}
               {pagination.total > 0 && (
-                <div className="p-4 border-t border-gray-200">
+                <div className="px-4 pb-4">
                   <Pagination
                     pagination={pagination}
                     onPageChange={(newPage) => {
@@ -1888,10 +2141,42 @@ export default function Empleados() {
                 })
               )}
               <Divider className="my-4" />
-              <div className="flex justify-center pt-2">
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    isDisabled={!paginationAuditoria.hasPreviousPage || isLoadingAuditoria}
+                    onPress={() => {
+                      setPaginationAuditoria((prev) => ({
+                        ...prev,
+                        page: prev.page - 1,
+                      }));
+                    }}
+                  >
+                    Anterior
+                  </Button>
+                  <span className="text-sm text-gray-500">
+                    Página {paginationAuditoria.page} de {paginationAuditoria.totalPages || 1}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    isDisabled={!paginationAuditoria.hasNextPage || isLoadingAuditoria}
+                    onPress={() => {
+                      setPaginationAuditoria((prev) => ({
+                        ...prev,
+                        page: prev.page + 1,
+                      }));
+                    }}
+                  >
+                    Siguiente
+                  </Button>
+                </div>
                 <Button
                   color="primary"
                   variant="flat"
+                  size="sm"
                   onPress={() => router.push("/analiticas?tab=logs")}
                 >
                   Ver logs completos
@@ -2304,6 +2589,225 @@ export default function Empleados() {
               isLoading={isDeletingRol}
             >
               Eliminar
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal de edición de empleado */}
+      <Modal
+        isOpen={!!empleadoAEditar}
+        onClose={() => {
+          setEmpleadoAEditar(null);
+          setNuevaPassword("");
+          setConfirmarPassword("");
+        }}
+        size="2xl"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            <h3 className="text-xl font-semibold">Editar empleado</h3>
+            <p className="text-sm text-gray-500">
+              {empleadoAEditar?.nombreCompleto}
+            </p>
+          </ModalHeader>
+          <ModalBody className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Nombre"
+                placeholder="Ej: Sofia"
+                value={empleadoEditDraft.nombre}
+                onChange={(e) =>
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    nombre: e.target.value,
+                  }))
+                }
+                isRequired
+              />
+              <Input
+                label="Apellido"
+                placeholder="Ej: Romero"
+                value={empleadoEditDraft.apellido}
+                onChange={(e) =>
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    apellido: e.target.value,
+                  }))
+                }
+                isRequired
+              />
+              <Input
+                label="DNI (opcional)"
+                placeholder="12345678"
+                value={empleadoEditDraft.dni}
+                onChange={(e) =>
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    dni: e.target.value,
+                  }))
+                }
+              />
+              <Input
+                label="Teléfono (opcional)"
+                placeholder="+54 11 5555 0000"
+                value={empleadoEditDraft.telefono}
+                onChange={(e) =>
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    telefono: e.target.value,
+                  }))
+                }
+              />
+              <Input
+                label="Dirección"
+                placeholder="Calle y número"
+                value={empleadoEditDraft.direccion}
+                onChange={(e) =>
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    direccion: e.target.value,
+                  }))
+                }
+                isRequired
+                className="md:col-span-2"
+              />
+              <Select
+                label="Provincia"
+                selectedKeys={
+                  empleadoEditDraft.provinciaId ? [empleadoEditDraft.provinciaId] : []
+                }
+                onChange={(e) => {
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    provinciaId: e.target.value,
+                    departamentoId: "",
+                    localidadId: "",
+                  }));
+                  setProvinciaSeleccionada(e.target.value);
+                }}
+                placeholder="Selecciona una provincia"
+              >
+                {provincias.map((prov) => (
+                  <SelectItem key={String(prov.Id)}>
+                    {prov.Descripcion}
+                  </SelectItem>
+                ))}
+              </Select>
+              <Select
+                label="Departamento"
+                selectedKeys={
+                  empleadoEditDraft.departamentoId ? [empleadoEditDraft.departamentoId] : []
+                }
+                onChange={(e) => {
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    departamentoId: e.target.value,
+                    localidadId: "",
+                  }));
+                  setDepartamentoSeleccionado(e.target.value);
+                }}
+                placeholder="Selecciona un departamento"
+                isDisabled={!empleadoEditDraft.provinciaId}
+              >
+                {departamentos.map((dep) => (
+                  <SelectItem key={String(dep.Id)}>
+                    {dep.Descripcion}
+                  </SelectItem>
+                ))}
+              </Select>
+              <Select
+                label="Localidad"
+                selectedKeys={
+                  empleadoEditDraft.localidadId ? [empleadoEditDraft.localidadId] : []
+                }
+                onChange={(e) =>
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    localidadId: e.target.value,
+                  }))
+                }
+                placeholder="Selecciona una localidad"
+                isDisabled={!empleadoEditDraft.departamentoId}
+                isRequired
+                className="md:col-span-2"
+              >
+                {localidades.map((loc) => (
+                  <SelectItem key={String(loc.Id)}>
+                    {loc.Descripcion}
+                  </SelectItem>
+                ))}
+              </Select>
+              <Select
+                label="Rol"
+                selectedKeys={empleadoEditDraft.rolId ? [empleadoEditDraft.rolId] : []}
+                onChange={(e) =>
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    rolId: e.target.value,
+                  }))
+                }
+                placeholder="Selecciona un rol"
+                className="md:col-span-2"
+              >
+                {roles.map((rol) => (
+                  <SelectItem key={String(rol.id)}>{rol.nombre}</SelectItem>
+                ))}
+              </Select>
+            </div>
+
+            <Divider className="my-4" />
+
+            {/* Sección de cambio de contraseña */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-slate-900">
+                Cambiar contraseña
+              </h4>
+              <Input
+                label="Nueva contraseña"
+                type="password"
+                placeholder="Mínimo 8 caracteres"
+                value={nuevaPassword}
+                onChange={(e) => setNuevaPassword(e.target.value)}
+              />
+              <Input
+                label="Confirmar contraseña"
+                type="password"
+                placeholder="Repite la contraseña"
+                value={confirmarPassword}
+                onChange={(e) => setConfirmarPassword(e.target.value)}
+              />
+              <Button
+                color="warning"
+                variant="flat"
+                size="sm"
+                onPress={handleCambiarPassword}
+                isLoading={isChangingPassword}
+                isDisabled={!nuevaPassword || nuevaPassword.length < 8 || nuevaPassword !== confirmarPassword}
+              >
+                Cambiar contraseña
+              </Button>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="light"
+              onPress={() => {
+                setEmpleadoAEditar(null);
+                setNuevaPassword("");
+                setConfirmarPassword("");
+              }}
+              isDisabled={isSavingEmpleado || isChangingPassword}
+            >
+              Cancelar
+            </Button>
+            <Button
+              color="primary"
+              onPress={handleEditarEmpleado}
+              isLoading={isSavingEmpleado}
+            >
+              Guardar cambios
             </Button>
           </ModalFooter>
         </ModalContent>

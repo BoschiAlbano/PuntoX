@@ -7,10 +7,12 @@ import { NextRequest } from "next/server";
 
 type AccionAuditoria =
   | "CREAR_USUARIO"
+  | "EDITAR_USUARIO"
   | "INVITAR_USUARIO"
   | "REENVIAR_INVITACION"
   | "ACEPTAR_INVITACION"
   | "CAMBIAR_ROL"
+  | "CAMBIAR_PASSWORD"
   | "SUSPENDER_USUARIO"
   | "REACTIVAR_USUARIO"
   | "ELIMINAR_USUARIO"

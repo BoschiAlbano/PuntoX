@@ -9,10 +9,12 @@
 - `POST /api/roles { nombre, tipo }`: crea rol para el tenant. Registra auditoría `CREAR_ROL`.
 - `PATCH /api/roles?id=<rolId> { nombre, descripcion, tipo, permisos }`: actualiza rol existente. No permite modificar nombre/tipo en roles del sistema. Registra auditoría `EDITAR_ROL` con `valorAnterior` y `valorNuevo` (incluye permisos).
 - `DELETE /api/roles?id=<rolId>`: elimina rol (hard delete). Bloquea si el rol tiene usuarios asignados o es rol del sistema. Registra auditoría `ELIMINAR_ROL` antes de eliminar.
-- `GET /api/empleados`: lista empleados del tenant (Persona + Usuario + Rol + Localidad) con estado (Activo/Suspendido/Invitado).
+- `GET /api/empleados`: lista empleados del tenant (Persona + Usuario + Rol + Localidad) con estado (Activo/Suspendido/Invitado). Soporta paginación (`page`, `limit`) y filtros backend (`rol`, `estado`, `busqueda`).
 - `POST /api/empleados`: alta de persona + empleado + usuario + rol; crea usuario en Supabase Auth con metadata `tenant_id` y `role`. Registra auditoría `CREAR_USUARIO` y `INVITAR_USUARIO` (si `autoInvitar` es true).
+- `PUT /api/empleados { personaId, nombre, apellido, dni, direccion, telefono, localidadId, rolId }`: edita datos del empleado. Actualiza `Persona` y `PerfilUsuario` (rol). Registra auditoría `EDITAR_USUARIO` y `CAMBIAR_ROL` (si cambió el rol) con `valorAnterior` y `valorNuevo`.
 - `PATCH /api/empleados { usuarioId, bloquear }`: suspende/activa usuario (toggle en `EstaBloqueado`). Registra auditoría `SUSPENDER_USUARIO` o `REACTIVAR_USUARIO`.
 - `DELETE /api/empleados { personaId }`: elimina empleado definitivamente (hard delete). Registra auditoría `ELIMINAR_USUARIO` antes de eliminar.
+- `PUT /api/empleados/cambiar-password { usuarioId, nuevaPassword }`: cambia la contraseña del usuario en Supabase Auth. Valida que la contraseña tenga al menos 8 caracteres. Registra auditoría `CAMBIAR_PASSWORD` con severidad `WARNING`.
 - `GET /api/auditoria-empleados`: consulta logs de auditoría con paginación. Filtros opcionales: `accion`, `usuarioId`, `empleadoId`, `fechaDesde`, `fechaHasta`.
 - `POST /api/auditoria-empleados`: registro manual de auditoría (principalmente para testing).
 
@@ -30,7 +32,14 @@
   - **Edición de roles**: Menú de acciones (⋯) con opción "Editar rol" que abre modal prellenado. Permite modificar nombre, descripción, tipo y permisos. Los roles del sistema no permiten modificar nombre/tipo.
   - **Eliminación de roles**: Opción "Eliminar" en menú de acciones con confirmación. Bloquea eliminación si el rol tiene usuarios asignados o es rol del sistema (muestra tooltip explicativo).
   - Se refleja en listado y en selector del alta.
-- Tabla: filtros por búsqueda, rol y estado; acciones ver ficha, suspender/activar (`PATCH`), reenviar invitación (toast).
+- Tabla: filtros por búsqueda, rol y estado (filtrado en backend); acciones con íconos SVG (lucide-react):
+  - **Editar** (Pencil): abre modal para editar datos del empleado (nombre, apellido, DNI, dirección, teléfono, localidad, rol) y cambiar contraseña
+  - **Ver ficha** (Eye): muestra detalles del empleado
+  - **Suspender/activar** (Zap): toggle de estado (`PATCH`)
+  - **Enviar email** (Mail): reenvía invitación (toast)
+  - **Eliminar** (Trash2): elimina empleado con confirmación
+- **Edición de empleados**: Modal con formulario prellenado que permite editar todos los campos del empleado. Incluye sección separada para cambiar contraseña con validación (mínimo 8 caracteres, confirmación).
+- **Paginación mejorada**: Componente `Pagination` con diseño moderno (fondo gris claro, bordes redondeados, mejor espaciado). Selector de límite sincronizado correctamente usando `useMemo` para evitar problemas de actualización. Los cambios en `limit` recargan automáticamente los datos gracias a `useEffect`.
 - **Auditoría de accesos**: 
   - Preview de eventos de seguridad y accesos (máximo 10 items) con chips de severidad (INFO/WARNING/CRITICAL).
   - Muestra descripción legible, tiempo relativo, categoría y severidad de cada evento.
@@ -54,10 +63,11 @@ Registra todas las acciones importantes sobre empleados, usuarios y roles:
   - **Empleados/Usuarios**: `CREAR_USUARIO`, `INVITAR_USUARIO`, `REENVIAR_INVITACION`, `ACEPTAR_INVITACION`, `CAMBIAR_ROL`, `SUSPENDER_USUARIO`, `REACTIVAR_USUARIO`, `ELIMINAR_USUARIO`
   - **Roles**: `CREAR_ROL`, `EDITAR_ROL`, `ELIMINAR_ROL`
   - **Configuración**: `CAMBIAR_CONFIG_SEGURIDAD`
+  - **Seguridad**: `CAMBIAR_PASSWORD` (cambio de contraseña de usuario)
 
 - **Severidad automática**:
   - **CRITICAL**: `ELIMINAR_USUARIO`, `ELIMINAR_ROL`
-  - **WARNING**: `CAMBIAR_ROL`, `EDITAR_ROL`, `SUSPENDER_USUARIO`, `CAMBIAR_CONFIG_SEGURIDAD`
+  - **WARNING**: `CAMBIAR_ROL`, `EDITAR_ROL`, `SUSPENDER_USUARIO`, `CAMBIAR_CONFIG_SEGURIDAD`, `CAMBIAR_PASSWORD`
   - **INFO**: resto de acciones (creaciones, invitaciones, reactivaciones)
 
 ### Helper `registrarAuditoria()`
@@ -102,8 +112,14 @@ await registrarAuditoria({
   - Se agregó tabla `AuditoriaEmpleado` con campo `Severidad`
   - Requiere migraciones: `add_auditoria_empleado`, `add_severidad_auditoria`
   - Después de migraciones: ejecutar `prisma generate` y reiniciar servidor de desarrollo
-- Supabase: al crear usuario se setea `app_metadata.role` según el tipo de rol (Administrador/Empleado).
+- Supabase: 
+  - Al crear usuario se setea `app_metadata.role` según el tipo de rol (Administrador/Empleado).
+  - El cambio de contraseña se realiza mediante `supabase.auth.admin.updateUserById()` usando el `AuthUserId` del usuario.
 - Localidad se valida contra Departamento/Provincia para asegurar consistencia.
+- **Componente Pagination** (`src/components/common/Pagination.tsx`):
+  - Usa `useMemo` para sincronizar correctamente el selector de límite con el estado.
+  - Diseño mejorado con fondo gris claro, bordes redondeados y mejor espaciado.
+  - El cambio de límite resetea automáticamente a la página 1.
 - **Gestión de roles**:
   - Los roles del sistema se identifican por `id < 0` o nombres normalizados como "administrador"/"superadmin".
   - La eliminación de roles realiza hard delete: primero elimina `PerfilPermiso` y luego `Perfiles`.
@@ -118,5 +134,7 @@ await registrarAuditoria({
   - Se eliminó la tab "Seguridad" (movida a Configuración → Seguridad).
   - Se agregó tab "Auditoría de accesos" con preview limitado (10 items) y navegación a Analíticas.
   - Chips de severidad con colores: INFO (azul), WARNING (amarillo), CRITICAL (rojo)
-  - Iconos de lucide-react (Pencil, Trash2) en acciones de roles.
+  - Iconos SVG de lucide-react en todas las acciones: Pencil (editar), Eye (ver ficha), Zap (suspender/activar), Mail (enviar email), Trash2 (eliminar).
+  - **Paginación mejorada**: Componente `Pagination` con diseño moderno, selector de límite sincronizado correctamente, fondo gris claro con bordes redondeados, mejor tipografía y espaciado.
+  - **Filtrado backend**: Los filtros de búsqueda, rol y estado se procesan en el servidor, mejorando el rendimiento y la precisión de los resultados.
   - Mejoras en responsive design y accesibilidad (aria-labels).
