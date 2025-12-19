@@ -444,8 +444,8 @@ export default function Empleados() {
         setEmpleados([]);
       }
 
-      setLocalidades([]);
-      setDepartamentos([]);
+      // No borrar departamentos y localidades si hay valores previos
+      // Se recargarán automáticamente si hay provincia/departamento seleccionados
     } catch (error) {
       console.error(error);
       addToast({
@@ -531,6 +531,17 @@ export default function Empleados() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departamentoSeleccionado]);
+
+  // Recargar selects de ubicación después de loadData si hay valores previos
+  useEffect(() => {
+    if (!isLoadingData && provinciaSeleccionada && departamentos.length === 0) {
+      loadDepartamentos(provinciaSeleccionada);
+    }
+    if (!isLoadingData && departamentoSeleccionado && localidades.length === 0) {
+      loadLocalidades(departamentoSeleccionado);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoadingData, empleados.length]);
 
   const handleCrearUsuario = async () => {
     if (
@@ -1298,6 +1309,8 @@ export default function Empleados() {
                       onSelectionChange={(keys) => {
                         const selected = Array.from(keys)[0] as string;
                         setFiltros((prev) => ({ ...prev, rol: selected || "" }));
+                        // Resetear a página 1 al cambiar filtro de rol
+                        setPage(1);
                       }}
                       className="w-full md:min-w-[160px]"
                     >
@@ -1313,9 +1326,11 @@ export default function Empleados() {
                     <Select
                       size="sm"
                       selectedKeys={[filtros.estado]}
-                      onChange={(e) =>
-                        setFiltros((prev) => ({ ...prev, estado: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        setFiltros((prev) => ({ ...prev, estado: e.target.value }));
+                        // Resetear a página 1 al cambiar filtro de estado
+                        setPage(1);
+                      }}
                       className="w-full md:min-w-[160px]"
                     >
                       <SelectItem key="todos">Todos</SelectItem>
