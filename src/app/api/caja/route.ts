@@ -156,12 +156,10 @@ export async function GET(req: NextRequest) {
             Comprobante: {
               ...m.Comprobante,
               Id: Number(m.Comprobante.Id),
-              TenantId: Number(m.Comprobante.TenantId),
             },
             Usuario: {
               ...m.Usuario,
               Id: Number(m.Usuario.Id),
-              TenantId: Number(m.Usuario.TenantId),
             },
           })),
         },
@@ -267,12 +265,10 @@ export async function GET(req: NextRequest) {
             Comprobante: {
               ...m.Comprobante,
               Id: Number(m.Comprobante.Id),
-              TenantId: Number(m.Comprobante.TenantId),
             },
             Usuario: {
               ...m.Usuario,
               Id: Number(m.Usuario.Id),
-              TenantId: Number(m.Usuario.TenantId),
             },
           })),
         },
@@ -280,11 +276,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Historial de cajas
-    const where: {
-      TenantId: bigint;
-      EstaEliminado: boolean;
-      FechaCierre?: { isNot: null };
-    } = {
+    const where: any = {
       TenantId: BigInt(tenantId),
       EstaEliminado: false,
     };
@@ -454,7 +446,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: error.errors[0].message },
+        { error: error.issues[0]?.message || "Datos inválidos" },
         { status: 400 }
       );
     }
@@ -636,7 +628,7 @@ export async function PATCH(req: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: error.errors[0].message },
+        { error: error.issues[0]?.message || "Datos inválidos" },
         { status: 400 }
       );
     }

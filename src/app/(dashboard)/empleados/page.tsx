@@ -31,6 +31,12 @@ import { addToast } from "@heroui/react";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { Pencil, Trash2, Eye, Zap, Mail } from "lucide-react";
 import Pagination, { PaginationInfo } from "@/components/common/Pagination";
+import {
+  formatTiempoRelativo,
+  formatearAccion,
+  mapearAccion,
+  mapearSeveridad,
+} from "./auditoria-utils";
 
 // PÃ¡gina funcional de empleados: alta rÃ¡pida, roles y tabla conectada a las APIs.
 type EstadoEmpleado = "Activo" | "Invitado" | "Suspendido";
@@ -100,121 +106,10 @@ function estadoColor(estado: EstadoEmpleado) {
   return "danger";
 }
 
-function criticidadColor(usuarios: number) {
-  if (usuarios > 5) return "danger";
-  if (usuarios > 0) return "warning";
-  return "success";
-}
-
-function rolChipColor(tipo?: string | null) {
-  if (tipo === "ADMINISTRADOR") return "secondary";
-  if (tipo === "INVITADO") return "default";
-  return "primary";
-}
-
-// Función para formatear tiempo relativo en español
-function formatTiempoRelativo(fecha: string): string {
-  const ahora = new Date();
-  const fechaEvento = new Date(fecha);
-  const diffMs = ahora.getTime() - fechaEvento.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  const diffHrs = Math.floor(diffMs / 3600000);
-  const diffDias = Math.floor(diffMs / 86400000);
-
-  if (diffMin < 1) return "Hace unos segundos";
-  if (diffMin < 60) return `Hace ${diffMin} min`;
-  if (diffHrs < 24) {
-    if (diffHrs === 1) return "Hace 1h";
-    return `Hace ${diffHrs}h`;
-  }
-  if (diffDias === 1) return "Ayer";
-  if (diffDias < 7) return `Hace ${diffDias} días`;
-  
-  // Si es más de una semana, mostrar fecha
-  return fechaEvento.toLocaleDateString("es-AR", {
-    day: "numeric",
-    month: "short",
-  });
-}
-
-// Función para mapear acción a categoría y color
-function mapearAccion(accion: string): { categoria: string; color: "default" | "primary" | "success" | "warning" | "danger" } {
-  if (accion.includes("CREAR_USUARIO") || accion.includes("REACTIVAR_USUARIO")) {
-    return { categoria: "Usuarios", color: "success" };
-  }
-  if (accion.includes("SUSPENDER_USUARIO") || accion.includes("ELIMINAR_USUARIO")) {
-    return { categoria: "Usuarios", color: "danger" };
-  }
-  if (accion.includes("CREAR_ROL") || accion.includes("EDITAR_ROL") || accion.includes("ASIGNAR_ROL") || accion.includes("CAMBIAR_ROL")) {
-    return { categoria: "Roles", color: "primary" };
-  }
-  if (accion.includes("ELIMINAR_ROL")) {
-    return { categoria: "Roles", color: "danger" };
-  }
-  if (accion.includes("INVITACION") || accion.includes("INVITAR")) {
-    return { categoria: "Invitaciones", color: "warning" };
-  }
-  return { categoria: "General", color: "default" };
-}
-
-// Función para mapear severidad a color
-function mapearSeveridad(severidad: string): "default" | "primary" | "secondary" | "success" | "warning" | "danger" {
-  switch (severidad) {
-    case "CRITICAL":
-      return "danger";
-    case "WARNING":
-      return "warning";
-    case "INFO":
-    default:
-      return "primary";
-  }
-}
-
-// Función para formatear descripción de acción
-function formatearAccion(auditoria: any): string {
-  const { accion, detalle, empleado, usuarioAfectado } = auditoria;
-  
-  if (detalle) return detalle;
-  
-  switch (accion) {
-    case "CREAR_USUARIO":
-      return empleado 
-        ? `Nuevo usuario creado: ${empleado.nombre}`
-        : "Nuevo usuario creado";
-    case "EDITAR_USUARIO":
-      return empleado 
-        ? `Usuario editado: ${empleado.nombre}`
-        : "Usuario editado";
-    case "ELIMINAR_USUARIO":
-      return empleado 
-        ? `Usuario eliminado: ${empleado.nombre}`
-        : "Usuario eliminado";
-    case "SUSPENDER_USUARIO":
-      return empleado 
-        ? `Usuario suspendido: ${empleado.nombre}`
-        : "Usuario suspendido";
-    case "REACTIVAR_USUARIO":
-      return empleado 
-        ? `Usuario reactivado: ${empleado.nombre}`
-        : "Usuario reactivado";
-    case "INVITAR_USUARIO":
-      return empleado 
-        ? `Invitación enviada a: ${empleado.nombre}`
-        : "Invitación enviada";
-    case "CREAR_ROL":
-      return "Se creó un nuevo rol";
-    case "EDITAR_ROL":
-      return "Rol editado";
-    case "ELIMINAR_ROL":
-      return "Rol eliminado";
-    case "ASIGNAR_ROL":
-    case "CAMBIAR_ROL":
-      return "Cambio de rol asignado";
-    case "REENVIAR_INVITACION":
-      return "Invitación reenviada";
-    default:
-      return accion;
-  }
+function rolChipColor(tipo: "ADMINISTRADOR" | "EMPLEADO" | "Empleado" | "Administrador" | null | undefined): "primary" | "secondary" | "default" {
+  if (tipo === "ADMINISTRADOR" || tipo === "Administrador") return "primary";
+  if (tipo === "EMPLEADO" || tipo === "Empleado") return "secondary";
+  return "default";
 }
 
 function estadoPill(estado: EstadoEmpleado) {

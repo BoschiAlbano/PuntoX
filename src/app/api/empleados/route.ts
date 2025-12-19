@@ -615,6 +615,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ empleado: empleadoResponse }, { status: 201 });
   } catch (error) {
+    if (error instanceof PermisoError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status }
+      );
+    }
     return handleError(error);
   }
 }

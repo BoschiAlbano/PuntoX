@@ -10,7 +10,20 @@ import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 
 // Mock de dependencias
-vi.mock("@/lib/requirePermiso");
+vi.mock("@/lib/requirePermiso", () => ({
+  requirePermiso: vi.fn(),
+  PermisoError: class PermisoError extends Error {
+    status: number;
+    constructor(message: string, status: number) {
+      super(message);
+      this.status = status;
+      this.name = "PermisoError";
+    }
+  },
+}));
+vi.mock("@/lib/auditoria/registrarAuditoria", () => ({
+  registrarAuditoria: vi.fn().mockResolvedValue(undefined),
+}));
 vi.mock("@/DB/prisma", () => ({
   default: {
     persona: {
@@ -232,7 +245,7 @@ describe("POST /api/empleados", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain("localidad");
+    expect(data.error.toLowerCase()).toContain("localidad");
   });
 });
 
