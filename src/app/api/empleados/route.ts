@@ -46,19 +46,95 @@ type EstadoEmpleado = "Activo" | "Suspendido" | "Invitado";
 
 import { parsePaginationParams, createPaginationResponse } from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
+import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 
 export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await requirePermiso("empleados:admin");
     const pagination = parsePaginationParams(req);
 
-    const where = {
+    // Obtener filtros de query params
+    const searchParams = req.nextUrl.searchParams;
+    const rolFilter = searchParams.get("rol");
+    const estadoFilter = searchParams.get("estado");
+    const busquedaFilter = searchParams.get("busqueda");
+
+    // Construir where base
+    const where: any = {
       TenantId: BigInt(tenantId),
       EstaEliminado: false,
       Persona_Empleado: { isNot: null },
     };
 
-    // Obtener total para paginación
+    // Filtro de búsqueda (nombre, apellido, email, dni)
+    if (busquedaFilter && busquedaFilter.trim()) {
+      const busqueda = busquedaFilter.trim();
+      where.OR = [
+        { Nombre: { contains: busqueda, mode: "insensitive" } },
+        { Apellido: { contains: busqueda, mode: "insensitive" } },
+        { Mail: { contains: busqueda, mode: "insensitive" } },
+        { Dni: { contains: busqueda, mode: "insensitive" } },
+      ];
+    }
+
+    // Filtro por rol
+    if (rolFilter && rolFilter !== "todos") {
+      const rolId = Number(rolFilter);
+      if (!Number.isNaN(rolId)) {
+        where.Persona_Empleado = {
+          ...where.Persona_Empleado,
+          Usuario: {
+            some: {
+              EstaEliminado: false,
+              PerfilUsuario: {
+                some: {
+                  Perfil_Id: BigInt(rolId),
+                },
+              },
+            },
+          },
+        };
+      }
+    }
+
+    // Filtro por estado
+    if (estadoFilter && estadoFilter !== "todos") {
+      if (estadoFilter === "Invitado") {
+        // Sin usuario asociado
+        where.Persona_Empleado = {
+          ...where.Persona_Empleado,
+          Usuario: {
+            none: {
+              EstaEliminado: false,
+            },
+          },
+        };
+      } else if (estadoFilter === "Suspendido") {
+        // Usuario bloqueado
+        where.Persona_Empleado = {
+          ...where.Persona_Empleado,
+          Usuario: {
+            some: {
+              EstaEliminado: false,
+              EstaBloqueado: true,
+            },
+          },
+        };
+      } else if (estadoFilter === "Activo") {
+        // Usuario activo (no bloqueado y existe)
+        where.Persona_Empleado = {
+          ...where.Persona_Empleado,
+          Usuario: {
+            some: {
+              EstaEliminado: false,
+              EstaBloqueado: false,
+            },
+          },
+        };
+      }
+    }
+
+    // Obtener total para paginación (con filtros aplicados)
     const total = await prisma.persona.count({ where });
 
     let empleados;
@@ -217,7 +293,7 @@ const createEmpleadoSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId } = await requirePermiso("empleados:admin");
+    const { tenantId, usuarioId } = await requirePermiso("empleados:admin");
     const tenantIdBigInt = BigInt(tenantId);
 
     const json = await req.json().catch(() => null);
@@ -470,6 +546,37 @@ export async function POST(req: NextRequest) {
       ultimaActividad: "Pendiente",
     };
 
+    // Registrar auditoría CREAR_USUARIO
+    await registrarAuditoria({
+      tenantId: tenantIdBigInt,
+      usuarioId,
+      accion: "CREAR_USUARIO",
+      empleadoId: created.personaEmpleado.Id,
+      usuarioAfectadoId: created.usuario.Id,
+      detalle: `Usuario creado: ${created.persona.Nombre} ${created.persona.Apellido} (${created.persona.Mail})`,
+      valorNuevo: {
+        nombre: created.persona.Nombre,
+        apellido: created.persona.Apellido,
+        email: created.persona.Mail,
+        rolId: rolIdNumber || null,
+        autoInvitar: data.autoInvitar || false,
+      },
+      req, // Pasar el request para obtener headers
+    });
+
+    // Registrar auditoría INVITAR_USUARIO si autoInvitar es true
+    if (data.autoInvitar) {
+      await registrarAuditoria({
+        tenantId: tenantIdBigInt,
+        usuarioId,
+        accion: "INVITAR_USUARIO",
+        empleadoId: created.personaEmpleado.Id,
+        usuarioAfectadoId: created.usuario.Id,
+        detalle: `Invitación enviada a: ${created.persona.Nombre} ${created.persona.Apellido} (${created.persona.Mail})`,
+        req,
+      });
+    }
+
     return NextResponse.json({ empleado: empleadoResponse }, { status: 201 });
   } catch (error) {
     return handleError(error);
@@ -487,7 +594,7 @@ const deleteEmpleadoSchema = z.object({
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId } = await requirePermiso("empleados:admin");
+    const { tenantId, usuarioId: usuarioIdAccion } = await requirePermiso("empleados:admin");
 
     const json = await req.json().catch(() => null);
     const parsed = updateEstadoSchema.safeParse(json);
@@ -495,15 +602,46 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Datos invalidos" }, { status: 400 });
     }
 
-    const usuarioId = Number(parsed.data.usuarioId);
-    if (!Number.isInteger(usuarioId)) {
+    const usuarioIdAfectado = Number(parsed.data.usuarioId);
+    if (!Number.isInteger(usuarioIdAfectado)) {
       return NextResponse.json({ error: "Usuario invalido" }, { status: 400 });
     }
 
+    // Obtener estado anterior para auditoría
+    const usuarioAnterior = await prisma.usuario.findFirst({
+      where: { Id: BigInt(usuarioIdAfectado), TenantId: BigInt(tenantId) },
+      select: { Id: true, EstaBloqueado: true, Persona_Empleado: { select: { Id: true } } },
+    });
+
+    if (!usuarioAnterior) {
+      return NextResponse.json(
+        { error: "Usuario no encontrado" },
+        { status: 404 }
+      );
+    }
+
     const updated = await prisma.usuario.update({
-      where: { Id: BigInt(usuarioId), TenantId: BigInt(tenantId) },
+      where: { Id: BigInt(usuarioIdAfectado), TenantId: BigInt(tenantId) },
       data: { EstaBloqueado: parsed.data.bloquear },
       select: { Id: true, EstaBloqueado: true },
+    });
+
+    // Registrar auditoría
+    const accion = updated.EstaBloqueado ? "SUSPENDER_USUARIO" : "REACTIVAR_USUARIO";
+    await registrarAuditoria({
+      tenantId,
+      usuarioId: usuarioIdAccion,
+      accion,
+      empleadoId: usuarioAnterior.Persona_Empleado?.Id || null,
+      usuarioAfectadoId: updated.Id,
+      detalle: `Usuario ${updated.EstaBloqueado ? "suspendido" : "reactivado"}`,
+      valorAnterior: {
+        estaBloqueado: usuarioAnterior.EstaBloqueado,
+      },
+      valorNuevo: {
+        estaBloqueado: updated.EstaBloqueado,
+      },
+      req, // Pasar el request para obtener headers
     });
 
     return NextResponse.json({
@@ -523,7 +661,7 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { tenantId, usuarioId } = await requirePermiso("empleados:admin");
+    const { tenantId, usuarioId: usuarioIdAccion } = await requirePermiso("empleados:admin");
 
     const json = await req.json().catch(() => null);
     const parsed = deleteEmpleadoSchema.safeParse(json);
@@ -543,6 +681,7 @@ export async function DELETE(req: NextRequest) {
       select: {
         Persona_Empleado: {
           select: {
+            Id: true,
             Usuario: {
               select: { Id: true, AuthUserId: true },
             },
@@ -561,7 +700,7 @@ export async function DELETE(req: NextRequest) {
     // Evitar que un admin se borre a sí mismo.
     const usuarioActual = await prisma.usuario.findFirst({
       where: {
-        Id: BigInt(usuarioId),
+        Id: BigInt(usuarioIdAccion),
         TenantId: tenantIdBig,
         EstaEliminado: false,
       },
@@ -581,6 +720,15 @@ export async function DELETE(req: NextRequest) {
       .map((u) => u.AuthUserId)
       .filter(Boolean) as string[];
 
+    // Obtener datos del empleado para la auditoría ANTES de borrar
+    const personaCompleta = await prisma.persona.findFirst({
+      where: { Id: personaId, TenantId: tenantIdBig },
+      select: { Nombre: true, Apellido: true, Mail: true },
+    });
+    
+    const empleadoId = persona.Persona_Empleado?.Id || null;
+    const usuarioAfectadoId = persona.Persona_Empleado?.Usuario?.[0]?.Id || null;
+
     await prisma.$transaction(async (tx) => {
       if (usuarioIds.length) {
         await tx.perfilUsuario.deleteMany({
@@ -599,6 +747,24 @@ export async function DELETE(req: NextRequest) {
         where: { Id: personaId, TenantId: tenantIdBig },
       });
     });
+
+    // Registrar auditoría después de borrar en BD pero antes de Supabase
+    if (personaCompleta) {
+      await registrarAuditoria({
+        tenantId,
+        usuarioId: usuarioIdAccion,
+        accion: "ELIMINAR_USUARIO",
+        empleadoId: empleadoId,
+        usuarioAfectadoId: usuarioAfectadoId,
+        detalle: `Empleado eliminado: ${personaCompleta.Nombre} ${personaCompleta.Apellido} (${personaCompleta.Mail})`,
+        valorAnterior: {
+          nombre: personaCompleta.Nombre,
+          apellido: personaCompleta.Apellido,
+          email: personaCompleta.Mail,
+        },
+        req, // Pasar el request para obtener headers
+      });
+    }
 
     // Borramos en Supabase Auth de forma no bloqueante.
     if (authIds.length) {

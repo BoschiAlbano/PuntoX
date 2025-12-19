@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Button,
@@ -110,6 +110,111 @@ function rolChipColor(tipo?: string | null) {
   return "primary";
 }
 
+// Función para formatear tiempo relativo en español
+function formatTiempoRelativo(fecha: string): string {
+  const ahora = new Date();
+  const fechaEvento = new Date(fecha);
+  const diffMs = ahora.getTime() - fechaEvento.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHrs = Math.floor(diffMs / 3600000);
+  const diffDias = Math.floor(diffMs / 86400000);
+
+  if (diffMin < 1) return "Hace unos segundos";
+  if (diffMin < 60) return `Hace ${diffMin} min`;
+  if (diffHrs < 24) {
+    if (diffHrs === 1) return "Hace 1h";
+    return `Hace ${diffHrs}h`;
+  }
+  if (diffDias === 1) return "Ayer";
+  if (diffDias < 7) return `Hace ${diffDias} días`;
+  
+  // Si es más de una semana, mostrar fecha
+  return fechaEvento.toLocaleDateString("es-AR", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+// Función para mapear acción a categoría y color
+function mapearAccion(accion: string): { categoria: string; color: "default" | "primary" | "success" | "warning" | "danger" } {
+  if (accion.includes("CREAR_USUARIO") || accion.includes("REACTIVAR_USUARIO")) {
+    return { categoria: "Usuarios", color: "success" };
+  }
+  if (accion.includes("SUSPENDER_USUARIO") || accion.includes("ELIMINAR_USUARIO")) {
+    return { categoria: "Usuarios", color: "danger" };
+  }
+  if (accion.includes("CREAR_ROL") || accion.includes("EDITAR_ROL") || accion.includes("ASIGNAR_ROL") || accion.includes("CAMBIAR_ROL")) {
+    return { categoria: "Roles", color: "primary" };
+  }
+  if (accion.includes("ELIMINAR_ROL")) {
+    return { categoria: "Roles", color: "danger" };
+  }
+  if (accion.includes("INVITACION") || accion.includes("INVITAR")) {
+    return { categoria: "Invitaciones", color: "warning" };
+  }
+  return { categoria: "General", color: "default" };
+}
+
+// Función para mapear severidad a color
+function mapearSeveridad(severidad: string): "default" | "primary" | "secondary" | "success" | "warning" | "danger" {
+  switch (severidad) {
+    case "CRITICAL":
+      return "danger";
+    case "WARNING":
+      return "warning";
+    case "INFO":
+    default:
+      return "primary";
+  }
+}
+
+// Función para formatear descripción de acción
+function formatearAccion(auditoria: any): string {
+  const { accion, detalle, empleado, usuarioAfectado } = auditoria;
+  
+  if (detalle) return detalle;
+  
+  switch (accion) {
+    case "CREAR_USUARIO":
+      return empleado 
+        ? `Nuevo usuario creado: ${empleado.nombre}`
+        : "Nuevo usuario creado";
+    case "EDITAR_USUARIO":
+      return empleado 
+        ? `Usuario editado: ${empleado.nombre}`
+        : "Usuario editado";
+    case "ELIMINAR_USUARIO":
+      return empleado 
+        ? `Usuario eliminado: ${empleado.nombre}`
+        : "Usuario eliminado";
+    case "SUSPENDER_USUARIO":
+      return empleado 
+        ? `Usuario suspendido: ${empleado.nombre}`
+        : "Usuario suspendido";
+    case "REACTIVAR_USUARIO":
+      return empleado 
+        ? `Usuario reactivado: ${empleado.nombre}`
+        : "Usuario reactivado";
+    case "INVITAR_USUARIO":
+      return empleado 
+        ? `Invitación enviada a: ${empleado.nombre}`
+        : "Invitación enviada";
+    case "CREAR_ROL":
+      return "Se creó un nuevo rol";
+    case "EDITAR_ROL":
+      return "Rol editado";
+    case "ELIMINAR_ROL":
+      return "Rol eliminado";
+    case "ASIGNAR_ROL":
+    case "CAMBIAR_ROL":
+      return "Cambio de rol asignado";
+    case "REENVIAR_INVITACION":
+      return "Invitación reenviada";
+    default:
+      return accion;
+  }
+}
+
 function estadoPill(estado: EstadoEmpleado) {
   const map: Record<EstadoEmpleado, { text: string; className: string }> = {
     Activo: {
@@ -143,12 +248,14 @@ export default function Empleados() {
   const [isAuthorized, setIsAuthorized] = useState(true);
   const [isSavingUser, setIsSavingUser] = useState(false);
   const [isSavingRole, setIsSavingRole] = useState(false);
+  const [isLoadingAuditoria, setIsLoadingAuditoria] = useState(false);
 
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [roles, setRoles] = useState<Rol[]>([]);
   const [localidades, setLocalidades] = useState<Localidad[]>([]);
   const [provincias, setProvincias] = useState<Provincia[]>([]);
   const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
+  const [auditorias, setAuditorias] = useState<any[]>([]);
   
   // Estado de paginación
   const [page, setPage] = useState(1);
@@ -161,12 +268,22 @@ export default function Empleados() {
     hasNextPage: false,
     hasPreviousPage: false,
   });
+  const [paginationAuditoria, setPaginationAuditoria] = useState<PaginationInfo>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
 
   const [filtros, setFiltros] = useState({
     busqueda: "",
     rol: "todos",
     estado: "todos",
   });
+  const [busquedaInput, setBusquedaInput] = useState("");
+  const busquedaTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [nuevoUsuario, setNuevoUsuario] = useState({
     nombre: "",
@@ -220,33 +337,25 @@ export default function Empleados() {
   const isSuperAdmin = isSuperAdminState || isSuperAdminLocal;
 
   const resumen = useMemo(
-    () => ({
-      activos: empleados.filter((e) => e.estado === "Activo").length,
-      invitados: empleados.filter((e) => e.estado === "Invitado").length,
-      suspendidos: empleados.filter((e) => e.estado === "Suspendido").length,
-      roles: roles.length,
-    }),
+    () => {
+      const invitados = empleados.filter((e) => e.estado === "Invitado");
+      return {
+        activos: empleados.filter((e) => e.estado === "Activo").length,
+        invitados: invitados.length,
+        invitadosLista: invitados, // Lista de invitados para mostrar detalles
+        suspendidos: empleados.filter((e) => e.estado === "Suspendido").length,
+        roles: roles.length,
+      };
+    },
     [empleados, roles]
   );
 
+  // Los filtros ahora se aplican en el backend, solo mantenemos empleados tal cual vienen
+  // (el filtrado de búsqueda también se hace en backend, pero mantenemos esta variable
+  // para compatibilidad con el código existente)
   const empleadosFiltrados = useMemo(() => {
-    return empleados.filter((empleado) => {
-      const matchBusqueda =
-        filtros.busqueda.trim().length === 0 ||
-        empleado.nombreCompleto
-          .toLowerCase()
-          .includes(filtros.busqueda.toLowerCase()) ||
-        empleado.email.toLowerCase().includes(filtros.busqueda.toLowerCase());
-
-      const matchRol =
-        filtros.rol === "todos" || empleado.rolId === Number(filtros.rol);
-
-      const matchEstado =
-        filtros.estado === "todos" || empleado.estado === filtros.estado;
-
-      return matchBusqueda && matchRol && matchEstado;
-    });
-  }, [empleados, filtros]);
+    return empleados;
+  }, [empleados]);
 
   const resolveTenantIdForRequests = () => {
     const meta = user?.app_metadata as Record<string, unknown> | undefined;
@@ -335,13 +444,23 @@ export default function Empleados() {
       // Construir query para roles (sin paginación)
       const rolesQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
       
-      // Construir query para empleados (con paginación)
+      // Construir query para empleados (con paginación y filtros)
       const paginationParams = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
       });
       if (tenantParam) {
         paginationParams.append("tenantId", tenantParam);
+      }
+      // Agregar filtros al backend
+      if (filtros.rol && filtros.rol !== "todos") {
+        paginationParams.append("rol", filtros.rol);
+      }
+      if (filtros.estado && filtros.estado !== "todos") {
+        paginationParams.append("estado", filtros.estado);
+      }
+      if (filtros.busqueda && filtros.busqueda.trim()) {
+        paginationParams.append("busqueda", filtros.busqueda.trim());
       }
       const empleadosQuery = `?${paginationParams.toString()}`;
       
@@ -459,9 +578,60 @@ export default function Empleados() {
     }
   };
 
+  // Cargar auditorías
+  const loadAuditorias = async () => {
+    setIsLoadingAuditoria(true);
+    try {
+      const res = await fetch(
+        `/api/auditoria-empleados?page=${paginationAuditoria.page}&limit=${paginationAuditoria.limit}`,
+        { cache: "no-store" }
+      );
+      if (res.ok) {
+        const json = await res.json();
+        if (json?.data && json?.pagination) {
+          setAuditorias(json.data);
+          setPaginationAuditoria(json.pagination);
+        } else {
+          setAuditorias([]);
+        }
+      } else {
+        setAuditorias([]);
+      }
+    } catch (error) {
+      console.error("Error al cargar auditorías:", error);
+      setAuditorias([]);
+    } finally {
+      setIsLoadingAuditoria(false);
+    }
+  };
+
+  // Debounce para búsqueda
+  useEffect(() => {
+    if (busquedaTimeoutRef.current) {
+      clearTimeout(busquedaTimeoutRef.current);
+    }
+    busquedaTimeoutRef.current = setTimeout(() => {
+      setFiltros((prev) => ({ ...prev, busqueda: busquedaInput }));
+      setPage(1);
+    }, 500); // 500ms de delay
+
+    return () => {
+      if (busquedaTimeoutRef.current) {
+        clearTimeout(busquedaTimeoutRef.current);
+      }
+    };
+  }, [busquedaInput]);
+
+  useEffect(() => {
+    if (user) {
+      loadData();
+      loadAuditorias();
+    }
+  }, [user]);
+
   useEffect(() => {
     loadData();
-  }, [page, limit]);
+  }, [page, limit, filtros.rol, filtros.estado, filtros.busqueda]);
 
   const loadDepartamentos = async (provId: string, q?: string) => {
     if (!provId) {
@@ -533,15 +703,18 @@ export default function Empleados() {
   }, [departamentoSeleccionado]);
 
   // Recargar selects de ubicación después de loadData si hay valores previos
+  // Se dispara cuando termina la carga o cambia la página
   useEffect(() => {
-    if (!isLoadingData && provinciaSeleccionada && departamentos.length === 0) {
-      loadDepartamentos(provinciaSeleccionada);
-    }
-    if (!isLoadingData && departamentoSeleccionado && localidades.length === 0) {
-      loadLocalidades(departamentoSeleccionado);
+    if (!isLoadingData) {
+      if (provinciaSeleccionada && departamentos.length === 0) {
+        loadDepartamentos(provinciaSeleccionada);
+      }
+      if (departamentoSeleccionado && localidades.length === 0) {
+        loadLocalidades(departamentoSeleccionado);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoadingData, empleados.length]);
+  }, [isLoadingData, page]);
 
   const handleCrearUsuario = async () => {
     if (
@@ -633,10 +806,7 @@ export default function Empleados() {
       }
 
       const data = await res.json();
-      if (data?.empleado) {
-        setEmpleados((prev) => [...prev, data.empleado]);
-      }
-
+      
       addToast({
         title: "Usuario creado",
         description: nuevoUsuario.autoInvitar
@@ -644,6 +814,11 @@ export default function Empleados() {
           : "Usuario listo. Recuerda compartir las credenciales.",
         color: "success",
       });
+
+      // Recargar datos para actualizar la lista y conteos
+      await loadData();
+      // Recargar auditorías para mostrar la acción recién registrada
+      await loadAuditorias();
 
       setNuevoUsuario({
         nombre: "",
@@ -731,23 +906,15 @@ export default function Empleados() {
       }
 
       const data = await res.json();
-      if (data?.rol) {
-        const rolCreado: Rol = {
-          id: Number(data.rol.id),
-          nombre: data.rol.nombre,
-          tipo: data.rol.tipo ?? "EMPLEADO",
-          usuarios: Number(data.rol.usuarios ?? 0),
-          descripcion: data.rol.descripcion ?? null,
-          permisos: Array.isArray(data.rol.permisos) ? data.rol.permisos : [],
-        };
-        setRoles((prev) => [...prev, rolCreado]);
-      }
 
       addToast({
         title: "Rol creado",
         description: "Asignalo desde la tabla o en el alta rapida.",
         color: "success",
       });
+
+      // Recargar datos para actualizar roles y conteos
+      await loadData();
       setOpenRolModal(false);
       setNuevoRol({
         nombre: "",
@@ -909,13 +1076,6 @@ export default function Empleados() {
       }
       const data = await res.json();
 
-      setEmpleados((prev) =>
-        prev.map((item) =>
-          item.usuarioId === empleado.usuarioId
-            ? { ...item, estado: data.estado ?? siguiente }
-            : item
-        )
-      );
       addToast({
         title: "Actualizado",
         description:
@@ -924,6 +1084,11 @@ export default function Empleados() {
             : "Usuario activo.",
         color: "success",
       });
+
+      // Recargar datos para actualizar la lista y conteos
+      await loadData();
+      // Recargar auditorías para mostrar la acción recién registrada
+      await loadAuditorias();
     } catch (error) {
       console.error(error);
       addToast({
@@ -954,14 +1119,16 @@ export default function Empleados() {
         throw new Error(data?.error ?? "No se pudo eliminar el empleado");
       }
 
-      setEmpleados((prev) =>
-        prev.filter((e) => e.personaId !== empleado.personaId)
-      );
       addToast({
         title: "Empleado eliminado",
         description: `${empleado.nombreCompleto} fue eliminado.`,
         color: "success",
       });
+
+      // Recargar datos para actualizar la lista y conteos
+      await loadData();
+      // Recargar auditorías para mostrar la acción recién registrada
+      await loadAuditorias();
     } catch (error) {
       console.error(error);
       addToast({
@@ -994,94 +1161,55 @@ export default function Empleados() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-6">
-      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 via-indigo-800 to-emerald-600 text-white shadow-sm">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),transparent_35%)]" />
-        <div className="relative p-6 sm:p-8 space-y-4">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="space-y-3">
-              <Chip variant="flat" color="success" className="bg-white/10">
-                Equipo y accesos
+    <>
+    <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center">
+      {/* Header de la página */}
+      <section className="w-full relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-blue-500 to-[#90c472] text-white shadow-xl mb-10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),transparent_40%)]" />
+        <div className="relative p-4 md:p-5 space-y-5">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="space-y-2">
+              <Chip variant="flat" className="bg-white/10 text-white">
+                Empleados
               </Chip>
-              <h1 className="text-3xl sm:text-4xl font-bold">Empleados y roles</h1>
-              <p className="text-white/80 max-w-2xl text-sm sm:text-base">
-                Crea usuarios, asigna roles y controla quien puede operar tu
-                negocio.
+              <h1 className="text-3xl md:text-[32px] font-bold">
+                Gestion de Empleados
+              </h1>
+              <p className="text-white max-w-3xl">
+                Administra tu equipo, roles, permisos y controla quien puede operar tu negocio
               </p>
-              <div className="flex gap-2 sm:gap-3 flex-wrap">
-                <Chip
-                  size="sm"
-                  className="bg-white/15 text-white"
-                  variant="flat"
-                >
-                  Activos: {resumen.activos}
-                </Chip>
-                <Chip
-                  size="sm"
-                  className="bg-white/15 text-white"
-                  variant="flat"
-                >
-                  Invitados: {resumen.invitados}
-                </Chip>
-                <Chip
-                  size="sm"
-                  className="bg-white/15 text-white"
-                  variant="flat"
-                >
-                  Roles: {resumen.roles}
-                </Chip>
-              </div>
-            </div>
-            <div className="flex gap-2 sm:gap-3 flex-wrap">
-              <Button
-                color="primary"
-                className="bg-white text-slate-900"
-                onPress={() => setOpenRolModal(true)}
-                size="sm"
-              >
-                + Nuevo rol
-              </Button>
-              <Button
-                variant="bordered"
-                className="border-white/40 text-white"
-                onPress={() =>
-                  addToast({
-                    title: "Exportar",
-                    description: "Exportaremos en la siguiente iteración.",
-                  })
-                }
-                size="sm"
-              >
-                Exportar equipo
-              </Button>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Tabs con los diferentes CRUDs */}
       <Tabs
-        aria-label="Gestión de empleados y roles"
-        color="primary"
-        variant="underlined"
-        classNames={{
-          tabList:
-            "gap-6 w-full relative rounded-none p-0 border-b border-divider",
-          cursor: "w-full bg-primary",
-          tab: "max-w-fit px-0 h-12",
-          tabContent: "group-data-[selected=true]:text-primary",
-        }}
+        aria-label="Options"
+        className="relative"
       >
         <Tab
           key="usuarios"
           title={
             <div className="flex items-center space-x-2">
-              <span>👥</span>
+              <span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="size-5"
+                >
+                  <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM3 5a2 2 0 11.001 3.001A2 2 0 013 5zm14 0a2 2 0 11.001 3.001A2 2 0 0117 5zm-3.707 6.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 13H13a1 1 0 100-2H9.414l1.293-1.293zM5 12a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1zm5-4a1 1 0 011-1h5a1 1 0 110 2h-5a1 1 0 01-1-1z" />
+                </svg>
+              </span>
               <span>Usuarios</span>
             </div>
           }
         >
-          <div className="mt-6 space-y-6">
-            <Card className="shadow-sm border border-slate-200">
+          <Card className="shadow-none border-none bg-transparent">
+            <CardBody className="p-0">
+              <div className="space-y-6">
+                <Card className="shadow-sm border border-slate-200">
               <CardHeader className="flex justify-between items-center pb-3">
                 <div>
                   <p className="text-sm text-gray-500">Alta rápida</p>
@@ -1277,6 +1405,39 @@ export default function Empleados() {
               </CardBody>
             </Card>
 
+            {/* Alerta de invitaciones pendientes */}
+            {resumen.invitados > 0 && (
+              <Card className="shadow-sm border-2 border-yellow-300 bg-yellow-50">
+                <CardBody className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl">📧</div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-yellow-900 mb-1">
+                        {resumen.invitados} invitación{resumen.invitados > 1 ? "es" : ""} pendiente{resumen.invitados > 1 ? "s" : ""}
+                      </h3>
+                      <p className="text-sm text-yellow-700">
+                        {resumen.invitadosLista
+                          .map((e) => e.nombreCompleto)
+                          .join(", ")}{" "}
+                        {resumen.invitados > 1 ? "están" : "está"} esperando aceptar su invitación.
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      color="warning"
+                      onPress={() => {
+                        setFiltros((prev) => ({ ...prev, estado: "Invitado" }));
+                        setPage(1);
+                      }}
+                    >
+                      Ver invitados
+                    </Button>
+                  </div>
+                </CardBody>
+              </Card>
+            )}
+
             <Card className="shadow-sm border border-slate-200">
               <CardHeader className="flex flex-col gap-3 pb-3">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 w-full">
@@ -1291,14 +1452,9 @@ export default function Empleados() {
                       size="sm"
                       placeholder="Buscar por nombre o correo"
                       startContent={<span className="text-gray-500">🔍</span>}
-                      value={filtros.busqueda}
+                      value={busquedaInput}
                       onChange={(e) => {
-                        setFiltros((prev) => ({
-                          ...prev,
-                          busqueda: e.target.value,
-                        }));
-                        // Resetear a página 1 al buscar (los filtros se hacen en cliente)
-                        setPage(1);
+                        setBusquedaInput(e.target.value);
                       }}
                       className="w-full md:max-w-xs"
                     />
@@ -1380,7 +1536,11 @@ export default function Empleados() {
                         <div>{estadoPill(empleado.estado)}</div>
                         <div className="flex items-center gap-1 text-gray-500">
                           <span>⏳</span>
-                          <span>{empleado.ultimaActividad ?? "Pendiente"}</span>
+                          <span>
+                            {empleado.estado === "Invitado"
+                              ? "Invitación pendiente"
+                              : empleado.ultimaActividad ?? "Pendiente"}
+                          </span>
                         </div>
                       </div>
 
@@ -1468,19 +1628,36 @@ export default function Empleados() {
                 </div>
               )}
             </Card>
-          </div>
+              </div>
+            </CardBody>
+          </Card>
         </Tab>
 
         <Tab
           key="roles"
           title={
             <div className="flex items-center space-x-2">
-              <span>🎭</span>
+              <span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="size-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M9.293 2.293a1 1 0 0 1 1.414 0l7 7A1 1 0 0 1 17 11h-1v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6H3a1 1 0 0 1-.707-1.707l7-7Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </span>
               <span>Roles</span>
             </div>
           }
         >
-          <Card className="mt-6 shadow-sm border border-slate-200">
+          <Card className="shadow-none border-none bg-transparent">
+            <CardBody className="p-0">
+              <Card className="shadow-sm border border-slate-200">
             <CardHeader className="flex items-center justify-between pb-3">
               <div>
                 <p className="text-sm text-gray-500">Roles</p>
@@ -1635,17 +1812,34 @@ export default function Empleados() {
               })}
             </CardBody>
           </Card>
+            </CardBody>
+          </Card>
         </Tab>
 
         <Tab
           key="auditoria"
           title={
             <div className="flex items-center space-x-2">
-              <span>📊</span>
+              <span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="size-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 2a.75.75 0 0 1 .75.75v16.5a.75.75 0 0 1-1.5 0V2.75A.75.75 0 0 1 10 2ZM4.5 4a.75.75 0 0 1 .75.75v11.5a.75.75 0 0 1-1.5 0V4.75A.75.75 0 0 1 4.5 4Zm11 0a.75.75 0 0 1 .75.75v11.5a.75.75 0 0 1-1.5 0V4.75A.75.75 0 0 1 15.5 4Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </span>
               <span>Auditoría de accesos</span>
             </div>
           }
         >
+          <Card className="shadow-none border-none bg-transparent">
+            <CardBody className="p-0">
           <Card className="mt-6 shadow-sm border border-slate-200">
             <CardHeader className="flex items-center justify-between pb-3">
               <div>
@@ -1660,89 +1854,39 @@ export default function Empleados() {
             </CardHeader>
             <Divider />
             <CardBody className="space-y-4 pt-4">
-              {/* Mock data - máximo 10 items para preview */}
-              {[
-                {
-                  id: 1,
-                  accion: "Lucas activo 2FA para cajas",
-                  tiempo: "Hace 15 min",
-                  categoria: "Seguridad",
-                  color: "success",
-                },
-                {
-                  id: 2,
-                  accion: "Se creó rol Supervisor de turno",
-                  tiempo: "Hace 1h",
-                  categoria: "Roles",
-                  color: "primary",
-                },
-                {
-                  id: 3,
-                  accion: "2 invitaciones pendientes de aceptación",
-                  tiempo: "Hoy",
-                  categoria: "Invitaciones",
-                  color: "warning",
-                },
-                {
-                  id: 4,
-                  accion: "Usuario suspendido: Juan Pérez",
-                  tiempo: "Hace 2h",
-                  categoria: "Usuarios",
-                  color: "danger",
-                },
-                {
-                  id: 5,
-                  accion: "Cambio de permisos en rol Empleado",
-                  tiempo: "Hace 3h",
-                  categoria: "Roles",
-                  color: "primary",
-                },
-                {
-                  id: 6,
-                  accion: "Nuevo usuario creado: María García",
-                  tiempo: "Ayer",
-                  categoria: "Usuarios",
-                  color: "success",
-                },
-                {
-                  id: 7,
-                  accion: "Sesión expirada por inactividad",
-                  tiempo: "Ayer",
-                  categoria: "Seguridad",
-                  color: "warning",
-                },
-                {
-                  id: 8,
-                  accion: "Rol eliminado: Vendedor temporal",
-                  tiempo: "Hace 2 días",
-                  categoria: "Roles",
-                  color: "danger",
-                },
-                {
-                  id: 9,
-                  accion: "Actualización de configuración de seguridad",
-                  tiempo: "Hace 2 días",
-                  categoria: "Seguridad",
-                  color: "primary",
-                },
-                {
-                  id: 10,
-                  accion: "Exportación de lista de empleados",
-                  tiempo: "Hace 3 días",
-                  categoria: "Usuarios",
-                  color: "default",
-                },
-              ].map((item) => (
-                <div key={item.id} className="flex items-center justify-between py-2">
-                  <div>
-                    <p className="font-semibold text-slate-900">{item.accion}</p>
-                    <p className="text-sm text-gray-500">{item.tiempo}</p>
-                  </div>
-                  <Chip size="sm" color={item.color as "default" | "primary" | "secondary" | "success" | "warning" | "danger"} variant="flat">
-                    {item.categoria}
-                  </Chip>
+              {isLoadingAuditoria ? (
+                <div className="flex justify-center py-8">
+                  <p className="text-sm text-gray-500">Cargando auditorías...</p>
                 </div>
-              ))}
+              ) : auditorias.length === 0 ? (
+                <div className="flex justify-center py-8">
+                  <p className="text-sm text-gray-500">No hay auditorías registradas</p>
+                </div>
+              ) : (
+                auditorias.map((aud) => {
+                  const { categoria, color } = mapearAccion(aud.accion);
+                  const tiempoRelativo = formatTiempoRelativo(aud.fecha);
+                  const descripcion = formatearAccion(aud);
+                  const severidadColor = mapearSeveridad(aud.severidad || "INFO");
+                  
+                  return (
+                    <div key={aud.id} className="flex items-center justify-between py-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-semibold text-slate-900">{descripcion}</p>
+                          <Chip size="sm" color={severidadColor} variant="flat">
+                            {aud.severidad || "INFO"}
+                          </Chip>
+                        </div>
+                        <p className="text-sm text-gray-500">{tiempoRelativo}</p>
+                      </div>
+                      <Chip size="sm" color={color} variant="flat">
+                        {categoria}
+                      </Chip>
+                    </div>
+                  );
+                })
+              )}
               <Divider className="my-4" />
               <div className="flex justify-center pt-2">
                 <Button
@@ -1755,8 +1899,11 @@ export default function Empleados() {
               </div>
             </CardBody>
           </Card>
+            </CardBody>
+          </Card>
         </Tab>
       </Tabs>
+    </div>
 
       <Modal
         isOpen={openRolModal}
@@ -2092,7 +2239,9 @@ export default function Empleados() {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Ultima actividad</span>
               <span className="font-medium text-slate-900">
-                {detalleEmpleado?.ultimaActividad ?? "Pendiente"}
+                {detalleEmpleado?.estado === "Invitado"
+                  ? "Invitación pendiente"
+                  : detalleEmpleado?.ultimaActividad ?? "Pendiente"}
               </span>
             </div>
           </ModalBody>
@@ -2159,6 +2308,6 @@ export default function Empleados() {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </div>
+    </>
   );
 }

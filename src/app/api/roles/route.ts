@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { requirePermiso } from "@/lib/requirePermiso";
+import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 
 type RolTipo = "ADMINISTRADOR" | "EMPLEADO";
 
@@ -70,7 +71,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId } = await requirePermiso("empleados:admin");
+    const { tenantId, usuarioId } = await requirePermiso("empleados:admin");
     const json = await req.json().catch(() => null);
     const parsed = rolSchema.safeParse(json);
     if (!parsed.success) {
@@ -166,6 +167,20 @@ export async function POST(req: NextRequest) {
       permisos: created.permisos.map((p) => p.Descripcion ?? p.Clave),
     };
 
+    // Registrar auditoría CREAR_ROL
+    await registrarAuditoria({
+      tenantId: tenantIdBigInt,
+      usuarioId,
+      accion: "CREAR_ROL",
+      detalle: `Rol creado: ${created.rol.Descripcion}`,
+      valorNuevo: {
+        nombre: created.rol.Descripcion,
+        tipo: created.rol.Tipo,
+        permisos: created.permisos.map((p) => p.Descripcion ?? p.Clave),
+      },
+      req,
+    });
+
     return NextResponse.json({ rol: rolResponse }, { status: 201 });
   } catch (error) {
     console.error("Error al crear rol", error);
@@ -175,7 +190,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId } = await requirePermiso("empleados:admin");
+    const { tenantId, usuarioId } = await requirePermiso("empleados:admin");
     const tenantIdBigInt = BigInt(tenantId);
 
     const { searchParams } = new URL(req.url);
@@ -376,6 +391,33 @@ export async function PATCH(req: NextRequest) {
       ).map((pp) => pp.Permiso?.Descripcion ?? pp.Permiso?.Clave ?? ""),
     };
 
+    // Registrar auditoría EDITAR_ROL
+    const permisosAnteriores = rolExistente.PerfilPermiso
+      .filter((pp) => !pp.Permiso?.EstaEliminado)
+      .map((pp) => pp.Permiso?.Descripcion ?? pp.Permiso?.Clave ?? "");
+    
+    const permisosNuevos = updated.rol.PerfilPermiso
+      .filter((pp) => !pp.Permiso?.EstaEliminado)
+      .map((pp) => pp.Permiso?.Descripcion ?? pp.Permiso?.Clave ?? "");
+
+    await registrarAuditoria({
+      tenantId: tenantIdBigInt,
+      usuarioId,
+      accion: "EDITAR_ROL",
+      detalle: `Rol editado: ${updated.rol.Descripcion}`,
+      valorAnterior: {
+        nombre: rolExistente.Descripcion,
+        tipo: rolExistente.Tipo,
+        permisos: permisosAnteriores,
+      },
+      valorNuevo: {
+        nombre: updated.rol.Descripcion,
+        tipo: updated.rol.Tipo,
+        permisos: permisosNuevos,
+      },
+      req,
+    });
+
     return NextResponse.json({ rol: rolResponse }, { status: 200 });
   } catch (error) {
     console.error("Error al actualizar rol", error);
@@ -388,7 +430,7 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { tenantId } = await requirePermiso("empleados:admin");
+    const { tenantId, usuarioId } = await requirePermiso("empleados:admin");
     const tenantIdBigInt = BigInt(tenantId);
 
     const { searchParams } = new URL(req.url);
@@ -457,6 +499,19 @@ export async function DELETE(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Registrar auditoría antes de eliminar
+    await registrarAuditoria({
+      tenantId: tenantIdBigInt,
+      usuarioId,
+      accion: "ELIMINAR_ROL",
+      detalle: `Rol eliminado: ${rol.Descripcion}`,
+      valorAnterior: {
+        nombre: rol.Descripcion,
+        usuariosAsignados: rol.PerfilUsuario.length,
+      },
+      req,
+    });
 
     // Hard delete: eliminar relaciones primero, luego el rol
     await prisma.$transaction(async (tx) => {
