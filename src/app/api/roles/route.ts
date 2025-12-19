@@ -224,6 +224,13 @@ export async function PATCH(req: NextRequest) {
         Id: true,
         Descripcion: true,
         Tipo: true,
+        PerfilPermiso: {
+          select: {
+            Permiso: {
+              select: { Clave: true, Descripcion: true, EstaEliminado: true },
+            },
+          },
+        },
       },
     });
 

@@ -88,16 +88,16 @@ export default function Pagination({
               aria-label="Items por página"
               variant="bordered"
             >
-              <SelectItem key="10" value="10">
+              <SelectItem key="10">
                 10
               </SelectItem>
-              <SelectItem key="20" value="20">
+              <SelectItem key="20">
                 20
               </SelectItem>
-              <SelectItem key="50" value="50">
+              <SelectItem key="50">
                 50
               </SelectItem>
-              <SelectItem key="100" value="100">
+              <SelectItem key="100">
                 100
               </SelectItem>
             </Select>

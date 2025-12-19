@@ -197,21 +197,24 @@ const crearAuditoriaSchema = z.object({
   accion: z.enum([
     "CREAR_USUARIO",
     "EDITAR_USUARIO",
-    "ELIMINAR_USUARIO",
+    "INVITAR_USUARIO",
+    "REENVIAR_INVITACION",
+    "ACEPTAR_INVITACION",
+    "CAMBIAR_ROL",
+    "CAMBIAR_PASSWORD",
     "SUSPENDER_USUARIO",
-    "ACTIVAR_USUARIO",
+    "REACTIVAR_USUARIO",
+    "ELIMINAR_USUARIO",
     "CREAR_ROL",
     "EDITAR_ROL",
     "ELIMINAR_ROL",
-    "ASIGNAR_ROL",
-    "CAMBIAR_ROL",
-    "REENVIAR_INVITACION",
+    "CAMBIAR_CONFIG_SEGURIDAD",
   ]),
   empleadoId: z.number().optional().nullable(),
   usuarioAfectadoId: z.number().optional().nullable(),
   detalle: z.string().optional().nullable(),
-  valorAnterior: z.record(z.unknown()).optional().nullable(),
-  valorNuevo: z.record(z.unknown()).optional().nullable(),
+  valorAnterior: z.record(z.string(), z.unknown()).optional().nullable(),
+  valorNuevo: z.record(z.string(), z.unknown()).optional().nullable(),
 });
 
 export async function POST(req: NextRequest) {
@@ -222,7 +225,7 @@ export async function POST(req: NextRequest) {
     const parsed = crearAuditoriaSchema.safeParse(json);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Datos inválidos", details: parsed.error.errors },
+        { error: "Datos inválidos", details: parsed.error.issues },
         { status: 400 }
       );
     }
