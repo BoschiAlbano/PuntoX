@@ -45,6 +45,8 @@
   - Muestra descripción legible, tiempo relativo, categoría y severidad de cada evento.
   - Recarga automática después de acciones (crear/editar/eliminar usuario, cambiar estado, crear/editar/eliminar rol).
   - Link a página completa de logs en Analíticas (`/analiticas?tab=logs`).
+  - **Lógica de formateo extraída**: Las funciones de formateo de auditoría están en `auditoria-utils.ts` para reutilización y testeo.
+- **Helpers de UI**: Función `rolChipColor` para mapear tipos de rol a colores de chip (primary para ADMINISTRADOR, secondary para EMPLEADO).
 - Metadata: usa tenant desde `user_metadata.tenant_id` vía `useSupabaseAuthContext`.
 
 ## Sistema de Auditoría
