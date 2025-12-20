@@ -184,10 +184,10 @@ export interface Producto {
   Stock: number;
   EstaEliminado: boolean;
   Precio: {
-    PorcentajeGanancia: number;
-    PorcentajeGanancia2: number;
-    PrecioPublico: number;
-    PrecioPublico2: number;
-    PrecioCosto: number;
+    PorcentajeGanancia?: number;
+    PorcentajeGanancia2?: number;
+    PrecioPublico?: number;
+    PrecioPublico2?: number;
+    PrecioCosto?: number;
   };
 }

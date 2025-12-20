@@ -16,6 +16,7 @@ export const createRubroSchema = z.object({
  * Schema de validación para actualizar una Marca existente
  */
 export const updateRubroSchema = z.object({
+  Id: z.number(),
   Descripcion: z
     .string()
     .min(1, { message: "La descripción no puede estar vacía" })

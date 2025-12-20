@@ -20,6 +20,7 @@ export const createIvaSchema = z.object({
  * Schema de validación para actualizar un IVA existente
  */
 export const updateIvaSchema = z.object({
+  Id: z.number(),
   Descripcion: z
     .string()
     .min(1, { message: "La descripción no puede estar vacía" })

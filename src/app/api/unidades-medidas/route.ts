@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
-import { createUnidadMedidaSchema } from "@/lib/validations/unidad-medida.schema";
+import {
+  createUnidadMedidaSchema,
+  updateUnidadMedidaSchema,
+} from "@/lib/validations/unidad-medida.schema";
 import { ZodError } from "zod";
 
-export async function GET(_req: NextRequest) {
+import {
+  parsePaginationParams,
+  createPaginationResponse,
+} from "@/lib/pagination";
+import { createError } from "@/lib/errors/types";
+
+export async function GET(req: NextRequest) {
   // Obtener la session del usuario
   const { tenantId, error } = await getAuthUser();
 
@@ -13,10 +22,23 @@ export async function GET(_req: NextRequest) {
   }
 
   try {
-    const unidades = await prisma.unidadMedida.findMany({
-      where: {
-        TenantId: tenantId,
-      },
+    const pagination = parsePaginationParams(req);
+    const search = req.nextUrl.searchParams.get("q")?.trim() || "";
+
+    const where: any = {
+      TenantId: tenantId,
+    };
+
+    if (search) {
+      where.Descripcion = { contains: search, mode: "insensitive" };
+    }
+
+    // 1. Obtener Total
+    const total = await prisma.unidadMedida.count({ where });
+
+    // 2. Obtener Datos Paginados
+    const unidadesMedida = await prisma.unidadMedida.findMany({
+      where,
       select: {
         Id: true,
         Descripcion: true,
@@ -25,21 +47,24 @@ export async function GET(_req: NextRequest) {
       orderBy: {
         Descripcion: "asc",
       },
+      skip: pagination.skip,
+      take: pagination.limit,
     });
 
-    return NextResponse.json(
-      {
-        unidades: unidades.map((unidad) => ({
-          ...unidad,
-          Id: Number(unidad.Id),
-        })),
-      },
-      { status: 200 }
+    // 3. Formatear Respuesta
+    const response = createPaginationResponse(
+      unidadesMedida,
+      total,
+      pagination
     );
+
+    // Ajustamos la respuesta para que cumpla con { data: [], meta: ... } si quisiéramos ser estrictos
+    // Pero el helper devuelve { data, pagination }, y nuestro hook GenericCrud lee 'pagination' también, así que está bien.
+
+    return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error("Error al obtener unidades de medida:", error);
     return NextResponse.json(
-      { error: "Error al obtener unidades de medida" },
+      { error: "Error al obtener marcas" },
       { status: 500 }
     );
   }
@@ -58,8 +83,8 @@ export async function POST(req: Request) {
     // Validar el body con Zod
     const validatedData = createUnidadMedidaSchema.parse(body);
 
-    // Crear la unidad de medida con datos validados
-    const unidad = await prisma.unidadMedida.create({
+    // Crear la marca con datos validados
+    const unidadMedida = await prisma.unidadMedida.create({
       data: {
         Descripcion: validatedData.Descripcion,
         EstaEliminado: validatedData.EstaEliminado,
@@ -69,8 +94,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       {
-        ...unidad,
-        Id: Number(unidad.Id),
+        ...unidadMedida,
+        Id: Number(unidadMedida.Id),
         TenantId: tenantId,
       },
       { status: 201 }
@@ -91,7 +116,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(
-      { error: "Error al crear unidad de medida" },
+      { error: "Error al crear marca" },
       { status: 500 }
     );
   }
@@ -103,22 +128,23 @@ export async function DELETE(req: NextRequest) {
   if (error) {
     return error;
   }
-
   const idParam =
     req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
-  const unidadId = idParam ? Number(idParam) : NaN;
+  const unidadMedidaId = idParam ? Number(idParam) : NaN;
 
-  if (!Number.isInteger(unidadId)) {
+  console.log("Unidad de Medida ID:", unidadMedidaId);
+
+  if (!Number.isInteger(unidadMedidaId)) {
     return NextResponse.json(
-      { error: "Id de unidad de medida inválido" },
+      { error: "Id de unidad de medida invalido" },
       { status: 400 }
     );
   }
 
   try {
-    const unidadActualizada = await prisma.unidadMedida.delete({
+    const unidadMedidaActualizada = await prisma.unidadMedida.delete({
       where: {
-        Id: unidadId,
+        Id: unidadMedidaId,
         TenantId: tenantId,
       },
       select: {
@@ -127,7 +153,7 @@ export async function DELETE(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { success: true, Id: Number(unidadActualizada.Id) },
+      { success: true, Id: Number(unidadMedidaActualizada.Id) },
       { status: 200 }
     );
   } catch (error) {
@@ -149,49 +175,43 @@ export async function DELETE(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const { tenantId, error } = await getAuthUser();
-
-  if (error) {
-    return error;
-  }
-
-  const idParam =
-    req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
-  const unidadId = idParam ? Number(idParam) : NaN;
-
-  if (!Number.isInteger(unidadId)) {
-    return NextResponse.json(
-      { error: "Id de unidad de medida inválido" },
-      { status: 400 }
-    );
-  }
-
   try {
+    const { tenantId, error } = await getAuthUser();
+
+    if (error) {
+      return error;
+    }
+
+    if (!tenantId || tenantId <= 0) {
+      throw createError.unauthorized("TenantId inválido o no proporcionado");
+    }
+
     const body = await req.json();
 
     // Validar el body con Zod
-    const validatedData = createUnidadMedidaSchema.parse(body);
+    const validatedData = updateUnidadMedidaSchema.parse(body);
 
-    // Actualizar la unidad de medida con datos validados
-    const unidad = await prisma.unidadMedida.update({
+    const tenantIdBigInt = BigInt(tenantId);
+
+    // Crear la marca con datos validados
+    const unidadMedida = await prisma.unidadMedida.update({
       where: {
-        Id: unidadId,
-        TenantId: tenantId,
+        Id: BigInt(validatedData.Id),
+        TenantId: tenantIdBigInt,
       },
       data: {
         Descripcion: validatedData.Descripcion,
         EstaEliminado: validatedData.EstaEliminado,
-        TenantId: tenantId,
       },
     });
 
     return NextResponse.json(
       {
-        ...unidad,
-        Id: Number(unidad.Id),
+        ...unidadMedida,
+        Id: Number(unidadMedida.Id),
         TenantId: tenantId,
       },
-      { status: 200 }
+      { status: 201 }
     );
   } catch (error) {
     // Manejo de errores de validación de Zod

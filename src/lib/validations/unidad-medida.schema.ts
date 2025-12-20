@@ -16,6 +16,7 @@ export const createUnidadMedidaSchema = z.object({
  * Schema de validación para actualizar una Unidad de Medida existente
  */
 export const updateUnidadMedidaSchema = z.object({
+  Id: z.number(),
   Descripcion: z
     .string()
     .min(1, { message: "La descripción no puede estar vacía" })

@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
-import { createRubroSchema } from "@/lib/validations/rubro.schema";
+import {
+  createRubroSchema,
+  updateRubroSchema,
+} from "@/lib/validations/rubro.schema";
 import { ZodError } from "zod";
 
-export async function GET(_req: NextRequest) {
+import {
+  parsePaginationParams,
+  createPaginationResponse,
+} from "@/lib/pagination";
+import { createError } from "@/lib/errors/types";
+
+export async function GET(req: NextRequest) {
   // Obtener la session del usuario
   const { tenantId, error } = await getAuthUser();
 
@@ -13,10 +22,23 @@ export async function GET(_req: NextRequest) {
   }
 
   try {
+    const pagination = parsePaginationParams(req);
+    const search = req.nextUrl.searchParams.get("q")?.trim() || "";
+
+    const where: any = {
+      TenantId: tenantId,
+    };
+
+    if (search) {
+      where.Descripcion = { contains: search, mode: "insensitive" };
+    }
+
+    // 1. Obtener Total
+    const total = await prisma.rubro.count({ where });
+
+    // 2. Obtener Datos Paginados
     const rubros = await prisma.rubro.findMany({
-      where: {
-        TenantId: tenantId,
-      },
+      where,
       select: {
         Id: true,
         Descripcion: true,
@@ -25,16 +47,17 @@ export async function GET(_req: NextRequest) {
       orderBy: {
         Descripcion: "asc",
       },
+      skip: pagination.skip,
+      take: pagination.limit,
     });
 
-    return NextResponse.json(
-      { rubros: rubros.map((rubro) => ({ ...rubro, Id: Number(rubro.Id) })) },
-      { status: 200 }
-    );
+    // 3. Formatear Respuesta
+    const response = createPaginationResponse(rubros, total, pagination);
+
+    return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error("Error al obtener rubros:", error);
     return NextResponse.json(
-      { error: "Error al obtener marcas" },
+      { error: "Error al obtener rubros" },
       { status: 500 }
     );
   }
@@ -102,7 +125,7 @@ export async function DELETE(req: NextRequest) {
     req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
   const rubroId = idParam ? Number(idParam) : NaN;
 
-  // Depuración eliminada: Rubro ID recibido en parámetro
+  console.log("Rubro ID:", rubroId);
 
   if (!Number.isInteger(rubroId)) {
     return NextResponse.json(
@@ -112,7 +135,7 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
-    const rubroActualizado = await prisma.rubro.delete({
+    const rubroActualizada = await prisma.rubro.delete({
       where: {
         Id: rubroId,
         TenantId: tenantId,
@@ -123,7 +146,7 @@ export async function DELETE(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { success: true, Id: Number(rubroActualizado.Id) },
+      { success: true, Id: Number(rubroActualizada.Id) },
       { status: 200 }
     );
   } catch (error) {
@@ -145,39 +168,33 @@ export async function DELETE(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const { tenantId, error } = await getAuthUser();
-
-  if (error) {
-    return error;
-  }
-
-  const idParam =
-    req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
-  const rubroId = idParam ? Number(idParam) : NaN;
-
-  if (!Number.isInteger(rubroId)) {
-    return NextResponse.json(
-      { error: "Id de rubro invalido" },
-      { status: 400 }
-    );
-  }
-
   try {
+    const { tenantId, error } = await getAuthUser();
+
+    if (error) {
+      return error;
+    }
+
+    if (!tenantId || tenantId <= 0) {
+      throw createError.unauthorized("TenantId inválido o no proporcionado");
+    }
+
     const body = await req.json();
 
     // Validar el body con Zod
-    const validatedData = createRubroSchema.parse(body);
+    const validatedData = updateRubroSchema.parse(body);
+
+    const tenantIdBigInt = BigInt(tenantId);
 
     // Crear la marca con datos validados
     const rubro = await prisma.rubro.update({
       where: {
-        Id: rubroId,
-        TenantId: tenantId,
+        Id: BigInt(validatedData.Id),
+        TenantId: tenantIdBigInt,
       },
       data: {
         Descripcion: validatedData.Descripcion,
         EstaEliminado: validatedData.EstaEliminado,
-        TenantId: tenantId,
       },
     });
 

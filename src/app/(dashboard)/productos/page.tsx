@@ -1,15 +1,15 @@
 "use client";
 
 import { Tabs, Tab, Card, CardBody, Chip } from "@heroui/react";
-import MarcaCRUD from "@/components/marcas/MarcaCRUD";
 import ProductoCRUD from "@/components/productos/ProductoCRUD";
 import RubroCRUD from "@/components/rubros/RubroCRUD";
 import UnidadMedidaCRUD from "@/components/unidad-medida/UnidadMedidaCRUD";
+import MarcaCRUD from "@/components/marcas/MarcaCRUD";
 import { useState } from "react";
 
 export default function ProductosPage() {
   const [selected, setSelected] = useState<
-    "productos" | "marcas" | "rubros" | "unidades"
+    "productos" | "marcas" | "rubros" | "unidades" | "marcas-test"
   >("productos");
   return (
     <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center">
@@ -20,7 +20,14 @@ export default function ProductosPage() {
         aria-label="Options"
         selectedKey={selected}
         onSelectionChange={(key) =>
-          setSelected(key as "productos" | "marcas" | "rubros" | "unidades")
+          setSelected(
+            key as
+              | "productos"
+              | "marcas"
+              | "rubros"
+              | "unidades"
+              | "marcas-test"
+          )
         }
         className="relative"
       >
@@ -72,11 +79,7 @@ export default function ProductosPage() {
             </div>
           }
         >
-          <Card className=" shadow-none border-none bg-transparent">
-            <CardBody className="p-0">
-              <MarcaCRUD />
-            </CardBody>
-          </Card>
+          <MarcaCRUD />
         </Tab>
 
         <Tab
@@ -106,11 +109,7 @@ export default function ProductosPage() {
             </div>
           }
         >
-          <Card className=" shadow-none border-none bg-transparent">
-            <CardBody className="p-0">
-              <RubroCRUD />
-            </CardBody>
-          </Card>
+          <RubroCRUD />
         </Tab>
 
         <Tab
@@ -135,11 +134,7 @@ export default function ProductosPage() {
             </div>
           }
         >
-          <Card className=" shadow-none border-none bg-transparent">
-            <CardBody className="p-0">
-              <UnidadMedidaCRUD />
-            </CardBody>
-          </Card>
+          <UnidadMedidaCRUD />
         </Tab>
       </Tabs>
     </div>
