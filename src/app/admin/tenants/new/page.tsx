@@ -1,3 +1,7 @@
+"use client";
+
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Button,
   Card,
@@ -6,39 +10,74 @@ import {
   Divider,
   Input,
 } from "@heroui/react";
-import { redirect } from "next/navigation";
+import { addToast } from "@heroui/react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { registerTenant } from "@/app/actions/register-tenant";
-// import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
 
-export const dynamic = "force-dynamic";
+type RegisterState = {
+  ok: boolean;
+  message?: string;
+  error?: string;
+  tenantId?: bigint;
+};
 
-export default async function NewTenantPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; success?: string }>;
-}) {
-  // await requireSuperAdmin();
+const initialState: RegisterState = {
+  ok: false,
+  message: "",
+  error: "",
+};
 
-  const params = await searchParams;
-  const errorMessage = params?.error && decodeURIComponent(params.error);
-  const successMessage = params?.success && decodeURIComponent(params.success);
+export default function NewTenantPage() {
+  const router = useRouter();
+  const [state, formAction, isPending] = useActionState(
+    async (
+      _prev: RegisterState,
+      formData: FormData
+    ): Promise<RegisterState> => {
+      const result = await registerTenant(formData);
+      return {
+        ok: result.ok,
+        message: result.message ?? "",
+        error: result.error ?? "",
+        tenantId: result.tenantId,
+      };
+    },
+    initialState
+  );
 
-  async function action(formData: FormData) {
-    "use server";
-
-    const result = await registerTenant(formData);
-
-    if (!result.ok) {
-      const msg = result.error ?? "Error al crear el comercio";
-      redirect(`/admin/tenants/new?error=${encodeURIComponent(msg)}`);
+  useEffect(() => {
+    if (!state.message && !state.error) return;
+    if (state.ok) {
+      addToast({
+        title: "Éxito",
+        description: state.message || "La tienda fue creada con éxito.",
+        color: "success",
+      });
+      // Redirigir a la página de administración después de un breve delay
+      setTimeout(() => {
+        router.push("/admin/tenants");
+      }, 1000);
+    } else {
+      addToast({
+        title: "Error",
+        description: state.error || "Error al crear la tienda",
+        color: "danger",
+      });
     }
-
-    const msg = result.message ?? "La tienda fue creada con éxito.";
-    redirect(`/admin/tenants/new?success=${encodeURIComponent(msg)}`);
-  }
+  }, [state, router]);
 
   return (
     <main className="max-w-xl mx-auto py-8 px-4">
+      <div className="mb-4">
+        <Link
+          href="/admin/tenants"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Volver a administración de tiendas
+        </Link>
+      </div>
       <Card shadow="lg">
         <CardHeader className="flex flex-col items-start gap-2">
           <h1 className="text-2xl font-semibold">Nuevo comercio (Tenant)</h1>
@@ -49,23 +88,23 @@ export default async function NewTenantPage({
         </CardHeader>
         <Divider />
         <CardBody className="space-y-6">
-          {errorMessage ? (
+          {state.error && (
             <Card className="border border-danger-200 bg-danger-50">
               <CardBody className="text-sm text-danger-700">
-                {errorMessage}
+                {state.error}
               </CardBody>
             </Card>
-          ) : null}
+          )}
 
-          {successMessage ? (
+          {state.message && state.ok && (
             <Card className="border border-success-200 bg-success-50">
               <CardBody className="text-sm text-success-700">
-                {successMessage}
+                {state.message}
               </CardBody>
             </Card>
-          ) : null}
+          )}
 
-          <form action={action} className="space-y-6">
+          <form action={formAction} className="space-y-6">
             <section className="space-y-3">
               <h2 className="font-medium text-gray-800">Datos del comercio</h2>
               <Input
@@ -105,7 +144,7 @@ export default async function NewTenantPage({
             <Divider />
 
             <div className="pt-2">
-              <Button type="submit" color="primary" fullWidth>
+              <Button type="submit" color="primary" fullWidth isLoading={isPending}>
                 Crear comercio
               </Button>
             </div>
