@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Key } from "react";
+import { useState, Key, useMemo } from "react";
 import {
   useDisclosure,
   addToast,
@@ -10,6 +10,7 @@ import {
   ModalBody,
   ModalFooter,
   Button,
+  SortDescriptor,
 } from "@heroui/react";
 import GenericTable, { Column } from "./GenericTable";
 import { useGenericApi } from "@/hooks/useGenericApi";
@@ -79,6 +80,10 @@ export default function GenericCrud<T extends { Id: number | string }>({
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(initialLimit);
+  const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
+    column: "Descripcion",
+    direction: "ascending",
+  });
 
   // Hook de Data
   const {
@@ -96,6 +101,28 @@ export default function GenericCrud<T extends { Id: number | string }>({
     limit,
     transformer,
   });
+
+  const sortedItems = useMemo(() => {
+    return [...data].sort((a: T, b: T) => {
+      const first = a[sortDescriptor.column as keyof T] as unknown as
+        | number
+        | string;
+      const second = b[sortDescriptor.column as keyof T] as unknown as
+        | number
+        | string;
+      const cmp =
+        (parseInt(first as string) || first) <
+        (parseInt(second as string) || second)
+          ? -1
+          : 1;
+
+      if (sortDescriptor.direction === "descending") {
+        return -cmp;
+      }
+
+      return cmp;
+    });
+  }, [sortDescriptor, data]);
 
   const isSaving = saveMutation.isPending || deleteMutation.isPending;
 
@@ -202,7 +229,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
       </div> */}
 
       <GenericTable
-        data={data}
+        data={sortedItems}
         columns={columns}
         renderCell={renderCellWrapper}
         isLoading={isLoading}
@@ -213,6 +240,9 @@ export default function GenericCrud<T extends { Id: number | string }>({
         page={page}
         onPageChange={setPage}
         paginationMeta={paginationMeta}
+        sortDescriptor={sortDescriptor}
+        onSortChange={setSortDescriptor}
+        onNewClick={handleCreate}
       />
 
       {/* Modal de Formulario */}

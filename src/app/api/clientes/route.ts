@@ -1,40 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
-
-// Schema para crear cliente
-const createClienteSchema = z.object({
-  nombre: z.string().min(1, "El nombre es requerido"),
-  apellido: z.string().min(1, "El apellido es requerido"),
-  dni: z.string().optional().nullable(),
-  direccion: z.string().min(1, "La dirección es requerida"),
-  telefono: z.string().optional().nullable(),
-  mail: z.string().email("Email inválido"),
-  localidadId: z.union([z.number(), z.string()]),
-  condicionIvaId: z.union([z.number(), z.string()]),
-  activarCtaCte: z.boolean().optional().default(false),
-  tieneLimiteCompra: z.boolean().optional().default(false),
-  montoMaximoCtaCte: z.number().min(0).optional().default(0),
-});
-
-// Schema para actualizar cliente
-const updateClienteSchema = z.object({
-  nombre: z.string().min(1).optional(),
-  apellido: z.string().min(1).optional(),
-  dni: z.string().optional().nullable(),
-  direccion: z.string().min(1).optional(),
-  telefono: z.string().optional().nullable(),
-  mail: z.string().email().optional(),
-  localidadId: z.union([z.number(), z.string()]).optional(),
-  condicionIvaId: z.union([z.number(), z.string()]).optional(),
-  activarCtaCte: z.boolean().optional(),
-  tieneLimiteCompra: z.boolean().optional(),
-  montoMaximoCtaCte: z.number().min(0).optional(),
-});
-
-import { parsePaginationParams, createPaginationResponse } from "@/lib/pagination";
+import {
+  parsePaginationParams,
+  createPaginationResponse,
+} from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
+import { createError } from "@/lib/errors/types";
+import {
+  createClienteSchema,
+  updateClienteSchema,
+} from "@/lib/validations/cliente.schema";
 
 // GET: Listar clientes
 export async function GET(req: NextRequest) {
@@ -93,15 +69,13 @@ export async function GET(req: NextRequest) {
         LocalidadId: true,
         Localidad: {
           select: {
+            Id: true,
             Descripcion: true,
             Departamento: {
               select: {
+                Id: true,
                 Descripcion: true,
-                Provincia: {
-                  select: {
-                    Descripcion: true,
-                  },
-                },
+                Provincia: { select: { Id: true, Descripcion: true } },
               },
             },
           },
@@ -114,6 +88,7 @@ export async function GET(req: NextRequest) {
             MontoMaximoCtaCte: true,
             CondicionIva: {
               select: {
+                Id: true,
                 Descripcion: true,
               },
             },
@@ -125,32 +100,11 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const response = clientes.map((persona) => {
-      const cliente = persona.Persona_Cliente;
-      return {
-        id: Number(persona.Id),
-        nombre: persona.Nombre,
-        apellido: persona.Apellido,
-        nombreCompleto: `${persona.Nombre} ${persona.Apellido}`,
-        dni: persona.Dni,
-        direccion: persona.Direccion,
-        telefono: persona.Telefono,
-        mail: persona.Mail,
-        localidadId: Number(persona.LocalidadId),
-        localidad: persona.Localidad?.Descripcion ?? null,
-        departamento: persona.Localidad?.Departamento?.Descripcion ?? null,
-        provincia: persona.Localidad?.Departamento?.Provincia?.Descripcion ?? null,
-        condicionIvaId: cliente ? Number(cliente.CondicionIvaId) : null,
-        condicionIva: cliente?.CondicionIva?.Descripcion ?? null,
-        activarCtaCte: cliente?.ActivarCtaCte ?? false,
-        tieneLimiteCompra: cliente?.TieneLimiteCompra ?? false,
-        montoMaximoCtaCte: cliente?.MontoMaximoCtaCte
-          ? Number(cliente.MontoMaximoCtaCte)
-          : 0,
-      };
-    });
-
-    const paginatedResponse = createPaginationResponse(response, total, pagination);
+    const paginatedResponse = createPaginationResponse(
+      clientes,
+      total,
+      pagination
+    );
 
     return NextResponse.json(paginatedResponse, { status: 200 });
   } catch (error) {
@@ -184,7 +138,7 @@ export async function POST(req: NextRequest) {
     const tenantIdBigInt = BigInt(tenantId);
 
     // Validar localidad
-    const localidadIdNumber = Number(data.localidadId);
+    const localidadIdNumber = Number(data.LocalidadId);
     if (!Number.isInteger(localidadIdNumber)) {
       return NextResponse.json(
         { error: "Localidad inválida" },
@@ -207,7 +161,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validar condición IVA
-    const condicionIvaIdNumber = Number(data.condicionIvaId);
+    const condicionIvaIdNumber = Number(data.CondicionIvaId);
     if (!Number.isInteger(condicionIvaIdNumber)) {
       return NextResponse.json(
         { error: "Condición IVA inválida" },
@@ -230,7 +184,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validar email único
-    const mailNormalized = data.mail.trim().toLowerCase();
+    const mailNormalized = data.Mail.trim().toLowerCase();
     const existingPersona = await prisma.persona.findFirst({
       where: {
         Mail: mailNormalized,
@@ -252,11 +206,11 @@ export async function POST(req: NextRequest) {
       const persona = await tx.persona.create({
         data: {
           TenantId: tenantIdBigInt,
-          Nombre: data.nombre.trim(),
-          Apellido: data.apellido.trim(),
-          Dni: data.dni?.trim() || null,
-          Direccion: data.direccion.trim(),
-          Telefono: data.telefono?.trim() || null,
+          Nombre: data.Nombre.trim(),
+          Apellido: data.Apellido.trim(),
+          Dni: data.Dni?.trim() || null,
+          Direccion: data.Direccion.trim(),
+          Telefono: data.Telefono?.trim() || null,
           Mail: mailNormalized,
           LocalidadId: BigInt(localidadIdNumber),
           EstaEliminado: false,
@@ -268,9 +222,9 @@ export async function POST(req: NextRequest) {
         data: {
           Id: persona.Id,
           CondicionIvaId: BigInt(condicionIvaIdNumber),
-          ActivarCtaCte: data.activarCtaCte ?? false,
-          TieneLimiteCompra: data.tieneLimiteCompra ?? false,
-          MontoMaximoCtaCte: data.montoMaximoCtaCte ?? 0,
+          ActivarCtaCte: data.ActivarCtaCte ?? false,
+          TieneLimiteCompra: data.TieneLimiteCompra ?? false,
+          MontoMaximoCtaCte: data.MontoMaximoCtaCte ?? 0,
         },
       });
 
@@ -291,7 +245,15 @@ export async function POST(req: NextRequest) {
         LocalidadId: true,
         Localidad: {
           select: {
+            Id: true,
             Descripcion: true,
+            Departamento: {
+              select: {
+                Id: true,
+                Descripcion: true,
+                Provincia: { select: { Id: true, Descripcion: true } },
+              },
+            },
           },
         },
         Persona_Cliente: {
@@ -321,6 +283,15 @@ export async function POST(req: NextRequest) {
       mail: clienteCompleto!.Mail,
       localidadId: Number(clienteCompleto!.LocalidadId),
       localidad: clienteCompleto!.Localidad?.Descripcion ?? null,
+      departamentoId: Number(clienteCompleto!.Localidad?.Departamento?.Id ?? 0),
+      departamento:
+        clienteCompleto!.Localidad?.Departamento?.Descripcion ?? null,
+      provinciaId: Number(
+        clienteCompleto!.Localidad?.Departamento?.Provincia?.Id ?? 0
+      ),
+      provincia:
+        clienteCompleto!.Localidad?.Departamento?.Provincia?.Descripcion ??
+        null,
       condicionIvaId: Number(
         clienteCompleto!.Persona_Cliente?.CondicionIvaId ?? 0
       ),
@@ -336,6 +307,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ cliente: clienteResponse }, { status: 201 });
   } catch (error: unknown) {
+    console.error("Error al crear cliente:", error);
     return handleError(error);
   }
 }
@@ -349,45 +321,22 @@ export async function PATCH(req: NextRequest) {
       return error;
     }
 
-    const json = await req.json().catch(() => null);
-    const parsed = updateClienteSchema.safeParse(json);
-
-    if (!parsed.success) {
-      return NextResponse.json(
-        {
-          error: "Datos inválidos",
-          details: parsed.error.issues,
-        },
-        { status: 400 }
-      );
+    if (!tenantId || tenantId <= 0) {
+      throw createError.unauthorized("TenantId inválido o no proporcionado");
     }
 
-    const data = parsed.data;
-    const searchParams = req.nextUrl.searchParams;
-    const clienteId = searchParams.get("id");
+    const body = await req.json();
 
-    if (!clienteId) {
-      return NextResponse.json(
-        { error: "ID de cliente requerido" },
-        { status: 400 }
-      );
-    }
+    console.log(body);
 
-    const clienteIdNumber = Number(clienteId);
-    if (!Number.isInteger(clienteIdNumber)) {
-      return NextResponse.json(
-        { error: "ID de cliente inválido" },
-        { status: 400 }
-      );
-    }
+    const validarCliente = updateClienteSchema.parse(body);
 
     const tenantIdBigInt = BigInt(tenantId);
-    const personaId = BigInt(clienteIdNumber);
 
     // Verificar que el cliente existe y pertenece al tenant
     const clienteExistente = await prisma.persona.findFirst({
       where: {
-        Id: personaId,
+        Id: BigInt(validarCliente.Id),
         TenantId: tenantIdBigInt,
         EstaEliminado: false,
         Persona_Cliente: { isNot: null },
@@ -411,8 +360,8 @@ export async function PATCH(req: NextRequest) {
 
     // Validar localidad si se proporciona
     let localidadIdNumber: number | null = null;
-    if (data.localidadId !== undefined) {
-      localidadIdNumber = Number(data.localidadId);
+    if (validarCliente.LocalidadId !== undefined) {
+      localidadIdNumber = Number(validarCliente.LocalidadId);
       if (!Number.isInteger(localidadIdNumber)) {
         return NextResponse.json(
           { error: "Localidad inválida" },
@@ -437,8 +386,8 @@ export async function PATCH(req: NextRequest) {
 
     // Validar condición IVA si se proporciona
     let condicionIvaIdNumber: number | null = null;
-    if (data.condicionIvaId !== undefined) {
-      condicionIvaIdNumber = Number(data.condicionIvaId);
+    if (validarCliente.CondicionIvaId !== undefined) {
+      condicionIvaIdNumber = Number(validarCliente.CondicionIvaId);
       if (!Number.isInteger(condicionIvaIdNumber)) {
         return NextResponse.json(
           { error: "Condición IVA inválida" },
@@ -462,14 +411,14 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Validar email único si se proporciona
-    if (data.mail !== undefined) {
-      const mailNormalized = data.mail.trim().toLowerCase();
+    if (validarCliente.Mail !== undefined) {
+      const mailNormalized = validarCliente.Mail.trim().toLowerCase();
       const existingPersona = await prisma.persona.findFirst({
         where: {
           Mail: mailNormalized,
           TenantId: tenantIdBigInt,
           EstaEliminado: false,
-          Id: { not: personaId },
+          Id: { not: BigInt(validarCliente.Id) },
         },
       });
 
@@ -493,21 +442,24 @@ export async function PATCH(req: NextRequest) {
         Direccion?: string;
         LocalidadId?: bigint;
       } = {};
-      if (data.nombre !== undefined) updatePersonaData.Nombre = data.nombre.trim();
-      if (data.apellido !== undefined)
-        updatePersonaData.Apellido = data.apellido.trim();
-      if (data.dni !== undefined) updatePersonaData.Dni = data.dni?.trim() || undefined;
-      if (data.direccion !== undefined)
-        updatePersonaData.Direccion = data.direccion.trim();
-      if (data.telefono !== undefined)
-        updatePersonaData.Telefono = data.telefono?.trim() || undefined;
-      if (data.mail !== undefined)
-        updatePersonaData.Mail = data.mail.trim().toLowerCase();
+      if (validarCliente.Nombre !== undefined)
+        updatePersonaData.Nombre = validarCliente.Nombre.trim();
+      if (validarCliente.Apellido !== undefined)
+        updatePersonaData.Apellido = validarCliente.Apellido.trim();
+      if (validarCliente.Dni !== undefined)
+        updatePersonaData.Dni = validarCliente.Dni?.trim() || undefined;
+      if (validarCliente.Direccion !== undefined)
+        updatePersonaData.Direccion = validarCliente.Direccion.trim();
+      if (validarCliente.Telefono !== undefined)
+        updatePersonaData.Telefono =
+          validarCliente.Telefono?.trim() || undefined;
+      if (validarCliente.Mail !== undefined)
+        updatePersonaData.Mail = validarCliente.Mail.trim().toLowerCase();
       if (localidadIdNumber !== null)
         updatePersonaData.LocalidadId = BigInt(localidadIdNumber);
 
       const persona = await tx.persona.update({
-        where: { Id: personaId, TenantId: tenantIdBigInt },
+        where: { Id: BigInt(validarCliente.Id), TenantId: tenantIdBigInt },
         data: updatePersonaData,
       });
 
@@ -521,15 +473,15 @@ export async function PATCH(req: NextRequest) {
       } = {};
       if (condicionIvaIdNumber !== null)
         updateClienteData.CondicionIvaId = BigInt(condicionIvaIdNumber);
-      if (data.activarCtaCte !== undefined)
-        updateClienteData.ActivarCtaCte = data.activarCtaCte;
-      if (data.tieneLimiteCompra !== undefined)
-        updateClienteData.TieneLimiteCompra = data.tieneLimiteCompra;
-      if (data.montoMaximoCtaCte !== undefined)
-        updateClienteData.MontoMaximoCtaCte = data.montoMaximoCtaCte;
+      if (validarCliente.ActivarCtaCte !== undefined)
+        updateClienteData.ActivarCtaCte = validarCliente.ActivarCtaCte;
+      if (validarCliente.TieneLimiteCompra !== undefined)
+        updateClienteData.TieneLimiteCompra = validarCliente.TieneLimiteCompra;
+      if (validarCliente.MontoMaximoCtaCte !== undefined)
+        updateClienteData.MontoMaximoCtaCte = validarCliente.MontoMaximoCtaCte;
 
       await tx.persona_Cliente.update({
-        where: { Id: personaId },
+        where: { Id: BigInt(validarCliente.Id) },
         data: updateClienteData,
       });
 
@@ -538,7 +490,7 @@ export async function PATCH(req: NextRequest) {
 
     // Obtener datos completos del cliente actualizado
     const clienteCompleto = await prisma.persona.findUnique({
-      where: { Id: updated.Id },
+      where: { Id: BigInt(validarCliente.Id) },
       select: {
         Id: true,
         Nombre: true,
@@ -593,7 +545,8 @@ export async function PATCH(req: NextRequest) {
       departamento:
         clienteCompleto!.Localidad?.Departamento?.Descripcion ?? null,
       provincia:
-        clienteCompleto!.Localidad?.Departamento?.Provincia?.Descripcion ?? null,
+        clienteCompleto!.Localidad?.Departamento?.Provincia?.Descripcion ??
+        null,
       condicionIvaId: Number(
         clienteCompleto!.Persona_Cliente?.CondicionIvaId ?? 0
       ),
@@ -623,7 +576,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     const searchParams = req.nextUrl.searchParams;
-    const clienteId = searchParams.get("id");
+    const clienteId = searchParams.get("Id");
 
     if (!clienteId) {
       return NextResponse.json(
@@ -679,6 +632,3 @@ export async function DELETE(req: NextRequest) {
     return handleError(error);
   }
 }
-
-
-

@@ -25,19 +25,17 @@ export async function GET(req: NextRequest) {
     const pagination = parsePaginationParams(req);
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
 
-    console.log(search);
-
     // Construir where clause
     const where: {
       TenantId: bigint;
-      EstaEliminado: boolean;
+      // EstaEliminado: boolean;
       OR?: Array<{
         Descripcion?: { contains: string; mode: "insensitive" };
         CodigoBarra?: { contains: string; mode: "insensitive" };
       }>;
     } = {
       TenantId: BigInt(tenantId),
-      EstaEliminado: false,
+      // EstaEliminado: false,
     };
 
     // Agregar búsqueda si existe
@@ -131,7 +129,7 @@ export async function POST(req: NextRequest) {
           PrecioPublico2: validarProducto.Precio.PrecioPublico2,
           FechaActualizacion: new Date(),
           EstaEliminado: false,
-          TenantId: Number(tenantId) || 1,
+          TenantId: tenantIdBigInt,
         },
       });
 
@@ -160,7 +158,7 @@ export async function POST(req: NextRequest) {
           Stock: validarProducto.Stock,
           Tenant: {
             connect: {
-              Id: Number(tenantId) || 1,
+              Id: tenantIdBigInt,
             },
           },
           Iva: {

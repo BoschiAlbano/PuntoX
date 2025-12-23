@@ -7,6 +7,7 @@ import {
   TableCell,
   Pagination,
   Spinner,
+  SortDescriptor,
 } from "@heroui/react";
 import { useEffect, useState, Key } from "react";
 import { PaginationMeta } from "@/hooks/useProductos"; // Reutilizamos interface o la movemos a types compartidos
@@ -33,6 +34,10 @@ interface GenericTableProps<T> {
   page: number;
   onPageChange: (page: number) => void;
   paginationMeta: PaginationMeta;
+  // Sorting Props
+  sortDescriptor?: SortDescriptor;
+  onSortChange?: (descriptor: SortDescriptor) => void;
+  onNewClick?: () => void;
 }
 
 export default function GenericTable<T extends { Id: number | string }>({
@@ -48,6 +53,9 @@ export default function GenericTable<T extends { Id: number | string }>({
   page,
   onPageChange,
   paginationMeta,
+  sortDescriptor,
+  onSortChange,
+  onNewClick,
 }: GenericTableProps<T>) {
   const [searchInput, setSearchInput] = useState(search);
 
@@ -64,7 +72,15 @@ export default function GenericTable<T extends { Id: number | string }>({
     <section className="w-full h-full flex flex-col gap-4 overflow-hidden px-2">
       <div className="rounded-lg flex flex-col gap-4 items-center">
         {/* Header & Search */}
-        <section className="w-full flex items-center justify-end">
+        <section className="w-full flex items-center justify-end gap-2">
+          {/* Boton nuevo */}
+          <button
+            onClick={onNewClick}
+            className="bg-[#67afc3] text-white px-4 py-1 rounded-lg hover:bg-[#529aa6] transition-colors"
+          >
+            Nuevo
+          </button>
+          {/* Search */}
           <div className="group flex items-center gap-2 border border-gray-300 rounded-xl p-1 transition-all focus-within:border-[#67afc3] focus-within:ring-[#67afc3]">
             <input
               type="text"
@@ -89,7 +105,11 @@ export default function GenericTable<T extends { Id: number | string }>({
         </section>
 
         {/* Table */}
-        <Table aria-label="Tabla de datos">
+        <Table
+          aria-label="Tabla de datos"
+          sortDescriptor={sortDescriptor}
+          onSortChange={onSortChange}
+        >
           <TableHeader columns={columns}>
             {(column) => (
               <TableColumn
@@ -138,6 +158,7 @@ export default function GenericTable<T extends { Id: number | string }>({
             onChange={onPageChange}
             classNames={{
               cursor: "bg-[#67afc3] text-white shadow-lg",
+              item: "bg-transparent shadow-none",
             }}
           />
         )}

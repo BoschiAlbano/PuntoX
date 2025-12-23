@@ -1,0 +1,55 @@
+import z from "zod";
+// Schema para crear cliente
+export const createClienteSchema = z.object({
+  Nombre: z.string().min(1, "El nombre es requerido"),
+  Apellido: z.string().min(1, "El apellido es requerido"),
+  Dni: z.string().optional().nullable(),
+  Direccion: z.string().min(1, "La dirección es requerida"),
+  Telefono: z.string().optional().nullable(),
+  Mail: z.string().email("Email inválido"),
+  LocalidadId: z.union([z.number(), z.string()]),
+  CondicionIvaId: z.union([z.number(), z.string()]),
+  ActivarCtaCte: z.boolean().optional().default(false),
+  TieneLimiteCompra: z.boolean().optional().default(false),
+  MontoMaximoCtaCte: z.number().min(0).optional().default(0),
+});
+
+// Schema para actualizar cliente
+export const updateClienteSchema = z.object({
+  Id: z.union([z.number(), z.string()]),
+  Nombre: z.string().min(1).optional(),
+  Apellido: z.string().min(1).optional(),
+  Dni: z.string().optional().nullable(),
+  Direccion: z.string().min(1).optional(),
+  Telefono: z.string().optional().nullable(),
+  Mail: z.string().email().optional(),
+  LocalidadId: z.union([z.number(), z.string()]).optional(),
+  CondicionIvaId: z.union([z.number(), z.string()]).optional(),
+  ActivarCtaCte: z.boolean().optional(),
+  TieneLimiteCompra: z.boolean().optional(),
+  MontoMaximoCtaCte: z.number().min(0).optional(),
+});
+
+export type CreateClienteInput = z.infer<typeof createClienteSchema>;
+export type UpdateClienteInput = z.infer<typeof updateClienteSchema>;
+
+export interface Cliente {
+  Id: number;
+  Nombre: string;
+  Apellido: string;
+  Dni: string | null;
+  Direccion: string;
+  Telefono: string | null;
+  Mail: string;
+  LocalidadId: number;
+  Localidad: string;
+  ProvinciaId: number;
+  Provincia: string;
+  DepartamentoId: number;
+  Departamento: string;
+  CondicionIvaId: number;
+  CondicionIva: string;
+  ActivarCtaCte: boolean;
+  TieneLimiteCompra: boolean;
+  MontoMaximoCtaCte: number;
+}

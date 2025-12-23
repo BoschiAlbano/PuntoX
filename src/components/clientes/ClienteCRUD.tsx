@@ -1,71 +1,93 @@
 "use client";
 
 import GenericCrud from "@/components/shared/GenericCrud";
-import ProductoForm from "./ProductoForm";
-import { Producto } from "@/lib/validations/producto.schema";
+import ClienteForm from "./ClienteForm";
 import { Chip, Tooltip, Button } from "@heroui/react";
-import { productoListAdapter } from "@/lib/adapters/producto.adapter";
+import { clienteListAdapter } from "@/lib/adapters/cliente.adapter";
+import { Cliente } from "@/lib/validations/cliente.schema";
 
-export default function ProductoCRUD() {
+export default function ClienteCRUD() {
   return (
-    <GenericCrud<Producto>
-      apiPath="/api/productos"
-      queryKey="productos-generic"
-      title="Gestión de Productos"
-      searchPlaceholder="Buscar productos..."
-      FormComponent={ProductoForm}
-      transformer={(item) => productoListAdapter(item)}
+    <GenericCrud<Cliente>
+      apiPath="/api/clientes"
+      queryKey="clientes-generic"
+      title="Gestión de Clientes"
+      searchPlaceholder="Buscar por nombre, email, dni"
+      FormComponent={ClienteForm}
+      transformer={(item) => clienteListAdapter(item)}
       columns={[
-        { uid: "Codigo", name: "CODIGO", sortable: false },
-        { uid: "Descripcion", name: "DESCRIPCIÓN", sortable: true },
-        { uid: "Stock", name: "STOCK", sortable: true },
-        { uid: "Costo", name: "COSTO", sortable: true },
-        { uid: "Minorista", name: "MINORISTA", sortable: true },
-        { uid: "Mayorista", name: "MAYORISTA", sortable: true },
-        { uid: "Estado", name: "ESTADO" },
+        { uid: "nombreCompleto", name: "CLIENTE", sortable: true },
+        { uid: "condicionIva", name: "CONDICIÓN IVA", sortable: true },
+        { uid: "localidad", name: "UBICACIÓN", sortable: false },
+        { uid: "contacto", name: "CONTACTO", sortable: false },
+        { uid: "ctaCte", name: "CTA. CTE.", sortable: true },
         { uid: "acciones", name: "ACCIONES" },
       ]}
       renderCell={(item, columnKey, actions) => {
         switch (columnKey) {
-          case "Codigo":
-            return item.CodigoBarra;
-          case "Descripcion":
+          case "nombreCompleto":
             return (
-              <span className="font-medium text-gray-700">
-                {item.Descripcion}
-              </span>
+              <div className="flex flex-col">
+                <span className="font-semibold text-slate-900">
+                  {item.Nombre + " " + item.Apellido}
+                </span>
+                {item.Dni && (
+                  <span className="text-xs text-gray-500">DNI: {item.Dni}</span>
+                )}
+              </div>
             );
-          case "Stock":
-            return (
-              <span className="font-medium text-gray-700">{item.Stock}</span>
-            );
-          case "Costo":
-            return (
-              <span className="font-medium text-gray-700">
-                {item.Precio.PrecioCosto}
-              </span>
-            );
-          case "Minorista":
-            return (
-              <span className="font-medium text-gray-700">
-                {item.Precio.PrecioCosto}
-              </span>
-            );
-          case "Mayorista":
-            return (
-              <span className="font-medium text-gray-700">
-                {item.Precio.PrecioPublico2}
-              </span>
-            );
-          case "Estado":
+          case "condicionIva":
             return (
               <Chip
-                color={item.EstaEliminado ? "danger" : "success"}
+                color={item.CondicionIva ? "success" : "danger"}
                 variant="flat"
                 size="sm"
               >
-                {item.EstaEliminado ? "Inactivo" : "Activo"}
+                {item.CondicionIva || "N/A"}
               </Chip>
+            );
+          case "localidad":
+            return (
+              <div className="flex flex-col text-sm">
+                <span>{item.Localidad || "Localidad pendiente"}</span>
+                <span className="text-xs text-gray-500">{item.Direccion}</span>
+              </div>
+            );
+          case "contacto":
+            return (
+              <div className="flex flex-col text-sm gap-1">
+                {item.Mail && (
+                  <span className="flex items-center gap-1 text-xs">
+                    ✉️ {item.Mail}
+                  </span>
+                )}
+                {item.Telefono && (
+                  <span className="flex items-center gap-1 text-xs">
+                    📞 {item.Telefono}
+                  </span>
+                )}
+              </div>
+            );
+          case "ctaCte":
+            return (
+              <div className="flex flex-col gap-1">
+                {item.ActivarCtaCte ? (
+                  <>
+                    <Chip variant="flat" size="sm" color="success">
+                      Activa
+                    </Chip>
+                    {item.TieneLimiteCompra && (
+                      <span className="text-xs text-gray-500">
+                        Límite: ${item.MontoMaximoCtaCte?.toLocaleString()}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <Chip variant="flat" size="sm" color="danger">
+                    No
+                  </Chip>
+                )}
+              </div>
             );
           case "acciones":
             return (
@@ -114,9 +136,9 @@ export default function ProductoCRUD() {
               </div>
             );
           default:
-            break;
+            return null;
         }
       }}
-    ></GenericCrud>
+    />
   );
 }
