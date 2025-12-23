@@ -138,7 +138,7 @@ function estadoPill(estado: EstadoEmpleado) {
 }
 
 export default function Empleados() {
-  const { user } = useSupabaseAuthContext();
+  const { user, status } = useSupabaseAuthContext();
   const router = useRouter();
 
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -287,6 +287,11 @@ export default function Empleados() {
   };
 
   const loadData = async () => {
+    // No hacer peticiones si el usuario no está autenticado
+    if (!user || status !== "authenticated") {
+      return;
+    }
+    
     setIsLoadingData(true);
     // Paso 0: verificar permisos explícitos antes de cargar todo.
     try {
@@ -495,6 +500,11 @@ export default function Empleados() {
 
   // Cargar auditorías
   const loadAuditorias = async () => {
+    // No hacer peticiones si el usuario no está autenticado
+    if (!user || status !== "authenticated") {
+      return;
+    }
+    
     setIsLoadingAuditoria(true);
     try {
       const res = await fetch(
@@ -537,16 +547,28 @@ export default function Empleados() {
     };
   }, [busquedaInput]);
 
+  // Redirigir al login si el usuario cierra sesión (sin hacer peticiones)
   useEffect(() => {
-    if (user) {
+    if (status === "unauthenticated") {
+      router.push("/signin");
+      return;
+    }
+  }, [status, router]);
+
+  useEffect(() => {
+    // Solo cargar datos si el usuario está autenticado
+    if (user && status === "authenticated") {
       loadData();
       loadAuditorias();
     }
-  }, [user]);
+  }, [user, status]);
 
   useEffect(() => {
-    loadData();
-  }, [page, limit, filtros.rol, filtros.estado, filtros.busqueda]);
+    // Solo cargar datos si el usuario está autenticado
+    if (user && status === "authenticated") {
+      loadData();
+    }
+  }, [page, limit, filtros.rol, filtros.estado, filtros.busqueda, user, status]);
 
   const loadDepartamentos = async (provId: string, q?: string) => {
     if (!provId) {

@@ -20,6 +20,7 @@ model Tenant {
   Email               String?              @db.VarChar(250)
   Telefono            String?              @db.VarChar(25)
   EstaActivo          Boolean              @default(true)
+  EstaEliminado       Boolean              @default(false)
   PlanId              BigInt?
   OnboardingCompleto  Boolean              @default(false)
   Articulos           Articulo[]

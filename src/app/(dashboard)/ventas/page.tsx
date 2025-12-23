@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useRef } from "react";
+import { usePagePermission } from "@/lib/permissions/usePagePermission";
 import {
   Button,
   Card,
@@ -132,7 +133,10 @@ type FormaPagoVenta = {
 };
 
 export default function Ventas() {
-  // Estados principales
+  // Verificar permisos de acceso a esta página
+  const { tieneAcceso, isLoading: isLoadingPermisos } = usePagePermission();
+  
+  // Estados principales (todos los hooks deben estar antes de cualquier return condicional)
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
   const [puestosTrabajo, setPuestosTrabajo] = useState<PuestoTrabajo[]>([]);
@@ -637,6 +641,11 @@ export default function Ventas() {
         return "Comprobante";
     }
   }, [tipoComprobante]);
+
+  // No renderizar si está cargando permisos o no tiene acceso (el hook redirige automáticamente)
+  if (isLoadingPermisos || !tieneAcceso) {
+    return null;
+  }
 
   if (isLoading) {
     return (

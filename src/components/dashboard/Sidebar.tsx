@@ -1,7 +1,10 @@
 ﻿"use client";
 
 import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
+import { filtrarRutasPorPermisos } from "@/lib/permissions/routePermissions";
 
 interface MenuItem {
   icon: React.ReactNode;
@@ -180,6 +183,56 @@ const menuItems: MenuItem[] = [
 export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { supabase, user, status } = useSupabaseAuthContext();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [permisos, setPermisos] = useState<string[]>([]);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+  // Cargar permisos del usuario
+  useEffect(() => {
+    async function cargarPermisos() {
+      if (status !== "authenticated" || !user) {
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/permisos", {
+          cache: "no-store",
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setPermisos(Array.isArray(data.permisos) ? data.permisos : []);
+          setIsSuperAdmin(data.isSuperAdmin === true);
+        }
+      } catch (error) {
+        console.error("Error cargando permisos:", error);
+      }
+    }
+
+    cargarPermisos();
+  }, [user, status]);
+
+  // Filtrar menuItems según permisos (SuperAdmin ve todo)
+  const menuItemsFiltrados = useMemo(() => {
+    if (isSuperAdmin) {
+      return menuItems;
+    }
+    return filtrarRutasPorPermisos(menuItems, permisos);
+  }, [permisos, isSuperAdmin]);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Error during sign out:", error);
+    } finally {
+      setIsLoggingOut(false);
+      router.push("/signin");
+    }
+  };
 
   return (
     // <section className={`z-[99] relative flex flex-col h-auto ${isCollapsed ? "w-[80px]" : "w-[280px]"} transition-all duration-300 ease-in-out`}>
@@ -266,7 +319,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
         {/* Menu Items */}
         <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-          {menuItems.map((item) => {
+          {menuItemsFiltrados.map((item) => {
             const isActive = pathname === item.href;
             return (
               <motion.button
@@ -331,7 +384,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         </nav>
 
         {/* Footer del Sidebar */}
-        <div className="p-4 border-t border-slate-700/50">
+        <div className="p-4 border-t border-slate-700/50 flex flex-col gap-3 items-center">
           <AnimatePresence mode="wait">
             {!isCollapsed ? (
               <motion.div
@@ -341,7 +394,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 className="p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20"
               >
                 <p className="text-xs text-slate-400 mb-2">
-                  Versi\u00f3n 1.0.0
+                  Version 1.0.0
                 </p>
                 <p className="text-xs text-slate-500">(c) 2024 Punto X SaaS</p>
               </motion.div>
@@ -356,6 +409,39 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               </motion.div>
             )}
           </AnimatePresence>
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            aria-busy={isLoggingOut}
+            title="Cerrar sesion"
+            className={`group inline-flex items-center gap-3 rounded-[32px] px-5 py-3 text-sm font-semibold text-white transition shadow-xl shadow-red-500/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-400 ${
+              isCollapsed
+                ? "mx-auto h-12 w-12 justify-center bg-gradient-to-br from-rose-500 to-red-500 hover:brightness-110"
+                : "w-full max-w-[240px] justify-between bg-gradient-to-br from-rose-600 via-red-600 to-red-500 hover:-translate-y-0.5"
+            }`}
+          >
+            <span className="flex items-center justify-center">
+              <svg
+                className="w-5 h-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M16 17l5-5-5-5" />
+                <path d="M21 12H9" />
+                <path d="M4 5h6a2 2 0 012 2v10a2 2 0 01-2 2H4" />
+              </svg>
+            </span>
+            {!isCollapsed && (
+              <span className="flex-1 text-base text-center">
+                {isLoggingOut ? "Cerrando sesion..." : "Cerrar sesion"}
+              </span>
+            )}
+          </button>
         </div>
       </motion.aside>
     </motion.section>

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
-import { requirePermiso } from "@/lib/requirePermiso";
+import { requirePermiso, PermisoError } from "@/lib/requirePermiso";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
+import { handleError } from "@/lib/errors/handler";
 
 type RolTipo = "ADMINISTRADOR" | "EMPLEADO";
 
@@ -61,11 +62,13 @@ export async function GET() {
 
     return NextResponse.json({ roles: response }, { status: 200 });
   } catch (error) {
-    console.error("Error al obtener roles", error);
-    return NextResponse.json(
-      { error: "Error al obtener roles" },
-      { status: 500 }
-    );
+    if (error instanceof PermisoError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status }
+      );
+    }
+    return handleError(error);
   }
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePagePermission } from "@/lib/permissions/usePagePermission";
 import {
   Button,
   Card,
@@ -136,6 +137,9 @@ type ConceptoGasto = {
 };
 
 export default function CajaPage() {
+  // Verificar permisos de acceso a esta página
+  const { tieneAcceso, isLoading: isLoadingPermisos } = usePagePermission();
+  
   const [cajaActual, setCajaActual] = useState<Caja | null>(null);
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [gastos, setGastos] = useState<Gasto[]>([]);
@@ -158,12 +162,19 @@ export default function CajaPage() {
     monto: "",
   });
 
-  // Cargar datos iniciales
+  // Cargar datos iniciales solo si tiene acceso
   useEffect(() => {
-    cargarDatos();
-  }, []);
+    if (tieneAcceso && !isLoadingPermisos) {
+      cargarDatos();
+    }
+  }, [tieneAcceso, isLoadingPermisos]);
 
   const cargarDatos = async () => {
+    // No hacer peticiones si no tiene acceso
+    if (!tieneAcceso) {
+      return;
+    }
+    
     try {
       setIsLoading(true);
       
@@ -185,6 +196,10 @@ export default function CajaPage() {
           setGastos([]);
         }
       } else {
+        // Si es error 401/403, no mostrar toast (el hook ya maneja la redirección)
+        if (cajaRes.status === 401 || cajaRes.status === 403) {
+          return;
+        }
         const errorData = await cajaRes.json().catch(() => null);
         addToast({
           title: "Error",
@@ -196,8 +211,22 @@ export default function CajaPage() {
       if (conceptosRes.ok) {
         const conceptosData = await conceptosRes.json();
         setConceptosGasto(conceptosData.conceptosGasto || []);
+      } else {
+        // Si es error 401/403, no mostrar toast (el hook ya maneja la redirección)
+        if (conceptosRes.status !== 401 && conceptosRes.status !== 403) {
+          const errorData = await conceptosRes.json().catch(() => null);
+          addToast({
+            title: "Error",
+            description: errorData?.error || "No se pudieron cargar los conceptos de gastos",
+            color: "warning",
+          });
+        }
       }
     } catch (error) {
+      // No mostrar error si es por falta de permisos (el hook ya maneja la redirección)
+      if (error instanceof Error && error.message.includes("401")) {
+        return;
+      }
       console.error("Error cargando datos", error);
       addToast({
         title: "Error",
