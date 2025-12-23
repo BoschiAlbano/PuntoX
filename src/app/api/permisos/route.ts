@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   try {
     const supabase = await getSupabaseServerClient();
     const {

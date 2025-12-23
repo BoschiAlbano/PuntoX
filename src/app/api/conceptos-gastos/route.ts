@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
 import { z } from "zod";
@@ -9,7 +9,7 @@ const createConceptoGastoSchema = z.object({
   EstaEliminado: z.boolean().optional().default(false),
 });
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   const { tenantId, error } = await getAuthUser();
 
   if (error) {

@@ -24,23 +24,6 @@ type MockUsuario = {
   }>;
 };
 
-type MockPermiso = {
-  Id: bigint;
-  Clave: string;
-  TenantId: bigint;
-  EstaEliminado: boolean;
-};
-
-type MockPerfil = {
-  Id: bigint;
-};
-
-type MockPerfilPermiso = {
-  Id: bigint;
-  PerfilId: bigint;
-  PermisoId: bigint;
-};
-
 // Mock de Prisma
 vi.mock("@/DB/prisma", () => ({
   default: {

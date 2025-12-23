@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect } from "react";
 import { registerTenant } from "@/app/actions/register-tenant";
-import { addToast, Toast } from "@heroui/react";
+import { addToast } from "@heroui/react";
 import { motion } from "framer-motion";
 
 type RegisterState = {

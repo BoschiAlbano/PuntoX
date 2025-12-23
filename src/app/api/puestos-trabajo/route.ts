@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
 
 // GET: Listar puestos de trabajo
-export async function GET(_req: NextRequest) {
+export async function GET() {
   try {
     const { tenantId, error } = await getAuthUser();
 

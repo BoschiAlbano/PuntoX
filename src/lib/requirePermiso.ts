@@ -15,46 +15,8 @@ export class PermisoError extends Error {
   }
 }
 
-async function ensurePermisoParaAdmins(
-  tenantId: bigint,
-  clavePermiso: string,
-  descripcion?: string
-) {
-  // Crea el permiso y lo asigna a todos los roles ADMINISTRADOR del tenant, si no existe.
-  const permiso = await prisma.permiso.upsert({
-    where: { Clave_TenantId: { Clave: clavePermiso, TenantId: tenantId } },
-    update: { Descripcion: descripcion ?? clavePermiso, EstaEliminado: false },
-    create: {
-      Clave: clavePermiso,
-      Descripcion: descripcion ?? clavePermiso,
-      TenantId: tenantId,
-    },
-  });
-
-  const rolesAdmin = await prisma.perfiles.findMany({
-    where: {
-      TenantId: tenantId,
-      EstaEliminado: false,
-      Tipo: "ADMINISTRADOR",
-    },
-    select: { Id: true },
-  });
-
-  if (rolesAdmin.length) {
-    await prisma.perfilPermiso.createMany({
-      data: rolesAdmin.map((rol) => ({
-        PerfilId: rol.Id,
-        PermisoId: permiso.Id,
-        TenantId: tenantId,
-      })),
-      skipDuplicates: true,
-    });
-  }
-}
-
 export async function requirePermiso(
-  clavePermiso: string,
-  opts?: { descripcionPermiso?: string }
+  clavePermiso: string
 ): Promise<PermisoResult> {
   const supabase = await getSupabaseServerClient();
   const {
@@ -77,6 +39,7 @@ export async function requirePermiso(
             select: {
               Id: true,
               Tipo: true,
+              Descripcion: true,
               PerfilPermiso: {
                 select: {
                   Permiso: {

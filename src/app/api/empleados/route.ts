@@ -643,10 +643,6 @@ const updateEmpleadoSchema = z.object({
   rolId: z.union([z.number(), z.string()]).optional().nullable(),
 });
 
-const cambiarPasswordSchema = z.object({
-  usuarioId: z.union([z.number(), z.string()]),
-  nuevaPassword: z.string().min(8),
-});
 
 const deleteEmpleadoSchema = z.object({
   personaId: z.union([z.number(), z.string()]),

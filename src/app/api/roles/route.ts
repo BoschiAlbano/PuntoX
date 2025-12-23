@@ -26,7 +26,7 @@ function mapRolTipo(tipo?: string | null): RolTipo {
   return "EMPLEADO";
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const { tenantId } = await requirePermiso("empleados:admin");
 

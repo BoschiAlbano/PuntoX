@@ -1,7 +1,7 @@
 /**
  * Configuración global para tests
  */
-import { beforeAll, afterAll, vi } from "vitest";
+import { beforeAll, afterAll } from "vitest";
 
 // Mock de variables de entorno
 process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";

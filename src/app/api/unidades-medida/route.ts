@@ -4,7 +4,7 @@ import { getAuthUser } from "@/lib/auth/getAuthUser";
 import { createUnidadMedidaSchema } from "@/lib/validations/unidad-medida.schema";
 import { ZodError } from "zod";
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   // Obtener la session del usuario
   const { tenantId, error } = await getAuthUser();
 

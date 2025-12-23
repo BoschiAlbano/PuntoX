@@ -4,7 +4,7 @@ import { getAuthUser } from "@/lib/auth/getAuthUser";
 import { createMarcaSchema } from "@/lib/validations/marca.schema";
 import { ZodError } from "zod";
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   // Obtener la session del usuario
   const { tenantId, error } = await getAuthUser();
 
@@ -31,7 +31,7 @@ export async function GET(_req: NextRequest) {
       { marcas: marcas.map((marca) => ({ ...marca, Id: Number(marca.Id) })) },
       { status: 200 }
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Error al obtener marcas" },
       { status: 500 }

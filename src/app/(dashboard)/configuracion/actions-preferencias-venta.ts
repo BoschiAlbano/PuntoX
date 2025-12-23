@@ -59,7 +59,7 @@ export async function getPreferenciasVenta(): Promise<PreferenciasVentaDTO> {
       abrirCajonEfectivo: config.AbrirCajonEfectivo ?? true,
       numerarPedidosPantalla: config.NumerarPedidosPantalla ?? true,
     };
-  } catch (error) {
+  } catch {
     // En caso de error, retornar defaults
     return DEFAULT_PREFERENCIAS;
   }

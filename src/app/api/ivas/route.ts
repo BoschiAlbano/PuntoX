@@ -4,7 +4,7 @@ import { getAuthUser } from "@/lib/auth/getAuthUser";
 import { createIvaSchema } from "@/lib/validations/iva.schema";
 import { ZodError } from "zod";
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   // Obtener la session del usuario para asegurar autenticacion
   const { error } = await getAuthUser();
 
@@ -35,7 +35,7 @@ export async function GET(_req: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Error al obtener IVAs" },
       { status: 500 }
