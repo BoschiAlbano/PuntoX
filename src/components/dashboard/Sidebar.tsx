@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
 
 interface MenuItem {
   icon: React.ReactNode;
@@ -161,6 +162,11 @@ const menuItems: MenuItem[] = [
 export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const supabase = getSupabaseBrowserClient();
+
+  const handleSignOut = () => {
+    supabase.auth.signOut();
+  };
 
   return (
     // <section className={`z-[99] relative flex flex-col h-auto ${isCollapsed ? "w-[80px]" : "w-[280px]"} transition-all duration-300 ease-in-out`}>
@@ -259,11 +265,11 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 }}
                 whileTap={{ scale: 0.98 }}
                 className={`
-                    w-full flex items-center gap-3 px-4 py-3 rounded-xl
-                    transition-all duration-200 relative group
+                    w-full flex items-center gap-3 px-4 py-3 rounded-xl overflow-hidden
+                    relative group
                     ${
                       isActive
-                        ? "bg-slate-800/80 text-white border-l-2 border-blue-400 shadow-none"
+                        ? "bg-slate-800/80 text-white  shadow-none"
                         : "text-slate-300 hover:text-white hover:bg-slate-700/30"
                     }
                   `}
@@ -272,7 +278,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 {isActive && (
                   <motion.div
                     layoutId="activeIndicator"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-400 rounded-r-full"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-full bg-gradient-to-b from-blue-500 to-[#90c472] rounded-r-full"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
                 )}
@@ -280,7 +286,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 <div className="relative">
                   {item.icon}
                   {item.badge && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-b from-blue-500 to-[#90c472] text-white text-xs rounded-full flex items-center justify-center">
                       {item.badge}
                     </span>
                   )}
@@ -310,6 +316,56 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             );
           })}
         </nav>
+
+        {/* Botón Cerrar Sesión */}
+        <div className="px-3 pb-2">
+          <motion.button
+            onClick={() => handleSignOut()}
+            whileHover={{
+              x: isCollapsed ? 0 : 2,
+              scale: isCollapsed ? 1 : 1.01,
+            }}
+            whileTap={{ scale: 0.98 }}
+            className={`
+                w-full flex items-center gap-3 px-4 py-3 rounded-xl
+                 relative group
+                text-white hover:text-red-200 hover:bg-slate-700/30
+              `}
+          >
+            <div className="relative">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-5 h-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
+                />
+              </svg>
+            </div>
+
+            <AnimatePresence mode="wait">
+              {!isCollapsed && (
+                <motion.div
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: "auto" }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center justify-between flex-1 overflow-hidden"
+                >
+                  <span className="font-medium whitespace-nowrap text-[15px]">
+                    Cerrar Sesión
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.button>
+        </div>
 
         {/* Footer del Sidebar */}
         <div className="p-4 border-t border-slate-700/50">
