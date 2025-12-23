@@ -115,7 +115,50 @@ export async function registerTenant(formData: FormData) {
         perfilAdmin = await tx.perfiles.create({
           data: {
             Descripcion: "Administrador",
+            Tipo: "ADMINISTRADOR",
             EstaEliminado: false,
+            TenantId: newTenant.Id,
+          },
+        });
+      } else if (perfilAdmin.Tipo !== "ADMINISTRADOR") {
+        // Asegurar que el perfil existente tenga el tipo correcto
+        perfilAdmin = await tx.perfiles.update({
+          where: { Id: perfilAdmin.Id },
+          data: { Tipo: "ADMINISTRADOR" },
+        });
+      }
+
+      // Crear y asignar el permiso básico "empleados:admin" al rol de administrador
+      const permisoEmpleadosAdmin = await tx.permiso.upsert({
+        where: {
+          Clave_TenantId: {
+            Clave: "empleados:admin",
+            TenantId: newTenant.Id,
+          },
+        },
+        update: { EstaEliminado: false },
+        create: {
+          Clave: "empleados:admin",
+          Descripcion: "Administración completa de empleados",
+          TenantId: newTenant.Id,
+          EstaEliminado: false,
+        },
+      });
+
+      // Verificar si el permiso ya está asignado al perfil
+      const permisoAsignado = await tx.perfilPermiso.findFirst({
+        where: {
+          PerfilId: perfilAdmin.Id,
+          PermisoId: permisoEmpleadosAdmin.Id,
+        },
+      });
+
+      // Asignar el permiso al perfil de administrador si no está asignado
+      if (!permisoAsignado) {
+        await tx.perfilPermiso.create({
+          data: {
+            PerfilId: perfilAdmin.Id,
+            PermisoId: permisoEmpleadosAdmin.Id,
             TenantId: newTenant.Id,
           },
         });
