@@ -387,7 +387,8 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         {/* Botón Cerrar Sesión */}
         <div className="px-3 pb-2">
           <motion.button
-            onClick={() => supabase.auth.signOut()}
+            onClick={() => handleLogout()}
+            disabled={isLoggingOut}
             whileHover={{
               x: isCollapsed ? 0 : 2,
               scale: isCollapsed ? 1 : 1.01,
@@ -435,14 +436,14 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         </div>
 
         {/* Footer del Sidebar */}
-        <div className="p-4 border-t border-slate-700/50 flex flex-col gap-3 items-center">
+        <div className="w-full p-4 border-t border-slate-700/50 flex flex-col gap-3 items-center">
           <AnimatePresence mode="wait">
             {!isCollapsed ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20"
+                className="w-full p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20"
               >
                 <p className="text-xs text-slate-400 mb-2">Version 1.0.0</p>
                 <p className="text-xs text-slate-500">(c) 2024 Punto X SaaS</p>
@@ -458,39 +459,6 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               </motion.div>
             )}
           </AnimatePresence>
-          <button
-            type="button"
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            aria-busy={isLoggingOut}
-            title="Cerrar sesion"
-            className={`group inline-flex items-center gap-3 rounded-[32px] px-5 py-3 text-sm font-semibold text-white transition shadow-xl shadow-red-500/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-400 ${
-              isCollapsed
-                ? "mx-auto h-12 w-12 justify-center bg-gradient-to-br from-rose-500 to-red-500 hover:brightness-110"
-                : "w-full max-w-[240px] justify-between bg-gradient-to-br from-rose-600 via-red-600 to-red-500 hover:-translate-y-0.5"
-            }`}
-          >
-            <span className="flex items-center justify-center">
-              <svg
-                className="w-5 h-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M16 17l5-5-5-5" />
-                <path d="M21 12H9" />
-                <path d="M4 5h6a2 2 0 012 2v10a2 2 0 01-2 2H4" />
-              </svg>
-            </span>
-            {!isCollapsed && (
-              <span className="flex-1 text-base text-center">
-                {isLoggingOut ? "Cerrando sesion..." : "Cerrar sesion"}
-              </span>
-            )}
-          </button>
         </div>
       </motion.aside>
     </motion.section>
