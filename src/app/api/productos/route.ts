@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
           PrecioPublico2: validarProducto.Precio.PrecioPublico2,
           FechaActualizacion: new Date(),
           EstaEliminado: false,
-          TenantId: tenantIdBigInt,
+          TenantId: BigInt(tenantId),
         },
       });
 
@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
           Stock: validarProducto.Stock,
           Tenant: {
             connect: {
-              Id: tenantIdBigInt,
+              Id: BigInt(tenantId),
             },
           },
           Iva: {
