@@ -37,6 +37,7 @@ import {
   mapearAccion,
   mapearSeveridad,
 } from "./auditoria-utils";
+import { useEmpleados } from "@/hooks/useEmpleados";
 
 // PÃ¡gina funcional de empleados: alta rÃ¡pida, roles y tabla conectada a las APIs.
 type EstadoEmpleado = "Activo" | "Invitado" | "Suspendido";
@@ -141,30 +142,11 @@ export default function Empleados() {
   const { user, status } = useSupabaseAuthContext();
   const router = useRouter();
 
-  const [isLoadingData, setIsLoadingData] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(true);
-  const [isSavingUser, setIsSavingUser] = useState(false);
-  const [isSavingRole, setIsSavingRole] = useState(false);
-  const [isLoadingAuditoria, setIsLoadingAuditoria] = useState(false);
-
-  const [empleados, setEmpleados] = useState<Empleado[]>([]);
-  const [roles, setRoles] = useState<Rol[]>([]);
-  const [localidades, setLocalidades] = useState<Localidad[]>([]);
-  const [provincias, setProvincias] = useState<Provincia[]>([]);
-  const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
-  const [auditorias, setAuditorias] = useState<any[]>([]);
   
   // Estado de paginación
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1,
-    limit: 20,
-    total: 0,
-    totalPages: 1,
-    hasNextPage: false,
-    hasPreviousPage: false,
-  });
   const [paginationAuditoria, setPaginationAuditoria] = useState<PaginationInfo>({
     page: 1,
     limit: 10,
@@ -181,6 +163,13 @@ export default function Empleados() {
   });
   const [busquedaInput, setBusquedaInput] = useState("");
   const busquedaTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Mover la declaración de filters antes del hook
+  const filters = {
+    busqueda: filtros.busqueda,
+    rol: filtros.rol,
+    estado: filtros.estado,
+  };
 
   const [nuevoUsuario, setNuevoUsuario] = useState({
     nombre: "",
@@ -210,8 +199,6 @@ export default function Empleados() {
   const [openRolModal, setOpenRolModal] = useState(false);
   const [detalleEmpleado, setDetalleEmpleado] = useState<Empleado | null>(null);
   const [empleadoAEditar, setEmpleadoAEditar] = useState<Empleado | null>(null);
-  const [isSavingEmpleado, setIsSavingEmpleado] = useState(false);
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
   
   // Estado para el formulario de edición
   const [empleadoEditDraft, setEmpleadoEditDraft] = useState({
@@ -230,9 +217,7 @@ export default function Empleados() {
   const [nuevaPassword, setNuevaPassword] = useState("");
   const [confirmarPassword, setConfirmarPassword] = useState("");
   const [rolAEliminar, setRolAEliminar] = useState<Rol | null>(null);
-  const [isDeletingRol, setIsDeletingRol] = useState(false);
   const [rolAEditar, setRolAEditar] = useState<Rol | null>(null);
-  const [isSavingRolEdit, setIsSavingRolEdit] = useState(false);
   const [rolEditDraft, setRolEditDraft] = useState({
     nombre: "",
     descripcion: "",
@@ -253,19 +238,7 @@ export default function Empleados() {
   // Usar el estado de la API como fuente de verdad, con fallback a la verificación local
   const isSuperAdmin = isSuperAdminState || isSuperAdminLocal;
 
-  const resumen = useMemo(
-    () => {
-      const invitados = empleados.filter((e) => e.estado === "Invitado");
-      return {
-        activos: empleados.filter((e) => e.estado === "Activo").length,
-        invitados: invitados.length,
-        invitadosLista: invitados, // Lista de invitados para mostrar detalles
-        suspendidos: empleados.filter((e) => e.estado === "Suspendido").length,
-        roles: roles.length,
-      };
-    },
-    [empleados, roles]
-  );
+  // Los datos ahora vienen del hook, pero necesitamos inicializarlos después de la declaración del hook
 
   // Los filtros ahora se aplican en el backend, solo mantenemos empleados tal cual vienen
   // (el filtrado de búsqueda también se hace en backend, pero mantenemos esta variable
@@ -286,249 +259,125 @@ export default function Empleados() {
     return resolved ? String(resolved) : null;
   };
 
-  const loadData = async () => {
-    // No hacer peticiones si el usuario no está autenticado
-    if (!user || status !== "authenticated") {
-      return;
-    }
-    
-    setIsLoadingData(true);
-    // Paso 0: verificar permisos explícitos antes de cargar todo.
-    try {
-      const permisosRes = await fetch("/api/permisos", {
-        cache: "no-store",
-      }).catch(() => null);
-      if (!permisosRes || !permisosRes.ok) {
-        const status = permisosRes?.status;
-        if (status === 401 || status === 403) {
-          setIsAuthorized(false);
-          setIsLoadingData(false);
-          addToast({
-            title: "Sin permisos",
-            description: "Necesitas empleados:admin para acceder.",
-            color: "danger",
-          });
-          return;
-        }
-      } else {
-        const permisosJson = await permisosRes.json().catch(() => null);
-        
-        // Actualizar el estado de SuperAdmin desde la API
-        if (permisosJson?.isSuperAdmin === true) {
-          setIsSuperAdminState(true);
-        }
-        
-        // Opción B: Solo SuperAdmin tiene bypass automático
-        // Administradores y Empleados necesitan permiso explícito "empleados:admin"
-        const esSuperAdmin = permisosJson?.isSuperAdmin === true || isSuperAdminLocal;
-        const tienePermisoEspecifico = Array.isArray(permisosJson?.permisos) &&
-          permisosJson.permisos.includes("empleados:admin");
-        
-        // Solo SuperAdmin tiene acceso automático, otros necesitan permiso explícito
-        const tienePermiso = esSuperAdmin || tienePermisoEspecifico;
-        
-        if (!tienePermiso) {
-          setIsAuthorized(false);
-          setIsLoadingData(false);
-          addToast({
-            title: "Sin permisos",
-            description: "Necesitas empleados:admin para acceder.",
-            color: "danger",
-          });
-          return;
-        }
-      }
-    } catch {
-      // Si falla, continuamos pero marcaremos no autorizado al primer 401/403.
-    }
+  // Usar TanStack Query hook
+  const tenantId = isSuperAdmin ? resolveTenantIdForRequests() : null;
+  const {
+    empleados,
+    roles,
+    provincias,
+    auditorias,
+    pagination,
+    isLoadingEmpleados,
+    isLoadingRoles,
+    isLoadingProvincias,
+    isLoadingAuditorias,
+    refetchEmpleados,
+    refetchAuditorias,
+    createEmpleado: createEmpleadoMutation,
+    updateEmpleado: updateEmpleadoMutation,
+    deleteEmpleado: deleteEmpleadoMutation,
+    changePassword: changePasswordMutation,
+    createRol: createRolMutation,
+    updateRol: updateRolMutation,
+    deleteRol: deleteRolMutation,
+    isCreatingEmpleado,
+    isUpdatingEmpleado,
+    isDeletingEmpleado,
+    isChangingPassword,
+    isCreatingRol,
+    isUpdatingRol,
+    isDeletingRol,
+    useDepartamentos,
+    useLocalidades,
+  } = useEmpleados({
+    page,
+    limit,
+    filters: {
+      busqueda: filtros.busqueda,
+      rol: filtros.rol,
+      estado: filtros.estado,
+    },
+    tenantId,
+    enabled: !!user && status === "authenticated" && isAuthorized,
+  });
 
-    const fallbackRoles: Rol[] = [
-      {
-        id: -1,
-        nombre: "Administrador",
-        tipo: "ADMINISTRADOR",
-        usuarios: 0,
-        permisos: permisosDisponibles,
-      },
-      {
-        id: -2,
-        nombre: "Empleado",
-        tipo: "EMPLEADO",
-        usuarios: 0,
-        permisos: ["Ventas", "Caja", "Clientes"],
-      },
-    ];
-    try {
-      const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
-      
-      // Construir query para roles (sin paginación)
-      const rolesQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
-      
-      // Construir query para empleados (con paginación y filtros)
-      const paginationParams = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString(),
-      });
-      if (tenantParam) {
-        paginationParams.append("tenantId", tenantParam);
-      }
-      // Agregar filtros al backend
-      if (filtros.rol && filtros.rol !== "todos") {
-        paginationParams.append("rol", filtros.rol);
-      }
-      if (filtros.estado && filtros.estado !== "todos") {
-        paginationParams.append("estado", filtros.estado);
-      }
-      if (filtros.busqueda && filtros.busqueda.trim()) {
-        paginationParams.append("busqueda", filtros.busqueda.trim());
-      }
-      const empleadosQuery = `?${paginationParams.toString()}`;
-      
-      const rolesRes = await fetch(`/api/roles${rolesQuery}`, {
-        cache: "no-store",
-      }).catch(() => null);
-      const provRes = await fetch("/api/provincias", {
-        cache: "no-store",
-      }).catch(() => null);
-      const empRes = await fetch(`/api/empleados${empleadosQuery}`, {
-        cache: "no-store",
-      }).catch(() => null);
+  // Hooks para departamentos y localidades
+  const departamentosQuery = useDepartamentos(provinciaSeleccionada || null);
+  const localidadesQuery = useLocalidades(departamentoSeleccionado || null);
+  const departamentos = departamentosQuery.data || [];
+  const localidades = localidadesQuery.data || [];
 
-      // Roles: si falla, cargamos fallback y seguimos.
-      if (!rolesRes || !rolesRes.ok) {
-        const status = rolesRes?.status;
-        if (status === 401 || status === 403) {
-          setIsAuthorized(false);
-          setIsLoadingData(false);
-          addToast({
-            title: "Sin permisos",
-            description: "Necesitas empleados:admin para acceder.",
-            color: "danger",
-          });
-          return;
-        }
-        const rolesErr = await rolesRes?.json().catch(() => null);
-        addToast({
-          title: "Error al obtener roles",
-          description:
-            rolesErr?.error ?? "Usando roles por defecto (Admin/Empleado).",
-          color: "warning",
-        });
-        setRoles(fallbackRoles);
-      } else {
-        const rolesJson = await rolesRes.json();
-        const parsedRoles = Array.isArray(rolesJson?.roles)
-          ? rolesJson.roles.map((rol: Rol) => ({
-              ...rol,
-              tipo: rol.tipo ?? "EMPLEADO",
-              permisos: Array.isArray(rol.permisos) ? rol.permisos : [],
-              descripcion: rol.descripcion ?? null,
-              usuarios: Number(rol.usuarios ?? 0),
-            }))
-          : [];
-        setRoles(parsedRoles.length ? parsedRoles : fallbackRoles);
+  const resumen = useMemo(
+    () => {
+      const invitados = empleados.filter((e) => e.estado === "Invitado");
+      return {
+        activos: empleados.filter((e) => e.estado === "Activo").length,
+        invitados: invitados.length,
+        invitadosLista: invitados, // Lista de invitados para mostrar detalles
+        suspendidos: empleados.filter((e) => e.estado === "Suspendido").length,
+        roles: roles.length,
+      };
+    },
+    [empleados, roles]
+  );
+
+  // Verificar permisos al montar el componente
+  useEffect(() => {
+    const checkPermissions = async () => {
+      if (!user || status !== "authenticated") {
+        return;
       }
 
-      // Provincias y empleados: si fallan, notificamos pero no rompemos la vista.
-      if (provRes && provRes.ok) {
-        const provJson = await provRes.json();
-        setProvincias(Array.isArray(provJson) ? provJson : []);
-      } else {
-        const provErr = await provRes?.json().catch(() => null);
-        addToast({
-          title: "Error al obtener provincias",
-          description: provErr?.error ?? "No pudimos cargar provincias.",
-          color: "warning",
-        });
-        setProvincias([]);
-      }
-
-      if (empRes && empRes.ok) {
-        const empJson = await empRes.json();
-        // Manejar respuesta paginada o formato antiguo
-        if (empJson?.data && empJson?.pagination) {
-          setEmpleados(empJson.data);
-          setPagination(empJson.pagination);
-        } else if (Array.isArray(empJson?.empleados)) {
-          // Formato antiguo (retrocompatibilidad)
-          setEmpleados(empJson.empleados);
-          setPagination({
-            page: 1,
-            limit: empJson.empleados.length,
-            total: empJson.empleados.length,
-            totalPages: 1,
-            hasNextPage: false,
-            hasPreviousPage: false,
-          });
+      try {
+        const permisosRes = await fetch("/api/permisos", {
+          cache: "no-store",
+        }).catch(() => null);
+        
+        if (!permisosRes || !permisosRes.ok) {
+          const status = permisosRes?.status;
+          if (status === 401 || status === 403) {
+            setIsAuthorized(false);
+            addToast({
+              title: "Sin permisos",
+              description: "Necesitas empleados:admin para acceder.",
+              color: "danger",
+            });
+            return;
+          }
         } else {
-          setEmpleados([]);
+          const permisosJson = await permisosRes.json().catch(() => null);
+          
+          // Actualizar el estado de SuperAdmin desde la API
+          if (permisosJson?.isSuperAdmin === true) {
+            setIsSuperAdminState(true);
+          }
+          
+          // Opción B: Solo SuperAdmin tiene bypass automático
+          // Administradores y Empleados necesitan permiso explícito "empleados:admin"
+          const esSuperAdmin = permisosJson?.isSuperAdmin === true || isSuperAdminLocal;
+          const tienePermisoEspecifico = Array.isArray(permisosJson?.permisos) &&
+            permisosJson.permisos.includes("empleados:admin");
+          
+          // Solo SuperAdmin tiene acceso automático, otros necesitan permiso explícito
+          const tienePermiso = esSuperAdmin || tienePermisoEspecifico;
+          
+          if (!tienePermiso) {
+            setIsAuthorized(false);
+            addToast({
+              title: "Sin permisos",
+              description: "Necesitas empleados:admin para acceder.",
+              color: "danger",
+            });
+            return;
+          }
         }
-      } else {
-        if (empRes?.status === 401 || empRes?.status === 403) {
-          setIsAuthorized(false);
-          setIsLoadingData(false);
-          addToast({
-            title: "Sin permisos",
-            description: "Necesitas empleados:admin para acceder.",
-            color: "danger",
-          });
-        } else {
-          const empErr = await empRes?.json().catch(() => null);
-          addToast({
-            title: "Error al obtener empleados",
-            description: empErr?.error ?? "No pudimos cargar empleados.",
-            color: "warning",
-          });
-        }
-        setEmpleados([]);
+      } catch {
+        // Si falla, continuamos pero marcaremos no autorizado al primer 401/403.
       }
+    };
 
-      // No borrar departamentos y localidades si hay valores previos
-      // Se recargarán automáticamente si hay provincia/departamento seleccionados
-    } catch (error) {
-      console.error(error);
-      addToast({
-        title: "Error",
-        description:
-          (error as Error).message ?? "No pudimos cargar empleados y roles.",
-        color: "danger",
-      });
-    } finally {
-      setIsLoadingData(false);
-    }
-  };
-
-  // Cargar auditorías
-  const loadAuditorias = async () => {
-    // No hacer peticiones si el usuario no está autenticado
-    if (!user || status !== "authenticated") {
-      return;
-    }
-    
-    setIsLoadingAuditoria(true);
-    try {
-      const res = await fetch(
-        `/api/auditoria-empleados?page=${paginationAuditoria.page}&limit=${paginationAuditoria.limit}`,
-        { cache: "no-store" }
-      );
-      if (res.ok) {
-        const json = await res.json();
-        if (json?.data && json?.pagination) {
-          setAuditorias(json.data);
-          setPaginationAuditoria(json.pagination);
-        } else {
-          setAuditorias([]);
-        }
-      } else {
-        setAuditorias([]);
-      }
-    } catch (error) {
-      console.error("Error al cargar auditorías:", error);
-      setAuditorias([]);
-    } finally {
-      setIsLoadingAuditoria(false);
-    }
-  };
+    checkPermissions();
+  }, [user, status, isSuperAdminLocal]);
 
   // Debounce para búsqueda
   useEffect(() => {
@@ -558,83 +407,30 @@ export default function Empleados() {
   useEffect(() => {
     // Solo cargar datos si el usuario está autenticado
     if (user && status === "authenticated") {
-      loadData();
-      loadAuditorias();
+      refetchEmpleados();
+      refetchAuditorias();
     }
   }, [user, status]);
 
   useEffect(() => {
     // Solo cargar datos si el usuario está autenticado
     if (user && status === "authenticated") {
-      loadData();
+      refetchEmpleados();
     }
   }, [page, limit, filtros.rol, filtros.estado, filtros.busqueda, user, status]);
 
-  const loadDepartamentos = async (provId: string, q?: string) => {
-    if (!provId) {
-      setDepartamentos([]);
-      return;
-    }
-    try {
-      const res = await fetch(`/api/departamentos?provinciaId=${provId}`);
-      if (!res.ok) {
-        const err = await res.json().catch(() => null);
-        addToast({
-          title: "Error",
-          description: err?.error ?? "No se pudieron cargar departamentos",
-          color: "warning",
-        });
-        setDepartamentos([]);
-        return;
-      }
-      const data = await res.json();
-      setDepartamentos(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error(error);
-      setDepartamentos([]);
-      addToast({
-        title: "Error",
-        description: "No se pudieron cargar departamentos",
-        color: "warning",
-      });
-    }
-  };
-
-  const loadLocalidades = async (deptId: string) => {
-    if (!deptId) {
-      setLocalidades([]);
-      return;
-    }
-    try {
-      const res = await fetch(`/api/localidades?departamentoId=${deptId}`);
-      if (!res.ok) throw new Error("No se pudieron cargar localidades");
-      const data = await res.json();
-      setLocalidades(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error(error);
-      setLocalidades([]);
-    }
-  };
-
+  // Los departamentos y localidades se cargan automáticamente con TanStack Query
   useEffect(() => {
     if (provinciaSeleccionada) {
-      loadDepartamentos(provinciaSeleccionada);
       setDepartamentoSeleccionado("");
-      setLocalidades([]);
       setNuevoUsuario((prev) => ({ ...prev, localidadId: "" }));
-    } else {
-      setDepartamentos([]);
-      setLocalidades([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provinciaSeleccionada]);
 
   useEffect(() => {
     if (departamentoSeleccionado) {
-      loadLocalidades(departamentoSeleccionado);
       setNuevoUsuario((prev) => ({ ...prev, localidadId: "" }));
-    } else {
-      setLocalidades([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departamentoSeleccionado]);
@@ -642,16 +438,10 @@ export default function Empleados() {
   // Recargar selects de ubicación después de loadData si hay valores previos
   // Se dispara cuando termina la carga o cambia la página
   useEffect(() => {
-    if (!isLoadingData) {
-      if (provinciaSeleccionada && departamentos.length === 0) {
-        loadDepartamentos(provinciaSeleccionada);
-      }
-      if (departamentoSeleccionado && localidades.length === 0) {
-        loadLocalidades(departamentoSeleccionado);
-      }
-    }
+    // Los departamentos y localidades se cargan automáticamente con TanStack Query
+    // cuando se selecciona una provincia o departamento
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoadingData, page]);
+  }, [isLoadingEmpleados, page]);
 
   const handleCrearUsuario = async () => {
     if (
@@ -673,134 +463,89 @@ export default function Empleados() {
       return;
     }
 
-    setIsSavingUser(true);
-    try {
-      const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
-      const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
+    const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
 
-      const body = {
+    createEmpleadoMutation(
+      {
         nombre: nuevoUsuario.nombre.trim(),
         apellido: nuevoUsuario.apellido.trim(),
-        mail: nuevoUsuario.email.trim(),
-        telefono: nuevoUsuario.telefono || null,
+        email: nuevoUsuario.email.trim(),
+        telefono: nuevoUsuario.telefono || undefined,
         direccion: nuevoUsuario.direccion.trim(),
-        localidadId: Number(nuevoUsuario.localidadId),
+        localidadId: nuevoUsuario.localidadId,
         departamentoId: departamentoSeleccionado
           ? Number(departamentoSeleccionado)
           : null,
         provinciaId: provinciaSeleccionada
           ? Number(provinciaSeleccionada)
           : null,
-        dni: nuevoUsuario.dni || null,
-        nombreUsuario: nuevoUsuario.usuario.trim(),
+        dni: nuevoUsuario.dni || undefined,
+        usuario: nuevoUsuario.usuario.trim(),
         password: nuevoUsuario.password,
         rolId: nuevoUsuario.rolId ? Number(nuevoUsuario.rolId) : undefined,
         autoInvitar: nuevoUsuario.autoInvitar,
-      };
-
-      const res = await fetch(`/api/empleados${tenantQuery}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        const errorMessage = data?.error ?? "No se pudo crear el usuario";
-        
-        // Detectar errores específicos de correo duplicado
-        if (
-          errorMessage.toLowerCase().includes("correo") &&
-          (errorMessage.toLowerCase().includes("registrado") ||
-           errorMessage.toLowerCase().includes("existe") ||
-           errorMessage.toLowerCase().includes("duplicado"))
-        ) {
+        tenantId: tenantParam,
+      },
+      {
+        onSuccess: () => {
           addToast({
-            title: "Correo ya registrado",
-            description: "Este correo ya se encuentra registrado. Por favor, usa otro correo electrónico.",
-            color: "warning",
+            title: "Usuario creado",
+            description: nuevoUsuario.autoInvitar
+              ? "Se envió la invitación. Podrás ajustar permisos desde roles."
+              : "Usuario listo. Recuerda compartir las credenciales.",
+            color: "success",
           });
-          setIsSavingUser(false);
-          return;
-        }
-        
-        // Detectar errores de nombre de usuario duplicado
-        if (
-          errorMessage.toLowerCase().includes("usuario") &&
-          (errorMessage.toLowerCase().includes("en uso") ||
-           errorMessage.toLowerCase().includes("duplicado"))
-        ) {
-          addToast({
-            title: "Usuario ya en uso",
-            description: "Este nombre de usuario ya está en uso. Por favor, elige otro.",
-            color: "warning",
+
+          setNuevoUsuario({
+            nombre: "",
+            apellido: "",
+            email: "",
+            telefono: "",
+            direccion: "",
+            localidadId: "",
+            dni: "",
+            usuario: "",
+            password: "",
+            rolId: "",
+            autoInvitar: true,
           });
-          setIsSavingUser(false);
-          return;
-        }
-        
-        throw new Error(errorMessage);
+          setProvinciaSeleccionada("");
+          setDepartamentoSeleccionado("");
+        },
+        onError: (error: Error) => {
+          const errorMessage = error.message;
+          
+          // Detectar errores específicos de correo duplicado
+          if (
+            errorMessage.toLowerCase().includes("correo") &&
+            (errorMessage.toLowerCase().includes("registrado") ||
+             errorMessage.toLowerCase().includes("existe") ||
+             errorMessage.toLowerCase().includes("duplicado"))
+          ) {
+            addToast({
+              title: "Correo ya registrado",
+              description: "Este correo ya se encuentra registrado. Por favor, usa otro correo electrónico.",
+              color: "warning",
+            });
+            return;
+          }
+          
+          // Detectar errores de nombre de usuario duplicado
+          if (
+            errorMessage.toLowerCase().includes("usuario") &&
+            (errorMessage.toLowerCase().includes("en uso") ||
+             errorMessage.toLowerCase().includes("duplicado"))
+          ) {
+            addToast({
+              title: "Usuario ya en uso",
+              description: "Este nombre de usuario ya está en uso. Por favor, elige otro.",
+              color: "warning",
+            });
+            return;
+          }
+        },
       }
-
-      const data = await res.json();
-      
-      addToast({
-        title: "Usuario creado",
-        description: nuevoUsuario.autoInvitar
-          ? "Se envió la invitación. Podrás ajustar permisos desde roles."
-          : "Usuario listo. Recuerda compartir las credenciales.",
-        color: "success",
-      });
-
-      // Recargar datos para actualizar la lista y conteos
-      await loadData();
-      // Recargar auditorías para mostrar la acción recién registrada
-      await loadAuditorias();
-
-      setNuevoUsuario({
-        nombre: "",
-        apellido: "",
-        email: "",
-        telefono: "",
-        direccion: "",
-        localidadId: "",
-        dni: "",
-        usuario: "",
-        password: "",
-        rolId: "",
-        autoInvitar: true,
-      });
-      setProvinciaSeleccionada("");
-      setDepartamentoSeleccionado("");
-      setLocalidades([]);
-      setDepartamentos([]);
-    } catch (error) {
-      console.error(error);
-      const errorMessage = (error as Error).message;
-      
-      // Verificar si el error es de Supabase relacionado con correo duplicado
-      if (
-        errorMessage.toLowerCase().includes("supabase") &&
-        (errorMessage.toLowerCase().includes("correo") ||
-         errorMessage.toLowerCase().includes("email") ||
-         errorMessage.toLowerCase().includes("duplicate") ||
-         errorMessage.toLowerCase().includes("already exists"))
-      ) {
-        addToast({
-          title: "Correo ya registrado",
-          description: "Este correo ya se encuentra registrado. Por favor, usa otro correo electrónico.",
-          color: "warning",
-        });
-      } else {
-        addToast({
-          title: "Error",
-          description: errorMessage,
-          color: "danger",
-        });
-      }
-    } finally {
-      setIsSavingUser(false);
-    }
+    );
   };
 
   const handleCrearRol = async () => {
@@ -822,7 +567,7 @@ export default function Empleados() {
       return;
     }
 
-    setIsSavingRole(true);
+      // El estado de loading se maneja automáticamente por la mutación
     try {
       const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
       const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
@@ -851,9 +596,9 @@ export default function Empleados() {
       });
 
       // Recargar datos para actualizar roles y conteos
-      await loadData();
+      await refetchEmpleados();
       // Recargar auditorías para mostrar la acción recién registrada
-      await loadAuditorias();
+      await refetchAuditorias();
       setOpenRolModal(false);
       setNuevoRol({
         nombre: "",
@@ -869,7 +614,7 @@ export default function Empleados() {
         color: "danger",
       });
     } finally {
-      setIsSavingRole(false);
+      // El estado de loading se maneja automáticamente por la mutación
     }
   };
 
@@ -894,7 +639,7 @@ export default function Empleados() {
       return;
     }
 
-    setIsSavingRolEdit(true);
+    // El estado de loading se maneja automáticamente por la mutación
     try {
       const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
       const tenantQuery = tenantParam ? `&tenantId=${tenantParam}` : "";
@@ -915,9 +660,9 @@ export default function Empleados() {
       }
 
       // Refrescar datos para actualizar roles y conteos
-      await loadData();
+      await refetchEmpleados();
       // Recargar auditorías para mostrar la acción recién registrada
-      await loadAuditorias();
+      await refetchAuditorias();
 
       addToast({
         title: "Rol actualizado",
@@ -940,14 +685,14 @@ export default function Empleados() {
         color: "danger",
       });
     } finally {
-      setIsSavingRolEdit(false);
+      // El estado de loading se maneja automáticamente por la mutación
     }
   };
 
   const handleEliminarRol = async () => {
     if (!rolAEliminar) return;
 
-    setIsDeletingRol(true);
+    // El estado de loading se maneja automáticamente por la mutación
     try {
       const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
       const tenantQuery = tenantParam ? `&tenantId=${tenantParam}` : "";
@@ -962,12 +707,12 @@ export default function Empleados() {
       }
 
       // Eliminar del state
-      setRoles((prev) => prev.filter((r) => r.id !== rolAEliminar.id));
+      // Los roles se actualizan automáticamente con TanStack Query
 
       // Refrescar datos para actualizar roles y conteos
-      await loadData();
+      await refetchEmpleados();
       // Recargar auditorías para mostrar la acción recién registrada
-      await loadAuditorias();
+      await refetchAuditorias();
 
       addToast({
         title: "Rol eliminado",
@@ -984,7 +729,7 @@ export default function Empleados() {
         color: "danger",
       });
     } finally {
-      setIsDeletingRol(false);
+      // El estado de loading se maneja automáticamente por la mutación
     }
   };
 
@@ -1029,9 +774,9 @@ export default function Empleados() {
       });
 
       // Recargar datos para actualizar la lista y conteos
-      await loadData();
+      await refetchEmpleados();
       // Recargar auditorías para mostrar la acción recién registrada
-      await loadAuditorias();
+      await refetchAuditorias();
     } catch (error) {
       console.error(error);
       addToast({
@@ -1069,9 +814,9 @@ export default function Empleados() {
       });
 
       // Recargar datos para actualizar la lista y conteos
-      await loadData();
+      await refetchEmpleados();
       // Recargar auditorías para mostrar la acción recién registrada
-      await loadAuditorias();
+      await refetchAuditorias();
     } catch (error) {
       console.error(error);
       addToast({
@@ -1123,7 +868,7 @@ export default function Empleados() {
       return;
     }
 
-    setIsSavingEmpleado(true);
+    // El estado de loading se maneja automáticamente por la mutación
     try {
       const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
       const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
@@ -1178,9 +923,9 @@ export default function Empleados() {
       });
 
       // Recargar datos
-      await loadData();
+      await refetchEmpleados();
       // Recargar auditorías
-      await loadAuditorias();
+      await refetchAuditorias();
       
       setEmpleadoAEditar(null);
       setEmpleadoEditDraft({
@@ -1202,7 +947,7 @@ export default function Empleados() {
         color: "danger",
       });
     } finally {
-      setIsSavingEmpleado(false);
+      // El estado de loading se maneja automáticamente por la mutación
     }
   };
 
@@ -1235,7 +980,7 @@ export default function Empleados() {
       return;
     }
 
-    setIsChangingPassword(true);
+    // El estado de loading se maneja automáticamente por la mutación
     try {
       const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
       const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
@@ -1261,7 +1006,7 @@ export default function Empleados() {
       });
 
       // Recargar auditorías
-      await loadAuditorias();
+      await refetchAuditorias();
       
       // Limpiar campos
       setNuevaPassword("");
@@ -1274,7 +1019,7 @@ export default function Empleados() {
         color: "danger",
       });
     } finally {
-      setIsChangingPassword(false);
+      // El estado de loading se maneja automáticamente por la mutación
     }
   };
 
@@ -1525,8 +1270,8 @@ export default function Empleados() {
                     color="primary"
                     onPress={handleCrearUsuario}
                     className="font-semibold"
-                    isLoading={isSavingUser}
-                    isDisabled={isLoadingData}
+                    isLoading={isCreatingEmpleado}
+                    isDisabled={isLoadingEmpleados}
                   >
                     Crear usuario
                   </Button>
@@ -1700,10 +1445,10 @@ export default function Empleados() {
                               // Cargar departamentos y localidades si hay provincia/departamento
                               if (provinciaIdStr) {
                                 setProvinciaSeleccionada(provinciaIdStr);
-                                await loadDepartamentos(provinciaIdStr);
+                                // Los departamentos y localidades se cargan automáticamente con TanStack Query
                                 if (departamentoIdStr) {
                                   setDepartamentoSeleccionado(departamentoIdStr);
-                                  await loadLocalidades(departamentoIdStr);
+                                  // Las localidades se cargan automáticamente cuando se selecciona un departamento
                                 }
                               }
                               
@@ -1775,16 +1520,23 @@ export default function Empleados() {
                 })}
                 {empleados.length === 0 && (
                   <p className="text-sm text-gray-500 px-2 py-4 text-center">
-                    {isLoadingData ? "Cargando..." : "Sin coincidencias"}
+                    {isLoadingEmpleados ? "Cargando..." : "Sin coincidencias"}
                   </p>
                 )}
               </CardBody>
               
               {/* Paginación */}
-              {pagination.total > 0 && (
+              {pagination && pagination.total > 0 && (
                 <div className="px-4 pb-4">
                   <Pagination
-                    pagination={pagination}
+                    pagination={pagination || {
+                      page: 1,
+                      limit: 20,
+                      total: 0,
+                      totalPages: 1,
+                      hasNextPage: false,
+                      hasPreviousPage: false,
+                    }}
                     onPageChange={(newPage) => {
                       setPage(newPage);
                       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -2024,7 +1776,7 @@ export default function Empleados() {
             </CardHeader>
             <Divider />
             <CardBody className="space-y-4 pt-4">
-              {isLoadingAuditoria ? (
+              {isLoadingAuditorias ? (
                 <div className="flex justify-center py-8">
                   <p className="text-sm text-gray-500">Cargando auditorías...</p>
                 </div>
@@ -2063,7 +1815,7 @@ export default function Empleados() {
                   <Button
                     size="sm"
                     variant="flat"
-                    isDisabled={!paginationAuditoria.hasPreviousPage || isLoadingAuditoria}
+                    isDisabled={!paginationAuditoria.hasPreviousPage || isLoadingAuditorias}
                     onPress={() => {
                       setPaginationAuditoria((prev) => ({
                         ...prev,
@@ -2079,7 +1831,7 @@ export default function Empleados() {
                   <Button
                     size="sm"
                     variant="flat"
-                    isDisabled={!paginationAuditoria.hasNextPage || isLoadingAuditoria}
+                    isDisabled={!paginationAuditoria.hasNextPage || isLoadingAuditorias}
                     onPress={() => {
                       setPaginationAuditoria((prev) => ({
                         ...prev,
@@ -2186,7 +1938,7 @@ export default function Empleados() {
             <Button
               color="primary"
               onPress={handleCrearRol}
-              isLoading={isSavingRole}
+              isLoading={isCreatingRol}
             >
               Crear rol
             </Button>
@@ -2361,14 +2113,14 @@ export default function Empleados() {
                   permisos: [],
                 });
               }}
-              isDisabled={isSavingRolEdit}
+              isDisabled={isUpdatingRol}
             >
               Cancelar
             </Button>
             <Button
               color="primary"
               onPress={handleEditarRol}
-              isLoading={isSavingRolEdit}
+              isLoading={isUpdatingRol}
             >
               Guardar cambios
             </Button>

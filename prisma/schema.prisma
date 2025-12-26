@@ -20,10 +20,11 @@ model Tenant {
   Email               String?              @db.VarChar(250)
   Telefono            String?              @db.VarChar(25)
   EstaActivo          Boolean              @default(true)
-  EstaEliminado       Boolean              @default(false)
   PlanId              BigInt?
   OnboardingCompleto  Boolean              @default(false)
+  EstaEliminado       Boolean              @default(false)
   Articulos           Articulo[]
+  AuditoriaEmpleados  AuditoriaEmpleado[]
   BajaArticulos       BajaArticulo[]
   Bancos              Banco[]
   Cajas               Caja[]
@@ -41,18 +42,16 @@ model Tenant {
   FormulariosPermisos Formularios[]
   Gastos              Gasto[]
   Logs                Log[]
-  AuditoriaEmpleados  AuditoriaEmpleado[]
   Marcas              Marca[]
   MotivosBaja         MotivoBajas[]
   Movimientos         Movimiento[]
+  PerfilPermisos      PerfilPermiso[]
   PerfilesUsuarios    PerfilUsuario[]
   Perfiles            Perfiles[]
   Permisos            Permiso[]
-  PerfilPermisos      PerfilPermiso[]
   Personas            Persona[]
   Precios             Precio[]
   Proveedores         Proveedor[]
-  PuestosTrabajo      PuestoTrabajo[]
   Rubros              Rubro[]
   Tarjetas            Tarjeta[]
   Plan                PlanSaaS?            @relation(fields: [PlanId], references: [Id])
@@ -114,10 +113,10 @@ model Articulo {
   StockMinimo          Decimal              @db.Decimal(18, 2)
   VencimientoDias      Int
   TipoVenta            Int
-  Stock                Decimal              @default(0) @db.Decimal(18, 2)
   EstaEliminado        Boolean
   /// Tenant dueño de este artículo
   TenantId             BigInt
+  Stock                Decimal              @default(0) @db.Decimal(18, 2)
   Iva                  Iva                  @relation(fields: [IvaId], references: [Id], onUpdate: NoAction)
   Marca                Marca                @relation(fields: [MarcaId], references: [Id], onUpdate: NoAction)
   Precio               Precio               @relation(fields: [PrecioId], references: [Id], onUpdate: NoAction)
@@ -281,11 +280,6 @@ model Comprobante_Compra {
   @@index([ProveedorId])
 }
 
-enum PerfilTipo {
-  ADMINISTRADOR
-  EMPLEADO
-}
-
 /// Relación comprobante con cuenta corriente de proveedor.
 model Comprobante_CtaCteProveedor {
   Id          BigInt      @id
@@ -319,15 +313,12 @@ model Comprobante_Factura {
   Id              BigInt          @id
   /// Hereda TenantId desde Comprobante (Id es PK y FK)
   ClienteId       BigInt
-  PuestoTrabajoId BigInt
   Estado          Int
   Persona_Cliente Persona_Cliente @relation(fields: [ClienteId], references: [Id], onUpdate: NoAction)
   Comprobante     Comprobante     @relation(fields: [Id], references: [Id], onUpdate: NoAction)
-  PuestoTrabajo   PuestoTrabajo   @relation(fields: [PuestoTrabajoId], references: [Id], onUpdate: NoAction)
 
   @@index([ClienteId])
   @@index([Id])
-  @@index([PuestoTrabajoId])
 }
 
 /// Relación entre nota de crédito y comprobantes.
@@ -417,14 +408,14 @@ model Configuracion {
   ActivarBascula                         Boolean
   EtiquetaPorPeso                        Boolean
   CodigoBascula                          String?   @db.VarChar(8000)
-  MostrarPreciosConIva                   Boolean   @default(true)
-  AbrirCajonEfectivo                     Boolean   @default(true)
-  NumerarPedidosPantalla                 Boolean   @default(true)
   EstaEliminado                          Boolean
   Foto                                   Bytes?
   ShowFoto                               Boolean   @default(false)
   /// Tenant dueño de esta configuración
   TenantId                               BigInt
+  AbrirCajonEfectivo                     Boolean   @default(true)
+  MostrarPreciosConIva                   Boolean   @default(true)
+  NumerarPedidosPantalla                 Boolean   @default(true)
   Localidad                              Localidad @relation(fields: [LocalidadId], references: [Id], onUpdate: NoAction)
   Tenant                                 Tenant    @relation(fields: [TenantId], references: [Id])
 
@@ -703,14 +694,14 @@ model MotivoBajas {
 model Perfiles {
   Id               BigInt             @id @default(autoincrement())
   Descripcion      String             @db.VarChar(250)
-  Tipo             PerfilTipo         @default(EMPLEADO)
   EstaEliminado    Boolean
   /// Tenant dueño de este perfil
   TenantId         BigInt
+  Tipo             PerfilTipo         @default(EMPLEADO)
   FormularioPerfil FormularioPerfil[]
+  PerfilPermiso    PerfilPermiso[]
   PerfilUsuario    PerfilUsuario[]
   Tenant           Tenant             @relation(fields: [TenantId], references: [Id])
-  PerfilPermiso    PerfilPermiso[]
 
   @@index([TenantId])
 }
@@ -734,10 +725,9 @@ model PerfilPermiso {
   PerfilId  BigInt
   PermisoId BigInt
   TenantId  BigInt
-
-  Perfil  Perfiles @relation(fields: [PerfilId], references: [Id], onDelete: Cascade)
-  Permiso Permiso  @relation(fields: [PermisoId], references: [Id], onDelete: Cascade)
-  Tenant  Tenant   @relation(fields: [TenantId], references: [Id])
+  Perfil    Perfiles @relation(fields: [PerfilId], references: [Id], onDelete: Cascade)
+  Permiso   Permiso  @relation(fields: [PermisoId], references: [Id], onDelete: Cascade)
+  Tenant    Tenant   @relation(fields: [TenantId], references: [Id])
 
   @@id([PerfilId, PermisoId])
   @@index([TenantId])
@@ -809,10 +799,10 @@ model Persona_Empleado {
   /// Hereda TenantId desde Persona (Id es PK y FK)
   Legajo             Int
   Foto               Bytes
+  AuditoriaEmpleados AuditoriaEmpleado[]
   Comprobante        Comprobante[]
   Persona            Persona             @relation(fields: [Id], references: [Id], onUpdate: NoAction)
   Usuario            Usuario[]
-  AuditoriaEmpleados AuditoriaEmpleado[]
 
   @@index([Id])
 }
@@ -860,20 +850,6 @@ model Proveedor {
   @@index([TenantId])
   @@index([CondicionIvaId])
   @@index([LocalidadId])
-}
-
-/// Puestos de trabajo del comercio (caja, mostrador, etc.).
-model PuestoTrabajo {
-  Id                  BigInt                @id @default(autoincrement())
-  Codigo              Int
-  Descripcion         String?               @db.VarChar(8000)
-  EstaEliminado       Boolean
-  /// Tenant dueño de este puesto
-  TenantId            BigInt
-  Comprobante_Factura Comprobante_Factura[]
-  Tenant              Tenant                @relation(fields: [TenantId], references: [Id])
-
-  @@index([TenantId])
 }
 
 /// Rubros o categorías de artículos.
@@ -929,6 +905,8 @@ model Usuario {
   TenantId                             BigInt
   /// ID del usuario en Supabase Auth (auth.users.id)
   AuthUserId                           String              @unique @db.VarChar(255)
+  AuditoriaEmpleadosAfectados          AuditoriaEmpleado[] @relation("Auditoria_UsuarioAfectado")
+  AuditoriaEmpleados                   AuditoriaEmpleado[] @relation("Auditoria_Usuario")
   Caja_Caja_UsuarioAperturaIdToUsuario Caja[]              @relation("Caja_UsuarioAperturaIdToUsuario")
   Caja_Caja_UsuarioCierreIdToUsuario   Caja[]              @relation("Caja_UsuarioCierreIdToUsuario")
   Comprobante                          Comprobante[]
@@ -936,8 +914,6 @@ model Usuario {
   PerfilUsuario                        PerfilUsuario[]
   Persona_Empleado                     Persona_Empleado    @relation(fields: [EmpleadoId], references: [Id], onUpdate: NoAction)
   Tenant                               Tenant              @relation(fields: [TenantId], references: [Id])
-  AuditoriaEmpleados                   AuditoriaEmpleado[] @relation("Auditoria_Usuario")
-  AuditoriaEmpleadosAfectados          AuditoriaEmpleado[] @relation("Auditoria_UsuarioAfectado")
 
   @@index([TenantId])
   @@index([EmpleadoId])
@@ -996,37 +972,23 @@ model Movimiento_CuentaCorrienteProveedor {
 
 /// Auditoría de acciones realizadas sobre empleados/usuarios
 model AuditoriaEmpleado {
-  Id       BigInt   @id @default(autoincrement())
-  TenantId BigInt
-  Fecha    DateTime @default(now())
-
-  // Quién hizo la acción
-  UsuarioId BigInt // Usuario que realizó la acción
-
-  // Qué acción se hizo
-  Accion String @db.VarChar(100) // "CREAR_USUARIO", "INVITAR_USUARIO", "REENVIAR_INVITACION", "ACEPTAR_INVITACION", "CAMBIAR_ROL", "SUSPENDER_USUARIO", "REACTIVAR_USUARIO", "ELIMINAR_USUARIO", "CREAR_ROL", "EDITAR_ROL", "ELIMINAR_ROL", "CAMBIAR_CONFIG_SEGURIDAD"
-  
-  // Severidad del evento
-  Severidad String @default("INFO") @db.VarChar(20) // "INFO", "WARNING", "CRITICAL"
-
-  // Sobre quién se hizo (empleado/usuario afectado)
-  EmpleadoId        BigInt? // Persona_Empleado.Id (opcional, puede ser null si es creación de rol)
-  UsuarioAfectadoId BigInt? // Usuario.Id del afectado (opcional)
-
-  // Detalles adicionales
-  Detalle       String? @db.VarChar(1000) // Descripción de la acción
-  ValorAnterior String? @db.VarChar(2000) // JSON con valores anteriores (para ediciones)
-  ValorNuevo    String? @db.VarChar(2000) // JSON con valores nuevos
-
-  // Metadata opcional
-  IpAddress String? @db.VarChar(50)
-  UserAgent String? @db.VarChar(500)
-
-  // Relaciones
-  Tenant          Tenant            @relation(fields: [TenantId], references: [Id])
-  Usuario         Usuario           @relation("Auditoria_Usuario", fields: [UsuarioId], references: [Id], onUpdate: NoAction)
-  Empleado        Persona_Empleado? @relation(fields: [EmpleadoId], references: [Id], onUpdate: NoAction)
-  UsuarioAfectado Usuario?          @relation("Auditoria_UsuarioAfectado", fields: [UsuarioAfectadoId], references: [Id], onUpdate: NoAction)
+  Id                BigInt            @id @default(autoincrement())
+  TenantId          BigInt
+  Fecha             DateTime          @default(now())
+  UsuarioId         BigInt
+  Accion            String            @db.VarChar(100)
+  EmpleadoId        BigInt?
+  UsuarioAfectadoId BigInt?
+  Detalle           String?           @db.VarChar(1000)
+  ValorAnterior     String?           @db.VarChar(2000)
+  ValorNuevo        String?           @db.VarChar(2000)
+  IpAddress         String?           @db.VarChar(50)
+  UserAgent         String?           @db.VarChar(500)
+  Severidad         String            @default("INFO") @db.VarChar(20)
+  Empleado          Persona_Empleado? @relation(fields: [EmpleadoId], references: [Id], onUpdate: NoAction)
+  Tenant            Tenant            @relation(fields: [TenantId], references: [Id])
+  UsuarioAfectado   Usuario?          @relation("Auditoria_UsuarioAfectado", fields: [UsuarioAfectadoId], references: [Id], onUpdate: NoAction)
+  Usuario           Usuario           @relation("Auditoria_Usuario", fields: [UsuarioId], references: [Id], onUpdate: NoAction)
 
   @@index([TenantId])
   @@index([Fecha])
@@ -1034,4 +996,9 @@ model AuditoriaEmpleado {
   @@index([EmpleadoId])
   @@index([Accion])
   @@index([Severidad])
+}
+
+enum PerfilTipo {
+  ADMINISTRADOR
+  EMPLEADO
 }

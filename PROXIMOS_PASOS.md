@@ -1,222 +1,368 @@
-# 🎯 Próximos Pasos Recomendados - PuntoX
+# 🎯 Próximos Pasos y Mejoras - PuntoX
+
+**Estado Actual:** 🟢 8/10  
+**Objetivo:** 🟢 10/10  
+**Última actualización:** Diciembre 2024
+
+---
 
 ## 📊 Resumen Ejecutivo
 
-**Estado General:** 🟢 **BUENO** (8/10)
+Para llegar a **10/10**, necesitamos enfocarnos en:
+1. **Seguridad** (crítico) - 2 puntos
+2. **Testing** (importante) - 1 punto  
+3. **Performance** (importante) - 0.5 puntos
+4. **Calidad de Código** (mejora) - 0.5 puntos
 
-El proyecto tiene una base sólida. Las mejoras prioritarias se enfocan en:
-1. **Seguridad y Estabilidad** (crítico)
-2. **Performance** (importante)
-3. **Testing** (mejora continua)
+**Tiempo estimado mínimo:** 30-40 horas  
+**Tiempo estimado completo:** 68-91 horas
 
 ---
 
-## 🔴 PRIORIDAD 1: Seguridad y Estabilidad (Esta Semana)
+## 🔴 PRIORIDAD 1: Seguridad Crítica (Hacer YA)
 
-### 1.1 Agregar Transacciones a Productos ⚠️ CRÍTICO
+### 1.1 Eliminar Fallbacks Peligrosos de TenantId ⚠️ CRÍTICO
+**Impacto:** 🔴 CRÍTICO - Riesgo de fuga de datos entre tenants  
+**Tiempo:** 30 minutos  
+**Dificultad:** Fácil
 
 **Problema:**
-- Crear/actualizar productos hace 2 operaciones separadas sin transacción
-- Si falla la segunda, queda inconsistencia en BD
+```typescript
+// src/app/api/productos/route.ts - Líneas 279 y 308
+TenantId: Number(tenantId) || 1,  // ⚠️ PELIGROSO
+Id: Number(tenantId) || 1,        // ⚠️ PELIGROSO
+```
 
-**Archivo:** `src/app/api/productos/route.ts`
+**Riesgo:**
+- Si `tenantId` es `0`, `null`, `undefined` → asigna al tenant 1
+- **Fuga de datos entre tenants** (violación de multi-tenancy)
 
 **Solución:**
 ```typescript
-// POST - Línea 129-173
-await prisma.$transaction(async (tx) => {
-  const precio = await tx.precio.create({...});
-  const producto = await tx.articulo.create({
-    ...,
-    Precio: { connect: { Id: precio.Id } }
-  });
-});
-
-// PATCH - Línea 235-306
-await prisma.$transaction(async (tx) => {
-  await tx.precio.update({...});
-  await tx.articulo.update({...});
-});
+// Ya tienes tenantIdBigInt validado arriba (línea 250)
+// Reemplazar:
+TenantId: tenantIdBigInt,  // Sin fallback
+Id: tenantIdBigInt,         // Sin fallback
 ```
 
-**Tiempo estimado:** 30 minutos
-**Impacto:** 🔴 ALTO - Previene corrupción de datos
+**Checklist:**
+- [ ] Buscar todos los `tenantId || 1` en el proyecto
+- [ ] Reemplazar por `tenantIdBigInt` (ya validado)
+- [ ] Agregar test para validar que falla si tenantId es inválido
 
 ---
 
-### 1.2 Eliminar Fallbacks Peligrosos de TenantId ⚠️ CRÍTICO
+### 1.2 Verificar Transacciones en Productos
+**Impacto:** 🔴 ALTO - Integridad de datos  
+**Tiempo:** 30 minutos  
+**Dificultad:** Fácil
 
-**Problema encontrado:**
-```typescript
-// src/app/api/productos/route.ts línea 139
-TenantId: Number(tenantId) || 1, // ⚠️ PELIGROSO
-```
+**Estado:**
+- ✅ POST ya tiene transacción
+- ✅ PATCH ya está en transacción
+- ⚠️ Solo falta eliminar fallbacks (ver #1.1)
 
-**Riesgo:** Si `tenantId` es null/undefined, asigna al tenant 1 (posible fuga de datos)
-
-**Solución:**
-```typescript
-if (!tenantId) {
-  throw createError.unauthorized("TenantId requerido");
-}
-TenantId: BigInt(tenantId), // Sin fallback
-```
-
-**Archivos a revisar:**
-- `src/app/api/productos/route.ts` (líneas 139, 247)
-- Buscar otros `|| 1` o `|| 0` relacionados con tenantId
-
-**Tiempo estimado:** 1 hora
-**Impacto:** 🔴 ALTO - Seguridad crítica
-
----
-
-### 1.3 Migrar Manejo de Errores a `handleError`
-
-**Problema:**
-- 102 `console.log/error` en 38 archivos
-- Manejo de errores inconsistente
-- Algunos endpoints no usan el nuevo sistema
-
-**Plan:**
-1. Reemplazar `console.error` + `NextResponse.json` por `handleError`
-2. Usar tipos de errores específicos
-3. Mejorar mensajes de error
-
-**Archivos prioritarios:**
+**Archivos:**
 - `src/app/api/productos/route.ts`
-- `src/app/api/empleados/route.ts`
-- `src/app/api/clientes/route.ts`
-
-**Tiempo estimado:** 2-3 horas
-**Impacto:** 🟡 MEDIO - Mejora debugging y UX
 
 ---
 
-## 🟡 PRIORIDAD 2: Performance (Próximas 2 Semanas)
-
-### 2.1 Optimizar Queries con `select` Específico
+### 1.3 Rate Limiting en APIs
+**Impacto:** 🟡 MEDIO - Seguridad  
+**Tiempo:** 4-6 horas  
+**Dificultad:** Media
 
 **Problema:**
-- Algunas queries traen todos los campos cuando solo se necesitan algunos
-- Afecta performance con muchos datos
+- Sin rate limiting, vulnerable a ataques de fuerza bruta
+- Sin protección contra DoS
 
-**Ejemplo a optimizar:**
+**Solución:**
 ```typescript
-// Antes
-const productos = await prisma.articulo.findMany({...});
+// Instalar: npm install @upstash/ratelimit
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
-// Después
-const productos = await prisma.articulo.findMany({
-  select: {
-    Id: true,
-    Descripcion: true,
-    Precio: { select: { PrecioPublico: true } },
-    // Solo campos necesarios
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(100, "15 m"),
+});
+
+// En cada endpoint:
+const { success } = await ratelimit.limit(identifier);
+if (!success) {
+  return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+}
+```
+
+**Endpoints prioritarios:**
+- `/api/auth/*` - Más restrictivo (5 req/min)
+- `/api/*` - General (100 req/15min)
+- `/api/admin/*` - Admin (50 req/15min)
+
+---
+
+### 1.4 Validación de Permisos Completa
+**Impacto:** 🟡 MEDIO - Seguridad  
+**Tiempo:** 4-6 horas  
+**Dificultad:** Media
+
+**Problema:**
+- Algunos endpoints no validan permisos
+
+**Solución:**
+```typescript
+import { requirePermiso } from "@/lib/requirePermiso";
+
+export async function POST(req: NextRequest) {
+  const { tenantId } = await requirePermiso("productos:crear");
+  // Continuar con la lógica...
+}
+```
+
+**Endpoints a revisar:**
+- `/api/productos` - POST/PATCH/DELETE
+- `/api/clientes` - POST/PATCH/DELETE
+- `/api/comprobantes` - POST
+- `/api/caja` - Operaciones críticas
+
+---
+
+## 🟡 PRIORIDAD 2: Testing y Calidad
+
+### 2.1 Migrar Más Endpoints a `handleError`
+**Impacto:** 🟡 MEDIO - Mantenibilidad  
+**Tiempo:** 2-3 horas  
+**Dificultad:** Fácil
+
+**Estado:**
+- ✅ Ya migrados: productos, clientes, empleados, tenant, configuracion
+- ⚠️ Pendientes: 22 archivos con `console.log/error`
+
+**Archivos pendientes:**
+- `src/app/api/unidades-medidas/route.ts`
+- `src/app/api/rubros/route.ts`
+- `src/app/api/marcas/route.ts`
+- `src/app/api/ivas/route.ts`
+- `src/app/api/roles/route.ts`
+- `src/app/api/condiciones-iva/route.ts`
+- Y otros 16 archivos...
+
+**Solución:**
+```typescript
+// Antes:
+try {
+  // código
+} catch (error) {
+  console.error("Error:", error);
+  return NextResponse.json({ error: "Error" }, { status: 500 });
+}
+
+// Después:
+import { handleError } from "@/lib/errors/handler";
+
+try {
+  // código
+} catch (error) {
+  return handleError(error);
+}
+```
+
+---
+
+### 2.2 Tests Unitarios Básicos
+**Impacto:** 🟡 MEDIO - Confiabilidad  
+**Tiempo:** 8-10 horas  
+**Dificultad:** Media
+
+**Estado actual:**
+- ✅ Tests existentes: 5 archivos
+- ⚠️ Cobertura: ~5-10%
+
+**Tests prioritarios:**
+- [ ] `src/lib/errors/handler.ts` - Manejo de errores
+- [ ] `src/lib/auth/getAuthUser.ts` - Obtención de usuario
+- [ ] `src/lib/adapters/*.ts` - Adapters
+- [ ] `src/lib/validations/*.schema.ts` - Validaciones Zod
+- [ ] `src/hooks/useGenericApi.ts` - Hook genérico
+
+**Checklist:**
+- [ ] Configurar BD de test
+- [ ] Setup de mocks (Supabase, etc.)
+- [ ] Tests unitarios para lógica crítica
+- [ ] Configurar coverage reporting
+
+---
+
+## 🟢 PRIORIDAD 3: Performance y Optimización
+
+### 3.1 Optimizar Queries de Base de Datos
+**Impacto:** 🟡 MEDIO - Performance  
+**Tiempo:** 6-8 horas  
+**Dificultad:** Media
+
+**Problemas:**
+- Posibles queries N+1 en algunos endpoints
+- Falta de índices en algunas relaciones
+- Queries sin paginación en algunos casos
+
+**Soluciones:**
+
+#### Agregar Índices Faltantes
+```prisma
+// Revisar schema.prisma
+@@index([TenantId, EstaEliminado])
+@@index([TenantId, CodigoBarra])
+```
+
+#### Optimizar Queries N+1
+```typescript
+// Antes (N+1):
+const usuarios = await prisma.usuario.findMany();
+for (const usuario of usuarios) {
+  const perfiles = await prisma.perfilUsuario.findMany({
+    where: { Usuario_Id: usuario.Id }
+  });
+}
+
+// Después (1 query):
+const usuarios = await prisma.usuario.findMany({
+  include: {
+    PerfilUsuario: true
   }
 });
 ```
 
-**Tiempo estimado:** 3-4 horas
-**Impacto:** 🟡 MEDIO - Mejora performance
+#### Paginación en Todos los Listados
+- Todos los GET que retornan listas deben tener paginación
+- Límite máximo de items por página
 
 ---
 
-### 2.2 Implementar Caché para Catálogos Estáticos
+### 3.2 Resolver Warnings de ESLint
+**Impacto:** 🟢 BAJO - Calidad  
+**Tiempo:** 4-6 horas  
+**Dificultad:** Fácil
 
-**Oportunidad:**
-- Provincias, departamentos, condiciones IVA son datos estáticos
-- Se consultan frecuentemente
-- Pueden cachearse
+**Estado:**
+- ~80 warnings de ESLint
+- Variables no usadas
+- Tipos `any`
+- Hooks con dependencias faltantes
 
 **Solución:**
-- Usar React Query con `staleTime` alto
-- O implementar caché en servidor (Redis opcional)
+```typescript
+// Antes:
+const [data, setData] = useState(null); // ⚠️ No usado
 
-**Tiempo estimado:** 2-3 horas
-**Impacto:** 🟡 MEDIO - Reduce carga en BD
+// Después:
+// Eliminar o usar
 
----
+// Antes:
+function processData(data: any) { // ⚠️ any
+  // ...
+}
 
-### 2.3 Completar TODOs de Analíticas
-
-**Pendientes:**
-- `src/app/(dashboard)/analiticas/page.tsx` - Datos mock
-- Filtros por fecha no implementados
-- API de logs pendiente
-
-**Tiempo estimado:** 4-6 horas
-**Impacto:** 🟡 MEDIO - Funcionalidad incompleta
-
----
-
-## 🟢 PRIORIDAD 3: Testing (Próximo Mes)
-
-### 3.1 Tests de API Routes Críticas
-
-**Prioridad:**
-1. `POST /api/comprobantes` - Lógica de ventas (más crítica)
-2. `POST /api/productos` - Creación de productos
-3. `POST /api/clientes` - Creación de clientes
-
-**Tiempo estimado:** 6-8 horas
-**Impacto:** 🟢 BAJO-MEDIO - Previene regresiones
+// Después:
+function processData(data: Producto) {
+  // ...
+}
+```
 
 ---
 
-### 3.2 Tests de Integración
+### 3.3 Documentación de APIs
+**Impacto:** 🟢 BAJO - Mantenibilidad  
+**Tiempo:** 6-8 horas  
+**Dificultad:** Fácil
 
-**Enfoque:**
-- Flujos completos (crear producto → vender → actualizar stock)
-- Tests de permisos end-to-end
-- Tests de multi-tenant
+**Falta:**
+- JSDoc en funciones complejas
+- Documentación de APIs con ejemplos
 
-**Tiempo estimado:** 8-10 horas
-**Impacto:** 🟢 MEDIO - Confianza en el sistema
-
----
-
-## 📈 Métricas Actuales vs Objetivo
-
-| Métrica | Actual | Objetivo | Prioridad |
-|---------|--------|----------|-----------|
-| Tests pasando | 19 | 50+ | 🟡 Media |
-| Cobertura | ~5% | 70%+ | 🟡 Media |
-| Transacciones críticas | 14/16 | 16/16 | 🔴 Alta |
-| Console.log | 102 | <20 | 🟡 Media |
-| Endpoints con handleError | ~50% | 100% | 🟡 Media |
-| Queries optimizadas | ~60% | 90%+ | 🟡 Media |
-
----
-
-## 🎯 Plan de Acción Inmediato (Esta Semana)
-
-### Día 1-2: Seguridad Crítica
-- [ ] Agregar transacciones a productos (POST y PATCH)
-- [ ] Eliminar fallbacks peligrosos de tenantId
-- [ ] Validar tenantId en todos los endpoints
-
-### Día 3-4: Manejo de Errores
-- [ ] Migrar 5 endpoints principales a `handleError`
-- [ ] Reemplazar console.error por logging estructurado
-- [ ] Mejorar mensajes de error
-
-### Día 5: Testing
-- [ ] Agregar tests para API de productos
-- [ ] Tests para validación de tenantId
+**Solución:**
+```typescript
+/**
+ * Crea un nuevo producto en el sistema.
+ * 
+ * @param req - Request con datos del producto
+ * @returns Producto creado o error
+ * 
+ * @throws {PermisoError} Si no tiene permiso "productos:crear"
+ * @throws {ValidationError} Si los datos son inválidos
+ */
+export async function POST(req: NextRequest) {
+  // ...
+}
+```
 
 ---
 
-## 💡 Recomendación Final
+## 📊 Resumen de Prioridades
 
-**Empezar HOY con:**
-1. ✅ Transacciones en productos (30 min)
-2. ✅ Eliminar fallbacks de tenantId (1 hora)
-3. ✅ Migrar manejo de errores en productos (30 min)
+| Prioridad | Mejora | Impacto | Tiempo | Dificultad |
+|-----------|--------|---------|--------|------------|
+| 🔴 1.1 | Eliminar fallbacks tenantId | CRÍTICO | 30min | Fácil |
+| 🔴 1.2 | Verificar transacciones | ALTO | 30min | Fácil |
+| 🔴 1.3 | Rate limiting | MEDIO | 4-6h | Media |
+| 🔴 1.4 | Validación permisos | MEDIO | 4-6h | Media |
+| 🟡 2.1 | Migrar a handleError | MEDIO | 2-3h | Fácil |
+| 🟡 2.2 | Tests unitarios | MEDIO | 8-10h | Media |
+| 🟢 3.1 | Optimizar queries BD | MEDIO | 6-8h | Media |
+| 🟢 3.2 | Resolver ESLint | BAJO | 4-6h | Fácil |
+| 🟢 3.3 | Documentación APIs | BAJO | 6-8h | Fácil |
 
-**Total: ~2 horas de trabajo crítico**
+---
 
-Estas 3 mejoras tienen el **mayor impacto** con el **menor esfuerzo**.
+## 🎯 Plan de Acción Recomendado
+
+### Semana 1: Críticas (1-2 horas)
+1. ✅ Eliminar fallbacks tenantId (30min) - **CRÍTICO**
+2. ✅ Verificar transacciones (30min)
+3. ✅ Migrar 5-10 endpoints a handleError (1h)
+
+### Semana 2: Importantes (12-16 horas)
+1. ✅ Rate limiting básico (4-6h)
+2. ✅ Validación permisos en endpoints críticos (4-6h)
+3. ✅ Tests unitarios básicos (8-10h)
+
+### Semana 3: Mejoras (14-20 horas)
+1. ✅ Optimizar queries BD (6-8h)
+2. ✅ Resolver ESLint warnings (4-6h)
+3. ✅ Documentación APIs (6-8h)
+
+**Total estimado:** 27-38 horas
+
+---
+
+## 💡 Top 3 Prioridades Absolutas
+
+1. **Eliminar fallbacks tenantId** (30min) - 🔴 **RIESGO DE SEGURIDAD**
+2. **Rate limiting** (4-6h) - 🟡 **PROTECCIÓN BÁSICA**
+3. **Tests unitarios** (8-10h) - 🟡 **CONFIABILIDAD**
+
+---
+
+## ✅ Checklist General
+
+### Seguridad
+- [ ] Sin fallbacks peligrosos de tenantId
+- [ ] Todas las operaciones críticas en transacciones
+- [ ] Rate limiting implementado
+- [ ] Validación de permisos completa
+- [ ] Validación Zod en todos los endpoints
+
+### Calidad
+- [ ] Sin warnings críticos de ESLint
+- [ ] Sin tipos `any` en código crítico
+- [ ] Documentación de APIs
+- [ ] Manejo de errores consistente
+- [ ] Tests unitarios básicos
+
+### Performance
+- [ ] Queries optimizadas (sin N+1)
+- [ ] Índices en relaciones frecuentes
+- [ ] Paginación en todos los listados
+- [ ] Bundle size optimizado
 
 ---
 
@@ -230,9 +376,21 @@ Estas 3 mejoras tienen el **mayor impacto** con el **menor esfuerzo**.
 **Sugerencia:** Dividir en componentes más pequeños cuando sea posible.
 
 ### Mejoras Futuras (No Urgentes)
-- Rate limiting
 - Monitoreo con Sentry
 - Documentación API interactiva (Swagger)
 - Logging estructurado profesional
 - Tests E2E con Playwright
+- Implementar caché (Redis)
 
+---
+
+## 🎉 Conclusión
+
+**Para llegar a 10/10 necesitas:**
+
+1. **Mínimo crítico:** 30-40 horas enfocadas en seguridad y testing básico
+2. **Excelencia completa:** 68-91 horas para cubrir todas las áreas
+
+**Recomendación:** Empezar con las críticas (1-2 horas) y luego seguir con las importantes según prioridad.
+
+**Prioridad absoluta:** Eliminar fallbacks tenantId - **NO negociable** para producción.

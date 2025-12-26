@@ -12,6 +12,8 @@ import {
   Select,
   SelectItem,
   Switch,
+  Tabs,
+  Tab,
 } from "@heroui/react";
 import { addToast } from "@heroui/react";
 import { Lock, Shield, Eye } from "lucide-react";
@@ -21,6 +23,7 @@ import {
   savePreferenciasVenta,
   type PreferenciasVentaDTO,
 } from "./actions-preferencias-venta";
+import { useConfiguracion } from "@/hooks/useConfiguracion";
 
 type SectionKey =
   | "perfil"
@@ -67,9 +70,7 @@ function SectionPanel({
   return (
     <Card
       shadow="sm"
-      className={`rounded-2xl border border-slate-200 ${
-        isActive ? "block" : "hidden"
-      }`}
+      className="rounded-2xl border border-slate-200"
       id={id}
     >
       <CardBody className="p-4 space-y-3">
@@ -87,12 +88,44 @@ function SectionPanel({
 
 export default function Configuracion() {
   const router = useRouter();
-  const [isSavingAll, setIsSavingAll] = useState(false);
-  const [isLoadingTenant, setIsLoadingTenant] = useState(true);
-  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
   const [openSection, setOpenSection] = useState<SectionKey>("perfil");
   const [isOffline, setIsOffline] = useState(false);
 
+  // Usar TanStack Query hook
+  const {
+    tenant: tenantData,
+    configuracion: configuracionData,
+    localidades: localidadesData,
+    preferenciasVenta: preferenciasVentaData,
+    notificaciones: notificacionesData,
+    seguridad: seguridadData,
+    fiscal: fiscalData,
+    branding: brandingData,
+    isLoadingTenant,
+    isLoadingConfiguracion,
+    isLoadingLocalidades,
+    isLoadingPreferenciasVenta,
+    isLoadingNotificaciones,
+    isLoadingSeguridad,
+    isLoadingFiscal,
+    isLoadingBranding,
+    saveTenant: saveTenantMutation,
+    saveConfiguracion: saveConfiguracionMutation,
+    savePreferenciasVenta: savePreferenciasVentaMutation,
+    saveNotificaciones: saveNotificacionesMutation,
+    saveSeguridad: saveSeguridadMutation,
+    saveFiscal: saveFiscalMutation,
+    saveBranding: saveBrandingMutation,
+    isSavingTenant,
+    isSavingConfiguracion,
+    isSavingPreferenciasVenta,
+    isSavingNotificaciones,
+    isSavingSeguridad,
+    isSavingFiscal,
+    isSavingBranding,
+  } = useConfiguracion({ enabled: true });
+
+  // Estados locales para edición (se sincronizan con los datos del hook)
   const [configuracion, setConfiguracion] = useState({
     razonSocial: "",
     nombreFantasia: "",
@@ -105,7 +138,7 @@ export default function Configuracion() {
     observacionPieFactura: "",
   });
   
-  const [localidades, setLocalidades] = useState<Array<{Id: number, Descripcion: string}>>([]);
+  const localidades = localidadesData || [];
 
   const [regional, setRegional] = useState({
     moneda: "ARS",
@@ -116,8 +149,6 @@ export default function Configuracion() {
     inicioActividades: "",
   });
   const [regionalOriginal, setRegionalOriginal] = useState<typeof regional | null>(null);
-  const [isLoadingFiscal, setIsLoadingFiscal] = useState(false);
-  const [isSavingFiscal, setIsSavingFiscal] = useState(false);
 
   const [preferencias, setPreferencias] = useState<PreferenciasVentaDTO>({
     ticketDigitalPorCorreo: true,
@@ -127,8 +158,6 @@ export default function Configuracion() {
   });
   const [preferenciasOriginales, setPreferenciasOriginales] =
     useState<PreferenciasVentaDTO | null>(null);
-  const [isLoadingPreferencias, setIsLoadingPreferencias] = useState(true);
-  const [isSavingPreferencias, setIsSavingPreferencias] = useState(false);
 
   // Configuración avanzada: Stock y compras
   const [configStock, setConfigStock] = useState({
@@ -172,8 +201,6 @@ export default function Configuracion() {
     stockBajo: true,
   });
   const [notificacionesOriginales, setNotificacionesOriginales] = useState<typeof notificaciones | null>(null);
-  const [isLoadingNotificaciones, setIsLoadingNotificaciones] = useState(false);
-  const [isSavingNotificaciones, setIsSavingNotificaciones] = useState(false);
 
   const [seguridad, setSeguridad] = useState({
     dobleFactor: false,
@@ -183,8 +210,6 @@ export default function Configuracion() {
     recordarSesion30Dias: true,
   });
   const [seguridadOriginal, setSeguridadOriginal] = useState<typeof seguridad | null>(null);
-  const [isLoadingSeguridad, setIsLoadingSeguridad] = useState(false);
-  const [isSavingSeguridad, setIsSavingSeguridad] = useState(false);
 
   const [branding, setBranding] = useState({
     slogan: "Mejor precio, mejor servicio.",
@@ -193,449 +218,179 @@ export default function Configuracion() {
     logoPreview: "",
   });
   const [brandingOriginal, setBrandingOriginal] = useState<{slogan: string, color: string, logoPreview: string} | null>(null);
-  const [isLoadingBranding, setIsLoadingBranding] = useState(false);
-  const [isSavingBranding, setIsSavingBranding] = useState(false);
 
   const [tenant, setTenant] = useState({
-    nombre: "PX Liniers",
-    dominio: "puntox.com",
-    razonSocial: "Punto X Market",
-    cuit: "20-12345678-9",
-    email: "admin@puntox.com",
-    telefono: "+54 11 5555 0000",
-    planId: "BUSINESS",
+    nombre: "",
+    dominio: "",
+    razonSocial: "",
+    cuit: "",
+    email: "",
+    telefono: "",
+    planId: "",
     estaActivo: true,
     onboardingCompleto: false,
   });
 
+  // Sincronizar tenant desde el hook
   useEffect(() => {
-    const loadTenant = async () => {
-      setIsLoadingTenant(true);
-      try {
-        const res = await fetch("/api/tenant");
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => null);
-          const errorMessage =
-            errorData?.error ?? "No se pudo cargar el tenant";
-          
-          // Diferenciar entre errores de conexión (503) y errores de permisos (401/403)
-          if (res.status === 503) {
-            // Error de conexión a la base de datos
-            setIsOffline(true);
-            console.error("Error de conexión a la base de datos:", errorMessage);
-            addToast({
-              title: "Modo offline",
-              description:
-                "No se pudo conectar a la base de datos. Se están usando valores por defecto.",
-              color: "warning",
-            });
-          } else if (res.status === 401 || res.status === 403) {
-            // Error de autenticación/autorización
-            setIsOffline(false);
-            console.error("Error de permisos:", errorMessage);
-            addToast({
-              title: "Sin permisos",
-              description: errorMessage || "No tienes permisos para acceder a estos datos.",
-              color: "danger",
-            });
-          } else {
-            // Otros errores (404, 500, etc.)
-            setIsOffline(false);
-            console.error("Error cargando tenant:", errorMessage);
-            addToast({
-              title: "Error",
-              description: errorMessage,
-              color: "danger",
-            });
-          }
-          return;
-        }
-        
-        // Si llegamos aquí, la conexión fue exitosa
-        setIsOffline(false);
-        const json = await res.json();
-        if (json?.tenant) {
-          setTenant((prev) => ({
-            ...prev,
-            nombre: json.tenant.nombre ?? prev.nombre,
-            dominio: json.tenant.dominio ?? prev.dominio,
-            razonSocial: json.tenant.razonSocial ?? prev.razonSocial,
-            cuit: json.tenant.cuit ?? prev.cuit,
-            email: json.tenant.email ?? prev.email,
-            telefono: json.tenant.telefono ?? prev.telefono,
-          }));
-        }
-      } catch (error) {
-        // Errores de red o timeouts también se consideran offline
-        setIsOffline(true);
-        console.error("Error inesperado cargando tenant:", error);
-        addToast({
-          title: "Modo offline",
-          description:
-            "No se pudo conectar al servidor. La página continuará con valores por defecto.",
-          color: "warning",
+    if (tenantData) {
+      setTenant((prev) => ({
+        ...prev,
+        nombre: tenantData.nombre ?? prev.nombre,
+        dominio: tenantData.dominio ?? prev.dominio,
+        razonSocial: tenantData.razonSocial ?? prev.razonSocial,
+        cuit: tenantData.cuit ?? prev.cuit,
+        email: tenantData.email ?? prev.email,
+        telefono: tenantData.telefono ?? prev.telefono,
+      }));
+    }
+  }, [tenantData]);
+
+  // Sincronizar configuración desde el hook
+  useEffect(() => {
+    if (configuracionData) {
+      setConfiguracion((prev) => ({
+        ...prev,
+        razonSocial: configuracionData.razonSocial ?? prev.razonSocial,
+        nombreFantasia: configuracionData.nombreFantasia ?? prev.nombreFantasia,
+        cuit: configuracionData.cuit ?? prev.cuit,
+        email: configuracionData.email ?? prev.email,
+        telefono: configuracionData.telefono ?? prev.telefono,
+        celular: configuracionData.celular ?? prev.celular,
+        direccion: configuracionData.direccion ?? prev.direccion,
+        localidadId: configuracionData.localidadId ?? prev.localidadId,
+        observacionPieFactura: configuracionData.observacionPieFactura ?? prev.observacionPieFactura,
+      }));
+
+      // Actualizar preferencias desde la configuración
+      if (configuracionData.mostrarPreciosConIva !== undefined) {
+        setPreferencias((prev) => ({
+          ...prev,
+          mostrarPreciosConIva: configuracionData.mostrarPreciosConIva ?? prev.mostrarPreciosConIva,
+          abrirCajonEfectivo: configuracionData.abrirCajonEfectivo ?? prev.abrirCajonEfectivo,
+          numerarPedidosPantalla: configuracionData.numerarPedidosPantalla ?? prev.numerarPedidosPantalla,
+          ticketDigitalPorCorreo: configuracionData.ticketDigitalPorCorreo ?? prev.ticketDigitalPorCorreo,
+        }));
+      }
+
+      // Actualizar configuración de stock
+      if (configuracionData.facturaDescuentaStock !== undefined) {
+        setConfigStock({
+          facturaDescuentaStock: configuracionData.facturaDescuentaStock ?? true,
+          presupuestoDescuentaStock: configuracionData.presupuestoDescuentaStock ?? false,
+          remitoDescuentaStock: configuracionData.remitoDescuentaStock ?? true,
+          actualizaCostoDesdeCompra: configuracionData.actualizaCostoDesdeCompra ?? true,
+          modificaPrecioVentaDesdeCompra: configuracionData.modificaPrecioVentaDesdeCompra ?? false,
         });
-      } finally {
-        setIsLoadingTenant(false);
+        setConfigStockOriginal({
+          facturaDescuentaStock: configuracionData.facturaDescuentaStock ?? true,
+          presupuestoDescuentaStock: configuracionData.presupuestoDescuentaStock ?? false,
+          remitoDescuentaStock: configuracionData.remitoDescuentaStock ?? true,
+          actualizaCostoDesdeCompra: configuracionData.actualizaCostoDesdeCompra ?? true,
+          modificaPrecioVentaDesdeCompra: configuracionData.modificaPrecioVentaDesdeCompra ?? false,
+        });
       }
-    };
 
-    const loadConfig = async () => {
-      setIsLoadingConfig(true);
-      try {
-        const res = await fetch("/api/configuracion");
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => null);
-          // handleError devuelve { error: { code, message, ... } }
-          // pero también puede venir { error: "mensaje" } en algunos casos
-          const errorMessage =
-            (typeof errorData?.error === "string" 
-              ? errorData.error 
-              : errorData?.error?.message) || "No se pudo cargar la configuración";
-          
-          // Diferenciar entre errores de conexión (503) y errores de permisos (401/403)
-          if (res.status === 503) {
-            // Error de conexión a la base de datos
-            setIsOffline(true);
-            // No mostrar toast duplicado si ya se mostró en loadTenant
-            if (!isLoadingTenant) {
-              addToast({
-                title: "Modo offline",
-                description:
-                  "No se pudo conectar a la base de datos. Se están usando valores por defecto.",
-                color: "warning",
-              });
-            }
-          } else if (res.status === 401 || res.status === 403) {
-            // Error de autenticación/autorización
-            setIsOffline(false);
-            addToast({
-              title: "Sin permisos",
-              description: errorMessage || "No tienes permisos para acceder a esta configuración.",
-              color: "danger",
-            });
-          } else if (res.status === 404) {
-            // No hay configuración, usar valores por defecto
-            setIsOffline(false);
-            // No mostrar error, simplemente usar valores por defecto
-          } else {
-            // Otros errores (500, etc.)
-            setIsOffline(false);
-            addToast({
-              title: "Error",
-              description: errorMessage,
-              color: "danger",
-            });
-          }
-          return;
-        }
-        
-        // Si llegamos aquí, la conexión fue exitosa
-        setIsOffline(false);
-        const json = await res.json();
-        if (json?.configuracion) {
-          setConfiguracion((prev) => ({
-            ...prev,
-            razonSocial: json.configuracion.razonSocial ?? prev.razonSocial,
-            nombreFantasia:
-              json.configuracion.nombreFantasia ?? prev.nombreFantasia,
-            cuit: json.configuracion.cuit ?? prev.cuit,
-            email: json.configuracion.email ?? prev.email,
-            telefono: json.configuracion.telefono ?? prev.telefono,
-            celular: json.configuracion.celular ?? prev.celular,
-            direccion: json.configuracion.direccion ?? prev.direccion,
-            localidadId: json.configuracion.localidadId ?? prev.localidadId,
-            observacionPieFactura:
-              json.configuracion.observacionPieFactura ??
-              prev.observacionPieFactura,
-          }));
-          
-          // Actualizar preferencias desde la configuración
-          if (json.configuracion.mostrarPreciosConIva !== undefined) {
-            setPreferencias((prev) => ({
-              ...prev,
-              mostrarPreciosConIva: json.configuracion.mostrarPreciosConIva,
-              abrirCajonEfectivo: json.configuracion.abrirCajonEfectivo ?? prev.abrirCajonEfectivo,
-              numerarPedidosPantalla: json.configuracion.numerarPedidosPantalla ?? prev.numerarPedidosPantalla,
-              ticketDigitalPorCorreo: json.configuracion.imprimir ?? prev.ticketDigitalPorCorreo,
-            }));
-          }
-
-          // Actualizar configuración de stock
-          if (json.configuracion.facturaDescuentaStock !== undefined) {
-            setConfigStock({
-              facturaDescuentaStock: json.configuracion.facturaDescuentaStock ?? true,
-              presupuestoDescuentaStock: json.configuracion.presupuestoDescuentaStock ?? false,
-              remitoDescuentaStock: json.configuracion.remitoDescuentaStock ?? true,
-              actualizaCostoDesdeCompra: json.configuracion.actualizaCostoDesdeCompra ?? true,
-              modificaPrecioVentaDesdeCompra: json.configuracion.modificaPrecioVentaDesdeCompra ?? false,
-            });
-            setConfigStockOriginal({
-              facturaDescuentaStock: json.configuracion.facturaDescuentaStock ?? true,
-              presupuestoDescuentaStock: json.configuracion.presupuestoDescuentaStock ?? false,
-              remitoDescuentaStock: json.configuracion.remitoDescuentaStock ?? true,
-              actualizaCostoDesdeCompra: json.configuracion.actualizaCostoDesdeCompra ?? true,
-              modificaPrecioVentaDesdeCompra: json.configuracion.modificaPrecioVentaDesdeCompra ?? false,
-            });
-          }
-
-          // Actualizar configuración de caja
-          if (json.configuracion.tipoFormaPagoPorDefectoVenta !== undefined) {
-            setConfigCaja({
-              tipoFormaPagoPorDefectoVenta: json.configuracion.tipoFormaPagoPorDefectoVenta ?? 0,
-              tipoFormaPagoPorDefectoCompra: json.configuracion.tipoFormaPagoPorDefectoCompra ?? 0,
-              ingresoManualCajaInicial: json.configuracion.ingresoManualCajaInicial ?? false,
-              puestoCajaSeparado: json.configuracion.puestoCajaSeparado ?? false,
-              activarRetiroDeCaja: json.configuracion.activarRetiroDeCaja ?? false,
-              montoMaximoRetiroCaja: json.configuracion.montoMaximoRetiroCaja ?? 0,
-            });
-            setConfigCajaOriginal({
-              tipoFormaPagoPorDefectoVenta: json.configuracion.tipoFormaPagoPorDefectoVenta ?? 0,
-              tipoFormaPagoPorDefectoCompra: json.configuracion.tipoFormaPagoPorDefectoCompra ?? 0,
-              ingresoManualCajaInicial: json.configuracion.ingresoManualCajaInicial ?? false,
-              puestoCajaSeparado: json.configuracion.puestoCajaSeparado ?? false,
-              activarRetiroDeCaja: json.configuracion.activarRetiroDeCaja ?? false,
-              montoMaximoRetiroCaja: json.configuracion.montoMaximoRetiroCaja ?? 0,
-            });
-          }
-
-          // Actualizar configuración de productos
-          if (json.configuracion.unificarRenglonesIngresarMismoProducto !== undefined) {
-            setConfigProductos({
-              unificarRenglonesIngresarMismoProducto: json.configuracion.unificarRenglonesIngresarMismoProducto ?? true,
-            });
-            setConfigProductosOriginal({
-              unificarRenglonesIngresarMismoProducto: json.configuracion.unificarRenglonesIngresarMismoProducto ?? true,
-            });
-          }
-
-          // Actualizar configuración de báscula
-          if (json.configuracion.activarBascula !== undefined) {
-            setConfigBascula({
-              activarBascula: json.configuracion.activarBascula ?? false,
-              etiquetaPorPeso: json.configuracion.etiquetaPorPeso ?? false,
-              codigoBascula: json.configuracion.codigoBascula ?? "",
-            });
-            setConfigBasculaOriginal({
-              activarBascula: json.configuracion.activarBascula ?? false,
-              etiquetaPorPeso: json.configuracion.etiquetaPorPeso ?? false,
-              codigoBascula: json.configuracion.codigoBascula ?? "",
-            });
-          }
-        }
-      } catch (error) {
-        // Errores de red o timeouts también se consideran offline
-        setIsOffline(true);
-        console.error("Error inesperado cargando configuración:", error);
-        // No mostrar toast duplicado si ya se mostró en loadTenant
-        if (!isLoadingTenant) {
-          addToast({
-            title: "Modo offline",
-            description:
-              "No se pudo conectar al servidor. La página continuará con valores por defecto.",
-            color: "warning",
-          });
-        }
-      } finally {
-        setIsLoadingConfig(false);
+      // Actualizar configuración de caja
+      if (configuracionData.tipoFormaPagoPorDefectoVenta !== undefined) {
+        setConfigCaja({
+          tipoFormaPagoPorDefectoVenta: configuracionData.tipoFormaPagoPorDefectoVenta ?? 0,
+          tipoFormaPagoPorDefectoCompra: configuracionData.tipoFormaPagoPorDefectoCompra ?? 0,
+          ingresoManualCajaInicial: configuracionData.ingresoManualCajaInicial ?? false,
+          puestoCajaSeparado: configuracionData.puestoCajaSeparado ?? false,
+          activarRetiroDeCaja: configuracionData.activarRetiroDeCaja ?? false,
+          montoMaximoRetiroCaja: configuracionData.montoMaximoRetiroCaja ?? 0,
+        });
+        setConfigCajaOriginal({
+          tipoFormaPagoPorDefectoVenta: configuracionData.tipoFormaPagoPorDefectoVenta ?? 0,
+          tipoFormaPagoPorDefectoCompra: configuracionData.tipoFormaPagoPorDefectoCompra ?? 0,
+          ingresoManualCajaInicial: configuracionData.ingresoManualCajaInicial ?? false,
+          puestoCajaSeparado: configuracionData.puestoCajaSeparado ?? false,
+          activarRetiroDeCaja: configuracionData.activarRetiroDeCaja ?? false,
+          montoMaximoRetiroCaja: configuracionData.montoMaximoRetiroCaja ?? 0,
+        });
       }
-    };
 
-    const loadLocalidades = async () => {
-      try {
-        const res = await fetch("/api/localidades");
-        if (res.ok) {
-          const data = await res.json();
-          setLocalidades(data);
-        }
-      } catch (error) {
-        console.error("Error cargando localidades:", error);
+      // Actualizar configuración de productos
+      if (configuracionData.unificarRenglonesIngresarMismoProducto !== undefined) {
+        setConfigProductos({
+          unificarRenglonesIngresarMismoProducto: configuracionData.unificarRenglonesIngresarMismoProducto ?? true,
+        });
+        setConfigProductosOriginal({
+          unificarRenglonesIngresarMismoProducto: configuracionData.unificarRenglonesIngresarMismoProducto ?? true,
+        });
       }
-    };
 
-    const loadNotificaciones = async () => {
-      setIsLoadingNotificaciones(true);
-      try {
-        const res = await fetch("/api/configuracion/preferencias");
-        if (res.ok) {
-          const json = await res.json();
-          if (json?.preferencias) {
-            setNotificaciones(json.preferencias);
-            setNotificacionesOriginales(json.preferencias);
-          }
-        }
-      } catch (error) {
-        console.error("Error cargando notificaciones:", error);
-      } finally {
-        setIsLoadingNotificaciones(false);
+      // Actualizar configuración de báscula
+      if (configuracionData.activarBascula !== undefined) {
+        setConfigBascula({
+          activarBascula: configuracionData.activarBascula ?? false,
+          etiquetaPorPeso: configuracionData.etiquetaPorPeso ?? false,
+          codigoBascula: configuracionData.codigoBascula ?? "",
+        });
+        setConfigBasculaOriginal({
+          activarBascula: configuracionData.activarBascula ?? false,
+          etiquetaPorPeso: configuracionData.etiquetaPorPeso ?? false,
+          codigoBascula: configuracionData.codigoBascula ?? "",
+        });
       }
-    };
-
-    const loadSeguridad = async () => {
-      setIsLoadingSeguridad(true);
-      try {
-        const res = await fetch("/api/configuracion/seguridad");
-        if (res.ok) {
-          const json = await res.json();
-          if (json?.seguridad) {
-            setSeguridad(json.seguridad);
-            setSeguridadOriginal(json.seguridad);
-          }
-        }
-      } catch (error) {
-        console.error("Error cargando seguridad:", error);
-      } finally {
-        setIsLoadingSeguridad(false);
-      }
-    };
-
-    const loadFiscal = async () => {
-      setIsLoadingFiscal(true);
-      try {
-        const res = await fetch("/api/configuracion/fiscal");
-        if (res.ok) {
-          const json = await res.json();
-          if (json?.fiscal) {
-            setRegional(json.fiscal);
-            setRegionalOriginal(json.fiscal);
-          }
-        }
-      } catch (error) {
-        console.error("Error cargando fiscal:", error);
-      } finally {
-        setIsLoadingFiscal(false);
-      }
-    };
-
-    const loadBranding = async () => {
-      setIsLoadingBranding(true);
-      try {
-        const res = await fetch("/api/configuracion/branding");
-        if (res.ok) {
-          const json = await res.json();
-          if (json?.branding) {
-            setBranding({
-              slogan: json.branding.slogan || "",
-              color: json.branding.color || "#90c472",
-              logo: null,
-              logoPreview: json.branding.logoPreview || "",
-            });
-            setBrandingOriginal({
-              slogan: json.branding.slogan || "",
-              color: json.branding.color || "#90c472",
-              logoPreview: json.branding.logoPreview || "",
-            });
-          }
-        }
-      } catch (error) {
-        console.error("Error cargando branding:", error);
-      } finally {
-        setIsLoadingBranding(false);
-      }
-    };
-
-    loadTenant();
-    loadConfig();
-    loadPreferenciasVenta();
-    loadLocalidades();
-    loadNotificaciones();
-    loadSeguridad();
-    loadFiscal();
-    loadBranding();
-  }, []);
-
-  const loadPreferenciasVenta = async () => {
-    setIsLoadingPreferencias(true);
-    try {
-      const data = await getPreferenciasVenta();
-      setPreferencias(data);
-      setPreferenciasOriginales(data);
-    } catch (error) {
-      console.error("Error cargando preferencias de venta:", error);
-      addToast({
-        title: "Error",
-        description:
-          "No se pudieron cargar las preferencias de venta. Se usarán valores por defecto.",
-        color: "warning",
-      });
-    } finally {
-      setIsLoadingPreferencias(false);
     }
-  };
+  }, [configuracionData]);
 
-  const handleSavePreferenciasVenta = async () => {
-    setIsSavingPreferencias(true);
-    try {
-      // Guardar preferencias básicas
-      const result = await savePreferenciasVenta(preferencias);
-      if (!result.success) {
-        throw new Error(result.error || "No se pudieron guardar las preferencias básicas");
-      }
-
-      // Guardar configuración avanzada usando la API de configuración
-      const res = await fetch("/api/configuracion", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          razonSocial: configuracion.razonSocial,
-          nombreFantasia: configuracion.nombreFantasia,
-          cuit: configuracion.cuit,
-          email: configuracion.email,
-          telefono: configuracion.telefono,
-          celular: configuracion.celular,
-          direccion: configuracion.direccion,
-          localidadId: configuracion.localidadId,
-          observacionPieFactura: configuracion.observacionPieFactura,
-          mostrarPreciosConIva: preferencias.mostrarPreciosConIva,
-          abrirCajonEfectivo: preferencias.abrirCajonEfectivo,
-          numerarPedidosPantalla: preferencias.numerarPedidosPantalla,
-          imprimir: preferencias.ticketDigitalPorCorreo,
-          facturaDescuentaStock: configStock.facturaDescuentaStock,
-          presupuestoDescuentaStock: configStock.presupuestoDescuentaStock,
-          remitoDescuentaStock: configStock.remitoDescuentaStock,
-          actualizaCostoDesdeCompra: configStock.actualizaCostoDesdeCompra,
-          modificaPrecioVentaDesdeCompra: configStock.modificaPrecioVentaDesdeCompra,
-          tipoFormaPagoPorDefectoVenta: configCaja.tipoFormaPagoPorDefectoVenta,
-          tipoFormaPagoPorDefectoCompra: configCaja.tipoFormaPagoPorDefectoCompra,
-          ingresoManualCajaInicial: configCaja.ingresoManualCajaInicial,
-          puestoCajaSeparado: configCaja.puestoCajaSeparado,
-          activarRetiroDeCaja: configCaja.activarRetiroDeCaja,
-          montoMaximoRetiroCaja: configCaja.montoMaximoRetiroCaja,
-          unificarRenglonesIngresarMismoProducto: configProductos.unificarRenglonesIngresarMismoProducto,
-          activarBascula: configBascula.activarBascula,
-          etiquetaPorPeso: configBascula.etiquetaPorPeso,
-          codigoBascula: configBascula.codigoBascula,
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => null);
-        throw new Error(errorData?.error || "No se pudo guardar la configuración avanzada");
-      }
-
-      // Actualizar estados originales
-      setPreferenciasOriginales(preferencias);
-      setConfigStockOriginal(configStock);
-      setConfigCajaOriginal(configCaja);
-      setConfigProductosOriginal(configProductos);
-      setConfigBasculaOriginal(configBascula);
-
-      addToast({
-        title: "Preferencias guardadas",
-        description: "Todas las preferencias de venta se guardaron correctamente.",
-        color: "success",
-      });
-    } catch (error: unknown) {
-      console.error("Error guardando preferencias de venta:", error);
-      addToast({
-        title: "Error al guardar",
-        description: (error instanceof Error ? error.message : String(error)) || "Ocurrió un error inesperado al guardar las preferencias.",
-        color: "danger",
-      });
-    } finally {
-      setIsSavingPreferencias(false);
+  // Sincronizar preferencias de venta
+  useEffect(() => {
+    if (preferenciasVentaData) {
+      setPreferencias(preferenciasVentaData);
+      setPreferenciasOriginales(preferenciasVentaData);
     }
-  };
+  }, [preferenciasVentaData]);
+
+  // Sincronizar notificaciones
+  useEffect(() => {
+    if (notificacionesData) {
+      setNotificaciones(notificacionesData);
+      setNotificacionesOriginales(notificacionesData);
+    }
+  }, [notificacionesData]);
+
+  // Sincronizar seguridad
+  useEffect(() => {
+    if (seguridadData) {
+      setSeguridad(seguridadData);
+      setSeguridadOriginal(seguridadData);
+    }
+  }, [seguridadData]);
+
+  // Sincronizar fiscal
+  useEffect(() => {
+    if (fiscalData) {
+      setRegional(fiscalData);
+      setRegionalOriginal(fiscalData);
+    }
+  }, [fiscalData]);
+
+  // Sincronizar branding
+  useEffect(() => {
+    if (brandingData) {
+      setBranding((prev) => ({
+        ...prev,
+        slogan: brandingData.slogan ?? prev.slogan,
+        color: brandingData.color ?? prev.color,
+        logoPreview: brandingData.logoPreview ?? prev.logoPreview,
+      }));
+      setBrandingOriginal({
+        slogan: brandingData.slogan ?? "",
+        color: brandingData.color ?? "#90c472",
+        logoPreview: brandingData.logoPreview ?? "",
+      });
+    }
+  }, [brandingData]);
+
+  // Las preferencias de venta se cargan automáticamente con TanStack Query
+  // Se sincronizan en el useEffect anterior
+
+  // Las preferencias de venta se guardan usando la mutación de TanStack Query
+  // Se maneja en handleSavePerfil
 
   const descriptionMap: Record<SectionKey, string> = {
     perfil: "Datos visibles en tickets y comunicaciones.",
@@ -743,87 +498,37 @@ export default function Configuracion() {
   const summaryFiscal = `Moneda: ${regional.moneda} | IVA: ${regional.tipoIva} | Punto de venta: ${regional.puntoVenta}`;
   const summaryBranding = `Color: ${branding.color} | Logo: pendiente`;
 
-  const saveTenant = async () => {
-    const res = await fetch("/api/tenant", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        nombre: tenant.nombre,
-        razonSocial: tenant.razonSocial,
-        dominio: tenant.dominio,
-        email: tenant.email,
-        telefono: tenant.telefono,
-        cuit: tenant.cuit,
-      }),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      throw new Error(data?.error ?? "No se pudo guardar el tenant");
-    }
-  };
-
-  const saveConfiguracion = async () => {
-    if (!configuracion.localidadId) {
-      throw new Error("Debe seleccionar una localidad");
-    }
-    
-    const res = await fetch("/api/configuracion", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        razonSocial: configuracion.razonSocial,
-        nombreFantasia: configuracion.nombreFantasia,
-        cuit: configuracion.cuit,
-        email: configuracion.email,
-        telefono: configuracion.telefono,
-        celular: configuracion.celular,
-        direccion: configuracion.direccion,
-        localidadId: configuracion.localidadId,
-        observacionPieFactura: configuracion.observacionPieFactura,
-        mostrarPreciosConIva: preferencias.mostrarPreciosConIva,
-        abrirCajonEfectivo: preferencias.abrirCajonEfectivo,
-        numerarPedidosPantalla: preferencias.numerarPedidosPantalla,
-        imprimir: preferencias.ticketDigitalPorCorreo,
-        // Stock y compras
-        facturaDescuentaStock: configStock.facturaDescuentaStock,
-        presupuestoDescuentaStock: configStock.presupuestoDescuentaStock,
-        remitoDescuentaStock: configStock.remitoDescuentaStock,
-        actualizaCostoDesdeCompra: configStock.actualizaCostoDesdeCompra,
-        modificaPrecioVentaDesdeCompra: configStock.modificaPrecioVentaDesdeCompra,
-        // Caja y pagos
-        tipoFormaPagoPorDefectoVenta: configCaja.tipoFormaPagoPorDefectoVenta,
-        tipoFormaPagoPorDefectoCompra: configCaja.tipoFormaPagoPorDefectoCompra,
-        ingresoManualCajaInicial: configCaja.ingresoManualCajaInicial,
-        puestoCajaSeparado: configCaja.puestoCajaSeparado,
-        activarRetiroDeCaja: configCaja.activarRetiroDeCaja,
-        montoMaximoRetiroCaja: configCaja.montoMaximoRetiroCaja,
-        // Productos
-        unificarRenglonesIngresarMismoProducto: configProductos.unificarRenglonesIngresarMismoProducto,
-        // Báscula
-        activarBascula: configBascula.activarBascula,
-        etiquetaPorPeso: configBascula.etiquetaPorPeso,
-        codigoBascula: configBascula.codigoBascula,
-      }),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      throw new Error(data?.error ?? "No se pudo guardar la configuracion");
-    }
-  };
+  // saveTenant y saveConfiguracion ahora se manejan con las mutaciones de TanStack Query
 
   const handleSavePerfil = async () => {
-    setIsSavingAll(true);
     try {
       // Guardar perfil (tenant y configuración básica)
-      await saveTenant();
-      await saveConfiguracion();
+      await Promise.all([
+        new Promise<void>((resolve, reject) => {
+          saveTenantMutation(tenant, {
+            onSuccess: () => resolve(),
+            onError: (error) => reject(error),
+          });
+        }),
+        new Promise<void>((resolve, reject) => {
+          saveConfiguracionMutation(configuracion, {
+            onSuccess: () => resolve(),
+            onError: (error) => reject(error),
+          });
+        }),
+      ]);
       
       // Si hay cambios en preferencias básicas, guardarlas también
       if (hasPreferenciasChanges) {
-        const result = await savePreferenciasVenta(preferencias);
-        if (result.success) {
-          setPreferenciasOriginales(preferencias);
-        }
+        await new Promise<void>((resolve, reject) => {
+          savePreferenciasVentaMutation(preferencias, {
+            onSuccess: () => {
+              setPreferenciasOriginales(preferencias);
+              resolve();
+            },
+            onError: (error) => reject(error),
+          });
+        });
       }
       
       // Actualizar estados originales de configuración avanzada (ya se guardaron en saveConfiguracion)
@@ -836,60 +541,59 @@ export default function Configuracion() {
 
       // Guardar notificaciones si hay cambios
       if (hasNotificacionesChanges) {
-        const res = await fetch("/api/configuracion/preferencias", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(notificaciones),
+        await new Promise<void>((resolve, reject) => {
+          saveNotificacionesMutation(notificaciones, {
+            onSuccess: () => {
+              setNotificacionesOriginales(notificaciones);
+              resolve();
+            },
+            onError: (error) => reject(error),
+          });
         });
-        if (res.ok) {
-          setNotificacionesOriginales(notificaciones);
-        }
       }
 
       // Guardar seguridad si hay cambios
       if (hasSeguridadChanges) {
-        const res = await fetch("/api/configuracion/seguridad", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(seguridad),
+        await new Promise<void>((resolve, reject) => {
+          saveSeguridadMutation(seguridad, {
+            onSuccess: () => {
+              setSeguridadOriginal(seguridad);
+              resolve();
+            },
+            onError: (error) => reject(error),
+          });
         });
-        if (res.ok) {
-          setSeguridadOriginal(seguridad);
-        }
       }
 
       // Guardar fiscal si hay cambios
       if (hasFiscalChanges) {
-        const res = await fetch("/api/configuracion/fiscal", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(regional),
+        await new Promise<void>((resolve, reject) => {
+          saveFiscalMutation(regional, {
+            onSuccess: () => {
+              setRegionalOriginal(regional);
+              resolve();
+            },
+            onError: (error) => reject(error),
+          });
         });
-        if (res.ok) {
-          setRegionalOriginal(regional);
-        }
       }
 
       // Guardar branding si hay cambios
       if (hasBrandingChanges) {
-        const formData = new FormData();
-        formData.append("slogan", branding.slogan);
-        formData.append("color", branding.color);
-        if (branding.logo) {
-          formData.append("logo", branding.logo);
-        }
-        const res = await fetch("/api/configuracion/branding", {
-          method: "PUT",
-          body: formData,
-        });
-        if (res.ok) {
-          setBrandingOriginal({
-            slogan: branding.slogan,
-            color: branding.color,
-            logoPreview: branding.logoPreview,
+        await new Promise<void>((resolve, reject) => {
+          saveBrandingMutation(branding, {
+            onSuccess: (data) => {
+              setBrandingOriginal({
+                slogan: branding.slogan,
+                color: branding.color,
+                logoPreview: data.logoPreview ?? branding.logoPreview,
+              });
+              setBranding((prev) => ({ ...prev, logo: null }));
+              resolve();
+            },
+            onError: (error) => reject(error),
           });
-          setBranding((prev) => ({ ...prev, logo: null }));
-        }
+        });
       }
       
       addToast({
@@ -899,287 +603,97 @@ export default function Configuracion() {
       });
     } catch (error) {
       console.error(error);
-      addToast({
-        title: "Error al guardar",
-        description: "Revisa los datos e intenta nuevamente.",
-        color: "danger",
-      });
-    } finally {
-      setIsSavingAll(false);
+      // Los errores ya se manejan en las mutaciones individuales
     }
   };
 
   const handleSaveNotificaciones = async () => {
-    setIsSavingNotificaciones(true);
-    try {
-      const res = await fetch("/api/configuracion/preferencias", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(notificaciones),
-      });
-      if (!res.ok) {
-        throw new Error("No se pudieron guardar las notificaciones");
-      }
-      setNotificacionesOriginales(notificaciones);
-      addToast({
-        title: "Notificaciones guardadas",
-        description: "Las preferencias de notificaciones se guardaron correctamente.",
-        color: "success",
-      });
-    } catch (error) {
-      console.error(error);
-      addToast({
-        title: "Error al guardar",
-        description: "No se pudieron guardar las notificaciones.",
-        color: "danger",
-      });
-    } finally {
-      setIsSavingNotificaciones(false);
-    }
+    saveNotificacionesMutation(notificaciones, {
+      onSuccess: () => {
+        setNotificacionesOriginales(notificaciones);
+      },
+    });
   };
 
   const handleSaveSeguridad = async () => {
-    setIsSavingSeguridad(true);
-    try {
-      const res = await fetch("/api/configuracion/seguridad", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(seguridad),
-      });
-      if (!res.ok) {
-        throw new Error("No se pudo guardar la configuración de seguridad");
-      }
-      setSeguridadOriginal(seguridad);
-      addToast({
-        title: "Seguridad actualizada",
-        description: "La configuración de seguridad se guardó correctamente.",
-        color: "success",
-      });
-    } catch (error) {
-      console.error(error);
-      addToast({
-        title: "Error al guardar",
-        description: "No se pudo guardar la configuración de seguridad.",
-        color: "danger",
-      });
-    } finally {
-      setIsSavingSeguridad(false);
-    }
+    saveSeguridadMutation(seguridad, {
+      onSuccess: () => {
+        setSeguridadOriginal(seguridad);
+      },
+    });
   };
 
   const handleSaveFiscal = async () => {
-    setIsSavingFiscal(true);
-    try {
-      const res = await fetch("/api/configuracion/fiscal", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(regional),
-      });
-      if (!res.ok) {
-        throw new Error("No se pudo guardar la configuración fiscal");
-      }
-      setRegionalOriginal(regional);
-      addToast({
-        title: "Configuración fiscal guardada",
-        description: "Los datos fiscales se guardaron correctamente.",
-        color: "success",
-      });
-    } catch (error) {
-      console.error(error);
-      addToast({
-        title: "Error al guardar",
-        description: "No se pudo guardar la configuración fiscal.",
-        color: "danger",
-      });
-    } finally {
-      setIsSavingFiscal(false);
-    }
+    saveFiscalMutation(regional, {
+      onSuccess: () => {
+        setRegionalOriginal(regional);
+      },
+    });
   };
 
   const handleSaveBranding = async () => {
-    setIsSavingBranding(true);
-    try {
-      const formData = new FormData();
-      formData.append("slogan", branding.slogan);
-      formData.append("color", branding.color);
-      if (branding.logo) {
-        formData.append("logo", branding.logo);
-      }
-
-      const res = await fetch("/api/configuracion/branding", {
-        method: "PUT",
-        body: formData,
-      });
-      if (!res.ok) {
-        throw new Error("No se pudo guardar el branding");
-      }
-      setBrandingOriginal({
-        slogan: branding.slogan,
-        color: branding.color,
-        logoPreview: branding.logoPreview,
-      });
-      setBranding((prev) => ({ ...prev, logo: null }));
-      addToast({
-        title: "Branding guardado",
-        description: "La configuración de branding se guardó correctamente.",
-        color: "success",
-      });
-    } catch (error) {
-      console.error(error);
-      addToast({
-        title: "Error al guardar",
-        description: "No se pudo guardar el branding.",
-        color: "danger",
-      });
-    } finally {
-      setIsSavingBranding(false);
-    }
+    saveBrandingMutation(branding, {
+      onSuccess: (data) => {
+        setBrandingOriginal({
+          slogan: branding.slogan,
+          color: branding.color,
+          logoPreview: data.logoPreview ?? branding.logoPreview,
+        });
+        setBranding((prev) => ({ ...prev, logo: null }));
+      },
+    });
   };
 
-  const sectionsNav = [
-    { id: "perfil", label: "Perfil del negocio" },
-    { id: "ventas", label: "Preferencias de venta" },
-    { id: "notificaciones", label: "Notificaciones" },
-    { id: "seguridad", label: "Seguridad y acceso" },
-    { id: "fiscal", label: "Facturacion y region" },
-    { id: "branding", label: "Branding" },
-  ];
-
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 via-blue-800 to-[#90c472] text-white shadow-xl">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),transparent_40%)]" />
-        <div className="relative p-4 md:p-5 space-y-5">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="space-y-2">
-              <Chip variant="flat" color="success" className="bg-white/10">
-                Panel de control
-              </Chip>
-              <h1 className="text-3xl md:text-[32px] font-bold">
-                Configuración
-              </h1>
-              <p className="text-white max-w-3xl">
-                Configuracion Ajustes rapidos de identidad, ventas y seguridad
-                en un solo lugar. Los cambios aplican a todas las sucursales
-                activas.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              {isOffline && (
-                <Chip
-                  variant="flat"
-                  color="warning"
-                  size="sm"
-                  className="bg-yellow-100 text-yellow-800"
+    <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center">
+      {/* Header de la página */}
+      <Header 
+        isOffline={isOffline}
+        isLoadingTenant={isLoadingTenant}
+        isLoadingConfiguracion={isLoadingConfiguracion}
+        hasAnyChanges={hasAnyChanges}
+        isSavingAll={isSavingTenant || isSavingConfiguracion || isSavingPreferenciasVenta || isSavingNotificaciones || isSavingSeguridad || isSavingFiscal || isSavingBranding}
+        onSaveAll={handleSavePerfil}
+        seguridad={seguridad}
+      />
+      
+      {/* Tabs con las diferentes secciones */}
+      <Tabs
+        aria-label="Configuración"
+        selectedKey={openSection}
+        onSelectionChange={(key) => setOpenSection(key as SectionKey)}
+        className="relative"
+      >
+        <Tab
+          key="perfil"
+          title={
+            <div className="flex items-center space-x-2">
+              <span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="size-5"
                 >
-                  Modo offline: valores por defecto
-                </Chip>
-              )}
-              <Button
-                color="primary"
-                className="bg-white text-slate-900"
-                isLoading={isSavingAll}
-                isDisabled={isLoadingTenant || isLoadingConfig || isOffline || !hasAnyChanges}
-                onPress={handleSavePerfil}
-              >
-                Guardar todo
-              </Button>
-              <Button
-                variant="bordered"
-                className="border-white/40 text-white"
-                onPress={() =>
-                  addToast({
-                    title: "Actividad",
-                    description: "Historial de cambios disponible pronto.",
-                  })
-                }
-              >
-                Ver actividad
-              </Button>
+                  <path
+                    fillRule="evenodd"
+                    d="M2 3.5A1.5 1.5 0 0 1 3.5 2h2.879a1.5 1.5 0 0 1 1.06.44l2.122 2.12a1.5 1.5 0 0 1 .44 1.06V12.5A1.5 1.5 0 0 1 9.5 14h-7A1.5 1.5 0 0 1 2 12.5v-9Zm10.293 1.293a.75.75 0 0 1 1.414 0l3 3a.75.75 0 0 1 0 1.414l-3 3a.75.75 0 0 1-1.414-1.414L13.586 8.5H9.5a.75.75 0 0 1 0-1.5h4.086l-1.293-1.293a.75.75 0 0 1 0-1.414Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </span>
+              <span>Perfil del negocio</span>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 w-full">
-            <div className="rounded-2xl bg-white/10 p-4 border border-white/10 h-full flex flex-col justify-between">
-              <p className="text-sm text-white/80">Plan activo</p>
-              <div className="flex items-center justify-between mt-2 gap-2">
-                <span className="text-lg font-semibold leading-tight">
-                  Business
-                </span>
-                <Chip
-                  size="sm"
-                  variant="flat"
-                  className="bg-white/20 text-white"
-                >
-                  4 locales
-                </Chip>
-              </div>
-            </div>
-            <div className="rounded-2xl bg-white/10 p-4 border border-white/10 h-full flex flex-col justify-between">
-              <p className="text-sm text-white/80">Respaldo</p>
-              <div className="flex items-center justify-between mt-2 gap-2">
-                <span className="text-lg font-semibold leading-tight">
-                  Hoy 03:00
-                </span>
-                <Chip
-                  size="sm"
-                  variant="flat"
-                  className="bg-white/20 text-white"
-                >
-                  Automatico
-                </Chip>
-              </div>
-            </div>
-            <div className="rounded-2xl bg-white/10 p-4 border border-white/10 h-full flex flex-col justify-between">
-              <p className="text-sm text-white/80">Seguridad</p>
-              <div className="flex items-center justify-between mt-2 gap-2">
-                <span className="text-lg font-semibold leading-tight">
-                  2FA {seguridad.dobleFactor ? "activo" : "pendiente"}
-                </span>
-                <Chip
-                  size="sm"
-                  color={seguridad.dobleFactor ? "success" : "warning"}
-                  variant="flat"
-                  className="bg-white/20 text-white"
-                >
-                  {seguridad.dobleFactor ? "Protegido" : "Habilitar"}
-                </Chip>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <main className="settings-single-column">
-        <div
-          className="settings-tab-bar"
-          role="tablist"
-          aria-label="Configuración"
+          }
         >
-          {sectionsNav.map((section) => {
-            const isActive = openSection === section.id;
-            return (
-              <button
-                key={section.id}
-                onClick={() => setOpenSection(section.id as SectionKey)}
-                className={`tab-pill ${isActive ? "active" : ""}`}
-                role="tab"
-                aria-selected={isActive}
-              >
-                <span className="tab-pill-label">{section.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="settings-content-pane space-y-3">
-          <SectionPanel
-            id="perfil"
-            title="Perfil del negocio"
-            description={descriptionMap.perfil}
-            summary={summaryPerfil}
-            isActive={openSection === "perfil"}
-          >
+          <div className="mt-6 space-y-3">
+            <SectionPanel
+              id="perfil"
+              title="Perfil del negocio"
+              description={descriptionMap.perfil}
+              summary={summaryPerfil}
+              isActive={true}
+            >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label="Nombre"
@@ -1322,14 +836,35 @@ export default function Configuracion() {
               />
             </div>
           </SectionPanel>
+          </div>
+        </Tab>
 
-          <SectionPanel
-            id="ventas"
-            title="Preferencias de venta"
-            description={descriptionMap.ventas}
-            summary={summaryVentas}
-            isActive={openSection === "ventas"}
-          >
+        <Tab
+          key="ventas"
+          title={
+            <div className="flex items-center space-x-2">
+              <span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="size-5"
+                >
+                  <path d="M1 1.75A.75.75 0 0 1 1.75 1h1.628a1.75 1.75 0 0 1 1.734 1.51L5.18 3a65.25 65.25 0 0 1 13.36 1.412.75.75 0 0 1 .58.875 48.645 48.645 0 0 1-1.618 6.2.75.75 0 0 1-.712.513H6a2.503 2.503 0 0 0-2.292 1.5H17.25a.75.75 0 0 1 0 1.5H2.76a.75.75 0 0 1-.748-.807 4.002 4.002 0 0 1 .252-1.996A2.5 2.5 0 0 0 3.912 8.5H1.75A.75.75 0 0 1 1 7.75ZM6 17.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM15.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
+                </svg>
+              </span>
+              <span>Preferencias de venta</span>
+            </div>
+          }
+        >
+          <div className="mt-6 space-y-3">
+            <SectionPanel
+              id="ventas"
+              title="Preferencias de venta"
+              description={descriptionMap.ventas}
+              summary={summaryVentas}
+              isActive={true}
+            >
             <div className="space-y-6">
               {isOffline && (
                 <Chip
@@ -1361,7 +896,7 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Enviar ticket digital por correo"
-                    isDisabled={isLoadingPreferencias || isOffline}
+                    isDisabled={isLoadingPreferenciasVenta || isOffline}
                   >
                     Enviar ticket digital por correo
                   </Switch>
@@ -1375,7 +910,7 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Mostrar precios con impuestos incluidos"
-                    isDisabled={isLoadingPreferencias || isOffline}
+                    isDisabled={isLoadingPreferenciasVenta || isOffline}
                   >
                     Mostrar precios con impuestos incluidos
                   </Switch>
@@ -1389,7 +924,7 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Abrir cajon al cobrar en efectivo"
-                    isDisabled={isLoadingPreferencias || isOffline}
+                    isDisabled={isLoadingPreferenciasVenta || isOffline}
                   >
                     Abrir cajon al cobrar en efectivo
                   </Switch>
@@ -1403,7 +938,7 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Numerar pedidos y mostrar en pantalla"
-                    isDisabled={isLoadingPreferencias || isOffline}
+                    isDisabled={isLoadingPreferenciasVenta || isOffline}
                   >
                     Numerar pedidos y mostrar en pantalla
                   </Switch>
@@ -1701,14 +1236,39 @@ export default function Configuracion() {
 
             </div>
           </SectionPanel>
+          </div>
+        </Tab>
 
-          <SectionPanel
-            id="notificaciones"
-            title="Notificaciones"
-            description={descriptionMap.notificaciones}
-            summary={summaryNotificaciones}
-            isActive={openSection === "notificaciones"}
-          >
+        <Tab
+          key="notificaciones"
+          title={
+            <div className="flex items-center space-x-2">
+              <span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="size-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 2a6 6 0 0 0-6 6c0 1.887-.454 3.665-1.257 5.234a.75.75 0 0 0 .515 1.076 32.94 32.94 0 0 0 3.256.508 3.5 3.5 0 0 0 6.972 0 32.933 32.933 0 0 0 3.256-.508.75.75 0 0 0 .515-1.076A11.717 11.717 0 0 1 16 8a6 6 0 0 0-6-6ZM8.05 14.943a33.54 33.54 0 0 0 3.9 0 2 2 0 0 1-3.9 0Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </span>
+              <span>Notificaciones</span>
+            </div>
+          }
+        >
+          <div className="mt-6 space-y-3">
+            <SectionPanel
+              id="notificaciones"
+              title="Notificaciones"
+              description={descriptionMap.notificaciones}
+              summary={summaryNotificaciones}
+              isActive={true}
+            >
             <div className="space-y-3">
               <Switch
                 isSelected={notificaciones.email}
@@ -1763,14 +1323,39 @@ export default function Configuracion() {
               </div>
             )}
           </SectionPanel>
+          </div>
+        </Tab>
 
-          <SectionPanel
-            id="seguridad"
-            title="Seguridad y acceso"
-            description={descriptionMap.seguridad}
-            summary={summarySeguridad}
-            isActive={openSection === "seguridad"}
-          >
+        <Tab
+          key="seguridad"
+          title={
+            <div className="flex items-center space-x-2">
+              <span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="size-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </span>
+              <span>Seguridad y acceso</span>
+            </div>
+          }
+        >
+          <div className="mt-6 space-y-3">
+            <SectionPanel
+              id="seguridad"
+              title="Seguridad y acceso"
+              description={descriptionMap.seguridad}
+              summary={summarySeguridad}
+              isActive={true}
+            >
             <div className="space-y-6">
               {/* Card: Acceso y autenticación */}
               <Card className="shadow-sm border border-slate-200">
@@ -2014,14 +1599,39 @@ export default function Configuracion() {
               </Card>
             </div>
           </SectionPanel>
+          </div>
+        </Tab>
 
-          <SectionPanel
-            id="fiscal"
-            title="Facturacion y region"
-            description={descriptionMap.fiscal}
-            summary={summaryFiscal}
-            isActive={openSection === "fiscal"}
-          >
+        <Tab
+          key="fiscal"
+          title={
+            <div className="flex items-center space-x-2">
+              <span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="size-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.5 2A1.5 1.5 0 0 0 3 3.5v13A1.5 1.5 0 0 0 4.5 18h11a1.5 1.5 0 0 0 1.5-1.5V7.621a1.5 1.5 0 0 0-.44-1.06l-4.12-4.122A1.5 1.5 0 0 0 11.378 2H4.5Zm2.25 8a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Zm0 3a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </span>
+              <span>Facturacion y region</span>
+            </div>
+          }
+        >
+          <div className="mt-6 space-y-3">
+            <SectionPanel
+              id="fiscal"
+              title="Facturacion y region"
+              description={descriptionMap.fiscal}
+              summary={summaryFiscal}
+              isActive={true}
+            >
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Select
@@ -2106,14 +1716,39 @@ export default function Configuracion() {
               </div>
             )}
           </SectionPanel>
+          </div>
+        </Tab>
 
-          <SectionPanel
-            id="branding"
-            title="Branding"
-            description={descriptionMap.branding}
-            summary={summaryBranding}
-            isActive={openSection === "branding"}
-          >
+        <Tab
+          key="branding"
+          title={
+            <div className="flex items-center space-x-2">
+              <span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="size-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M1 4a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v8.586a1 1 0 0 1-.293.707l-6.414 6.414a1 1 0 0 1-.707.293H2a1 1 0 0 1-1-1V4Zm1.5 0v12.086l5.707-5.707A1 1 0 0 1 9 10.5V4H2.5Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </span>
+              <span>Branding</span>
+            </div>
+          }
+        >
+          <div className="mt-6 space-y-3">
+            <SectionPanel
+              id="branding"
+              title="Branding"
+              description={descriptionMap.branding}
+              summary={summaryBranding}
+              isActive={true}
+            >
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -2190,8 +1825,118 @@ export default function Configuracion() {
               </div>
             )}
           </SectionPanel>
-        </div>
-      </main>
+          </div>
+        </Tab>
+      </Tabs>
     </div>
+  );
+}
+
+function Header({
+  isOffline,
+  isLoadingTenant,
+  isLoadingConfiguracion,
+  hasAnyChanges,
+  isSavingAll,
+  onSaveAll,
+  seguridad,
+}: {
+  isOffline: boolean;
+  isLoadingTenant: boolean;
+  isLoadingConfiguracion: boolean;
+  hasAnyChanges: boolean;
+  isSavingAll: boolean;
+  onSaveAll: () => void;
+  seguridad: { dobleFactor: boolean };
+}) {
+  return (
+    <section className="w-full relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-blue-500 to-[#90c472] text-white shadow-xl mb-10">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),transparent_40%)]" />
+      <div className="relative p-4 md:p-5 space-y-5">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="space-y-2">
+            <Chip variant="flat" className="bg-white/10 text-white">
+              Configuración
+            </Chip>
+            <h1 className="text-3xl md:text-[32px] font-bold">
+              Configuración
+            </h1>
+            <p className="text-white max-w-3xl">
+              Ajustes rápidos de identidad, ventas y seguridad en un solo lugar. Los cambios aplican a todas las sucursales activas.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {isOffline && (
+              <Chip
+                variant="flat"
+                color="warning"
+                size="sm"
+                className="bg-yellow-100 text-yellow-800"
+              >
+                Modo offline
+              </Chip>
+            )}
+            <Button
+              color="primary"
+              className="bg-white text-slate-900"
+              isLoading={isSavingAll}
+              isDisabled={isLoadingTenant || isLoadingConfiguracion || isOffline || !hasAnyChanges}
+              onPress={onSaveAll}
+            >
+              Guardar todo
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 w-full">
+          <div className="rounded-2xl bg-white/10 p-4 border border-white/10 h-full flex flex-col justify-between">
+            <p className="text-sm text-white/80">Plan activo</p>
+            <div className="flex items-center justify-between mt-2 gap-2">
+              <span className="text-lg font-semibold leading-tight">
+                Business
+              </span>
+              <Chip
+                size="sm"
+                variant="flat"
+                className="bg-white/20 text-white"
+              >
+                4 locales
+              </Chip>
+            </div>
+          </div>
+          <div className="rounded-2xl bg-white/10 p-4 border border-white/10 h-full flex flex-col justify-between">
+            <p className="text-sm text-white/80">Respaldo</p>
+            <div className="flex items-center justify-between mt-2 gap-2">
+              <span className="text-lg font-semibold leading-tight">
+                Hoy 03:00
+              </span>
+              <Chip
+                size="sm"
+                variant="flat"
+                className="bg-white/20 text-white"
+              >
+                Automático
+              </Chip>
+            </div>
+          </div>
+          <div className="rounded-2xl bg-white/10 p-4 border border-white/10 h-full flex flex-col justify-between">
+            <p className="text-sm text-white/80">Seguridad</p>
+            <div className="flex items-center justify-between mt-2 gap-2">
+              <span className="text-lg font-semibold leading-tight">
+                2FA {seguridad.dobleFactor ? "activo" : "pendiente"}
+              </span>
+              <Chip
+                size="sm"
+                color={seguridad.dobleFactor ? "success" : "warning"}
+                variant="flat"
+                className="bg-white/20 text-white"
+              >
+                {seguridad.dobleFactor ? "Protegido" : "Habilitar"}
+              </Chip>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

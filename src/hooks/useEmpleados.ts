@@ -1,0 +1,692 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { addToast } from "@heroui/react";
+
+export interface Empleado {
+  id: number;
+  personaId: number;
+  usuarioId: number | null;
+  nombre: string;
+  apellido: string;
+  nombreCompleto: string;
+  email: string;
+  telefono: string | null;
+  direccion: string | null;
+  localidadId: number | null;
+  localidad: string | null;
+  departamentoId?: number | null;
+  provinciaId?: number | null;
+  rolId: number | null;
+  rolNombre: string | null;
+  rolTipo?: "ADMINISTRADOR" | "EMPLEADO" | null;
+  estado: "Activo" | "Invitado" | "Suspendido";
+  legajo: string | null;
+  dni: string | null;
+  ultimaActividad: string | null;
+}
+
+export interface Rol {
+  id: number;
+  nombre: string;
+  usuarios: number;
+  tipo: "ADMINISTRADOR" | "EMPLEADO";
+  descripcion?: string | null;
+  permisos?: string[];
+}
+
+export interface Localidad {
+  Id: number;
+  Descripcion: string;
+  DepartamentoId: number;
+}
+
+export interface Provincia {
+  Id: number;
+  Descripcion: string;
+}
+
+export interface Departamento {
+  Id: number;
+  Descripcion: string;
+  ProvinciaId: number;
+}
+
+export interface Auditoria {
+  id: number;
+  accion: string;
+  fecha: string;
+  severidad?: string;
+  [key: string]: unknown;
+}
+
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface EmpleadosResponse {
+  empleados: Empleado[];
+  pagination: PaginationInfo;
+}
+
+export interface EmpleadosFilters {
+  busqueda?: string;
+  rol?: string;
+  estado?: string;
+  tenantId?: string | null;
+}
+
+// Fetch functions
+const fetchEmpleados = async ({
+  signal,
+  page = 1,
+  limit = 20,
+  filters = {},
+}: {
+  signal: AbortSignal;
+  page?: number;
+  limit?: number;
+  filters?: EmpleadosFilters;
+}): Promise<EmpleadosResponse> => {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  });
+
+  if (filters.busqueda) params.append("busqueda", filters.busqueda);
+  if (filters.rol && filters.rol !== "todos") params.append("rol", filters.rol);
+  if (filters.estado && filters.estado !== "todos")
+    params.append("estado", filters.estado);
+  if (filters.tenantId) params.append("tenantId", filters.tenantId);
+
+  const response = await fetch(`/api/empleados?${params.toString()}`, {
+    signal,
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    throw new Error(error?.error || "Error al cargar empleados");
+  }
+
+  const data = await response.json();
+  return {
+    empleados: data?.empleados || [],
+    pagination: data?.pagination || {
+      page: 1,
+      limit: 20,
+      total: 0,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    },
+  };
+};
+
+const fetchRoles = async ({
+  signal,
+  tenantId,
+}: {
+  signal: AbortSignal;
+  tenantId?: string | null;
+}): Promise<Rol[]> => {
+  const params = tenantId ? `?tenantId=${tenantId}` : "";
+  const response = await fetch(`/api/roles${params}`, {
+    signal,
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    // Si falla, retornar array vacío en lugar de lanzar error
+    return [];
+  }
+
+  const data = await response.json();
+  return Array.isArray(data?.roles) ? data.roles : [];
+};
+
+const fetchProvincias = async ({ signal }: { signal: AbortSignal }): Promise<Provincia[]> => {
+  const response = await fetch("/api/provincias", {
+    signal,
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = await response.json();
+  return Array.isArray(data?.provincias) ? data.provincias : [];
+};
+
+const fetchDepartamentos = async ({
+  signal,
+  provinciaId,
+}: {
+  signal: AbortSignal;
+  provinciaId: string;
+}): Promise<Departamento[]> => {
+  const response = await fetch(`/api/departamentos?provinciaId=${provinciaId}`, {
+    signal,
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = await response.json();
+  return Array.isArray(data?.departamentos) ? data.departamentos : [];
+};
+
+const fetchLocalidades = async ({
+  signal,
+  departamentoId,
+}: {
+  signal: AbortSignal;
+  departamentoId: string;
+}): Promise<Localidad[]> => {
+  const response = await fetch(`/api/localidades?departamentoId=${departamentoId}`, {
+    signal,
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = await response.json();
+  return Array.isArray(data?.localidades) ? data.localidades : [];
+};
+
+const fetchAuditorias = async ({
+  signal,
+  page = 1,
+  limit = 10,
+  tenantId,
+}: {
+  signal: AbortSignal;
+  page?: number;
+  limit?: number;
+  tenantId?: string | null;
+}): Promise<{ auditorias: Auditoria[]; pagination: PaginationInfo }> => {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  });
+  if (tenantId) params.append("tenantId", tenantId);
+
+  const response = await fetch(`/api/auditoria?${params.toString()}`, {
+    signal,
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return {
+      auditorias: [],
+      pagination: {
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
+    };
+  }
+
+  const data = await response.json();
+  return {
+    auditorias: data?.auditorias || [],
+    pagination: data?.pagination || {
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    },
+  };
+};
+
+// Mutation functions
+const createEmpleado = async (empleadoData: {
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono?: string;
+  direccion?: string;
+  localidadId?: string;
+  departamentoId?: number | null;
+  provinciaId?: number | null;
+  dni?: string;
+  usuario?: string;
+  password?: string;
+  rolId?: number | undefined;
+  autoInvitar?: boolean;
+  tenantId?: string | null;
+}): Promise<Empleado> => {
+  const tenantParam = empleadoData.tenantId ? `?tenantId=${empleadoData.tenantId}` : "";
+  const { tenantId, email, usuario, localidadId, rolId, ...rest } = empleadoData;
+
+  // Transformar al formato que espera el API
+  const body = {
+    ...rest,
+    mail: email,
+    nombreUsuario: usuario,
+    localidadId: localidadId ? Number(localidadId) : undefined,
+    rolId: rolId,
+  };
+
+  const response = await fetch(`/api/empleados${tenantParam}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    throw new Error(error?.error || "Error al crear empleado");
+  }
+
+  const data = await response.json();
+  return data?.empleado;
+};
+
+const updateEmpleado = async ({
+  id,
+  data: empleadoData,
+  tenantId,
+}: {
+  id: number;
+  data: Partial<Empleado>;
+  tenantId?: string | null;
+}): Promise<Empleado> => {
+  const tenantParam = tenantId ? `?tenantId=${tenantId}` : "";
+
+  const response = await fetch(`/api/empleados/${id}${tenantParam}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(empleadoData),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    throw new Error(error?.error || "Error al actualizar empleado");
+  }
+
+  const data = await response.json();
+  return data?.empleado;
+};
+
+const deleteEmpleado = async ({
+  id,
+  tenantId,
+}: {
+  id: number;
+  tenantId?: string | null;
+}): Promise<void> => {
+  const tenantParam = tenantId ? `?tenantId=${tenantId}` : "";
+
+  const response = await fetch(`/api/empleados/${id}${tenantParam}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    throw new Error(error?.error || "Error al eliminar empleado");
+  }
+};
+
+const changePassword = async ({
+  usuarioId,
+  nuevaPassword,
+  tenantId,
+}: {
+  usuarioId: number;
+  nuevaPassword: string;
+  tenantId?: string | null;
+}): Promise<void> => {
+  const tenantParam = tenantId ? `?tenantId=${tenantId}` : "";
+
+  const response = await fetch(`/api/empleados/cambiar-password${tenantParam}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ usuarioId, nuevaPassword }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    throw new Error(error?.error || "Error al cambiar contraseña");
+  }
+};
+
+const createRol = async ({
+  rolData,
+  tenantId,
+}: {
+  rolData: {
+    nombre: string;
+    descripcion?: string;
+    permisos: string[];
+    tipo: "ADMINISTRADOR" | "EMPLEADO";
+  };
+  tenantId?: string | null;
+}): Promise<Rol> => {
+  const tenantParam = tenantId ? `?tenantId=${tenantId}` : "";
+
+  const response = await fetch(`/api/roles${tenantParam}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(rolData),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    throw new Error(error?.error || "Error al crear rol");
+  }
+
+  const data = await response.json();
+  return data?.rol;
+};
+
+const updateRol = async ({
+  id,
+  rolData,
+  tenantId,
+}: {
+  id: number;
+  rolData: Partial<Rol>;
+  tenantId?: string | null;
+}): Promise<Rol> => {
+  const tenantParam = tenantId ? `?tenantId=${tenantId}` : "";
+
+  const response = await fetch(`/api/roles/${id}${tenantParam}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(rolData),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    throw new Error(error?.error || "Error al actualizar rol");
+  }
+
+  const data = await response.json();
+  return data?.rol;
+};
+
+const deleteRol = async ({
+  id,
+  tenantId,
+}: {
+  id: number;
+  tenantId?: string | null;
+}): Promise<void> => {
+  const tenantParam = tenantId ? `?tenantId=${tenantId}` : "";
+
+  const response = await fetch(`/api/roles/${id}${tenantParam}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    throw new Error(error?.error || "Error al eliminar rol");
+  }
+};
+
+// Hook principal
+export function useEmpleados({
+  page = 1,
+  limit = 20,
+  filters = {},
+  tenantId,
+  enabled = true,
+}: {
+  page?: number;
+  limit?: number;
+  filters?: EmpleadosFilters;
+  tenantId?: string | null;
+  enabled?: boolean;
+}) {
+  const queryClient = useQueryClient();
+
+  // Queries
+  const empleadosQuery = useQuery({
+    queryKey: ["empleados", page, limit, filters, tenantId],
+    queryFn: ({ signal }) =>
+      fetchEmpleados({ signal, page, limit, filters: { ...filters, tenantId } }),
+    enabled,
+  });
+
+  const rolesQuery = useQuery({
+    queryKey: ["roles", tenantId],
+    queryFn: ({ signal }) => fetchRoles({ signal, tenantId }),
+    enabled,
+  });
+
+  const provinciasQuery = useQuery({
+    queryKey: ["provincias"],
+    queryFn: ({ signal }) => fetchProvincias({ signal }),
+    enabled,
+  });
+
+  const auditoriasQuery = useQuery({
+    queryKey: ["auditorias", page, limit, tenantId],
+    queryFn: ({ signal }) => fetchAuditorias({ signal, page, limit, tenantId }),
+    enabled: false, // Se habilita manualmente cuando se necesita
+  });
+
+  // Mutations
+  const createEmpleadoMutation = useMutation({
+    mutationFn: createEmpleado,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["empleados"] });
+      queryClient.invalidateQueries({ queryKey: ["auditorias"] });
+      addToast({
+        title: "Empleado creado",
+        description: "El empleado fue creado correctamente.",
+        color: "success",
+      });
+    },
+    onError: (error: Error) => {
+      addToast({
+        title: "Error",
+        description: error.message,
+        color: "danger",
+      });
+    },
+  });
+
+  const updateEmpleadoMutation = useMutation({
+    mutationFn: updateEmpleado,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["empleados"] });
+      queryClient.invalidateQueries({ queryKey: ["auditorias"] });
+      addToast({
+        title: "Empleado actualizado",
+        description: "El empleado fue actualizado correctamente.",
+        color: "success",
+      });
+    },
+    onError: (error: Error) => {
+      addToast({
+        title: "Error",
+        description: error.message,
+        color: "danger",
+      });
+    },
+  });
+
+  const deleteEmpleadoMutation = useMutation({
+    mutationFn: deleteEmpleado,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["empleados"] });
+      queryClient.invalidateQueries({ queryKey: ["auditorias"] });
+      addToast({
+        title: "Empleado eliminado",
+        description: "El empleado fue eliminado correctamente.",
+        color: "success",
+      });
+    },
+    onError: (error: Error) => {
+      addToast({
+        title: "Error",
+        description: error.message,
+        color: "danger",
+      });
+    },
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: changePassword,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["auditorias"] });
+      addToast({
+        title: "Contraseña actualizada",
+        description: "La contraseña fue cambiada correctamente.",
+        color: "success",
+      });
+    },
+    onError: (error: Error) => {
+      addToast({
+        title: "Error",
+        description: error.message,
+        color: "danger",
+      });
+    },
+  });
+
+  const createRolMutation = useMutation({
+    mutationFn: createRol,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["roles"] });
+      queryClient.invalidateQueries({ queryKey: ["auditorias"] });
+      addToast({
+        title: "Rol creado",
+        description: "El rol fue creado correctamente.",
+        color: "success",
+      });
+    },
+    onError: (error: Error) => {
+      addToast({
+        title: "Error",
+        description: error.message,
+        color: "danger",
+      });
+    },
+  });
+
+  const updateRolMutation = useMutation({
+    mutationFn: updateRol,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["roles"] });
+      queryClient.invalidateQueries({ queryKey: ["auditorias"] });
+      addToast({
+        title: "Rol actualizado",
+        description: "El rol fue actualizado correctamente.",
+        color: "success",
+      });
+    },
+    onError: (error: Error) => {
+      addToast({
+        title: "Error",
+        description: error.message,
+        color: "danger",
+      });
+    },
+  });
+
+  const deleteRolMutation = useMutation({
+    mutationFn: deleteRol,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["roles"] });
+      queryClient.invalidateQueries({ queryKey: ["auditorias"] });
+      addToast({
+        title: "Rol eliminado",
+        description: "El rol fue eliminado correctamente.",
+        color: "success",
+      });
+    },
+    onError: (error: Error) => {
+      addToast({
+        title: "Error",
+        description: error.message,
+        color: "danger",
+      });
+    },
+  });
+
+  // Helper hook para departamentos (depende de provinciaId)
+  const useDepartamentos = (provinciaId: string | null) => {
+    return useQuery({
+      queryKey: ["departamentos", provinciaId],
+      queryFn: ({ signal }) => fetchDepartamentos({ signal, provinciaId: provinciaId! }),
+      enabled: !!provinciaId,
+    });
+  };
+
+  // Helper hook para localidades (depende de departamentoId)
+  const useLocalidades = (departamentoId: string | null) => {
+    return useQuery({
+      queryKey: ["localidades", departamentoId],
+      queryFn: ({ signal }) =>
+        fetchLocalidades({ signal, departamentoId: departamentoId! }),
+      enabled: !!departamentoId,
+    });
+  };
+
+  return {
+    // Data
+    empleados: empleadosQuery.data?.empleados || [],
+    pagination: empleadosQuery.data?.pagination,
+    roles: rolesQuery.data || [],
+    provincias: provinciasQuery.data || [],
+    auditorias: auditoriasQuery.data?.auditorias || [],
+    auditoriasPagination: auditoriasQuery.data?.pagination,
+
+    // Loading states
+    isLoadingEmpleados: empleadosQuery.isLoading,
+    isLoadingRoles: rolesQuery.isLoading,
+    isLoadingProvincias: provinciasQuery.isLoading,
+    isLoadingAuditorias: auditoriasQuery.isLoading,
+
+    // Error states
+    errorEmpleados: empleadosQuery.error,
+    errorRoles: rolesQuery.error,
+    errorProvincias: provinciasQuery.error,
+    errorAuditorias: auditoriasQuery.error,
+
+    // Refetch functions
+    refetchEmpleados: empleadosQuery.refetch,
+    refetchRoles: rolesQuery.refetch,
+    refetchProvincias: provinciasQuery.refetch,
+    refetchAuditorias: auditoriasQuery.refetch,
+
+    // Mutations
+    createEmpleado: createEmpleadoMutation.mutate,
+    updateEmpleado: updateEmpleadoMutation.mutate,
+    deleteEmpleado: deleteEmpleadoMutation.mutate,
+    changePassword: changePasswordMutation.mutate,
+    createRol: createRolMutation.mutate,
+    updateRol: updateRolMutation.mutate,
+    deleteRol: deleteRolMutation.mutate,
+
+    // Mutation states
+    isCreatingEmpleado: createEmpleadoMutation.isPending,
+    isUpdatingEmpleado: updateEmpleadoMutation.isPending,
+    isDeletingEmpleado: deleteEmpleadoMutation.isPending,
+    isChangingPassword: changePasswordMutation.isPending,
+    isCreatingRol: createRolMutation.isPending,
+    isUpdatingRol: updateRolMutation.isPending,
+    isDeletingRol: deleteRolMutation.isPending,
+
+    // Helper hooks
+    useDepartamentos,
+    useLocalidades,
+  };
+}
+
