@@ -114,8 +114,6 @@ export async function POST(req: NextRequest) {
 
     const validarProducto = createProductoSchema.parse(body);
 
-    const tenantIdBigInt = BigInt(tenantId);
-
     // Iniciar transacción para crear Precio y Artículo
     const producto = await prisma.$transaction(async (tx) => {
       // 1. Crear Precio primero (con ArticuloId temporal 0 o 1)

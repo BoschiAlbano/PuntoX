@@ -13,6 +13,7 @@ type MockUsuario = {
     Perfiles: {
       Id: bigint;
       Tipo: "ADMINISTRADOR" | "EMPLEADO";
+      Descripcion?: string | null;
       PerfilPermiso: Array<{
         Permiso: {
           Clave: string;
@@ -21,23 +22,6 @@ type MockUsuario = {
       }>;
     };
   }>;
-};
-
-type MockPermiso = {
-  Id: bigint;
-  Clave: string;
-  TenantId: bigint;
-  EstaEliminado: boolean;
-};
-
-type MockPerfil = {
-  Id: bigint;
-};
-
-type MockPerfilPermiso = {
-  Id: bigint;
-  PerfilId: bigint;
-  PermisoId: bigint;
 };
 
 // Mock de Prisma
@@ -148,7 +132,9 @@ describe("requirePermiso", () => {
     ).rejects.toThrow(PermisoError);
   });
 
-  it("debe asignar permiso automáticamente a administradores si no existe", async () => {
+  it("debe lanzar error si el administrador no tiene el permiso explícitamente asignado", async () => {
+    // Nota: La auto-asignación de permisos a administradores fue removida.
+    // Los administradores ahora necesitan permisos explícitos asignados.
     const mockUsuario = {
       Id: BigInt(1),
       TenantId: BigInt(100),
@@ -157,40 +143,18 @@ describe("requirePermiso", () => {
           Perfiles: {
             Id: BigInt(1),
             Tipo: "ADMINISTRADOR" as const,
-            PerfilPermiso: [],
+            Descripcion: "Administrador",
+            PerfilPermiso: [], // Sin permisos asignados
           },
         },
       ],
     };
 
-    const mockPermiso = {
-      Id: BigInt(1),
-      Clave: "productos:crear",
-      TenantId: BigInt(100),
-      EstaEliminado: false,
-    };
-
-    const mockRolesAdmin = [
-      { Id: BigInt(1) },
-      { Id: BigInt(2) },
-    ];
-
     vi.mocked(prisma.usuario.findFirst).mockResolvedValue(mockUsuario as MockUsuario);
-    vi.mocked(prisma.permiso.upsert).mockResolvedValue(mockPermiso as MockPermiso);
-    vi.mocked(prisma.perfiles.findMany).mockResolvedValue(mockRolesAdmin as MockPerfil[]);
-    vi.mocked(prisma.perfilPermiso.createMany).mockResolvedValue({ count: 2 });
-    vi.mocked(prisma.perfilPermiso.findFirst).mockResolvedValue({
-      Id: BigInt(1),
-      PerfilId: BigInt(1),
-      PermisoId: BigInt(1),
-    } as MockPerfilPermiso);
 
-    const result = await requirePermiso("productos:crear");
-
-    expect(result.tenantId).toBe(100);
-    expect(prisma.permiso.upsert).toHaveBeenCalled();
-    expect(prisma.perfiles.findMany).toHaveBeenCalled();
-    expect(prisma.perfilPermiso.createMany).toHaveBeenCalled();
+    await expect(
+      requirePermiso("productos:crear")
+    ).rejects.toThrow(PermisoError);
   });
 });
 

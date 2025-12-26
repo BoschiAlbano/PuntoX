@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
-import { handleError, isDatabaseConnectionError } from "@/lib/errors/handler";
+import { handleError } from "@/lib/errors/handler";
 import { createError } from "@/lib/errors/types";
 
 const seguridadSchema = z.object({
@@ -19,7 +18,7 @@ const seguridadSchema = z.object({
  */
 export async function GET() {
   try {
-    const { tenantId, error } = await getAuthUser();
+    const { error } = await getAuthUser();
 
     if (error) {
       return error;
@@ -46,7 +45,7 @@ export async function GET() {
  */
 export async function PUT(req: Request) {
   try {
-    const { tenantId, error } = await getAuthUser();
+    const { error } = await getAuthUser();
 
     if (error) {
       return error;

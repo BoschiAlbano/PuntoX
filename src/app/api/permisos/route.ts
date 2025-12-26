@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   try {
     const supabase = await getSupabaseServerClient();
     const {
@@ -56,7 +56,22 @@ export async function GET(_req: NextRequest) {
       id: Number(pu.Perfiles.Id),
       nombre: pu.Perfiles.Descripcion,
       tipo: pu.Perfiles.Tipo ?? "EMPLEADO",
+      descripcionCompleta: pu.Perfiles.Descripcion, // Para debugging
     }));
+
+    // Verificar si el usuario es SuperAdmin
+    const isSuperAdmin = usuario.PerfilUsuario.some(
+      (pu) => {
+        const descripcion = pu.Perfiles.Descripcion?.trim() || "";
+        return descripcion === "SuperAdmin" || 
+               descripcion.toLowerCase() === "superadmin";
+      }
+    );
+    
+    // Verificar si es cualquier tipo de administrador (fallback)
+    const esAdministrador = usuario.PerfilUsuario.some(
+      (pu) => pu.Perfiles.Tipo === "ADMINISTRADOR"
+    );
 
     return NextResponse.json(
       {
@@ -64,6 +79,8 @@ export async function GET(_req: NextRequest) {
         tenantId: Number(usuario.TenantId),
         permisos,
         roles,
+        isSuperAdmin,
+        esAdministrador, // Incluir también esta información
       },
       { status: 200 }
     );

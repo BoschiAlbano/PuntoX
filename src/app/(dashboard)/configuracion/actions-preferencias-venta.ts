@@ -3,6 +3,8 @@
 import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
 
+const LOCALIDAD_DUMMY_ID = 2014010;
+
 export type PreferenciasVentaDTO = {
   ticketDigitalPorCorreo: boolean; // Mapea a Imprimir
   mostrarPreciosConIva: boolean;
@@ -57,7 +59,7 @@ export async function getPreferenciasVenta(): Promise<PreferenciasVentaDTO> {
       abrirCajonEfectivo: config.AbrirCajonEfectivo ?? true,
       numerarPedidosPantalla: config.NumerarPedidosPantalla ?? true,
     };
-  } catch (error) {
+  } catch {
     // En caso de error, retornar defaults
     return DEFAULT_PREFERENCIAS;
   }
@@ -93,23 +95,54 @@ export async function savePreferenciasVenta(
         },
       });
 
+      // Si no existe configuración, crear una mínima válida
       if (!config) {
-        throw new Error("No se encontró una configuración existente. Por favor, complete primero el perfil del negocio.");
+        await tx.configuracion.create({
+          data: {
+            TenantId: BigInt(tenantId),
+            RazonSocial: "SIN DEFINIR",
+            Cuit: "00000000000",
+            Direccion: "SIN DEFINIR",
+            LocalidadId: BigInt(LOCALIDAD_DUMMY_ID),
+            FacturaDescuentaStock: true,
+            PresupuestoDescuentaStock: false,
+            RemitoDescuentaStock: true,
+            ActualizaCostoDesdeCompra: true,
+            ModificaPrecioVentaDesdeCompra: false,
+            Imprimir: data.ticketDigitalPorCorreo,
+            Instalada: 1,
+            TipoFormaPagoPorDefectoVenta: 0,
+            TipoFormaPagoPorDefectoCompra: 0,
+            UnificarRenglonesIngresarMismoProducto: true,
+            IngresoManualCajaInicial: false,
+            PuestoCajaSeparado: false,
+            ActivarRetiroDeCaja: false,
+            MontoMaximoRetiroCaja: 0,
+            ActivarBascula: false,
+            EtiquetaPorPeso: false,
+            CodigoBascula: null,
+            EstaEliminado: false,
+            ShowFoto: false,
+            MostrarPreciosConIva: data.mostrarPreciosConIva,
+            AbrirCajonEfectivo: data.abrirCajonEfectivo,
+            NumerarPedidosPantalla: data.numerarPedidosPantalla,
+          },
+        });
+      } else {
+        // Actualizar la configuración existente dentro de la transacción
+        await tx.configuracion.update({
+          where: { 
+            Id: config.Id,
+            TenantId: BigInt(tenantId),
+          },
+          data: {
+            Imprimir: data.ticketDigitalPorCorreo,
+            MostrarPreciosConIva: data.mostrarPreciosConIva,
+            AbrirCajonEfectivo: data.abrirCajonEfectivo,
+            NumerarPedidosPantalla: data.numerarPedidosPantalla,
+          },
+        });
       }
-
-      // Actualizar la configuración existente dentro de la transacción
-      await tx.configuracion.update({
-        where: { 
-          Id: config.Id,
-          TenantId: BigInt(tenantId),
-        },
-        data: {
-          Imprimir: data.ticketDigitalPorCorreo,
-          MostrarPreciosConIva: data.mostrarPreciosConIva,
-          AbrirCajonEfectivo: data.abrirCajonEfectivo,
-          NumerarPedidosPantalla: data.numerarPedidosPantalla,
-        },
-      });
     });
 
     return { success: true };

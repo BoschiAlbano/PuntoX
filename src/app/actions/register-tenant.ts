@@ -115,10 +115,67 @@ export async function registerTenant(formData: FormData) {
         perfilAdmin = await tx.perfiles.create({
           data: {
             Descripcion: "Administrador",
+            Tipo: "ADMINISTRADOR",
             EstaEliminado: false,
             TenantId: newTenant.Id,
           },
         });
+      } else if (perfilAdmin.Tipo !== "ADMINISTRADOR") {
+        // Asegurar que el perfil existente tenga el tipo correcto
+        perfilAdmin = await tx.perfiles.update({
+          where: { Id: perfilAdmin.Id },
+          data: { Tipo: "ADMINISTRADOR" },
+        });
+      }
+
+      // Definir los permisos básicos que debe tener un administrador
+      const permisosBasicos = [
+        { clave: "empleados:admin", descripcion: "Administración completa de empleados" },
+        { clave: "ventas", descripcion: "Acceso a ventas" },
+        { clave: "caja", descripcion: "Acceso a caja" },
+        { clave: "clientes", descripcion: "Acceso a clientes" },
+        { clave: "productos", descripcion: "Acceso a productos" },
+        { clave: "analiticas", descripcion: "Acceso a analíticas" },
+        { clave: "configuracion", descripcion: "Acceso a configuración" },
+      ];
+
+      // Crear y asignar todos los permisos básicos al rol de administrador
+      for (const permisoData of permisosBasicos) {
+        // Crear o actualizar el permiso
+        const permiso = await tx.permiso.upsert({
+          where: {
+            Clave_TenantId: {
+              Clave: permisoData.clave,
+              TenantId: newTenant.Id,
+            },
+          },
+          update: { EstaEliminado: false },
+          create: {
+            Clave: permisoData.clave,
+            Descripcion: permisoData.descripcion,
+            TenantId: newTenant.Id,
+            EstaEliminado: false,
+          },
+        });
+
+        // Verificar si el permiso ya está asignado al perfil
+        const permisoAsignado = await tx.perfilPermiso.findFirst({
+          where: {
+            PerfilId: perfilAdmin.Id,
+            PermisoId: permiso.Id,
+          },
+        });
+
+        // Asignar el permiso al perfil de administrador si no está asignado
+        if (!permisoAsignado) {
+          await tx.perfilPermiso.create({
+            data: {
+              PerfilId: perfilAdmin.Id,
+              PermisoId: permiso.Id,
+              TenantId: newTenant.Id,
+            },
+          });
+        }
       }
 
       await tx.perfilUsuario.create({

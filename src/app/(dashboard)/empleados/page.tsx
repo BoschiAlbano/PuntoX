@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Button,
@@ -29,8 +29,14 @@ import {
 } from "@heroui/react";
 import { addToast } from "@heroui/react";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Eye, Zap, Mail } from "lucide-react";
 import Pagination, { PaginationInfo } from "@/components/common/Pagination";
+import {
+  formatTiempoRelativo,
+  formatearAccion,
+  mapearAccion,
+  mapearSeveridad,
+} from "./auditoria-utils";
 
 // PÃ¡gina funcional de empleados: alta rÃ¡pida, roles y tabla conectada a las APIs.
 type EstadoEmpleado = "Activo" | "Invitado" | "Suspendido";
@@ -47,6 +53,8 @@ type Empleado = {
   direccion: string | null;
   localidadId: number | null;
   localidad: string | null;
+  departamentoId?: number | null;
+  provinciaId?: number | null;
   rolId: number | null;
   rolNombre: string | null;
   rolTipo?: "ADMINISTRADOR" | "EMPLEADO" | null;
@@ -98,16 +106,10 @@ function estadoColor(estado: EstadoEmpleado) {
   return "danger";
 }
 
-function criticidadColor(usuarios: number) {
-  if (usuarios > 5) return "danger";
-  if (usuarios > 0) return "warning";
-  return "success";
-}
-
-function rolChipColor(tipo?: string | null) {
-  if (tipo === "ADMINISTRADOR") return "secondary";
-  if (tipo === "INVITADO") return "default";
-  return "primary";
+function rolChipColor(tipo: "ADMINISTRADOR" | "EMPLEADO" | "Empleado" | "Administrador" | null | undefined): "primary" | "secondary" | "default" {
+  if (tipo === "ADMINISTRADOR" || tipo === "Administrador") return "primary";
+  if (tipo === "EMPLEADO" || tipo === "Empleado") return "secondary";
+  return "default";
 }
 
 function estadoPill(estado: EstadoEmpleado) {
@@ -136,19 +138,21 @@ function estadoPill(estado: EstadoEmpleado) {
 }
 
 export default function Empleados() {
-  const { user } = useSupabaseAuthContext();
+  const { user, status } = useSupabaseAuthContext();
   const router = useRouter();
 
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(true);
   const [isSavingUser, setIsSavingUser] = useState(false);
   const [isSavingRole, setIsSavingRole] = useState(false);
+  const [isLoadingAuditoria, setIsLoadingAuditoria] = useState(false);
 
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [roles, setRoles] = useState<Rol[]>([]);
   const [localidades, setLocalidades] = useState<Localidad[]>([]);
   const [provincias, setProvincias] = useState<Provincia[]>([]);
   const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
+  const [auditorias, setAuditorias] = useState<any[]>([]);
   
   // Estado de paginación
   const [page, setPage] = useState(1);
@@ -161,12 +165,22 @@ export default function Empleados() {
     hasNextPage: false,
     hasPreviousPage: false,
   });
+  const [paginationAuditoria, setPaginationAuditoria] = useState<PaginationInfo>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
 
   const [filtros, setFiltros] = useState({
     busqueda: "",
     rol: "todos",
     estado: "todos",
   });
+  const [busquedaInput, setBusquedaInput] = useState("");
+  const busquedaTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [nuevoUsuario, setNuevoUsuario] = useState({
     nombre: "",
@@ -195,6 +209,26 @@ export default function Empleados() {
 
   const [openRolModal, setOpenRolModal] = useState(false);
   const [detalleEmpleado, setDetalleEmpleado] = useState<Empleado | null>(null);
+  const [empleadoAEditar, setEmpleadoAEditar] = useState<Empleado | null>(null);
+  const [isSavingEmpleado, setIsSavingEmpleado] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  
+  // Estado para el formulario de edición
+  const [empleadoEditDraft, setEmpleadoEditDraft] = useState({
+    nombre: "",
+    apellido: "",
+    dni: "",
+    direccion: "",
+    telefono: "",
+    localidadId: "",
+    provinciaId: "",
+    departamentoId: "",
+    rolId: "",
+  });
+  
+  // Estado para cambio de contraseña
+  const [nuevaPassword, setNuevaPassword] = useState("");
+  const [confirmarPassword, setConfirmarPassword] = useState("");
   const [rolAEliminar, setRolAEliminar] = useState<Rol | null>(null);
   const [isDeletingRol, setIsDeletingRol] = useState(false);
   const [rolAEditar, setRolAEditar] = useState<Rol | null>(null);
@@ -206,40 +240,37 @@ export default function Empleados() {
     permisos: [] as string[],
   });
 
-  const isSuperAdmin =
+  // Estado para almacenar si el usuario es SuperAdmin (se obtiene de la API)
+  const [isSuperAdminState, setIsSuperAdminState] = useState(false);
+  
+  // Verificación local como fallback (basada en metadata)
+  const isSuperAdminLocal =
     user?.role === "superadmin" ||
     user?.role === "SuperAdmin" ||
     (user?.app_metadata as Record<string, unknown> | undefined)?.role ===
       "SuperAdmin";
+  
+  // Usar el estado de la API como fuente de verdad, con fallback a la verificación local
+  const isSuperAdmin = isSuperAdminState || isSuperAdminLocal;
 
   const resumen = useMemo(
-    () => ({
-      activos: empleados.filter((e) => e.estado === "Activo").length,
-      invitados: empleados.filter((e) => e.estado === "Invitado").length,
-      suspendidos: empleados.filter((e) => e.estado === "Suspendido").length,
-      roles: roles.length,
-    }),
+    () => {
+      const invitados = empleados.filter((e) => e.estado === "Invitado");
+      return {
+        activos: empleados.filter((e) => e.estado === "Activo").length,
+        invitados: invitados.length,
+        invitadosLista: invitados, // Lista de invitados para mostrar detalles
+        suspendidos: empleados.filter((e) => e.estado === "Suspendido").length,
+        roles: roles.length,
+      };
+    },
     [empleados, roles]
   );
 
-  const empleadosFiltrados = useMemo(() => {
-    return empleados.filter((empleado) => {
-      const matchBusqueda =
-        filtros.busqueda.trim().length === 0 ||
-        empleado.nombreCompleto
-          .toLowerCase()
-          .includes(filtros.busqueda.toLowerCase()) ||
-        empleado.email.toLowerCase().includes(filtros.busqueda.toLowerCase());
-
-      const matchRol =
-        filtros.rol === "todos" || empleado.rolId === Number(filtros.rol);
-
-      const matchEstado =
-        filtros.estado === "todos" || empleado.estado === filtros.estado;
-
-      return matchBusqueda && matchRol && matchEstado;
-    });
-  }, [empleados, filtros]);
+  // Los filtros ahora se aplican en el backend, solo mantenemos empleados tal cual vienen
+  // (el filtrado de búsqueda también se hace en backend, pero mantenemos esta variable
+  // para compatibilidad con el código existente)
+  // Los filtros ahora corren en el servidor, no necesitamos empleadosFiltrados
 
   const resolveTenantIdForRequests = () => {
     const meta = user?.app_metadata as Record<string, unknown> | undefined;
@@ -256,6 +287,11 @@ export default function Empleados() {
   };
 
   const loadData = async () => {
+    // No hacer peticiones si el usuario no está autenticado
+    if (!user || status !== "authenticated") {
+      return;
+    }
+    
     setIsLoadingData(true);
     // Paso 0: verificar permisos explícitos antes de cargar todo.
     try {
@@ -276,9 +312,21 @@ export default function Empleados() {
         }
       } else {
         const permisosJson = await permisosRes.json().catch(() => null);
-        const tienePermiso = Array.isArray(permisosJson?.permisos)
-          ? permisosJson.permisos.includes("empleados:admin")
-          : true;
+        
+        // Actualizar el estado de SuperAdmin desde la API
+        if (permisosJson?.isSuperAdmin === true) {
+          setIsSuperAdminState(true);
+        }
+        
+        // Opción B: Solo SuperAdmin tiene bypass automático
+        // Administradores y Empleados necesitan permiso explícito "empleados:admin"
+        const esSuperAdmin = permisosJson?.isSuperAdmin === true || isSuperAdminLocal;
+        const tienePermisoEspecifico = Array.isArray(permisosJson?.permisos) &&
+          permisosJson.permisos.includes("empleados:admin");
+        
+        // Solo SuperAdmin tiene acceso automático, otros necesitan permiso explícito
+        const tienePermiso = esSuperAdmin || tienePermisoEspecifico;
+        
         if (!tienePermiso) {
           setIsAuthorized(false);
           setIsLoadingData(false);
@@ -316,13 +364,23 @@ export default function Empleados() {
       // Construir query para roles (sin paginación)
       const rolesQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
       
-      // Construir query para empleados (con paginación)
+      // Construir query para empleados (con paginación y filtros)
       const paginationParams = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
       });
       if (tenantParam) {
         paginationParams.append("tenantId", tenantParam);
+      }
+      // Agregar filtros al backend
+      if (filtros.rol && filtros.rol !== "todos") {
+        paginationParams.append("rol", filtros.rol);
+      }
+      if (filtros.estado && filtros.estado !== "todos") {
+        paginationParams.append("estado", filtros.estado);
+      }
+      if (filtros.busqueda && filtros.busqueda.trim()) {
+        paginationParams.append("busqueda", filtros.busqueda.trim());
       }
       const empleadosQuery = `?${paginationParams.toString()}`;
       
@@ -425,8 +483,8 @@ export default function Empleados() {
         setEmpleados([]);
       }
 
-      setLocalidades([]);
-      setDepartamentos([]);
+      // No borrar departamentos y localidades si hay valores previos
+      // Se recargarán automáticamente si hay provincia/departamento seleccionados
     } catch (error) {
       console.error(error);
       addToast({
@@ -440,9 +498,77 @@ export default function Empleados() {
     }
   };
 
+  // Cargar auditorías
+  const loadAuditorias = async () => {
+    // No hacer peticiones si el usuario no está autenticado
+    if (!user || status !== "authenticated") {
+      return;
+    }
+    
+    setIsLoadingAuditoria(true);
+    try {
+      const res = await fetch(
+        `/api/auditoria-empleados?page=${paginationAuditoria.page}&limit=${paginationAuditoria.limit}`,
+        { cache: "no-store" }
+      );
+      if (res.ok) {
+        const json = await res.json();
+        if (json?.data && json?.pagination) {
+          setAuditorias(json.data);
+          setPaginationAuditoria(json.pagination);
+        } else {
+          setAuditorias([]);
+        }
+      } else {
+        setAuditorias([]);
+      }
+    } catch (error) {
+      console.error("Error al cargar auditorías:", error);
+      setAuditorias([]);
+    } finally {
+      setIsLoadingAuditoria(false);
+    }
+  };
+
+  // Debounce para búsqueda
   useEffect(() => {
-    loadData();
-  }, [page, limit]);
+    if (busquedaTimeoutRef.current) {
+      clearTimeout(busquedaTimeoutRef.current);
+    }
+    busquedaTimeoutRef.current = setTimeout(() => {
+      setFiltros((prev) => ({ ...prev, busqueda: busquedaInput }));
+      setPage(1);
+    }, 500); // 500ms de delay
+
+    return () => {
+      if (busquedaTimeoutRef.current) {
+        clearTimeout(busquedaTimeoutRef.current);
+      }
+    };
+  }, [busquedaInput]);
+
+  // Redirigir al login si el usuario cierra sesión (sin hacer peticiones)
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/signin");
+      return;
+    }
+  }, [status, router]);
+
+  useEffect(() => {
+    // Solo cargar datos si el usuario está autenticado
+    if (user && status === "authenticated") {
+      loadData();
+      loadAuditorias();
+    }
+  }, [user, status]);
+
+  useEffect(() => {
+    // Solo cargar datos si el usuario está autenticado
+    if (user && status === "authenticated") {
+      loadData();
+    }
+  }, [page, limit, filtros.rol, filtros.estado, filtros.busqueda, user, status]);
 
   const loadDepartamentos = async (provId: string, q?: string) => {
     if (!provId) {
@@ -512,6 +638,20 @@ export default function Empleados() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departamentoSeleccionado]);
+
+  // Recargar selects de ubicación después de loadData si hay valores previos
+  // Se dispara cuando termina la carga o cambia la página
+  useEffect(() => {
+    if (!isLoadingData) {
+      if (provinciaSeleccionada && departamentos.length === 0) {
+        loadDepartamentos(provinciaSeleccionada);
+      }
+      if (departamentoSeleccionado && localidades.length === 0) {
+        loadLocalidades(departamentoSeleccionado);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoadingData, page]);
 
   const handleCrearUsuario = async () => {
     if (
@@ -603,10 +743,7 @@ export default function Empleados() {
       }
 
       const data = await res.json();
-      if (data?.empleado) {
-        setEmpleados((prev) => [...prev, data.empleado]);
-      }
-
+      
       addToast({
         title: "Usuario creado",
         description: nuevoUsuario.autoInvitar
@@ -614,6 +751,11 @@ export default function Empleados() {
           : "Usuario listo. Recuerda compartir las credenciales.",
         color: "success",
       });
+
+      // Recargar datos para actualizar la lista y conteos
+      await loadData();
+      // Recargar auditorías para mostrar la acción recién registrada
+      await loadAuditorias();
 
       setNuevoUsuario({
         nombre: "",
@@ -701,23 +843,17 @@ export default function Empleados() {
       }
 
       const data = await res.json();
-      if (data?.rol) {
-        const rolCreado: Rol = {
-          id: Number(data.rol.id),
-          nombre: data.rol.nombre,
-          tipo: data.rol.tipo ?? "EMPLEADO",
-          usuarios: Number(data.rol.usuarios ?? 0),
-          descripcion: data.rol.descripcion ?? null,
-          permisos: Array.isArray(data.rol.permisos) ? data.rol.permisos : [],
-        };
-        setRoles((prev) => [...prev, rolCreado]);
-      }
 
       addToast({
         title: "Rol creado",
         description: "Asignalo desde la tabla o en el alta rapida.",
         color: "success",
       });
+
+      // Recargar datos para actualizar roles y conteos
+      await loadData();
+      // Recargar auditorías para mostrar la acción recién registrada
+      await loadAuditorias();
       setOpenRolModal(false);
       setNuevoRol({
         nombre: "",
@@ -780,6 +916,8 @@ export default function Empleados() {
 
       // Refrescar datos para actualizar roles y conteos
       await loadData();
+      // Recargar auditorías para mostrar la acción recién registrada
+      await loadAuditorias();
 
       addToast({
         title: "Rol actualizado",
@@ -828,6 +966,8 @@ export default function Empleados() {
 
       // Refrescar datos para actualizar roles y conteos
       await loadData();
+      // Recargar auditorías para mostrar la acción recién registrada
+      await loadAuditorias();
 
       addToast({
         title: "Rol eliminado",
@@ -879,13 +1019,6 @@ export default function Empleados() {
       }
       const data = await res.json();
 
-      setEmpleados((prev) =>
-        prev.map((item) =>
-          item.usuarioId === empleado.usuarioId
-            ? { ...item, estado: data.estado ?? siguiente }
-            : item
-        )
-      );
       addToast({
         title: "Actualizado",
         description:
@@ -894,6 +1027,11 @@ export default function Empleados() {
             : "Usuario activo.",
         color: "success",
       });
+
+      // Recargar datos para actualizar la lista y conteos
+      await loadData();
+      // Recargar auditorías para mostrar la acción recién registrada
+      await loadAuditorias();
     } catch (error) {
       console.error(error);
       addToast({
@@ -924,14 +1062,16 @@ export default function Empleados() {
         throw new Error(data?.error ?? "No se pudo eliminar el empleado");
       }
 
-      setEmpleados((prev) =>
-        prev.filter((e) => e.personaId !== empleado.personaId)
-      );
       addToast({
         title: "Empleado eliminado",
         description: `${empleado.nombreCompleto} fue eliminado.`,
         color: "success",
       });
+
+      // Recargar datos para actualizar la lista y conteos
+      await loadData();
+      // Recargar auditorías para mostrar la acción recién registrada
+      await loadAuditorias();
     } catch (error) {
       console.error(error);
       addToast({
@@ -952,6 +1092,192 @@ export default function Empleados() {
     return roles.find((r) => r.id === rolId)?.tipo ?? null;
   };
 
+  // Función para editar empleado
+  const handleEditarEmpleado = async () => {
+    if (!empleadoAEditar) return;
+
+    if (!empleadoEditDraft.nombre.trim() || !empleadoEditDraft.apellido.trim()) {
+      addToast({
+        title: "Campos requeridos",
+        description: "Nombre y apellido son obligatorios.",
+        color: "warning",
+      });
+      return;
+    }
+
+    if (!empleadoEditDraft.direccion.trim()) {
+      addToast({
+        title: "Dirección requerida",
+        description: "La dirección es obligatoria.",
+        color: "warning",
+      });
+      return;
+    }
+
+    if (!empleadoEditDraft.localidadId) {
+      addToast({
+        title: "Localidad requerida",
+        description: "Debes seleccionar una localidad.",
+        color: "warning",
+      });
+      return;
+    }
+
+    setIsSavingEmpleado(true);
+    try {
+      const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
+      const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
+
+      const body: any = {
+        personaId: empleadoAEditar.personaId,
+      };
+
+      if (empleadoEditDraft.nombre !== empleadoAEditar.nombre) {
+        body.nombre = empleadoEditDraft.nombre.trim();
+      }
+      if (empleadoEditDraft.apellido !== empleadoAEditar.apellido) {
+        body.apellido = empleadoEditDraft.apellido.trim();
+      }
+      if (empleadoEditDraft.dni !== (empleadoAEditar.dni || "")) {
+        body.dni = empleadoEditDraft.dni || null;
+      }
+      if (empleadoEditDraft.direccion !== (empleadoAEditar.direccion || "")) {
+        body.direccion = empleadoEditDraft.direccion.trim();
+      }
+      if (empleadoEditDraft.telefono !== (empleadoAEditar.telefono || "")) {
+        body.telefono = empleadoEditDraft.telefono || null;
+      }
+      if (Number(empleadoEditDraft.localidadId) !== (empleadoAEditar.localidadId || null)) {
+        body.localidadId = Number(empleadoEditDraft.localidadId);
+      }
+      if (empleadoEditDraft.provinciaId) {
+        body.provinciaId = Number(empleadoEditDraft.provinciaId);
+      }
+      if (empleadoEditDraft.departamentoId) {
+        body.departamentoId = Number(empleadoEditDraft.departamentoId);
+      }
+      if (empleadoEditDraft.rolId !== (empleadoAEditar.rolId ? String(empleadoAEditar.rolId) : "")) {
+        body.rolId = empleadoEditDraft.rolId ? Number(empleadoEditDraft.rolId) : null;
+      }
+
+      const res = await fetch(`/api/empleados${tenantQuery}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "No se pudo actualizar el empleado");
+      }
+
+      addToast({
+        title: "Empleado actualizado",
+        description: `${empleadoEditDraft.nombre} ${empleadoEditDraft.apellido} fue actualizado correctamente.`,
+        color: "success",
+      });
+
+      // Recargar datos
+      await loadData();
+      // Recargar auditorías
+      await loadAuditorias();
+      
+      setEmpleadoAEditar(null);
+      setEmpleadoEditDraft({
+        nombre: "",
+        apellido: "",
+        dni: "",
+        direccion: "",
+        telefono: "",
+        localidadId: "",
+        provinciaId: "",
+        departamentoId: "",
+        rolId: "",
+      });
+    } catch (error) {
+      console.error(error);
+      addToast({
+        title: "Error",
+        description: (error as Error).message,
+        color: "danger",
+      });
+    } finally {
+      setIsSavingEmpleado(false);
+    }
+  };
+
+  // Función para cambiar contraseña
+  const handleCambiarPassword = async () => {
+    if (!empleadoAEditar || !empleadoAEditar.usuarioId) {
+      addToast({
+        title: "Error",
+        description: "Usuario no encontrado",
+        color: "danger",
+      });
+      return;
+    }
+
+    if (!nuevaPassword || nuevaPassword.length < 8) {
+      addToast({
+        title: "Contraseña inválida",
+        description: "La contraseña debe tener al menos 8 caracteres.",
+        color: "warning",
+      });
+      return;
+    }
+
+    if (nuevaPassword !== confirmarPassword) {
+      addToast({
+        title: "Contraseñas no coinciden",
+        description: "Las contraseñas deben ser iguales.",
+        color: "warning",
+      });
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
+      const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
+
+      const res = await fetch(`/api/empleados/cambiar-password${tenantQuery}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          usuarioId: empleadoAEditar.usuarioId,
+          nuevaPassword,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "No se pudo cambiar la contraseña");
+      }
+
+      addToast({
+        title: "Contraseña actualizada",
+        description: "La contraseña fue cambiada correctamente.",
+        color: "success",
+      });
+
+      // Recargar auditorías
+      await loadAuditorias();
+      
+      // Limpiar campos
+      setNuevaPassword("");
+      setConfirmarPassword("");
+    } catch (error) {
+      console.error(error);
+      addToast({
+        title: "Error",
+        description: (error as Error).message,
+        color: "danger",
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
   if (!isAuthorized) {
     return (
       <div className="max-w-4xl mx-auto py-16 text-center space-y-3">
@@ -964,94 +1290,55 @@ export default function Empleados() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-6">
-      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 via-indigo-800 to-emerald-600 text-white shadow-sm">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),transparent_35%)]" />
-        <div className="relative p-6 sm:p-8 space-y-4">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="space-y-3">
-              <Chip variant="flat" color="success" className="bg-white/10">
-                Equipo y accesos
+    <>
+    <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center">
+      {/* Header de la página */}
+      <section className="w-full relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-blue-500 to-[#90c472] text-white shadow-xl mb-10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),transparent_40%)]" />
+        <div className="relative p-4 md:p-5 space-y-5">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="space-y-2">
+              <Chip variant="flat" className="bg-white/10 text-white">
+                Empleados
               </Chip>
-              <h1 className="text-3xl sm:text-4xl font-bold">Empleados y roles</h1>
-              <p className="text-white/80 max-w-2xl text-sm sm:text-base">
-                Crea usuarios, asigna roles y controla quien puede operar tu
-                negocio.
+              <h1 className="text-3xl md:text-[32px] font-bold">
+                Gestion de Empleados
+              </h1>
+              <p className="text-white max-w-3xl">
+                Administra tu equipo, roles, permisos y controla quien puede operar tu negocio
               </p>
-              <div className="flex gap-2 sm:gap-3 flex-wrap">
-                <Chip
-                  size="sm"
-                  className="bg-white/15 text-white"
-                  variant="flat"
-                >
-                  Activos: {resumen.activos}
-                </Chip>
-                <Chip
-                  size="sm"
-                  className="bg-white/15 text-white"
-                  variant="flat"
-                >
-                  Invitados: {resumen.invitados}
-                </Chip>
-                <Chip
-                  size="sm"
-                  className="bg-white/15 text-white"
-                  variant="flat"
-                >
-                  Roles: {resumen.roles}
-                </Chip>
-              </div>
-            </div>
-            <div className="flex gap-2 sm:gap-3 flex-wrap">
-              <Button
-                color="primary"
-                className="bg-white text-slate-900"
-                onPress={() => setOpenRolModal(true)}
-                size="sm"
-              >
-                + Nuevo rol
-              </Button>
-              <Button
-                variant="bordered"
-                className="border-white/40 text-white"
-                onPress={() =>
-                  addToast({
-                    title: "Exportar",
-                    description: "Exportaremos en la siguiente iteración.",
-                  })
-                }
-                size="sm"
-              >
-                Exportar equipo
-              </Button>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Tabs con los diferentes CRUDs */}
       <Tabs
-        aria-label="Gestión de empleados y roles"
-        color="primary"
-        variant="underlined"
-        classNames={{
-          tabList:
-            "gap-6 w-full relative rounded-none p-0 border-b border-divider",
-          cursor: "w-full bg-primary",
-          tab: "max-w-fit px-0 h-12",
-          tabContent: "group-data-[selected=true]:text-primary",
-        }}
+        aria-label="Options"
+        className="relative"
       >
         <Tab
           key="usuarios"
           title={
             <div className="flex items-center space-x-2">
-              <span>👥</span>
+              <span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="size-5"
+                >
+                  <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM3 5a2 2 0 11.001 3.001A2 2 0 013 5zm14 0a2 2 0 11.001 3.001A2 2 0 0117 5zm-3.707 6.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 13H13a1 1 0 100-2H9.414l1.293-1.293zM5 12a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1zm5-4a1 1 0 011-1h5a1 1 0 110 2h-5a1 1 0 01-1-1z" />
+                </svg>
+              </span>
               <span>Usuarios</span>
             </div>
           }
         >
-          <div className="mt-6 space-y-6">
-            <Card className="shadow-sm border border-slate-200">
+          <Card className="shadow-none border-none bg-transparent">
+            <CardBody className="p-0">
+              <div className="space-y-6">
+                <Card className="shadow-sm border border-slate-200">
               <CardHeader className="flex justify-between items-center pb-3">
                 <div>
                   <p className="text-sm text-gray-500">Alta rápida</p>
@@ -1247,6 +1534,39 @@ export default function Empleados() {
               </CardBody>
             </Card>
 
+            {/* Alerta de invitaciones pendientes */}
+            {resumen.invitados > 0 && (
+              <Card className="shadow-sm border-2 border-yellow-300 bg-yellow-50">
+                <CardBody className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl">📧</div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-yellow-900 mb-1">
+                        {resumen.invitados} invitación{resumen.invitados > 1 ? "es" : ""} pendiente{resumen.invitados > 1 ? "s" : ""}
+                      </h3>
+                      <p className="text-sm text-yellow-700">
+                        {resumen.invitadosLista
+                          .map((e) => e.nombreCompleto)
+                          .join(", ")}{" "}
+                        {resumen.invitados > 1 ? "están" : "está"} esperando aceptar su invitación.
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      color="warning"
+                      onPress={() => {
+                        setFiltros((prev) => ({ ...prev, estado: "Invitado" }));
+                        setPage(1);
+                      }}
+                    >
+                      Ver invitados
+                    </Button>
+                  </div>
+                </CardBody>
+              </Card>
+            )}
+
             <Card className="shadow-sm border border-slate-200">
               <CardHeader className="flex flex-col gap-3 pb-3">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 w-full">
@@ -1261,14 +1581,9 @@ export default function Empleados() {
                       size="sm"
                       placeholder="Buscar por nombre o correo"
                       startContent={<span className="text-gray-500">🔍</span>}
-                      value={filtros.busqueda}
+                      value={busquedaInput}
                       onChange={(e) => {
-                        setFiltros((prev) => ({
-                          ...prev,
-                          busqueda: e.target.value,
-                        }));
-                        // Resetear a página 1 al buscar (los filtros se hacen en cliente)
-                        setPage(1);
+                        setBusquedaInput(e.target.value);
                       }}
                       className="w-full md:max-w-xs"
                     />
@@ -1279,6 +1594,8 @@ export default function Empleados() {
                       onSelectionChange={(keys) => {
                         const selected = Array.from(keys)[0] as string;
                         setFiltros((prev) => ({ ...prev, rol: selected || "" }));
+                        // Resetear a página 1 al cambiar filtro de rol
+                        setPage(1);
                       }}
                       className="w-full md:min-w-[160px]"
                     >
@@ -1294,9 +1611,11 @@ export default function Empleados() {
                     <Select
                       size="sm"
                       selectedKeys={[filtros.estado]}
-                      onChange={(e) =>
-                        setFiltros((prev) => ({ ...prev, estado: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        setFiltros((prev) => ({ ...prev, estado: e.target.value }));
+                        // Resetear a página 1 al cambiar filtro de estado
+                        setPage(1);
+                      }}
                       className="w-full md:min-w-[160px]"
                     >
                       <SelectItem key="todos">Todos</SelectItem>
@@ -1309,7 +1628,7 @@ export default function Empleados() {
               </CardHeader>
               <Divider />
               <CardBody className="space-y-3 pt-4">
-                {empleadosFiltrados.map((empleado) => {
+                {empleados.map((empleado) => {
                   const rolNombre =
                     empleado.rolNombre ?? getRolNombre(empleado.rolId) ?? "Sin rol";
                   const rolTipo =
@@ -1346,11 +1665,56 @@ export default function Empleados() {
                         <div>{estadoPill(empleado.estado)}</div>
                         <div className="flex items-center gap-1 text-gray-500">
                           <span>⏳</span>
-                          <span>{empleado.ultimaActividad ?? "Pendiente"}</span>
+                          <span>
+                            {empleado.estado === "Invitado"
+                              ? "Invitación pendiente"
+                              : empleado.ultimaActividad ?? "Pendiente"}
+                          </span>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2">
+                        <Tooltip content="Editar">
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            variant="light"
+                            onPress={async () => {
+                              setEmpleadoAEditar(empleado);
+                              // Prellenar formulario
+                              const provinciaIdStr = empleado.provinciaId ? String(empleado.provinciaId) : "";
+                              const departamentoIdStr = empleado.departamentoId ? String(empleado.departamentoId) : "";
+                              
+                              setEmpleadoEditDraft({
+                                nombre: empleado.nombre,
+                                apellido: empleado.apellido,
+                                dni: empleado.dni || "",
+                                direccion: empleado.direccion || "",
+                                telefono: empleado.telefono || "",
+                                localidadId: empleado.localidadId ? String(empleado.localidadId) : "",
+                                provinciaId: provinciaIdStr,
+                                departamentoId: departamentoIdStr,
+                                rolId: empleado.rolId ? String(empleado.rolId) : "",
+                              });
+                              
+                              // Cargar departamentos y localidades si hay provincia/departamento
+                              if (provinciaIdStr) {
+                                setProvinciaSeleccionada(provinciaIdStr);
+                                await loadDepartamentos(provinciaIdStr);
+                                if (departamentoIdStr) {
+                                  setDepartamentoSeleccionado(departamentoIdStr);
+                                  await loadLocalidades(departamentoIdStr);
+                                }
+                              }
+                              
+                              // Limpiar contraseñas
+                              setNuevaPassword("");
+                              setConfirmarPassword("");
+                            }}
+                          >
+                            <Pencil size={16} />
+                          </Button>
+                        </Tooltip>
                         <Tooltip content="Ver ficha">
                           <Button
                             isIconOnly
@@ -1358,7 +1722,7 @@ export default function Empleados() {
                             variant="light"
                             onPress={() => setDetalleEmpleado(empleado)}
                           >
-                            🔍
+                            <Eye size={16} />
                           </Button>
                         </Tooltip>
                         <Tooltip content="Suspender/activar">
@@ -1375,7 +1739,7 @@ export default function Empleados() {
                               )
                             }
                           >
-                            ⚡
+                            <Zap size={16} />
                           </Button>
                         </Tooltip>
                         <Tooltip content="Enviar email">
@@ -1391,7 +1755,7 @@ export default function Empleados() {
                               })
                             }
                           >
-                            ✉️
+                            <Mail size={16} />
                           </Button>
                         </Tooltip>
                         <Tooltip content="Eliminar">
@@ -1402,14 +1766,14 @@ export default function Empleados() {
                             variant="light"
                             onPress={() => handleEliminar(empleado)}
                           >
-                            🗑
+                            <Trash2 size={16} />
                           </Button>
                         </Tooltip>
                       </div>
                     </div>
                   );
                 })}
-                {empleadosFiltrados.length === 0 && (
+                {empleados.length === 0 && (
                   <p className="text-sm text-gray-500 px-2 py-4 text-center">
                     {isLoadingData ? "Cargando..." : "Sin coincidencias"}
                   </p>
@@ -1418,7 +1782,7 @@ export default function Empleados() {
               
               {/* Paginación */}
               {pagination.total > 0 && (
-                <div className="p-4 border-t border-gray-200">
+                <div className="px-4 pb-4">
                   <Pagination
                     pagination={pagination}
                     onPageChange={(newPage) => {
@@ -1434,19 +1798,36 @@ export default function Empleados() {
                 </div>
               )}
             </Card>
-          </div>
+              </div>
+            </CardBody>
+          </Card>
         </Tab>
 
         <Tab
           key="roles"
           title={
             <div className="flex items-center space-x-2">
-              <span>🎭</span>
+              <span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="size-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M9.293 2.293a1 1 0 0 1 1.414 0l7 7A1 1 0 0 1 17 11h-1v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6H3a1 1 0 0 1-.707-1.707l7-7Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </span>
               <span>Roles</span>
             </div>
           }
         >
-          <Card className="mt-6 shadow-sm border border-slate-200">
+          <Card className="shadow-none border-none bg-transparent">
+            <CardBody className="p-0">
+              <Card className="shadow-sm border border-slate-200">
             <CardHeader className="flex items-center justify-between pb-3">
               <div>
                 <p className="text-sm text-gray-500">Roles</p>
@@ -1601,17 +1982,34 @@ export default function Empleados() {
               })}
             </CardBody>
           </Card>
+            </CardBody>
+          </Card>
         </Tab>
 
         <Tab
           key="auditoria"
           title={
             <div className="flex items-center space-x-2">
-              <span>📊</span>
+              <span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="size-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 2a.75.75 0 0 1 .75.75v16.5a.75.75 0 0 1-1.5 0V2.75A.75.75 0 0 1 10 2ZM4.5 4a.75.75 0 0 1 .75.75v11.5a.75.75 0 0 1-1.5 0V4.75A.75.75 0 0 1 4.5 4Zm11 0a.75.75 0 0 1 .75.75v11.5a.75.75 0 0 1-1.5 0V4.75A.75.75 0 0 1 15.5 4Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </span>
               <span>Auditoría de accesos</span>
             </div>
           }
         >
+          <Card className="shadow-none border-none bg-transparent">
+            <CardBody className="p-0">
           <Card className="mt-6 shadow-sm border border-slate-200">
             <CardHeader className="flex items-center justify-between pb-3">
               <div>
@@ -1626,94 +2024,76 @@ export default function Empleados() {
             </CardHeader>
             <Divider />
             <CardBody className="space-y-4 pt-4">
-              {/* Mock data - máximo 10 items para preview */}
-              {[
-                {
-                  id: 1,
-                  accion: "Lucas activo 2FA para cajas",
-                  tiempo: "Hace 15 min",
-                  categoria: "Seguridad",
-                  color: "success",
-                },
-                {
-                  id: 2,
-                  accion: "Se creó rol Supervisor de turno",
-                  tiempo: "Hace 1h",
-                  categoria: "Roles",
-                  color: "primary",
-                },
-                {
-                  id: 3,
-                  accion: "2 invitaciones pendientes de aceptación",
-                  tiempo: "Hoy",
-                  categoria: "Invitaciones",
-                  color: "warning",
-                },
-                {
-                  id: 4,
-                  accion: "Usuario suspendido: Juan Pérez",
-                  tiempo: "Hace 2h",
-                  categoria: "Usuarios",
-                  color: "danger",
-                },
-                {
-                  id: 5,
-                  accion: "Cambio de permisos en rol Empleado",
-                  tiempo: "Hace 3h",
-                  categoria: "Roles",
-                  color: "primary",
-                },
-                {
-                  id: 6,
-                  accion: "Nuevo usuario creado: María García",
-                  tiempo: "Ayer",
-                  categoria: "Usuarios",
-                  color: "success",
-                },
-                {
-                  id: 7,
-                  accion: "Sesión expirada por inactividad",
-                  tiempo: "Ayer",
-                  categoria: "Seguridad",
-                  color: "warning",
-                },
-                {
-                  id: 8,
-                  accion: "Rol eliminado: Vendedor temporal",
-                  tiempo: "Hace 2 días",
-                  categoria: "Roles",
-                  color: "danger",
-                },
-                {
-                  id: 9,
-                  accion: "Actualización de configuración de seguridad",
-                  tiempo: "Hace 2 días",
-                  categoria: "Seguridad",
-                  color: "primary",
-                },
-                {
-                  id: 10,
-                  accion: "Exportación de lista de empleados",
-                  tiempo: "Hace 3 días",
-                  categoria: "Usuarios",
-                  color: "default",
-                },
-              ].map((item) => (
-                <div key={item.id} className="flex items-center justify-between py-2">
-                  <div>
-                    <p className="font-semibold text-slate-900">{item.accion}</p>
-                    <p className="text-sm text-gray-500">{item.tiempo}</p>
-                  </div>
-                  <Chip size="sm" color={item.color as "default" | "primary" | "secondary" | "success" | "warning" | "danger"} variant="flat">
-                    {item.categoria}
-                  </Chip>
+              {isLoadingAuditoria ? (
+                <div className="flex justify-center py-8">
+                  <p className="text-sm text-gray-500">Cargando auditorías...</p>
                 </div>
-              ))}
+              ) : auditorias.length === 0 ? (
+                <div className="flex justify-center py-8">
+                  <p className="text-sm text-gray-500">No hay auditorías registradas</p>
+                </div>
+              ) : (
+                auditorias.map((aud) => {
+                  const { categoria, color } = mapearAccion(aud.accion);
+                  const tiempoRelativo = formatTiempoRelativo(aud.fecha);
+                  const descripcion = formatearAccion(aud);
+                  const severidadColor = mapearSeveridad(aud.severidad || "INFO");
+                  
+                  return (
+                    <div key={aud.id} className="flex items-center justify-between py-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-semibold text-slate-900">{descripcion}</p>
+                          <Chip size="sm" color={severidadColor} variant="flat">
+                            {aud.severidad || "INFO"}
+                          </Chip>
+                        </div>
+                        <p className="text-sm text-gray-500">{tiempoRelativo}</p>
+                      </div>
+                      <Chip size="sm" color={color} variant="flat">
+                        {categoria}
+                      </Chip>
+                    </div>
+                  );
+                })
+              )}
               <Divider className="my-4" />
-              <div className="flex justify-center pt-2">
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    isDisabled={!paginationAuditoria.hasPreviousPage || isLoadingAuditoria}
+                    onPress={() => {
+                      setPaginationAuditoria((prev) => ({
+                        ...prev,
+                        page: prev.page - 1,
+                      }));
+                    }}
+                  >
+                    Anterior
+                  </Button>
+                  <span className="text-sm text-gray-500">
+                    Página {paginationAuditoria.page} de {paginationAuditoria.totalPages || 1}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    isDisabled={!paginationAuditoria.hasNextPage || isLoadingAuditoria}
+                    onPress={() => {
+                      setPaginationAuditoria((prev) => ({
+                        ...prev,
+                        page: prev.page + 1,
+                      }));
+                    }}
+                  >
+                    Siguiente
+                  </Button>
+                </div>
                 <Button
                   color="primary"
                   variant="flat"
+                  size="sm"
                   onPress={() => router.push("/analiticas?tab=logs")}
                 >
                   Ver logs completos
@@ -1721,8 +2101,11 @@ export default function Empleados() {
               </div>
             </CardBody>
           </Card>
+            </CardBody>
+          </Card>
         </Tab>
       </Tabs>
+    </div>
 
       <Modal
         isOpen={openRolModal}
@@ -2058,7 +2441,9 @@ export default function Empleados() {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Ultima actividad</span>
               <span className="font-medium text-slate-900">
-                {detalleEmpleado?.ultimaActividad ?? "Pendiente"}
+                {detalleEmpleado?.estado === "Invitado"
+                  ? "Invitación pendiente"
+                  : detalleEmpleado?.ultimaActividad ?? "Pendiente"}
               </span>
             </div>
           </ModalBody>
@@ -2125,6 +2510,225 @@ export default function Empleados() {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </div>
+
+      {/* Modal de edición de empleado */}
+      <Modal
+        isOpen={!!empleadoAEditar}
+        onClose={() => {
+          setEmpleadoAEditar(null);
+          setNuevaPassword("");
+          setConfirmarPassword("");
+        }}
+        size="2xl"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            <h3 className="text-xl font-semibold">Editar empleado</h3>
+            <p className="text-sm text-gray-500">
+              {empleadoAEditar?.nombreCompleto}
+            </p>
+          </ModalHeader>
+          <ModalBody className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Nombre"
+                placeholder="Ej: Sofia"
+                value={empleadoEditDraft.nombre}
+                onChange={(e) =>
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    nombre: e.target.value,
+                  }))
+                }
+                isRequired
+              />
+              <Input
+                label="Apellido"
+                placeholder="Ej: Romero"
+                value={empleadoEditDraft.apellido}
+                onChange={(e) =>
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    apellido: e.target.value,
+                  }))
+                }
+                isRequired
+              />
+              <Input
+                label="DNI (opcional)"
+                placeholder="12345678"
+                value={empleadoEditDraft.dni}
+                onChange={(e) =>
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    dni: e.target.value,
+                  }))
+                }
+              />
+              <Input
+                label="Teléfono (opcional)"
+                placeholder="+54 11 5555 0000"
+                value={empleadoEditDraft.telefono}
+                onChange={(e) =>
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    telefono: e.target.value,
+                  }))
+                }
+              />
+              <Input
+                label="Dirección"
+                placeholder="Calle y número"
+                value={empleadoEditDraft.direccion}
+                onChange={(e) =>
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    direccion: e.target.value,
+                  }))
+                }
+                isRequired
+                className="md:col-span-2"
+              />
+              <Select
+                label="Provincia"
+                selectedKeys={
+                  empleadoEditDraft.provinciaId ? [empleadoEditDraft.provinciaId] : []
+                }
+                onChange={(e) => {
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    provinciaId: e.target.value,
+                    departamentoId: "",
+                    localidadId: "",
+                  }));
+                  setProvinciaSeleccionada(e.target.value);
+                }}
+                placeholder="Selecciona una provincia"
+              >
+                {provincias.map((prov) => (
+                  <SelectItem key={String(prov.Id)}>
+                    {prov.Descripcion}
+                  </SelectItem>
+                ))}
+              </Select>
+              <Select
+                label="Departamento"
+                selectedKeys={
+                  empleadoEditDraft.departamentoId ? [empleadoEditDraft.departamentoId] : []
+                }
+                onChange={(e) => {
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    departamentoId: e.target.value,
+                    localidadId: "",
+                  }));
+                  setDepartamentoSeleccionado(e.target.value);
+                }}
+                placeholder="Selecciona un departamento"
+                isDisabled={!empleadoEditDraft.provinciaId}
+              >
+                {departamentos.map((dep) => (
+                  <SelectItem key={String(dep.Id)}>
+                    {dep.Descripcion}
+                  </SelectItem>
+                ))}
+              </Select>
+              <Select
+                label="Localidad"
+                selectedKeys={
+                  empleadoEditDraft.localidadId ? [empleadoEditDraft.localidadId] : []
+                }
+                onChange={(e) =>
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    localidadId: e.target.value,
+                  }))
+                }
+                placeholder="Selecciona una localidad"
+                isDisabled={!empleadoEditDraft.departamentoId}
+                isRequired
+                className="md:col-span-2"
+              >
+                {localidades.map((loc) => (
+                  <SelectItem key={String(loc.Id)}>
+                    {loc.Descripcion}
+                  </SelectItem>
+                ))}
+              </Select>
+              <Select
+                label="Rol"
+                selectedKeys={empleadoEditDraft.rolId ? [empleadoEditDraft.rolId] : []}
+                onChange={(e) =>
+                  setEmpleadoEditDraft((prev) => ({
+                    ...prev,
+                    rolId: e.target.value,
+                  }))
+                }
+                placeholder="Selecciona un rol"
+                className="md:col-span-2"
+              >
+                {roles.map((rol) => (
+                  <SelectItem key={String(rol.id)}>{rol.nombre}</SelectItem>
+                ))}
+              </Select>
+            </div>
+
+            <Divider className="my-4" />
+
+            {/* Sección de cambio de contraseña */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-slate-900">
+                Cambiar contraseña
+              </h4>
+              <Input
+                label="Nueva contraseña"
+                type="password"
+                placeholder="Mínimo 8 caracteres"
+                value={nuevaPassword}
+                onChange={(e) => setNuevaPassword(e.target.value)}
+              />
+              <Input
+                label="Confirmar contraseña"
+                type="password"
+                placeholder="Repite la contraseña"
+                value={confirmarPassword}
+                onChange={(e) => setConfirmarPassword(e.target.value)}
+              />
+              <Button
+                color="warning"
+                variant="flat"
+                size="sm"
+                onPress={handleCambiarPassword}
+                isLoading={isChangingPassword}
+                isDisabled={!nuevaPassword || nuevaPassword.length < 8 || nuevaPassword !== confirmarPassword}
+              >
+                Cambiar contraseña
+              </Button>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="light"
+              onPress={() => {
+                setEmpleadoAEditar(null);
+                setNuevaPassword("");
+                setConfirmarPassword("");
+              }}
+              isDisabled={isSavingEmpleado || isChangingPassword}
+            >
+              Cancelar
+            </Button>
+            <Button
+              color="primary"
+              onPress={handleEditarEmpleado}
+              isLoading={isSavingEmpleado}
+            >
+              Guardar cambios
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </>
   );
 }
