@@ -74,23 +74,6 @@ type Rol = {
   permisos?: string[];
 };
 
-type Localidad = {
-  Id: number;
-  Descripcion: string;
-  DepartamentoId: number;
-};
-
-type Provincia = {
-  Id: number;
-  Descripcion: string;
-};
-
-type Departamento = {
-  Id: number;
-  Descripcion: string;
-  ProvinciaId: number;
-};
-
 const permisosDisponibles = [
   "Ventas",
   "Caja",
@@ -163,13 +146,6 @@ export default function Empleados() {
   });
   const [busquedaInput, setBusquedaInput] = useState("");
   const busquedaTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Mover la declaración de filters antes del hook
-  const filters = {
-    busqueda: filtros.busqueda,
-    rol: filtros.rol,
-    estado: filtros.estado,
-  };
 
   const [nuevoUsuario, setNuevoUsuario] = useState({
     nombre: "",
@@ -268,21 +244,12 @@ export default function Empleados() {
     auditorias,
     pagination,
     isLoadingEmpleados,
-    isLoadingRoles,
-    isLoadingProvincias,
     isLoadingAuditorias,
     refetchEmpleados,
     refetchAuditorias,
     createEmpleado: createEmpleadoMutation,
-    updateEmpleado: updateEmpleadoMutation,
-    deleteEmpleado: deleteEmpleadoMutation,
-    changePassword: changePasswordMutation,
-    createRol: createRolMutation,
-    updateRol: updateRolMutation,
-    deleteRol: deleteRolMutation,
     isCreatingEmpleado,
     isUpdatingEmpleado,
-    isDeletingEmpleado,
     isChangingPassword,
     isCreatingRol,
     isUpdatingRol,
@@ -331,6 +298,7 @@ export default function Empleados() {
       try {
         const permisosRes = await fetch("/api/permisos", {
           cache: "no-store",
+          credentials: "include",
         }).catch(() => null);
         
         if (!permisosRes || !permisosRes.ok) {
@@ -410,14 +378,14 @@ export default function Empleados() {
       refetchEmpleados();
       refetchAuditorias();
     }
-  }, [user, status]);
+  }, [user, status, refetchEmpleados, refetchAuditorias]);
 
   useEffect(() => {
     // Solo cargar datos si el usuario está autenticado
     if (user && status === "authenticated") {
       refetchEmpleados();
     }
-  }, [page, limit, filtros.rol, filtros.estado, filtros.busqueda, user, status]);
+  }, [page, limit, filtros.rol, filtros.estado, filtros.busqueda, user, status, refetchEmpleados]);
 
   // Los departamentos y localidades se cargan automáticamente con TanStack Query
   useEffect(() => {
@@ -425,23 +393,13 @@ export default function Empleados() {
       setDepartamentoSeleccionado("");
       setNuevoUsuario((prev) => ({ ...prev, localidadId: "" }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provinciaSeleccionada]);
 
   useEffect(() => {
     if (departamentoSeleccionado) {
       setNuevoUsuario((prev) => ({ ...prev, localidadId: "" }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departamentoSeleccionado]);
-
-  // Recargar selects de ubicación después de loadData si hay valores previos
-  // Se dispara cuando termina la carga o cambia la página
-  useEffect(() => {
-    // Los departamentos y localidades se cargan automáticamente con TanStack Query
-    // cuando se selecciona una provincia o departamento
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoadingEmpleados, page]);
 
   const handleCrearUsuario = async () => {
     if (
@@ -458,6 +416,27 @@ export default function Empleados() {
       addToast({
         title: "Faltan datos",
         description: "Completa los campos obligatorios para crear el usuario.",
+        color: "warning",
+      });
+      return;
+    }
+
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(nuevoUsuario.email.trim())) {
+      addToast({
+        title: "Email inválido",
+        description: "Por favor, ingresa un email válido.",
+        color: "warning",
+      });
+      return;
+    }
+
+    // Validar longitud mínima de password
+    if (nuevoUsuario.password.length < 8) {
+      addToast({
+        title: "Contraseña muy corta",
+        description: "La contraseña debe tener al menos 8 caracteres.",
         color: "warning",
       });
       return;
@@ -2467,14 +2446,14 @@ export default function Empleados() {
                 setNuevaPassword("");
                 setConfirmarPassword("");
               }}
-              isDisabled={isSavingEmpleado || isChangingPassword}
+              isDisabled={isUpdatingEmpleado || isChangingPassword}
             >
               Cancelar
             </Button>
             <Button
               color="primary"
               onPress={handleEditarEmpleado}
-              isLoading={isSavingEmpleado}
+              isLoading={isUpdatingEmpleado}
             >
               Guardar cambios
             </Button>

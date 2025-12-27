@@ -92,6 +92,7 @@ const fetchTenant = async ({ signal }: { signal: AbortSignal }): Promise<Tenant>
   const response = await fetch("/api/tenant", {
     signal,
     cache: "no-store",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -111,6 +112,7 @@ const fetchConfiguracion = async ({
   const response = await fetch("/api/configuracion", {
     signal,
     cache: "no-store",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -134,6 +136,7 @@ const fetchLocalidades = async ({
   const response = await fetch("/api/localidades", {
     signal,
     cache: "no-store",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -152,6 +155,7 @@ const fetchPreferenciasVenta = async ({
   const response = await fetch("/api/configuracion/preferencias", {
     signal,
     cache: "no-store",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -181,6 +185,7 @@ const fetchNotificaciones = async ({
   const response = await fetch("/api/configuracion/preferencias", {
     signal,
     cache: "no-store",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -209,6 +214,7 @@ const fetchSeguridad = async ({
   const response = await fetch("/api/configuracion/seguridad", {
     signal,
     cache: "no-store",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -235,6 +241,7 @@ const fetchFiscal = async ({ signal }: { signal: AbortSignal }): Promise<Fiscal>
   const response = await fetch("/api/configuracion/fiscal", {
     signal,
     cache: "no-store",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -267,6 +274,7 @@ const fetchBranding = async ({
   const response = await fetch("/api/configuracion/branding", {
     signal,
     cache: "no-store",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -290,6 +298,7 @@ const saveTenant = async (tenantData: Partial<Tenant>): Promise<Tenant> => {
   const response = await fetch("/api/tenant", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(tenantData),
   });
 
@@ -308,6 +317,7 @@ const saveConfiguracion = async (
   const response = await fetch("/api/configuracion", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(configData),
   });
 
@@ -326,6 +336,7 @@ const savePreferenciasVenta = async (
   const response = await fetch("/api/configuracion/preferencias", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(preferencias),
   });
 
@@ -344,6 +355,7 @@ const saveNotificaciones = async (
   const response = await fetch("/api/configuracion/preferencias", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(notificaciones),
   });
 
@@ -360,6 +372,7 @@ const saveSeguridad = async (seguridad: Seguridad): Promise<Seguridad> => {
   const response = await fetch("/api/configuracion/seguridad", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(seguridad),
   });
 
@@ -376,6 +389,7 @@ const saveFiscal = async (fiscal: Fiscal): Promise<Fiscal> => {
   const response = await fetch("/api/configuracion/fiscal", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(fiscal),
   });
 
@@ -398,6 +412,7 @@ const saveBranding = async (branding: Branding): Promise<Omit<Branding, "logo">>
 
   const response = await fetch("/api/configuracion/branding", {
     method: "PUT",
+    credentials: "include",
     body: formData,
   });
 
@@ -638,14 +653,14 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     refetchFiscal: fiscalQuery.refetch,
     refetchBranding: brandingQuery.refetch,
 
-    // Mutations
-    saveTenant: saveTenantMutation.mutate,
-    saveConfiguracion: saveConfiguracionMutation.mutate,
-    savePreferenciasVenta: savePreferenciasVentaMutation.mutate,
-    saveNotificaciones: saveNotificacionesMutation.mutate,
-    saveSeguridad: saveSeguridadMutation.mutate,
-    saveFiscal: saveFiscalMutation.mutate,
-    saveBranding: saveBrandingMutation.mutate,
+    // Mutations (use mutateAsync para await, mutate para fire-and-forget)
+    saveTenant: saveTenantMutation.mutateAsync,
+    saveConfiguracion: saveConfiguracionMutation.mutateAsync,
+    savePreferenciasVenta: savePreferenciasVentaMutation.mutateAsync,
+    saveNotificaciones: saveNotificacionesMutation.mutateAsync,
+    saveSeguridad: saveSeguridadMutation.mutateAsync,
+    saveFiscal: saveFiscalMutation.mutateAsync,
+    saveBranding: saveBrandingMutation.mutateAsync,
 
     // Mutation states
     isSavingTenant: saveTenantMutation.isPending,

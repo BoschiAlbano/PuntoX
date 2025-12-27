@@ -105,6 +105,7 @@ const fetchEmpleados = async ({
   const response = await fetch(`/api/empleados?${params.toString()}`, {
     signal,
     cache: "no-store",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -137,6 +138,7 @@ const fetchRoles = async ({
   const response = await fetch(`/api/roles${params}`, {
     signal,
     cache: "no-store",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -152,6 +154,7 @@ const fetchProvincias = async ({ signal }: { signal: AbortSignal }): Promise<Pro
   const response = await fetch("/api/provincias", {
     signal,
     cache: "no-store",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -172,6 +175,7 @@ const fetchDepartamentos = async ({
   const response = await fetch(`/api/departamentos?provinciaId=${provinciaId}`, {
     signal,
     cache: "no-store",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -192,6 +196,7 @@ const fetchLocalidades = async ({
   const response = await fetch(`/api/localidades?departamentoId=${departamentoId}`, {
     signal,
     cache: "no-store",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -219,9 +224,10 @@ const fetchAuditorias = async ({
   });
   if (tenantId) params.append("tenantId", tenantId);
 
-  const response = await fetch(`/api/auditoria?${params.toString()}`, {
+  const response = await fetch(`/api/auditoria-empleados?${params.toString()}`, {
     signal,
     cache: "no-store",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -284,6 +290,7 @@ const createEmpleado = async (empleadoData: {
   const response = await fetch(`/api/empleados${tenantParam}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(body),
   });
 
@@ -310,6 +317,7 @@ const updateEmpleado = async ({
   const response = await fetch(`/api/empleados/${id}${tenantParam}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(empleadoData),
   });
 
@@ -333,6 +341,7 @@ const deleteEmpleado = async ({
 
   const response = await fetch(`/api/empleados/${id}${tenantParam}`, {
     method: "DELETE",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -355,6 +364,7 @@ const changePassword = async ({
   const response = await fetch(`/api/empleados/cambiar-password${tenantParam}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({ usuarioId, nuevaPassword }),
   });
 
@@ -381,6 +391,7 @@ const createRol = async ({
   const response = await fetch(`/api/roles${tenantParam}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(rolData),
   });
 
@@ -407,6 +418,7 @@ const updateRol = async ({
   const response = await fetch(`/api/roles/${id}${tenantParam}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(rolData),
   });
 
@@ -430,6 +442,7 @@ const deleteRol = async ({
 
   const response = await fetch(`/api/roles/${id}${tenantParam}`, {
     method: "DELETE",
+    credentials: "include",
   });
 
   if (!response.ok) {

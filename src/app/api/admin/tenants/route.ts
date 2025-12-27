@@ -555,12 +555,7 @@ export async function DELETE(req: NextRequest) {
         where: { TenantId: tenantId },
       });
 
-      // 33. Eliminar puestos de trabajo
-      await tx.puestoTrabajo.deleteMany({
-        where: { TenantId: tenantId },
-      });
-
-      // 34. Eliminar rubros
+      // 33. Eliminar rubros (PuestoTrabajo fue eliminado)
       await tx.rubro.deleteMany({
         where: { TenantId: tenantId },
       });

@@ -16,7 +16,7 @@ async function resolveTenantId() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const tenantId = user?.user_metadata?.tenantId;
+  const tenantId = user?.app_metadata?.tenantId;
   return tenantId ? Number(tenantId) : null;
 }
 

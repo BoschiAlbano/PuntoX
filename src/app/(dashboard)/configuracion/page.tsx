@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Button,
   Card,
@@ -9,6 +9,11 @@ import {
   Chip,
   Divider,
   Input,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
   Select,
   SelectItem,
   Switch,
@@ -18,12 +23,8 @@ import {
 import { addToast } from "@heroui/react";
 import { Lock, Shield, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
-import {
-  getPreferenciasVenta,
-  savePreferenciasVenta,
-  type PreferenciasVentaDTO,
-} from "./actions-preferencias-venta";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
+import { type PreferenciasVentaDTO } from "./actions-preferencias-venta";
 
 type SectionKey =
   | "perfil"
@@ -57,14 +58,12 @@ function SectionPanel({
   title,
   description,
   summary,
-  isActive,
   children,
 }: {
   id: SectionKey;
   title: string;
   description: string;
   summary: string;
-  isActive: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -89,7 +88,7 @@ function SectionPanel({
 export default function Configuracion() {
   const router = useRouter();
   const [openSection, setOpenSection] = useState<SectionKey>("perfil");
-  const [isOffline, setIsOffline] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   // Usar TanStack Query hook
   const {
@@ -103,12 +102,7 @@ export default function Configuracion() {
     branding: brandingData,
     isLoadingTenant,
     isLoadingConfiguracion,
-    isLoadingLocalidades,
     isLoadingPreferenciasVenta,
-    isLoadingNotificaciones,
-    isLoadingSeguridad,
-    isLoadingFiscal,
-    isLoadingBranding,
     saveTenant: saveTenantMutation,
     saveConfiguracion: saveConfiguracionMutation,
     savePreferenciasVenta: savePreferenciasVentaMutation,
@@ -400,53 +394,112 @@ export default function Configuracion() {
     fiscal: "Moneda, idioma y datos fiscales para comprobantes.",
     branding: "Ajusta la imagen de tu negocio en el panel y tickets.",
   };
-  const summaryPerfil = `Nombre: ${tenant.nombre} | CUIT: ${tenant.cuit}`;
-  const summaryVentas = `Ticket digital: ${
-    preferencias.ticketDigitalPorCorreo ? "activado" : "desactivado"
-  } | Impuestos: ${preferencias.mostrarPreciosConIva ? "incluidos" : "excluidos"}`;
+  const summaryPerfil = useMemo(
+    () => `Nombre: ${tenant.nombre} | CUIT: ${tenant.cuit}`,
+    [tenant.nombre, tenant.cuit]
+  );
+  const summaryVentas = useMemo(
+    () => `Ticket digital: ${
+      preferencias.ticketDigitalPorCorreo ? "activado" : "desactivado"
+    } | Impuestos: ${preferencias.mostrarPreciosConIva ? "incluidos" : "excluidos"}`,
+    [preferencias.ticketDigitalPorCorreo, preferencias.mostrarPreciosConIva]
+  );
 
-  // Detectar si hay cambios en preferencias
-  const hasPreferenciasChanges = preferenciasOriginales
-    ? JSON.stringify(preferencias) !== JSON.stringify(preferenciasOriginales)
-    : false;
+  // Detectar si hay cambios en preferencias (memoizado)
+  const hasPreferenciasChanges = useMemo(() => {
+    if (!preferenciasOriginales) return false;
+    return (
+      preferencias.ticketDigitalPorCorreo !== preferenciasOriginales.ticketDigitalPorCorreo ||
+      preferencias.mostrarPreciosConIva !== preferenciasOriginales.mostrarPreciosConIva ||
+      preferencias.abrirCajonEfectivo !== preferenciasOriginales.abrirCajonEfectivo ||
+      preferencias.numerarPedidosPantalla !== preferenciasOriginales.numerarPedidosPantalla
+    );
+  }, [preferencias, preferenciasOriginales]);
   
-  const hasNotificacionesChanges = notificacionesOriginales
-    ? JSON.stringify(notificaciones) !== JSON.stringify(notificacionesOriginales)
-    : false;
+  const hasNotificacionesChanges = useMemo(() => {
+    if (!notificacionesOriginales) return false;
+    return (
+      notificaciones.email !== notificacionesOriginales.email ||
+      notificaciones.push !== notificacionesOriginales.push ||
+      notificaciones.resumenDiario !== notificacionesOriginales.resumenDiario ||
+      notificaciones.stockBajo !== notificacionesOriginales.stockBajo
+    );
+  }, [notificaciones, notificacionesOriginales]);
   
-  const hasSeguridadChanges = seguridadOriginal
-    ? JSON.stringify(seguridad) !== JSON.stringify(seguridadOriginal)
-    : false;
+  const hasSeguridadChanges = useMemo(() => {
+    if (!seguridadOriginal) return false;
+    return (
+      seguridad.dobleFactor !== seguridadOriginal.dobleFactor ||
+      seguridad.alertarNuevoDispositivo !== seguridadOriginal.alertarNuevoDispositivo ||
+      seguridad.bloquearPorInactividad !== seguridadOriginal.bloquearPorInactividad ||
+      seguridad.bloquearTrasIntentos !== seguridadOriginal.bloquearTrasIntentos ||
+      seguridad.recordarSesion30Dias !== seguridadOriginal.recordarSesion30Dias
+    );
+  }, [seguridad, seguridadOriginal]);
   
-  const hasFiscalChanges = regionalOriginal
-    ? JSON.stringify(regional) !== JSON.stringify(regionalOriginal)
-    : false;
+  const hasFiscalChanges = useMemo(() => {
+    if (!regionalOriginal) return false;
+    return (
+      regional.moneda !== regionalOriginal.moneda ||
+      regional.zonaHoraria !== regionalOriginal.zonaHoraria ||
+      regional.idioma !== regionalOriginal.idioma ||
+      regional.tipoIva !== regionalOriginal.tipoIva ||
+      regional.puntoVenta !== regionalOriginal.puntoVenta ||
+      regional.inicioActividades !== regionalOriginal.inicioActividades
+    );
+  }, [regional, regionalOriginal]);
   
-  const hasBrandingChanges = brandingOriginal
-    ? branding.slogan !== brandingOriginal.slogan || 
+  const hasBrandingChanges = useMemo(() => {
+    if (!brandingOriginal) return false;
+    return (
+      branding.slogan !== brandingOriginal.slogan || 
       branding.color !== brandingOriginal.color ||
       branding.logo !== null ||
       branding.logoPreview !== brandingOriginal.logoPreview
-    : false;
+    );
+  }, [branding, brandingOriginal]);
   
-  const hasStockChanges = configStockOriginal
-    ? JSON.stringify(configStock) !== JSON.stringify(configStockOriginal)
-    : false;
+  const hasStockChanges = useMemo(() => {
+    if (!configStockOriginal) return false;
+    return (
+      configStock.facturaDescuentaStock !== configStockOriginal.facturaDescuentaStock ||
+      configStock.presupuestoDescuentaStock !== configStockOriginal.presupuestoDescuentaStock ||
+      configStock.remitoDescuentaStock !== configStockOriginal.remitoDescuentaStock ||
+      configStock.actualizaCostoDesdeCompra !== configStockOriginal.actualizaCostoDesdeCompra ||
+      configStock.modificaPrecioVentaDesdeCompra !== configStockOriginal.modificaPrecioVentaDesdeCompra
+    );
+  }, [configStock, configStockOriginal]);
   
-  const hasCajaChanges = configCajaOriginal
-    ? JSON.stringify(configCaja) !== JSON.stringify(configCajaOriginal)
-    : false;
+  const hasCajaChanges = useMemo(() => {
+    if (!configCajaOriginal) return false;
+    return (
+      configCaja.tipoFormaPagoPorDefectoVenta !== configCajaOriginal.tipoFormaPagoPorDefectoVenta ||
+      configCaja.tipoFormaPagoPorDefectoCompra !== configCajaOriginal.tipoFormaPagoPorDefectoCompra ||
+      configCaja.ingresoManualCajaInicial !== configCajaOriginal.ingresoManualCajaInicial ||
+      configCaja.puestoCajaSeparado !== configCajaOriginal.puestoCajaSeparado ||
+      configCaja.activarRetiroDeCaja !== configCajaOriginal.activarRetiroDeCaja ||
+      configCaja.montoMaximoRetiroCaja !== configCajaOriginal.montoMaximoRetiroCaja
+    );
+  }, [configCaja, configCajaOriginal]);
   
-  const hasProductosChanges = configProductosOriginal
-    ? JSON.stringify(configProductos) !== JSON.stringify(configProductosOriginal)
-    : false;
+  const hasProductosChanges = useMemo(() => {
+    if (!configProductosOriginal) return false;
+    return (
+      configProductos.unificarRenglonesIngresarMismoProducto !== configProductosOriginal.unificarRenglonesIngresarMismoProducto
+    );
+  }, [configProductos, configProductosOriginal]);
   
-  const hasBasculaChanges = configBasculaOriginal
-    ? JSON.stringify(configBascula) !== JSON.stringify(configBasculaOriginal)
-    : false;
+  const hasBasculaChanges = useMemo(() => {
+    if (!configBasculaOriginal) return false;
+    return (
+      configBascula.activarBascula !== configBasculaOriginal.activarBascula ||
+      configBascula.etiquetaPorPeso !== configBasculaOriginal.etiquetaPorPeso ||
+      configBascula.codigoBascula !== configBasculaOriginal.codigoBascula
+    );
+  }, [configBascula, configBasculaOriginal]);
 
-  // Detectar si hay cambios en cualquier sección
-  const hasAnyChanges = 
+  // Detectar si hay cambios en cualquier sección (memoizado)
+  const hasAnyChanges = useMemo(() => 
     hasPreferenciasChanges || 
     hasStockChanges || 
     hasCajaChanges || 
@@ -455,7 +508,9 @@ export default function Configuracion() {
     hasNotificacionesChanges ||
     hasSeguridadChanges ||
     hasFiscalChanges ||
-    hasBrandingChanges;
+    hasBrandingChanges,
+    [hasPreferenciasChanges, hasStockChanges, hasCajaChanges, hasProductosChanges, hasBasculaChanges, hasNotificacionesChanges, hasSeguridadChanges, hasFiscalChanges, hasBrandingChanges]
+  );
   
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -487,48 +542,48 @@ export default function Configuracion() {
       reader.readAsDataURL(file);
     }
   };
-  const summaryNotificaciones = `Correo: ${
-    notificaciones.email ? "on" : "off"
-  } | Push: ${notificaciones.push ? "on" : "off"} | Resumen diario: ${
-    notificaciones.resumenDiario ? "on" : "off"
-  }`;
-  const summarySeguridad = `2FA: ${
-    seguridad.dobleFactor ? "activo" : "pendiente"
-  } | Bloqueo: ${seguridad.bloquearTrasIntentos === "nunca" ? "desactivado" : `${seguridad.bloquearTrasIntentos} intentos`} | Recordar sesión: ${seguridad.recordarSesion30Dias ? "30 días" : "off"}`;
-  const summaryFiscal = `Moneda: ${regional.moneda} | IVA: ${regional.tipoIva} | Punto de venta: ${regional.puntoVenta}`;
-  const summaryBranding = `Color: ${branding.color} | Logo: pendiente`;
+  const summaryNotificaciones = useMemo(
+    () => `Correo: ${
+      notificaciones.email ? "on" : "off"
+    } | Push: ${notificaciones.push ? "on" : "off"} | Resumen diario: ${
+      notificaciones.resumenDiario ? "on" : "off"
+    }`,
+    [notificaciones.email, notificaciones.push, notificaciones.resumenDiario]
+  );
+  const summarySeguridad = useMemo(
+    () => `2FA: ${
+      seguridad.dobleFactor ? "activo" : "pendiente"
+    } | Bloqueo: ${seguridad.bloquearTrasIntentos === "nunca" ? "desactivado" : `${seguridad.bloquearTrasIntentos} intentos`} | Recordar sesión: ${seguridad.recordarSesion30Dias ? "30 días" : "off"}`,
+    [seguridad.dobleFactor, seguridad.bloquearTrasIntentos, seguridad.recordarSesion30Dias]
+  );
+  const summaryFiscal = useMemo(
+    () => `Moneda: ${regional.moneda} | IVA: ${regional.tipoIva} | Punto de venta: ${regional.puntoVenta}`,
+    [regional.moneda, regional.tipoIva, regional.puntoVenta]
+  );
+  const summaryBranding = useMemo(
+    () => `Color: ${branding.color} | Logo: pendiente`,
+    [branding.color]
+  );
 
   // saveTenant y saveConfiguracion ahora se manejan con las mutaciones de TanStack Query
 
+  const handleConfirmSave = () => {
+    setIsConfirmModalOpen(true);
+  };
+
   const handleSavePerfil = async () => {
+    setIsConfirmModalOpen(false);
     try {
-      // Guardar perfil (tenant y configuración básica)
+      // Guardar perfil (tenant y configuración básica) en paralelo
       await Promise.all([
-        new Promise<void>((resolve, reject) => {
-          saveTenantMutation(tenant, {
-            onSuccess: () => resolve(),
-            onError: (error) => reject(error),
-          });
-        }),
-        new Promise<void>((resolve, reject) => {
-          saveConfiguracionMutation(configuracion, {
-            onSuccess: () => resolve(),
-            onError: (error) => reject(error),
-          });
-        }),
+        saveTenantMutation(tenant),
+        saveConfiguracionMutation(configuracion),
       ]);
       
       // Si hay cambios en preferencias básicas, guardarlas también
       if (hasPreferenciasChanges) {
-        await new Promise<void>((resolve, reject) => {
-          savePreferenciasVentaMutation(preferencias, {
-            onSuccess: () => {
-              setPreferenciasOriginales(preferencias);
-              resolve();
-            },
-            onError: (error) => reject(error),
-          });
-        });
+        await savePreferenciasVentaMutation(preferencias);
+        setPreferenciasOriginales(preferencias);
       }
       
       // Actualizar estados originales de configuración avanzada (ya se guardaron en saveConfiguracion)
@@ -541,59 +596,31 @@ export default function Configuracion() {
 
       // Guardar notificaciones si hay cambios
       if (hasNotificacionesChanges) {
-        await new Promise<void>((resolve, reject) => {
-          saveNotificacionesMutation(notificaciones, {
-            onSuccess: () => {
-              setNotificacionesOriginales(notificaciones);
-              resolve();
-            },
-            onError: (error) => reject(error),
-          });
-        });
+        await saveNotificacionesMutation(notificaciones);
+        setNotificacionesOriginales(notificaciones);
       }
 
       // Guardar seguridad si hay cambios
       if (hasSeguridadChanges) {
-        await new Promise<void>((resolve, reject) => {
-          saveSeguridadMutation(seguridad, {
-            onSuccess: () => {
-              setSeguridadOriginal(seguridad);
-              resolve();
-            },
-            onError: (error) => reject(error),
-          });
-        });
+        await saveSeguridadMutation(seguridad);
+        setSeguridadOriginal(seguridad);
       }
 
       // Guardar fiscal si hay cambios
       if (hasFiscalChanges) {
-        await new Promise<void>((resolve, reject) => {
-          saveFiscalMutation(regional, {
-            onSuccess: () => {
-              setRegionalOriginal(regional);
-              resolve();
-            },
-            onError: (error) => reject(error),
-          });
-        });
+        await saveFiscalMutation(regional);
+        setRegionalOriginal(regional);
       }
 
       // Guardar branding si hay cambios
       if (hasBrandingChanges) {
-        await new Promise<void>((resolve, reject) => {
-          saveBrandingMutation(branding, {
-            onSuccess: (data) => {
-              setBrandingOriginal({
-                slogan: branding.slogan,
-                color: branding.color,
-                logoPreview: data.logoPreview ?? branding.logoPreview,
-              });
-              setBranding((prev) => ({ ...prev, logo: null }));
-              resolve();
-            },
-            onError: (error) => reject(error),
-          });
+        const brandingData = await saveBrandingMutation(branding);
+        setBrandingOriginal({
+          slogan: branding.slogan,
+          color: branding.color,
+          logoPreview: brandingData.logoPreview ?? branding.logoPreview,
         });
+        setBranding((prev) => ({ ...prev, logo: null }));
       }
       
       addToast({
@@ -603,57 +630,55 @@ export default function Configuracion() {
       });
     } catch (error) {
       console.error(error);
-      // Los errores ya se manejan en las mutaciones individuales
+      // Los errores ya se manejan en las mutaciones individuales (onError en el hook)
     }
-  };
-
-  const handleSaveNotificaciones = async () => {
-    saveNotificacionesMutation(notificaciones, {
-      onSuccess: () => {
-        setNotificacionesOriginales(notificaciones);
-      },
-    });
-  };
-
-  const handleSaveSeguridad = async () => {
-    saveSeguridadMutation(seguridad, {
-      onSuccess: () => {
-        setSeguridadOriginal(seguridad);
-      },
-    });
-  };
-
-  const handleSaveFiscal = async () => {
-    saveFiscalMutation(regional, {
-      onSuccess: () => {
-        setRegionalOriginal(regional);
-      },
-    });
-  };
-
-  const handleSaveBranding = async () => {
-    saveBrandingMutation(branding, {
-      onSuccess: (data) => {
-        setBrandingOriginal({
-          slogan: branding.slogan,
-          color: branding.color,
-          logoPreview: data.logoPreview ?? branding.logoPreview,
-        });
-        setBranding((prev) => ({ ...prev, logo: null }));
-      },
-    });
   };
 
   return (
     <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center">
+      {/* Modal de confirmación */}
+      <Modal 
+        isOpen={isConfirmModalOpen} 
+        onClose={() => setIsConfirmModalOpen(false)}
+        size="md"
+      >
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            <h3 className="text-xl font-semibold">Confirmar cambios</h3>
+            <p className="text-sm text-gray-500">
+              ¿Estás seguro de que deseas guardar los cambios?
+            </p>
+          </ModalHeader>
+          <ModalBody>
+            <p className="text-sm text-gray-700">
+              Los cambios realizados en la configuración se aplicarán a todas las sucursales activas.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button 
+              variant="light" 
+              onPress={() => setIsConfirmModalOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              color="primary" 
+              onPress={handleSavePerfil}
+              isLoading={isSavingTenant || isSavingConfiguracion || isSavingPreferenciasVenta || isSavingNotificaciones || isSavingSeguridad || isSavingFiscal || isSavingBranding}
+            >
+              Guardar cambios
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
       {/* Header de la página */}
       <Header 
-        isOffline={isOffline}
         isLoadingTenant={isLoadingTenant}
         isLoadingConfiguracion={isLoadingConfiguracion}
         hasAnyChanges={hasAnyChanges}
         isSavingAll={isSavingTenant || isSavingConfiguracion || isSavingPreferenciasVenta || isSavingNotificaciones || isSavingSeguridad || isSavingFiscal || isSavingBranding}
-        onSaveAll={handleSavePerfil}
+        onSaveAll={handleConfirmSave}
         seguridad={seguridad}
       />
       
@@ -692,7 +717,6 @@ export default function Configuracion() {
               title="Perfil del negocio"
               description={descriptionMap.perfil}
               summary={summaryPerfil}
-              isActive={true}
             >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
@@ -863,20 +887,8 @@ export default function Configuracion() {
               title="Preferencias de venta"
               description={descriptionMap.ventas}
               summary={summaryVentas}
-              isActive={true}
             >
             <div className="space-y-6">
-              {isOffline && (
-                <Chip
-                  variant="flat"
-                  color="warning"
-                  size="sm"
-                  className="bg-yellow-100 text-yellow-800"
-                >
-                  Modo offline: valores por defecto
-                </Chip>
-              )}
-
               {/* Sección: Preferencias básicas */}
               <Card className="shadow-sm border border-slate-200">
                 <CardHeader className="pb-3">
@@ -896,7 +908,7 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Enviar ticket digital por correo"
-                    isDisabled={isLoadingPreferenciasVenta || isOffline}
+                    isDisabled={isLoadingPreferenciasVenta}
                   >
                     Enviar ticket digital por correo
                   </Switch>
@@ -910,7 +922,7 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Mostrar precios con impuestos incluidos"
-                    isDisabled={isLoadingPreferenciasVenta || isOffline}
+                    isDisabled={isLoadingPreferenciasVenta}
                   >
                     Mostrar precios con impuestos incluidos
                   </Switch>
@@ -924,7 +936,7 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Abrir cajon al cobrar en efectivo"
-                    isDisabled={isLoadingPreferenciasVenta || isOffline}
+                    isDisabled={isLoadingPreferenciasVenta}
                   >
                     Abrir cajon al cobrar en efectivo
                   </Switch>
@@ -938,7 +950,7 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Numerar pedidos y mostrar en pantalla"
-                    isDisabled={isLoadingPreferenciasVenta || isOffline}
+                    isDisabled={isLoadingPreferenciasVenta}
                   >
                     Numerar pedidos y mostrar en pantalla
                   </Switch>
@@ -967,7 +979,6 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Factura descuenta stock"
-                    isDisabled={isOffline}
                   >
                     Factura descuenta stock
                   </Switch>
@@ -981,7 +992,6 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Presupuesto descuenta stock"
-                    isDisabled={isOffline}
                   >
                     Presupuesto descuenta stock
                   </Switch>
@@ -995,7 +1005,6 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Remito descuenta stock"
-                    isDisabled={isOffline}
                   >
                     Remito descuenta stock
                   </Switch>
@@ -1009,7 +1018,6 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Actualizar costo desde compra"
-                    isDisabled={isOffline}
                   >
                     Actualizar costo desde compra
                   </Switch>
@@ -1023,7 +1031,6 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Modificar precio de venta desde compra"
-                    isDisabled={isOffline}
                   >
                     Modificar precio de venta desde compra
                   </Switch>
@@ -1054,7 +1061,6 @@ export default function Configuracion() {
                         }));
                       }}
                       classNames={{ trigger: "bg-white border-slate-200" }}
-                      isDisabled={isOffline}
                     >
                       <SelectItem key="0">Efectivo</SelectItem>
                       <SelectItem key="1">Débito</SelectItem>
@@ -1072,7 +1078,6 @@ export default function Configuracion() {
                         }));
                       }}
                       classNames={{ trigger: "bg-white border-slate-200" }}
-                      isDisabled={isOffline}
                     >
                       <SelectItem key="0">Efectivo</SelectItem>
                       <SelectItem key="1">Débito</SelectItem>
@@ -1090,7 +1095,6 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Ingreso manual de caja inicial"
-                    isDisabled={isOffline}
                   >
                     Ingreso manual de caja inicial
                   </Switch>
@@ -1104,7 +1108,6 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Puesto de caja separado"
-                    isDisabled={isOffline}
                   >
                     Puesto de caja separado
                   </Switch>
@@ -1118,7 +1121,6 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Activar retiro de caja"
-                    isDisabled={isOffline}
                   >
                     Activar retiro de caja
                   </Switch>
@@ -1138,7 +1140,6 @@ export default function Configuracion() {
                         }))
                       }
                       startContent={<span className="text-gray-500">$</span>}
-                      isDisabled={isOffline}
                     />
                   )}
                 </CardBody>
@@ -1166,7 +1167,6 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Unificar renglones al ingresar el mismo producto"
-                    isDisabled={isOffline}
                   >
                     Unificar renglones al ingresar el mismo producto
                   </Switch>
@@ -1195,7 +1195,6 @@ export default function Configuracion() {
                     }
                     className="px-1 py-1"
                     aria-label="Activar báscula"
-                    isDisabled={isOffline}
                   >
                     Activar báscula
                   </Switch>
@@ -1211,7 +1210,6 @@ export default function Configuracion() {
                         }
                         className="px-1 py-1"
                         aria-label="Etiqueta por peso"
-                        isDisabled={isOffline}
                       >
                         Etiqueta por peso
                       </Switch>
@@ -1227,7 +1225,6 @@ export default function Configuracion() {
                           }))
                         }
                         placeholder="Ingrese el código de la báscula"
-                        isDisabled={isOffline}
                       />
                     </>
                   )}
@@ -1267,7 +1264,6 @@ export default function Configuracion() {
               title="Notificaciones"
               description={descriptionMap.notificaciones}
               summary={summaryNotificaciones}
-              isActive={true}
             >
             <div className="space-y-3">
               <Switch
@@ -1310,18 +1306,6 @@ export default function Configuracion() {
                 Enviar resumen diario a las 20:00
               </Switch>
             </div>
-            {hasNotificacionesChanges && (
-              <div className="flex justify-end pt-2">
-                <Button
-                  color="primary"
-                  onPress={handleSaveNotificaciones}
-                  isLoading={isSavingNotificaciones}
-                  isDisabled={isOffline}
-                >
-                  Guardar cambios
-                </Button>
-              </div>
-            )}
           </SectionPanel>
           </div>
         </Tab>
@@ -1354,7 +1338,6 @@ export default function Configuracion() {
               title="Seguridad y acceso"
               description={descriptionMap.seguridad}
               summary={summarySeguridad}
-              isActive={true}
             >
             <div className="space-y-6">
               {/* Card: Acceso y autenticación */}
@@ -1497,18 +1480,6 @@ export default function Configuracion() {
                 </CardBody>
               </Card>
               
-              {hasSeguridadChanges && (
-                <div className="flex justify-end pt-2">
-                  <Button
-                    color="primary"
-                    onPress={handleSaveSeguridad}
-                    isLoading={isSavingSeguridad}
-                    isDisabled={isOffline}
-                  >
-                    Guardar cambios de seguridad
-                  </Button>
-                </div>
-              )}
 
               {/* Card: Estado de seguridad */}
               <Card className="shadow-sm border border-slate-200">
@@ -1630,7 +1601,6 @@ export default function Configuracion() {
               title="Facturacion y region"
               description={descriptionMap.fiscal}
               summary={summaryFiscal}
-              isActive={true}
             >
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1703,18 +1673,6 @@ export default function Configuracion() {
                 />
               </div>
             </div>
-            {hasFiscalChanges && (
-              <div className="flex justify-end pt-2">
-                <Button
-                  color="primary"
-                  onPress={handleSaveFiscal}
-                  isLoading={isSavingFiscal}
-                  isDisabled={isOffline}
-                >
-                  Guardar cambios
-                </Button>
-              </div>
-            )}
           </SectionPanel>
           </div>
         </Tab>
@@ -1747,7 +1705,6 @@ export default function Configuracion() {
               title="Branding"
               description={descriptionMap.branding}
               summary={summaryBranding}
-              isActive={true}
             >
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1812,18 +1769,6 @@ export default function Configuracion() {
                 placeholder="Ej: Mejor precio, mejor servicio."
               />
             </div>
-            {hasBrandingChanges && (
-              <div className="flex justify-end pt-2">
-                <Button
-                  color="primary"
-                  onPress={handleSaveBranding}
-                  isLoading={isSavingBranding}
-                  isDisabled={isOffline}
-                >
-                  Guardar cambios
-                </Button>
-              </div>
-            )}
           </SectionPanel>
           </div>
         </Tab>
@@ -1833,7 +1778,6 @@ export default function Configuracion() {
 }
 
 function Header({
-  isOffline,
   isLoadingTenant,
   isLoadingConfiguracion,
   hasAnyChanges,
@@ -1841,7 +1785,6 @@ function Header({
   onSaveAll,
   seguridad,
 }: {
-  isOffline: boolean;
   isLoadingTenant: boolean;
   isLoadingConfiguracion: boolean;
   hasAnyChanges: boolean;
@@ -1866,21 +1809,11 @@ function Header({
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            {isOffline && (
-              <Chip
-                variant="flat"
-                color="warning"
-                size="sm"
-                className="bg-yellow-100 text-yellow-800"
-              >
-                Modo offline
-              </Chip>
-            )}
             <Button
               color="primary"
               className="bg-white text-slate-900"
               isLoading={isSavingAll}
-              isDisabled={isLoadingTenant || isLoadingConfiguracion || isOffline || !hasAnyChanges}
+              isDisabled={isLoadingTenant || isLoadingConfiguracion || !hasAnyChanges}
               onPress={onSaveAll}
             >
               Guardar todo

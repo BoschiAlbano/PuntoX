@@ -97,12 +97,6 @@ type Producto = {
   PermiteStockNegativo: boolean;
 };
 
-type PuestoTrabajo = {
-  id: number;
-  codigo: number;
-  descripcion: string | null;
-};
-
 type Tarjeta = {
   id: number;
   descripcion: string;
@@ -139,7 +133,6 @@ export default function Ventas() {
   // Estados principales (todos los hooks deben estar antes de cualquier return condicional)
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
-  const [puestosTrabajo, setPuestosTrabajo] = useState<PuestoTrabajo[]>([]);
   const [tarjetas, setTarjetas] = useState<Tarjeta[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -150,8 +143,6 @@ export default function Ventas() {
   const [tipoComprobante, setTipoComprobante] = useState<number>(
     TIPO_COMPROBANTE.FACTURA
   );
-  const [puestoTrabajoSeleccionado, setPuestoTrabajoSeleccionado] =
-    useState<string>("");
   const [busquedaCliente, setBusquedaCliente] = useState("");
   const [busquedaProducto, setBusquedaProducto] = useState("");
   const [descuento, setDescuento] = useState<number>(0);
@@ -182,11 +173,10 @@ export default function Ventas() {
   const cargarDatos = async () => {
     try {
       setIsLoading(true);
-      const [clientesRes, productosRes, puestosRes, tarjetasRes] =
+      const [clientesRes, productosRes, tarjetasRes] =
         await Promise.all([
           fetch("/api/clientes"),
           fetch("/api/productos"),
-          fetch("/api/puestos-trabajo"),
           fetch("/api/tarjetas"),
         ]);
 
@@ -198,18 +188,6 @@ export default function Ventas() {
       if (productosRes.ok) {
         const { productos } = await productosRes.json();
         setProductos(productos);
-      }
-
-      if (puestosRes.ok) {
-        const { puestos } = await puestosRes.json();
-        setPuestosTrabajo(puestos);
-        // Seleccionar el primer puesto por defecto si es factura
-        if (
-          puestos.length > 0 &&
-          tipoComprobante === TIPO_COMPROBANTE.FACTURA
-        ) {
-          setPuestoTrabajoSeleccionado(puestos[0].id.toString());
-        }
       }
 
       if (tarjetasRes.ok) {
@@ -478,17 +456,13 @@ export default function Ventas() {
       clienteSeleccionado &&
       detalles.length > 0 &&
       formasPago.length > 0 &&
-      Math.abs(totales.diferencia) <= 0.01 &&
-      (tipoComprobante !== TIPO_COMPROBANTE.FACTURA ||
-        puestoTrabajoSeleccionado)
+      Math.abs(totales.diferencia) <= 0.01
     );
   }, [
     clienteSeleccionado,
     detalles,
     formasPago,
     totales.diferencia,
-    tipoComprobante,
-    puestoTrabajoSeleccionado,
   ]);
 
   // Guardar venta
@@ -511,17 +485,6 @@ export default function Ventas() {
       return;
     }
 
-    if (
-      tipoComprobante === TIPO_COMPROBANTE.FACTURA &&
-      !puestoTrabajoSeleccionado
-    ) {
-      addToast({
-        title: "Error",
-        description: "Debe seleccionar un puesto de trabajo para facturas",
-        color: "danger",
-      });
-      return;
-    }
 
     if (formasPago.length === 0) {
       addToast({
@@ -549,10 +512,6 @@ export default function Ventas() {
       const payload = {
         tipoComprobante,
         clienteId: clienteSeleccionado.id === 0 ? null : clienteSeleccionado.id, // Consumidor Final tiene id 0
-        puestoTrabajoId:
-          tipoComprobante === TIPO_COMPROBANTE.FACTURA
-            ? Number(puestoTrabajoSeleccionado)
-            : undefined,
         descuento: totales.descuento,
         detalles: detalles.map((d) => ({
           articuloId: d.articuloId,
@@ -607,12 +566,6 @@ export default function Ventas() {
       setFormasPago([]);
       setDescuento(0);
       setDescuentoPorcentaje(0);
-      setPuestoTrabajoSeleccionado(
-        puestosTrabajo.length > 0 &&
-          tipoComprobante === TIPO_COMPROBANTE.FACTURA
-          ? puestosTrabajo[0].id.toString()
-          : ""
-      );
       setBusquedaProducto("");
     } catch (error: unknown) {
       console.error("Error guardando venta", error);
@@ -701,13 +654,6 @@ export default function Ventas() {
                   onSelectionChange={(keys) => {
                     const selected = Array.from(keys)[0] as string;
                     setTipoComprobante(Number(selected));
-                    if (Number(selected) !== TIPO_COMPROBANTE.FACTURA) {
-                      setPuestoTrabajoSeleccionado("");
-                    } else if (puestosTrabajo.length > 0) {
-                      setPuestoTrabajoSeleccionado(
-                        puestosTrabajo[0].id.toString()
-                      );
-                    }
                   }}
                 >
                   <SelectItem key="1">
@@ -729,27 +675,6 @@ export default function Ventas() {
                     </div>
                   </SelectItem>
                 </Select>
-
-                {tipoComprobante === TIPO_COMPROBANTE.FACTURA && (
-                  <Select
-                    label="Puesto de trabajo"
-                    selectedKeys={
-                      puestoTrabajoSeleccionado
-                        ? [puestoTrabajoSeleccionado]
-                        : []
-                    }
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] as string;
-                      setPuestoTrabajoSeleccionado(selected);
-                    }}
-                  >
-                    {puestosTrabajo.map((puesto) => (
-                      <SelectItem key={puesto.id.toString()}>
-                        {puesto.descripcion || `Puesto ${puesto.codigo}`}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                )}
               </div>
 
               <div>
@@ -1339,10 +1264,7 @@ export default function Ventas() {
                     {detalles.length === 0 && "• Agrega productos al carrito\n"}
                     {formasPago.length === 0 && "• Agrega formas de pago\n"}
                     {Math.abs(totales.diferencia) > 0.01 &&
-                      "• Completa el total de pagos\n"}
-                    {tipoComprobante === TIPO_COMPROBANTE.FACTURA &&
-                      !puestoTrabajoSeleccionado &&
-                      "• Selecciona un puesto de trabajo"}
+                      "• Completa el total de pagos"}
                   </div>
                 </div>
               </CardBody>
