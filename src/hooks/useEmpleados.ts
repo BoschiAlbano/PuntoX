@@ -109,13 +109,19 @@ const fetchEmpleados = async ({
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
-    throw new Error(error?.error || "Error al cargar empleados");
+    const errorData = await response.json().catch(() => ({ error: "Error desconocido" }));
+    // La API devuelve { error: { code, message } } o { error: "string" }
+    const errorMessage = 
+      typeof errorData?.error === "string" 
+        ? errorData.error 
+        : errorData?.error?.message || errorData?.error?.code || "Error al cargar empleados";
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();
+  // La API devuelve { data: [...], pagination: {...} }
   return {
-    empleados: data?.empleados || [],
+    empleados: data?.data || data?.empleados || [],
     pagination: data?.pagination || {
       page: 1,
       limit: 20,
@@ -162,7 +168,8 @@ const fetchProvincias = async ({ signal }: { signal: AbortSignal }): Promise<Pro
   }
 
   const data = await response.json();
-  return Array.isArray(data?.provincias) ? data.provincias : [];
+  // La API devuelve directamente un array, no un objeto con propiedad provincias
+  return Array.isArray(data) ? data : [];
 };
 
 const fetchDepartamentos = async ({
@@ -183,7 +190,8 @@ const fetchDepartamentos = async ({
   }
 
   const data = await response.json();
-  return Array.isArray(data?.departamentos) ? data.departamentos : [];
+  // La API devuelve directamente un array, no un objeto con propiedad departamentos
+  return Array.isArray(data) ? data : [];
 };
 
 const fetchLocalidades = async ({
@@ -204,7 +212,8 @@ const fetchLocalidades = async ({
   }
 
   const data = await response.json();
-  return Array.isArray(data?.localidades) ? data.localidades : [];
+  // La API devuelve directamente un array, no un objeto con propiedad localidades
+  return Array.isArray(data) ? data : [];
 };
 
 const fetchAuditorias = async ({
@@ -245,8 +254,9 @@ const fetchAuditorias = async ({
   }
 
   const data = await response.json();
+  // La API devuelve { data: [...], pagination: {...} } usando createPaginationResponse
   return {
-    auditorias: data?.auditorias || [],
+    auditorias: data?.data || data?.auditorias || [],
     pagination: data?.pagination || {
       page: 1,
       limit: 10,
@@ -313,17 +323,28 @@ const updateEmpleado = async ({
   tenantId?: string | null;
 }): Promise<Empleado> => {
   const tenantParam = tenantId ? `?tenantId=${tenantId}` : "";
+  
+  // La API espera personaId en el body, no en la URL
+  const body = {
+    ...empleadoData,
+    personaId: id,
+  };
 
-  const response = await fetch(`/api/empleados/${id}${tenantParam}`, {
+  const response = await fetch(`/api/empleados${tenantParam}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify(empleadoData),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
-    throw new Error(error?.error || "Error al actualizar empleado");
+    const errorData = await response.json().catch(() => ({ error: "Error desconocido" }));
+    // La API devuelve { error: { code, message } } o { error: "string" }
+    const errorMessage = 
+      typeof errorData?.error === "string" 
+        ? errorData.error 
+        : errorData?.error?.message || errorData?.error?.code || "Error al actualizar empleado";
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();
@@ -469,7 +490,7 @@ export function useEmpleados({
 
   // Queries
   const empleadosQuery = useQuery({
-    queryKey: ["empleados", page, limit, filters, tenantId],
+    queryKey: ["empleados", page, limit, filters.busqueda, filters.rol, filters.estado, tenantId],
     queryFn: ({ signal }) =>
       fetchEmpleados({ signal, page, limit, filters: { ...filters, tenantId } }),
     enabled,

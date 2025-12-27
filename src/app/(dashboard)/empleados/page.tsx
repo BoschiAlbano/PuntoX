@@ -237,6 +237,23 @@ export default function Empleados() {
 
   // Usar TanStack Query hook
   const tenantId = isSuperAdmin ? resolveTenantIdForRequests() : null;
+  
+  // Memorizar filters para evitar recrear el objeto en cada render
+  const filtersMemo = useMemo(
+    () => ({
+      busqueda: filtros.busqueda,
+      rol: filtros.rol,
+      estado: filtros.estado,
+    }),
+    [filtros.busqueda, filtros.rol, filtros.estado]
+  );
+
+  // Memorizar enabled para evitar cambios innecesarios
+  const enabledQuery = useMemo(
+    () => !!user && status === "authenticated" && isAuthorized,
+    [user, status, isAuthorized]
+  );
+
   const {
     empleados,
     roles,
@@ -244,12 +261,26 @@ export default function Empleados() {
     auditorias,
     pagination,
     isLoadingEmpleados,
+    isLoadingRoles,
+    isLoadingProvincias,
     isLoadingAuditorias,
+    errorEmpleados,
+    errorRoles,
+    errorProvincias,
     refetchEmpleados,
+    refetchRoles,
+    refetchProvincias,
     refetchAuditorias,
     createEmpleado: createEmpleadoMutation,
+    updateEmpleado: updateEmpleadoMutation,
+    deleteEmpleado: deleteEmpleadoMutation,
+    changePassword: changePasswordMutation,
+    createRol: createRolMutation,
+    updateRol: updateRolMutation,
+    deleteRol: deleteRolMutation,
     isCreatingEmpleado,
     isUpdatingEmpleado,
+    isDeletingEmpleado,
     isChangingPassword,
     isCreatingRol,
     isUpdatingRol,
@@ -259,13 +290,9 @@ export default function Empleados() {
   } = useEmpleados({
     page,
     limit,
-    filters: {
-      busqueda: filtros.busqueda,
-      rol: filtros.rol,
-      estado: filtros.estado,
-    },
+    filters: filtersMemo,
     tenantId,
-    enabled: !!user && status === "authenticated" && isAuthorized,
+    enabled: enabledQuery,
   });
 
   // Hooks para departamentos y localidades
@@ -287,6 +314,76 @@ export default function Empleados() {
     },
     [empleados, roles]
   );
+
+  // Debug: Mostrar errores si los hay
+  useEffect(() => {
+    if (errorEmpleados) {
+      console.error("Error al cargar empleados:", errorEmpleados);
+      addToast({
+        title: "Error al cargar empleados",
+        description: errorEmpleados instanceof Error ? errorEmpleados.message : "Error desconocido",
+        color: "danger",
+      });
+    }
+    if (errorRoles) {
+      console.error("Error al cargar roles:", errorRoles);
+      addToast({
+        title: "Error al cargar roles",
+        description: errorRoles instanceof Error ? errorRoles.message : "Error desconocido",
+        color: "danger",
+      });
+    }
+    if (errorProvincias) {
+      console.error("Error al cargar provincias:", errorProvincias);
+      addToast({
+        title: "Error al cargar provincias",
+        description: errorProvincias instanceof Error ? errorProvincias.message : "Error desconocido",
+        color: "danger",
+      });
+    }
+  }, [errorEmpleados, errorRoles, errorProvincias]);
+
+  // Debug: Verificar si las queries están habilitadas (solo en desarrollo)
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("Debug empleados:", {
+        enabled: enabledQuery,
+        user: !!user,
+        status,
+        isAuthorized,
+        isLoadingEmpleados,
+        isLoadingRoles,
+        empleadosCount: empleados.length,
+        rolesCount: roles.length,
+        errorEmpleados: errorEmpleados?.message,
+        errorRoles: errorRoles?.message,
+      });
+    }
+  }, [enabledQuery, user, status, isAuthorized, isLoadingEmpleados, isLoadingRoles, empleados.length, roles.length, errorEmpleados, errorRoles]);
+
+  // Sincronizar departamentoSeleccionado con empleadoEditDraft cuando se abre el modal
+  // IMPORTANTE: Solo sincronizar cuando realmente hay un empleado siendo editado
+  useEffect(() => {
+    if (empleadoAEditar && empleadoEditDraft.departamentoId) {
+      // Si hay un departamento en el draft pero no está sincronizado con departamentoSeleccionado
+      if (departamentoSeleccionado !== empleadoEditDraft.departamentoId) {
+        setDepartamentoSeleccionado(empleadoEditDraft.departamentoId);
+      }
+    }
+  }, [empleadoAEditar, empleadoEditDraft.departamentoId, departamentoSeleccionado]);
+
+  // Limpiar estados de ubicación cuando se cierra el modal de edición
+  // Esto previene que queden valores residuales en el formulario de creación
+  const prevEmpleadoAEditarRef = useRef<Empleado | null>(null);
+  useEffect(() => {
+    // Si había un empleado siendo editado y ahora no hay ninguno, limpiar los estados
+    if (prevEmpleadoAEditarRef.current && !empleadoAEditar) {
+      setDepartamentoSeleccionado("");
+      setProvinciaSeleccionada("");
+    }
+    // Actualizar la referencia
+    prevEmpleadoAEditarRef.current = empleadoAEditar;
+  }, [empleadoAEditar]);
 
   // Verificar permisos al montar el componente
   useEffect(() => {
@@ -372,20 +469,9 @@ export default function Empleados() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    // Solo cargar datos si el usuario está autenticado
-    if (user && status === "authenticated") {
-      refetchEmpleados();
-      refetchAuditorias();
-    }
-  }, [user, status, refetchEmpleados, refetchAuditorias]);
-
-  useEffect(() => {
-    // Solo cargar datos si el usuario está autenticado
-    if (user && status === "authenticated") {
-      refetchEmpleados();
-    }
-  }, [page, limit, filtros.rol, filtros.estado, filtros.busqueda, user, status, refetchEmpleados]);
+  // NOTA: No necesitamos useEffect para refetch - TanStack Query maneja automáticamente
+  // los refetches cuando cambian los parámetros (page, limit, filters) o cuando
+  // las queries se invalidan después de mutaciones
 
   // Los departamentos y localidades se cargan automáticamente con TanStack Query
   useEffect(() => {
@@ -546,55 +632,29 @@ export default function Empleados() {
       return;
     }
 
-      // El estado de loading se maneja automáticamente por la mutación
-    try {
-      const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
-      const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
-      const res = await fetch(`/api/roles${tenantQuery}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+    // Usar la mutación del hook - ya maneja loading, errores, invalidación y toasts
+    createRolMutation(
+      {
+        rolData: {
           nombre: nuevoRol.nombre,
           descripcion: nuevoRol.descripcion,
           tipo: nuevoRol.tipo,
           permisos: nuevoRol.permisos,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(data?.error ?? "No se pudo crear el rol");
+        },
+        tenantId: isSuperAdmin ? resolveTenantIdForRequests() : null,
+      },
+      {
+        onSuccess: () => {
+          setOpenRolModal(false);
+          setNuevoRol({
+            nombre: "",
+            descripcion: "",
+            permisos: ["Ventas", "Caja"],
+            tipo: "EMPLEADO",
+          });
+        },
       }
-
-      const data = await res.json();
-
-      addToast({
-        title: "Rol creado",
-        description: "Asignalo desde la tabla o en el alta rapida.",
-        color: "success",
-      });
-
-      // Recargar datos para actualizar roles y conteos
-      await refetchEmpleados();
-      // Recargar auditorías para mostrar la acción recién registrada
-      await refetchAuditorias();
-      setOpenRolModal(false);
-      setNuevoRol({
-        nombre: "",
-        descripcion: "",
-        permisos: ["Ventas", "Caja"],
-        tipo: "EMPLEADO",
-      });
-    } catch (error) {
-      console.error(error);
-      addToast({
-        title: "Error",
-        description: (error as Error).message,
-        color: "danger",
-      });
-    } finally {
-      // El estado de loading se maneja automáticamente por la mutación
-    }
+    );
   };
 
   const handleEditarRol = async () => {
@@ -618,98 +678,47 @@ export default function Empleados() {
       return;
     }
 
-    // El estado de loading se maneja automáticamente por la mutación
-    try {
-      const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
-      const tenantQuery = tenantParam ? `&tenantId=${tenantParam}` : "";
-      const res = await fetch(`/api/roles?id=${rolAEditar.id}${tenantQuery}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+    // Usar la mutación del hook - ya maneja loading, errores, invalidación y toasts
+    updateRolMutation(
+      {
+        id: rolAEditar.id,
+        rolData: {
           nombre: rolEditDraft.nombre,
           descripcion: rolEditDraft.descripcion,
           tipo: rolEditDraft.tipo,
           permisos: rolEditDraft.permisos,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(data?.error ?? "No se pudo actualizar el rol");
+        },
+        tenantId: isSuperAdmin ? resolveTenantIdForRequests() : null,
+      },
+      {
+        onSuccess: () => {
+          setRolAEditar(null);
+          setRolEditDraft({
+            nombre: "",
+            descripcion: "",
+            tipo: "EMPLEADO",
+            permisos: [],
+          });
+        },
       }
-
-      // Refrescar datos para actualizar roles y conteos
-      await refetchEmpleados();
-      // Recargar auditorías para mostrar la acción recién registrada
-      await refetchAuditorias();
-
-      addToast({
-        title: "Rol actualizado",
-        description: `El rol "${rolEditDraft.nombre}" fue actualizado correctamente.`,
-        color: "success",
-      });
-
-      setRolAEditar(null);
-      setRolEditDraft({
-        nombre: "",
-        descripcion: "",
-        tipo: "EMPLEADO",
-        permisos: [],
-      });
-    } catch (error) {
-      console.error(error);
-      addToast({
-        title: "Error",
-        description: (error as Error).message,
-        color: "danger",
-      });
-    } finally {
-      // El estado de loading se maneja automáticamente por la mutación
-    }
+    );
   };
 
   const handleEliminarRol = async () => {
     if (!rolAEliminar) return;
 
-    // El estado de loading se maneja automáticamente por la mutación
-    try {
-      const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
-      const tenantQuery = tenantParam ? `&tenantId=${tenantParam}` : "";
-      const res = await fetch(`/api/roles?id=${rolAEliminar.id}${tenantQuery}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(data?.error ?? "No se pudo eliminar el rol");
+    // Usar la mutación del hook - ya maneja loading, errores, invalidación y toasts
+    deleteRolMutation(
+      {
+        id: rolAEliminar.id,
+        tenantId: isSuperAdmin ? resolveTenantIdForRequests() : null,
+      },
+      {
+        onSuccess: () => {
+          setRolAEliminar(null);
+        },
       }
-
-      // Eliminar del state
-      // Los roles se actualizan automáticamente con TanStack Query
-
-      // Refrescar datos para actualizar roles y conteos
-      await refetchEmpleados();
-      // Recargar auditorías para mostrar la acción recién registrada
-      await refetchAuditorias();
-
-      addToast({
-        title: "Rol eliminado",
-        description: `El rol "${rolAEliminar.nombre}" fue eliminado correctamente.`,
-        color: "success",
-      });
-
-      setRolAEliminar(null);
-    } catch (error) {
-      console.error(error);
-      addToast({
-        title: "Error",
-        description: (error as Error).message,
-        color: "danger",
-      });
-    } finally {
-      // El estado de loading se maneja automáticamente por la mutación
-    }
+    );
   };
 
   const handleEstado = async (
@@ -752,10 +761,7 @@ export default function Empleados() {
         color: "success",
       });
 
-      // Recargar datos para actualizar la lista y conteos
-      await refetchEmpleados();
-      // Recargar auditorías para mostrar la acción recién registrada
-      await refetchAuditorias();
+      // TanStack Query ya invalida las queries automáticamente, no necesitamos refetch manual
     } catch (error) {
       console.error(error);
       addToast({
@@ -772,38 +778,22 @@ export default function Empleados() {
     );
     if (!confirmDelete) return;
 
-    try {
-      const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
-      const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
-      const res = await fetch(`/api/empleados${tenantQuery}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ personaId: empleado.personaId }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(data?.error ?? "No se pudo eliminar el empleado");
+    // Usar la mutación del hook - ya maneja loading, errores, invalidación y toasts
+    deleteEmpleadoMutation(
+      {
+        id: empleado.personaId,
+        tenantId: isSuperAdmin ? resolveTenantIdForRequests() : null,
+      },
+      {
+        onSuccess: () => {
+          addToast({
+            title: "Empleado eliminado",
+            description: `${empleado.nombreCompleto} fue eliminado.`,
+            color: "success",
+          });
+        },
       }
-
-      addToast({
-        title: "Empleado eliminado",
-        description: `${empleado.nombreCompleto} fue eliminado.`,
-        color: "success",
-      });
-
-      // Recargar datos para actualizar la lista y conteos
-      await refetchEmpleados();
-      // Recargar auditorías para mostrar la acción recién registrada
-      await refetchAuditorias();
-    } catch (error) {
-      console.error(error);
-      addToast({
-        title: "Error",
-        description: (error as Error).message,
-        color: "danger",
-      });
-    }
+    );
   };
 
   const getRolNombre = (rolId: number | null) => {
@@ -847,87 +837,68 @@ export default function Empleados() {
       return;
     }
 
-    // El estado de loading se maneja automáticamente por la mutación
-    try {
-      const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
-      const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
+    // Construir el objeto de datos a actualizar (solo campos que cambiaron)
+    const updateData: any = {
+      personaId: empleadoAEditar.personaId,
+    };
 
-      const body: any = {
-        personaId: empleadoAEditar.personaId,
-      };
-
-      if (empleadoEditDraft.nombre !== empleadoAEditar.nombre) {
-        body.nombre = empleadoEditDraft.nombre.trim();
-      }
-      if (empleadoEditDraft.apellido !== empleadoAEditar.apellido) {
-        body.apellido = empleadoEditDraft.apellido.trim();
-      }
-      if (empleadoEditDraft.dni !== (empleadoAEditar.dni || "")) {
-        body.dni = empleadoEditDraft.dni || null;
-      }
-      if (empleadoEditDraft.direccion !== (empleadoAEditar.direccion || "")) {
-        body.direccion = empleadoEditDraft.direccion.trim();
-      }
-      if (empleadoEditDraft.telefono !== (empleadoAEditar.telefono || "")) {
-        body.telefono = empleadoEditDraft.telefono || null;
-      }
-      if (Number(empleadoEditDraft.localidadId) !== (empleadoAEditar.localidadId || null)) {
-        body.localidadId = Number(empleadoEditDraft.localidadId);
-      }
-      if (empleadoEditDraft.provinciaId) {
-        body.provinciaId = Number(empleadoEditDraft.provinciaId);
-      }
-      if (empleadoEditDraft.departamentoId) {
-        body.departamentoId = Number(empleadoEditDraft.departamentoId);
-      }
-      if (empleadoEditDraft.rolId !== (empleadoAEditar.rolId ? String(empleadoAEditar.rolId) : "")) {
-        body.rolId = empleadoEditDraft.rolId ? Number(empleadoEditDraft.rolId) : null;
-      }
-
-      const res = await fetch(`/api/empleados${tenantQuery}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(data?.error ?? "No se pudo actualizar el empleado");
-      }
-
-      addToast({
-        title: "Empleado actualizado",
-        description: `${empleadoEditDraft.nombre} ${empleadoEditDraft.apellido} fue actualizado correctamente.`,
-        color: "success",
-      });
-
-      // Recargar datos
-      await refetchEmpleados();
-      // Recargar auditorías
-      await refetchAuditorias();
-      
-      setEmpleadoAEditar(null);
-      setEmpleadoEditDraft({
-        nombre: "",
-        apellido: "",
-        dni: "",
-        direccion: "",
-        telefono: "",
-        localidadId: "",
-        provinciaId: "",
-        departamentoId: "",
-        rolId: "",
-      });
-    } catch (error) {
-      console.error(error);
-      addToast({
-        title: "Error",
-        description: (error as Error).message,
-        color: "danger",
-      });
-    } finally {
-      // El estado de loading se maneja automáticamente por la mutación
+    if (empleadoEditDraft.nombre !== empleadoAEditar.nombre) {
+      updateData.nombre = empleadoEditDraft.nombre.trim();
     }
+    if (empleadoEditDraft.apellido !== empleadoAEditar.apellido) {
+      updateData.apellido = empleadoEditDraft.apellido.trim();
+    }
+    if (empleadoEditDraft.dni !== (empleadoAEditar.dni || "")) {
+      updateData.dni = empleadoEditDraft.dni || null;
+    }
+    if (empleadoEditDraft.direccion !== (empleadoAEditar.direccion || "")) {
+      updateData.direccion = empleadoEditDraft.direccion.trim();
+    }
+    if (empleadoEditDraft.telefono !== (empleadoAEditar.telefono || "")) {
+      updateData.telefono = empleadoEditDraft.telefono || null;
+    }
+    if (Number(empleadoEditDraft.localidadId) !== (empleadoAEditar.localidadId || null)) {
+      updateData.localidadId = Number(empleadoEditDraft.localidadId);
+    }
+    if (empleadoEditDraft.provinciaId) {
+      updateData.provinciaId = Number(empleadoEditDraft.provinciaId);
+    }
+    if (empleadoEditDraft.departamentoId) {
+      updateData.departamentoId = Number(empleadoEditDraft.departamentoId);
+    }
+    if (empleadoEditDraft.rolId !== (empleadoAEditar.rolId ? String(empleadoAEditar.rolId) : "")) {
+      updateData.rolId = empleadoEditDraft.rolId ? Number(empleadoEditDraft.rolId) : null;
+    }
+
+    // Usar la mutación del hook en lugar de fetch manual
+    // La mutación ya maneja el loading, errores, invalidación de queries y toasts
+    updateEmpleadoMutation(
+      {
+        id: empleadoAEditar.personaId,
+        data: updateData,
+        tenantId: isSuperAdmin ? resolveTenantIdForRequests() : null,
+      },
+      {
+        onSuccess: () => {
+          // Limpiar el modal después de actualizar exitosamente
+          setEmpleadoAEditar(null);
+          setEmpleadoEditDraft({
+            nombre: "",
+            apellido: "",
+            dni: "",
+            direccion: "",
+            telefono: "",
+            localidadId: "",
+            provinciaId: "",
+            departamentoId: "",
+            rolId: "",
+          });
+          // Limpiar estados de ubicación
+          setProvinciaSeleccionada("");
+          setDepartamentoSeleccionado("");
+        },
+      }
+    );
   };
 
   // Función para cambiar contraseña
@@ -959,47 +930,21 @@ export default function Empleados() {
       return;
     }
 
-    // El estado de loading se maneja automáticamente por la mutación
-    try {
-      const tenantParam = isSuperAdmin ? resolveTenantIdForRequests() : null;
-      const tenantQuery = tenantParam ? `?tenantId=${tenantParam}` : "";
-
-      const res = await fetch(`/api/empleados/cambiar-password${tenantQuery}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          usuarioId: empleadoAEditar.usuarioId,
-          nuevaPassword,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(data?.error ?? "No se pudo cambiar la contraseña");
+    // Usar la mutación del hook - ya maneja loading, errores, invalidación y toasts
+    changePasswordMutation(
+      {
+        usuarioId: empleadoAEditar.usuarioId!,
+        nuevaPassword,
+        tenantId: isSuperAdmin ? resolveTenantIdForRequests() : null,
+      },
+      {
+        onSuccess: () => {
+          // Limpiar campos después de cambiar la contraseña exitosamente
+          setNuevaPassword("");
+          setConfirmarPassword("");
+        },
       }
-
-      addToast({
-        title: "Contraseña actualizada",
-        description: "La contraseña fue cambiada correctamente.",
-        color: "success",
-      });
-
-      // Recargar auditorías
-      await refetchAuditorias();
-      
-      // Limpiar campos
-      setNuevaPassword("");
-      setConfirmarPassword("");
-    } catch (error) {
-      console.error(error);
-      addToast({
-        title: "Error",
-        description: (error as Error).message,
-        color: "danger",
-      });
-    } finally {
-      // El estado de loading se maneja automáticamente por la mutación
-    }
+    );
   };
 
   if (!isAuthorized) {
@@ -1424,7 +1369,7 @@ export default function Empleados() {
                               // Cargar departamentos y localidades si hay provincia/departamento
                               if (provinciaIdStr) {
                                 setProvinciaSeleccionada(provinciaIdStr);
-                                // Los departamentos y localidades se cargan automáticamente con TanStack Query
+                                // Establecer departamento - el useEffect se encargará de sincronizar
                                 if (departamentoIdStr) {
                                   setDepartamentoSeleccionado(departamentoIdStr);
                                   // Las localidades se cargan automáticamente cuando se selecciona un departamento
@@ -2249,6 +2194,21 @@ export default function Empleados() {
           setEmpleadoAEditar(null);
           setNuevaPassword("");
           setConfirmarPassword("");
+          // Limpiar estados de ubicación para que no queden en el formulario de creación
+          setProvinciaSeleccionada("");
+          setDepartamentoSeleccionado("");
+          // Limpiar el draft de edición
+          setEmpleadoEditDraft({
+            nombre: "",
+            apellido: "",
+            dni: "",
+            direccion: "",
+            telefono: "",
+            localidadId: "",
+            provinciaId: "",
+            departamentoId: "",
+            rolId: "",
+          });
         }}
         size="2xl"
         scrollBehavior="inside"
@@ -2335,13 +2295,21 @@ export default function Empleados() {
                   }));
                   setProvinciaSeleccionada(e.target.value);
                 }}
-                placeholder="Selecciona una provincia"
+                placeholder={isLoadingProvincias ? "Cargando provincias..." : "Selecciona una provincia"}
+                isLoading={isLoadingProvincias}
+                isDisabled={isLoadingProvincias}
               >
-                {provincias.map((prov) => (
-                  <SelectItem key={String(prov.Id)}>
-                    {prov.Descripcion}
+                {provincias.length === 0 && !isLoadingProvincias ? (
+                  <SelectItem key="no-items" isDisabled>
+                    No hay provincias disponibles
                   </SelectItem>
-                ))}
+                ) : (
+                  provincias.map((prov) => (
+                    <SelectItem key={String(prov.Id)}>
+                      {prov.Descripcion}
+                    </SelectItem>
+                  ))
+                )}
               </Select>
               <Select
                 label="Departamento"
@@ -2349,21 +2317,36 @@ export default function Empleados() {
                   empleadoEditDraft.departamentoId ? [empleadoEditDraft.departamentoId] : []
                 }
                 onChange={(e) => {
+                  const deptId = e.target.value;
                   setEmpleadoEditDraft((prev) => ({
                     ...prev,
-                    departamentoId: e.target.value,
-                    localidadId: "",
+                    departamentoId: deptId,
+                    localidadId: "", // Limpiar localidad al cambiar departamento
                   }));
-                  setDepartamentoSeleccionado(e.target.value);
+                  // Sincronizar con el estado que usa el hook
+                  setDepartamentoSeleccionado(deptId);
                 }}
-                placeholder="Selecciona un departamento"
-                isDisabled={!empleadoEditDraft.provinciaId}
+                placeholder={
+                  !empleadoEditDraft.provinciaId
+                    ? "Selecciona una provincia primero"
+                    : departamentosQuery.isLoading
+                    ? "Cargando departamentos..."
+                    : "Selecciona un departamento"
+                }
+                isLoading={departamentosQuery.isLoading}
+                isDisabled={!empleadoEditDraft.provinciaId || departamentosQuery.isLoading}
               >
-                {departamentos.map((dep) => (
-                  <SelectItem key={String(dep.Id)}>
-                    {dep.Descripcion}
+                {departamentos.length === 0 && !departamentosQuery.isLoading && empleadoEditDraft.provinciaId ? (
+                  <SelectItem key="no-items" isDisabled>
+                    No hay departamentos disponibles
                   </SelectItem>
-                ))}
+                ) : (
+                  departamentos.map((dep) => (
+                    <SelectItem key={String(dep.Id)}>
+                      {dep.Descripcion}
+                    </SelectItem>
+                  ))
+                )}
               </Select>
               <Select
                 label="Localidad"
@@ -2376,16 +2359,29 @@ export default function Empleados() {
                     localidadId: e.target.value,
                   }))
                 }
-                placeholder="Selecciona una localidad"
-                isDisabled={!empleadoEditDraft.departamentoId}
+                placeholder={
+                  !empleadoEditDraft.departamentoId
+                    ? "Selecciona un departamento primero"
+                    : localidadesQuery.isLoading
+                    ? "Cargando localidades..."
+                    : "Selecciona una localidad"
+                }
+                isLoading={localidadesQuery.isLoading}
+                isDisabled={!empleadoEditDraft.departamentoId || localidadesQuery.isLoading}
                 isRequired
                 className="md:col-span-2"
               >
-                {localidades.map((loc) => (
-                  <SelectItem key={String(loc.Id)}>
-                    {loc.Descripcion}
+                {localidades.length === 0 && !localidadesQuery.isLoading && empleadoEditDraft.departamentoId ? (
+                  <SelectItem key="no-items" isDisabled>
+                    No hay localidades disponibles
                   </SelectItem>
-                ))}
+                ) : (
+                  localidades.map((loc) => (
+                    <SelectItem key={String(loc.Id)}>
+                      {loc.Descripcion}
+                    </SelectItem>
+                  ))
+                )}
               </Select>
               <Select
                 label="Rol"
