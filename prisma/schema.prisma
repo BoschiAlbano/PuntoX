@@ -15,10 +15,6 @@ model Tenant {
   Id                  BigInt               @id @default(autoincrement())
   Nombre              String               @db.VarChar(250)
   Dominio             String?              @unique @db.VarChar(400)
-  RazonSocial         String?              @db.VarChar(250)
-  Cuit                String?              @db.VarChar(20)
-  Email               String?              @db.VarChar(250)
-  Telefono            String?              @db.VarChar(25)
   EstaActivo          Boolean              @default(true)
   PlanId              BigInt?
   OnboardingCompleto  Boolean              @default(false)
@@ -377,19 +373,20 @@ model CondicionIva {
   EstaEliminado   Boolean
   Persona_Cliente Persona_Cliente[]
   Proveedor       Proveedor[]
+  Configuracion   Configuracion[]
 }
 
 /// Configuración general del comercio (datos fiscales, parámetros de stock, etc.).
 model Configuracion {
-  Id                                     BigInt    @id @default(autoincrement())
-  RazonSocial                            String    @db.VarChar(250)
-  NombreFantasia                         String?   @db.VarChar(250)
-  Cuit                                   String    @db.VarChar(13)
-  Telefono                               String?   @db.VarChar(25)
-  Celular                                String?   @db.VarChar(25)
-  Direccion                              String    @db.VarChar(400)
-  Email                                  String?   @db.VarChar(250)
-  LocalidadId                            BigInt
+  Id                                     BigInt        @id @default(autoincrement())
+  RazonSocial                            String        @db.VarChar(250)
+  NombreFantasia                         String?       @db.VarChar(250)
+  Cuit                                   String        @db.VarChar(13)
+  Telefono                               String?       @db.VarChar(25)
+  Celular                                String?       @db.VarChar(25)
+  Direccion                              String        @db.VarChar(400)
+  Email                                  String?       @db.VarChar(250)
+  LocalidadId                            BigInt?
   FacturaDescuentaStock                  Boolean
   PresupuestoDescuentaStock              Boolean
   RemitoDescuentaStock                   Boolean
@@ -399,28 +396,41 @@ model Configuracion {
   Instalada                              Int?
   TipoFormaPagoPorDefectoVenta           Int
   TipoFormaPagoPorDefectoCompra          Int
-  ObservacionEnPieFactura                String?   @db.VarChar(400)
+  ObservacionEnPieFactura                String?       @db.VarChar(400)
   UnificarRenglonesIngresarMismoProducto Boolean
   IngresoManualCajaInicial               Boolean
   PuestoCajaSeparado                     Boolean
   ActivarRetiroDeCaja                    Boolean
-  MontoMaximoRetiroCaja                  Decimal   @db.Decimal(18, 2)
+  MontoMaximoRetiroCaja                  Decimal       @db.Decimal(18, 2)
   ActivarBascula                         Boolean
   EtiquetaPorPeso                        Boolean
-  CodigoBascula                          String?   @db.VarChar(8000)
+  CodigoBascula                          String?       @db.VarChar(8000)
   EstaEliminado                          Boolean
   Foto                                   Bytes?
-  ShowFoto                               Boolean   @default(false)
+  ShowFoto                               Boolean       @default(false)
   /// Tenant dueño de esta configuración
   TenantId                               BigInt
-  AbrirCajonEfectivo                     Boolean   @default(true)
-  MostrarPreciosConIva                   Boolean   @default(true)
-  NumerarPedidosPantalla                 Boolean   @default(true)
-  Localidad                              Localidad @relation(fields: [LocalidadId], references: [Id], onUpdate: NoAction)
-  Tenant                                 Tenant    @relation(fields: [TenantId], references: [Id])
+  AbrirCajonEfectivo                     Boolean       @default(true)
+  MostrarPreciosConIva                   Boolean       @default(true)
+  NumerarPedidosPantalla                 Boolean       @default(true)
+  // Notificaciones
+  NotificacionesPush                     Boolean       @default(true)
+  NotificacionesResumenDiario            Boolean       @default(false)
+  NotificacionesStockBajo                Boolean       @default(true)
+  // Datos fiscales y regionales
+  Moneda                                 String?       @default("ARS") @db.VarChar(10)
+  ZonaHoraria                            String?       @default("America/Argentina/Buenos_Aires") @db.VarChar(100)
+  Idioma                                 String?       @default("es-AR") @db.VarChar(10)
+  CondicionIvaId                         BigInt?
+  PuntoVenta                             String?       @db.VarChar(10)
+  InicioActividades                      DateTime?
+  Localidad                              Localidad?    @relation(fields: [LocalidadId], references: [Id], onUpdate: NoAction)
+  CondicionIva                           CondicionIva? @relation(fields: [CondicionIvaId], references: [Id], onUpdate: NoAction)
+  Tenant                                 Tenant        @relation(fields: [TenantId], references: [Id])
 
   @@index([TenantId])
   @@index([LocalidadId])
+  @@index([CondicionIvaId])
 }
 
 /// Contadores para numeración de comprobantes.

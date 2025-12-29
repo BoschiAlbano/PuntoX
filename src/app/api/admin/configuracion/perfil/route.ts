@@ -21,7 +21,6 @@ async function resolveTenantId() {
   return tenantId ? Number(tenantId) : null;
 }
 
-const LOCALIDAD_DUMMY_ID = 2014010;
 
 export async function GET() {
   const tenantId = await resolveTenantId();
@@ -173,7 +172,7 @@ export async function PUT(req: NextRequest) {
             Email: data.correo || null,
             Telefono: data.telefono || null,
             Direccion: "SIN DEFINIR",
-            LocalidadId: BigInt(LOCALIDAD_DUMMY_ID),
+            LocalidadId: null,
             FacturaDescuentaStock: true,
             PresupuestoDescuentaStock: false,
             RemitoDescuentaStock: true,

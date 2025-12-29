@@ -54,13 +54,39 @@ const SessionProviderComponent = ({
       const { data } = await supabase.auth.getSession();
       setSession(data.session ?? null);
       setStatus(data.session ? "authenticated" : "unauthenticated");
+      
+      // Sincronizar permisos si hay sesión y no tiene permisos en JWT
+      if (data.session?.user) {
+        const metadata = data.session.user.app_metadata || {};
+        const tienePermisos = Array.isArray(metadata.permissions) && metadata.permissions.length > 0;
+        
+        // Si no tiene permisos en JWT, sincronizar (solo una vez)
+        if (!tienePermisos) {
+          fetch("/api/auth/sync-permissions", { method: "POST" }).catch((err) => {
+            console.warn("No se pudieron sincronizar permisos:", err);
+          });
+        }
+      }
     };
 
     fetchSession();
 
-    const { data } = supabase.auth.onAuthStateChange((_, newSession) => {
+    const { data } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       setSession(newSession);
       setStatus(newSession ? "authenticated" : "unauthenticated");
+      
+      // Sincronizar permisos cuando hay un nuevo login
+      if (event === "SIGNED_IN" && newSession?.user) {
+        const metadata = newSession.user.app_metadata || {};
+        const tienePermisos = Array.isArray(metadata.permissions) && metadata.permissions.length > 0;
+        
+        // Sincronizar permisos después del login
+        if (!tienePermisos) {
+          fetch("/api/auth/sync-permissions", { method: "POST" }).catch((err) => {
+            console.warn("No se pudieron sincronizar permisos:", err);
+          });
+        }
+      }
     });
 
     return () => {

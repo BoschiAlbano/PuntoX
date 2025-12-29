@@ -29,6 +29,7 @@ import {
 } from "@heroui/react";
 import { addToast } from "@heroui/react";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
+import { usePagePermission } from "@/lib/permissions/usePagePermission";
 import { Pencil, Trash2, Eye, Zap, Mail } from "lucide-react";
 import Pagination, { PaginationInfo } from "@/components/common/Pagination";
 import {
@@ -124,12 +125,16 @@ function estadoPill(estado: EstadoEmpleado) {
 export default function Empleados() {
   const { user, status } = useSupabaseAuthContext();
   const router = useRouter();
+  const { tieneAcceso, isLoading: isLoadingPermisos } = usePagePermission();
 
   const [isAuthorized, setIsAuthorized] = useState(true);
+  const [selectedTab, setSelectedTab] = useState<string>("usuarios");
   
   // Estado de paginación
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
+  const [auditoriaPage, setAuditoriaPage] = useState(1);
+  const [auditoriaLimit] = useState(10);
   const [paginationAuditoria, setPaginationAuditoria] = useState<PaginationInfo>({
     page: 1,
     limit: 10,
@@ -259,6 +264,7 @@ export default function Empleados() {
     roles,
     provincias,
     auditorias,
+    auditoriasPagination,
     pagination,
     isLoadingEmpleados,
     isLoadingRoles,
@@ -293,6 +299,8 @@ export default function Empleados() {
     filters: filtersMemo,
     tenantId,
     enabled: enabledQuery,
+    auditoriaPage,
+    auditoriaLimit,
   });
 
   // Hooks para departamentos y localidades
@@ -486,6 +494,27 @@ export default function Empleados() {
       setNuevoUsuario((prev) => ({ ...prev, localidadId: "" }));
     }
   }, [departamentoSeleccionado]);
+
+  // Cargar auditorías cuando se selecciona el tab de auditoría
+  useEffect(() => {
+    if (selectedTab === "auditoria" && enabledQuery) {
+      refetchAuditorias();
+    }
+  }, [selectedTab, enabledQuery, refetchAuditorias]);
+
+  // Sincronizar paginación de auditorías con la query
+  useEffect(() => {
+    if (auditoriasPagination) {
+      setPaginationAuditoria(auditoriasPagination);
+    }
+  }, [auditoriasPagination]);
+
+  // Cargar auditorías cuando cambia la paginación
+  useEffect(() => {
+    if (selectedTab === "auditoria" && enabledQuery) {
+      refetchAuditorias();
+    }
+  }, [auditoriaPage, selectedTab, enabledQuery, refetchAuditorias]);
 
   const handleCrearUsuario = async () => {
     if (
@@ -985,6 +1014,8 @@ export default function Empleados() {
       <Tabs
         aria-label="Options"
         className="relative"
+        selectedKey={selectedTab}
+        onSelectionChange={(key) => setSelectedTab(key as string)}
       >
         <Tab
           key="usuarios"
@@ -1741,10 +1772,7 @@ export default function Empleados() {
                     variant="flat"
                     isDisabled={!paginationAuditoria.hasPreviousPage || isLoadingAuditorias}
                     onPress={() => {
-                      setPaginationAuditoria((prev) => ({
-                        ...prev,
-                        page: prev.page - 1,
-                      }));
+                      setAuditoriaPage((prev) => Math.max(1, prev - 1));
                     }}
                   >
                     Anterior
@@ -1757,10 +1785,7 @@ export default function Empleados() {
                     variant="flat"
                     isDisabled={!paginationAuditoria.hasNextPage || isLoadingAuditorias}
                     onPress={() => {
-                      setPaginationAuditoria((prev) => ({
-                        ...prev,
-                        page: prev.page + 1,
-                      }));
+                      setAuditoriaPage((prev) => prev + 1);
                     }}
                   >
                     Siguiente

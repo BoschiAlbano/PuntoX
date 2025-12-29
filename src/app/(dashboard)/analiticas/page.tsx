@@ -2,6 +2,7 @@
 
 import { useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { usePagePermission } from "@/lib/permissions/usePagePermission";
 import {
   Tabs,
   Tab,
@@ -425,6 +426,7 @@ function AnaliticasContent() {
 }
 
 export default function Analiticas() {
+  usePagePermission(); // Proteger página con permisos
   return (
     <Suspense fallback={<div className="p-6">Cargando...</div>}>
       <AnaliticasContent />

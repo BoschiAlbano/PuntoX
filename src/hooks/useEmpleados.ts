@@ -434,10 +434,11 @@ const updateRol = async ({
   rolData: Partial<Rol>;
   tenantId?: string | null;
 }): Promise<Rol> => {
-  const tenantParam = tenantId ? `?tenantId=${tenantId}` : "";
+  const params = new URLSearchParams({ id: id.toString() });
+  if (tenantId) params.append("tenantId", tenantId);
 
-  const response = await fetch(`/api/roles/${id}${tenantParam}`, {
-    method: "PUT",
+  const response = await fetch(`/api/roles?${params.toString()}`, {
+    method: "PATCH",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
     body: JSON.stringify(rolData),
@@ -459,9 +460,10 @@ const deleteRol = async ({
   id: number;
   tenantId?: string | null;
 }): Promise<void> => {
-  const tenantParam = tenantId ? `?tenantId=${tenantId}` : "";
+  const params = new URLSearchParams({ id: id.toString() });
+  if (tenantId) params.append("tenantId", tenantId);
 
-  const response = await fetch(`/api/roles/${id}${tenantParam}`, {
+  const response = await fetch(`/api/roles?${params.toString()}`, {
     method: "DELETE",
     credentials: "include",
   });
@@ -479,12 +481,16 @@ export function useEmpleados({
   filters = {},
   tenantId,
   enabled = true,
+  auditoriaPage = 1,
+  auditoriaLimit = 10,
 }: {
   page?: number;
   limit?: number;
   filters?: EmpleadosFilters;
   tenantId?: string | null;
   enabled?: boolean;
+  auditoriaPage?: number;
+  auditoriaLimit?: number;
 }) {
   const queryClient = useQueryClient();
 
@@ -509,9 +515,9 @@ export function useEmpleados({
   });
 
   const auditoriasQuery = useQuery({
-    queryKey: ["auditorias", page, limit, tenantId],
-    queryFn: ({ signal }) => fetchAuditorias({ signal, page, limit, tenantId }),
-    enabled: false, // Se habilita manualmente cuando se necesita
+    queryKey: ["auditorias", auditoriaPage, auditoriaLimit, tenantId],
+    queryFn: ({ signal }) => fetchAuditorias({ signal, page: auditoriaPage, limit: auditoriaLimit, tenantId }),
+    enabled: enabled, // Habilitar cuando el componente principal está habilitado
   });
 
   // Mutations

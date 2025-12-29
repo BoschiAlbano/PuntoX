@@ -1,13 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
 
+// Contador para controlar si se muestran notificaciones en las mutaciones
+// Si silentCount > 0, no se muestran notificaciones
+let silentCount = 0;
+
 export interface Tenant {
   nombre: string;
   dominio: string | null;
-  razonSocial: string | null;
-  cuit: string | null;
-  email: string | null;
-  telefono: string | null;
   planId?: string;
   estaActivo?: boolean;
   onboardingCompleto?: boolean;
@@ -21,7 +21,9 @@ export interface Configuracion {
   telefono: string;
   celular: string;
   direccion: string;
-  localidadId: number;
+  localidadId: number | null;
+  departamentoId?: number | null;
+  provinciaId?: number | null;
   observacionPieFactura: string;
   mostrarPreciosConIva?: boolean;
   abrirCajonEfectivo?: boolean;
@@ -52,7 +54,6 @@ export interface PreferenciasVenta {
 }
 
 export interface Notificaciones {
-  email: boolean;
   push: boolean;
   resumenDiario: boolean;
   stockBajo: boolean;
@@ -71,8 +72,14 @@ export interface Fiscal {
   zonaHoraria: string;
   idioma: string;
   tipoIva: string;
+  condicionIvaId: number | null;
   puntoVenta: string;
   inicioActividades: string;
+}
+
+export interface CondicionIva {
+  id: number;
+  descripcion: string;
 }
 
 export interface Branding {
@@ -85,6 +92,26 @@ export interface Branding {
 export interface Localidad {
   Id: number;
   Descripcion: string;
+  DepartamentoId?: number;
+  Departamento?: {
+    Id: number;
+    Descripcion: string;
+    Provincia?: {
+      Id: number;
+      Descripcion: string;
+    };
+  };
+}
+
+export interface Provincia {
+  Id: number;
+  Descripcion: string;
+}
+
+export interface Departamento {
+  Id: number;
+  Descripcion: string;
+  ProvinciaId: number;
 }
 
 // Fetch functions
@@ -128,12 +155,73 @@ const fetchConfiguracion = async ({
   return data?.configuracion || ({} as Configuracion);
 };
 
-const fetchLocalidades = async ({
+const fetchProvincias = async ({
   signal,
 }: {
   signal: AbortSignal;
+}): Promise<Provincia[]> => {
+  const response = await fetch("/api/provincias", {
+    signal,
+    cache: "no-store",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
+};
+
+const fetchDepartamentos = async ({
+  signal,
+  provinciaId,
+}: {
+  signal: AbortSignal;
+  provinciaId: string;
+}): Promise<Departamento[]> => {
+  const response = await fetch(`/api/departamentos?provinciaId=${provinciaId}`, {
+    signal,
+    cache: "no-store",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
+};
+
+const fetchLocalidades = async ({
+  signal,
+  departamentoId,
+}: {
+  signal: AbortSignal;
+  departamentoId: string;
 }): Promise<Localidad[]> => {
-  const response = await fetch("/api/localidades", {
+  const response = await fetch(`/api/localidades?departamentoId=${departamentoId}`, {
+    signal,
+    cache: "no-store",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
+};
+
+const fetchCondicionesIva = async ({
+  signal,
+}: {
+  signal: AbortSignal;
+}): Promise<CondicionIva[]> => {
+  const response = await fetch("/api/condiciones-iva", {
     signal,
     cache: "no-store",
     credentials: "include",
@@ -182,7 +270,7 @@ const fetchNotificaciones = async ({
 }: {
   signal: AbortSignal;
 }): Promise<Notificaciones> => {
-  const response = await fetch("/api/configuracion/preferencias", {
+  const response = await fetch("/api/configuracion/notificaciones", {
     signal,
     cache: "no-store",
     credentials: "include",
@@ -190,7 +278,6 @@ const fetchNotificaciones = async ({
 
   if (!response.ok) {
     return {
-      email: true,
       push: true,
       resumenDiario: false,
       stockBajo: true,
@@ -198,8 +285,7 @@ const fetchNotificaciones = async ({
   }
 
   const data = await response.json();
-  return data?.preferencias || {
-    email: true,
+  return data?.notificaciones || {
     push: true,
     resumenDiario: false,
     stockBajo: true,
@@ -249,8 +335,9 @@ const fetchFiscal = async ({ signal }: { signal: AbortSignal }): Promise<Fiscal>
       moneda: "ARS",
       zonaHoraria: "America/Argentina/Buenos_Aires",
       idioma: "es-AR",
-      tipoIva: "Responsable Inscripto",
-      puntoVenta: "0001",
+      tipoIva: "",
+      condicionIvaId: null,
+      puntoVenta: "",
       inicioActividades: "",
     };
   }
@@ -260,8 +347,9 @@ const fetchFiscal = async ({ signal }: { signal: AbortSignal }): Promise<Fiscal>
     moneda: "ARS",
     zonaHoraria: "America/Argentina/Buenos_Aires",
     idioma: "es-AR",
-    tipoIva: "Responsable Inscripto",
-    puntoVenta: "0001",
+    tipoIva: "",
+    condicionIvaId: null,
+    puntoVenta: "",
     inicioActividades: "",
   };
 };
@@ -352,7 +440,7 @@ const savePreferenciasVenta = async (
 const saveNotificaciones = async (
   notificaciones: Notificaciones
 ): Promise<Notificaciones> => {
-  const response = await fetch("/api/configuracion/preferencias", {
+  const response = await fetch("/api/configuracion/notificaciones", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -365,7 +453,7 @@ const saveNotificaciones = async (
   }
 
   const data = await response.json();
-  return data?.preferencias;
+  return data?.notificaciones;
 };
 
 const saveSeguridad = async (seguridad: Seguridad): Promise<Seguridad> => {
@@ -394,8 +482,25 @@ const saveFiscal = async (fiscal: Fiscal): Promise<Fiscal> => {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
-    throw new Error(error?.error || "Error al guardar configuración fiscal");
+    let errorMessage = "Error al guardar configuración fiscal";
+    try {
+      const error = await response.json();
+      if (typeof error === "object" && error !== null) {
+        if ("error" in error && typeof error.error === "string") {
+          errorMessage = error.error;
+        } else if ("message" in error && typeof error.message === "string") {
+          errorMessage = error.message;
+        } else if (Array.isArray(error.details)) {
+          errorMessage = error.details.map((d: any) => d.message || String(d)).join(", ");
+        }
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+    } catch {
+      // Si no se puede parsear el error, usar el mensaje por defecto
+      errorMessage = `Error al guardar configuración fiscal (${response.status})`;
+    }
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();
@@ -442,11 +547,8 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     enabled,
   });
 
-  const localidadesQuery = useQuery({
-    queryKey: ["localidades"],
-    queryFn: ({ signal }) => fetchLocalidades({ signal }),
-    enabled,
-  });
+  // Queries en cascada para ubicación (provincia → departamento → localidad)
+  // Estas queries se manejan desde el componente que las necesita
 
   const preferenciasVentaQuery = useQuery({
     queryKey: ["preferencias-venta"],
@@ -483,11 +585,13 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     mutationFn: saveTenant,
     onSuccess: (data) => {
       queryClient.setQueryData(["tenant"], data);
-      addToast({
-        title: "Tenant actualizado",
-        description: "Los datos del tenant se guardaron correctamente.",
-        color: "success",
-      });
+      if (silentCount === 0) {
+        addToast({
+          title: "Tenant actualizado",
+          description: "Los datos del tenant se guardaron correctamente.",
+          color: "success",
+        });
+      }
     },
     onError: (error: Error) => {
       addToast({
@@ -502,11 +606,13 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     mutationFn: saveConfiguracion,
     onSuccess: (data) => {
       queryClient.setQueryData(["configuracion"], data);
-      addToast({
-        title: "Configuración actualizada",
-        description: "La configuración se guardó correctamente.",
-        color: "success",
-      });
+      if (silentCount === 0) {
+        addToast({
+          title: "Configuración actualizada",
+          description: "La configuración se guardó correctamente.",
+          color: "success",
+        });
+      }
     },
     onError: (error: Error) => {
       addToast({
@@ -521,11 +627,13 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     mutationFn: savePreferenciasVenta,
     onSuccess: (data) => {
       queryClient.setQueryData(["preferencias-venta"], data);
-      addToast({
-        title: "Preferencias guardadas",
-        description: "Las preferencias de venta se guardaron correctamente.",
-        color: "success",
-      });
+      if (silentCount === 0) {
+        addToast({
+          title: "Preferencias guardadas",
+          description: "Las preferencias de venta se guardaron correctamente.",
+          color: "success",
+        });
+      }
     },
     onError: (error: Error) => {
       addToast({
@@ -540,11 +648,13 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     mutationFn: saveNotificaciones,
     onSuccess: (data) => {
       queryClient.setQueryData(["notificaciones"], data);
-      addToast({
-        title: "Notificaciones guardadas",
-        description: "Las preferencias de notificaciones se guardaron correctamente.",
-        color: "success",
-      });
+      if (silentCount === 0) {
+        addToast({
+          title: "Notificaciones guardadas",
+          description: "Las preferencias de notificaciones se guardaron correctamente.",
+          color: "success",
+        });
+      }
     },
     onError: (error: Error) => {
       addToast({
@@ -559,11 +669,13 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     mutationFn: saveSeguridad,
     onSuccess: (data) => {
       queryClient.setQueryData(["seguridad"], data);
-      addToast({
-        title: "Seguridad actualizada",
-        description: "La configuración de seguridad se guardó correctamente.",
-        color: "success",
-      });
+      if (silentCount === 0) {
+        addToast({
+          title: "Seguridad actualizada",
+          description: "La configuración de seguridad se guardó correctamente.",
+          color: "success",
+        });
+      }
     },
     onError: (error: Error) => {
       addToast({
@@ -578,11 +690,13 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     mutationFn: saveFiscal,
     onSuccess: (data) => {
       queryClient.setQueryData(["fiscal"], data);
-      addToast({
-        title: "Configuración fiscal guardada",
-        description: "Los datos fiscales se guardaron correctamente.",
-        color: "success",
-      });
+      if (silentCount === 0) {
+        addToast({
+          title: "Configuración fiscal guardada",
+          description: "Los datos fiscales se guardaron correctamente.",
+          color: "success",
+        });
+      }
     },
     onError: (error: Error) => {
       addToast({
@@ -597,11 +711,13 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     mutationFn: saveBranding,
     onSuccess: (data) => {
       queryClient.setQueryData(["branding"], data);
-      addToast({
-        title: "Branding actualizado",
-        description: "La configuración de branding se guardó correctamente.",
-        color: "success",
-      });
+      if (silentCount === 0) {
+        addToast({
+          title: "Branding actualizado",
+          description: "La configuración de branding se guardó correctamente.",
+          color: "success",
+        });
+      }
     },
     onError: (error: Error) => {
       addToast({
@@ -612,11 +728,43 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     },
   });
 
+  // Helper hooks para ubicación en cascada
+  const useProvincias = () => {
+    return useQuery({
+      queryKey: ["provincias"],
+      queryFn: ({ signal }) => fetchProvincias({ signal }),
+      enabled,
+    });
+  };
+
+  const useDepartamentos = (provinciaId: string | null) => {
+    return useQuery({
+      queryKey: ["departamentos", provinciaId],
+      queryFn: ({ signal }) => fetchDepartamentos({ signal, provinciaId: provinciaId! }),
+      enabled: enabled && !!provinciaId,
+    });
+  };
+
+  const useLocalidades = (departamentoId: string | null) => {
+    return useQuery({
+      queryKey: ["localidades", departamentoId],
+      queryFn: ({ signal }) => fetchLocalidades({ signal, departamentoId: departamentoId! }),
+      enabled: enabled && !!departamentoId,
+    });
+  };
+
+  const useCondicionesIva = () => {
+    return useQuery({
+      queryKey: ["condiciones-iva"],
+      queryFn: ({ signal }) => fetchCondicionesIva({ signal }),
+      enabled,
+    });
+  };
+
   return {
     // Data
     tenant: tenantQuery.data,
     configuracion: configuracionQuery.data,
-    localidades: localidadesQuery.data || [],
     preferenciasVenta: preferenciasVentaQuery.data,
     notificaciones: notificacionesQuery.data,
     seguridad: seguridadQuery.data,
@@ -626,7 +774,6 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     // Loading states
     isLoadingTenant: tenantQuery.isLoading,
     isLoadingConfiguracion: configuracionQuery.isLoading,
-    isLoadingLocalidades: localidadesQuery.isLoading,
     isLoadingPreferenciasVenta: preferenciasVentaQuery.isLoading,
     isLoadingNotificaciones: notificacionesQuery.isLoading,
     isLoadingSeguridad: seguridadQuery.isLoading,
@@ -636,7 +783,6 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     // Error states
     errorTenant: tenantQuery.error,
     errorConfiguracion: configuracionQuery.error,
-    errorLocalidades: localidadesQuery.error,
     errorPreferenciasVenta: preferenciasVentaQuery.error,
     errorNotificaciones: notificacionesQuery.error,
     errorSeguridad: seguridadQuery.error,
@@ -646,21 +792,103 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     // Refetch functions
     refetchTenant: tenantQuery.refetch,
     refetchConfiguracion: configuracionQuery.refetch,
-    refetchLocalidades: localidadesQuery.refetch,
     refetchPreferenciasVenta: preferenciasVentaQuery.refetch,
     refetchNotificaciones: notificacionesQuery.refetch,
     refetchSeguridad: seguridadQuery.refetch,
     refetchFiscal: fiscalQuery.refetch,
     refetchBranding: brandingQuery.refetch,
 
+    // Helper hooks para ubicación
+    useProvincias,
+    useDepartamentos,
+    useLocalidades,
+    useCondicionesIva,
+
     // Mutations (use mutateAsync para await, mutate para fire-and-forget)
-    saveTenant: saveTenantMutation.mutateAsync,
-    saveConfiguracion: saveConfiguracionMutation.mutateAsync,
-    savePreferenciasVenta: savePreferenciasVentaMutation.mutateAsync,
-    saveNotificaciones: saveNotificacionesMutation.mutateAsync,
-    saveSeguridad: saveSeguridadMutation.mutateAsync,
-    saveFiscal: saveFiscalMutation.mutateAsync,
-    saveBranding: saveBrandingMutation.mutateAsync,
+    saveTenant: async (data: Partial<Tenant>, silent?: boolean) => {
+      if (silent) {
+        silentCount++;
+      }
+      try {
+        return await saveTenantMutation.mutateAsync(data);
+      } finally {
+        if (silent) {
+          silentCount--;
+        }
+      }
+    },
+    saveConfiguracion: async (data: Partial<Configuracion>, silent?: boolean) => {
+      if (silent) {
+        silentCount++;
+      }
+      try {
+        return await saveConfiguracionMutation.mutateAsync(data);
+      } finally {
+        if (silent) {
+          silentCount--;
+        }
+      }
+    },
+    savePreferenciasVenta: async (data: PreferenciasVenta, silent?: boolean) => {
+      if (silent) {
+        silentCount++;
+      }
+      try {
+        return await savePreferenciasVentaMutation.mutateAsync(data);
+      } finally {
+        if (silent) {
+          silentCount--;
+        }
+      }
+    },
+    saveNotificaciones: async (data: Notificaciones, silent?: boolean) => {
+      if (silent) {
+        silentCount++;
+      }
+      try {
+        return await saveNotificacionesMutation.mutateAsync(data);
+      } finally {
+        if (silent) {
+          silentCount--;
+        }
+      }
+    },
+    saveSeguridad: async (data: Seguridad, silent?: boolean) => {
+      if (silent) {
+        silentCount++;
+      }
+      try {
+        return await saveSeguridadMutation.mutateAsync(data);
+      } finally {
+        if (silent) {
+          silentCount--;
+        }
+      }
+    },
+    saveFiscal: async (data: Fiscal, silent?: boolean) => {
+      if (silent) {
+        silentCount++;
+      }
+      try {
+        return await saveFiscalMutation.mutateAsync(data);
+      } finally {
+        if (silent) {
+          silentCount--;
+        }
+      }
+    },
+    saveBranding: async (data: Branding, silent?: boolean) => {
+      if (silent) {
+        silentCount++;
+      }
+      try {
+        return await saveBrandingMutation.mutateAsync(data);
+      } finally {
+        if (silent) {
+          silentCount--;
+        }
+      }
+    },
 
     // Mutation states
     isSavingTenant: saveTenantMutation.isPending,

@@ -1,21 +1,45 @@
 import db from "@/DB/prisma";
-// import * as fs from "fs";
-// import * as path from "path";
 
-// import { fileURLToPath } from "url";
+// Condiciones de IVA estándar de Argentina
+const condicionesIva = [
+  "Responsable Inscripto",
+  "Monotributista",
+  "Exento",
+  "No Responsable",
+  "Consumidor Final",
+];
 
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
+async function main() {
+  console.log("🌱 Iniciando seed de condiciones de IVA...");
 
-// const provincias = JSON.parse(
-//   fs.readFileSync(path.join(__dirname, "json/provincias.json"), "utf-8")
-// );
+  for (const descripcion of condicionesIva) {
+    // Verificar si ya existe
+    const existe = await db.condicionIva.findFirst({
+      where: {
+        Descripcion: descripcion,
+        EstaEliminado: false,
+      },
+    });
 
-async function main() {}
+    if (!existe) {
+      await db.condicionIva.create({
+        data: {
+          Descripcion: descripcion,
+          EstaEliminado: false,
+        },
+      });
+      console.log(`✅ Creada condición IVA: ${descripcion}`);
+    } else {
+      console.log(`⏭️  Condición IVA ya existe: ${descripcion}`);
+    }
+  }
+
+  console.log("✨ Seed de condiciones de IVA completado!");
+}
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("❌ Error en seed:", e);
     process.exit(1);
   })
   .finally(async () => {

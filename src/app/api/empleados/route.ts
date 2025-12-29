@@ -633,6 +633,14 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Actualizar permisos en JWT del nuevo usuario (si tiene rol asignado)
+    if (rolIdNumber && created.usuario.AuthUserId) {
+      const { actualizarPermisosEnJWT } = await import("@/lib/auth/updateUserPermissions");
+      actualizarPermisosEnJWT(created.usuario.AuthUserId).catch((err) => {
+        console.warn("No se pudieron actualizar permisos en JWT:", err);
+      });
+    }
+
     return NextResponse.json({ empleado: empleadoResponse }, { status: 201 });
   } catch (error) {
     if (error instanceof PermisoError) {
@@ -859,6 +867,14 @@ export async function PUT(req: NextRequest) {
         valorNuevo: { rolId: updated.rolIdNuevo },
         req,
       });
+
+      // Actualizar permisos en JWT cuando cambia el rol
+      if (usuarioActual.AuthUserId) {
+        const { actualizarPermisosEnJWT } = await import("@/lib/auth/updateUserPermissions");
+        actualizarPermisosEnJWT(usuarioActual.AuthUserId).catch((err) => {
+          console.warn("No se pudieron actualizar permisos en JWT:", err);
+        });
+      }
     }
 
     return NextResponse.json({

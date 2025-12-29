@@ -25,6 +25,18 @@ export async function GET(req: NextRequest) {
         Id: true,
         Descripcion: true,
         DepartamentoId: true,
+        Departamento: {
+          select: {
+            Id: true,
+            Descripcion: true,
+            Provincia: {
+              select: {
+                Id: true,
+                Descripcion: true,
+              },
+            },
+          },
+        },
       },
       orderBy: [{ Descripcion: "asc" }],
       take: 50,

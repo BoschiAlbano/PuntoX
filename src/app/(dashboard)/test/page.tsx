@@ -2,8 +2,10 @@
 import React, { useEffect } from "react";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
+import { usePagePermission } from "@/lib/permissions/usePagePermission";
 
 export default function Page() {
+  usePagePermission(); // Proteger página con permisos (aunque /test no está en el mapeo, esto redirige si no está autenticado)
   const supabase = getSupabaseBrowserClient();
   const { user, session } = useSupabaseAuthContext();
   const roleFromMetadata =

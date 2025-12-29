@@ -4,8 +4,6 @@ import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import { handleError } from "@/lib/errors/handler";
 
-const LOCALIDAD_DUMMY_ID = 2014010;
-
 const payloadSchema = z.object({
   razonSocial: z.string().min(1, "Razon social requerida"),
   nombreFantasia: z.string().optional().nullable(),
@@ -14,7 +12,7 @@ const payloadSchema = z.object({
   telefono: z.string().optional().nullable(),
   celular: z.string().optional().nullable(),
   direccion: z.string().min(1, "Dirección requerida"),
-  localidadId: z.number().int().positive(),
+  localidadId: z.number().int().positive("Debe seleccionar una localidad"),
   observacionPieFactura: z.string().optional().nullable(),
   // Preferencias de venta básicas
   mostrarPreciosConIva: z.boolean().optional(),
@@ -73,6 +71,26 @@ export async function GET() {
         Celular: true,
         Direccion: true,
         LocalidadId: true,
+        Localidad: {
+          select: {
+            Id: true,
+            Descripcion: true,
+            DepartamentoId: true,
+            Departamento: {
+              select: {
+                Id: true,
+                Descripcion: true,
+                ProvinciaId: true,
+                Provincia: {
+                  select: {
+                    Id: true,
+                    Descripcion: true,
+                  },
+                },
+              },
+            },
+          },
+        },
         ObservacionEnPieFactura: true,
         MostrarPreciosConIva: true,
         AbrirCajonEfectivo: true,
@@ -93,6 +111,9 @@ export async function GET() {
         ActivarBascula: true,
         EtiquetaPorPeso: true,
         CodigoBascula: true,
+        NotificacionesPush: true,
+        NotificacionesResumenDiario: true,
+        NotificacionesStockBajo: true,
       },
       orderBy: {
         Id: 'desc',
@@ -117,17 +138,19 @@ export async function GET() {
           telefono: config.Telefono ?? "",
           celular: config.Celular ?? "",
           direccion: config.Direccion ?? "",
-          localidadId: Number(config.LocalidadId),
+          localidadId: config.LocalidadId ? Number(config.LocalidadId) : null,
+          departamentoId: config.Localidad?.DepartamentoId ? Number(config.Localidad.DepartamentoId) : null,
+          provinciaId: config.Localidad?.Departamento?.ProvinciaId ? Number(config.Localidad.Departamento.ProvinciaId) : null,
           observacionPieFactura: config.ObservacionEnPieFactura ?? "",
           mostrarPreciosConIva: config.MostrarPreciosConIva ?? true,
           abrirCajonEfectivo: config.AbrirCajonEfectivo ?? true,
           numerarPedidosPantalla: config.NumerarPedidosPantalla ?? true,
           imprimir: config.Imprimir ?? false,
-          facturaDescuentaStock: config.FacturaDescuentaStock ?? true,
-          presupuestoDescuentaStock: config.PresupuestoDescuentaStock ?? false,
-          remitoDescuentaStock: config.RemitoDescuentaStock ?? true,
-          actualizaCostoDesdeCompra: config.ActualizaCostoDesdeCompra ?? true,
-          modificaPrecioVentaDesdeCompra: config.ModificaPrecioVentaDesdeCompra ?? false,
+          facturaDescuentaStock: config.FacturaDescuentaStock,
+          presupuestoDescuentaStock: config.PresupuestoDescuentaStock,
+          remitoDescuentaStock: config.RemitoDescuentaStock,
+          actualizaCostoDesdeCompra: config.ActualizaCostoDesdeCompra,
+          modificaPrecioVentaDesdeCompra: config.ModificaPrecioVentaDesdeCompra,
           tipoFormaPagoPorDefectoVenta: config.TipoFormaPagoPorDefectoVenta ?? 0,
           tipoFormaPagoPorDefectoCompra: config.TipoFormaPagoPorDefectoCompra ?? 0,
           ingresoManualCajaInicial: config.IngresoManualCajaInicial ?? false,
@@ -188,7 +211,7 @@ export async function PUT(req: Request) {
             Telefono: data.telefono ?? null,
             Celular: data.celular ?? null,
             Direccion: data.direccion,
-            LocalidadId: BigInt(data.localidadId || LOCALIDAD_DUMMY_ID),
+            LocalidadId: data.localidadId ? BigInt(data.localidadId) : null,
             ObservacionEnPieFactura: data.observacionPieFactura ?? null,
             FacturaDescuentaStock: data.facturaDescuentaStock ?? true,
             PresupuestoDescuentaStock: data.presupuestoDescuentaStock ?? false,
@@ -260,7 +283,7 @@ export async function PUT(req: Request) {
           Telefono: data.telefono ?? undefined,
           Celular: data.celular ?? undefined,
           Direccion: data.direccion,
-          LocalidadId: BigInt(data.localidadId),
+          LocalidadId: data.localidadId ? BigInt(data.localidadId) : null,
           ObservacionEnPieFactura: data.observacionPieFactura ?? undefined,
           MostrarPreciosConIva: data.mostrarPreciosConIva ?? undefined,
           AbrirCajonEfectivo: data.abrirCajonEfectivo ?? undefined,
@@ -331,7 +354,7 @@ export async function PUT(req: Request) {
           telefono: configResult.Telefono ?? "",
           celular: configResult.Celular ?? "",
           direccion: configResult.Direccion ?? "",
-          localidadId: Number(configResult.LocalidadId),
+          localidadId: configResult.LocalidadId ? Number(configResult.LocalidadId) : null,
           observacionPieFactura: configResult.ObservacionEnPieFactura ?? "",
           mostrarPreciosConIva: configResult.MostrarPreciosConIva ?? true,
           abrirCajonEfectivo: configResult.AbrirCajonEfectivo ?? true,
