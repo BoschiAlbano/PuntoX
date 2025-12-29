@@ -95,7 +95,7 @@ export default function Seguridad() {
         throw new Error(error.error?.message || "Error al guardar");
       }
 
-      const data = await response.json();
+      await response.json();
       setPoliticasOriginales(politicas);
       setHasChanges(false);
 

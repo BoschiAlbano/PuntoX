@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import { calcularPermisosUsuario, actualizarPermisosEnJWT } from "@/lib/auth/updateUserPermissions";
 

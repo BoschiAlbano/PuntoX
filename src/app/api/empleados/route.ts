@@ -711,6 +711,7 @@ export async function PUT(req: NextRequest) {
             Usuario: {
               select: {
                 Id: true,
+                AuthUserId: true,
                 PerfilUsuario: {
                   select: {
                     Perfil_Id: true,

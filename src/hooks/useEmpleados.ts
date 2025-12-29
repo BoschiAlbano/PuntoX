@@ -286,7 +286,7 @@ const createEmpleado = async (empleadoData: {
   tenantId?: string | null;
 }): Promise<Empleado> => {
   const tenantParam = empleadoData.tenantId ? `?tenantId=${empleadoData.tenantId}` : "";
-  const { tenantId, email, usuario, localidadId, rolId, ...rest } = empleadoData;
+  const { tenantId: _tenantId, email, usuario, localidadId, rolId, ...rest } = empleadoData;
 
   // Transformar al formato que espera el API
   const body = {

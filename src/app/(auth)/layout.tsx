@@ -6,7 +6,7 @@ import Loading from "@/components/loading/loading";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { status, user } = useSupabaseAuthContext();
+  const { status } = useSupabaseAuthContext();
   const router = useRouter();
   const [isRedirecting, setIsRedirecting] = useState(false);
 

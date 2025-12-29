@@ -61,9 +61,11 @@ export interface Notificaciones {
 
 export interface Seguridad {
   dobleFactor: boolean;
+  expirarSesiones30Dias: boolean;
+  bloquearTrasIntentos: "nunca" | "5" | "10";
   alertarNuevoDispositivo: boolean;
   bloquearPorInactividad: boolean;
-  bloquearTrasIntentos: "nunca" | "5" | "10";
+  tiempoInactividadMinutos: number;
   recordarSesion30Dias: boolean;
 }
 
@@ -136,23 +138,33 @@ const fetchConfiguracion = async ({
 }: {
   signal: AbortSignal;
 }): Promise<Configuracion> => {
-  const response = await fetch("/api/configuracion", {
-    signal,
-    cache: "no-store",
-    credentials: "include",
-  });
+  try {
+    const response = await fetch("/api/configuracion", {
+      signal,
+      cache: "no-store",
+      credentials: "include",
+    });
 
-  if (!response.ok) {
-    // Si es 404, retornar objeto vacío en lugar de lanzar error
-    if (response.status === 404) {
-      return {} as Configuracion;
+    if (!response.ok) {
+      // Si es 404, retornar objeto vacío en lugar de lanzar error
+      if (response.status === 404) {
+        return {} as Configuracion;
+      }
+      // Si es 500 u otro error, intentar parsear el error pero no cancelar
+      const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+      throw new Error(error?.error || `Error al cargar configuración (${response.status})`);
     }
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
-    throw new Error(error?.error || "Error al cargar configuración");
-  }
 
-  const data = await response.json();
-  return data?.configuracion || ({} as Configuracion);
+    const data = await response.json();
+    return data?.configuracion || ({} as Configuracion);
+  } catch (error) {
+    // Si el error es por cancelación (AbortError), relanzarlo
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw error;
+    }
+    // Para otros errores, también relanzarlos pero con más información
+    throw error;
+  }
 };
 
 const fetchProvincias = async ({
@@ -306,9 +318,11 @@ const fetchSeguridad = async ({
   if (!response.ok) {
     return {
       dobleFactor: false,
-      alertarNuevoDispositivo: true,
-      bloquearPorInactividad: true,
+      expirarSesiones30Dias: true,
       bloquearTrasIntentos: "5",
+      alertarNuevoDispositivo: true,
+      bloquearPorInactividad: false,
+      tiempoInactividadMinutos: 30,
       recordarSesion30Dias: true,
     };
   }
@@ -316,9 +330,11 @@ const fetchSeguridad = async ({
   const data = await response.json();
   return data?.seguridad || {
     dobleFactor: false,
-    alertarNuevoDispositivo: true,
-    bloquearPorInactividad: true,
+    expirarSesiones30Dias: true,
     bloquearTrasIntentos: "5",
+    alertarNuevoDispositivo: true,
+    bloquearPorInactividad: false,
+    tiempoInactividadMinutos: 30,
     recordarSesion30Dias: true,
   };
 };
@@ -473,7 +489,7 @@ const saveSeguridad = async (seguridad: Seguridad): Promise<Seguridad> => {
   return data?.seguridad;
 };
 
-const saveFiscal = async (fiscal: Fiscal): Promise<Fiscal> => {
+const saveFiscal = async (fiscal: Omit<Fiscal, "tipoIva">): Promise<Fiscal> => {
   const response = await fetch("/api/configuracion/fiscal", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -539,12 +555,22 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     queryKey: ["tenant"],
     queryFn: ({ signal }) => fetchTenant({ signal }),
     enabled,
+    retry: 2,
+    retryDelay: 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    staleTime: 30000, // 30 segundos - los datos se consideran frescos
   });
 
   const configuracionQuery = useQuery({
     queryKey: ["configuracion"],
     queryFn: ({ signal }) => fetchConfiguracion({ signal }),
     enabled,
+    retry: 2,
+    retryDelay: 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    staleTime: 30000, // 30 segundos - los datos se consideran frescos
   });
 
   // Queries en cascada para ubicación (provincia → departamento → localidad)
@@ -554,30 +580,50 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     queryKey: ["preferencias-venta"],
     queryFn: ({ signal }) => fetchPreferenciasVenta({ signal }),
     enabled,
+    retry: 2,
+    retryDelay: 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 
   const notificacionesQuery = useQuery({
     queryKey: ["notificaciones"],
     queryFn: ({ signal }) => fetchNotificaciones({ signal }),
     enabled,
+    retry: 2,
+    retryDelay: 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 
   const seguridadQuery = useQuery({
     queryKey: ["seguridad"],
     queryFn: ({ signal }) => fetchSeguridad({ signal }),
     enabled,
+    retry: 2,
+    retryDelay: 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 
   const fiscalQuery = useQuery({
     queryKey: ["fiscal"],
     queryFn: ({ signal }) => fetchFiscal({ signal }),
     enabled,
+    retry: 2,
+    retryDelay: 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 
   const brandingQuery = useQuery({
     queryKey: ["branding"],
     queryFn: ({ signal }) => fetchBranding({ signal }),
     enabled,
+    retry: 2,
+    retryDelay: 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 
   // Mutations
@@ -865,7 +911,7 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
         }
       }
     },
-    saveFiscal: async (data: Fiscal, silent?: boolean) => {
+    saveFiscal: async (data: Omit<Fiscal, "tipoIva">, silent?: boolean) => {
       if (silent) {
         silentCount++;
       }

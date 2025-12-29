@@ -111,9 +111,10 @@ export async function GET() {
         ActivarBascula: true,
         EtiquetaPorPeso: true,
         CodigoBascula: true,
-        NotificacionesPush: true,
-        NotificacionesResumenDiario: true,
-        NotificacionesStockBajo: true,
+        // Notificaciones - comentado temporalmente hasta regenerar Prisma
+        // NotificacionesPush: true,
+        // NotificacionesResumenDiario: true,
+        // NotificacionesStockBajo: true,
       },
       orderBy: {
         Id: 'desc',

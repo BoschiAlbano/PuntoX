@@ -11,7 +11,8 @@ const fiscalSchema = z.object({
   condicionIvaId: z.number().int().positive().optional().nullable(),
   puntoVenta: z.string().optional(),
   inicioActividades: z.string().optional(), // ISO date string
-});
+  tipoIva: z.string().optional(), // Campo informativo, se ignora al guardar
+}).passthrough(); // Permite campos adicionales que se ignoran
 
 async function resolveTenantId() {
   const supabase = await getSupabaseServerClient();

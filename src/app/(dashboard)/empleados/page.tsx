@@ -125,7 +125,7 @@ function estadoPill(estado: EstadoEmpleado) {
 export default function Empleados() {
   const { user, status } = useSupabaseAuthContext();
   const router = useRouter();
-  const { tieneAcceso, isLoading: isLoadingPermisos } = usePagePermission();
+  const { isLoading: isLoadingPermisos } = usePagePermission();
 
   const [isAuthorized, setIsAuthorized] = useState(true);
   const [selectedTab, setSelectedTab] = useState<string>("usuarios");
@@ -273,9 +273,6 @@ export default function Empleados() {
     errorEmpleados,
     errorRoles,
     errorProvincias,
-    refetchEmpleados,
-    refetchRoles,
-    refetchProvincias,
     refetchAuditorias,
     createEmpleado: createEmpleadoMutation,
     updateEmpleado: updateEmpleadoMutation,
@@ -286,7 +283,6 @@ export default function Empleados() {
     deleteRol: deleteRolMutation,
     isCreatingEmpleado,
     isUpdatingEmpleado,
-    isDeletingEmpleado,
     isChangingPassword,
     isCreatingRol,
     isUpdatingRol,
@@ -779,7 +775,7 @@ export default function Empleados() {
         const data = await res.json().catch(() => null);
         throw new Error(data?.error ?? "No se pudo actualizar el estado");
       }
-      const data = await res.json();
+      await res.json();
 
       addToast({
         title: "Actualizado",

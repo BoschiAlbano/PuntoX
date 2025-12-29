@@ -75,7 +75,7 @@ const SessionProviderComponent = ({
       setSession(newSession);
       setStatus(newSession ? "authenticated" : "unauthenticated");
       
-      // Sincronizar permisos cuando hay un nuevo login
+      // Sincronizar permisos y registrar sesión cuando hay un nuevo login
       if (event === "SIGNED_IN" && newSession?.user) {
         const metadata = newSession.user.app_metadata || {};
         const tienePermisos = Array.isArray(metadata.permissions) && metadata.permissions.length > 0;
@@ -86,6 +86,47 @@ const SessionProviderComponent = ({
             console.warn("No se pudieron sincronizar permisos:", err);
           });
         }
+
+        // Registrar sesión activa (si no se registró ya desde el formulario)
+        // Esto es un fallback por si alguien se autentica de otra manera
+        const userAgent = typeof navigator !== "undefined" ? navigator.userAgent : null;
+        let dispositivo = "Dispositivo desconocido";
+        if (userAgent) {
+          try {
+            const nav = navigator as any;
+            if (nav.userAgentData) {
+              dispositivo = `${nav.userAgentData.platform || "Unknown"} - ${nav.userAgentData.brands?.map((b: any) => b.brand).join(", ") || "Unknown"}`;
+            } else {
+              dispositivo = `${navigator.platform || "Unknown"} - ${userAgent.substring(0, 50)}`;
+            }
+          } catch {
+            dispositivo = userAgent.substring(0, 100);
+          }
+        }
+
+        const email = newSession.user.email || "";
+        const esConfiable = typeof localStorage !== "undefined" 
+          ? localStorage.getItem(`device_trusted_${email}`) === "true"
+          : false;
+
+        fetch("/api/auth/registrar-sesion", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token: newSession.access_token || null,
+            dispositivo,
+            ubicacion: null,
+            esConfiable,
+          }),
+        }).catch((err) => console.warn("Error al registrar sesión desde sessionProvider:", err));
+      }
+
+      // Cerrar sesiones cuando hay un logout
+      if (event === "SIGNED_OUT") {
+        fetch("/api/auth/registrar-sesion", {
+          method: "DELETE",
+          credentials: "include",
+        }).catch((err) => console.warn("Error al cerrar sesión desde sessionProvider:", err));
       }
     });
 

@@ -65,6 +65,7 @@ export default function CredentialsForm() {
   const [error, setError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [recordarDispositivo, setRecordarDispositivo] = useState(false);
   const router = useRouter();
 
   // Validación de email en tiempo real
@@ -101,13 +102,89 @@ export default function CredentialsForm() {
 
     try {
       const supabase = getSupabaseBrowserClient();
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (authError) {
+        // Registrar intento fallido
+        try {
+          await fetch("/api/auth/registrar-intento-login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email,
+              exitoso: false,
+              motivoFallo: getErrorMessage(authError),
+            }),
+          });
+        } catch (regError) {
+          console.warn("Error al registrar intento fallido:", regError);
+        }
         throw authError;
+      }
+
+      // Login exitoso - registrar intento exitoso y sesión
+      if (authData?.user) {
+        const userMetadata = authData.user.app_metadata || {};
+        const tenantId = userMetadata.tenantId;
+
+        // Obtener información del dispositivo
+        let dispositivo = "Dispositivo desconocido";
+        try {
+          const nav = navigator as any;
+          if (nav.userAgentData) {
+            dispositivo = `${nav.userAgentData.platform || "Unknown"} - ${nav.userAgentData.brands?.map((b: any) => b.brand).join(", ") || "Unknown"}`;
+          } else {
+            dispositivo = `${navigator.platform || "Unknown"} - ${navigator.userAgent.substring(0, 50)}`;
+          }
+        } catch {
+          dispositivo = navigator.userAgent.substring(0, 100);
+        }
+        
+        // Intentar obtener ubicación aproximada (opcional, no bloqueante)
+        let ubicacion = null;
+        try {
+          // Esto es opcional y puede fallar, no bloqueamos si falla
+          const geo = await fetch("https://ipapi.co/json/").then(r => r.json()).catch(() => null);
+          if (geo && geo.city) {
+            ubicacion = `${geo.city || ""}, ${geo.region || ""}, ${geo.country_name || ""}`.trim();
+          }
+        } catch {
+          // Ignorar errores de geolocalización
+        }
+
+        // Verificar si el dispositivo es confiable o si el usuario quiere recordarlo
+        const esConfiable = recordarDispositivo || localStorage.getItem(`device_trusted_${email}`) === "true";
+        
+        // Guardar en localStorage si el usuario marcó "Recordar dispositivo"
+        if (recordarDispositivo) {
+          localStorage.setItem(`device_trusted_${email}`, "true");
+        }
+
+        // Registrar intento exitoso (en background, no bloqueamos)
+        fetch("/api/auth/registrar-intento-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            exitoso: true,
+            tenantId: tenantId || null,
+          }),
+        }).catch((err) => console.warn("Error al registrar intento exitoso:", err));
+
+        // Registrar sesión activa (en background, no bloqueamos)
+        fetch("/api/auth/registrar-sesion", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token: authData.session?.access_token || null,
+            dispositivo,
+            ubicacion,
+            esConfiable,
+          }),
+        }).catch((err) => console.warn("Error al registrar sesión:", err));
       }
 
       // Redirigir después de login exitoso
@@ -184,6 +261,22 @@ export default function CredentialsForm() {
           {error}
         </div>
       )}
+
+      <div className="flex items-center">
+        <input
+          id="recordar-dispositivo"
+          type="checkbox"
+          checked={recordarDispositivo}
+          onChange={(e) => setRecordarDispositivo(e.target.checked)}
+          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+        />
+        <label
+          htmlFor="recordar-dispositivo"
+          className="ml-2 text-sm text-gray-700 cursor-pointer"
+        >
+          Recordar este dispositivo
+        </label>
+      </div>
 
       <button
         type="submit"

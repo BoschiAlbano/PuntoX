@@ -34,6 +34,7 @@ export default function Page() {
     }
 
     getArticulos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

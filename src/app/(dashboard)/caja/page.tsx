@@ -24,7 +24,6 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Badge,
 } from "@heroui/react";
 import { addToast } from "@heroui/react";
 import {
@@ -34,26 +33,16 @@ import {
   TrendingUp,
   TrendingDown,
   Plus,
-  X,
   Lock,
   Unlock,
-  Calendar,
-  Clock,
-  User,
   FileText,
-  ShoppingBag,
-  AlertCircle,
-  CheckCircle2,
   ArrowUpRight,
   ArrowDownLeft,
   Wallet,
   Banknote,
-  Coins,
   Building2,
   ArrowLeftRight,
   Eye,
-  Filter,
-  Download,
   RefreshCw,
 } from "lucide-react";
 
@@ -201,9 +190,12 @@ export default function CajaPage() {
           return;
         }
         const errorData = await cajaRes.json().catch(() => null);
+        const errorMessage = typeof errorData?.error === "string" 
+          ? errorData.error 
+          : errorData?.error?.message || "No se pudo cargar la caja";
         addToast({
           title: "Error",
-          description: errorData?.error || "No se pudo cargar la caja",
+          description: errorMessage,
           color: "warning",
         });
       }
@@ -215,9 +207,12 @@ export default function CajaPage() {
         // Si es error 401/403, no mostrar toast (el hook ya maneja la redirección)
         if (conceptosRes.status !== 401 && conceptosRes.status !== 403) {
           const errorData = await conceptosRes.json().catch(() => null);
+          const errorMessage = typeof errorData?.error === "string" 
+            ? errorData.error 
+            : errorData?.error?.message || "No se pudieron cargar los conceptos de gastos";
           addToast({
             title: "Error",
-            description: errorData?.error || "No se pudieron cargar los conceptos de gastos",
+            description: errorMessage,
             color: "warning",
           });
         }
@@ -438,23 +433,23 @@ export default function CajaPage() {
     });
   };
 
-  // Obtener nombre del tipo de pago
-  const nombreTipoPago = (tipo: number) => {
-    switch (tipo) {
-      case TIPO_PAGO.EFECTIVO:
-        return "Efectivo";
-      case TIPO_PAGO.TARJETA:
-        return "Tarjeta";
-      case TIPO_PAGO.CHEQUE:
-        return "Cheque";
-      case TIPO_PAGO.CUENTA_CORRIENTE:
-        return "Cuenta Corriente";
-      case TIPO_PAGO.TRANSFERENCIA:
-        return "Transferencia";
-      default:
-        return "Desconocido";
-    }
-  };
+  // Obtener nombre del tipo de pago (función no usada actualmente, pero puede ser útil en el futuro)
+  // const nombreTipoPago = (tipo: number) => {
+  //   switch (tipo) {
+  //     case TIPO_PAGO.EFECTIVO:
+  //       return "Efectivo";
+  //     case TIPO_PAGO.TARJETA:
+  //       return "Tarjeta";
+  //     case TIPO_PAGO.CHEQUE:
+  //       return "Cheque";
+  //     case TIPO_PAGO.CUENTA_CORRIENTE:
+  //       return "Cuenta Corriente";
+  //     case TIPO_PAGO.TRANSFERENCIA:
+  //       return "Transferencia";
+  //     default:
+  //       return "Desconocido";
+  //   }
+  // };
 
   if (isLoading) {
     return (

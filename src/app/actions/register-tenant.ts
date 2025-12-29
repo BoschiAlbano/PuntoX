@@ -69,6 +69,15 @@ export async function registerTenant(formData: FormData) {
         },
       });
 
+      // Buscar una localidad por defecto (la primera disponible)
+      const localidadDefault = await tx.localidad.findFirst({
+        orderBy: { Id: "asc" },
+      });
+
+      if (!localidadDefault) {
+        throw new Error("No hay localidades disponibles en la base de datos. Por favor, configure al menos una localidad.");
+      }
+
       const persona = await tx.persona.create({
         data: {
           Apellido: adminApellido,
@@ -77,7 +86,7 @@ export async function registerTenant(formData: FormData) {
           Direccion: "Sin dirección",
           Telefono: null,
           Mail: adminEmail,
-          LocalidadId: null,
+          LocalidadId: localidadDefault.Id,
           EstaEliminado: false,
           TenantId: newTenant.Id,
         },

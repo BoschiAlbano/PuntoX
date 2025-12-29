@@ -895,9 +895,9 @@ export default function Ventas() {
               ) : (
                 <div className="space-y-3">
                   {detalles.map((detalle, index) => {
-                    const producto = productos.find(
-                      (p) => Number(p.Id) === detalle.articuloId
-                    );
+                    // const producto = productos.find(
+                    //   (p) => Number(p.Id) === detalle.articuloId
+                    // );
                     const stockBajo =
                       detalle.stockDisponible < detalle.cantidad * 2;
 

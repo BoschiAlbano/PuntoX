@@ -12,47 +12,51 @@ datasource db {
 /// Representa un comercio/cliente del SaaS.
 /// Todo lo que tiene TenantId pertenece a este Tenant.
 model Tenant {
-  Id                  BigInt               @id @default(autoincrement())
-  Nombre              String               @db.VarChar(250)
-  Dominio             String?              @unique @db.VarChar(400)
-  EstaActivo          Boolean              @default(true)
-  PlanId              BigInt?
-  OnboardingCompleto  Boolean              @default(false)
-  EstaEliminado       Boolean              @default(false)
-  Articulos           Articulo[]
-  AuditoriaEmpleados  AuditoriaEmpleado[]
-  BajaArticulos       BajaArticulo[]
-  Bancos              Banco[]
-  Cajas               Caja[]
-  Cheques             Cheque[]
-  Comprobantes        Comprobante[]
-  ConceptosGasto      ConceptoGastos[]
-  Configuraciones     Configuracion[]
-  Contadores          Contador[]
-  CuentasBancarias    CuentaBancarias[]
-  DepositosCheques    DepositoCheques[]
-  DetallesCaja        DetalleCaja[]
-  DetallesComprobante DetalleComprobante[]
-  FormasPago          FormaPago[]
-  FormulariosPerfiles FormularioPerfil[]
-  FormulariosPermisos Formularios[]
-  Gastos              Gasto[]
-  Logs                Log[]
-  Marcas              Marca[]
-  MotivosBaja         MotivoBajas[]
-  Movimientos         Movimiento[]
-  PerfilPermisos      PerfilPermiso[]
-  PerfilesUsuarios    PerfilUsuario[]
-  Perfiles            Perfiles[]
-  Permisos            Permiso[]
-  Personas            Persona[]
-  Precios             Precio[]
-  Proveedores         Proveedor[]
-  Rubros              Rubro[]
-  Tarjetas            Tarjeta[]
-  Plan                PlanSaaS?            @relation(fields: [PlanId], references: [Id])
-  Unidades            UnidadMedida[]
-  Usuarios            Usuario[]
+  Id                    BigInt                 @id @default(autoincrement())
+  Nombre                String                 @db.VarChar(250)
+  Dominio               String?                @unique @db.VarChar(400)
+  EstaActivo            Boolean                @default(true)
+  PlanId                BigInt?
+  OnboardingCompleto    Boolean                @default(false)
+  EstaEliminado         Boolean                @default(false)
+  Articulos             Articulo[]
+  AuditoriaEmpleados    AuditoriaEmpleado[]
+  BajaArticulos         BajaArticulo[]
+  Bancos                Banco[]
+  Cajas                 Caja[]
+  Cheques               Cheque[]
+  Comprobantes          Comprobante[]
+  ConceptosGasto        ConceptoGastos[]
+  Configuraciones       Configuracion[]
+  Contadores            Contador[]
+  CuentasBancarias      CuentaBancarias[]
+  DepositosCheques      DepositoCheques[]
+  DetallesCaja          DetalleCaja[]
+  DetallesComprobante   DetalleComprobante[]
+  FormasPago            FormaPago[]
+  FormulariosPerfiles   FormularioPerfil[]
+  FormulariosPermisos   Formularios[]
+  Gastos                Gasto[]
+  Logs                  Log[]
+  Marcas                Marca[]
+  MotivosBaja           MotivoBajas[]
+  Movimientos           Movimiento[]
+  PerfilPermisos        PerfilPermiso[]
+  PerfilesUsuarios      PerfilUsuario[]
+  Perfiles              Perfiles[]
+  Permisos              Permiso[]
+  Personas              Persona[]
+  Precios               Precio[]
+  Proveedores           Proveedor[]
+  Rubros                Rubro[]
+  Tarjetas              Tarjeta[]
+  Plan                  PlanSaaS?              @relation(fields: [PlanId], references: [Id])
+  Unidades              UnidadMedida[]
+  Usuarios              Usuario[]
+  SesionesActivas       SesionActiva[]
+  DispositivosConfiable DispositivoConfiable[]
+  IntentosLogin         IntentoLogin[]
+  IpsBloqueadas         IpBloqueada[]
 
   @@index([PlanId])
 }
@@ -424,6 +428,14 @@ model Configuracion {
   CondicionIvaId                         BigInt?
   PuntoVenta                             String?       @db.VarChar(10)
   InicioActividades                      DateTime?
+  // Configuración de seguridad
+  Forzar2FA                              Boolean       @default(false)
+  ExpirarSesiones30Dias                  Boolean       @default(true)
+  BloquearTrasIntentos                   Int?          @default(5) // null = nunca, número = cantidad de intentos
+  AlertarNuevoDispositivo                Boolean       @default(true)
+  BloquearPorInactividad                 Boolean       @default(false)
+  TiempoInactividadMinutos               Int?          @default(30) // Tiempo en minutos antes de bloquear por inactividad
+  RecordarSesion30Dias                   Boolean       @default(true)
   Localidad                              Localidad?    @relation(fields: [LocalidadId], references: [Id], onUpdate: NoAction)
   CondicionIva                           CondicionIva? @relation(fields: [CondicionIvaId], references: [Id], onUpdate: NoAction)
   Tenant                                 Tenant        @relation(fields: [TenantId], references: [Id])
@@ -906,24 +918,27 @@ model UnidadMedida {
 /// IMPORTANTE (Supabase):
 /// - AuthUserId guarda el `auth.users.id` (UUID) de Supabase.
 model Usuario {
-  Id                                   BigInt              @id @default(autoincrement())
+  Id                                   BigInt                 @id @default(autoincrement())
   EmpleadoId                           BigInt
-  Nombre                               String              @db.VarChar(50)
+  Nombre                               String                 @db.VarChar(50)
   EstaBloqueado                        Boolean
   EstaEliminado                        Boolean
   /// Tenant dueño de este usuario
   TenantId                             BigInt
   /// ID del usuario en Supabase Auth (auth.users.id)
-  AuthUserId                           String              @unique @db.VarChar(255)
-  AuditoriaEmpleadosAfectados          AuditoriaEmpleado[] @relation("Auditoria_UsuarioAfectado")
-  AuditoriaEmpleados                   AuditoriaEmpleado[] @relation("Auditoria_Usuario")
-  Caja_Caja_UsuarioAperturaIdToUsuario Caja[]              @relation("Caja_UsuarioAperturaIdToUsuario")
-  Caja_Caja_UsuarioCierreIdToUsuario   Caja[]              @relation("Caja_UsuarioCierreIdToUsuario")
+  AuthUserId                           String                 @unique @db.VarChar(255)
+  AuditoriaEmpleadosAfectados          AuditoriaEmpleado[]    @relation("Auditoria_UsuarioAfectado")
+  AuditoriaEmpleados                   AuditoriaEmpleado[]    @relation("Auditoria_Usuario")
+  Caja_Caja_UsuarioAperturaIdToUsuario Caja[]                 @relation("Caja_UsuarioAperturaIdToUsuario")
+  Caja_Caja_UsuarioCierreIdToUsuario   Caja[]                 @relation("Caja_UsuarioCierreIdToUsuario")
   Comprobante                          Comprobante[]
   Movimiento                           Movimiento[]
   PerfilUsuario                        PerfilUsuario[]
-  Persona_Empleado                     Persona_Empleado    @relation(fields: [EmpleadoId], references: [Id], onUpdate: NoAction)
-  Tenant                               Tenant              @relation(fields: [TenantId], references: [Id])
+  Persona_Empleado                     Persona_Empleado       @relation(fields: [EmpleadoId], references: [Id], onUpdate: NoAction)
+  Tenant                               Tenant                 @relation(fields: [TenantId], references: [Id])
+  SesionesActivas                      SesionActiva[]
+  DispositivosConfiable                DispositivoConfiable[]
+  IntentosLogin                        IntentoLogin[]
 
   @@index([TenantId])
   @@index([EmpleadoId])
@@ -1006,6 +1021,87 @@ model AuditoriaEmpleado {
   @@index([EmpleadoId])
   @@index([Accion])
   @@index([Severidad])
+}
+
+// Tablas de seguridad y acceso
+model SesionActiva {
+  Id                   BigInt   @id @default(autoincrement())
+  TenantId             BigInt
+  UsuarioId            BigInt
+  TokenHash            String   @db.VarChar(255) // Hash del token de sesión
+  IpAddress            String?  @db.VarChar(50)
+  UserAgent            String?  @db.VarChar(500)
+  Dispositivo          String?  @db.VarChar(100) // Nombre del dispositivo
+  Ubicacion            String?  @db.VarChar(200) // Ubicación aproximada
+  FechaInicio          DateTime @default(now())
+  FechaUltimaActividad DateTime @default(now())
+  EstaActiva           Boolean  @default(true)
+  EsConfiable          Boolean  @default(false) // Si el dispositivo es confiable
+  Tenant               Tenant   @relation(fields: [TenantId], references: [Id])
+  Usuario              Usuario  @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
+
+  @@index([TenantId])
+  @@index([UsuarioId])
+  @@index([TokenHash])
+  @@index([EstaActiva])
+  @@index([FechaUltimaActividad])
+}
+
+model DispositivoConfiable {
+  Id                BigInt   @id @default(autoincrement())
+  TenantId          BigInt
+  UsuarioId         BigInt
+  NombreDispositivo String   @db.VarChar(100)
+  UserAgent         String?  @db.VarChar(500)
+  IpAddress         String?  @db.VarChar(50)
+  FechaRegistro     DateTime @default(now())
+  FechaUltimoUso    DateTime @default(now())
+  EstaActivo        Boolean  @default(true)
+  Tenant            Tenant   @relation(fields: [TenantId], references: [Id])
+  Usuario           Usuario  @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
+
+  @@unique([TenantId, UsuarioId, UserAgent, IpAddress])
+  @@index([TenantId])
+  @@index([UsuarioId])
+  @@index([EstaActivo])
+}
+
+model IntentoLogin {
+  Id           BigInt   @id @default(autoincrement())
+  TenantId     BigInt
+  Email        String   @db.VarChar(250)
+  IpAddress    String?  @db.VarChar(50)
+  UserAgent    String?  @db.VarChar(500)
+  Exitoso      Boolean  @default(false)
+  MotivoFallo  String?  @db.VarChar(200) // "Credenciales inválidas", "Cuenta bloqueada", etc.
+  FechaIntento DateTime @default(now())
+  UsuarioId    BigInt? // Si se identifica al usuario
+  Tenant       Tenant   @relation(fields: [TenantId], references: [Id])
+  Usuario      Usuario? @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
+
+  @@index([TenantId])
+  @@index([Email])
+  @@index([IpAddress])
+  @@index([FechaIntento])
+  @@index([Exitoso])
+}
+
+model IpBloqueada {
+  Id               BigInt    @id @default(autoincrement())
+  TenantId         BigInt
+  IpAddress        String    @db.VarChar(50)
+  Motivo           String?   @db.VarChar(200)
+  FechaBloqueo     DateTime  @default(now())
+  FechaDesbloqueo  DateTime? // null = bloqueo permanente
+  EstaActiva       Boolean   @default(true)
+  IntentosFallidos Int       @default(0)
+  Tenant           Tenant    @relation(fields: [TenantId], references: [Id])
+
+  @@unique([TenantId, IpAddress])
+  @@index([TenantId])
+  @@index([IpAddress])
+  @@index([EstaActiva])
+  @@index([FechaBloqueo])
 }
 
 enum PerfilTipo {

@@ -16,6 +16,7 @@ import {
   ModalFooter,
   Select,
   SelectItem,
+  Spinner,
   Switch,
   Tabs,
   Tab,
@@ -229,12 +230,56 @@ export default function Configuracion() {
 
   const [seguridad, setSeguridad] = useState({
     dobleFactor: false,
-    alertarNuevoDispositivo: true,
-    bloquearPorInactividad: true,
+    expirarSesiones30Dias: true,
     bloquearTrasIntentos: "5" as "nunca" | "5" | "10",
+    alertarNuevoDispositivo: true,
+    bloquearPorInactividad: false,
+    tiempoInactividadMinutos: 30,
     recordarSesion30Dias: true,
   });
   const [seguridadOriginal, setSeguridadOriginal] = useState<typeof seguridad | null>(null);
+
+  // Estados para sesiones y dispositivos
+  const [sesionesActivas, setSesionesActivas] = useState<any[]>([]);
+  const [dispositivosConfiable, setDispositivosConfiable] = useState<any[]>([]);
+  const [estadisticasSeguridad, setEstadisticasSeguridad] = useState({
+    sesionesActivas: 0,
+    dispositivosActivos: 0,
+    ultimaActividad: null as string | null,
+    intentosFallidos7Dias: 0,
+    intentosExitosos7Dias: 0,
+  });
+  const [isLoadingSesiones, setIsLoadingSesiones] = useState(false);
+  const [isLoadingDispositivos, setIsLoadingDispositivos] = useState(false);
+  
+  // Estados para modales de detalles
+  const [modalDetalle, setModalDetalle] = useState<"sesiones" | "dispositivos" | "ultimoAcceso" | "intentosFallidos" | "intentosExitosos" | null>(null);
+  const [intentosSospechosos, setIntentosSospechosos] = useState<{
+    sospechosos: Array<{ ipAddress: string; intentos24Horas: number; ultimoIntento: string; esCritico: boolean }>;
+    alertas: Array<{ tipo: string; titulo: string; descripcion: string; ips?: string[] }>;
+    ultimosIntentos: Array<{ id: number; fecha: string; ipAddress: string | null; usuarioNombre: string | null; usuarioId: number | null }>;
+    estadisticas: { ipsUnicasUltimaHora: number; intentosFallidos24Horas: number };
+  } | null>(null);
+  const [isLoadingIntentosSospechosos, setIsLoadingIntentosSospechosos] = useState(false);
+  
+  // Estados para auditoría
+  const [estadisticasAuditoria, setEstadisticasAuditoria] = useState({
+    totalEventos: 0,
+    eventosError: 0,
+    eventosWarning: 0,
+    eventosUltimos7Dias: 0,
+    eventosUltimos30Dias: 0,
+  });
+  const [eventosRecientesAuditoria, setEventosRecientesAuditoria] = useState<Array<{
+    id: number;
+    fecha: string;
+    accion: string;
+    severidad: string;
+    detalle: string | null;
+    ipAddress: string | null;
+    usuario: string;
+  }>>([]);
+  const [isLoadingAuditoria, setIsLoadingAuditoria] = useState(false);
 
   const [branding, setBranding] = useState({
     slogan: "Mejor precio, mejor servicio.",
@@ -255,7 +300,7 @@ export default function Configuracion() {
 
   // Sincronizar tenant desde el hook
   useEffect(() => {
-    if (tenantData) {
+    if (tenantData && Object.keys(tenantData).length > 0) {
       const newTenant = {
         nombre: tenantData.nombre ?? "",
         dominio: tenantData.dominio ?? "",
@@ -263,17 +308,15 @@ export default function Configuracion() {
         estaActivo: tenantData.estaActivo ?? true,
         onboardingCompleto: tenantData.onboardingCompleto ?? false,
       };
-      setTenant((prev) => ({
-        ...prev,
-        ...newTenant,
-      }));
+      // Reemplazar completamente el estado en lugar de hacer merge
+      setTenant(newTenant);
       setTenantOriginal(newTenant);
     }
   }, [tenantData]);
 
   // Sincronizar configuración desde el hook
   useEffect(() => {
-    if (configuracionData) {
+    if (configuracionData && Object.keys(configuracionData).length > 0) {
       const newConfiguracion = {
         razonSocial: configuracionData.razonSocial ?? "",
         nombreFantasia: configuracionData.nombreFantasia ?? "",
@@ -287,10 +330,8 @@ export default function Configuracion() {
         provinciaId: configuracionData.provinciaId ?? null,
         observacionPieFactura: configuracionData.observacionPieFactura ?? "",
       };
-      setConfiguracion((prev) => ({
-        ...prev,
-        ...newConfiguracion,
-      }));
+      // Reemplazar completamente el estado en lugar de hacer merge
+      setConfiguracion(newConfiguracion);
       setConfiguracionOriginal(newConfiguracion);
       
       // Cargar provincia y departamento si hay localidad
@@ -401,6 +442,269 @@ export default function Configuracion() {
     }
   }, [seguridadData]);
 
+  // Cargar sesiones, dispositivos y estadísticas cuando se abre la sección de seguridad
+  useEffect(() => {
+    if (openSection === "seguridad") {
+      loadSesionesActivas();
+      loadDispositivosConfiable();
+      loadEstadisticasSeguridad();
+      loadAuditoria();
+      loadIntentosSospechosos();
+    }
+  }, [openSection]);
+
+  const loadSesionesActivas = async () => {
+    try {
+      setIsLoadingSesiones(true);
+      const response = await fetch("/api/configuracion/seguridad/sesiones", {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSesionesActivas(data.sesiones || []);
+      } else {
+        const errorData = await response.json().catch(() => null);
+        const errorMessage = typeof errorData?.error === "string" 
+          ? errorData.error 
+          : errorData?.error?.message || "Error al cargar sesiones";
+        console.error("Error cargando sesiones:", errorMessage);
+        addToast({
+          title: "Error",
+          description: errorMessage,
+          color: "warning",
+        });
+        setSesionesActivas([]);
+      }
+    } catch (error) {
+      console.error("Error cargando sesiones:", error);
+      addToast({
+        title: "Error",
+        description: "No se pudo conectar con el servidor para cargar las sesiones",
+        color: "danger",
+      });
+      setSesionesActivas([]);
+    } finally {
+      setIsLoadingSesiones(false);
+    }
+  };
+
+  const loadDispositivosConfiable = async () => {
+    try {
+      setIsLoadingDispositivos(true);
+      const response = await fetch("/api/configuracion/seguridad/dispositivos", {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setDispositivosConfiable(data.dispositivos || []);
+      } else {
+        const errorData = await response.json().catch(() => null);
+        const errorMessage = typeof errorData?.error === "string" 
+          ? errorData.error 
+          : errorData?.error?.message || "Error al cargar dispositivos";
+        console.error("Error cargando dispositivos:", errorMessage);
+        addToast({
+          title: "Error",
+          description: errorMessage,
+          color: "warning",
+        });
+        setDispositivosConfiable([]);
+      }
+    } catch (error) {
+      console.error("Error cargando dispositivos:", error);
+      addToast({
+        title: "Error",
+        description: "No se pudo conectar con el servidor para cargar los dispositivos",
+        color: "danger",
+      });
+      setDispositivosConfiable([]);
+    } finally {
+      setIsLoadingDispositivos(false);
+    }
+  };
+
+  const loadEstadisticasSeguridad = async () => {
+    try {
+      const response = await fetch("/api/configuracion/seguridad/estadisticas", {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setEstadisticasSeguridad(data.estadisticas || {
+          sesionesActivas: 0,
+          dispositivosActivos: 0,
+          ultimaActividad: null,
+          intentosFallidos7Dias: 0,
+          intentosExitosos7Dias: 0,
+        });
+      } else {
+        const errorData = await response.json().catch(() => null);
+        const errorMessage = typeof errorData?.error === "string" 
+          ? errorData.error 
+          : errorData?.error?.message || "Error al cargar estadísticas";
+        console.error("Error cargando estadísticas:", errorMessage);
+        // No mostrar toast para estadísticas, solo log
+      }
+    } catch (error) {
+      console.error("Error cargando estadísticas:", error);
+      // Mantener estadísticas por defecto en caso de error
+    }
+  };
+
+  const loadIntentosSospechosos = async () => {
+    try {
+      setIsLoadingIntentosSospechosos(true);
+      const response = await fetch("/api/configuracion/seguridad/intentos-sospechosos", {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setIntentosSospechosos(data);
+        
+        // Mostrar alertas si hay intentos sospechosos críticos
+        if (data.alertas && data.alertas.length > 0) {
+          data.alertas.forEach((alerta: any) => {
+            if (alerta.tipo === "critico") {
+              addToast({
+                title: "⚠️ Alerta de seguridad",
+                description: alerta.titulo + ": " + alerta.descripcion,
+                color: "danger",
+              });
+            }
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error cargando intentos sospechosos:", error);
+    } finally {
+      setIsLoadingIntentosSospechosos(false);
+    }
+  };
+
+  const loadAuditoria = async () => {
+    try {
+      setIsLoadingAuditoria(true);
+      const response = await fetch("/api/configuracion/seguridad/auditoria", {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setEstadisticasAuditoria(data.estadisticas || {
+          totalEventos: 0,
+          eventosError: 0,
+          eventosWarning: 0,
+          eventosUltimos7Dias: 0,
+          eventosUltimos30Dias: 0,
+        });
+        setEventosRecientesAuditoria(data.eventosRecientes || []);
+      } else {
+        const errorData = await response.json().catch(() => ({ error: { message: "Error desconocido" } }));
+        console.error("Error cargando auditoría:", errorData);
+        // El error puede venir como { error: { code, message } } o { error: "string" }
+        const errorMessage = typeof errorData.error === "string" 
+          ? errorData.error 
+          : errorData.error?.message || "No se pudieron cargar los datos de auditoría";
+        addToast({
+          title: "Error",
+          description: errorMessage,
+          color: "danger",
+        });
+        // Si hay error, establecer valores por defecto
+        setEstadisticasAuditoria({
+          totalEventos: 0,
+          eventosError: 0,
+          eventosWarning: 0,
+          eventosUltimos7Dias: 0,
+          eventosUltimos30Dias: 0,
+        });
+        setEventosRecientesAuditoria([]);
+      }
+    } catch (error) {
+      console.error("Error cargando auditoría:", error);
+      addToast({
+        title: "Error",
+        description: "No se pudo conectar con el servidor para cargar los datos de auditoría",
+        color: "danger",
+      });
+      setEstadisticasAuditoria({
+        totalEventos: 0,
+        eventosError: 0,
+        eventosWarning: 0,
+        eventosUltimos7Dias: 0,
+        eventosUltimos30Dias: 0,
+      });
+      setEventosRecientesAuditoria([]);
+    } finally {
+      setIsLoadingAuditoria(false);
+    }
+  };
+
+  const cerrarSesion = async (sesionId: number) => {
+    try {
+      const response = await fetch(`/api/configuracion/seguridad/sesiones?id=${sesionId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (response.ok) {
+        addToast({
+          title: "Sesión cerrada",
+          description: "La sesión se cerró correctamente",
+          color: "success",
+        });
+        loadSesionesActivas();
+        loadEstadisticasSeguridad();
+      } else {
+        throw new Error("Error al cerrar sesión");
+      }
+    } catch {
+      addToast({
+        title: "Error",
+        description: "No se pudo cerrar la sesión",
+        color: "danger",
+      });
+    }
+  };
+
+  const eliminarDispositivo = async (dispositivoId: number) => {
+    try {
+      const response = await fetch(`/api/configuracion/seguridad/dispositivos?id=${dispositivoId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (response.ok) {
+        addToast({
+          title: "Dispositivo eliminado",
+          description: "El dispositivo se eliminó correctamente",
+          color: "success",
+        });
+        loadDispositivosConfiable();
+        loadEstadisticasSeguridad();
+      } else {
+        throw new Error("Error al eliminar dispositivo");
+      }
+    } catch {
+      addToast({
+        title: "Error",
+        description: "No se pudo eliminar el dispositivo",
+        color: "danger",
+      });
+    }
+  };
+
+  const formatFecha = (fecha: string) => {
+    const date = new Date(fecha);
+    const ahora = new Date();
+    const diffMs = ahora.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return "Hace menos de un minuto";
+    if (diffMins < 60) return `Hace ${diffMins} ${diffMins === 1 ? 'minuto' : 'minutos'}`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `Hace ${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `Hace ${diffDays} ${diffDays === 1 ? 'día' : 'días'}`;
+  };
+
   // Sincronizar fiscal
   useEffect(() => {
     if (fiscalData) {
@@ -475,9 +779,11 @@ export default function Configuracion() {
     if (!seguridadOriginal) return false;
     return (
       seguridad.dobleFactor !== seguridadOriginal.dobleFactor ||
+      seguridad.expirarSesiones30Dias !== seguridadOriginal.expirarSesiones30Dias ||
+      seguridad.bloquearTrasIntentos !== seguridadOriginal.bloquearTrasIntentos ||
       seguridad.alertarNuevoDispositivo !== seguridadOriginal.alertarNuevoDispositivo ||
       seguridad.bloquearPorInactividad !== seguridadOriginal.bloquearPorInactividad ||
-      seguridad.bloquearTrasIntentos !== seguridadOriginal.bloquearTrasIntentos ||
+      seguridad.tiempoInactividadMinutos !== seguridadOriginal.tiempoInactividadMinutos ||
       seguridad.recordarSesion30Dias !== seguridadOriginal.recordarSesion30Dias
     );
   }, [seguridad, seguridadOriginal]);
@@ -622,8 +928,8 @@ export default function Configuracion() {
   const summarySeguridad = useMemo(
     () => `2FA: ${
       seguridad.dobleFactor ? "activo" : "pendiente"
-    } | Bloqueo: ${seguridad.bloquearTrasIntentos === "nunca" ? "desactivado" : `${seguridad.bloquearTrasIntentos} intentos`} | Recordar sesión: ${seguridad.recordarSesion30Dias ? "30 días" : "off"}`,
-    [seguridad.dobleFactor, seguridad.bloquearTrasIntentos, seguridad.recordarSesion30Dias]
+    } | Bloqueo: ${seguridad.bloquearTrasIntentos === "nunca" ? "desactivado" : `${seguridad.bloquearTrasIntentos} intentos`} | Inactividad: ${seguridad.bloquearPorInactividad ? `${seguridad.tiempoInactividadMinutos} min` : "off"}`,
+    [seguridad.dobleFactor, seguridad.bloquearTrasIntentos, seguridad.bloquearPorInactividad, seguridad.tiempoInactividadMinutos]
   );
   const summaryFiscal = useMemo(() => {
     const condicion = condicionesIva.find((c: { id: number; descripcion: string }) => c.id === regional.condicionIvaId);
@@ -722,7 +1028,9 @@ export default function Configuracion() {
 
       // Guardar fiscal si hay cambios
       if (hasFiscalChanges) {
-        await saveFiscalMutation(regional, true);
+        // Filtrar tipoIva ya que es solo informativo y no se guarda en la BD
+        const { tipoIva: _tipoIva, ...fiscalData } = regional;
+        await saveFiscalMutation(fiscalData, true);
         setRegionalOriginal(regional);
       }
 
@@ -2254,6 +2562,28 @@ export default function Configuracion() {
                   <div className="flex items-center justify-between py-2">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-700">
+                        Expirar sesiones después de 30 días
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Las sesiones inactivas se cerrarán automáticamente después de 30 días
+                      </p>
+                    </div>
+                    <Switch
+                      size="sm"
+                      isSelected={seguridad.expirarSesiones30Dias}
+                      onValueChange={(value) => {
+                        setSeguridad((prev) => ({
+                          ...prev,
+                          expirarSesiones30Dias: value,
+                        }));
+                      }}
+                      aria-label="Expirar sesiones después de 30 días"
+                    />
+                  </div>
+                  <Divider />
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-700">
                         Avisar inicio de sesión desde nuevos dispositivos
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
@@ -2280,8 +2610,7 @@ export default function Configuracion() {
                         Bloquear dashboard por inactividad
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        Cierra la sesión automáticamente después de 10 minutos
-                        de inactividad
+                        Cierra la sesión automáticamente después de un período de inactividad
                       </p>
                     </div>
                     <Switch
@@ -2296,6 +2625,37 @@ export default function Configuracion() {
                       aria-label="Bloquear dashboard por inactividad"
                     />
                   </div>
+                  {seguridad.bloquearPorInactividad && (
+                    <>
+                      <Divider />
+                      <div className="flex items-center justify-between py-2 pl-6">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-700">
+                            Tiempo de inactividad (minutos)
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Tiempo en minutos antes de cerrar la sesión por inactividad
+                          </p>
+                        </div>
+                        <Input
+                          type="number"
+                          size="sm"
+                          value={seguridad.tiempoInactividadMinutos.toString()}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value) || 30;
+                            setSeguridad((prev) => ({
+                              ...prev,
+                              tiempoInactividadMinutos: value,
+                            }));
+                          }}
+                          className="w-24"
+                          min={1}
+                          max={1440}
+                          aria-label="Tiempo de inactividad en minutos"
+                        />
+                      </div>
+                    </>
+                  )}
                   <Divider />
                   <div className="flex items-center justify-between py-2">
                     <div className="flex-1">
@@ -2310,10 +2670,11 @@ export default function Configuracion() {
                     <Select
                       size="sm"
                       selectedKeys={[seguridad.bloquearTrasIntentos]}
-                      onChange={(e) => {
+                      onSelectionChange={(keys) => {
+                        const selected = Array.from(keys)[0] as string;
                         setSeguridad((prev) => ({
                           ...prev,
-                          bloquearTrasIntentos: e.target.value as "nunca" | "5" | "10",
+                          bloquearTrasIntentos: (selected || "5") as "nunca" | "5" | "10",
                         }));
                       }}
                       className="min-w-[140px]"
@@ -2354,78 +2715,471 @@ export default function Configuracion() {
 
               {/* Card: Estado de seguridad */}
               <Card className="shadow-sm border border-slate-200">
-                <CardHeader className="flex items-center gap-3 pb-3">
-                  <div className="p-2 rounded-lg bg-green-100">
-                    <Shield size={20} className="text-green-600" />
+                <CardHeader className="flex items-center justify-between pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-green-100">
+                      <Shield size={20} className="text-green-600" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-semibold text-slate-900">
+                        Estado de seguridad
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        Información sobre sesiones y dispositivos activos
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-base font-semibold text-slate-900">
-                      Estado de seguridad
-                    </h4>
-                    <p className="text-xs text-gray-500">
-                      Información sobre sesiones y dispositivos activos
-                    </p>
-                  </div>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    color="primary"
+                    onPress={() => {
+                      loadEstadisticasSeguridad();
+                      loadSesionesActivas();
+                      loadDispositivosConfiable();
+                      loadIntentosSospechosos();
+                    }}
+                    isLoading={isLoadingSesiones || isLoadingDispositivos || isLoadingIntentosSospechosos}
+                  >
+                    Actualizar
+                  </Button>
                 </CardHeader>
                 <Divider />
                 <CardBody className="space-y-4 pt-4">
-                  {/* TODO: Reemplazar con datos reales del API cuando esté disponible */}
-                  {/* Endpoint esperado: GET /api/configuracion/seguridad/estado */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
-                      <p className="text-xs text-gray-500 mb-1">
-                        Sesiones activas
+                    <div 
+                      className="p-4 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
+                      onClick={() => setModalDetalle("sesiones")}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs text-gray-500">
+                          Sesiones activas
+                        </p>
+                        <div className={`w-2 h-2 rounded-full ${
+                          estadisticasSeguridad.sesionesActivas > 0 
+                            ? "bg-green-500" 
+                            : "bg-gray-300"
+                        }`} />
+                      </div>
+                      <p className="text-2xl font-semibold text-slate-900">
+                        {estadisticasSeguridad.sesionesActivas}
                       </p>
-                      <p className="text-2xl font-semibold text-slate-900">8</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Usuarios conectados ahora • Click para detalles
+                      </p>
                     </div>
-                    <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
-                      <p className="text-xs text-gray-500 mb-1">
-                        Dispositivos activos
+                    <div 
+                      className="p-4 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
+                      onClick={() => setModalDetalle("dispositivos")}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs text-gray-500">
+                          Dispositivos confiables
+                        </p>
+                        <div className={`w-2 h-2 rounded-full ${
+                          estadisticasSeguridad.dispositivosActivos > 0 
+                            ? "bg-blue-500" 
+                            : "bg-gray-300"
+                        }`} />
+                      </div>
+                      <p className="text-2xl font-semibold text-slate-900">
+                        {estadisticasSeguridad.dispositivosActivos}
                       </p>
-                      <p className="text-2xl font-semibold text-slate-900">5</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Dispositivos marcados como confiables • Click para detalles
+                      </p>
                     </div>
-                    <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
-                      <p className="text-xs text-gray-500 mb-1">
-                        Último acceso
-                      </p>
+                    <div 
+                      className="p-4 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
+                      onClick={() => setModalDetalle("ultimoAcceso")}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs text-gray-500">
+                          Último acceso
+                        </p>
+                        <div className={`w-2 h-2 rounded-full ${
+                          estadisticasSeguridad.ultimaActividad 
+                            ? "bg-green-500" 
+                            : "bg-gray-300"
+                        }`} />
+                      </div>
                       <p className="text-lg font-semibold text-slate-900">
-                        Hace 12 minutos
+                        {estadisticasSeguridad.ultimaActividad 
+                          ? formatFecha(estadisticasSeguridad.ultimaActividad)
+                          : "N/A"}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Última actividad registrada • Click para detalles
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div 
+                      className={`p-4 rounded-lg border transition-colors cursor-pointer ${
+                        estadisticasSeguridad.intentosFallidos7Dias > 0 || (intentosSospechosos?.alertas && intentosSospechosos.alertas.length > 0)
+                          ? "bg-red-50 border-red-300 hover:bg-red-100"
+                          : "bg-red-50 border-red-200 hover:bg-red-100"
+                      }`}
+                      onClick={() => setModalDetalle("intentosFallidos")}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs text-red-600 font-medium">
+                          Intentos fallidos (7 días)
+                        </p>
+                        <div className="flex items-center gap-2">
+                          {intentosSospechosos?.alertas && intentosSospechosos.alertas.length > 0 && (
+                            <Chip size="sm" color="danger" variant="flat">
+                              ⚠️ Alerta
+                            </Chip>
+                          )}
+                          {estadisticasSeguridad.intentosFallidos7Dias > 0 && !intentosSospechosos?.alertas && (
+                            <Chip size="sm" color="warning" variant="flat">
+                              Atención
+                            </Chip>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-xl font-semibold text-red-900">
+                        {estadisticasSeguridad.intentosFallidos7Dias}
+                      </p>
+                      <p className="text-xs text-red-400 mt-1">
+                        {estadisticasSeguridad.intentosFallidos7Dias === 0
+                          ? "No hay intentos fallidos"
+                          : intentosSospechosos?.alertas && intentosSospechosos.alertas.length > 0
+                          ? "⚠️ Actividad sospechosa detectada • Click para detalles"
+                          : "Revisar posibles intentos de acceso no autorizado • Click para detalles"}
+                      </p>
+                    </div>
+                    <div 
+                      className="p-4 rounded-lg bg-green-50 border border-green-200 hover:bg-green-100 transition-colors cursor-pointer"
+                      onClick={() => setModalDetalle("intentosExitosos")}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs text-green-600 font-medium">
+                          Intentos exitosos (7 días)
+                        </p>
+                        {estadisticasSeguridad.intentosExitosos7Dias > 0 && (
+                          <Chip size="sm" color="success" variant="flat">
+                            Normal
+                          </Chip>
+                        )}
+                      </div>
+                      <p className="text-xl font-semibold text-green-900">
+                        {estadisticasSeguridad.intentosExitosos7Dias}
+                      </p>
+                      <p className="text-xs text-green-400 mt-1">
+                        Inicios de sesión exitosos en la última semana • Click para detalles
                       </p>
                     </div>
                   </div>
                 </CardBody>
               </Card>
 
+              {/* Card: Sesiones activas */}
+              <Card className="shadow-sm border border-slate-200">
+                <CardHeader className="flex items-center justify-between pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-blue-100">
+                      <Lock size={20} className="text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-semibold text-slate-900">
+                        Sesiones activas
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        Gestiona las sesiones activas de los usuarios
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="light"
+                    onPress={loadSesionesActivas}
+                    isLoading={isLoadingSesiones}
+                  >
+                    Actualizar
+                  </Button>
+                </CardHeader>
+                <Divider />
+                <CardBody className="pt-4">
+                  {isLoadingSesiones ? (
+                    <div className="flex justify-center py-8">
+                      <Spinner size="sm" />
+                    </div>
+                  ) : sesionesActivas.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 text-sm">
+                      No hay sesiones activas
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {sesionesActivas.map((sesion) => (
+                        <div
+                          key={sesion.id}
+                          className="p-4 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <p className="text-sm font-semibold text-slate-900">
+                                  {sesion.usuarioNombre}
+                                </p>
+                                {sesion.esConfiable && (
+                                  <Chip size="sm" color="success" variant="flat">
+                                    Confiable
+                                  </Chip>
+                                )}
+                              </div>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-gray-600">
+                                <div>
+                                  <span className="font-medium">Dispositivo:</span>{" "}
+                                  {sesion.dispositivo || "Desconocido"}
+                                </div>
+                                <div>
+                                  <span className="font-medium">IP:</span> {sesion.ipAddress || "N/A"}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Inicio:</span>{" "}
+                                  {formatFecha(sesion.fechaInicio)}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Última actividad:</span>{" "}
+                                  {formatFecha(sesion.fechaUltimaActividad)}
+                                </div>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              color="danger"
+                              variant="light"
+                              onPress={() => cerrarSesion(sesion.id)}
+                            >
+                              Cerrar
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardBody>
+              </Card>
+
+              {/* Card: Dispositivos confiables */}
+              <Card className="shadow-sm border border-slate-200">
+                <CardHeader className="flex items-center justify-between pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-purple-100">
+                      <Shield size={20} className="text-purple-600" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-semibold text-slate-900">
+                        Dispositivos confiables
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        Dispositivos marcados como confiables por los usuarios
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="light"
+                    onPress={loadDispositivosConfiable}
+                    isLoading={isLoadingDispositivos}
+                  >
+                    Actualizar
+                  </Button>
+                </CardHeader>
+                <Divider />
+                <CardBody className="pt-4">
+                  {isLoadingDispositivos ? (
+                    <div className="flex justify-center py-8">
+                      <Spinner size="sm" />
+                    </div>
+                  ) : dispositivosConfiable.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 text-sm">
+                      No hay dispositivos confiables registrados
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {dispositivosConfiable.map((dispositivo) => (
+                        <div
+                          key={dispositivo.id}
+                          className="p-4 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <p className="text-sm font-semibold text-slate-900">
+                                  {dispositivo.nombreDispositivo}
+                                </p>
+                                <Chip size="sm" color="success" variant="flat">
+                                  {dispositivo.usuarioNombre}
+                                </Chip>
+                              </div>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-gray-600">
+                                <div>
+                                  <span className="font-medium">IP:</span> {dispositivo.ipAddress || "N/A"}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Registrado:</span>{" "}
+                                  {formatFecha(dispositivo.fechaRegistro)}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Último uso:</span>{" "}
+                                  {formatFecha(dispositivo.fechaUltimoUso)}
+                                </div>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              color="danger"
+                              variant="light"
+                              onPress={() => eliminarDispositivo(dispositivo.id)}
+                            >
+                              Eliminar
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardBody>
+              </Card>
+
               {/* Card: Auditoría */}
               <Card className="shadow-sm border border-slate-200">
-                <CardHeader className="flex items-center gap-3 pb-3">
-                  <div className="p-2 rounded-lg bg-purple-100">
-                    <Eye size={20} className="text-purple-600" />
+                <CardHeader className="flex items-center justify-between pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-purple-100">
+                      <Eye size={20} className="text-purple-600" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-semibold text-slate-900">
+                        Auditoría
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        Visualiza y monitorea la actividad de seguridad
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-base font-semibold text-slate-900">
-                      Auditoría
-                    </h4>
-                    <p className="text-xs text-gray-500">
-                      Visualiza y monitorea la actividad de seguridad
-                    </p>
-                  </div>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    color="primary"
+                    onPress={loadAuditoria}
+                    isLoading={isLoadingAuditoria}
+                  >
+                    Actualizar
+                  </Button>
                 </CardHeader>
                 <Divider />
                 <CardBody className="space-y-4 pt-4">
+                  {/* Estadísticas */}
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                      <p className="text-xs text-gray-600 mb-1">Total eventos</p>
+                      <p className="text-lg font-semibold text-slate-900">
+                        {estadisticasAuditoria.totalEventos}
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+                      <p className="text-xs text-gray-600 mb-1">Errores</p>
+                      <p className="text-lg font-semibold text-red-700">
+                        {estadisticasAuditoria.eventosError}
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-yellow-50 border border-yellow-200">
+                      <p className="text-xs text-gray-600 mb-1">Advertencias</p>
+                      <p className="text-lg font-semibold text-yellow-700">
+                        {estadisticasAuditoria.eventosWarning}
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                      <p className="text-xs text-gray-600 mb-1">Últimos 7 días</p>
+                      <p className="text-lg font-semibold text-blue-700">
+                        {estadisticasAuditoria.eventosUltimos7Dias}
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+                      <p className="text-xs text-gray-600 mb-1">Últimos 30 días</p>
+                      <p className="text-lg font-semibold text-green-700">
+                        {estadisticasAuditoria.eventosUltimos30Dias}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Eventos recientes */}
+                  <div>
+                    <h5 className="text-sm font-semibold text-slate-900 mb-3">
+                      Eventos recientes
+                    </h5>
+                    {isLoadingAuditoria ? (
+                      <div className="flex justify-center py-8">
+                        <Spinner size="sm" />
+                      </div>
+                    ) : eventosRecientesAuditoria.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500 text-sm rounded-lg bg-slate-50 border border-slate-200">
+                        No hay eventos de auditoría registrados
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {eventosRecientesAuditoria.map((evento) => (
+                          <div
+                            key={evento.id}
+                            className="p-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <p className="text-sm font-semibold text-slate-900 truncate">
+                                    {evento.usuario}
+                                  </p>
+                                  <Chip
+                                    size="sm"
+                                    color={
+                                      evento.severidad === "ERROR"
+                                        ? "danger"
+                                        : evento.severidad === "WARNING"
+                                        ? "warning"
+                                        : "default"
+                                    }
+                                    variant="flat"
+                                  >
+                                    {evento.severidad}
+                                  </Chip>
+                                </div>
+                                <p className="text-sm text-slate-700 mb-1">
+                                  {evento.accion}
+                                </p>
+                                {evento.detalle && (
+                                  <p className="text-xs text-gray-600 mb-1 truncate">
+                                    {evento.detalle}
+                                  </p>
+                                )}
+                                <div className="flex items-center gap-3 text-xs text-gray-500">
+                                  <span>{formatFecha(evento.fecha)}</span>
+                                  {evento.ipAddress && (
+                                    <>
+                                      <span>•</span>
+                                      <span>IP: {evento.ipAddress}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Información y acción */}
                   <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
-                    <p className="text-sm text-gray-700">
+                    <p className="text-sm text-gray-700 mb-3">
                       El sistema registra automáticamente todos los eventos de
                       seguridad y accesos para mantener un historial completo
                       de la actividad del negocio. Los logs incluyen inicios de
                       sesión, cambios de configuración, intentos fallidos y
                       acciones administrativas.
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-600">
-                      Para ver los logs completos, visita la sección de
-                      Analíticas
                     </p>
                     <Button
                       size="sm"
@@ -2897,6 +3651,323 @@ export default function Configuracion() {
           </div>
         </Tab>
       </Tabs>
+
+      {/* Modales de detalles */}
+      <Modal 
+        isOpen={modalDetalle === "sesiones"} 
+        onClose={() => setModalDetalle(null)}
+        size="2xl"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          <ModalHeader>Sesiones Activas - Detalles</ModalHeader>
+          <ModalBody>
+            {isLoadingSesiones ? (
+              <div className="flex justify-center py-8">
+                <Spinner size="sm" />
+              </div>
+            ) : sesionesActivas.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">No hay sesiones activas</p>
+            ) : (
+              <div className="space-y-3">
+                {sesionesActivas.map((sesion) => (
+                  <div key={sesion.id} className="p-4 rounded-lg border border-slate-200">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-semibold text-slate-900">{sesion.usuarioNombre}</p>
+                        {sesion.esConfiable && (
+                          <Chip size="sm" color="success" variant="flat" className="mt-1">
+                            Dispositivo confiable
+                          </Chip>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        color="danger"
+                        variant="light"
+                        onPress={() => {
+                          cerrarSesion(sesion.id);
+                          setModalDetalle(null);
+                        }}
+                      >
+                        Cerrar sesión
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mt-3">
+                      <div>
+                        <span className="font-medium">IP:</span> {sesion.ipAddress || "N/A"}
+                      </div>
+                      <div>
+                        <span className="font-medium">Dispositivo:</span> {sesion.dispositivo || "N/A"}
+                      </div>
+                      <div>
+                        <span className="font-medium">Inicio:</span> {formatFecha(sesion.fechaInicio)}
+                      </div>
+                      <div>
+                        <span className="font-medium">Última actividad:</span> {formatFecha(sesion.fechaUltimaActividad)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button onPress={() => setModalDetalle(null)}>Cerrar</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal 
+        isOpen={modalDetalle === "dispositivos"} 
+        onClose={() => setModalDetalle(null)}
+        size="2xl"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          <ModalHeader>Dispositivos Confiables - Detalles</ModalHeader>
+          <ModalBody>
+            {isLoadingDispositivos ? (
+              <div className="flex justify-center py-8">
+                <Spinner size="sm" />
+              </div>
+            ) : dispositivosConfiable.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">No hay dispositivos confiables registrados</p>
+            ) : (
+              <div className="space-y-3">
+                {dispositivosConfiable.map((dispositivo) => (
+                  <div key={dispositivo.id} className="p-4 rounded-lg border border-slate-200">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-semibold text-slate-900">{dispositivo.nombreDispositivo}</p>
+                        <Chip size="sm" color="success" variant="flat" className="mt-1">
+                          {dispositivo.usuarioNombre}
+                        </Chip>
+                      </div>
+                      <Button
+                        size="sm"
+                        color="danger"
+                        variant="light"
+                        onPress={() => {
+                          eliminarDispositivo(dispositivo.id);
+                          setModalDetalle(null);
+                        }}
+                      >
+                        Eliminar
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mt-3">
+                      <div>
+                        <span className="font-medium">IP:</span> {dispositivo.ipAddress || "N/A"}
+                      </div>
+                      <div>
+                        <span className="font-medium">Registrado:</span> {formatFecha(dispositivo.fechaRegistro)}
+                      </div>
+                      <div>
+                        <span className="font-medium">Último uso:</span> {formatFecha(dispositivo.fechaUltimoUso)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button onPress={() => setModalDetalle(null)}>Cerrar</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal 
+        isOpen={modalDetalle === "intentosFallidos"} 
+        onClose={() => setModalDetalle(null)}
+        size="3xl"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          <ModalHeader>
+            <div className="flex items-center gap-2">
+              Intentos Fallidos - Detalles
+              {intentosSospechosos?.alertas && intentosSospechosos.alertas.length > 0 && (
+                <Chip size="sm" color="danger" variant="flat">⚠️ Alertas activas</Chip>
+              )}
+            </div>
+          </ModalHeader>
+          <ModalBody>
+            {isLoadingIntentosSospechosos ? (
+              <div className="flex justify-center py-8">
+                <Spinner size="sm" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Alertas */}
+                {intentosSospechosos?.alertas && intentosSospechosos.alertas.length > 0 && (
+                  <div className="space-y-2">
+                    <h5 className="font-semibold text-red-700">⚠️ Alertas de Seguridad</h5>
+                    {intentosSospechosos.alertas.map((alerta, idx) => (
+                      <div 
+                        key={idx} 
+                        className={`p-3 rounded-lg border ${
+                          alerta.tipo === "critico" 
+                            ? "bg-red-50 border-red-300" 
+                            : "bg-yellow-50 border-yellow-300"
+                        }`}
+                      >
+                        <p className="font-semibold text-sm">{alerta.titulo}</p>
+                        <p className="text-xs text-gray-600 mt-1">{alerta.descripcion}</p>
+                        {alerta.ips && alerta.ips.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-xs font-medium">IPs afectadas:</p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {alerta.ips.map((ip, i) => (
+                                <Chip key={i} size="sm" variant="flat" className="text-xs">
+                                  {ip}
+                                </Chip>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* IPs sospechosas */}
+                {intentosSospechosos?.sospechosos && intentosSospechosos.sospechosos.length > 0 && (
+                  <div>
+                    <h5 className="font-semibold text-slate-900 mb-2">IPs con actividad sospechosa</h5>
+                    <div className="space-y-2">
+                      {intentosSospechosos.sospechosos.map((sospechoso, idx) => (
+                        <div 
+                          key={idx} 
+                          className={`p-3 rounded-lg border ${
+                            sospechoso.esCritico 
+                              ? "bg-red-50 border-red-300" 
+                              : "bg-yellow-50 border-yellow-300"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-semibold text-sm">{sospechoso.ipAddress}</p>
+                              <p className="text-xs text-gray-600 mt-1">
+                                {sospechoso.intentos24Horas} intentos fallidos en 24 horas
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Último intento: {formatFecha(sospechoso.ultimoIntento)}
+                              </p>
+                            </div>
+                            {sospechoso.esCritico && (
+                              <Chip size="sm" color="danger" variant="flat">
+                                Crítico
+                              </Chip>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Últimos intentos fallidos */}
+                {intentosSospechosos?.ultimosIntentos && intentosSospechosos.ultimosIntentos.length > 0 && (
+                  <div>
+                    <h5 className="font-semibold text-slate-900 mb-2">Últimos intentos fallidos (24 horas)</h5>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {intentosSospechosos.ultimosIntentos.map((intento) => (
+                        <div key={intento.id} className="p-2 rounded border border-slate-200 text-sm">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">{intento.usuarioNombre || "Usuario desconocido"}</p>
+                              <p className="text-xs text-gray-500">{intento.ipAddress || "IP desconocida"}</p>
+                            </div>
+                            <p className="text-xs text-gray-400">{formatFecha(intento.fecha)}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(!intentosSospechosos || (intentosSospechosos.sospechosos.length === 0 && intentosSospechosos.ultimosIntentos.length === 0)) && (
+                  <p className="text-center text-gray-500 py-8">No hay intentos fallidos registrados</p>
+                )}
+              </div>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button onPress={() => setModalDetalle(null)}>Cerrar</Button>
+            <Button 
+              color="primary" 
+              onPress={() => {
+                loadIntentosSospechosos();
+                loadEstadisticasSeguridad();
+              }}
+            >
+              Actualizar
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal 
+        isOpen={modalDetalle === "intentosExitosos"} 
+        onClose={() => setModalDetalle(null)}
+        size="2xl"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          <ModalHeader>Intentos Exitosos - Detalles</ModalHeader>
+          <ModalBody>
+            <div className="space-y-2">
+              <div className="p-4 rounded-lg bg-green-50 border border-green-200">
+                <p className="text-sm font-semibold text-green-900">
+                  {estadisticasSeguridad.intentosExitosos7Dias} inicios de sesión exitosos
+                </p>
+                <p className="text-xs text-green-600 mt-1">
+                  En los últimos 7 días
+                </p>
+              </div>
+              <p className="text-sm text-gray-600">
+                Los inicios de sesión exitosos indican actividad normal del sistema. 
+                Todos los accesos están siendo registrados correctamente.
+              </p>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button onPress={() => setModalDetalle(null)}>Cerrar</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal 
+        isOpen={modalDetalle === "ultimoAcceso"} 
+        onClose={() => setModalDetalle(null)}
+        size="lg"
+      >
+        <ModalContent>
+          <ModalHeader>Último Acceso - Detalles</ModalHeader>
+          <ModalBody>
+            {estadisticasSeguridad.ultimaActividad ? (
+              <div className="space-y-3">
+                <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                  <p className="text-sm font-semibold text-slate-900">Última actividad registrada</p>
+                  <p className="text-lg text-slate-700 mt-2">
+                    {formatFecha(estadisticasSeguridad.ultimaActividad)}
+                  </p>
+                </div>
+                <p className="text-sm text-gray-600">
+                  Esta es la fecha y hora de la última sesión activa registrada en el sistema.
+                </p>
+              </div>
+            ) : (
+              <p className="text-center text-gray-500 py-8">No hay actividad registrada</p>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button onPress={() => setModalDetalle(null)}>Cerrar</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
