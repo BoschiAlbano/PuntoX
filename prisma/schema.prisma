@@ -52,7 +52,7 @@ model Tenant {
   Personas            Persona[]
   Precios             Precio[]
   Proveedores         Proveedor[]
-  PuestosTrabajo      PuestoTrabajo[]
+  // PuestosTrabajo      PuestoTrabajo[]
   Rubros              Rubro[]
   Tarjetas            Tarjeta[]
   Plan                PlanSaaS?            @relation(fields: [PlanId], references: [Id])
@@ -319,15 +319,15 @@ model Comprobante_Factura {
   Id              BigInt          @id
   /// Hereda TenantId desde Comprobante (Id es PK y FK)
   ClienteId       BigInt
-  PuestoTrabajoId BigInt
+  // PuestoTrabajoId BigInt
   Estado          Int
   Persona_Cliente Persona_Cliente @relation(fields: [ClienteId], references: [Id], onUpdate: NoAction)
   Comprobante     Comprobante     @relation(fields: [Id], references: [Id], onUpdate: NoAction)
-  PuestoTrabajo   PuestoTrabajo   @relation(fields: [PuestoTrabajoId], references: [Id], onUpdate: NoAction)
+  // PuestoTrabajo   PuestoTrabajo   @relation(fields: [PuestoTrabajoId], references: [Id], onUpdate: NoAction)
 
   @@index([ClienteId])
   @@index([Id])
-  @@index([PuestoTrabajoId])
+  // @@index([PuestoTrabajoId])
 }
 
 /// Relación entre nota de crédito y comprobantes.
@@ -863,18 +863,18 @@ model Proveedor {
 }
 
 /// Puestos de trabajo del comercio (caja, mostrador, etc.).
-model PuestoTrabajo {
-  Id                  BigInt                @id @default(autoincrement())
-  Codigo              Int
-  Descripcion         String?               @db.VarChar(8000)
-  EstaEliminado       Boolean
-  /// Tenant dueño de este puesto
-  TenantId            BigInt
-  Comprobante_Factura Comprobante_Factura[]
-  Tenant              Tenant                @relation(fields: [TenantId], references: [Id])
+// model PuestoTrabajo {
+//   Id                  BigInt                @id @default(autoincrement())
+//   Codigo              Int
+//   Descripcion         String?               @db.VarChar(8000)
+//   EstaEliminado       Boolean
+//   /// Tenant dueño de este puesto
+//   TenantId            BigInt
+//   Comprobante_Factura Comprobante_Factura[]
+//   Tenant              Tenant                @relation(fields: [TenantId], references: [Id])
 
-  @@index([TenantId])
-}
+//   @@index([TenantId])
+// }
 
 /// Rubros o categorías de artículos.
 model Rubro {
