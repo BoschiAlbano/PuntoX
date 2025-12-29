@@ -63,6 +63,7 @@ interface AlertaSeguridad {
   tipo: "critico" | "advertencia" | "info";
   titulo: string;
   descripcion: string;
+  ips?: string[];
 }
 
 const monedas = [

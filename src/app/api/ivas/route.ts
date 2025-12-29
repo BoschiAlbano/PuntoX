@@ -89,7 +89,6 @@ export async function POST(req: Request) {
       {
         ...iva,
         Id: Number(iva.Id),
-        TenantId: tenantId,
       },
       { status: 201 }
     );
