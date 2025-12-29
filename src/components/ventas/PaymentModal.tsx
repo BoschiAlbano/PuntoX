@@ -103,7 +103,7 @@ export default function PaymentModal({
   const handleConfirm = () => {
     if (!isComplete && !isError) return;
 
-    let finalPagos = [...pagos];
+    const finalPagos = [...pagos];
 
     // Handling overpayment (Change)
     if (isError) {

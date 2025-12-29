@@ -21,7 +21,6 @@ import {
 } from "@heroui/react";
 import { Search, ScanBarcode } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useDebounce } from "@uidotdev/usehooks"; // Assuming available or I should implement my own debounce
 
 // Simple custom debounce hook if uidotdev is not available or to be safe
 function useDebounceValue<T>(value: T, delay: number): T {
@@ -64,7 +63,6 @@ export default function ProductSearch({
       return res.json();
     },
     enabled: isOpen,
-    keepPreviousData: true,
   });
 
   const handleInputKeyDown = async (e: React.KeyboardEvent) => {
@@ -152,7 +150,6 @@ export default function ProductSearch({
                   placeholder="Escriba para buscar..."
                   startContent={<Search className="w-4 h-4 text-gray-400" />}
                   autoFocus
-                  clearable
                   onClear={() => setSearchQuery("")}
                 />
 
