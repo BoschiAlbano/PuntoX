@@ -200,15 +200,13 @@ export async function PUT(req: Request) {
 
     return NextResponse.json(
       {
-        seguridad: {
-          dobleFactor: updatedConfig?.Forzar2FA ?? false,
-          expirarSesiones30Dias: updatedConfig?.ExpirarSesiones30Dias ?? true,
-          bloquearTrasIntentos,
-          alertarNuevoDispositivo: updatedConfig?.AlertarNuevoDispositivo ?? true,
-          bloquearPorInactividad: updatedConfig?.BloquearPorInactividad ?? false,
-          tiempoInactividadMinutos: updatedConfig?.TiempoInactividadMinutos ?? 30,
-          recordarSesion30Dias: updatedConfig?.RecordarSesion30Dias ?? true,
-        },
+        dobleFactor: updatedConfig?.Forzar2FA ?? false,
+        expirarSesiones30Dias: updatedConfig?.ExpirarSesiones30Dias ?? true,
+        bloquearTrasIntentos,
+        alertarNuevoDispositivo: updatedConfig?.AlertarNuevoDispositivo ?? true,
+        bloquearPorInactividad: updatedConfig?.BloquearPorInactividad ?? false,
+        tiempoInactividadMinutos: updatedConfig?.TiempoInactividadMinutos ?? 30,
+        recordarSesion30Dias: updatedConfig?.RecordarSesion30Dias ?? true,
       },
       { status: 200 }
     );

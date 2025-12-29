@@ -42,7 +42,12 @@ const fetchProductos = async ({
   const response = await fetch(`/api/productos?${params.toString()}`, {
     signal,
   });
-  if (!response.ok) throw new Error("Error al cargar productos");
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const errorMessage = errorData?.error?.message || `Error al cargar productos (${response.status})`;
+    console.error("[useProductos] Error en fetch:", errorMessage, errorData);
+    throw new Error(errorMessage);
+  }
   const data = await response.json();
 
   return {

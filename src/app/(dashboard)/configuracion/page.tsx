@@ -20,8 +20,8 @@ import {
   Switch,
   Tabs,
   Tab,
+  addToast,
 } from "@heroui/react";
-import { addToast } from "@heroui/react";
 import { Lock, Shield, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
@@ -33,8 +33,37 @@ type SectionKey =
   | "ventas"
   | "notificaciones"
   | "seguridad"
-  | "fiscal"
-  | "branding";
+  | "fiscal";
+
+interface SesionActiva {
+  id: number;
+  usuarioId: number;
+  usuarioNombre: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  dispositivo: string | null;
+  ubicacion: string | null;
+  fechaInicio: string;
+  fechaUltimaActividad: string;
+  esConfiable: boolean;
+}
+
+interface DispositivoConfiable {
+  id: number;
+  usuarioId: number;
+  usuarioNombre: string;
+  nombreDispositivo: string;
+  userAgent: string | null;
+  ipAddress: string | null;
+  fechaRegistro: string;
+  fechaUltimoUso: string;
+}
+
+interface AlertaSeguridad {
+  tipo: "critico" | "advertencia" | "info";
+  titulo: string;
+  descripcion: string;
+}
 
 const monedas = [
   { value: "ARS", label: "ARS - Peso argentino" },
@@ -111,14 +140,12 @@ export default function Configuracion() {
     saveNotificaciones: saveNotificacionesMutation,
     saveSeguridad: saveSeguridadMutation,
     saveFiscal: saveFiscalMutation,
-    saveBranding: saveBrandingMutation,
     isSavingTenant,
     isSavingConfiguracion,
     isSavingPreferenciasVenta,
     isSavingNotificaciones,
     isSavingSeguridad,
     isSavingFiscal,
-    isSavingBranding,
     useProvincias,
     useDepartamentos,
     useLocalidades,
@@ -194,7 +221,7 @@ export default function Configuracion() {
     actualizaCostoDesdeCompra: boolean;
     modificaPrecioVentaDesdeCompra: boolean;
   } | null>(null);
-  const [configStockOriginal, setConfigStockOriginal] = useState<typeof configStock>(null);
+  const [configStockOriginal, setConfigStockOriginal] = useState<typeof configStock | null>(null);
 
   // Configuración avanzada: Caja y pagos
   const [configCaja, setConfigCaja] = useState({
@@ -240,8 +267,8 @@ export default function Configuracion() {
   const [seguridadOriginal, setSeguridadOriginal] = useState<typeof seguridad | null>(null);
 
   // Estados para sesiones y dispositivos
-  const [sesionesActivas, setSesionesActivas] = useState<any[]>([]);
-  const [dispositivosConfiable, setDispositivosConfiable] = useState<any[]>([]);
+  const [sesionesActivas, setSesionesActivas] = useState<SesionActiva[]>([]);
+  const [dispositivosConfiable, setDispositivosConfiable] = useState<DispositivoConfiable[]>([]);
   const [estadisticasSeguridad, setEstadisticasSeguridad] = useState({
     sesionesActivas: 0,
     dispositivosActivos: 0,
@@ -256,7 +283,7 @@ export default function Configuracion() {
   const [modalDetalle, setModalDetalle] = useState<"sesiones" | "dispositivos" | "ultimoAcceso" | "intentosFallidos" | "intentosExitosos" | null>(null);
   const [intentosSospechosos, setIntentosSospechosos] = useState<{
     sospechosos: Array<{ ipAddress: string; intentos24Horas: number; ultimoIntento: string; esCritico: boolean }>;
-    alertas: Array<{ tipo: string; titulo: string; descripcion: string; ips?: string[] }>;
+    alertas: AlertaSeguridad[];
     ultimosIntentos: Array<{ id: number; fecha: string; ipAddress: string | null; usuarioNombre: string | null; usuarioId: number | null }>;
     estadisticas: { ipsUnicasUltimaHora: number; intentosFallidos24Horas: number };
   } | null>(null);
@@ -281,13 +308,10 @@ export default function Configuracion() {
   }>>([]);
   const [isLoadingAuditoria, setIsLoadingAuditoria] = useState(false);
 
-  const [branding, setBranding] = useState({
-    slogan: "Mejor precio, mejor servicio.",
-    color: "#90c472",
-    logo: null as File | null,
-    logoPreview: "",
-  });
-  const [brandingOriginal, setBrandingOriginal] = useState<{slogan: string, color: string, logoPreview: string} | null>(null);
+  // Estado solo para el logo (integrado en perfil del negocio)
+  const [logo, setLogo] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string>("");
+  const [logoPreviewOriginal, setLogoPreviewOriginal] = useState<string>("");
 
   const [tenant, setTenant] = useState({
     nombre: "",
@@ -463,14 +487,14 @@ export default function Configuracion() {
         const data = await response.json();
         setSesionesActivas(data.sesiones || []);
       } else {
-        const errorData = await response.json().catch(() => null);
+        const errorData = await response.json().catch(() => ({}));
         const errorMessage = typeof errorData?.error === "string" 
           ? errorData.error 
-          : errorData?.error?.message || "Error al cargar sesiones";
+          : (errorData?.error?.message || errorData?.message || "Error al cargar sesiones");
         console.error("Error cargando sesiones:", errorMessage);
         addToast({
           title: "Error",
-          description: errorMessage,
+          description: String(errorMessage),
           color: "warning",
         });
         setSesionesActivas([]);
@@ -498,14 +522,14 @@ export default function Configuracion() {
         const data = await response.json();
         setDispositivosConfiable(data.dispositivos || []);
       } else {
-        const errorData = await response.json().catch(() => null);
+        const errorData = await response.json().catch(() => ({}));
         const errorMessage = typeof errorData?.error === "string" 
           ? errorData.error 
-          : errorData?.error?.message || "Error al cargar dispositivos";
+          : (errorData?.error?.message || errorData?.message || "Error al cargar dispositivos");
         console.error("Error cargando dispositivos:", errorMessage);
         addToast({
           title: "Error",
-          description: errorMessage,
+          description: String(errorMessage),
           color: "warning",
         });
         setDispositivosConfiable([]);
@@ -538,11 +562,11 @@ export default function Configuracion() {
           intentosExitosos7Dias: 0,
         });
       } else {
-        const errorData = await response.json().catch(() => null);
+        const errorData = await response.json().catch(() => ({}));
         const errorMessage = typeof errorData?.error === "string" 
           ? errorData.error 
-          : errorData?.error?.message || "Error al cargar estadísticas";
-        console.error("Error cargando estadísticas:", errorMessage);
+          : (errorData?.error?.message || errorData?.message || "Error al cargar estadísticas");
+        console.error("Error cargando estadísticas:", String(errorMessage));
         // No mostrar toast para estadísticas, solo log
       }
     } catch (error) {
@@ -562,12 +586,12 @@ export default function Configuracion() {
         setIntentosSospechosos(data);
         
         // Mostrar alertas si hay intentos sospechosos críticos
-        if (data.alertas && data.alertas.length > 0) {
-          data.alertas.forEach((alerta: any) => {
+        if (data.alertas && Array.isArray(data.alertas) && data.alertas.length > 0) {
+          data.alertas.forEach((alerta: AlertaSeguridad) => {
             if (alerta.tipo === "critico") {
               addToast({
                 title: "⚠️ Alerta de seguridad",
-                description: alerta.titulo + ": " + alerta.descripcion,
+                description: `${alerta.titulo}: ${alerta.descripcion}`,
                 color: "danger",
               });
             }
@@ -713,20 +737,11 @@ export default function Configuracion() {
     }
   }, [fiscalData]);
 
-  // Sincronizar branding
+  // Cargar logo desde branding (solo logo, sin slogan/color)
   useEffect(() => {
-    if (brandingData) {
-      setBranding((prev) => ({
-        ...prev,
-        slogan: brandingData.slogan ?? prev.slogan,
-        color: brandingData.color ?? prev.color,
-        logoPreview: brandingData.logoPreview ?? prev.logoPreview,
-      }));
-      setBrandingOriginal({
-        slogan: brandingData.slogan ?? "",
-        color: brandingData.color ?? "#90c472",
-        logoPreview: brandingData.logoPreview ?? "",
-      });
+    if (brandingData?.logoPreview) {
+      setLogoPreview(brandingData.logoPreview);
+      setLogoPreviewOriginal(brandingData.logoPreview);
     }
   }, [brandingData]);
 
@@ -742,7 +757,6 @@ export default function Configuracion() {
     notificaciones: "Define que alertas reciben los usuarios.",
     seguridad: "Protege el panel y controla dispositivos.",
     fiscal: "Moneda, idioma y datos fiscales para comprobantes.",
-    branding: "Ajusta la imagen de tu negocio en el panel y tickets.",
   };
   const summaryPerfil = useMemo(
     () => `Nombre: ${tenant.nombre} | CUIT: ${configuracion.cuit}`,
@@ -801,15 +815,6 @@ export default function Configuracion() {
     );
   }, [regional, regionalOriginal]);
   
-  const hasBrandingChanges = useMemo(() => {
-    if (!brandingOriginal) return false;
-    return (
-      branding.slogan !== brandingOriginal.slogan || 
-      branding.color !== brandingOriginal.color ||
-      branding.logo !== null ||
-      branding.logoPreview !== brandingOriginal.logoPreview
-    );
-  }, [branding, brandingOriginal]);
   
   const hasStockChanges = useMemo(() => {
     if (!configStock || !configStockOriginal) return false;
@@ -873,6 +878,11 @@ export default function Configuracion() {
     );
   }, [configuracion, configuracionOriginal]);
 
+  // Detectar si hay cambios en el logo
+  const hasLogoChanges = useMemo(() => {
+    return logo !== null;
+  }, [logo]);
+
   // Detectar si hay cambios en cualquier sección (memoizado)
   const hasAnyChanges = useMemo(() => 
     hasTenantChanges ||
@@ -885,8 +895,8 @@ export default function Configuracion() {
     hasNotificacionesChanges ||
     hasSeguridadChanges ||
     hasFiscalChanges ||
-    hasBrandingChanges,
-    [hasTenantChanges, hasConfiguracionChanges, hasPreferenciasChanges, hasStockChanges, hasCajaChanges, hasProductosChanges, hasBasculaChanges, hasNotificacionesChanges, hasSeguridadChanges, hasFiscalChanges, hasBrandingChanges]
+    hasLogoChanges,
+    [hasTenantChanges, hasConfiguracionChanges, hasPreferenciasChanges, hasStockChanges, hasCajaChanges, hasProductosChanges, hasBasculaChanges, hasNotificacionesChanges, hasSeguridadChanges, hasFiscalChanges, hasLogoChanges]
   );
   
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -910,11 +920,8 @@ export default function Configuracion() {
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-        setBranding((prev) => ({
-          ...prev,
-          logo: file,
-          logoPreview: reader.result as string,
-        }));
+        setLogo(file);
+        setLogoPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -936,10 +943,6 @@ export default function Configuracion() {
     const condicionText = condicion?.descripcion || regional.tipoIva || "No definida";
     return `Moneda: ${regional.moneda} | IVA: ${condicionText} | Punto de venta: ${regional.puntoVenta || "No definido"}`;
   }, [regional.moneda, regional.tipoIva, regional.condicionIvaId, regional.puntoVenta, condicionesIva]);
-  const summaryBranding = useMemo(
-    () => `Color: ${branding.color} | Logo: pendiente`,
-    [branding.color]
-  );
 
   // saveTenant y saveConfiguracion ahora se manejan con las mutaciones de TanStack Query
 
@@ -1034,15 +1037,24 @@ export default function Configuracion() {
         setRegionalOriginal(regional);
       }
 
-      // Guardar branding si hay cambios
-      if (hasBrandingChanges) {
-        const brandingData = await saveBrandingMutation(branding, true);
-        setBrandingOriginal({
-          slogan: branding.slogan,
-          color: branding.color,
-          logoPreview: brandingData.logoPreview ?? branding.logoPreview,
+      // Guardar logo si hay cambios
+      if (hasLogoChanges && logo) {
+        const formData = new FormData();
+        formData.append("logo", logo);
+        formData.append("slogan", ""); // No se usa, pero el endpoint lo requiere
+        formData.append("color", "#90c472"); // No se usa, pero el endpoint lo requiere
+        
+        const response = await fetch("/api/configuracion/branding", {
+          method: "PUT",
+          credentials: "include",
+          body: formData,
         });
-        setBranding((prev) => ({ ...prev, logo: null }));
+        
+        if (response.ok) {
+          const data = await response.json();
+          setLogoPreviewOriginal(data.branding?.logoPreview || logoPreview);
+          setLogo(null); // Limpiar el archivo después de guardar
+        }
       }
       
       // Mostrar una sola notificación consolidada al final
@@ -1087,7 +1099,7 @@ export default function Configuracion() {
             <Button 
               color="primary" 
               onPress={handleSavePerfil}
-              isLoading={isSavingTenant || isSavingConfiguracion || isSavingPreferenciasVenta || isSavingNotificaciones || isSavingSeguridad || isSavingFiscal || isSavingBranding}
+              isLoading={isSavingTenant || isSavingConfiguracion || isSavingPreferenciasVenta || isSavingNotificaciones || isSavingSeguridad || isSavingFiscal}
             >
               Guardar cambios
             </Button>
@@ -1100,7 +1112,7 @@ export default function Configuracion() {
         isLoadingTenant={isLoadingTenant}
         isLoadingConfiguracion={isLoadingConfiguracion}
         hasAnyChanges={hasAnyChanges}
-        isSavingAll={isSavingTenant || isSavingConfiguracion || isSavingPreferenciasVenta || isSavingNotificaciones || isSavingSeguridad || isSavingFiscal || isSavingBranding}
+        isSavingAll={isSavingTenant || isSavingConfiguracion || isSavingPreferenciasVenta || isSavingNotificaciones || isSavingSeguridad || isSavingFiscal}
         onSaveAll={handleConfirmSave}
         seguridad={seguridad}
       />
@@ -1142,6 +1154,44 @@ export default function Configuracion() {
               summary={summaryPerfil}
             >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Logo del negocio */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Logo del negocio</label>
+                <div className="flex items-center gap-4">
+                  {logoPreview && (
+                    <div className="relative">
+                      <img
+                        src={logoPreview}
+                        alt="Logo preview"
+                        className="w-24 h-24 object-contain border border-slate-200 rounded-lg bg-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLogo(null);
+                          setLogoPreview(logoPreviewOriginal);
+                        }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      variant="bordered"
+                      classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                      onChange={handleLogoChange}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Formatos: JPG, PNG, GIF. Máximo 5MB
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
               <Input
                 label="Nombre"
                 variant="bordered"
@@ -3555,101 +3605,6 @@ export default function Configuracion() {
           </div>
         </Tab>
 
-        <Tab
-          key="branding"
-          title={
-            <div className="flex items-center space-x-2">
-              <span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M1 4a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v8.586a1 1 0 0 1-.293.707l-6.414 6.414a1 1 0 0 1-.707.293H2a1 1 0 0 1-1-1V4Zm1.5 0v12.086l5.707-5.707A1 1 0 0 1 9 10.5V4H2.5Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </span>
-              <span>Branding</span>
-            </div>
-          }
-        >
-          <div className="mt-6 space-y-3">
-            <SectionPanel
-              id="branding"
-              title="Branding"
-              description={descriptionMap.branding}
-              summary={summaryBranding}
-            >
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Logo</label>
-                  <div className="flex items-center gap-4">
-                    {branding.logoPreview && (
-                      <div className="relative">
-                        <img
-                          src={branding.logoPreview}
-                          alt="Logo preview"
-                          className="w-24 h-24 object-contain border border-slate-200 rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setBranding((prev) => ({
-                              ...prev,
-                              logo: null,
-                              logoPreview: brandingOriginal?.logoPreview || "",
-                            }));
-                          }}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        variant="bordered"
-                        classNames={{ inputWrapper: "bg-white border-slate-200" }}
-                        onChange={handleLogoChange}
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Formatos: JPG, PNG, GIF. Máximo 5MB
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <Input
-                  type="color"
-                  label="Color principal"
-                  variant="bordered"
-                  classNames={{ inputWrapper: "bg-white border-slate-200 h-12" }}
-                  value={branding.color}
-                  onChange={(e) =>
-                    setBranding((prev) => ({ ...prev, color: e.target.value }))
-                  }
-                />
-              </div>
-              <Input
-                label="Slogan del negocio"
-                variant="bordered"
-                classNames={{ inputWrapper: "bg-white border-slate-200" }}
-                value={branding.slogan}
-                onChange={(e) =>
-                  setBranding((prev) => ({ ...prev, slogan: e.target.value }))
-                }
-                placeholder="Ej: Mejor precio, mejor servicio."
-              />
-            </div>
-          </SectionPanel>
-          </div>
-        </Tab>
       </Tabs>
 
       {/* Modales de detalles */}

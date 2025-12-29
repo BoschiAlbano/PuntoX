@@ -328,7 +328,8 @@ const fetchSeguridad = async ({
   }
 
   const data = await response.json();
-  return data?.seguridad || {
+  // El GET y PUT retornan los datos directamente, no envueltos en 'seguridad'
+  return data || {
     dobleFactor: false,
     expirarSesiones30Dias: true,
     bloquearTrasIntentos: "5",
@@ -486,7 +487,8 @@ const saveSeguridad = async (seguridad: Seguridad): Promise<Seguridad> => {
   }
 
   const data = await response.json();
-  return data?.seguridad;
+  // El PUT retorna los datos directamente, no envueltos en 'seguridad'
+  return data;
 };
 
 const saveFiscal = async (fiscal: Omit<Fiscal, "tipoIva">): Promise<Fiscal> => {

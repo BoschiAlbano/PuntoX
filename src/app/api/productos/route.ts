@@ -16,10 +16,19 @@ import { fotoDefault } from "@/utilities/fotoDefault";
 
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
+    const { tenantId, error, user } = await getAuthUser();
 
     if (error) {
+      console.error("[productos GET] Error de autenticación:", user);
       return error;
+    }
+
+    if (!tenantId || tenantId <= 0) {
+      console.error("[productos GET] TenantId inválido:", tenantId);
+      return NextResponse.json(
+        { error: { code: "INVALID_TENANT", message: "TenantId inválido" } },
+        { status: 401 }
+      );
     }
 
     const pagination = parsePaginationParams(req);
@@ -28,14 +37,14 @@ export async function GET(req: NextRequest) {
     // Construir where clause
     const where: {
       TenantId: bigint;
-      // EstaEliminado: boolean;
+      EstaEliminado: boolean;
       OR?: Array<{
         Descripcion?: { contains: string; mode: "insensitive" };
         CodigoBarra?: { contains: string; mode: "insensitive" };
       }>;
     } = {
       TenantId: BigInt(tenantId),
-      // EstaEliminado: false,
+      EstaEliminado: false,
     };
 
     // Agregar búsqueda si existe
@@ -91,8 +100,10 @@ export async function GET(req: NextRequest) {
 
     const response = createPaginationResponse(productos, total, pagination);
 
+    console.log(`[productos GET] Tenant ${tenantId}: ${productos.length} productos de ${total} totales`);
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
+    console.error("[productos GET] Error capturado:", error);
     return handleError(error);
   }
 }
