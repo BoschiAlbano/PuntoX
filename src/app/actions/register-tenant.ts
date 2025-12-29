@@ -58,7 +58,6 @@ export async function registerTenant(formData: FormData) {
     }
 
     const authUserId = data.user.id;
-    const LOCALIDAD_DUMMY_ID = 2014010;
 
     // transaccion prisma
     const tenant = await prisma.$transaction(async (tx) => {
@@ -66,10 +65,18 @@ export async function registerTenant(formData: FormData) {
       const newTenant = await tx.tenant.create({
         data: {
           Nombre: tenantName,
-          Email: tenantEmail && tenantEmail.length > 0 ? tenantEmail : null,
           EstaActivo: true,
         },
       });
+
+      // Buscar una localidad por defecto (la primera disponible)
+      const localidadDefault = await tx.localidad.findFirst({
+        orderBy: { Id: "asc" },
+      });
+
+      if (!localidadDefault) {
+        throw new Error("No hay localidades disponibles en la base de datos. Por favor, configure al menos una localidad.");
+      }
 
       const persona = await tx.persona.create({
         data: {
@@ -79,7 +86,7 @@ export async function registerTenant(formData: FormData) {
           Direccion: "Sin dirección",
           Telefono: null,
           Mail: adminEmail,
-          LocalidadId: LOCALIDAD_DUMMY_ID,
+          LocalidadId: localidadDefault.Id,
           EstaEliminado: false,
           TenantId: newTenant.Id,
         },
@@ -195,7 +202,7 @@ export async function registerTenant(formData: FormData) {
           Celular: null,
           Direccion: "Sin dirección",
           Email: tenantEmail && tenantEmail.length > 0 ? tenantEmail : null,
-          LocalidadId: LOCALIDAD_DUMMY_ID,
+          LocalidadId: null,
           FacturaDescuentaStock: true,
           PresupuestoDescuentaStock: false,
           RemitoDescuentaStock: true,

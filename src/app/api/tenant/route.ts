@@ -6,11 +6,7 @@ import { handleError } from "@/lib/errors/handler";
 
 const updateTenantSchema = z.object({
   nombre: z.string().min(1).optional(),
-  razonSocial: z.string().optional(),
   dominio: z.string().optional().nullable(),
-  email: z.string().email().optional().nullable(),
-  telefono: z.string().optional().nullable(),
-  cuit: z.string().optional().nullable(),
 });
 
 function tenantNotFound() {
@@ -38,11 +34,7 @@ export async function GET() {
       select: {
         Id: true,
         Nombre: true,
-        RazonSocial: true,
         Dominio: true,
-        Email: true,
-        Telefono: true,
-        Cuit: true,
       },
     });
 
@@ -55,11 +47,7 @@ export async function GET() {
         tenant: {
           id: Number(tenant.Id),
           nombre: tenant.Nombre,
-          razonSocial: tenant.RazonSocial ?? "",
           dominio: tenant.Dominio ?? "",
-          email: tenant.Email ?? "",
-          telefono: tenant.Telefono ?? "",
-          cuit: tenant.Cuit ?? "",
         },
       },
       { status: 200 }
@@ -85,13 +73,7 @@ export async function PUT(req: NextRequest) {
 
   const updateData = {
     ...(data.nombre !== undefined ? { Nombre: data.nombre } : {}),
-    ...(data.razonSocial !== undefined
-      ? { RazonSocial: data.razonSocial }
-      : {}),
     ...(data.dominio !== undefined ? { Dominio: data.dominio || null } : {}),
-    ...(data.email !== undefined ? { Email: data.email || null } : {}),
-    ...(data.telefono !== undefined ? { Telefono: data.telefono || null } : {}),
-    ...(data.cuit !== undefined ? { Cuit: data.cuit || null } : {}),
   };
 
   try {
@@ -101,11 +83,7 @@ export async function PUT(req: NextRequest) {
       select: {
         Id: true,
         Nombre: true,
-        RazonSocial: true,
         Dominio: true,
-        Email: true,
-        Telefono: true,
-        Cuit: true,
       },
     });
 
@@ -114,11 +92,7 @@ export async function PUT(req: NextRequest) {
         tenant: {
           id: Number(tenant.Id),
           nombre: tenant.Nombre,
-          razonSocial: tenant.RazonSocial ?? "",
           dominio: tenant.Dominio ?? "",
-          email: tenant.Email ?? "",
-          telefono: tenant.Telefono ?? "",
-          cuit: tenant.Cuit ?? "",
         },
       },
       { status: 200 }

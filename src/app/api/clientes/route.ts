@@ -431,7 +431,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Actualizar Persona y Persona_Cliente en transacción
-    const updated = await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       // Actualizar Persona
       const updatePersonaData: {
         Nombre?: string;

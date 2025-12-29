@@ -3,7 +3,6 @@
 import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
 
-const LOCALIDAD_DUMMY_ID = 2014010;
 
 export type PreferenciasVentaDTO = {
   ticketDigitalPorCorreo: boolean; // Mapea a Imprimir
@@ -103,7 +102,7 @@ export async function savePreferenciasVenta(
             RazonSocial: "SIN DEFINIR",
             Cuit: "00000000000",
             Direccion: "SIN DEFINIR",
-            LocalidadId: BigInt(LOCALIDAD_DUMMY_ID),
+            LocalidadId: null,
             FacturaDescuentaStock: true,
             PresupuestoDescuentaStock: false,
             RemitoDescuentaStock: true,

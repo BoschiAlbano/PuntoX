@@ -67,6 +67,7 @@ export async function GET(req: NextRequest) {
     };
 
     // Filtro de búsqueda (nombre, apellido, email, dni)
+    // Nota: OR debe estar al mismo nivel que otros filtros, no anidado
     if (busquedaFilter && busquedaFilter.trim()) {
       const busqueda = busquedaFilter.trim();
       where.OR = [
@@ -77,21 +78,20 @@ export async function GET(req: NextRequest) {
       ];
     }
 
+    // Construir filtros de Persona_Empleado de forma incremental
+    // Nota: "Invitado" (none) no se puede combinar con filtros de rol (some)
+    const personaEmpleadoFilters: any = {};
+    const usuarioFilters: any = {
+      EstaEliminado: false,
+    };
+
     // Filtro por rol
     if (rolFilter && rolFilter !== "todos") {
       const rolId = Number(rolFilter);
       if (!Number.isNaN(rolId)) {
-        where.Persona_Empleado = {
-          ...where.Persona_Empleado,
-          Usuario: {
-            some: {
-              EstaEliminado: false,
-              PerfilUsuario: {
-                some: {
-                  Perfil_Id: BigInt(rolId),
-                },
-              },
-            },
+        usuarioFilters.PerfilUsuario = {
+          some: {
+            Perfil_Id: BigInt(rolId),
           },
         };
       }
@@ -100,42 +100,55 @@ export async function GET(req: NextRequest) {
     // Filtro por estado
     if (estadoFilter && estadoFilter !== "todos") {
       if (estadoFilter === "Invitado") {
-        // Sin usuario asociado
-        where.Persona_Empleado = {
-          ...where.Persona_Empleado,
-          Usuario: {
-            none: {
-              EstaEliminado: false,
-            },
+        // Sin usuario asociado - no se puede combinar con filtro de rol
+        if (rolFilter && rolFilter !== "todos") {
+          // Si hay filtro de rol, no puede haber invitados (tienen rol)
+          // Retornar vacío
+          return NextResponse.json(
+            createPaginationResponse([], 0, pagination),
+            { status: 200 }
+          );
+        }
+        personaEmpleadoFilters.Usuario = {
+          none: {
+            EstaEliminado: false,
           },
         };
-      } else if (estadoFilter === "Suspendido") {
-        // Usuario bloqueado
-        where.Persona_Empleado = {
-          ...where.Persona_Empleado,
-          Usuario: {
-            some: {
-              EstaEliminado: false,
-              EstaBloqueado: true,
-            },
-          },
-        };
-      } else if (estadoFilter === "Activo") {
-        // Usuario activo (no bloqueado y existe)
-        where.Persona_Empleado = {
-          ...where.Persona_Empleado,
-          Usuario: {
-            some: {
-              EstaEliminado: false,
-              EstaBloqueado: false,
-            },
-          },
+      } else {
+        // Para "Activo" o "Suspendido", combinar con filtro de rol si existe
+        if (estadoFilter === "Suspendido") {
+          usuarioFilters.EstaBloqueado = true;
+        } else if (estadoFilter === "Activo") {
+          usuarioFilters.EstaBloqueado = false;
+        }
+        personaEmpleadoFilters.Usuario = {
+          some: usuarioFilters,
         };
       }
+    } else if (rolFilter && rolFilter !== "todos") {
+      // Si no hay filtro de estado pero hay filtro de rol, aplicar solo el filtro de rol
+      personaEmpleadoFilters.Usuario = {
+        some: usuarioFilters,
+      };
+    }
+
+    // Aplicar filtros de Persona_Empleado si hay alguno
+    if (Object.keys(personaEmpleadoFilters).length > 0) {
+      where.Persona_Empleado = {
+        ...where.Persona_Empleado,
+        ...personaEmpleadoFilters,
+      };
     }
 
     // Obtener total para paginación (con filtros aplicados)
-    const total = await prisma.persona.count({ where });
+    let total: number;
+    try {
+      total = await prisma.persona.count({ where });
+    } catch (countError) {
+      console.error("[empleados] Error en count:", countError);
+      console.error("[empleados] Where clause:", JSON.stringify(where, null, 2));
+      throw countError;
+    }
 
     let empleados;
     try {
@@ -258,44 +271,51 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const response = empleados.map((persona) => {
-      const legajo = persona.Persona_Empleado?.Legajo ?? null;
-      const usuario = persona.Persona_Empleado?.Usuario?.[0] ?? null;
-      const perfil = usuario?.PerfilUsuario?.[0]?.Perfiles ?? null;
+    let response;
+    try {
+      response = empleados.map((persona) => {
+        const legajo = persona.Persona_Empleado?.Legajo ?? null;
+        const usuario = persona.Persona_Empleado?.Usuario?.[0] ?? null;
+        const perfil = usuario?.PerfilUsuario?.[0]?.Perfiles ?? null;
 
-      const estado: EstadoEmpleado = usuario
-        ? mapEstado(usuario.EstaBloqueado)
-        : "Invitado";
+        const estado: EstadoEmpleado = usuario
+          ? mapEstado(usuario.EstaBloqueado)
+          : "Invitado";
 
-      return {
-        id: Number(usuario?.Id ?? persona.Id),
-        personaId: Number(persona.Id),
-        usuarioId: usuario ? Number(usuario.Id) : null,
-        nombre: persona.Nombre,
-        apellido: persona.Apellido,
-        nombreCompleto: `${persona.Nombre} ${persona.Apellido}`,
-        email: persona.Mail,
-        telefono: persona.Telefono,
-        direccion: persona.Direccion,
-        localidadId: persona.LocalidadId ? Number(persona.LocalidadId) : null,
-        localidad: persona.Localidad && !persona.Localidad.EstaEliminado 
-          ? persona.Localidad.Descripcion 
-          : null,
-        departamentoId: persona.Localidad && persona.Localidad.Departamento
-          ? Number(persona.Localidad.Departamento.Id)
-          : null,
-        provinciaId: persona.Localidad && persona.Localidad.Departamento && persona.Localidad.Departamento.Provincia
-          ? Number(persona.Localidad.Departamento.Provincia.Id)
-          : null,
-        rolId: perfil ? Number(perfil.Id) : null,
-        rolNombre: perfil?.Descripcion ?? null,
-        rolTipo: (perfil?.Tipo as string | undefined) ?? "EMPLEADO",
-        estado,
-        legajo: legajo ? `PX-${legajo}` : null,
-        dni: persona.Dni,
-        ultimaActividad: "Pendiente",
-      };
-    });
+        return {
+          id: Number(usuario?.Id ?? persona.Id),
+          personaId: Number(persona.Id),
+          usuarioId: usuario ? Number(usuario.Id) : null,
+          nombre: persona.Nombre,
+          apellido: persona.Apellido,
+          nombreCompleto: `${persona.Nombre} ${persona.Apellido}`,
+          email: persona.Mail,
+          telefono: persona.Telefono,
+          direccion: persona.Direccion,
+          localidadId: persona.LocalidadId ? Number(persona.LocalidadId) : null,
+          localidad: persona.Localidad && !persona.Localidad.EstaEliminado 
+            ? persona.Localidad.Descripcion 
+            : null,
+          departamentoId: persona.Localidad && persona.Localidad.Departamento
+            ? Number(persona.Localidad.Departamento.Id)
+            : null,
+          provinciaId: persona.Localidad && persona.Localidad.Departamento && persona.Localidad.Departamento.Provincia
+            ? Number(persona.Localidad.Departamento.Provincia.Id)
+            : null,
+          rolId: perfil ? Number(perfil.Id) : null,
+          rolNombre: perfil?.Descripcion ?? null,
+          rolTipo: (perfil?.Tipo as string | undefined) ?? "EMPLEADO",
+          estado,
+          legajo: legajo ? `PX-${legajo}` : null,
+          dni: persona.Dni,
+          ultimaActividad: "Pendiente",
+        };
+      });
+    } catch (mapError) {
+      console.error("[empleados] Error en mapeo de datos:", mapError);
+      console.error("[empleados] Empleados recibidos:", JSON.stringify(empleados, null, 2));
+      throw mapError;
+    }
 
     const paginatedResponse = createPaginationResponse(response, total, pagination);
 
@@ -613,6 +633,14 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Actualizar permisos en JWT del nuevo usuario (si tiene rol asignado)
+    if (rolIdNumber && created.usuario.AuthUserId) {
+      const { actualizarPermisosEnJWT } = await import("@/lib/auth/updateUserPermissions");
+      actualizarPermisosEnJWT(created.usuario.AuthUserId).catch((err) => {
+        console.warn("No se pudieron actualizar permisos en JWT:", err);
+      });
+    }
+
     return NextResponse.json({ empleado: empleadoResponse }, { status: 201 });
   } catch (error) {
     if (error instanceof PermisoError) {
@@ -683,6 +711,7 @@ export async function PUT(req: NextRequest) {
             Usuario: {
               select: {
                 Id: true,
+                AuthUserId: true,
                 PerfilUsuario: {
                   select: {
                     Perfil_Id: true,
@@ -839,6 +868,14 @@ export async function PUT(req: NextRequest) {
         valorNuevo: { rolId: updated.rolIdNuevo },
         req,
       });
+
+      // Actualizar permisos en JWT cuando cambia el rol
+      if (usuarioActual.AuthUserId) {
+        const { actualizarPermisosEnJWT } = await import("@/lib/auth/updateUserPermissions");
+        actualizarPermisosEnJWT(usuarioActual.AuthUserId).catch((err) => {
+          console.warn("No se pudieron actualizar permisos en JWT:", err);
+        });
+      }
     }
 
     return NextResponse.json({

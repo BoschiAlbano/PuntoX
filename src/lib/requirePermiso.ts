@@ -1,5 +1,6 @@
 import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+import { calcularPermisosUsuario, actualizarPermisosEnJWT } from "@/lib/auth/updateUserPermissions";
 
 type PermisoResult = {
   tenantId: number;
@@ -15,6 +16,10 @@ export class PermisoError extends Error {
   }
 }
 
+/**
+ * Obtiene permisos del usuario desde JWT (rápido) o DB (fallback)
+ * Prioriza JWT para evitar queries innecesarias
+ */
 export async function requirePermiso(
   clavePermiso: string
 ): Promise<PermisoResult> {
@@ -27,30 +32,12 @@ export async function requirePermiso(
     throw new PermisoError("No autenticado", 401);
   }
 
-  // Buscar usuario interno por AuthUserId y traer roles/permisos.
+  // Obtener tenantId del usuario (necesario para retornar)
   const usuario = await prisma.usuario.findFirst({
     where: { AuthUserId: user.id, EstaEliminado: false },
     select: {
       Id: true,
       TenantId: true,
-      PerfilUsuario: {
-        select: {
-          Perfiles: {
-            select: {
-              Id: true,
-              Tipo: true,
-              Descripcion: true,
-              PerfilPermiso: {
-                select: {
-                  Permiso: {
-                    select: { Clave: true, EstaEliminado: true },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
     },
   });
 
@@ -58,44 +45,70 @@ export async function requirePermiso(
     throw new PermisoError("Usuario no encontrado en el tenant", 401);
   }
 
-  const tenantId = usuario.TenantId;
-  
-  // Verificar si es SuperAdmin - tiene acceso completo sin verificar permisos
-  const esSuperAdmin = usuario.PerfilUsuario.some(
-    (pu) => {
-      const descripcion = pu.Perfiles.Descripcion?.trim() || "";
-      return descripcion === "SuperAdmin" || descripcion.toLowerCase() === "superadmin";
+  const tenantId = Number(usuario.TenantId);
+  const usuarioId = Number(usuario.Id);
+
+  // Intentar leer permisos del JWT (app_metadata)
+  const metadata = user.app_metadata || {};
+  const permisosJWT = (metadata.permissions as string[]) || [];
+  const isSuperAdminJWT = metadata.isSuperAdmin === true;
+
+  // Si tiene permisos en JWT, usarlos (rápido, sin DB)
+  if (permisosJWT.length > 0 || isSuperAdminJWT) {
+    if (isSuperAdminJWT) {
+      return {
+        tenantId,
+        usuarioId,
+        permisos: ["*"], // SuperAdmin tiene acceso completo
+      };
     }
-  );
-  
-  // SuperAdmin tiene acceso a todo, no necesita verificar permisos específicos
-  if (esSuperAdmin) {
+
+    const tienePermiso = permisosJWT.includes(clavePermiso);
+    if (!tienePermiso) {
+      throw new PermisoError("Sin permisos", 403);
+    }
+
     return {
-      tenantId: Number(tenantId),
-      usuarioId: Number(usuario.Id),
-      permisos: ["*"], // Indica acceso completo
+      tenantId,
+      usuarioId,
+      permisos: permisosJWT,
     };
   }
 
-  const permisos = usuario.PerfilUsuario.flatMap((pu) =>
-    pu.Perfiles.PerfilPermiso.filter((pp) => !pp.Permiso?.EstaEliminado).map(
-      (pp) => pp.Permiso?.Clave ?? ""
-    )
-  ).filter((c) => c);
+  // Fallback: Si no hay permisos en JWT, calcular desde DB
+  // Esto puede pasar si el usuario es antiguo o si hubo un error
+  // También actualizamos el JWT para futuras requests
+  try {
+    const { permisos, isSuperAdmin } = await calcularPermisosUsuario(user.id);
 
-  const tienePermiso = permisos.some((p) => p === clavePermiso);
+    // Actualizar JWT para futuras requests (no bloqueamos si falla)
+    actualizarPermisosEnJWT(user.id).catch((err) => {
+      console.warn("No se pudo actualizar permisos en JWT:", err);
+    });
 
-  // Opción B: Solo SuperAdmin tiene bypass automático
-  // Administradores y Empleados necesitan permisos explícitos asignados
-  // (Removida la auto-asignación de permisos a administradores)
-  
-  if (!tienePermiso) {
-    throw new PermisoError("Sin permisos", 403);
+    if (isSuperAdmin) {
+      return {
+        tenantId,
+        usuarioId,
+        permisos: ["*"],
+      };
+    }
+
+    const tienePermiso = permisos.includes(clavePermiso);
+    if (!tienePermiso) {
+      throw new PermisoError("Sin permisos", 403);
+    }
+
+    return {
+      tenantId,
+      usuarioId,
+      permisos,
+    };
+  } catch (error) {
+    if (error instanceof PermisoError) {
+      throw error;
+    }
+    console.error("Error calculando permisos:", error);
+    throw new PermisoError("Error verificando permisos", 500);
   }
-
-  return {
-    tenantId: Number(tenantId),
-    usuarioId: Number(usuario.Id),
-    permisos,
-  };
 }

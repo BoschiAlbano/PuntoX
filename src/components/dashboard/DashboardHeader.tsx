@@ -1,19 +1,11 @@
 "use client";
 import { motion } from "framer-motion";
-import {
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-  addToast,
-  Button,
-} from "@heroui/react";
+import { addToast } from "@heroui/react";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { Dispatch, SetStateAction } from "react";
 
 export default function DashboardHeader({
   isShow,
-  show,
 }: {
   isShow: Dispatch<SetStateAction<boolean>>;
   show: boolean;
@@ -41,19 +33,24 @@ export default function DashboardHeader({
     "Usuario";
   const displayEmail = typeof user?.email === "string" ? user.email : "";
 
-  function handleSignOut(): void {
+  async function handleSignOut(): Promise<void> {
+    // Cerrar sesión en la base de datos primero
+    try {
+      await fetch("/api/auth/registrar-sesion", {
+        method: "DELETE",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.warn("Error al cerrar sesión en BD:", error);
+    }
+
+    // Luego cerrar sesión en Supabase
+    await supabase.auth.signOut();
+    
     addToast({
-      title: "Cerrar sesion",
-      description: "Confirma que deseas cerrar sesion.",
-      endContent: (
-        <Button
-          size="sm"
-          variant="flat"
-          onPress={() => supabase.auth.signOut()}
-        >
-          Aceptar
-        </Button>
-      ),
+      title: "Sesión cerrada",
+      description: "Has cerrado sesión correctamente",
+      color: "success",
     });
   }
 

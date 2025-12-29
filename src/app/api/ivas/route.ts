@@ -12,7 +12,7 @@ import { createError } from "@/lib/errors/types";
 
 export async function GET(req: NextRequest) {
   // Obtener la session del usuario
-  const { tenantId, error } = await getAuthUser();
+  const { error } = await getAuthUser();
 
   if (error) {
     return error;
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: Request) {
-  const { tenantId, error } = await getAuthUser();
+  const { error } = await getAuthUser();
 
   if (error) {
     return error;
@@ -89,7 +89,6 @@ export async function POST(req: Request) {
       {
         ...iva,
         Id: Number(iva.Id),
-        TenantId: tenantId,
       },
       { status: 201 }
     );
@@ -116,7 +115,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const { tenantId, error } = await getAuthUser();
+  const { error } = await getAuthUser();
 
   if (error) {
     return error;

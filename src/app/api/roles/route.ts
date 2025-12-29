@@ -428,6 +428,12 @@ export async function PATCH(req: NextRequest) {
       req,
     });
 
+    // Actualizar permisos en JWT de todos los usuarios con este rol
+    const { actualizarPermisosUsuariosDelRol } = await import("@/lib/auth/updateUserPermissions");
+    actualizarPermisosUsuariosDelRol(rolIdBigInt, tenantIdBigInt).catch((err) => {
+      console.warn("No se pudieron actualizar permisos en JWT:", err);
+    });
+
     return NextResponse.json({ rol: rolResponse }, { status: 200 });
   } catch (error) {
     console.error("Error al actualizar rol", error);

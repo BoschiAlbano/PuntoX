@@ -13,7 +13,6 @@ import {
   Select,
   SelectItem,
   Switch,
-  Textarea,
 } from "@heroui/react";
 import { addToast } from "@heroui/react";
 
@@ -226,7 +225,6 @@ export default function AdminConfiguracionPage() {
   const {
     data: perfilData,
     isLoading: isLoadingPerfil,
-    error: errorPerfil,
   } = useQuery({
     queryKey: ["perfil-negocio"],
     queryFn: fetchPerfilNegocio,
@@ -235,7 +233,6 @@ export default function AdminConfiguracionPage() {
   const {
     data: preferenciasData,
     isLoading: isLoadingPreferencias,
-    error: errorPreferencias,
   } = useQuery({
     queryKey: ["preferencias-venta"],
     queryFn: fetchPreferenciasVenta,
@@ -376,7 +373,7 @@ export default function AdminConfiguracionPage() {
 
     // Guardar Preferencias de venta si hay cambios
     if (dirtyVentas && preferencias) {
-      const { existsConfiguracion, ...preferenciasData } = preferencias;
+      const { existsConfiguracion: _existsConfiguracion, ...preferenciasData } = preferencias;
       tasks.push({
         name: "Preferencias de venta",
         promise: mutationPreferencias.mutateAsync(preferenciasData),

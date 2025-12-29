@@ -7,6 +7,7 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { motion } from "framer-motion";
 import Loading from "@/components/loading/loading";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
+import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
 
 export default function DashboardLayout({
   children,
@@ -17,6 +18,9 @@ export default function DashboardLayout({
   const router = useRouter();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [show, setshow] = useState(true);
+  
+  // Monitorear inactividad y cerrar sesión automáticamente
+  useInactivityTimeout();
 
   useEffect(() => {
     setshow(window.innerWidth > 768);

@@ -37,7 +37,6 @@ const formaPagoSchema = z.object({
 const createComprobanteSchema = z.object({
   tipoComprobante: z.number().int().min(1).max(5),
   clienteId: z.number().int().nonnegative().nullable().optional(), // Permite null o 0 para Consumidor Final
-  puestoTrabajoId: z.number().int().positive().optional(), // Requerido solo para facturas
   fecha: z.string().optional(), // ISO date string, opcional (usa fecha actual si no se proporciona)
   descuento: z.number().nonnegative().optional().default(0),
   detalles: z
@@ -100,17 +99,6 @@ export async function POST(req: NextRequest) {
     const usuarioId = usuario.Id;
     const empleadoId = usuario.EmpleadoId;
 
-    // Validar que el tipo de comprobante requiere puesto de trabajo
-    if (
-      data.tipoComprobante === TIPO_COMPROBANTE.FACTURA &&
-      !data.puestoTrabajoId
-    ) {
-      return NextResponse.json(
-        { error: "Puesto de trabajo es requerido para facturas" },
-        { status: 400 }
-      );
-    }
-
     // Si clienteId es null o undefined, usar 0 para Consumidor Final
     if (data.clienteId === null || data.clienteId === undefined) {
       data.clienteId = 0;
@@ -118,24 +106,6 @@ export async function POST(req: NextRequest) {
 
     // Preparar clienteIdFinal (se resolverá en la transacción si es Consumidor Final)
     const clienteIdFinal = data.clienteId || 0;
-
-    // Validar puesto de trabajo si es factura
-    if (data.puestoTrabajoId) {
-      const puesto = await prisma.puestoTrabajo.findFirst({
-        where: {
-          Id: BigInt(data.puestoTrabajoId),
-          TenantId: tenantIdBigInt,
-          EstaEliminado: false,
-        },
-      });
-
-      if (!puesto) {
-        return NextResponse.json(
-          { error: "Puesto de trabajo no encontrado" },
-          { status: 404 }
-        );
-      }
-    }
 
     // Validar artículos y stock
     const articulosIds = data.detalles.map((d) => BigInt(d.articuloId));
@@ -439,7 +409,6 @@ export async function POST(req: NextRequest) {
           data: {
             Id: comprobante.Id,
             ClienteId: BigInt(clienteIdFinalTx),
-            PuestoTrabajoId: BigInt(data.puestoTrabajoId!),
             Estado: ESTADO_FACTURA.CONFIRMADO,
           },
         });

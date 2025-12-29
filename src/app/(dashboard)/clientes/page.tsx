@@ -2,8 +2,10 @@
 
 import ClienteCRUD from "@/components/clientes/ClienteCRUD";
 import { Chip, Tab, Tabs } from "@heroui/react";
+import { usePagePermission } from "@/lib/permissions/usePagePermission";
 
 export default function ClientesPage() {
+  usePagePermission(); // Proteger página con permisos
   return (
     <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center">
       {/* Header de la página */}

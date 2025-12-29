@@ -199,15 +199,29 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       try {
         const res = await fetch("/api/permisos", {
           cache: "no-store",
+          credentials: "include",
         });
 
-        if (res.ok) {
-          const data = await res.json();
-          setPermisos(Array.isArray(data.permisos) ? data.permisos : []);
-          setIsSuperAdmin(data.isSuperAdmin === true);
+        if (!res.ok) {
+          // Si la respuesta no es OK, intentar leer el error
+          const errorText = await res.text();
+          console.error("Error en respuesta de permisos:", res.status, errorText);
+          return;
         }
+
+        const data = await res.json();
+        setPermisos(Array.isArray(data.permisos) ? data.permisos : []);
+        setIsSuperAdmin(data.isSuperAdmin === true);
       } catch (error) {
-        console.error("Error cargando permisos:", error);
+        // Manejar diferentes tipos de errores
+        if (error instanceof TypeError && error.message === "Failed to fetch") {
+          console.warn("No se pudo conectar con el servidor. Verifica que el servidor esté corriendo.");
+        } else {
+          console.error("Error cargando permisos:", error);
+        }
+        // En caso de error, establecer valores por defecto para evitar bloqueos
+        setPermisos([]);
+        setIsSuperAdmin(false);
       }
     }
 

@@ -79,7 +79,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
   // Estados de Listado
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(initialLimit);
+  const [limit] = useState(initialLimit);
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "Descripcion",
     direction: "ascending",
@@ -188,9 +188,12 @@ export default function GenericCrud<T extends { Id: number | string }>({
         setItemToDelete(null);
       },
       onError: (error: any) => {
+        const errorMessage = typeof error?.error === "string" 
+          ? error.error 
+          : error?.error?.message || "Error al eliminar";
         addToast({
           title: "Error",
-          description: error.error || "Error al eliminar",
+          description: errorMessage,
           color: "danger",
         });
       },

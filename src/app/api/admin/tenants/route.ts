@@ -60,8 +60,13 @@ export async function GET(req: NextRequest) {
     if (search) {
       where.OR = [
         { Nombre: { contains: search, mode: "insensitive" } },
-        { Email: { contains: search, mode: "insensitive" } },
-        { RazonSocial: { contains: search, mode: "insensitive" } },
+        { Configuraciones: { some: { 
+          OR: [
+            { Email: { contains: search, mode: "insensitive" } },
+            { RazonSocial: { contains: search, mode: "insensitive" } },
+          ],
+          EstaEliminado: false,
+        } } },
       ];
     }
 
@@ -69,14 +74,12 @@ export async function GET(req: NextRequest) {
       where.EstaActivo = status === "activo";
     }
 
-    // Obtener todos los tenants
+    // Obtener todos los tenants con su configuración más reciente
     const tenants = await prisma.tenant.findMany({
       where,
       select: {
         Id: true,
         Nombre: true,
-        Email: true,
-        RazonSocial: true,
         Dominio: true,
         EstaActivo: true,
         OnboardingCompleto: true,
@@ -84,6 +87,19 @@ export async function GET(req: NextRequest) {
         Plan: {
           select: {
             Nombre: true,
+          },
+        },
+        Configuraciones: {
+          where: {
+            EstaEliminado: false,
+          },
+          orderBy: {
+            Id: "desc",
+          },
+          take: 1,
+          select: {
+            Email: true,
+            RazonSocial: true,
           },
         },
         Usuarios: {
@@ -153,12 +169,13 @@ export async function GET(req: NextRequest) {
         : tenant.OnboardingCompleto
         ? "cancelado"
         : "pendiente";
+      const configuracion = tenant.Configuraciones[0];
 
       return {
         id: Number(tenant.Id),
         name: tenant.Nombre,
-        email: tenant.Email || "",
-        razonSocial: tenant.RazonSocial || "",
+        email: configuracion?.Email || "",
+        razonSocial: configuracion?.RazonSocial || "",
         dominio: tenant.Dominio || "",
         status: status as "activo" | "pendiente" | "cancelado",
         plan: tenant.Plan?.Nombre || "Base",
@@ -555,12 +572,7 @@ export async function DELETE(req: NextRequest) {
         where: { TenantId: tenantId },
       });
 
-      // 33. Eliminar puestos de trabajo
-      await tx.puestoTrabajo.deleteMany({
-        where: { TenantId: tenantId },
-      });
-
-      // 34. Eliminar rubros
+      // 33. Eliminar rubros (PuestoTrabajo fue eliminado)
       await tx.rubro.deleteMany({
         where: { TenantId: tenantId },
       });

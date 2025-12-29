@@ -1,13 +1,15 @@
 "use client";
 
-import { Tabs, Tab, Card, CardBody, Chip } from "@heroui/react";
+import { Tabs, Tab, Chip } from "@heroui/react";
 import ProductoCRUD from "@/components/productos/ProductoCRUD";
 import RubroCRUD from "@/components/rubros/RubroCRUD";
 import UnidadMedidaCRUD from "@/components/unidad-medida/UnidadMedidaCRUD";
 import MarcaCRUD from "@/components/marcas/MarcaCRUD";
 import { useState } from "react";
+import { usePagePermission } from "@/lib/permissions/usePagePermission";
 
 export default function ProductosPage() {
+  usePagePermission(); // Proteger página con permisos
   const [selected, setSelected] = useState<
     "productos" | "marcas" | "rubros" | "unidades" | "marcas-test"
   >("productos");
