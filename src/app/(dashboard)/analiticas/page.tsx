@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, Suspense } from "react";
+import { useState, useMemo, Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { usePagePermission } from "@/lib/permissions/usePagePermission";
 import {
@@ -23,7 +23,13 @@ import {
   TableCell,
   Pagination,
 } from "@heroui/react";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, DollarSign, TrendingUp, Package, Users, Receipt, Percent, ShoppingCart, Store } from "lucide-react";
+import { useKPIs, useGraficas, useAlertas, useComplementarios } from "@/hooks/useAnaliticas";
+import KPICard from "@/components/analiticas/KPICard";
+import GraficaIngresos from "@/components/analiticas/GraficaIngresos";
+import GraficaPagos from "@/components/analiticas/GraficaPagos";
+import GraficaProductos from "@/components/analiticas/GraficaProductos";
+import PanelAlertas from "@/components/analiticas/PanelAlertas";
 
 // TODO: Reemplazar con datos reales del API cuando esté disponible
 // Endpoint esperado: GET /api/logs?fechaDesde=...&fechaHasta=...&usuario=...&accion=...&modulo=...&page=...&limit=...
@@ -199,6 +205,13 @@ function AnaliticasContent() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") || "dashboard";
 
+  // Filtros para dashboard
+  const [periodo, setPeriodo] = useState<"semanal" | "mensual">("mensual");
+  const [fechaDesde, setFechaDesde] = useState<string>("");
+  const [fechaHasta, setFechaHasta] = useState<string>("");
+  const [agrupacion, setAgrupacion] = useState<"dia" | "semana" | "mes">("dia");
+
+  // Filtros para logs
   const [filtros, setFiltros] = useState({
     fechaDesde: "",
     fechaHasta: "",
@@ -209,6 +222,50 @@ function AnaliticasContent() {
 
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
+
+  // Calcular fechas por defecto según período
+  useEffect(() => {
+    if (!fechaDesde || !fechaHasta) {
+      const hoy = new Date();
+      const diasAtras = periodo === "semanal" ? 7 : 30;
+      const desde = new Date(hoy.getTime() - diasAtras * 24 * 60 * 60 * 1000);
+      setFechaDesde(desde.toISOString().split("T")[0]);
+      setFechaHasta(hoy.toISOString().split("T")[0]);
+    }
+  }, [periodo, fechaDesde, fechaHasta]);
+
+  // Hooks para datos
+  const { data: kpisData, isLoading: kpisLoading } = useKPIs({
+    fechaDesde,
+    fechaHasta,
+    periodo,
+  });
+
+  const { data: graficasIngresos, isLoading: ingresosLoading } = useGraficas({
+    tipo: "ingresos",
+    fechaDesde,
+    fechaHasta,
+    agrupacion,
+  });
+
+  const { data: graficasPagos, isLoading: pagosLoading } = useGraficas({
+    tipo: "pagos",
+    fechaDesde,
+    fechaHasta,
+  });
+
+  const { data: graficasProductos, isLoading: productosLoading } = useGraficas({
+    tipo: "productos",
+    fechaDesde,
+    fechaHasta,
+  });
+
+  const { data: alertasData, isLoading: alertasLoading } = useAlertas({});
+
+  const { data: complementariosData } = useComplementarios({
+    fechaDesde,
+    fechaHasta,
+  });
 
   const logsFiltrados = useMemo(() => {
     return mockLogs.filter((log) => {
@@ -265,13 +322,283 @@ function AnaliticasContent() {
             </div>
           }
         >
-          <Card className="mt-6 shadow-sm border border-slate-200">
-            <CardBody className="p-6">
-              <p className="text-gray-600">
-                Dashboard de analíticas (en desarrollo)
-              </p>
-            </CardBody>
-          </Card>
+          <div className="mt-6 space-y-6">
+            {/* Filtros */}
+            <Card className="shadow-sm">
+              <CardBody className="p-4">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <Select
+                    size="sm"
+                    label="Período"
+                    selectedKeys={[periodo]}
+                    onChange={(e) => setPeriodo(e.target.value as "semanal" | "mensual")}
+                    className="w-full md:min-w-[140px]"
+                  >
+                    <SelectItem key="semanal">Semanal</SelectItem>
+                    <SelectItem key="mensual">Mensual</SelectItem>
+                  </Select>
+                  <Input
+                    size="sm"
+                    type="date"
+                    label="Desde"
+                    value={fechaDesde}
+                    onChange={(e) => setFechaDesde(e.target.value)}
+                    className="w-full md:min-w-[140px]"
+                  />
+                  <Input
+                    size="sm"
+                    type="date"
+                    label="Hasta"
+                    value={fechaHasta}
+                    onChange={(e) => setFechaHasta(e.target.value)}
+                    className="w-full md:min-w-[140px]"
+                  />
+                  <Select
+                    size="sm"
+                    label="Agrupación"
+                    selectedKeys={[agrupacion]}
+                    onChange={(e) => setAgrupacion(e.target.value as "dia" | "semana" | "mes")}
+                    className="w-full md:min-w-[140px]"
+                  >
+                    <SelectItem key="dia">Por Día</SelectItem>
+                    <SelectItem key="semana">Por Semana</SelectItem>
+                    <SelectItem key="mes">Por Mes</SelectItem>
+                  </Select>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* KPIs */}
+            {kpisLoading ? (
+              <Card className="shadow-sm">
+                <CardBody className="p-6">
+                  <p className="text-gray-500">Cargando KPIs...</p>
+                </CardBody>
+              </Card>
+            ) : kpisData ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                <KPICard
+                  title="Ingresos Netos"
+                  value={kpisData.kpis.ingresosNetos.valor}
+                  variation={kpisData.kpis.ingresosNetos.variacion}
+                  format="currency"
+                  icon={<DollarSign size={24} />}
+                  color="success"
+                />
+                <KPICard
+                  title="Descuentos"
+                  value={kpisData.kpis.descuentos.valor}
+                  variation={kpisData.kpis.descuentos.variacion}
+                  format="currency"
+                  icon={<Percent size={24} />}
+                  color="warning"
+                />
+                <KPICard
+                  title="IVA Facturado"
+                  value={kpisData.kpis.ivaFacturado.valor}
+                  variation={kpisData.kpis.ivaFacturado.variacion}
+                  format="currency"
+                  icon={<Receipt size={24} />}
+                  color="primary"
+                />
+                <KPICard
+                  title="Tickets"
+                  value={kpisData.kpis.tickets.valor}
+                  variation={kpisData.kpis.tickets.variacion}
+                  format="number"
+                  icon={<TrendingUp size={24} />}
+                  color="default"
+                />
+                <KPICard
+                  title="Ticket Promedio"
+                  value={kpisData.kpis.ticketPromedio.valor}
+                  variation={kpisData.kpis.ticketPromedio.variacion}
+                  format="currency"
+                  icon={<DollarSign size={24} />}
+                  color="success"
+                />
+                <KPICard
+                  title="Margen de Ganancia"
+                  value={kpisData.kpis.margenGanancia.valor}
+                  variation={kpisData.kpis.margenGanancia.variacion}
+                  format="currency"
+                  icon={<TrendingUp size={24} />}
+                  color="success"
+                />
+                <KPICard
+                  title="Productos Vendidos"
+                  value={kpisData.kpis.productosVendidos.valor}
+                  variation={kpisData.kpis.productosVendidos.variacion}
+                  format="number"
+                  icon={<ShoppingCart size={24} />}
+                  color="default"
+                />
+                <KPICard
+                  title="Clientes Activos"
+                  value={kpisData.kpis.clientesActivos.valor}
+                  variation={kpisData.kpis.clientesActivos.variacion}
+                  format="number"
+                  icon={<Users size={24} />}
+                  color="primary"
+                />
+                <KPICard
+                  title="Notas de Crédito"
+                  value={kpisData.kpis.notasCredito.valor}
+                  format="number"
+                  icon={<Package size={24} />}
+                  color="warning"
+                />
+                {kpisData.kpis.estadoCaja && (
+                  <KPICard
+                    title="Estado de Caja"
+                    value={kpisData.kpis.estadoCaja.estaAbierta ? "Abierta" : "Cerrada"}
+                    format="custom"
+                    icon={<Store size={24} />}
+                    color={kpisData.kpis.estadoCaja.estaAbierta ? "success" : "default"}
+                  />
+                )}
+              </div>
+            ) : null}
+
+            {/* Gráficas */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {ingresosLoading ? (
+                <Card className="shadow-sm">
+                  <CardBody className="p-6">
+                    <p className="text-gray-500">Cargando gráfica de ingresos...</p>
+                  </CardBody>
+                </Card>
+              ) : graficasIngresos ? (
+                <GraficaIngresos datos={graficasIngresos.datos} />
+              ) : null}
+
+              {pagosLoading ? (
+                <Card className="shadow-sm">
+                  <CardBody className="p-6">
+                    <p className="text-gray-500">Cargando gráfica de pagos...</p>
+                  </CardBody>
+                </Card>
+              ) : graficasPagos ? (
+                <GraficaPagos datos={graficasPagos.datos} />
+              ) : null}
+            </div>
+
+            {productosLoading ? (
+              <Card className="shadow-sm">
+                <CardBody className="p-6">
+                  <p className="text-gray-500">Cargando gráfica de productos...</p>
+                </CardBody>
+              </Card>
+            ) : graficasProductos ? (
+              <GraficaProductos datos={graficasProductos.datos} />
+            ) : null}
+
+            {/* Alertas */}
+            {alertasData && (
+              <PanelAlertas data={alertasData} isLoading={alertasLoading} />
+            )}
+
+            {/* Datos complementarios */}
+            {complementariosData && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {complementariosData.gastos && (
+                  <Card className="shadow-sm">
+                    <CardHeader className="pb-3">
+                      <h3 className="text-lg font-semibold text-slate-900">
+                        Gastos y Caja
+                      </h3>
+                    </CardHeader>
+                    <CardBody>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Total Gastos:</span>
+                          <span className="text-lg font-semibold">
+                            {new Intl.NumberFormat("es-AR", {
+                              style: "currency",
+                              currency: "ARS",
+                            }).format(complementariosData.gastos.total)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Total Ganancia:</span>
+                          <span className="text-lg font-semibold text-green-600">
+                            {new Intl.NumberFormat("es-AR", {
+                              style: "currency",
+                              currency: "ARS",
+                            }).format(complementariosData.gastos.totalGanancia)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Eficiencia:</span>
+                          <Chip
+                            size="sm"
+                            color={complementariosData.gastos.eficiencia >= 50 ? "success" : "warning"}
+                            variant="flat"
+                          >
+                            {complementariosData.gastos.eficiencia.toFixed(1)}%
+                          </Chip>
+                        </div>
+                        <Divider />
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 mb-2">
+                            Gastos por Concepto:
+                          </p>
+                          <div className="space-y-2">
+                            {complementariosData.gastos.porConcepto.slice(0, 5).map((gasto, idx) => (
+                              <div key={idx} className="flex justify-between items-center text-sm">
+                                <span className="text-gray-600">{gasto.concepto}</span>
+                                <span className="font-medium">
+                                  {new Intl.NumberFormat("es-AR", {
+                                    style: "currency",
+                                    currency: "ARS",
+                                  }).format(gasto.monto)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+                )}
+
+                {complementariosData.usuarios && (
+                  <Card className="shadow-sm">
+                    <CardHeader className="pb-3">
+                      <h3 className="text-lg font-semibold text-slate-900">
+                        Usuarios Activos
+                      </h3>
+                    </CardHeader>
+                    <CardBody>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Activos Ahora:</span>
+                          <Chip size="sm" color="success" variant="flat">
+                            {complementariosData.usuarios.activosAhora}
+                          </Chip>
+                        </div>
+                        {complementariosData.usuarios.dispositivosNoConfiables.length > 0 && (
+                          <div>
+                            <p className="text-sm font-medium text-gray-700 mb-2">
+                              Dispositivos No Confiables:
+                            </p>
+                            <div className="space-y-2">
+                              {complementariosData.usuarios.dispositivosNoConfiables.map((d) => (
+                                <div key={d.id} className="text-sm p-2 rounded border border-yellow-200 bg-yellow-50">
+                                  <p className="font-medium">{d.usuario}</p>
+                                  <p className="text-xs text-gray-500">{d.dispositivo || "Desconocido"}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardBody>
+                  </Card>
+                )}
+              </div>
+            )}
+          </div>
         </Tab>
 
         <Tab
