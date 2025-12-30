@@ -10,23 +10,108 @@
 - `PATCH /api/roles?id=<rolId> { nombre, descripcion, tipo, permisos }`: actualiza rol existente. No permite modificar nombre/tipo en roles del sistema. Registra auditoría `EDITAR_ROL` con `valorAnterior` y `valorNuevo` (incluye permisos).
 - `DELETE /api/roles?id=<rolId>`: elimina rol (hard delete). Bloquea si el rol tiene usuarios asignados o es rol del sistema. Registra auditoría `ELIMINAR_ROL` antes de eliminar.
 - `GET /api/empleados`: lista empleados del tenant (Persona + Usuario + Rol + Localidad) con estado (Activo/Suspendido/Invitado). Soporta paginación (`page`, `limit`) y filtros backend (`rol`, `estado`, `busqueda`).
-- `POST /api/empleados`: alta de persona + empleado + usuario + rol; crea usuario en Supabase Auth con metadata `tenant_id` y `role`. Registra auditoría `CREAR_USUARIO` y `INVITAR_USUARIO` (si `autoInvitar` es true).
+- `POST /api/empleados`: alta de persona + empleado + usuario + rol; crea usuario en Supabase Auth con metadata `tenant_id` y `role`. El campo `nombreUsuario` es opcional; si no se proporciona, se genera automáticamente desde el email (parte antes de `@`). Si el usuario generado ya existe, se agrega un número secuencial (ej: `usuario1`, `usuario2`). Registra auditoría `CREAR_USUARIO` y `INVITAR_USUARIO` (si `autoInvitar` es true).
 - `PUT /api/empleados { personaId, nombre, apellido, dni, direccion, telefono, localidadId, rolId }`: edita datos del empleado. Actualiza `Persona` y `PerfilUsuario` (rol). Registra auditoría `EDITAR_USUARIO` y `CAMBIAR_ROL` (si cambió el rol) con `valorAnterior` y `valorNuevo`.
 - `PATCH /api/empleados { usuarioId, bloquear }`: suspende/activa usuario (toggle en `EstaBloqueado`). Registra auditoría `SUSPENDER_USUARIO` o `REACTIVAR_USUARIO`.
-- `DELETE /api/empleados { personaId }`: elimina empleado definitivamente (hard delete). Registra auditoría `ELIMINAR_USUARIO` antes de eliminar.
+- `DELETE /api/empleados { personaId }`: elimina empleado definitivamente (hard delete). El `personaId` se envía en el body de la request, no como parámetro de URL. Registra auditoría `ELIMINAR_USUARIO` antes de eliminar.
 - `PUT /api/empleados/cambiar-password { usuarioId, nuevaPassword }`: cambia la contraseña del usuario en Supabase Auth. Valida que la contraseña tenga al menos 8 caracteres. Registra auditoría `CAMBIAR_PASSWORD` con severidad `WARNING`.
+- `POST /api/empleados/reenviar-invitacion { email, tenantId }`: reenvía una invitación a un usuario específico. Utiliza `supabase.auth.admin.inviteUserByEmail` para reenviar el email de invitación. Registra auditoría `REENVIAR_INVITACION`. Retorna mensaje de éxito o error.
 - `GET /api/auditoria-empleados`: consulta logs de auditoría con paginación. Filtros opcionales: `accion`, `usuarioId`, `empleadoId`, `fechaDesde`, `fechaHasta`.
 - `POST /api/auditoria-empleados`: registro manual de auditoría (principalmente para testing).
 
 ## Página `src/app/(dashboard)/empleados/page.tsx`
 - **Estructura con Tabs**: La página está organizada en 3 tabs principales:
-  - **Usuarios**: Alta rápida de usuarios + Tabla de empleados con filtros
+  - **Usuarios**: Alerta de invitaciones pendientes + Tabla de empleados con filtros + Modal de creación
   - **Roles**: Librería de roles con acciones de editar/eliminar
-  - **Auditoría de accesos**: Preview de logs (máximo 10 items) con botón "Ver logs completos" que navega a `/analiticas?tab=logs`
+  - **Auditoría de accesos**: Preview de logs con paginación HeroUI y botón "Ver logs completos" que navega a `/analiticas?tab=logs`
 
 - Carga inicial: `/api/roles`, `/api/provincias`, `/api/empleados`.
 - Cascada con búsqueda: Provincia → Departamento → Localidad (fetch dinámico con `q`).
-- Alta rápida: nombre/apellido/email/usuario/password/teléfono/dirección + selección de provincia/departamento/localidad + rol + opción de invitación. Valida campos y dispara `POST /api/empleados`.
+
+### Mejoras de UI/UX Implementadas (Diciembre 2024)
+
+#### 1. **Alerta de Invitaciones Pendientes (Sticky)**
+- **Ubicación**: Sticky en la parte superior del tab "Usuarios" (`sticky top-0 z-30`)
+- **Diseño**: 
+  - Fondo gradiente amarillo con borde destacado (`border-2 border-yellow-400`)
+  - Sombra y backdrop blur para mejor visibilidad
+  - Badge con contador de invitaciones pendientes
+- **Funcionalidades**:
+  - Muestra cantidad de invitaciones pendientes en badge
+  - Botón **"Enviar recordatorio"**: Reenvía invitaciones a todos los usuarios pendientes
+  - Botón **"Ver invitados"**: Filtra la lista para mostrar solo usuarios invitados
+- **Endpoint**: `POST /api/empleados/reenviar-invitacion` para reenvío individual
+
+#### 2. **Formulario de Alta Convertido a Modal**
+- **Antes**: Formulario inline que ocupaba mucho espacio vertical
+- **Ahora**: Modal "Crear nuevo usuario" (`size="3xl"`, `scrollBehavior="inside"`)
+- **Estructura del Modal**:
+  - **Sección "Información personal"**: Nombre, Apellido, DNI, Teléfono, Dirección
+  - **Sección "Credenciales de acceso"**: Email, Contraseña, Confirmar contraseña
+  - **Sección "Ubicación"**: Provincia, Departamento, Localidad (cascada)
+  - **Sección "Configuración"**: Rol, Auto-invitar
+- **Mejoras**:
+  - Campos requeridos marcados con `isRequired`
+  - Descripciones contextuales para cada campo
+  - Layout responsive con grid de 2 columnas
+  - Bordes laterales de color por sección (`border-l-4`)
+- **Campo eliminado**: "Usuario de acceso" (el sistema genera automáticamente el nombre de usuario desde el email)
+
+#### 3. **Integración con GenericCrud/GenericTable**
+- **Componente**: `EmpleadoCRUD` (`src/components/empleados/EmpleadoCRUD.tsx`)
+- **Características**:
+  - Usa `GenericCrud` con `GenericTable` para consistencia con otras páginas
+  - Paginación con límite por defecto de 15 registros
+  - Búsqueda integrada con debounce
+  - Botón de refresh con animación de carga
+  - Reset automático de página al cambiar búsqueda
+- **Columnas de la tabla**:
+  - Nombre completo
+  - Email
+  - Rol (con chip de color)
+  - Estado (Activo/Suspendido/Invitado con chip)
+  - Última actividad
+  - Acciones (Edit, View, Toggle Status, Send Email, Delete)
+- **Adaptador**: `empleado.adapter.ts` para transformar datos de API a formato frontend
+
+#### 4. **Botón de Refresh**
+- **Ubicación**: Junto a la barra de búsqueda en la tabla de empleados
+- **Diseño**: 
+  - Icono `RefreshCw` de lucide-react
+  - Animación de rotación cuando está cargando (`animate-spin`)
+  - Estilo consistente con otros botones de refresh del sistema
+- **Funcionalidad**: Refresca manualmente los datos de empleados
+
+#### 5. **Mejoras en Sección de Roles**
+- **Botón "Crear nuevo rol"**:
+  - Mismo formato y estilo que "Crear nuevo usuario"
+  - Texto descriptivo en lugar de solo "Crear rol"
+  - Posicionamiento consistente
+- **Modal "Nuevo rol" mejorado**:
+  - Misma estructura visual que modal de crear usuario
+  - Secciones organizadas: "Información básica", "Permisos"
+  - Campos requeridos marcados
+  - Descripciones contextuales
+  - Layout responsive con grid
+- **Botón de refresh en Roles**:
+  - Mismo formato que en la tabla de empleados
+  - Refresca la lista de roles manualmente
+
+#### 6. **Paginación en Auditoría de Accesos**
+- **Antes**: Botones manuales de paginación
+- **Ahora**: Componente HeroUI `Pagination`
+- **Características**:
+  - Renderizado condicional (solo muestra si `totalPages > 1`)
+  - Estilo consistente con el resto de la aplicación
+  - Navegación mejorada
+
+#### 7. **Eliminación del Campo "Usuario de Acceso"**
+- **Razón**: El login se realiza mediante email, no requiere nombre de usuario
+- **Implementación**:
+  - El backend genera automáticamente `nombreUsuario` desde el email (parte antes de `@`)
+  - Manejo de duplicados: Si el usuario generado ya existe, se agrega un número (ej: `usuario1`, `usuario2`)
+  - Validación y error de "usuario ya en uso" eliminados del frontend
+- **Endpoint actualizado**: `POST /api/empleados` ahora acepta `nombreUsuario` como opcional y lo genera automáticamente si no se proporciona
 - **Roles mejorados**:
   - Creación de rol con tipo (Administrador o Empleado) desde modal
   - **Edición de roles**: Menú de acciones (⋯) con opción "Editar rol" que abre modal prellenado. Permite modificar nombre, descripción, tipo y permisos. Los roles del sistema no permiten modificar nombre/tipo.
@@ -151,3 +236,8 @@ await registrarAuditoria({
   - **Filtrado backend**: Los filtros de búsqueda, rol y estado se procesan en el servidor, mejorando el rendimiento y la precisión de los resultados.
   - **Refactorización de código**: Lógica de formateo de auditoría extraída a `auditoria-utils.ts` con tests unitarios (`auditoria-utils.test.ts`).
   - Mejoras en responsive design y accesibilidad (aria-labels).
+  - **Alerta sticky de invitaciones**: Alerta siempre visible con badge de contador, botones de acción (Enviar recordatorio, Ver invitados) y diseño destacado.
+  - **Modal de creación**: Formulario organizado en secciones lógicas con indicadores visuales y campos requeridos marcados.
+  - **Integración GenericCrud**: Tabla de empleados usando componentes reutilizables para consistencia con otras páginas.
+  - **Botones de refresh**: Disponibles en tabla de empleados y sección de roles, con animación de carga.
+  - **Paginación HeroUI**: En auditoría de accesos, reemplazando controles manuales.
