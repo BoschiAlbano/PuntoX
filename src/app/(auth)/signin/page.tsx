@@ -1,6 +1,7 @@
 "use client";
 
 import CredentialsForm from "@/components/auth/CredentialsForm";
+import { Info } from "lucide-react";
 
 export default function SignIn() {
   return (
@@ -8,27 +9,28 @@ export default function SignIn() {
       <div className="max-w-md w-full space-y-8">
         {/* Header simple (solo credenciales, sin Google) */}
         <div className="text-center">
-          <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-500 to-[#90c472] rounded-full flex items-center justify-center mb-4">
+          <div className="mx-auto h-20 w-20 bg-gradient-to-r from-blue-500 to-[#90c472] rounded-full flex items-center justify-center mb-4 shadow-md">
             <img
               src="/XPdark.ico"
               alt="Punto X"
-              className="h-10 w-10 object-contain"
+              className="h-12 w-12 object-contain"
             />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Bienvenido</h2>
-          <p className="text-gray-600">Inicia sesion en tu cuenta</p>
+          <p className="text-sm text-gray-500">Inicia sesion en tu cuenta</p>
         </div>
 
         {/* Formulario de credenciales (único método de acceso) */}
-        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8">
+        <div className="bg-white rounded-lg shadow-xl border border-gray-100 p-8">
           <CredentialsForm />
         </div>
 
-        {/* Registro deshabilitado: indicar vía copy */}
-        <div className="text-center text-sm text-gray-600">
-          <p>
-            El registro de usuarios está deshabilitado. Solicita acceso a un
-            administrador.
+        {/* Registro deshabilitado: alerta suave */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+          <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+          <p className="text-sm text-blue-800">
+            El acceso es solo por invitación. Contactá a un administrador para
+            obtener acceso.
           </p>
         </div>
 

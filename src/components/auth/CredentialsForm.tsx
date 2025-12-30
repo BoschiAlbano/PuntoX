@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
+import { Mail, Lock } from "lucide-react";
 
 // Validación de email con regex
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -207,26 +208,29 @@ export default function CredentialsForm() {
         >
           Correo electronico
         </label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={handleEmailChange}
-          onBlur={() => {
-            // Validar al perder el foco también
-            if (email && !validateEmail(email)) {
-              setEmailError("El formato del email no es válido");
-            }
-          }}
-          required
-          disabled={isLoading}
-          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-            emailError
-              ? "border-red-300 bg-red-50"
-              : "border-gray-300 bg-white"
-          } ${isLoading ? "opacity-60 cursor-not-allowed" : ""}`}
-          placeholder="tu@email.com"
-        />
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={handleEmailChange}
+            onBlur={() => {
+              // Validar al perder el foco también
+              if (email && !validateEmail(email)) {
+                setEmailError("El formato del email no es válido");
+              }
+            }}
+            required
+            disabled={isLoading}
+            className={`w-full pl-10 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+              emailError
+                ? "border-red-300 bg-red-50"
+                : "border-gray-300 bg-white"
+            } ${isLoading ? "opacity-60 cursor-not-allowed" : ""}`}
+            placeholder="tu@email.com"
+          />
+        </div>
         {emailError && (
           <p className="mt-1 text-sm text-red-600">{emailError}</p>
         )}
@@ -237,23 +241,26 @@ export default function CredentialsForm() {
           htmlFor="password"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          Contrasena
+          Contraseña
         </label>
-        <input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value);
-            setError(""); // Limpiar error al escribir
-          }}
-          required
-          disabled={isLoading}
-          className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-            isLoading ? "opacity-60 cursor-not-allowed" : ""
-          }`}
-          placeholder="********"
-        />
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setError(""); // Limpiar error al escribir
+            }}
+            required
+            disabled={isLoading}
+            className={`w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+              isLoading ? "opacity-60 cursor-not-allowed" : ""
+            }`}
+            placeholder="********"
+          />
+        </div>
       </div>
 
       {error && (
@@ -281,10 +288,10 @@ export default function CredentialsForm() {
       <button
         type="submit"
         disabled={isLoading || !!emailError}
-        className={`w-full bg-gradient-to-r from-blue-500 to-[#90c472] text-white py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 font-medium ${
+        className={`w-full bg-gradient-to-r from-blue-500 to-[#90c472] text-white py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 font-medium shadow-sm ${
           isLoading || emailError
             ? "opacity-60 cursor-not-allowed"
-            : "hover:from-blue-600 hover:to-[#90c472]"
+            : "hover:from-blue-600 hover:to-[#7fb362] hover:shadow-md active:shadow-lg"
         }`}
       >
         {isLoading ? (

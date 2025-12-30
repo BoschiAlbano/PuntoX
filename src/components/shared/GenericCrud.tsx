@@ -93,6 +93,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
     isError,
     saveMutation,
     deleteMutation,
+    refetch,
   } = useGenericApi<T>({
     endpoint: apiPath,
     queryKey,
@@ -101,6 +102,17 @@ export default function GenericCrud<T extends { Id: number | string }>({
     limit,
     transformer,
   });
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const sortedItems = useMemo(() => {
     return [...data].sort((a: T, b: T) => {
@@ -246,6 +258,8 @@ export default function GenericCrud<T extends { Id: number | string }>({
         sortDescriptor={sortDescriptor}
         onSortChange={setSortDescriptor}
         onNewClick={handleCreate}
+        onRefresh={handleRefresh}
+        isRefreshing={isRefreshing}
       />
 
       {/* Modal de Formulario */}

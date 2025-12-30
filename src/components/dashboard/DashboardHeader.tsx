@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { addToast } from "@heroui/react";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { Dispatch, SetStateAction } from "react";
+import { usePathname } from "next/navigation";
+import { ChevronRight, Home } from "lucide-react";
 
 export default function DashboardHeader({
   isShow,
@@ -11,6 +13,36 @@ export default function DashboardHeader({
   show: boolean;
 }) {
   const { user, supabase } = useSupabaseAuthContext();
+  const pathname = usePathname();
+
+  // Mapeo de rutas a nombres amigables
+  const routeNames: Record<string, string> = {
+    "/ventas": "Ventas",
+    "/caja": "Caja",
+    "/productos": "Productos",
+    "/test": "Test",
+    "/clientes": "Clientes",
+    "/empleados": "Empleados",
+    "/analiticas": "Analíticas",
+    "/configuracion": "Configuración",
+  };
+
+  // Generar breadcrumbs desde la ruta
+  const generateBreadcrumbs = () => {
+    const paths = pathname.split("/").filter(Boolean);
+    const breadcrumbs = [{ label: "Inicio", path: "/" }];
+
+    let currentPath = "";
+    paths.forEach((path) => {
+      currentPath += `/${path}`;
+      const label = routeNames[currentPath] || path.charAt(0).toUpperCase() + path.slice(1);
+      breadcrumbs.push({ label, path: currentPath });
+    });
+
+    return breadcrumbs;
+  };
+
+  const breadcrumbs = generateBreadcrumbs();
 
   const fullName =
     typeof user?.app_metadata?.full_name === "string"
@@ -62,29 +94,35 @@ export default function DashboardHeader({
     >
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
-          {/* Search Bar */}
-          <div className="max-w-2xl sm:flex-1  ">
-            <div className="relative">
-              <svg
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              <input
-                type="text"
-                placeholder="Buscar productos, ordenes, clientes..."
-                className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-              />
-            </div>
-          </div>
+          {/* Breadcrumbs */}
+          <nav className="flex items-center gap-2 text-sm" aria-label="Breadcrumb">
+            <ol className="flex items-center gap-2">
+              {breadcrumbs.map((crumb, index) => (
+                <li key={crumb.path} className="flex items-center gap-2">
+                  {index > 0 && (
+                    <ChevronRight className="h-4 w-4 text-slate-400" />
+                  )}
+                  {index === 0 ? (
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      className="flex items-center gap-1.5"
+                    >
+                      <Home className="h-4 w-4 text-slate-500" />
+                      <span className="text-slate-600 font-medium">Inicio</span>
+                    </motion.div>
+                  ) : index === breadcrumbs.length - 1 ? (
+                    <span className="text-slate-900 font-semibold">
+                      {crumb.label}
+                    </span>
+                  ) : (
+                    <span className="text-slate-600 hover:text-slate-900 transition-colors">
+                      {crumb.label}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </nav>
 
           {/* Right Section */}
           <div className="flex items-center sm:gap-4 gap-0 sm:ml-6 ml-0">
