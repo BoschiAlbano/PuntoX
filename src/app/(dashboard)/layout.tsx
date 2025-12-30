@@ -18,7 +18,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [show, setshow] = useState(true);
-  
+
   // Monitorear inactividad y cerrar sesión automáticamente
   useInactivityTimeout();
 
@@ -67,7 +67,7 @@ export default function DashboardLayout({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="p-6"
+            className="p-6 h-full"
           >
             {children}
           </motion.div>

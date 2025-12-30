@@ -1,10 +1,12 @@
 // Constantes para tipos de comprobante
 export const TIPO_COMPROBANTE = {
-  FACTURA: 1,
-  PRESUPUESTO: 2,
-  REMITO: 3,
-  NOTA_CREDITO: 4,
-  NOTA_DEBITO: 5,
+  FACTURA_A: 1,
+  FACTURA_B: 2,
+  FACTURA_C: 3,
+  PRESUPUESTO: 4,
+  REMITO: 5,
+  NOTA_CREDITO: 6,
+  NOTA_DEBITO: 7,
 } as const;
 
 // Constantes para tipos de pago
@@ -22,7 +24,3 @@ export const ESTADO_FACTURA = {
   CONFIRMADO: 2,
   ANULADO: 3,
 } as const;
-
-
-
-

@@ -114,7 +114,7 @@ export default function ProductSearch({
           }}
           placeholder="Escanear (Código / Barras) o Buscar..."
           size="lg"
-          startContent={<ScanBarcode className="text-default-400" />}
+          startContent={<ScanBarcode className="text-[#67afc3]" />}
           value={inputValue}
           onValueChange={setInputValue}
           onKeyDown={handleInputKeyDown}
@@ -125,7 +125,7 @@ export default function ProductSearch({
               size="sm"
               onClick={handleManualSearch}
             >
-              <Search className="text-default-400" />
+              <Search className="text-[#67afc3] " />
             </Button>
           }
         />
@@ -153,9 +153,10 @@ export default function ProductSearch({
                   onClear={() => setSearchQuery("")}
                 />
 
-                <div className="min-h-[300px]">
+                <div className="min-h-[300px] flex flex-col">
                   <Table
                     aria-label="Resultados de búsqueda"
+                    className="h-full"
                     bottomContent={
                       data?.meta && (
                         <div className="flex w-full justify-center">
@@ -225,11 +226,6 @@ export default function ProductSearch({
                   </Table>
                 </div>
               </ModalBody>
-              <ModalFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
-                  Cerrar
-                </Button>
-              </ModalFooter>
             </>
           )}
         </ModalContent>

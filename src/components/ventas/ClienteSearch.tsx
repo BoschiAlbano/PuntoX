@@ -70,9 +70,9 @@ export default function ClienteSearch({
     <>
       <Button
         variant="flat"
-        color={selected.Id === 0 ? "default" : "primary"}
+        // color={selected.Id === 0 ? "default" : "primary"}
         onPress={onOpen}
-        className="justify-start min-w-[200px] py-6"
+        className="justify-start min-w-[200px] py-6 bg-[#67afc3da] text-white"
         startContent={
           selected.Id === 0 ? <User size={18} /> : <UserCheck size={18} />
         }
