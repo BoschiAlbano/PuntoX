@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requirePermiso } from "@/lib/permissions/requirePermiso";
+import { requirePermiso, PermisoError } from "@/lib/requirePermiso";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 import prisma from "@/DB/prisma";
 import { z } from "zod";
 import { handleError } from "@/lib/errors/handler";
-import { PermisoError } from "@/lib/permissions/PermisoError";
 
 const reenviarInvitacionSchema = z.object({
   email: z.string().email(),
