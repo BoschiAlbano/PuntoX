@@ -6,7 +6,7 @@ import { TIPO_COMPROBANTE } from "@/lib/constants/comprobantes";
 
 /**
  * GET /api/analiticas/kpis
- * 
+ *
  * Retorna KPIs del dashboard de analíticas
  * Query params:
  * - fechaDesde: ISO string (opcional, default: 30 días atrás)
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     const fechaHasta = searchParams.get("fechaHasta")
       ? new Date(searchParams.get("fechaHasta")!)
       : new Date();
-    
+
     const periodo = searchParams.get("periodo") || "mensual";
     const diasAtras = periodo === "semanal" ? 7 : 30;
     const fechaDesde = searchParams.get("fechaDesde")
@@ -30,8 +30,12 @@ export async function GET(req: NextRequest) {
       : new Date(Date.now() - diasAtras * 24 * 60 * 60 * 1000);
 
     // Período anterior para comparación
-    const diasPeriodo = Math.ceil((fechaHasta.getTime() - fechaDesde.getTime()) / (24 * 60 * 60 * 1000));
-    const fechaDesdeAnterior = new Date(fechaDesde.getTime() - diasPeriodo * 24 * 60 * 60 * 1000);
+    const diasPeriodo = Math.ceil(
+      (fechaHasta.getTime() - fechaDesde.getTime()) / (24 * 60 * 60 * 1000)
+    );
+    const fechaDesdeAnterior = new Date(
+      fechaDesde.getTime() - diasPeriodo * 24 * 60 * 60 * 1000
+    );
     const fechaHastaAnterior = new Date(fechaDesde.getTime() - 1);
 
     const tenantIdBigInt = BigInt(tenantId);
@@ -46,7 +50,13 @@ export async function GET(req: NextRequest) {
           lte: fechaHasta,
         },
         TipoComprobante: {
-          in: [TIPO_COMPROBANTE.FACTURA, TIPO_COMPROBANTE.PRESUPUESTO, TIPO_COMPROBANTE.REMITO],
+          in: [
+            TIPO_COMPROBANTE.FACTURA_A,
+            TIPO_COMPROBANTE.FACTURA_B,
+            TIPO_COMPROBANTE.FACTURA_C,
+            TIPO_COMPROBANTE.PRESUPUESTO,
+            TIPO_COMPROBANTE.REMITO,
+          ],
         },
       },
       _sum: {
@@ -64,7 +74,13 @@ export async function GET(req: NextRequest) {
           lte: fechaHastaAnterior,
         },
         TipoComprobante: {
-          in: [TIPO_COMPROBANTE.FACTURA, TIPO_COMPROBANTE.PRESUPUESTO, TIPO_COMPROBANTE.REMITO],
+          in: [
+            TIPO_COMPROBANTE.FACTURA_A,
+            TIPO_COMPROBANTE.FACTURA_B,
+            TIPO_COMPROBANTE.FACTURA_C,
+            TIPO_COMPROBANTE.PRESUPUESTO,
+            TIPO_COMPROBANTE.REMITO,
+          ],
         },
       },
       _sum: {
@@ -73,18 +89,26 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const ingresosNetosActual = Number(ingresosActual._sum.Total || 0) - Number(ingresosActual._sum.Descuento || 0);
-    const ingresosNetosAnterior = Number(ingresosAnterior._sum.Total || 0) - Number(ingresosAnterior._sum.Descuento || 0);
-    const variacionIngresos = ingresosNetosAnterior > 0
-      ? ((ingresosNetosActual - ingresosNetosAnterior) / ingresosNetosAnterior) * 100
-      : 0;
+    const ingresosNetosActual =
+      Number(ingresosActual._sum.Total || 0) -
+      Number(ingresosActual._sum.Descuento || 0);
+    const ingresosNetosAnterior =
+      Number(ingresosAnterior._sum.Total || 0) -
+      Number(ingresosAnterior._sum.Descuento || 0);
+    const variacionIngresos =
+      ingresosNetosAnterior > 0
+        ? ((ingresosNetosActual - ingresosNetosAnterior) /
+            ingresosNetosAnterior) *
+          100
+        : 0;
 
     // 2. Descuentos aplicados
     const descuentosActual = Number(ingresosActual._sum.Descuento || 0);
     const descuentosAnterior = Number(ingresosAnterior._sum.Descuento || 0);
-    const variacionDescuentos = descuentosAnterior > 0
-      ? ((descuentosActual - descuentosAnterior) / descuentosAnterior) * 100
-      : 0;
+    const variacionDescuentos =
+      descuentosAnterior > 0
+        ? ((descuentosActual - descuentosAnterior) / descuentosAnterior) * 100
+        : 0;
 
     // 3. IVA facturado (Iva21 + Iva105)
     const ivaActual = await prisma.comprobante.aggregate({
@@ -117,11 +141,15 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const ivaTotalActual = Number(ivaActual._sum.Iva21 || 0) + Number(ivaActual._sum.Iva105 || 0);
-    const ivaTotalAnterior = Number(ivaAnterior._sum.Iva21 || 0) + Number(ivaAnterior._sum.Iva105 || 0);
-    const variacionIva = ivaTotalAnterior > 0
-      ? ((ivaTotalActual - ivaTotalAnterior) / ivaTotalAnterior) * 100
-      : 0;
+    const ivaTotalActual =
+      Number(ivaActual._sum.Iva21 || 0) + Number(ivaActual._sum.Iva105 || 0);
+    const ivaTotalAnterior =
+      Number(ivaAnterior._sum.Iva21 || 0) +
+      Number(ivaAnterior._sum.Iva105 || 0);
+    const variacionIva =
+      ivaTotalAnterior > 0
+        ? ((ivaTotalActual - ivaTotalAnterior) / ivaTotalAnterior) * 100
+        : 0;
 
     // 4. Tickets vs Notas de crédito
     const ticketsActual = await prisma.comprobante.count({
@@ -133,7 +161,13 @@ export async function GET(req: NextRequest) {
           lte: fechaHasta,
         },
         TipoComprobante: {
-          in: [TIPO_COMPROBANTE.FACTURA, TIPO_COMPROBANTE.PRESUPUESTO, TIPO_COMPROBANTE.REMITO],
+          in: [
+            TIPO_COMPROBANTE.FACTURA_A,
+            TIPO_COMPROBANTE.FACTURA_B,
+            TIPO_COMPROBANTE.FACTURA_C,
+            TIPO_COMPROBANTE.PRESUPUESTO,
+            TIPO_COMPROBANTE.REMITO,
+          ],
         },
       },
     });
@@ -159,7 +193,13 @@ export async function GET(req: NextRequest) {
           lte: fechaHastaAnterior,
         },
         TipoComprobante: {
-          in: [TIPO_COMPROBANTE.FACTURA, TIPO_COMPROBANTE.PRESUPUESTO, TIPO_COMPROBANTE.REMITO],
+          in: [
+            TIPO_COMPROBANTE.FACTURA_A,
+            TIPO_COMPROBANTE.FACTURA_B,
+            TIPO_COMPROBANTE.FACTURA_C,
+            TIPO_COMPROBANTE.PRESUPUESTO,
+            TIPO_COMPROBANTE.REMITO,
+          ],
         },
       },
     });
@@ -176,9 +216,10 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const variacionTickets = ticketsAnterior > 0
-      ? ((ticketsActual - ticketsAnterior) / ticketsAnterior) * 100
-      : 0;
+    const variacionTickets =
+      ticketsAnterior > 0
+        ? ((ticketsActual - ticketsAnterior) / ticketsAnterior) * 100
+        : 0;
 
     // 5. Estado de caja (última caja abierta/cerrada)
     const ultimaCaja = await prisma.caja.findFirst({
@@ -208,7 +249,9 @@ export async function GET(req: NextRequest) {
           totalEntrada: Number(ultimaCaja.TotalEntradaEfectivo),
           totalSalida: Number(ultimaCaja.TotalSalidaEfectivo),
           montoInicial: Number(ultimaCaja.MontoInicial),
-          montoCierre: ultimaCaja.MontoCierre ? Number(ultimaCaja.MontoCierre) : null,
+          montoCierre: ultimaCaja.MontoCierre
+            ? Number(ultimaCaja.MontoCierre)
+            : null,
         }
       : null;
 
@@ -249,18 +292,30 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const margenGananciaActual = Number(margenActual._sum.SubTotal || 0) - Number(margenActual._sum.Costo || 0);
-    const margenGananciaAnterior = Number(margenAnterior._sum.SubTotal || 0) - Number(margenAnterior._sum.Costo || 0);
-    const variacionMargen = margenGananciaAnterior > 0
-      ? ((margenGananciaActual - margenGananciaAnterior) / margenGananciaAnterior) * 100
-      : 0;
+    const margenGananciaActual =
+      Number(margenActual._sum.SubTotal || 0) -
+      Number(margenActual._sum.Costo || 0);
+    const margenGananciaAnterior =
+      Number(margenAnterior._sum.SubTotal || 0) -
+      Number(margenAnterior._sum.Costo || 0);
+    const variacionMargen =
+      margenGananciaAnterior > 0
+        ? ((margenGananciaActual - margenGananciaAnterior) /
+            margenGananciaAnterior) *
+          100
+        : 0;
 
     // 7. Ticket promedio
-    const ticketPromedioActual = ticketsActual > 0 ? ingresosNetosActual / ticketsActual : 0;
-    const ticketPromedioAnterior = ticketsAnterior > 0 ? ingresosNetosAnterior / ticketsAnterior : 0;
-    const variacionTicketPromedio = ticketPromedioAnterior > 0
-      ? ((ticketPromedioActual - ticketPromedioAnterior) / ticketPromedioAnterior) * 100
-      : 0;
+    const ticketPromedioActual =
+      ticketsActual > 0 ? ingresosNetosActual / ticketsActual : 0;
+    const ticketPromedioAnterior =
+      ticketsAnterior > 0 ? ingresosNetosAnterior / ticketsAnterior : 0;
+    const variacionTicketPromedio =
+      ticketPromedioAnterior > 0
+        ? ((ticketPromedioActual - ticketPromedioAnterior) /
+            ticketPromedioAnterior) *
+          100
+        : 0;
 
     // 8. Productos vendidos (cantidad total)
     const productosVendidosActual = await prisma.detalleComprobante.aggregate({
@@ -280,28 +335,37 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const productosVendidosAnterior = await prisma.detalleComprobante.aggregate({
-      where: {
-        TenantId: tenantIdBigInt,
-        EstaEliminado: false,
-        Comprobante: {
-          Fecha: {
-            gte: fechaDesdeAnterior,
-            lte: fechaHastaAnterior,
-          },
+    const productosVendidosAnterior = await prisma.detalleComprobante.aggregate(
+      {
+        where: {
+          TenantId: tenantIdBigInt,
           EstaEliminado: false,
+          Comprobante: {
+            Fecha: {
+              gte: fechaDesdeAnterior,
+              lte: fechaHastaAnterior,
+            },
+            EstaEliminado: false,
+          },
         },
-      },
-      _sum: {
-        Cantidad: true,
-      },
-    });
+        _sum: {
+          Cantidad: true,
+        },
+      }
+    );
 
-    const cantidadVendidaActual = Number(productosVendidosActual._sum.Cantidad || 0);
-    const cantidadVendidaAnterior = Number(productosVendidosAnterior._sum.Cantidad || 0);
-    const variacionCantidad = cantidadVendidaAnterior > 0
-      ? ((cantidadVendidaActual - cantidadVendidaAnterior) / cantidadVendidaAnterior) * 100
-      : 0;
+    const cantidadVendidaActual = Number(
+      productosVendidosActual._sum.Cantidad || 0
+    );
+    const cantidadVendidaAnterior = Number(
+      productosVendidosAnterior._sum.Cantidad || 0
+    );
+    const variacionCantidad =
+      cantidadVendidaAnterior > 0
+        ? ((cantidadVendidaActual - cantidadVendidaAnterior) /
+            cantidadVendidaAnterior) *
+          100
+        : 0;
 
     // 9. Clientes activos (distinct ClienteId en Comprobante_Factura)
     const clientesActivosActual = await prisma.comprobante_Factura.groupBy({
@@ -332,9 +396,12 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const variacionClientes = clientesActivosAnterior.length > 0
-      ? ((clientesActivosActual.length - clientesActivosAnterior.length) / clientesActivosAnterior.length) * 100
-      : 0;
+    const variacionClientes =
+      clientesActivosAnterior.length > 0
+        ? ((clientesActivosActual.length - clientesActivosAnterior.length) /
+            clientesActivosAnterior.length) *
+          100
+        : 0;
 
     return NextResponse.json({
       periodo: {
@@ -394,4 +461,3 @@ export async function GET(req: NextRequest) {
     return handleError(error);
   }
 }
-

@@ -158,11 +158,11 @@ export async function POST(req: NextRequest) {
     });
 
     const descuentaStock =
-      (data.tipoComprobante === TIPO_COMPROBANTE.FACTURA &&
+      (data.tipoComprobante === TIPO_COMPROBANTE.FACTURA_A &&
         configuracion?.FacturaDescuentaStock) ||
-      (data.tipoComprobante === TIPO_COMPROBANTE.PRESUPUESTO &&
+      (data.tipoComprobante === TIPO_COMPROBANTE.FACTURA_B &&
         configuracion?.PresupuestoDescuentaStock) ||
-      (data.tipoComprobante === TIPO_COMPROBANTE.REMITO &&
+      (data.tipoComprobante === TIPO_COMPROBANTE.FACTURA_C &&
         configuracion?.RemitoDescuentaStock) ||
       false;
 
@@ -404,7 +404,7 @@ export async function POST(req: NextRequest) {
       }
 
       // 5. Crear relación específica según tipo de comprobante
-      if (data.tipoComprobante === TIPO_COMPROBANTE.FACTURA) {
+      if (data.tipoComprobante === TIPO_COMPROBANTE.FACTURA_A) {
         await tx.comprobante_Factura.create({
           data: {
             Id: comprobante.Id,

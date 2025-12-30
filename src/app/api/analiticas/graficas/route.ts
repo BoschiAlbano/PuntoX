@@ -6,7 +6,7 @@ import { TIPO_COMPROBANTE, TIPO_PAGO } from "@/lib/constants/comprobantes";
 
 /**
  * GET /api/analiticas/graficas
- * 
+ *
  * Retorna datos para gráficas del dashboard
  * Query params:
  * - tipo: "ingresos" | "pagos" | "productos" | "stock" | "cuentaCorriente" | "gastos"
@@ -42,7 +42,13 @@ export async function GET(req: NextRequest) {
               lte: fechaHasta,
             },
             TipoComprobante: {
-              in: [TIPO_COMPROBANTE.FACTURA, TIPO_COMPROBANTE.PRESUPUESTO, TIPO_COMPROBANTE.REMITO],
+              in: [
+                TIPO_COMPROBANTE.FACTURA_A,
+                TIPO_COMPROBANTE.FACTURA_B,
+                TIPO_COMPROBANTE.FACTURA_C,
+                TIPO_COMPROBANTE.PRESUPUESTO,
+                TIPO_COMPROBANTE.REMITO,
+              ],
             },
           },
           select: {
@@ -57,7 +63,16 @@ export async function GET(req: NextRequest) {
         });
 
         // Agrupar por período según agrupacion
-        const datosAgrupados: Record<string, { fecha: string; ingresos: number; descuentos: number; facturas: number; todos: number }> = {};
+        const datosAgrupados: Record<
+          string,
+          {
+            fecha: string;
+            ingresos: number;
+            descuentos: number;
+            facturas: number;
+            todos: number;
+          }
+        > = {};
 
         comprobantes.forEach((comp) => {
           let key: string;
@@ -67,7 +82,9 @@ export async function GET(req: NextRequest) {
             const semana = getWeekNumber(fecha);
             key = `${fecha.getFullYear()}-W${semana}`;
           } else if (agrupacion === "mes") {
-            key = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}`;
+            key = `${fecha.getFullYear()}-${String(
+              fecha.getMonth() + 1
+            ).padStart(2, "0")}`;
           } else {
             key = fecha.toISOString().split("T")[0];
           }
@@ -86,7 +103,11 @@ export async function GET(req: NextRequest) {
           datosAgrupados[key].ingresos += total;
           datosAgrupados[key].descuentos += Number(comp.Descuento);
           datosAgrupados[key].todos += 1;
-          if (comp.TipoComprobante === TIPO_COMPROBANTE.FACTURA) {
+          if (
+            comp.TipoComprobante === TIPO_COMPROBANTE.FACTURA_A ||
+            comp.TipoComprobante === TIPO_COMPROBANTE.FACTURA_B ||
+            comp.TipoComprobante === TIPO_COMPROBANTE.FACTURA_C
+          ) {
             datosAgrupados[key].facturas += 1;
           }
         });
@@ -169,7 +190,16 @@ export async function GET(req: NextRequest) {
           },
         });
 
-        const productosAgrupados: Record<string, { id: bigint; nombre: string; cantidad: number; monto: number; margen: number }> = {};
+        const productosAgrupados: Record<
+          string,
+          {
+            id: bigint;
+            nombre: string;
+            cantidad: number;
+            monto: number;
+            margen: number;
+          }
+        > = {};
 
         detalles.forEach((det) => {
           const articuloId = det.ArticuloId.toString();
@@ -187,7 +217,8 @@ export async function GET(req: NextRequest) {
 
           productosAgrupados[articuloId].cantidad += Number(det.Cantidad);
           productosAgrupados[articuloId].monto += Number(det.SubTotal);
-          productosAgrupados[articuloId].margen += Number(det.SubTotal) - Number(det.Costo);
+          productosAgrupados[articuloId].margen +=
+            Number(det.SubTotal) - Number(det.Costo);
         });
 
         const topProductos = Object.values(productosAgrupados)
@@ -251,15 +282,19 @@ export async function GET(req: NextRequest) {
             cantidadVendida: Number(venta._sum.Cantidad || 0),
             stockDisponible: Number(articulo?.Stock || 0),
             stockMinimo: Number(articulo?.StockMinimo || 0),
-            rotacion: Number(articulo?.Stock || 0) > 0
-              ? Number(venta._sum.Cantidad || 0) / Number(articulo?.Stock || 1)
-              : 0,
+            rotacion:
+              Number(articulo?.Stock || 0) > 0
+                ? Number(venta._sum.Cantidad || 0) /
+                  Number(articulo?.Stock || 1)
+                : 0,
           };
         });
 
         return NextResponse.json({
           tipo: "stock",
-          datos: datosStock.sort((a, b) => b.cantidadVendida - a.cantidadVendida).slice(0, 20),
+          datos: datosStock
+            .sort((a, b) => b.cantidadVendida - a.cantidadVendida)
+            .slice(0, 20),
         });
       }
 
@@ -297,7 +332,10 @@ export async function GET(req: NextRequest) {
           },
         });
 
-        const clientesAgrupados: Record<string, { id: bigint; nombre: string; pagado: number; pendiente: number }> = {};
+        const clientesAgrupados: Record<
+          string,
+          { id: bigint; nombre: string; pagado: number; pendiente: number }
+        > = {};
 
         movimientos.forEach((mov) => {
           const clienteId = mov.ClienteId.toString();
@@ -359,7 +397,8 @@ export async function GET(req: NextRequest) {
         const gastosAgrupados: Record<string, number> = {};
         gastos.forEach((gasto) => {
           const concepto = gasto.ConceptoGastos.Descripcion;
-          gastosAgrupados[concepto] = (gastosAgrupados[concepto] || 0) + Number(gasto.Monto);
+          gastosAgrupados[concepto] =
+            (gastosAgrupados[concepto] || 0) + Number(gasto.Monto);
         });
 
         return NextResponse.json({
@@ -386,10 +425,11 @@ export async function GET(req: NextRequest) {
 
 // Helper para obtener número de semana
 function getWeekNumber(date: Date): number {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const d = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  );
   const dayNum = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
 }
-
