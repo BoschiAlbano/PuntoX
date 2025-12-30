@@ -279,20 +279,22 @@ const createEmpleado = async (empleadoData: {
   departamentoId?: number | null;
   provinciaId?: number | null;
   dni?: string;
-  usuario?: string;
   password?: string;
   rolId?: number | undefined;
   autoInvitar?: boolean;
   tenantId?: string | null;
 }): Promise<Empleado> => {
   const tenantParam = empleadoData.tenantId ? `?tenantId=${empleadoData.tenantId}` : "";
-  const { tenantId: _tenantId, email, usuario, localidadId, rolId, ...rest } = empleadoData;
+  const { tenantId: _tenantId, email, localidadId, rolId, ...rest } = empleadoData;
+
+  // Generar nombre de usuario automáticamente desde el email (parte antes del @)
+  const nombreUsuario = email.split("@")[0];
 
   // Transformar al formato que espera el API
   const body = {
     ...rest,
     mail: email,
-    nombreUsuario: usuario,
+    nombreUsuario: nombreUsuario,
     localidadId: localidadId ? Number(localidadId) : undefined,
     rolId: rolId,
   };
@@ -360,9 +362,11 @@ const deleteEmpleado = async ({
 }): Promise<void> => {
   const tenantParam = tenantId ? `?tenantId=${tenantId}` : "";
 
-  const response = await fetch(`/api/empleados/${id}${tenantParam}`, {
+  const response = await fetch(`/api/empleados${tenantParam}`, {
     method: "DELETE",
+    headers: { "Content-Type": "application/json" },
     credentials: "include",
+    body: JSON.stringify({ personaId: id }),
   });
 
   if (!response.ok) {

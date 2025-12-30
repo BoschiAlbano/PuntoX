@@ -29,7 +29,9 @@ export function useGenericApi<T extends { Id: number | string }>({
   // --- Fetch Query ---
   const fetchData = async ({ signal }: { signal: AbortSignal }) => {
     const params = new URLSearchParams();
-    if (search) params.append("q", search);
+    // Para empleados usa "busqueda", para otros endpoints usa "q"
+    const searchParam = endpoint.includes("/empleados") ? "busqueda" : "q";
+    if (search) params.append(searchParam, search);
     params.append("page", page.toString());
     params.append("limit", limit.toString());
 
@@ -43,10 +45,36 @@ export function useGenericApi<T extends { Id: number | string }>({
     if (!response.ok) throw new Error("Error al cargar datos");
     const json = await response.json();
 
-    // Si hay transformer, usarlo. Si no, asumir que json.data es el array
-    const data = transformer ? transformer(json.data) : (json.data as T[]);
-    const meta = json.meta ||
-      json.pagination || { total: 0, page: 1, limit: 10, totalPages: 0 };
+    // Adaptar respuesta: empleados devuelve { empleados: [...], pagination: {...} }
+    // otros endpoints devuelven { data: [...], meta: {...} }
+    let data: T[];
+    let meta: any;
+
+    if (endpoint.includes("/empleados")) {
+      // Formato de empleados: { empleados: [...], pagination: {...} }
+      data = transformer
+        ? transformer(json.empleados || json.data || [])
+        : (json.empleados || json.data || []) as T[];
+      // Asegurar que meta tenga la estructura correcta
+      const pagination = json.pagination || {};
+      meta = {
+        total: pagination.total || 0,
+        page: pagination.page || 1,
+        limit: pagination.limit || limit,
+        totalPages: pagination.totalPages || Math.ceil((pagination.total || 0) / (pagination.limit || limit)) || 1,
+      };
+    } else {
+      // Formato estándar
+      data = transformer
+        ? transformer(json.data || [])
+        : (json.data || []) as T[];
+      meta = json.meta || json.pagination || {
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 0,
+      };
+    }
 
     return { data, meta };
   };

@@ -10,6 +10,7 @@ import {
   SortDescriptor,
 } from "@heroui/react";
 import { useEffect, useState, Key } from "react";
+import { RefreshCw } from "lucide-react";
 import { PaginationMeta } from "@/hooks/useProductos"; // Reutilizamos interface o la movemos a types compartidos
 
 export interface Column {
@@ -38,6 +39,9 @@ interface GenericTableProps<T> {
   sortDescriptor?: SortDescriptor;
   onSortChange?: (descriptor: SortDescriptor) => void;
   onNewClick?: () => void;
+  newButtonText?: string;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 export default function GenericTable<T extends { Id: number | string }>({
@@ -56,6 +60,9 @@ export default function GenericTable<T extends { Id: number | string }>({
   sortDescriptor,
   onSortChange,
   onNewClick,
+  newButtonText = "Nuevo",
+  onRefresh,
+  isRefreshing = false,
 }: GenericTableProps<T>) {
   const [searchInput, setSearchInput] = useState(search);
 
@@ -74,12 +81,30 @@ export default function GenericTable<T extends { Id: number | string }>({
         {/* Header & Search */}
         <section className="w-full flex items-center justify-end gap-2">
           {/* Boton nuevo */}
-          <button
-            onClick={onNewClick}
-            className="bg-[#67afc3] text-white px-4 py-1 rounded-lg hover:bg-[#529aa6] transition-colors"
-          >
-            Nuevo
-          </button>
+          {onNewClick && (
+            <button
+              onClick={onNewClick}
+              className="bg-[#67afc3] text-white px-4 py-1 rounded-lg hover:bg-[#529aa6] transition-colors"
+            >
+              {newButtonText}
+            </button>
+          )}
+          {/* Botón de actualizar */}
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 hover:border-[#67afc3] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Actualizar datos"
+            >
+              <RefreshCw
+                size={18}
+                className={`text-gray-600 transition-transform ${
+                  isRefreshing ? "animate-spin" : ""
+                }`}
+              />
+            </button>
+          )}
           {/* Search */}
           <div className="group flex items-center gap-2 border border-gray-300 rounded-xl p-1 transition-all focus-within:border-[#67afc3] focus-within:ring-[#67afc3]">
             <input

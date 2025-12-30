@@ -341,7 +341,7 @@ const createEmpleadoSchema = z.object({
   localidadId: z.union([z.number(), z.string()]),
   departamentoId: z.union([z.number(), z.string()]).optional().nullable(),
   provinciaId: z.union([z.number(), z.string()]).optional().nullable(),
-  nombreUsuario: z.string().min(3),
+  nombreUsuario: z.string().min(1).optional(), // Opcional, se genera automáticamente si no se proporciona
   password: z.string().min(8),
   rolId: z.union([z.number(), z.string()]).optional().nullable(),
   autoInvitar: z.boolean().optional(),
@@ -473,7 +473,8 @@ export async function POST(req: NextRequest) {
     }
 
     const mailNormalized = data.mail.trim().toLowerCase();
-    const usernameNormalized = data.nombreUsuario.trim();
+    // Generar nombre de usuario automáticamente desde el email si no se proporciona
+    const usernameNormalized = data.nombreUsuario?.trim() || mailNormalized.split("@")[0];
 
     const existingPersona = await prisma.persona.findFirst({
       where: {
@@ -489,18 +490,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const existingUsuario = await prisma.usuario.findFirst({
+    // Verificar si el nombre de usuario generado ya existe, si es así, agregar un número
+    let finalUsername = usernameNormalized;
+    let counter = 1;
+    let existingUsuario = await prisma.usuario.findFirst({
       where: {
-        Nombre: usernameNormalized,
+        Nombre: finalUsername,
         TenantId: tenantIdBigInt,
         EstaEliminado: false,
       },
     });
-    if (existingUsuario) {
-      return NextResponse.json(
-        { error: "El nombre de usuario ya esta en uso" },
-        { status: 400 }
-      );
+    
+    // Si el nombre de usuario ya existe, agregar un número hasta encontrar uno disponible
+    while (existingUsuario) {
+      finalUsername = `${usernameNormalized}${counter}`;
+      existingUsuario = await prisma.usuario.findFirst({
+        where: {
+          Nombre: finalUsername,
+          TenantId: tenantIdBigInt,
+          EstaEliminado: false,
+        },
+      });
+      counter++;
     }
 
     const supabaseService = getSupabaseServiceClient();
@@ -561,7 +572,7 @@ export async function POST(req: NextRequest) {
         data: {
           EmpleadoId: personaEmpleado.Id,
           TenantId: tenantIdBigInt,
-          Nombre: usernameNormalized,
+          Nombre: finalUsername,
           AuthUserId: authUser.user.id,
           EstaBloqueado: false,
           EstaEliminado: false,

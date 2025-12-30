@@ -19,6 +19,7 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
+  Pagination as HeroUIPagination,
   Select,
   SelectItem,
   Switch,
@@ -30,7 +31,7 @@ import {
 import { addToast } from "@heroui/react";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { usePagePermission } from "@/lib/permissions/usePagePermission";
-import { Pencil, Trash2, Eye, Zap, Mail } from "lucide-react";
+import { Pencil, Trash2, Eye, Zap, Mail, RefreshCw } from "lucide-react";
 import Pagination, { PaginationInfo } from "@/components/common/Pagination";
 import {
   formatTiempoRelativo,
@@ -39,6 +40,7 @@ import {
   mapearSeveridad,
 } from "./auditoria-utils";
 import { useEmpleados } from "@/hooks/useEmpleados";
+import EmpleadoCRUD from "@/components/empleados/EmpleadoCRUD";
 
 // PÃ¡gina funcional de empleados: alta rÃ¡pida, roles y tabla conectada a las APIs.
 type EstadoEmpleado = "Activo" | "Invitado" | "Suspendido";
@@ -160,7 +162,6 @@ export default function Empleados() {
     direccion: "",
     localidadId: "",
     dni: "",
-    usuario: "",
     password: "",
     rolId: "",
     autoInvitar: true,
@@ -178,6 +179,7 @@ export default function Empleados() {
   });
 
   const [openRolModal, setOpenRolModal] = useState(false);
+  const [openCrearUsuarioModal, setOpenCrearUsuarioModal] = useState(false);
   const [detalleEmpleado, setDetalleEmpleado] = useState<Empleado | null>(null);
   const [empleadoAEditar, setEmpleadoAEditar] = useState<Empleado | null>(null);
   
@@ -273,6 +275,8 @@ export default function Empleados() {
     errorEmpleados,
     errorRoles,
     errorProvincias,
+    refetchEmpleados,
+    refetchRoles,
     refetchAuditorias,
     createEmpleado: createEmpleadoMutation,
     updateEmpleado: updateEmpleadoMutation,
@@ -298,6 +302,17 @@ export default function Empleados() {
     auditoriaPage,
     auditoriaLimit,
   });
+
+  const [isRefreshingRoles, setIsRefreshingRoles] = useState(false);
+
+  const handleRefreshRoles = async () => {
+    setIsRefreshingRoles(true);
+    try {
+      await refetchRoles();
+    } finally {
+      setIsRefreshingRoles(false);
+    }
+  };
 
   // Hooks para departamentos y localidades
   const departamentosQuery = useDepartamentos(provinciaSeleccionada || null);
@@ -517,7 +532,6 @@ export default function Empleados() {
       !nuevoUsuario.nombre.trim() ||
       !nuevoUsuario.apellido.trim() ||
       !nuevoUsuario.email.trim() ||
-      !nuevoUsuario.usuario.trim() ||
       !nuevoUsuario.password.trim() ||
       !nuevoUsuario.direccion.trim() ||
       !provinciaSeleccionada ||
@@ -570,7 +584,6 @@ export default function Empleados() {
           ? Number(provinciaSeleccionada)
           : null,
         dni: nuevoUsuario.dni || undefined,
-        usuario: nuevoUsuario.usuario.trim(),
         password: nuevoUsuario.password,
         rolId: nuevoUsuario.rolId ? Number(nuevoUsuario.rolId) : undefined,
         autoInvitar: nuevoUsuario.autoInvitar,
@@ -594,13 +607,13 @@ export default function Empleados() {
             direccion: "",
             localidadId: "",
             dni: "",
-            usuario: "",
             password: "",
             rolId: "",
             autoInvitar: true,
           });
           setProvinciaSeleccionada("");
           setDepartamentoSeleccionado("");
+          setOpenCrearUsuarioModal(false);
         },
         onError: (error: Error) => {
           const errorMessage = error.message;
@@ -619,23 +632,56 @@ export default function Empleados() {
             });
             return;
           }
-          
-          // Detectar errores de nombre de usuario duplicado
-          if (
-            errorMessage.toLowerCase().includes("usuario") &&
-            (errorMessage.toLowerCase().includes("en uso") ||
-             errorMessage.toLowerCase().includes("duplicado"))
-          ) {
-            addToast({
-              title: "Usuario ya en uso",
-              description: "Este nombre de usuario ya está en uso. Por favor, elige otro.",
-              color: "warning",
-            });
-            return;
-          }
         },
       }
     );
+  };
+
+  const handleReenviarInvitaciones = async () => {
+    const invitados = resumen.invitadosLista;
+    if (invitados.length === 0) return;
+
+    try {
+      // Reenviar invitaciones a todos los invitados pendientes
+      const promises = invitados.map(async (empleado) => {
+        try {
+          const response = await fetch("/api/empleados/reenviar-invitacion", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: empleado.email,
+              personaId: empleado.personaId,
+              usuarioId: empleado.usuarioId,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Error al reenviar a ${empleado.email}`);
+          }
+        } catch (error) {
+          console.error(`Error al reenviar invitación a ${empleado.email}:`, error);
+          throw error;
+        }
+      });
+
+      await Promise.all(promises);
+
+      addToast({
+        title: "Invitaciones reenviadas",
+        description: `Se reenviaron ${invitados.length} invitación${invitados.length > 1 ? "es" : ""} exitosamente.`,
+        color: "success",
+      });
+
+      // Refrescar la lista de empleados
+      refetchEmpleados();
+    } catch (error) {
+      addToast({
+        title: "Error al reenviar",
+        description: "Hubo un problema al reenviar algunas invitaciones. Revisa la consola para más detalles.",
+        color: "warning",
+      });
+    }
   };
 
   const handleCrearRol = async () => {
@@ -1034,473 +1080,116 @@ export default function Empleados() {
           <Card className="shadow-none border-none bg-transparent">
             <CardBody className="p-0">
               <div className="space-y-6">
-                <Card className="shadow-sm border border-slate-200">
-              <CardHeader className="flex justify-between items-center pb-3">
-                <div>
-                  <p className="text-sm text-gray-500">Alta rápida</p>
-                  <h2 className="text-xl font-semibold text-slate-900">
-                    Crear usuario y asignar rol
-                  </h2>
-                </div>
-                <Chip color="success" variant="flat" size="sm">
-                  Sin costo extra
-                </Chip>
-              </CardHeader>
-              <Divider />
-              <CardBody className="space-y-4 pt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Nombre"
-                    placeholder="Ej: Sofia"
-                    value={nuevoUsuario.nombre}
-                    onChange={(e) =>
-                      setNuevoUsuario((prev) => ({
-                        ...prev,
-                        nombre: e.target.value,
-                      }))
-                    }
-                  />
-                  <Input
-                    label="Apellido"
-                    placeholder="Ej: Romero"
-                    value={nuevoUsuario.apellido}
-                    onChange={(e) =>
-                      setNuevoUsuario((prev) => ({
-                        ...prev,
-                        apellido: e.target.value,
-                      }))
-                    }
-                  />
-                  <Input
-                    label="Correo"
-                    type="email"
-                    placeholder="correo@puntox.com"
-                    value={nuevoUsuario.email}
-                    onChange={(e) =>
-                      setNuevoUsuario((prev) => ({
-                        ...prev,
-                        email: e.target.value,
-                      }))
-                    }
-                  />
-                  <Input
-                    label="Usuario"
-                    placeholder="usuario de acceso"
-                    value={nuevoUsuario.usuario}
-                    onChange={(e) =>
-                      setNuevoUsuario((prev) => ({
-                        ...prev,
-                        usuario: e.target.value,
-                      }))
-                    }
-                  />
-                  <Input
-                    label="Contraseña"
-                    type="password"
-                    placeholder="Mínimo 8 caracteres"
-                    value={nuevoUsuario.password}
-                    onChange={(e) =>
-                      setNuevoUsuario((prev) => ({
-                        ...prev,
-                        password: e.target.value,
-                      }))
-                    }
-                  />
-                  <Input
-                    label="Telefono"
-                    placeholder="+54 11 5555 0000"
-                    value={nuevoUsuario.telefono}
-                    onChange={(e) =>
-                      setNuevoUsuario((prev) => ({
-                        ...prev,
-                        telefono: e.target.value,
-                      }))
-                    }
-                  />
-                  <Input
-                    label="Direccion"
-                    placeholder="Calle y número"
-                    value={nuevoUsuario.direccion}
-                    onChange={(e) =>
-                      setNuevoUsuario((prev) => ({
-                        ...prev,
-                        direccion: e.target.value,
-                      }))
-                    }
-                  />
-                  <Select
-                    label="Provincia"
-                    selectedKeys={
-                      provinciaSeleccionada ? [provinciaSeleccionada] : []
-                    }
-                    onChange={(e) => setProvinciaSeleccionada(e.target.value)}
-                    placeholder="Selecciona una provincia"
-                  >
-                    {provincias.map((prov) => (
-                      <SelectItem key={String(prov.Id)}>
-                        {prov.Descripcion}
-                      </SelectItem>
-                    ))}
-                  </Select>
 
-                  <Select
-                    label="Departamento"
-                    selectedKeys={
-                      departamentoSeleccionado ? [departamentoSeleccionado] : []
-                    }
-                    onChange={(e) => setDepartamentoSeleccionado(e.target.value)}
-                    placeholder="Selecciona un departamento"
-                    isDisabled={!provinciaSeleccionada}
-                  >
-                    {departamentos.map((dep) => (
-                      <SelectItem key={String(dep.Id)}>
-                        {dep.Descripcion}
-                      </SelectItem>
-                    ))}
-                  </Select>
-
-                  <Select
-                    label="Localidad"
-                    selectedKeys={
-                      nuevoUsuario.localidadId ? [nuevoUsuario.localidadId] : []
-                    }
-                    onChange={(e) =>
-                      setNuevoUsuario((prev) => ({
-                        ...prev,
-                        localidadId: e.target.value,
-                      }))
-                    }
-                    placeholder="Selecciona una localidad"
-                    isDisabled={!departamentoSeleccionado}
-                  >
-                    {localidades.map((loc) => (
-                      <SelectItem key={String(loc.Id)}>
-                        {loc.Descripcion}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                  <Input
-                    label="DNI (opcional)"
-                    placeholder="12345678"
-                    value={nuevoUsuario.dni}
-                    onChange={(e) =>
-                      setNuevoUsuario((prev) => ({ ...prev, dni: e.target.value }))
-                    }
-                  />
-                  <Select
-                    label="Rol"
-                    selectedKeys={nuevoUsuario.rolId ? [nuevoUsuario.rolId] : []}
-                    onChange={(e) =>
-                      setNuevoUsuario((prev) => ({
-                        ...prev,
-                        rolId: e.target.value,
-                      }))
-                    }
-                    placeholder="Selecciona un rol"
-                  >
-                    {roles.map((rol) => (
-                      <SelectItem key={String(rol.id)}>{rol.nombre}</SelectItem>
-                    ))}
-                  </Select>
-                  <div className="flex items-center gap-3">
-                    <Switch
-                      isSelected={nuevoUsuario.autoInvitar}
-                      onValueChange={(value) =>
-                        setNuevoUsuario((prev) => ({ ...prev, autoInvitar: value }))
-                      }
-                    >
-                      Enviar invitacion por correo
-                    </Switch>
-                    <Tooltip content="Usa plantillas del tenant para invitar rapido">
-                      <span className="text-sm text-gray-500 cursor-help">?</span>
-                    </Tooltip>
-                  </div>
-                </div>
-                <div className="flex justify-end pt-2">
-                  <Button
-                    color="primary"
-                    onPress={handleCrearUsuario}
-                    className="font-semibold"
-                    isLoading={isCreatingEmpleado}
-                    isDisabled={isLoadingEmpleados}
-                  >
-                    Crear usuario
-                  </Button>
-                </div>
-              </CardBody>
-            </Card>
-
-            {/* Alerta de invitaciones pendientes */}
+            {/* Alerta de invitaciones pendientes - Sticky */}
             {resumen.invitados > 0 && (
-              <Card className="shadow-sm border-2 border-yellow-300 bg-yellow-50">
-                <CardBody className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="text-2xl">📧</div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-yellow-900 mb-1">
-                        {resumen.invitados} invitación{resumen.invitados > 1 ? "es" : ""} pendiente{resumen.invitados > 1 ? "s" : ""}
-                      </h3>
-                      <p className="text-sm text-yellow-700">
-                        {resumen.invitadosLista
-                          .map((e) => e.nombreCompleto)
-                          .join(", ")}{" "}
-                        {resumen.invitados > 1 ? "están" : "está"} esperando aceptar su invitación.
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      color="warning"
-                      onPress={() => {
-                        setFiltros((prev) => ({ ...prev, estado: "Invitado" }));
-                        setPage(1);
-                      }}
-                    >
-                      Ver invitados
-                    </Button>
-                  </div>
-                </CardBody>
-              </Card>
-            )}
-
-            <Card className="shadow-sm border border-slate-200">
-              <CardHeader className="flex flex-col gap-3 pb-3">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 w-full">
-                  <div>
-                    <p className="text-sm text-gray-500">Equipo</p>
-                    <h2 className="text-xl font-semibold text-slate-900">
-                      Empleados y accesos
-                    </h2>
-                  </div>
-                  <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto md:items-center">
-                    <Input
-                      size="sm"
-                      placeholder="Buscar por nombre o correo"
-                      startContent={<span className="text-gray-500">🔍</span>}
-                      value={busquedaInput}
-                      onChange={(e) => {
-                        setBusquedaInput(e.target.value);
-                      }}
-                      className="w-full md:max-w-xs"
-                    />
-
-                    <Select
-                      size="sm"
-                      selectedKeys={filtros.rol ? [filtros.rol] : []}
-                      onSelectionChange={(keys) => {
-                        const selected = Array.from(keys)[0] as string;
-                        setFiltros((prev) => ({ ...prev, rol: selected || "" }));
-                        // Resetear a página 1 al cambiar filtro de rol
-                        setPage(1);
-                      }}
-                      className="w-full md:min-w-[160px]"
-                    >
-                      {[
-                        <SelectItem key="todos">Todos los roles</SelectItem>,
-                        ...roles.map((rol) => (
-                          <SelectItem key={String(rol.id)}>
-                            {rol.nombre}
-                          </SelectItem>
-                        )),
-                      ]}
-                    </Select>
-                    <Select
-                      size="sm"
-                      selectedKeys={[filtros.estado]}
-                      onChange={(e) => {
-                        setFiltros((prev) => ({ ...prev, estado: e.target.value }));
-                        // Resetear a página 1 al cambiar filtro de estado
-                        setPage(1);
-                      }}
-                      className="w-full md:min-w-[160px]"
-                    >
-                      <SelectItem key="todos">Todos</SelectItem>
-                      <SelectItem key="Activo">Activos</SelectItem>
-                      <SelectItem key="Invitado">Invitados</SelectItem>
-                      <SelectItem key="Suspendido">Suspendidos</SelectItem>
-                    </Select>
-                  </div>
-                </div>
-              </CardHeader>
-              <Divider />
-              <CardBody className="space-y-3 pt-4">
-                {empleados.map((empleado) => {
-                  const rolNombre =
-                    empleado.rolNombre ?? getRolNombre(empleado.rolId) ?? "Sin rol";
-                  const rolTipo =
-                    empleado.rolTipo ?? getRolTipo(empleado.rolId) ?? "Empleado";
-                  return (
-                    <div
-                      key={empleado.usuarioId ?? empleado.personaId ?? empleado.id}
-                      className="rounded-xl border border-slate-200 bg-white px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:shadow-sm transition-shadow"
-                    >
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-slate-900 text-sm sm:text-base">
-                            {empleado.nombreCompleto}
-                          </span>
+              <div className="sticky top-0 z-30 -mx-6 px-6 pt-4 pb-2 bg-white/95 backdrop-blur-sm border-b border-yellow-200">
+                <Card className="shadow-md border-2 border-yellow-400 bg-gradient-to-r from-yellow-50 to-yellow-100">
+                  <CardBody className="p-4">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0">
+                        <div className="w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center text-2xl">
+                          📧
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-bold text-yellow-900 text-lg">
+                            Invitaciones pendientes
+                          </h3>
                           <Chip
                             size="sm"
-                            color={rolChipColor(rolTipo)}
-                            variant="flat"
+                            color="warning"
+                            variant="solid"
+                            className="font-bold"
                           >
-                            {rolNombre} ({rolTipo})
+                            {resumen.invitados}
                           </Chip>
                         </div>
-                        <p className="text-xs text-gray-500">
-                          Legajo {empleado.legajo ?? "-"} ·{" "}
-                          {empleado.localidad ?? "Localidad pendiente"}
+                        <p className="text-sm text-yellow-800 mb-3">
+                          {resumen.invitadosLista
+                            .map((e) => e.nombreCompleto)
+                            .join(", ")}{" "}
+                          {resumen.invitados > 1 ? "están" : "está"} esperando aceptar su invitación.
                         </p>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-slate-700">
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-500">✉️</span>
-                          <span>{empleado.email}</span>
-                        </div>
-                        <div>{estadoPill(empleado.estado)}</div>
-                        <div className="flex items-center gap-1 text-gray-500">
-                          <span>⏳</span>
-                          <span>
-                            {empleado.estado === "Invitado"
-                              ? "Invitación pendiente"
-                              : empleado.ultimaActividad ?? "Pendiente"}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Tooltip content="Editar">
+                        <div className="flex flex-wrap gap-2">
                           <Button
-                            isIconOnly
                             size="sm"
-                            variant="light"
-                            onPress={async () => {
-                              setEmpleadoAEditar(empleado);
-                              // Prellenar formulario
-                              const provinciaIdStr = empleado.provinciaId ? String(empleado.provinciaId) : "";
-                              const departamentoIdStr = empleado.departamentoId ? String(empleado.departamentoId) : "";
-                              
-                              setEmpleadoEditDraft({
-                                nombre: empleado.nombre,
-                                apellido: empleado.apellido,
-                                dni: empleado.dni || "",
-                                direccion: empleado.direccion || "",
-                                telefono: empleado.telefono || "",
-                                localidadId: empleado.localidadId ? String(empleado.localidadId) : "",
-                                provinciaId: provinciaIdStr,
-                                departamentoId: departamentoIdStr,
-                                rolId: empleado.rolId ? String(empleado.rolId) : "",
-                              });
-                              
-                              // Cargar departamentos y localidades si hay provincia/departamento
-                              if (provinciaIdStr) {
-                                setProvinciaSeleccionada(provinciaIdStr);
-                                // Establecer departamento - el useEffect se encargará de sincronizar
-                                if (departamentoIdStr) {
-                                  setDepartamentoSeleccionado(departamentoIdStr);
-                                  // Las localidades se cargan automáticamente cuando se selecciona un departamento
-                                }
-                              }
-                              
-                              // Limpiar contraseñas
-                              setNuevaPassword("");
-                              setConfirmarPassword("");
+                            variant="solid"
+                            color="warning"
+                            onPress={handleReenviarInvitaciones}
+                            className="font-semibold"
+                          >
+                            Enviar recordatorio
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            color="warning"
+                            onPress={() => {
+                              setFiltros((prev) => ({ ...prev, estado: "Invitado" }));
+                              setPage(1);
                             }}
                           >
-                            <Pencil size={16} />
+                            Ver invitados
                           </Button>
-                        </Tooltip>
-                        <Tooltip content="Ver ficha">
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            variant="light"
-                            onPress={() => setDetalleEmpleado(empleado)}
-                          >
-                            <Eye size={16} />
-                          </Button>
-                        </Tooltip>
-                        <Tooltip content="Suspender/activar">
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            variant="light"
-                            onPress={() =>
-                              handleEstado(
-                                empleado,
-                                empleado.estado === "Suspendido"
-                                  ? "Activo"
-                                  : "Suspendido"
-                              )
-                            }
-                          >
-                            <Zap size={16} />
-                          </Button>
-                        </Tooltip>
-                        <Tooltip content="Enviar email">
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            variant="light"
-                            onPress={() =>
-                              addToast({
-                                title: "Invitacion reenviada",
-                                description: `Enviada a ${empleado.email}`,
-                                color: "success",
-                              })
-                            }
-                          >
-                            <Mail size={16} />
-                          </Button>
-                        </Tooltip>
-                        <Tooltip content="Eliminar">
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            color="danger"
-                            variant="light"
-                            onPress={() => handleEliminar(empleado)}
-                          >
-                            <Trash2 size={16} />
-                          </Button>
-                        </Tooltip>
+                        </div>
                       </div>
                     </div>
-                  );
-                })}
-                {empleados.length === 0 && (
-                  <p className="text-sm text-gray-500 px-2 py-4 text-center">
-                    {isLoadingEmpleados ? "Cargando..." : "Sin coincidencias"}
-                  </p>
-                )}
-              </CardBody>
-              
-              {/* Paginación */}
-              {pagination && pagination.total > 0 && (
-                <div className="px-4 pb-4">
-                  <Pagination
-                    pagination={pagination || {
-                      page: 1,
-                      limit: 20,
-                      total: 0,
-                      totalPages: 1,
-                      hasNextPage: false,
-                      hasPreviousPage: false,
-                    }}
-                    onPageChange={(newPage) => {
-                      setPage(newPage);
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    onLimitChange={(newLimit) => {
-                      setLimit(newLimit);
-                      setPage(1);
-                    }}
-                    showLimitSelector={true}
-                  />
-                </div>
-              )}
-            </Card>
+                  </CardBody>
+                </Card>
+              </div>
+            )}
+
+            {/* Tabla de empleados usando GenericTable */}
+            <EmpleadoCRUD
+              onCreate={() => setOpenCrearUsuarioModal(true)}
+              onEdit={(empleado) => {
+                setEmpleadoAEditar(empleado);
+                // Prellenar formulario
+                const provinciaIdStr = empleado.provinciaId ? String(empleado.provinciaId) : "";
+                const departamentoIdStr = empleado.departamentoId ? String(empleado.departamentoId) : "";
+                
+                setEmpleadoEditDraft({
+                  nombre: empleado.nombre,
+                  apellido: empleado.apellido,
+                  dni: empleado.dni || "",
+                  direccion: empleado.direccion || "",
+                  telefono: empleado.telefono || "",
+                  localidadId: empleado.localidadId ? String(empleado.localidadId) : "",
+                  provinciaId: provinciaIdStr,
+                  departamentoId: departamentoIdStr,
+                  rolId: empleado.rolId ? String(empleado.rolId) : "",
+                });
+                
+                // Cargar departamentos y localidades si hay provincia/departamento
+                if (provinciaIdStr) {
+                  setProvinciaSeleccionada(provinciaIdStr);
+                  if (departamentoIdStr) {
+                    setDepartamentoSeleccionado(departamentoIdStr);
+                  }
+                }
+                
+                // Limpiar contraseñas
+                setNuevaPassword("");
+                setConfirmarPassword("");
+              }}
+              onDelete={(empleado) => handleEliminar(empleado)}
+              onView={(empleado) => setDetalleEmpleado(empleado)}
+              onToggleEstado={(empleado) =>
+                handleEstado(
+                  empleado,
+                  empleado.estado === "Suspendido" ? "Activo" : "Suspendido"
+                )
+              }
+              onSendEmail={(empleado) =>
+                addToast({
+                  title: "Invitacion reenviada",
+                  description: `Enviada a ${empleado.email}`,
+                  color: "success",
+                })
+              }
+            />
               </div>
             </CardBody>
           </Card>
@@ -1538,14 +1227,27 @@ export default function Empleados() {
                   Librería de roles
                 </h3>
               </div>
-              <Button
-                size="sm"
-                variant="flat"
-                color="primary"
-                onPress={() => setOpenRolModal(true)}
-              >
-                + Crear rol
-              </Button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleRefreshRoles}
+                  disabled={isRefreshingRoles}
+                  className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 hover:border-[#67afc3] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Actualizar datos"
+                >
+                  <RefreshCw
+                    size={18}
+                    className={`text-gray-600 transition-transform ${
+                      isRefreshingRoles ? "animate-spin" : ""
+                    }`}
+                  />
+                </button>
+                <button
+                  onClick={() => setOpenRolModal(true)}
+                  className="bg-[#67afc3] text-white px-4 py-1 rounded-lg hover:bg-[#529aa6] transition-colors"
+                >
+                  Crear nuevo rol
+                </button>
+              </div>
             </CardHeader>
             <Divider />
             <CardBody className="space-y-4 pt-4">
@@ -1762,30 +1464,19 @@ export default function Empleados() {
               )}
               <Divider className="my-4" />
               <div className="flex items-center justify-between pt-2">
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    isDisabled={!paginationAuditoria.hasPreviousPage || isLoadingAuditorias}
-                    onPress={() => {
-                      setAuditoriaPage((prev) => Math.max(1, prev - 1));
-                    }}
-                  >
-                    Anterior
-                  </Button>
-                  <span className="text-sm text-gray-500">
-                    Página {paginationAuditoria.page} de {paginationAuditoria.totalPages || 1}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    isDisabled={!paginationAuditoria.hasNextPage || isLoadingAuditorias}
-                    onPress={() => {
-                      setAuditoriaPage((prev) => prev + 1);
-                    }}
-                  >
-                    Siguiente
-                  </Button>
+                <div className="flex items-center gap-4">
+                  {!isLoadingAuditorias && paginationAuditoria.totalPages > 1 && (
+                    <HeroUIPagination
+                      showControls
+                      page={paginationAuditoria.page}
+                      total={paginationAuditoria.totalPages}
+                      onChange={(page) => setAuditoriaPage(page)}
+                      classNames={{
+                        cursor: "bg-[#67afc3] text-white shadow-lg",
+                        item: "bg-transparent shadow-none",
+                      }}
+                    />
+                  )}
                 </div>
                 <Button
                   color="primary"
@@ -1807,50 +1498,76 @@ export default function Empleados() {
       <Modal
         isOpen={openRolModal}
         onClose={() => setOpenRolModal(false)}
-        size="lg"
+        size="3xl"
+        scrollBehavior="inside"
       >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
-            <h3 className="text-xl font-semibold">Nuevo rol</h3>
-            <p className="text-sm text-gray-500">
-              Define permisos base. Luego podras afinarlos en cada usuario.
+            <h3 className="text-xl font-semibold">Crear nuevo rol</h3>
+            <p className="text-sm text-gray-500 font-normal">
+              Define permisos base. Luego podrás afinarlos en cada usuario.
             </p>
           </ModalHeader>
-          <ModalBody className="space-y-3">
-            <Input
-              label="Nombre"
-              placeholder="Ej: Supervisor de turno"
-              value={nuevoRol.nombre}
-              onChange={(e) =>
-                setNuevoRol((prev) => ({ ...prev, nombre: e.target.value }))
-              }
-            />
-            <Textarea
-              label="Descripcion"
-              placeholder="Que puede y que no puede hacer este rol"
-              value={nuevoRol.descripcion}
-              onChange={(e) =>
-                setNuevoRol((prev) => ({
-                  ...prev,
-                  descripcion: e.target.value,
-                }))
-              }
-            />
-            <Select
-              label="Tipo de rol"
-              selectedKeys={[nuevoRol.tipo]}
-              onChange={(e) =>
-                setNuevoRol((prev) => ({
-                  ...prev,
-                  tipo: e.target.value as "ADMINISTRADOR" | "EMPLEADO",
-                }))
-              }
-            >
-              <SelectItem key="ADMINISTRADOR">Administrador</SelectItem>
-              <SelectItem key="EMPLEADO">Empleado</SelectItem>
-            </Select>
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-slate-900">Permisos</p>
+          <ModalBody className="space-y-6 pt-4">
+            {/* Sección: Información del Rol */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
+                <div className="w-1 h-5 bg-blue-500 rounded-full" />
+                <h4 className="text-sm font-semibold text-slate-700">
+                  Información del Rol
+                </h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="Nombre"
+                  placeholder="Ej: Supervisor de turno"
+                  value={nuevoRol.nombre}
+                  onChange={(e) =>
+                    setNuevoRol((prev) => ({ ...prev, nombre: e.target.value }))
+                  }
+                  isRequired
+                />
+                <Select
+                  label="Tipo de rol"
+                  selectedKeys={[nuevoRol.tipo]}
+                  onChange={(e) =>
+                    setNuevoRol((prev) => ({
+                      ...prev,
+                      tipo: e.target.value as "ADMINISTRADOR" | "EMPLEADO",
+                    }))
+                  }
+                  description="Define el nivel de acceso del rol"
+                  isRequired
+                >
+                  <SelectItem key="ADMINISTRADOR">Administrador</SelectItem>
+                  <SelectItem key="EMPLEADO">Empleado</SelectItem>
+                </Select>
+              </div>
+              <Textarea
+                label="Descripción"
+                placeholder="Qué puede y qué no puede hacer este rol"
+                value={nuevoRol.descripcion}
+                onChange={(e) =>
+                  setNuevoRol((prev) => ({
+                    ...prev,
+                    descripcion: e.target.value,
+                  }))
+                }
+                description="Describe las responsabilidades y limitaciones del rol"
+              />
+            </div>
+
+            {/* Sección: Permisos */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
+                <div className="w-1 h-5 bg-green-500 rounded-full" />
+                <h4 className="text-sm font-semibold text-slate-700">
+                  Permisos
+                </h4>
+              </div>
+              <p className="text-sm text-gray-600">
+                Selecciona los permisos que tendrá este rol. Puedes seleccionar múltiples permisos.
+              </p>
               <div className="flex flex-wrap gap-2">
                 {permisosDisponibles.map((permiso) => {
                   const activo = nuevoRol.permisos.includes(permiso);
@@ -1877,12 +1594,17 @@ export default function Empleados() {
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button variant="light" onPress={() => setOpenRolModal(false)}>
+            <Button
+              variant="light"
+              onPress={() => setOpenRolModal(false)}
+              isDisabled={isCreatingRol}
+            >
               Cancelar
             </Button>
             <Button
               color="primary"
               onPress={handleCrearRol}
+              className="font-semibold"
               isLoading={isCreatingRol}
             >
               Crear rol
@@ -2473,6 +2195,258 @@ export default function Empleados() {
               isLoading={isUpdatingEmpleado}
             >
               Guardar cambios
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal para crear usuario */}
+      <Modal
+        isOpen={openCrearUsuarioModal}
+        onClose={() => setOpenCrearUsuarioModal(false)}
+        size="3xl"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            <h3 className="text-xl font-semibold">Crear nuevo usuario</h3>
+            <p className="text-sm text-gray-500 font-normal">
+              Completa los datos para crear un usuario y asignar un rol
+            </p>
+          </ModalHeader>
+          <ModalBody className="space-y-6 pt-4">
+            {/* Sección: Información Personal */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
+                <div className="w-1 h-5 bg-blue-500 rounded-full" />
+                <h4 className="text-sm font-semibold text-slate-700">
+                  Información Personal
+                </h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="Nombre"
+                  placeholder="Ej: Sofia"
+                  value={nuevoUsuario.nombre}
+                  onChange={(e) =>
+                    setNuevoUsuario((prev) => ({
+                      ...prev,
+                      nombre: e.target.value,
+                    }))
+                  }
+                  isRequired
+                />
+                <Input
+                  label="Apellido"
+                  placeholder="Ej: Romero"
+                  value={nuevoUsuario.apellido}
+                  onChange={(e) =>
+                    setNuevoUsuario((prev) => ({
+                      ...prev,
+                      apellido: e.target.value,
+                    }))
+                  }
+                  isRequired
+                />
+                <Input
+                  label="DNI (opcional)"
+                  placeholder="12345678"
+                  value={nuevoUsuario.dni}
+                  onChange={(e) =>
+                    setNuevoUsuario((prev) => ({ ...prev, dni: e.target.value }))
+                  }
+                />
+                <Input
+                  label="Teléfono"
+                  placeholder="+54 11 5555 0000"
+                  value={nuevoUsuario.telefono}
+                  onChange={(e) =>
+                    setNuevoUsuario((prev) => ({
+                      ...prev,
+                      telefono: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Sección: Credenciales de Acceso */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
+                <div className="w-1 h-5 bg-green-500 rounded-full" />
+                <h4 className="text-sm font-semibold text-slate-700">
+                  Credenciales de Acceso
+                </h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="Correo electrónico"
+                  type="email"
+                  placeholder="correo@puntox.com"
+                  value={nuevoUsuario.email}
+                  onChange={(e) =>
+                    setNuevoUsuario((prev) => ({
+                      ...prev,
+                      email: e.target.value,
+                    }))
+                  }
+                  description="Se usará para iniciar sesión"
+                  isRequired
+                />
+                <Input
+                  label="Contraseña"
+                  type="password"
+                  placeholder="Mínimo 8 caracteres"
+                  value={nuevoUsuario.password}
+                  onChange={(e) =>
+                    setNuevoUsuario((prev) => ({
+                      ...prev,
+                      password: e.target.value,
+                    }))
+                  }
+                  description="Mínimo 8 caracteres"
+                  isRequired
+                />
+              </div>
+            </div>
+
+            {/* Sección: Ubicación */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
+                <div className="w-1 h-5 bg-purple-500 rounded-full" />
+                <h4 className="text-sm font-semibold text-slate-700">
+                  Ubicación
+                </h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="Dirección"
+                  placeholder="Calle y número"
+                  value={nuevoUsuario.direccion}
+                  onChange={(e) =>
+                    setNuevoUsuario((prev) => ({
+                      ...prev,
+                      direccion: e.target.value,
+                    }))
+                  }
+                  isRequired
+                />
+                <Select
+                  label="Provincia"
+                  selectedKeys={
+                    provinciaSeleccionada ? [provinciaSeleccionada] : []
+                  }
+                  onChange={(e) => setProvinciaSeleccionada(e.target.value)}
+                  placeholder="Selecciona una provincia"
+                  isRequired
+                >
+                  {provincias.map((prov) => (
+                    <SelectItem key={String(prov.Id)}>
+                      {prov.Descripcion}
+                    </SelectItem>
+                  ))}
+                </Select>
+                <Select
+                  label="Departamento"
+                  selectedKeys={
+                    departamentoSeleccionado ? [departamentoSeleccionado] : []
+                  }
+                  onChange={(e) => setDepartamentoSeleccionado(e.target.value)}
+                  placeholder="Selecciona un departamento"
+                  isDisabled={!provinciaSeleccionada}
+                  isRequired
+                >
+                  {departamentos.map((dep) => (
+                    <SelectItem key={String(dep.Id)}>
+                      {dep.Descripcion}
+                    </SelectItem>
+                  ))}
+                </Select>
+                <Select
+                  label="Localidad"
+                  selectedKeys={
+                    nuevoUsuario.localidadId ? [nuevoUsuario.localidadId] : []
+                  }
+                  onChange={(e) =>
+                    setNuevoUsuario((prev) => ({
+                      ...prev,
+                      localidadId: e.target.value,
+                    }))
+                  }
+                  placeholder="Selecciona una localidad"
+                  isDisabled={!departamentoSeleccionado}
+                  isRequired
+                >
+                  {localidades.map((loc) => (
+                    <SelectItem key={String(loc.Id)}>
+                      {loc.Descripcion}
+                    </SelectItem>
+                  ))}
+                </Select>
+              </div>
+            </div>
+
+            {/* Sección: Configuración */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
+                <div className="w-1 h-5 bg-orange-500 rounded-full" />
+                <h4 className="text-sm font-semibold text-slate-700">
+                  Configuración
+                </h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Select
+                  label="Rol"
+                  selectedKeys={nuevoUsuario.rolId ? [nuevoUsuario.rolId] : []}
+                  onChange={(e) =>
+                    setNuevoUsuario((prev) => ({
+                      ...prev,
+                      rolId: e.target.value,
+                    }))
+                  }
+                  placeholder="Selecciona un rol"
+                  description="Define los permisos del usuario"
+                >
+                  {roles.map((rol) => (
+                    <SelectItem key={String(rol.id)}>{rol.nombre}</SelectItem>
+                  ))}
+                </Select>
+                <div className="flex flex-col justify-end">
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200">
+                    <Switch
+                      isSelected={nuevoUsuario.autoInvitar}
+                      onValueChange={(value) =>
+                        setNuevoUsuario((prev) => ({ ...prev, autoInvitar: value }))
+                      }
+                    >
+                      <span className="text-sm font-medium text-slate-700">
+                        Enviar invitación por correo
+                      </span>
+                    </Switch>
+                    <Tooltip content="Se enviará un correo electrónico con las credenciales de acceso al usuario">
+                      <span className="text-sm text-gray-500 cursor-help">ℹ️</span>
+                    </Tooltip>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="light"
+              onPress={() => setOpenCrearUsuarioModal(false)}
+              isDisabled={isCreatingEmpleado}
+            >
+              Cancelar
+            </Button>
+            <Button
+              color="primary"
+              onPress={handleCrearUsuario}
+              className="font-semibold"
+              isLoading={isCreatingEmpleado}
+              isDisabled={isLoadingEmpleados}
+            >
+              Crear usuario
             </Button>
           </ModalFooter>
         </ModalContent>
