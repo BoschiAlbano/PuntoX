@@ -170,8 +170,12 @@ export default function GenericCrud<T extends { Id: number | string }>({
               isEdit ? "actualizado" : "creado"
             } correctamente`,
             color: "success",
+            duration: 3000,
           });
-          onClose();
+          // Cerrar con animación suave
+          setTimeout(() => {
+            onClose();
+          }, 150);
         },
         onError: (error: any) => {
           // Manejo básico de errores, se puede mejorar parseando Zod errors
@@ -195,9 +199,13 @@ export default function GenericCrud<T extends { Id: number | string }>({
           title: "Éxito",
           description: "Registro eliminado correctamente",
           color: "success",
+          duration: 3000,
         });
-        onDeleteClose();
-        setItemToDelete(null);
+        // Cerrar con animación suave
+        setTimeout(() => {
+          onDeleteClose();
+          setItemToDelete(null);
+        }, 150);
       },
       onError: (error: any) => {
         const errorMessage = typeof error?.error === "string" 
@@ -260,6 +268,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
         onNewClick={handleCreate}
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing}
+        totalItems={paginationMeta.total}
       />
 
       {/* Modal de Formulario */}
