@@ -292,27 +292,104 @@ function AnaliticasContent() {
   const totalPages = Math.ceil(logsFiltrados.length / rowsPerPage);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Analíticas</h1>
-        <p className="text-gray-600 mt-2">
-          Visualiza métricas, reportes y logs de actividad del sistema
-        </p>
-      </div>
+    <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center">
+      {/* Header mejorado con parallax, glow y sombras profundas */}
+      <section className="w-full relative overflow-hidden rounded-3xl border border-slate-200/50 bg-gradient-to-r from-blue-500 via-sky-500 to-emerald-400 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] mb-10 transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]">
+        {/* Blurred circles decorativos para profundidad con parallax ligero (optimizado) */}
+        <div className="absolute inset-0 overflow-hidden" style={{ willChange: 'transform' }}>
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl parallax-bg" style={{ willChange: 'transform' }} />
+          <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-white/8 rounded-full blur-2xl parallax-bg" style={{ animationDelay: '2s', willChange: 'transform' }} />
+          <div className="absolute top-1/2 right-1/4 w-32 h-32 bg-white/5 rounded-full blur-xl parallax-bg" style={{ animationDelay: '4s', willChange: 'transform' }} />
+        </div>
+        
+        {/* Glass panel semitransparente con blur más suave */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 backdrop-blur-sm" />
+        
+        {/* Radial gradient overlay para más profundidad */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),transparent_50%)]" />
+        
+        <div className="relative p-4 md:p-6 lg:p-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="space-y-3 flex-1">
+              <Chip 
+                variant="flat" 
+                className="bg-white/25 text-white backdrop-blur-sm border border-white/40 shadow-lg shadow-white/20 transition-all duration-300 hover:bg-white/30 hover:shadow-xl hover:shadow-white/30"
+              >
+                Analíticas
+              </Chip>
+              <div className="space-y-2">
+                <h1 className="text-3xl md:text-4xl lg:text-[40px] font-bold text-white drop-shadow-lg">
+                  Analíticas y Reportes
+                </h1>
+                <p className="text-white/95 max-w-2xl md:text-lg leading-relaxed drop-shadow-md">
+                  Visualiza métricas, reportes y logs de actividad del sistema desde un solo lugar
+                </p>
+              </div>
+            </div>
+            
+            {/* Ícono grande de gráficos/analíticas a la derecha (complementario al sidebar) */}
+            <div className="hidden md:flex items-center justify-center flex-shrink-0">
+              <div className="relative group">
+                {/* Glow alrededor del icono - efecto premium */}
+                <div className="absolute inset-0 bg-white/20 rounded-full blur-2xl group-hover:bg-white/30 transition-all duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-white/20 rounded-full blur-xl group-hover:from-white/40 group-hover:to-white/30 transition-all duration-500" />
+                {/* Blur suave de fondo */}
+                <div className="absolute inset-0 bg-white/15 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-300" />
+                <svg
+                  className="w-32 h-32 md:w-40 md:h-40 text-white relative z-10 drop-shadow-2xl transition-transform duration-300 group-hover:scale-105"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  style={{
+                    animation: 'fadeIn 0.4s ease-out 0.1s forwards',
+                    willChange: 'transform, opacity',
+                    opacity: 0
+                  }}
+                >
+                  {/* Icono de gráficos/analíticas - más elaborado que el del sidebar */}
+                  {/* Eje Y */}
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18" />
+                  {/* Gráfico de barras */}
+                  <rect x="4" y="16" width="2" height="2" fill="currentColor" opacity="0.8" />
+                  <rect x="7" y="12" width="2" height="6" fill="currentColor" opacity="0.8" />
+                  <rect x="10" y="8" width="2" height="10" fill="currentColor" opacity="0.8" />
+                  <rect x="13" y="6" width="2" height="12" fill="currentColor" opacity="0.8" />
+                  <rect x="16" y="10" width="2" height="8" fill="currentColor" opacity="0.8" />
+                  {/* Línea de tendencia */}
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 15l4-4 4 4 4-4 4 4"
+                    strokeWidth={2}
+                    opacity={0.9}
+                  />
+                  {/* Puntos en la línea */}
+                  <circle cx="5" cy="15" r="1.5" fill="currentColor" opacity="0.9" />
+                  <circle cx="9" cy="11" r="1.5" fill="currentColor" opacity="0.9" />
+                  <circle cx="13" cy="7" r="1.5" fill="currentColor" opacity="0.9" />
+                  <circle cx="17" cy="11" r="1.5" fill="currentColor" opacity="0.9" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <Tabs
-        aria-label="Analíticas"
-        color="primary"
-        variant="underlined"
-        defaultSelectedKey={initialTab}
-        classNames={{
-          tabList:
-            "gap-6 w-full relative rounded-none p-0 border-b border-divider",
-          cursor: "w-full bg-primary",
-          tab: "max-w-fit px-0 h-12",
-          tabContent: "group-data-[selected=true]:text-primary",
-        }}
-      >
+      {/* Tabs mejoradas con glassmorphism y micro-interacciones */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-200/50 p-2 mb-6 overflow-x-auto scrollbar-hide">
+        <Tabs
+          aria-label="Analíticas"
+          color="primary"
+          variant="underlined"
+          defaultSelectedKey={initialTab}
+          classNames={{
+            tabList: "gap-2 w-full relative rounded-lg p-0 border-none bg-transparent",
+            cursor: "w-full bg-gradient-to-r from-[#67afc3] to-[#529aa6] shadow-md",
+            tab: "max-w-fit px-4 h-10 data-[selected=true]:text-white transition-colors duration-200 hover:bg-gray-100/50 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#67afc3] focus-visible:ring-offset-2",
+            tabContent: "group-data-[selected=true]:text-white font-medium",
+          }}
+        >
         <Tab
           key="dashboard"
           title={
@@ -324,8 +401,8 @@ function AnaliticasContent() {
         >
           <div className="mt-6 space-y-6">
             {/* Filtros */}
-            <Card className="shadow-sm">
-              <CardBody className="p-4">
+            <Card className="shadow-md border border-gray-200/50">
+              <CardBody className="p-4 bg-white/80 backdrop-blur-sm">
                 <div className="flex flex-col md:flex-row gap-4">
                   <Select
                     size="sm"
@@ -370,8 +447,8 @@ function AnaliticasContent() {
 
             {/* KPIs */}
             {kpisLoading ? (
-              <Card className="shadow-sm">
-                <CardBody className="p-6">
+              <Card className="shadow-md border border-gray-200/50">
+                <CardBody className="p-6 bg-white/80 backdrop-blur-sm">
                   <p className="text-gray-500">Cargando KPIs...</p>
                 </CardBody>
               </Card>
@@ -463,8 +540,8 @@ function AnaliticasContent() {
             {/* Gráficas */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {ingresosLoading ? (
-                <Card className="shadow-sm">
-                  <CardBody className="p-6">
+                <Card className="shadow-md border border-gray-200/50">
+                  <CardBody className="p-6 bg-white/80 backdrop-blur-sm">
                     <p className="text-gray-500">Cargando gráfica de ingresos...</p>
                   </CardBody>
                 </Card>
@@ -473,8 +550,8 @@ function AnaliticasContent() {
               ) : null}
 
               {pagosLoading ? (
-                <Card className="shadow-sm">
-                  <CardBody className="p-6">
+                <Card className="shadow-md border border-gray-200/50">
+                  <CardBody className="p-6 bg-white/80 backdrop-blur-sm">
                     <p className="text-gray-500">Cargando gráfica de pagos...</p>
                   </CardBody>
                 </Card>
@@ -484,8 +561,8 @@ function AnaliticasContent() {
             </div>
 
             {productosLoading ? (
-              <Card className="shadow-sm">
-                <CardBody className="p-6">
+              <Card className="shadow-md border border-gray-200/50">
+                <CardBody className="p-6 bg-white/80 backdrop-blur-sm">
                   <p className="text-gray-500">Cargando gráfica de productos...</p>
                 </CardBody>
               </Card>
@@ -502,8 +579,8 @@ function AnaliticasContent() {
             {complementariosData && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {complementariosData.gastos && (
-                  <Card className="shadow-sm">
-                    <CardHeader className="pb-3">
+                  <Card className="shadow-md border border-gray-200/50">
+                    <CardHeader className="pb-3 bg-gradient-to-r from-slate-50 to-slate-100">
                       <h3 className="text-lg font-semibold text-slate-900">
                         Gastos y Caja
                       </h3>
@@ -563,8 +640,8 @@ function AnaliticasContent() {
                 )}
 
                 {complementariosData.usuarios && (
-                  <Card className="shadow-sm">
-                    <CardHeader className="pb-3">
+                  <Card className="shadow-md border border-gray-200/50">
+                    <CardHeader className="pb-3 bg-gradient-to-r from-slate-50 to-slate-100">
                       <h3 className="text-lg font-semibold text-slate-900">
                         Usuarios Activos
                       </h3>
@@ -610,8 +687,8 @@ function AnaliticasContent() {
             </div>
           }
         >
-          <Card className="mt-6 shadow-sm border border-slate-200">
-            <CardHeader className="flex flex-col gap-4 pb-3">
+          <Card className="mt-6 shadow-md border border-gray-200/50">
+            <CardHeader className="flex flex-col gap-4 pb-3 bg-gradient-to-r from-slate-50 to-slate-100">
               <div className="flex items-center justify-between w-full">
                 <div>
                   <p className="text-sm text-gray-500">Auditoría</p>
@@ -619,7 +696,12 @@ function AnaliticasContent() {
                     Logs de actividad
                   </h3>
                 </div>
-                <Chip size="sm" variant="flat" color="warning">
+                <Chip 
+                  size="sm" 
+                  variant="flat" 
+                  color="warning"
+                  className="transition-all duration-200 hover:scale-105"
+                >
                   {logsFiltrados.length} registros
                 </Chip>
               </div>
@@ -694,6 +776,8 @@ function AnaliticasContent() {
                     // TODO: Implementar lógica de filtrado cuando esté conectado al API
                     setPage(1);
                   }}
+                  className="transition-all duration-200 hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  aria-label="Aplicar filtros"
                 >
                   Filtrar
                 </Button>
@@ -702,38 +786,53 @@ function AnaliticasContent() {
             <Divider />
             <CardBody className="p-0">
               {/* TODO: Reemplazar con datos reales del API */}
-              <Table aria-label="Tabla de logs">
-                <TableHeader>
-                  <TableColumn>FECHA</TableColumn>
-                  <TableColumn>USUARIO</TableColumn>
-                  <TableColumn>ACCIÓN</TableColumn>
-                  <TableColumn>MÓDULO</TableColumn>
-                  <TableColumn>IP</TableColumn>
-                  <TableColumn>ESTADO</TableColumn>
-                </TableHeader>
-                <TableBody emptyContent="No se encontraron logs">
-                  {paginatedLogs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell>{log.fecha}</TableCell>
-                      <TableCell>{log.usuario}</TableCell>
-                      <TableCell>{log.accion}</TableCell>
-                      <TableCell>{log.modulo}</TableCell>
-                      <TableCell>
-                        <span className="text-xs text-gray-500">{log.ip}</span>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          size="sm"
-                          color={estadoColor(log.estado)}
-                          variant="flat"
-                        >
-                          {log.estado}
-                        </Chip>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <div className="rounded-lg overflow-hidden shadow-sm border border-gray-200/50">
+                <Table 
+                  aria-label="Tabla de logs"
+                  classNames={{
+                    wrapper: "bg-white/80 backdrop-blur-sm",
+                    th: "bg-gradient-to-b from-gray-50 to-white border-b border-gray-200 transition-colors duration-200 hover:bg-gray-100",
+                  }}
+                  style={{ contain: 'layout style paint' }}
+                >
+                  <TableHeader>
+                    <TableColumn aria-label="Fecha del log">FECHA</TableColumn>
+                    <TableColumn aria-label="Usuario que realizó la acción">USUARIO</TableColumn>
+                    <TableColumn aria-label="Acción realizada">ACCIÓN</TableColumn>
+                    <TableColumn aria-label="Módulo donde se realizó">MÓDULO</TableColumn>
+                    <TableColumn aria-label="Dirección IP">IP</TableColumn>
+                    <TableColumn aria-label="Estado de la acción">ESTADO</TableColumn>
+                  </TableHeader>
+                  <TableBody emptyContent="No se encontraron logs">
+                    {paginatedLogs.map((log) => (
+                      <TableRow 
+                        key={log.id}
+                        className="transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-sky-50/50 hover:shadow-sm cursor-pointer focus-within:bg-blue-50/30 focus-within:outline-none focus-within:ring-2 focus-within:ring-[#67afc3]/50"
+                        tabIndex={0}
+                        aria-label={`Log ${log.accion} por ${log.usuario}`}
+                      >
+                        <TableCell className="border-b border-gray-100">{log.fecha}</TableCell>
+                        <TableCell className="border-b border-gray-100">{log.usuario}</TableCell>
+                        <TableCell className="border-b border-gray-100">{log.accion}</TableCell>
+                        <TableCell className="border-b border-gray-100">{log.modulo}</TableCell>
+                        <TableCell className="border-b border-gray-100">
+                          <span className="text-xs text-gray-500">{log.ip}</span>
+                        </TableCell>
+                        <TableCell className="border-b border-gray-100">
+                          <Chip
+                            size="sm"
+                            color={estadoColor(log.estado)}
+                            variant="flat"
+                            className="transition-all duration-200 hover:scale-105"
+                          >
+                            {log.estado}
+                          </Chip>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
               {totalPages > 1 && (
                 <div className="flex justify-center py-4">
                   <Pagination
@@ -748,6 +847,7 @@ function AnaliticasContent() {
           </Card>
         </Tab>
       </Tabs>
+      </div>
     </div>
   );
 }
