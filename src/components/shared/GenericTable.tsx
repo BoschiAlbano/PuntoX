@@ -12,7 +12,6 @@ import {
 import { useEffect, useState, Key } from "react";
 import { RefreshCw } from "lucide-react";
 import { PaginationMeta } from "@/hooks/useProductos"; // Reutilizamos interface o la movemos a types compartidos
-import SkeletonLoader from "./SkeletonLoader";
 
 export interface Column {
   uid: string;
@@ -161,11 +160,9 @@ export default function GenericTable<T extends { Id: number | string }>({
             )}
           </TableHeader>
           <TableBody
-            items={data}
+            items={isLoading ? Array.from({ length: 5 }).map((_, i) => ({ Id: `skeleton-${i}` } as T)) : data}
             emptyContent={
-              isLoading ? (
-                <SkeletonLoader rows={5} columns={columns.length} />
-              ) : isError ? (
+              isError ? (
                 <div className="text-danger flex justify-center py-4" role="alert" aria-live="polite">
                   Error al cargar datos
                 </div>
@@ -176,18 +173,34 @@ export default function GenericTable<T extends { Id: number | string }>({
               )
             }
           >
-            {(item) => (
-              <TableRow 
-                key={item.Id}
-                className="transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-sky-50/50 hover:shadow-sm cursor-pointer focus-within:bg-blue-50/30 focus-within:outline-none focus-within:ring-2 focus-within:ring-[#67afc3]/50"
-                tabIndex={0}
-                aria-label={`Fila ${item.Id}`}
-              >
-                {(columnKey) => (
-                  <TableCell className="border-b border-gray-100">{renderCell(item, columnKey)}</TableCell>
-                )}
-              </TableRow>
-            )}
+            {(item) => {
+              // Si es un skeleton (durante loading)
+              if (isLoading && typeof item.Id === 'string' && item.Id.startsWith('skeleton-')) {
+                return (
+                  <TableRow key={item.Id} className="animate-pulse">
+                    {columns.map((column) => (
+                      <TableCell key={column.uid} className="border-b border-gray-100">
+                        <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-md bg-[length:200%_100%] animate-shimmer" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              }
+              
+              // Fila normal con datos
+              return (
+                <TableRow 
+                  key={item.Id}
+                  className="transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-sky-50/50 hover:shadow-sm cursor-pointer focus-within:bg-blue-50/30 focus-within:outline-none focus-within:ring-2 focus-within:ring-[#67afc3]/50"
+                  tabIndex={0}
+                  aria-label={`Fila ${item.Id}`}
+                >
+                  {(columnKey) => (
+                    <TableCell className="border-b border-gray-100">{renderCell(item, columnKey)}</TableCell>
+                  )}
+                </TableRow>
+              );
+            }}
           </TableBody>
         </Table>
         </div>
