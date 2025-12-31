@@ -12,6 +12,15 @@ Bienvenido a la documentación del proyecto PuntoX.
   - Componentes visuales
   - Guía de uso
 
+### Seguridad
+
+- **[CSRF Implementation](./CSRF_IMPLEMENTATION.md)** - Documentación sobre tokens CSRF
+  - ¿Qué es CSRF y por qué implementarlo?
+  - Cómo usar tokens CSRF en endpoints
+  - Ejemplos prácticos de implementación
+  - Endpoints que deberían usar CSRF
+  - Guía de mantenimiento
+
 ### Próximamente
 
 - Configuración

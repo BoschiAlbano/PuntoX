@@ -51,9 +51,21 @@ const SessionProviderComponent = ({
 
   useEffect(() => {
     const fetchSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session ?? null);
-      setStatus(data.session ? "authenticated" : "unauthenticated");
+      try {
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session ?? null);
+        setStatus(data.session ? "authenticated" : "unauthenticated");
+      } catch (error: any) {
+        // Ignorar errores de refresh token no encontrado (común cuando las cookies están inválidas)
+        if (error?.code === "refresh_token_not_found") {
+          setSession(null);
+          setStatus("unauthenticated");
+          return;
+        }
+        console.error("Error al obtener sesión:", error);
+        setSession(null);
+        setStatus("unauthenticated");
+      }
       
       // Sincronizar permisos si hay sesión y no tiene permisos en JWT
       if (data.session?.user) {
@@ -72,8 +84,18 @@ const SessionProviderComponent = ({
     fetchSession();
 
     const { data } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      setSession(newSession);
-      setStatus(newSession ? "authenticated" : "unauthenticated");
+      // Ignorar errores de refresh token durante cambios de estado
+      try {
+        setSession(newSession);
+        setStatus(newSession ? "authenticated" : "unauthenticated");
+      } catch (error: any) {
+        if (error?.code === "refresh_token_not_found") {
+          setSession(null);
+          setStatus("unauthenticated");
+          return;
+        }
+        throw error;
+      }
       
       // Sincronizar permisos y registrar sesión cuando hay un nuevo login
       if (event === "SIGNED_IN" && newSession?.user) {
