@@ -19,12 +19,14 @@ model Tenant {
   PlanId                BigInt?
   OnboardingCompleto    Boolean                @default(false)
   EstaEliminado         Boolean                @default(false)
+  AlertasSeguridad      AlertaSeguridad[]
   Articulos             Articulo[]
   AuditoriaEmpleados    AuditoriaEmpleado[]
   BajaArticulos         BajaArticulo[]
   Bancos                Banco[]
   Cajas                 Caja[]
   Cheques               Cheque[]
+  Codigos2FA            Codigo2FA[]
   Comprobantes          Comprobante[]
   ConceptosGasto        ConceptoGastos[]
   Configuraciones       Configuracion[]
@@ -33,10 +35,13 @@ model Tenant {
   DepositosCheques      DepositoCheques[]
   DetallesCaja          DetalleCaja[]
   DetallesComprobante   DetalleComprobante[]
+  DispositivosConfiable DispositivoConfiable[]
   FormasPago            FormaPago[]
   FormulariosPerfiles   FormularioPerfil[]
   FormulariosPermisos   Formularios[]
   Gastos                Gasto[]
+  IntentosLogin         IntentoLogin[]
+  IpsBloqueadas         IpBloqueada[]
   Logs                  Log[]
   Marcas                Marca[]
   MotivosBaja           MotivoBajas[]
@@ -49,17 +54,12 @@ model Tenant {
   Precios               Precio[]
   Proveedores           Proveedor[]
   Rubros                Rubro[]
+  SesionesActivas       SesionActiva[]
   Tarjetas              Tarjeta[]
   Plan                  PlanSaaS?              @relation(fields: [PlanId], references: [Id])
+  TokensCsrf            TokenCsrf[]
   Unidades              UnidadMedida[]
   Usuarios              Usuario[]
-  SesionesActivas       SesionActiva[]
-  DispositivosConfiable DispositivoConfiable[]
-  IntentosLogin         IntentoLogin[]
-  IpsBloqueadas         IpBloqueada[]
-  TokensCsrf            TokenCsrf[]
-  Codigos2FA            Codigo2FA[]
-  AlertasSeguridad      AlertaSeguridad[]
 
   @@index([PlanId])
 }
@@ -378,9 +378,9 @@ model CondicionIva {
   Id              BigInt            @id @default(autoincrement())
   Descripcion     String            @unique @db.VarChar(150)
   EstaEliminado   Boolean
+  Configuracion   Configuracion[]
   Persona_Cliente Persona_Cliente[]
   Proveedor       Proveedor[]
-  Configuracion   Configuracion[]
 }
 
 /// Configuración general del comercio (datos fiscales, parámetros de stock, etc.).
@@ -420,27 +420,24 @@ model Configuracion {
   AbrirCajonEfectivo                     Boolean       @default(true)
   MostrarPreciosConIva                   Boolean       @default(true)
   NumerarPedidosPantalla                 Boolean       @default(true)
-  // Notificaciones
   NotificacionesPush                     Boolean       @default(true)
   NotificacionesResumenDiario            Boolean       @default(false)
   NotificacionesStockBajo                Boolean       @default(true)
-  // Datos fiscales y regionales
   Moneda                                 String?       @default("ARS") @db.VarChar(10)
   ZonaHoraria                            String?       @default("America/Argentina/Buenos_Aires") @db.VarChar(100)
   Idioma                                 String?       @default("es-AR") @db.VarChar(10)
   CondicionIvaId                         BigInt?
   PuntoVenta                             String?       @db.VarChar(10)
   InicioActividades                      DateTime?
-  // Configuración de seguridad
   Forzar2FA                              Boolean       @default(false)
   ExpirarSesiones30Dias                  Boolean       @default(true)
-  BloquearTrasIntentos                   Int?          @default(5) // null = nunca, número = cantidad de intentos
+  BloquearTrasIntentos                   Int?          @default(5)
   AlertarNuevoDispositivo                Boolean       @default(true)
   BloquearPorInactividad                 Boolean       @default(false)
-  TiempoInactividadMinutos               Int?          @default(30) // Tiempo en minutos antes de bloquear por inactividad
+  TiempoInactividadMinutos               Int?          @default(30)
   RecordarSesion30Dias                   Boolean       @default(true)
-  Localidad                              Localidad?    @relation(fields: [LocalidadId], references: [Id], onUpdate: NoAction)
   CondicionIva                           CondicionIva? @relation(fields: [CondicionIvaId], references: [Id], onUpdate: NoAction)
+  Localidad                              Localidad?    @relation(fields: [LocalidadId], references: [Id], onUpdate: NoAction)
   Tenant                                 Tenant        @relation(fields: [TenantId], references: [Id])
 
   @@index([TenantId])
@@ -930,22 +927,22 @@ model Usuario {
   TenantId                             BigInt
   /// ID del usuario en Supabase Auth (auth.users.id)
   AuthUserId                           String                 @unique @db.VarChar(255)
+  AlertasSeguridadResueltas            AlertaSeguridad[]      @relation("Alerta_ResueltoPor")
+  AlertasSeguridad                     AlertaSeguridad[]
   AuditoriaEmpleadosAfectados          AuditoriaEmpleado[]    @relation("Auditoria_UsuarioAfectado")
   AuditoriaEmpleados                   AuditoriaEmpleado[]    @relation("Auditoria_Usuario")
   Caja_Caja_UsuarioAperturaIdToUsuario Caja[]                 @relation("Caja_UsuarioAperturaIdToUsuario")
   Caja_Caja_UsuarioCierreIdToUsuario   Caja[]                 @relation("Caja_UsuarioCierreIdToUsuario")
+  Codigos2FA                           Codigo2FA[]
   Comprobante                          Comprobante[]
-  Movimiento                           Movimiento[]
-  PerfilUsuario                        PerfilUsuario[]
-  Persona_Empleado                     Persona_Empleado       @relation(fields: [EmpleadoId], references: [Id], onUpdate: NoAction)
-  Tenant                               Tenant                 @relation(fields: [TenantId], references: [Id])
-  SesionesActivas                      SesionActiva[]
   DispositivosConfiable                DispositivoConfiable[]
   IntentosLogin                        IntentoLogin[]
+  Movimiento                           Movimiento[]
+  PerfilUsuario                        PerfilUsuario[]
+  SesionesActivas                      SesionActiva[]
   TokensCsrf                           TokenCsrf[]
-  Codigos2FA                           Codigo2FA[]
-  AlertasSeguridad                     AlertaSeguridad[]
-  AlertasSeguridadResueltas            AlertaSeguridad[] @relation("Alerta_ResueltoPor")
+  Persona_Empleado                     Persona_Empleado       @relation(fields: [EmpleadoId], references: [Id], onUpdate: NoAction)
+  Tenant                               Tenant                 @relation(fields: [TenantId], references: [Id])
 
   @@index([TenantId])
   @@index([EmpleadoId])
@@ -1030,20 +1027,19 @@ model AuditoriaEmpleado {
   @@index([Severidad])
 }
 
-// Tablas de seguridad y acceso
 model SesionActiva {
   Id                   BigInt   @id @default(autoincrement())
   TenantId             BigInt
   UsuarioId            BigInt
-  TokenHash            String   @db.VarChar(255) // Hash del token de sesión
+  TokenHash            String   @db.VarChar(255)
   IpAddress            String?  @db.VarChar(50)
   UserAgent            String?  @db.VarChar(500)
-  Dispositivo          String?  @db.VarChar(100) // Nombre del dispositivo
-  Ubicacion            String?  @db.VarChar(200) // Ubicación aproximada
+  Dispositivo          String?  @db.VarChar(100)
+  Ubicacion            String?  @db.VarChar(200)
   FechaInicio          DateTime @default(now())
   FechaUltimaActividad DateTime @default(now())
   EstaActiva           Boolean  @default(true)
-  EsConfiable          Boolean  @default(false) // Si el dispositivo es confiable
+  EsConfiable          Boolean  @default(false)
   Tenant               Tenant   @relation(fields: [TenantId], references: [Id])
   Usuario              Usuario  @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
 
@@ -1080,9 +1076,9 @@ model IntentoLogin {
   IpAddress    String?  @db.VarChar(50)
   UserAgent    String?  @db.VarChar(500)
   Exitoso      Boolean  @default(false)
-  MotivoFallo  String?  @db.VarChar(200) // "Credenciales inválidas", "Cuenta bloqueada", etc.
+  MotivoFallo  String?  @db.VarChar(200)
   FechaIntento DateTime @default(now())
-  UsuarioId    BigInt? // Si se identifica al usuario
+  UsuarioId    BigInt?
   Tenant       Tenant   @relation(fields: [TenantId], references: [Id])
   Usuario      Usuario? @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
 
@@ -1099,7 +1095,7 @@ model IpBloqueada {
   IpAddress        String    @db.VarChar(50)
   Motivo           String?   @db.VarChar(200)
   FechaBloqueo     DateTime  @default(now())
-  FechaDesbloqueo  DateTime? // null = bloqueo permanente
+  FechaDesbloqueo  DateTime?
   EstaActiva       Boolean   @default(true)
   IntentosFallidos Int       @default(0)
   Tenant           Tenant    @relation(fields: [TenantId], references: [Id])
@@ -1113,17 +1109,17 @@ model IpBloqueada {
 
 /// Tokens CSRF para protección contra ataques CSRF
 model TokenCsrf {
-  Id          BigInt   @id @default(autoincrement())
-  TenantId    BigInt
-  UsuarioId   BigInt?
-  Token       String   @unique @db.VarChar(255)
-  FechaCreacion DateTime @default(now())
+  Id              BigInt   @id @default(autoincrement())
+  TenantId        BigInt
+  UsuarioId       BigInt?
+  Token           String   @unique @db.VarChar(255)
+  FechaCreacion   DateTime @default(now())
   FechaExpiracion DateTime
-  Usado       Boolean  @default(false)
-  IpAddress   String?  @db.VarChar(50)
-  UserAgent   String?  @db.VarChar(500)
-  Tenant      Tenant   @relation(fields: [TenantId], references: [Id])
-  Usuario     Usuario? @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
+  Usado           Boolean  @default(false)
+  IpAddress       String?  @db.VarChar(50)
+  UserAgent       String?  @db.VarChar(500)
+  Tenant          Tenant   @relation(fields: [TenantId], references: [Id])
+  Usuario         Usuario? @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
 
   @@index([TenantId])
   @@index([Token])
@@ -1133,15 +1129,15 @@ model TokenCsrf {
 
 /// Códigos 2FA (TOTP) para autenticación de dos factores
 model Codigo2FA {
-  Id              BigInt   @id @default(autoincrement())
+  Id              BigInt    @id @default(autoincrement())
   TenantId        BigInt
   UsuarioId       BigInt
-  Secret          String   @db.VarChar(255) // Secret TOTP encriptado
-  EstaActivo      Boolean  @default(false)
+  Secret          String    @db.VarChar(255)
+  EstaActivo      Boolean   @default(false)
   FechaActivacion DateTime?
-  BackupCodes     String?  @db.VarChar(2000) // Códigos de respaldo (JSON array encriptado)
-  Tenant          Tenant   @relation(fields: [TenantId], references: [Id])
-  Usuario         Usuario  @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
+  BackupCodes     String?   @db.VarChar(2000)
+  Tenant          Tenant    @relation(fields: [TenantId], references: [Id])
+  Usuario         Usuario   @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
 
   @@unique([TenantId, UsuarioId])
   @@index([TenantId])
@@ -1151,22 +1147,22 @@ model Codigo2FA {
 
 /// Alertas de seguridad para eventos sospechosos
 model AlertaSeguridad {
-  Id              BigInt   @id @default(autoincrement())
+  Id              BigInt    @id @default(autoincrement())
   TenantId        BigInt
   UsuarioId       BigInt?
-  Tipo            String   @db.VarChar(50) // "LOGIN_SOSPECHOSO", "NUEVO_DISPOSITIVO", "MULTIPLE_IP", etc.
-  Severidad       String   @default("MEDIA") @db.VarChar(20) // "BAJA", "MEDIA", "ALTA", "CRITICA"
-  Mensaje         String   @db.VarChar(500)
-  Detalles        String?  @db.VarChar(2000) // JSON con detalles adicionales
-  IpAddress       String?  @db.VarChar(50)
-  UserAgent       String?  @db.VarChar(500)
-  FechaCreacion   DateTime @default(now())
-  EstaResuelta    Boolean  @default(false)
+  Tipo            String    @db.VarChar(50)
+  Severidad       String    @default("MEDIA") @db.VarChar(20)
+  Mensaje         String    @db.VarChar(500)
+  Detalles        String?   @db.VarChar(2000)
+  IpAddress       String?   @db.VarChar(50)
+  UserAgent       String?   @db.VarChar(500)
+  FechaCreacion   DateTime  @default(now())
+  EstaResuelta    Boolean   @default(false)
   FechaResolucion DateTime?
-  ResueltoPor     BigInt? // UsuarioId que resolvió la alerta
-  Tenant          Tenant   @relation(fields: [TenantId], references: [Id])
-  Usuario         Usuario? @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
-  UsuarioResuelto Usuario? @relation("Alerta_ResueltoPor", fields: [ResueltoPor], references: [Id], onUpdate: NoAction)
+  ResueltoPor     BigInt?
+  UsuarioResuelto Usuario?  @relation("Alerta_ResueltoPor", fields: [ResueltoPor], references: [Id], onUpdate: NoAction)
+  Tenant          Tenant    @relation(fields: [TenantId], references: [Id])
+  Usuario         Usuario?  @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
 
   @@index([TenantId])
   @@index([UsuarioId])

@@ -170,7 +170,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
               isEdit ? "actualizado" : "creado"
             } correctamente`,
             color: "success",
-            duration: 3000,
+            timeout: 3000,
           });
           // Cerrar con animación suave
           setTimeout(() => {
@@ -199,7 +199,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
           title: "Éxito",
           description: "Registro eliminado correctamente",
           color: "success",
-          duration: 3000,
+          timeout: 3000,
         });
         // Cerrar con animación suave
         setTimeout(() => {
@@ -208,9 +208,10 @@ export default function GenericCrud<T extends { Id: number | string }>({
         }, 150);
       },
       onError: (error: any) => {
-        const errorMessage = typeof error?.error === "string" 
-          ? error.error 
-          : error?.error?.message || "Error al eliminar";
+        const errorMessage =
+          typeof error?.error === "string"
+            ? error.error
+            : error?.error?.message || "Error al eliminar";
         addToast({
           title: "Error",
           description: errorMessage,

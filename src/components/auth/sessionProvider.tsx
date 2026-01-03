@@ -55,6 +55,23 @@ const SessionProviderComponent = ({
         const { data } = await supabase.auth.getSession();
         setSession(data.session ?? null);
         setStatus(data.session ? "authenticated" : "unauthenticated");
+
+        // Sincronizar permisos si hay sesión y no tiene permisos en JWT
+        if (data.session?.user) {
+          const metadata = data.session.user.app_metadata || {};
+          const tienePermisos =
+            Array.isArray(metadata.permissions) &&
+            metadata.permissions.length > 0;
+
+          // Si no tiene permisos en JWT, sincronizar (solo una vez)
+          if (!tienePermisos) {
+            fetch("/api/auth/sync-permissions", { method: "POST" }).catch(
+              (err) => {
+                console.warn("No se pudieron sincronizar permisos:", err);
+              }
+            );
+          }
+        }
       } catch (error: any) {
         // Ignorar errores de refresh token no encontrado (común cuando las cookies están inválidas)
         if (error?.code === "refresh_token_not_found") {
@@ -66,91 +83,99 @@ const SessionProviderComponent = ({
         setSession(null);
         setStatus("unauthenticated");
       }
-      
-      // Sincronizar permisos si hay sesión y no tiene permisos en JWT
-      if (data.session?.user) {
-        const metadata = data.session.user.app_metadata || {};
-        const tienePermisos = Array.isArray(metadata.permissions) && metadata.permissions.length > 0;
-        
-        // Si no tiene permisos en JWT, sincronizar (solo una vez)
-        if (!tienePermisos) {
-          fetch("/api/auth/sync-permissions", { method: "POST" }).catch((err) => {
-            console.warn("No se pudieron sincronizar permisos:", err);
-          });
-        }
-      }
     };
 
     fetchSession();
 
-    const { data } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      // Ignorar errores de refresh token durante cambios de estado
-      try {
-        setSession(newSession);
-        setStatus(newSession ? "authenticated" : "unauthenticated");
-      } catch (error: any) {
-        if (error?.code === "refresh_token_not_found") {
-          setSession(null);
-          setStatus("unauthenticated");
-          return;
-        }
-        throw error;
-      }
-      
-      // Sincronizar permisos y registrar sesión cuando hay un nuevo login
-      if (event === "SIGNED_IN" && newSession?.user) {
-        const metadata = newSession.user.app_metadata || {};
-        const tienePermisos = Array.isArray(metadata.permissions) && metadata.permissions.length > 0;
-        
-        // Sincronizar permisos después del login
-        if (!tienePermisos) {
-          fetch("/api/auth/sync-permissions", { method: "POST" }).catch((err) => {
-            console.warn("No se pudieron sincronizar permisos:", err);
-          });
-        }
-
-        // Registrar sesión activa (si no se registró ya desde el formulario)
-        // Esto es un fallback por si alguien se autentica de otra manera
-        const userAgent = typeof navigator !== "undefined" ? navigator.userAgent : null;
-        let dispositivo = "Dispositivo desconocido";
-        if (userAgent) {
-          try {
-            const nav = navigator as any;
-            if (nav.userAgentData) {
-              dispositivo = `${nav.userAgentData.platform || "Unknown"} - ${nav.userAgentData.brands?.map((b: any) => b.brand).join(", ") || "Unknown"}`;
-            } else {
-              dispositivo = `${navigator.platform || "Unknown"} - ${userAgent.substring(0, 50)}`;
-            }
-          } catch {
-            dispositivo = userAgent.substring(0, 100);
+    const { data } = supabase.auth.onAuthStateChange(
+      async (event, newSession) => {
+        // Ignorar errores de refresh token durante cambios de estado
+        try {
+          setSession(newSession);
+          setStatus(newSession ? "authenticated" : "unauthenticated");
+        } catch (error: any) {
+          if (error?.code === "refresh_token_not_found") {
+            setSession(null);
+            setStatus("unauthenticated");
+            return;
           }
+          throw error;
         }
 
-        const email = newSession.user.email || "";
-        const esConfiable = typeof localStorage !== "undefined" 
-          ? localStorage.getItem(`device_trusted_${email}`) === "true"
-          : false;
+        // Sincronizar permisos y registrar sesión cuando hay un nuevo login
+        if (event === "SIGNED_IN" && newSession?.user) {
+          const metadata = newSession.user.app_metadata || {};
+          const tienePermisos =
+            Array.isArray(metadata.permissions) &&
+            metadata.permissions.length > 0;
 
-        fetch("/api/auth/registrar-sesion", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            token: newSession.access_token || null,
-            dispositivo,
-            ubicacion: null,
-            esConfiable,
-          }),
-        }).catch((err) => console.warn("Error al registrar sesión desde sessionProvider:", err));
-      }
+          // Sincronizar permisos después del login
+          if (!tienePermisos) {
+            fetch("/api/auth/sync-permissions", { method: "POST" }).catch(
+              (err) => {
+                console.warn("No se pudieron sincronizar permisos:", err);
+              }
+            );
+          }
 
-      // Cerrar sesiones cuando hay un logout
-      if (event === "SIGNED_OUT") {
-        fetch("/api/auth/registrar-sesion", {
-          method: "DELETE",
-          credentials: "include",
-        }).catch((err) => console.warn("Error al cerrar sesión desde sessionProvider:", err));
+          // Registrar sesión activa (si no se registró ya desde el formulario)
+          // Esto es un fallback por si alguien se autentica de otra manera
+          const userAgent =
+            typeof navigator !== "undefined" ? navigator.userAgent : null;
+          let dispositivo = "Dispositivo desconocido";
+          if (userAgent) {
+            try {
+              const nav = navigator as any;
+              if (nav.userAgentData) {
+                dispositivo = `${nav.userAgentData.platform || "Unknown"} - ${
+                  nav.userAgentData.brands
+                    ?.map((b: any) => b.brand)
+                    .join(", ") || "Unknown"
+                }`;
+              } else {
+                dispositivo = `${
+                  navigator.platform || "Unknown"
+                } - ${userAgent.substring(0, 50)}`;
+              }
+            } catch {
+              dispositivo = userAgent.substring(0, 100);
+            }
+          }
+
+          const email = newSession.user.email || "";
+          const esConfiable =
+            typeof localStorage !== "undefined"
+              ? localStorage.getItem(`device_trusted_${email}`) === "true"
+              : false;
+
+          fetch("/api/auth/registrar-sesion", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              token: newSession.access_token || null,
+              dispositivo,
+              ubicacion: null,
+              esConfiable,
+            }),
+          }).catch((err) =>
+            console.warn(
+              "Error al registrar sesión desde sessionProvider:",
+              err
+            )
+          );
+        }
+
+        // Cerrar sesiones cuando hay un logout
+        if (event === "SIGNED_OUT") {
+          fetch("/api/auth/registrar-sesion", {
+            method: "DELETE",
+            credentials: "include",
+          }).catch((err) =>
+            console.warn("Error al cerrar sesión desde sessionProvider:", err)
+          );
+        }
       }
-    });
+    );
 
     return () => {
       data.subscription.unsubscribe();
