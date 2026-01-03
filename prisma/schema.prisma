@@ -57,6 +57,9 @@ model Tenant {
   DispositivosConfiable DispositivoConfiable[]
   IntentosLogin         IntentoLogin[]
   IpsBloqueadas         IpBloqueada[]
+  TokensCsrf            TokenCsrf[]
+  Codigos2FA            Codigo2FA[]
+  AlertasSeguridad      AlertaSeguridad[]
 
   @@index([PlanId])
 }
@@ -779,7 +782,7 @@ model Persona {
   Dni              String?           @db.VarChar(8)
   Direccion        String            @db.VarChar(400)
   Telefono         String?           @db.VarChar(25)
-  Mail             String            @db.VarChar(250)
+  Mail             String?           @db.VarChar(250)
   LocalidadId      BigInt
   EstaEliminado    Boolean
   /// Tenant dueño de esta persona
@@ -939,6 +942,10 @@ model Usuario {
   SesionesActivas                      SesionActiva[]
   DispositivosConfiable                DispositivoConfiable[]
   IntentosLogin                        IntentoLogin[]
+  TokensCsrf                           TokenCsrf[]
+  Codigos2FA                           Codigo2FA[]
+  AlertasSeguridad                     AlertaSeguridad[]
+  AlertasSeguridadResueltas            AlertaSeguridad[] @relation("Alerta_ResueltoPor")
 
   @@index([TenantId])
   @@index([EmpleadoId])
@@ -1102,6 +1109,71 @@ model IpBloqueada {
   @@index([IpAddress])
   @@index([EstaActiva])
   @@index([FechaBloqueo])
+}
+
+/// Tokens CSRF para protección contra ataques CSRF
+model TokenCsrf {
+  Id          BigInt   @id @default(autoincrement())
+  TenantId    BigInt
+  UsuarioId   BigInt?
+  Token       String   @unique @db.VarChar(255)
+  FechaCreacion DateTime @default(now())
+  FechaExpiracion DateTime
+  Usado       Boolean  @default(false)
+  IpAddress   String?  @db.VarChar(50)
+  UserAgent   String?  @db.VarChar(500)
+  Tenant      Tenant   @relation(fields: [TenantId], references: [Id])
+  Usuario     Usuario? @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
+
+  @@index([TenantId])
+  @@index([Token])
+  @@index([FechaExpiracion])
+  @@index([UsuarioId])
+}
+
+/// Códigos 2FA (TOTP) para autenticación de dos factores
+model Codigo2FA {
+  Id              BigInt   @id @default(autoincrement())
+  TenantId        BigInt
+  UsuarioId       BigInt
+  Secret          String   @db.VarChar(255) // Secret TOTP encriptado
+  EstaActivo      Boolean  @default(false)
+  FechaActivacion DateTime?
+  BackupCodes     String?  @db.VarChar(2000) // Códigos de respaldo (JSON array encriptado)
+  Tenant          Tenant   @relation(fields: [TenantId], references: [Id])
+  Usuario         Usuario  @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
+
+  @@unique([TenantId, UsuarioId])
+  @@index([TenantId])
+  @@index([UsuarioId])
+  @@index([EstaActivo])
+}
+
+/// Alertas de seguridad para eventos sospechosos
+model AlertaSeguridad {
+  Id              BigInt   @id @default(autoincrement())
+  TenantId        BigInt
+  UsuarioId       BigInt?
+  Tipo            String   @db.VarChar(50) // "LOGIN_SOSPECHOSO", "NUEVO_DISPOSITIVO", "MULTIPLE_IP", etc.
+  Severidad       String   @default("MEDIA") @db.VarChar(20) // "BAJA", "MEDIA", "ALTA", "CRITICA"
+  Mensaje         String   @db.VarChar(500)
+  Detalles        String?  @db.VarChar(2000) // JSON con detalles adicionales
+  IpAddress       String?  @db.VarChar(50)
+  UserAgent       String?  @db.VarChar(500)
+  FechaCreacion   DateTime @default(now())
+  EstaResuelta    Boolean  @default(false)
+  FechaResolucion DateTime?
+  ResueltoPor     BigInt? // UsuarioId que resolvió la alerta
+  Tenant          Tenant   @relation(fields: [TenantId], references: [Id])
+  Usuario         Usuario? @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
+  UsuarioResuelto Usuario? @relation("Alerta_ResueltoPor", fields: [ResueltoPor], references: [Id], onUpdate: NoAction)
+
+  @@index([TenantId])
+  @@index([UsuarioId])
+  @@index([Tipo])
+  @@index([Severidad])
+  @@index([FechaCreacion])
+  @@index([EstaResuelta])
 }
 
 enum PerfilTipo {

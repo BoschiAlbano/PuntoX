@@ -12,7 +12,24 @@ const payloadSchema = z.object({
   telefono: z.string().optional().nullable(),
   celular: z.string().optional().nullable(),
   direccion: z.string().min(1, "Dirección requerida"),
-  localidadId: z.number().int().positive("Debe seleccionar una localidad"),
+  localidadId: z.preprocess(
+    (val) => {
+      if (val === null || val === undefined || val === "") {
+        return null;
+      }
+      const num = typeof val === "string" ? Number(val) : (typeof val === "number" ? val : null);
+      if (num === null || Number.isNaN(num) || num <= 0) {
+        return null;
+      }
+      return num;
+    },
+    z.union([
+      z.number().int().positive("Debe seleccionar una localidad válida"),
+      z.null()
+    ])
+  ).refine((val) => val !== null && val > 0, {
+    message: "Debe seleccionar una localidad"
+  }),
   observacionPieFactura: z.string().optional().nullable(),
   // Preferencias de venta básicas
   mostrarPreciosConIva: z.boolean().optional(),
@@ -41,18 +58,73 @@ const payloadSchema = z.object({
 });
 
 async function resolveTenantId() {
-  const supabase = await getSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const tenantId = user?.app_metadata?.tenantId;
-  return tenantId ? Number(tenantId) : null;
+  try {
+    const supabase = await getSupabaseServerClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError) {
+      console.error("[resolveTenantId] Error al obtener usuario:", authError.message);
+      return null;
+    }
+
+    if (!user) {
+      console.error("[resolveTenantId] Usuario no encontrado");
+      return null;
+    }
+
+    console.log("[resolveTenantId] Usuario encontrado:", user.id);
+    console.log("[resolveTenantId] app_metadata:", JSON.stringify(user.app_metadata, null, 2));
+
+    // Buscar tenantId en diferentes lugares del metadata
+    const metadata = user.app_metadata || {};
+    const tenantId = 
+      metadata.tenantId || 
+      metadata.tenant_id || 
+      (user as any).tenantId;
+
+    if (tenantId) {
+      console.log("[resolveTenantId] tenantId encontrado en metadata:", tenantId);
+      return Number(tenantId);
+    }
+
+    console.log("[resolveTenantId] tenantId no encontrado en metadata, buscando en DB...");
+
+    // Si no está en metadata, buscar en la base de datos
+    try {
+      const usuario = await prisma.usuario.findFirst({
+        where: { AuthUserId: user.id, EstaEliminado: false },
+        select: { TenantId: true },
+      });
+
+      if (usuario?.TenantId) {
+        console.log("[resolveTenantId] tenantId encontrado en DB:", usuario.TenantId);
+        return Number(usuario.TenantId);
+      }
+
+      console.error("[resolveTenantId] Usuario no encontrado en DB o sin TenantId");
+    } catch (error) {
+      console.error("[resolveTenantId] Error buscando tenantId en DB:", error);
+    }
+
+    console.error("[resolveTenantId] No se pudo determinar el tenantId");
+    return null;
+  } catch (error) {
+    console.error("[resolveTenantId] Error inesperado:", error);
+    return null;
+  }
 }
 
 export async function GET() {
   const tenantId = await resolveTenantId();
   if (!tenantId) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    console.error("[GET /api/configuracion] No se pudo determinar el tenantId");
+    return NextResponse.json(
+      { error: "No se pudo determinar el tenant. Por favor, cierra sesión y vuelve a iniciar sesión." },
+      { status: 401 }
+    );
   }
 
   try {
@@ -174,14 +246,31 @@ export async function GET() {
 export async function PUT(req: Request) {
   const tenantId = await resolveTenantId();
   if (!tenantId) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    console.error("[PUT /api/configuracion] No se pudo determinar el tenantId");
+    return NextResponse.json(
+      { error: "No se pudo determinar el tenant. Por favor, cierra sesión y vuelve a iniciar sesión." },
+      { status: 401 }
+    );
   }
 
   const json = await req.json().catch(() => null);
+  if (!json) {
+    return NextResponse.json({ error: "Cuerpo de la petición inválido" }, { status: 400 });
+  }
+
+  console.log("Datos recibidos en PUT /api/configuracion:", JSON.stringify(json, null, 2));
+  console.log("localidadId recibido:", json.localidadId, "tipo:", typeof json.localidadId);
+
   const parsed = payloadSchema.safeParse(json);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: "Datos invalidos" }, { status: 400 });
+    const errorIssues = parsed.error.issues || [];
+    console.error("Error de validación en configuración:", JSON.stringify(errorIssues, null, 2));
+    const firstError = errorIssues[0];
+    const errorMessage = firstError 
+      ? `${firstError.path.join(".")}: ${firstError.message}`
+      : "Datos invalidos";
+    return NextResponse.json({ error: errorMessage }, { status: 400 });
   }
 
   const data = parsed.data;
@@ -381,6 +470,11 @@ export async function PUT(req: Request) {
       { status: result.isNew ? 201 : 200 }
     );
   } catch (error: unknown) {
+    console.error("Error en PUT /api/configuracion:", error);
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
     return handleError(error);
   }
 }

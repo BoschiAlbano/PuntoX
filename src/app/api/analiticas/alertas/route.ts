@@ -145,7 +145,7 @@ export async function GET(req: NextRequest) {
           saldosPorCliente[clienteId] = {
             id: mov.ClienteId,
             nombre: `${persona.Nombre} ${persona.Apellido}`,
-            email: persona.Mail,
+            email: persona.Mail || "",
             telefono: persona.Telefono,
             saldo: 0,
             fechaUltimoMovimiento: fecha,

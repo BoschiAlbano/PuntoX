@@ -13,22 +13,42 @@
 
 ## 🔄 Flujo Completo de Autenticación
 
-### 1. Login Inicial (Supabase Auth)
+### 1. Login Inicial (Supabase Auth) - **ACTUALIZADO: Login por Username**
 
 **Archivo:** `src/components/auth/CredentialsForm.tsx`
 
+**IMPORTANTE:** A partir de Enero 2025, el sistema utiliza **nombre de usuario** en lugar de email para el login.
+
 ```typescript
-// Usuario ingresa email y password
+// Usuario ingresa username (no email)
+const response = await fetch("/api/auth/get-email-by-username", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ username }),
+});
+
+const { email, isInternal, tenantId } = await response.json();
+
+// Luego se usa el email resuelto para Supabase Auth
 const { error } = await supabase.auth.signInWithPassword({
-  email,
+  email, // Email resuelto desde el username
   password,
 });
 ```
 
 **¿Qué hace?**
-- ✅ Valida credenciales contra **Supabase Auth**
-- ✅ Si es válido, crea una sesión JWT
-- ✅ Almacena el token en cookies (gestionado por Supabase SSR)
+1. ✅ Usuario ingresa **username** (no email)
+2. ✅ El sistema resuelve el username a email mediante `/api/auth/get-email-by-username`
+3. ✅ Valida credenciales contra **Supabase Auth** usando el email resuelto
+4. ✅ Si es válido, crea una sesión JWT
+5. ✅ Almacena el token en cookies (gestionado por Supabase SSR)
+
+**Resolución de Username a Email:**
+- **Endpoint:** `/api/auth/get-email-by-username`
+- Busca el usuario en la tabla `Usuario` por `Nombre` (username normalizado)
+- Si el usuario tiene email en `Persona.Mail`, lo usa
+- Si no tiene email, genera uno automático: `username@puntox.com`
+- Retorna el email, si es interno, y el `tenantId`
 
 **Resultado:**
 - Usuario autenticado en Supabase
@@ -286,7 +306,13 @@ const esSuperAdmin = usuario.PerfilUsuario.some(
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ 1. Usuario ingresa email/password                          │
+│ 1. Usuario ingresa username/password                      │
+└──────────────────┬──────────────────────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────────────────────┐
+│ 1.5. Sistema resuelve username a email                      │
+│     (GET /api/auth/get-email-by-username)                   │
 └──────────────────┬──────────────────────────────────────────┘
                    │
                    ▼
@@ -521,7 +547,7 @@ const esSuperAdmin = usuario.PerfilUsuario.some(
 
 | Aspecto | Dónde | Cómo |
 |---------|-------|------|
-| **Autenticación inicial** | Supabase Auth | Email/password |
+| **Autenticación inicial** | Supabase Auth | Username/password (resuelto a email) |
 | **Sesión** | Cookies (Supabase SSR) | JWT tokens |
 | **Roles/Perfiles** | PostgreSQL (`Perfiles`) | Tabla de BD |
 | **Asignación de roles** | PostgreSQL (`PerfilUsuario`) | Relación muchos-a-muchos |
@@ -535,10 +561,37 @@ const esSuperAdmin = usuario.PerfilUsuario.some(
 
 **Respuesta directa a tu pregunta:**
 
-1. **Autenticación inicial:** Supabase Auth (email/password)
+1. **Autenticación inicial:** Supabase Auth (username/password, resuelto a email internamente)
 2. **Roles y permisos:** Base de datos PostgreSQL
 3. **SuperAdmin:** Se identifica por el nombre del perfil en la BD (`Descripcion = "SuperAdmin"`)
 4. **NO hay autenticación hardcodeada** en el código
 
 El sistema es **híbrido**: Supabase maneja la autenticación, PostgreSQL maneja la autorización (roles y permisos).
+
+---
+
+## 🔄 Cambios Recientes (Enero 2025)
+
+### Login por Username
+
+**Antes:**
+- Los usuarios ingresaban su email para iniciar sesión
+- El email debía coincidir exactamente con el almacenado en Supabase Auth
+
+**Ahora:**
+- Los usuarios ingresan su **nombre de usuario** (username)
+- El sistema resuelve automáticamente el username a email
+- Soporte para emails automáticos (`username@puntox.com`) para empleados
+- Normalización automática de usernames (lowercase, sin espacios)
+
+**Beneficios:**
+- ✅ Mayor flexibilidad: empleados no necesitan tener email personal
+- ✅ Usernames más fáciles de recordar que emails
+- ✅ Emails internos automáticos para empleados
+- ✅ Consistencia: todos los usuarios usan username para login
+
+**Archivos relacionados:**
+- `src/components/auth/CredentialsForm.tsx` - Formulario de login actualizado
+- `src/app/api/auth/get-email-by-username/route.ts` - Endpoint de resolución
+- `src/lib/auth/generateInternalEmail.ts` - Generación de emails internos
 

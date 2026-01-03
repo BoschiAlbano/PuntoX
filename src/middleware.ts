@@ -11,7 +11,6 @@ export async function middleware(req: NextRequest) {
     "/favicon-light.ico",
     "/favicon-dark.ico",
     "/new-tenant",
-    "/admin/tenants/new",
   ];
 
   const isPublic =

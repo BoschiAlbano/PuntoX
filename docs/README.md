@@ -12,6 +12,26 @@ Bienvenido a la documentación del proyecto PuntoX.
   - Componentes visuales
   - Guía de uso
 
+### Seguridad
+
+- **[CSRF Implementation](./CSRF_IMPLEMENTATION.md)** - Documentación sobre tokens CSRF
+  - ¿Qué es CSRF y por qué implementarlo?
+  - Cómo usar tokens CSRF en endpoints
+  - Ejemplos prácticos de implementación
+  - Endpoints que deberían usar CSRF
+  - Guía de mantenimiento
+
+### UX y Diseño
+
+- **[UX Improvements](./UX_IMPROVEMENTS.md)** - Mejoras visuales y de experiencia de usuario
+  - Mejoras en headers (parallax, glow, sombras)
+  - Skeleton loaders con shimmer effect
+  - Micro-animaciones y transiciones
+  - Accesibilidad mejorada
+  - Responsive design
+  - Optimizaciones de performance
+  - Tabs mejoradas
+
 ### Próximamente
 
 - Configuración

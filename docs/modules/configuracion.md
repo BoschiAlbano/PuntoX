@@ -71,7 +71,12 @@
       - Báscula: `ActivarBascula`, `EtiquetaPorPeso`, `CodigoBascula`
     - Si no existe: retorna `404`
   - **PUT**: Crea o actualiza configuración
-    - **Validación zod**: `razonSocial` (requerido), `cuit` (requerido), `direccion` (requerido), `localidadId` (requerido)
+    - **Validación zod**: 
+  - `razonSocial` (requerido, min 1 carácter) ⭐
+  - `cuit` (requerido, min 1 carácter) ⭐
+  - `direccion` (requerido, min 1 carácter) ⭐
+  - `localidadId` (requerido, número positivo) ⭐
+  - Todos los demás campos son opcionales
     - Campos opcionales: `nombreFantasia`, `email`, `telefono`, `celular`, `observacionPieFactura`
     - **TODAS las preferencias de venta opcionales**:
       - Básicas: `mostrarPreciosConIva`, `abrirCajonEfectivo`, `numerarPedidosPantalla`, `imprimir`
@@ -167,16 +172,17 @@ async function resolveTenantId() {
 ### Perfil del negocio ✅ FUNCIONAL
 - **Campos UI**: 
   - Nombre (Tenant)
-  - Razón social (Configuracion)
-  - Nombre de fantasía (Configuracion) - **NUEVO**
-  - Correo (Configuracion)
-  - Teléfono (Configuracion)
-  - Celular (Configuracion) - **NUEVO**
-  - Dominio (Tenant)
-  - CUIT (Configuracion)
-  - Dirección (Configuracion) - **NUEVO**
-  - Localidad (Select con lista de localidades) - **NUEVO**
-  - Observación en pie de factura (Configuracion) - **NUEVO**
+  - Razón social (Configuracion) - **OBLIGATORIO** ⭐
+  - Nombre de fantasía (Configuracion) - Opcional
+  - Correo (Configuracion) - Opcional
+  - Teléfono (Configuracion) - Opcional
+  - Celular (Configuracion) - Opcional
+  - Dominio (Tenant) - Opcional
+  - CUIT (Configuracion) - **OBLIGATORIO** ⭐
+  - Dirección (Configuracion) - **OBLIGATORIO** ⭐
+  - Localidad (Select con lista de localidades) - **OBLIGATORIO** ⭐
+  - Observación en pie de factura (Configuracion) - Opcional
+- **Indicadores visuales**: Los campos obligatorios muestran asterisco rojo (*) y descripción "Campo obligatorio"
 - **Persistencia**:
   - `Tenant`: Nombre, Dominio (identidad/dominio).
   - `Configuracion`: RazonSocial, NombreFantasia, Cuit, Email, Telefono, Celular, Direccion, LocalidadId, ObservacionEnPieFactura (fiscal).
@@ -513,6 +519,29 @@ Todas las APIs detectan errores reales de conexión a la base de datos y retorna
 - **Historial de cambios**: Implementar auditoría de cambios en configuración
 
 ## Cambios recientes (Última actualización)
+
+### Enero 2025: Validación y UI Mejorada
+
+- ✅ **Campos Obligatorios Marcados en UI**
+  - Razón Social, CUIT, Dirección y Localidad ahora muestran asterisco rojo (*)
+  - Descripción "Campo obligatorio" debajo de cada campo requerido
+  - Prop `isRequired` en componentes Input/Select para indicadores visuales automáticos
+
+- ✅ **Resolución Mejorada de TenantId**
+  - Función `resolveTenantId()` mejorada con logging detallado
+  - Búsqueda en múltiples ubicaciones: `app_metadata.tenantId`, `app_metadata.tenant_id`, `(user as any).tenantId`
+  - Fallback a consulta en base de datos si no está en metadata
+  - Mensajes de error más descriptivos: "No se pudo determinar el tenant. Por favor, cierra sesión y vuelve a iniciar sesión."
+
+- ✅ **Validación de Schema Mejorada**
+  - Schema de validación actualizado con `z.preprocess` para `localidadId`
+  - Conversión automática de strings a números
+  - Validación de números positivos
+  - Mensajes de error más específicos indicando qué campo falló
+
+---
+
+## Cambios recientes (Diciembre 2024)
 
 ### Unificación del botón de guardado
 - ✅ **Eliminado**: Botón individual "Guardar cambios" de la sección de Preferencias de venta

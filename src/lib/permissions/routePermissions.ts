@@ -45,7 +45,7 @@ export const ROUTE_TO_PERMISO_KEY: Record<string, string> = {
   "/productos": "productos",
   "/analiticas": "analiticas",
   "/configuracion": "configuracion",
-  "/empleados": "empleados",
+  "/empleados": "empleados:admin", // El permiso real es "empleados:admin"
 };
 
 /**
@@ -83,7 +83,7 @@ export function getPermisoForRoute(route: string): string | null {
 
 /**
  * Verifica si un usuario tiene permiso para acceder a una ruta
- * @param permisos Array de claves de permisos (normalizadas, ej: "ventas", "caja")
+ * @param permisos Array de claves de permisos (normalizadas, ej: "ventas", "caja", "empleados:admin")
  * @param route Ruta a verificar (ej: "/ventas")
  */
 export function tienePermisoParaRuta(
@@ -95,6 +95,13 @@ export function tienePermisoParaRuta(
   if (!permisoRequerido) {
     // Si no hay permiso requerido para esta ruta, permitir acceso
     return true;
+  }
+  
+  // Para permisos con ":" (como "empleados:admin"), comparar directamente sin normalizar
+  // Para otros permisos, normalizar
+  if (permisoRequerido.includes(":")) {
+    // Permiso con formato "clave:subclave", comparar directamente
+    return permisos.includes(permisoRequerido);
   }
   
   // Normalizar los permisos del usuario para comparar

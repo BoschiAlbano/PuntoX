@@ -53,6 +53,7 @@ type Empleado = {
   apellido: string;
   nombreCompleto: string;
   email: string;
+  username: string | null; // Nombre de usuario para login
   telefono: string | null;
   direccion: string | null;
   localidadId: number | null;
@@ -127,9 +128,9 @@ function estadoPill(estado: EstadoEmpleado) {
 export default function Empleados() {
   const { user, status } = useSupabaseAuthContext();
   const router = useRouter();
-  const { isLoading: isLoadingPermisos } = usePagePermission();
-
-  const [isAuthorized, setIsAuthorized] = useState(true);
+  // usePagePermission ya maneja la autorización y redirección automática
+  const { isLoading: isLoadingPermisos, tieneAcceso } = usePagePermission();
+  const isAuthorized = tieneAcceso ?? true; // Por defecto permitir acceso mientras carga
   const [selectedTab, setSelectedTab] = useState<string>("usuarios");
   
   // Estado de paginación
@@ -157,14 +158,13 @@ export default function Empleados() {
   const [nuevoUsuario, setNuevoUsuario] = useState({
     nombre: "",
     apellido: "",
-    email: "",
+    nombreUsuario: "",
     telefono: "",
     direccion: "",
     localidadId: "",
     dni: "",
     password: "",
     rolId: "",
-    autoInvitar: true,
   });
   const [provinciaSeleccionada, setProvinciaSeleccionada] =
     useState<string>("");
@@ -256,9 +256,10 @@ export default function Empleados() {
   );
 
   // Memorizar enabled para evitar cambios innecesarios
+  // usePagePermission ya maneja la autorización, solo verificar autenticación
   const enabledQuery = useMemo(
-    () => !!user && status === "authenticated" && isAuthorized,
-    [user, status, isAuthorized]
+    () => !!user && status === "authenticated" && (tieneAcceso ?? true),
+    [user, status, tieneAcceso]
   );
 
   const {
@@ -404,9 +405,9 @@ export default function Empleados() {
     prevEmpleadoAEditarRef.current = empleadoAEditar;
   }, [empleadoAEditar]);
 
-  // Verificar permisos al montar el componente
+  // Obtener permisos para verificar SuperAdmin
   useEffect(() => {
-    const checkPermissions = async () => {
+    const checkSuperAdmin = async () => {
       if (!user || status !== "authenticated") {
         return;
       }
@@ -415,53 +416,21 @@ export default function Empleados() {
         const permisosRes = await fetch("/api/permisos", {
           cache: "no-store",
           credentials: "include",
-        }).catch(() => null);
+        });
         
-        if (!permisosRes || !permisosRes.ok) {
-          const status = permisosRes?.status;
-          if (status === 401 || status === 403) {
-            setIsAuthorized(false);
-            addToast({
-              title: "Sin permisos",
-              description: "Necesitas empleados:admin para acceder.",
-              color: "danger",
-            });
-            return;
-          }
-        } else {
+        if (permisosRes.ok) {
           const permisosJson = await permisosRes.json().catch(() => null);
-          
-          // Actualizar el estado de SuperAdmin desde la API
           if (permisosJson?.isSuperAdmin === true) {
             setIsSuperAdminState(true);
           }
-          
-          // Opción B: Solo SuperAdmin tiene bypass automático
-          // Administradores y Empleados necesitan permiso explícito "empleados:admin"
-          const esSuperAdmin = permisosJson?.isSuperAdmin === true || isSuperAdminLocal;
-          const tienePermisoEspecifico = Array.isArray(permisosJson?.permisos) &&
-            permisosJson.permisos.includes("empleados:admin");
-          
-          // Solo SuperAdmin tiene acceso automático, otros necesitan permiso explícito
-          const tienePermiso = esSuperAdmin || tienePermisoEspecifico;
-          
-          if (!tienePermiso) {
-            setIsAuthorized(false);
-            addToast({
-              title: "Sin permisos",
-              description: "Necesitas empleados:admin para acceder.",
-              color: "danger",
-            });
-            return;
-          }
         }
       } catch {
-        // Si falla, continuamos pero marcaremos no autorizado al primer 401/403.
+        // Ignorar errores, usePagePermission ya maneja la autorización
       }
     };
 
-    checkPermissions();
-  }, [user, status, isSuperAdminLocal]);
+    checkSuperAdmin();
+  }, [user, status]);
 
   // Debounce para búsqueda
   useEffect(() => {
@@ -531,7 +500,7 @@ export default function Empleados() {
     if (
       !nuevoUsuario.nombre.trim() ||
       !nuevoUsuario.apellido.trim() ||
-      !nuevoUsuario.email.trim() ||
+      !nuevoUsuario.nombreUsuario.trim() ||
       !nuevoUsuario.password.trim() ||
       !nuevoUsuario.direccion.trim() ||
       !provinciaSeleccionada ||
@@ -546,12 +515,11 @@ export default function Empleados() {
       return;
     }
 
-    // Validar formato de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(nuevoUsuario.email.trim())) {
+    // Validar nombre de usuario (mínimo 2 caracteres)
+    if (nuevoUsuario.nombreUsuario.trim().length < 2) {
       addToast({
-        title: "Email inválido",
-        description: "Por favor, ingresa un email válido.",
+        title: "Nombre de usuario inválido",
+        description: "El nombre de usuario debe tener al menos 2 caracteres.",
         color: "warning",
       });
       return;
@@ -573,7 +541,7 @@ export default function Empleados() {
       {
         nombre: nuevoUsuario.nombre.trim(),
         apellido: nuevoUsuario.apellido.trim(),
-        email: nuevoUsuario.email.trim(),
+        nombreUsuario: nuevoUsuario.nombreUsuario.trim(),
         telefono: nuevoUsuario.telefono || undefined,
         direccion: nuevoUsuario.direccion.trim(),
         localidadId: nuevoUsuario.localidadId,
@@ -586,30 +554,26 @@ export default function Empleados() {
         dni: nuevoUsuario.dni || undefined,
         password: nuevoUsuario.password,
         rolId: nuevoUsuario.rolId ? Number(nuevoUsuario.rolId) : undefined,
-        autoInvitar: nuevoUsuario.autoInvitar,
         tenantId: tenantParam,
       },
       {
         onSuccess: () => {
           addToast({
             title: "Usuario creado",
-            description: nuevoUsuario.autoInvitar
-              ? "Se envió la invitación. Podrás ajustar permisos desde roles."
-              : "Usuario listo. Recuerda compartir las credenciales.",
+            description: "Usuario creado exitosamente. Recuerda compartir las credenciales.",
             color: "success",
           });
 
           setNuevoUsuario({
             nombre: "",
             apellido: "",
-            email: "",
+            nombreUsuario: "",
             telefono: "",
             direccion: "",
             localidadId: "",
             dni: "",
             password: "",
             rolId: "",
-            autoInvitar: true,
           });
           setProvinciaSeleccionada("");
           setDepartamentoSeleccionado("");
@@ -1018,7 +982,16 @@ export default function Empleados() {
     );
   };
 
-  if (!isAuthorized) {
+  // usePagePermission ya maneja la redirección, pero mostramos un mensaje mientras carga
+  if (isLoadingPermisos) {
+    return (
+      <div className="max-w-4xl mx-auto py-16 text-center space-y-3">
+        <p className="text-gray-600">Verificando permisos...</p>
+      </div>
+    );
+  }
+
+  if (!tieneAcceso) {
     return (
       <div className="max-w-4xl mx-auto py-16 text-center space-y-3">
         <h1 className="text-2xl font-semibold text-slate-900">Sin permisos</h1>
@@ -1033,20 +1006,67 @@ export default function Empleados() {
     <>
     <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center">
       {/* Header de la página */}
-      <section className="w-full relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-blue-500 to-[#90c472] text-white shadow-xl mb-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),transparent_40%)]" />
-        <div className="relative p-4 md:p-5 space-y-5">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="space-y-2">
-              <Chip variant="flat" className="bg-white/10 text-white">
+      <section className="w-full relative overflow-hidden rounded-3xl border border-slate-200/50 bg-gradient-to-r from-blue-500 via-sky-500 to-emerald-400 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] mb-10 transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]">
+        {/* Blurred circles decorativos para profundidad con parallax ligero (optimizado) */}
+        <div className="absolute inset-0 overflow-hidden" style={{ willChange: 'transform' }}>
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl parallax-bg" style={{ willChange: 'transform' }} />
+          <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-white/8 rounded-full blur-2xl parallax-bg" style={{ animationDelay: '2s', willChange: 'transform' }} />
+          <div className="absolute top-1/2 right-1/4 w-32 h-32 bg-white/5 rounded-full blur-xl parallax-bg" style={{ animationDelay: '4s', willChange: 'transform' }} />
+        </div>
+        
+        {/* Glass panel semitransparente con blur más suave */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 backdrop-blur-sm" />
+        
+        {/* Radial gradient overlay para más profundidad */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),transparent_50%)]" />
+        
+        <div className="relative p-4 md:p-6 lg:p-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="space-y-3 flex-1">
+              <Chip 
+                variant="flat" 
+                className="bg-white/25 text-white backdrop-blur-sm border border-white/40 shadow-lg shadow-white/20 transition-all duration-300 hover:bg-white/30 hover:shadow-xl hover:shadow-white/30"
+              >
                 Empleados
               </Chip>
-              <h1 className="text-3xl md:text-[32px] font-bold">
-                Gestion de Empleados
-              </h1>
-              <p className="text-white max-w-3xl">
-                Administra tu equipo, roles, permisos y controla quien puede operar tu negocio
-              </p>
+              <div className="space-y-2">
+                <h1 className="text-3xl md:text-4xl lg:text-[40px] font-bold text-white drop-shadow-lg">
+                  Gestion de Empleados
+                </h1>
+                <p className="text-white/95 max-w-2xl md:text-lg leading-relaxed drop-shadow-md">
+                  Supervisa permisos, historiales y seguridad desde un solo sitio
+                </p>
+              </div>
+            </div>
+            
+            {/* Ícono grande de equipo/empleados a la derecha (complementario al sidebar) */}
+            <div className="hidden md:flex items-center justify-center flex-shrink-0">
+              <div className="relative group">
+                {/* Glow alrededor del icono - efecto premium */}
+                <div className="absolute inset-0 bg-white/20 rounded-full blur-2xl group-hover:bg-white/30 transition-all duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-white/20 rounded-full blur-xl group-hover:from-white/40 group-hover:to-white/30 transition-all duration-500" />
+                {/* Blur suave de fondo */}
+                <div className="absolute inset-0 bg-white/15 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-300" />
+                <svg
+                  className="w-32 h-32 md:w-40 md:h-40 text-white relative z-10 drop-shadow-2xl transition-transform duration-300 group-hover:scale-105"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  style={{
+                    animation: 'fadeIn 0.4s ease-out 0.1s forwards',
+                    willChange: 'transform, opacity',
+                    opacity: 0
+                  }}
+                >
+                  {/* Icono de equipo trabajando - más elaborado que el del sidebar */}
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
@@ -1058,6 +1078,12 @@ export default function Empleados() {
         className="relative"
         selectedKey={selectedTab}
         onSelectionChange={(key) => setSelectedTab(key as string)}
+        classNames={{
+          tabList: "bg-white/80 backdrop-blur-sm rounded-lg shadow-md border border-gray-200/50 p-1 overflow-x-auto scrollbar-hide",
+          tab: "data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-[#67afc3] data-[selected=true]:to-[#529aa6] data-[selected=true]:text-white data-[selected=true]:shadow-lg transition-all duration-300 data-[hover=true]:bg-gray-100/50 data-[hover=true]:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#67afc3] focus-visible:ring-offset-2",
+          tabContent: "group-data-[selected=true]:text-white font-medium transition-colors duration-200",
+          cursor: "bg-gradient-to-r from-[#67afc3] to-[#529aa6] shadow-lg",
+        }}
       >
         <Tab
           key="usuarios"
@@ -1463,21 +1489,19 @@ export default function Empleados() {
                 })
               )}
               <Divider className="my-4" />
-              <div className="flex items-center justify-between pt-2">
-                <div className="flex items-center gap-4">
-                  {!isLoadingAuditorias && paginationAuditoria.totalPages > 1 && (
-                    <HeroUIPagination
-                      showControls
-                      page={paginationAuditoria.page}
-                      total={paginationAuditoria.totalPages}
-                      onChange={(page) => setAuditoriaPage(page)}
-                      classNames={{
-                        cursor: "bg-[#67afc3] text-white shadow-lg",
-                        item: "bg-transparent shadow-none",
-                      }}
-                    />
-                  )}
-                </div>
+              <div className="flex flex-col items-center gap-4 pt-2">
+                {!isLoadingAuditorias && paginationAuditoria.totalPages > 1 && (
+                  <HeroUIPagination
+                    showControls
+                    page={paginationAuditoria.page}
+                    total={paginationAuditoria.totalPages}
+                    onChange={(page) => setAuditoriaPage(page)}
+                    classNames={{
+                      cursor: "bg-[#67afc3] text-white shadow-lg",
+                      item: "bg-transparent shadow-none",
+                    }}
+                  />
+                )}
                 <Button
                   color="primary"
                   variant="flat"
@@ -2280,17 +2304,17 @@ export default function Empleados() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
-                  label="Correo electrónico"
-                  type="email"
-                  placeholder="correo@puntox.com"
-                  value={nuevoUsuario.email}
+                  label="Nombre de usuario"
+                  type="text"
+                  placeholder="juan"
+                  value={nuevoUsuario.nombreUsuario}
                   onChange={(e) =>
                     setNuevoUsuario((prev) => ({
                       ...prev,
-                      email: e.target.value,
+                      nombreUsuario: e.target.value.toLowerCase().trim(),
                     }))
                   }
-                  description="Se usará para iniciar sesión"
+                  description="Se usará para iniciar sesión (se generará un email automático)"
                   isRequired
                 />
                 <Input
@@ -2394,41 +2418,22 @@ export default function Empleados() {
                   Configuración
                 </h4>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Select
-                  label="Rol"
-                  selectedKeys={nuevoUsuario.rolId ? [nuevoUsuario.rolId] : []}
-                  onChange={(e) =>
-                    setNuevoUsuario((prev) => ({
-                      ...prev,
-                      rolId: e.target.value,
-                    }))
-                  }
-                  placeholder="Selecciona un rol"
-                  description="Define los permisos del usuario"
-                >
-                  {roles.map((rol) => (
-                    <SelectItem key={String(rol.id)}>{rol.nombre}</SelectItem>
-                  ))}
-                </Select>
-                <div className="flex flex-col justify-end">
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200">
-                    <Switch
-                      isSelected={nuevoUsuario.autoInvitar}
-                      onValueChange={(value) =>
-                        setNuevoUsuario((prev) => ({ ...prev, autoInvitar: value }))
-                      }
-                    >
-                      <span className="text-sm font-medium text-slate-700">
-                        Enviar invitación por correo
-                      </span>
-                    </Switch>
-                    <Tooltip content="Se enviará un correo electrónico con las credenciales de acceso al usuario">
-                      <span className="text-sm text-gray-500 cursor-help">ℹ️</span>
-                    </Tooltip>
-                  </div>
-                </div>
-              </div>
+              <Select
+                label="Rol"
+                selectedKeys={nuevoUsuario.rolId ? [nuevoUsuario.rolId] : []}
+                onChange={(e) =>
+                  setNuevoUsuario((prev) => ({
+                    ...prev,
+                    rolId: e.target.value,
+                  }))
+                }
+                placeholder="Selecciona un rol"
+                description="Define los permisos del usuario"
+              >
+                {roles.map((rol) => (
+                  <SelectItem key={String(rol.id)}>{rol.nombre}</SelectItem>
+                ))}
+              </Select>
             </div>
           </ModalBody>
           <ModalFooter>

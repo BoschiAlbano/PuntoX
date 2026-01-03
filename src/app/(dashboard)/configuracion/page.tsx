@@ -966,8 +966,25 @@ export default function Configuracion() {
     
     try {
       // Preparar datos completos de configuración incluyendo stock, caja, productos y báscula
+      // Asegurar que localidadId sea un número válido
+      const localidadIdNum = configuracion.localidadId 
+        ? (typeof configuracion.localidadId === "string" 
+            ? Number(configuracion.localidadId) 
+            : configuracion.localidadId)
+        : null;
+
+      if (!localidadIdNum || localidadIdNum <= 0) {
+        addToast({
+          title: "Localidad requerida",
+          description: "Por favor, seleccione una localidad válida para continuar.",
+          color: "warning",
+        });
+        return;
+      }
+
       const configuracionCompleta = {
         ...configuracion,
+        localidadId: localidadIdNum, // Asegurar que sea número
         // Preferencias básicas
         mostrarPreciosConIva: preferencias.mostrarPreciosConIva,
         abrirCajonEfectivo: preferencias.abrirCajonEfectivo,
@@ -1124,6 +1141,12 @@ export default function Configuracion() {
         selectedKey={openSection}
         onSelectionChange={(key) => setOpenSection(key as SectionKey)}
         className="relative"
+        classNames={{
+          tabList: "bg-white/80 backdrop-blur-sm rounded-lg shadow-md border border-gray-200/50 p-1 overflow-x-auto scrollbar-hide",
+          tab: "data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-[#67afc3] data-[selected=true]:to-[#529aa6] data-[selected=true]:text-white data-[selected=true]:shadow-lg transition-all duration-300 data-[hover=true]:bg-gray-100/50 data-[hover=true]:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#67afc3] focus-visible:ring-offset-2",
+          tabContent: "group-data-[selected=true]:text-white font-medium transition-colors duration-200",
+          cursor: "bg-gradient-to-r from-[#67afc3] to-[#529aa6] shadow-lg",
+        }}
       >
         <Tab
           key="perfil"
@@ -1206,7 +1229,7 @@ export default function Configuracion() {
                 }
               />
               <Input
-                label="Razon social"
+                label="Razón social"
                 variant="bordered"
                 classNames={{ inputWrapper: "bg-white border-slate-200" }}
                 value={configuracion.razonSocial}
@@ -1216,6 +1239,8 @@ export default function Configuracion() {
                     razonSocial: e.target.value,
                   }))
                 }
+                isRequired
+                description="Campo obligatorio"
               />
               <Input
                 label="Nombre de fantasía"
@@ -1286,6 +1311,8 @@ export default function Configuracion() {
                 onChange={(e) =>
                   setConfiguracion((prev) => ({ ...prev, cuit: e.target.value }))
                 }
+                isRequired
+                description="Campo obligatorio"
               />
               <Input
                 label="Dirección"
@@ -1298,6 +1325,8 @@ export default function Configuracion() {
                     direccion: e.target.value,
                   }))
                 }
+                isRequired
+                description="Campo obligatorio"
               />
               <div className="md:col-span-2 space-y-3">
                 <div className="space-y-1">
@@ -1305,7 +1334,7 @@ export default function Configuracion() {
                     Ubicación del negocio <span className="text-red-500">*</span>
                   </label>
                   <p className="text-xs text-gray-500">
-                    Seleccione la ubicación completa de su negocio
+                    Seleccione la ubicación completa de su negocio (Campo obligatorio)
                   </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -3944,31 +3973,84 @@ function Header({
   seguridad: { dobleFactor: boolean };
 }) {
   return (
-    <section className="w-full relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-blue-500 to-[#90c472] text-white shadow-xl mb-10">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),transparent_40%)]" />
-      <div className="relative p-4 md:p-5 space-y-5">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="space-y-2">
-            <Chip variant="flat" className="bg-white/10 text-white">
+    <section className="w-full relative overflow-hidden rounded-3xl border border-slate-200/50 bg-gradient-to-r from-blue-500 via-sky-500 to-emerald-400 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] mb-10 transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]">
+      {/* Blurred circles decorativos para profundidad con parallax ligero (optimizado) */}
+      <div className="absolute inset-0 overflow-hidden" style={{ willChange: 'transform' }}>
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl parallax-bg" style={{ willChange: 'transform' }} />
+        <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-white/8 rounded-full blur-2xl parallax-bg" style={{ animationDelay: '2s', willChange: 'transform' }} />
+        <div className="absolute top-1/2 right-1/4 w-32 h-32 bg-white/5 rounded-full blur-xl parallax-bg" style={{ animationDelay: '4s', willChange: 'transform' }} />
+      </div>
+      
+      {/* Glass panel semitransparente con blur más suave */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 backdrop-blur-sm" />
+      
+      {/* Radial gradient overlay para más profundidad */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),transparent_50%)]" />
+      
+      <div className="relative p-4 md:p-6 lg:p-8 space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="space-y-3 flex-1">
+            <Chip 
+              variant="flat" 
+              className="bg-white/25 text-white backdrop-blur-sm border border-white/40 shadow-lg shadow-white/20 transition-all duration-300 hover:bg-white/30 hover:shadow-xl hover:shadow-white/30"
+            >
               Configuración
             </Chip>
-            <h1 className="text-3xl md:text-[32px] font-bold">
-              Configuración
-            </h1>
-            <p className="text-white max-w-3xl">
-              Ajustes rápidos de identidad, ventas y seguridad en un solo lugar. Los cambios aplican a todas las sucursales activas.
-            </p>
+            <div className="space-y-2">
+              <h1 className="text-3xl md:text-4xl lg:text-[40px] font-bold text-white drop-shadow-lg">
+                Configuración
+              </h1>
+              <p className="text-white/95 max-w-2xl md:text-lg leading-relaxed drop-shadow-md">
+                Ajusta la identidad del negocio, preferencias de venta y seguridad desde un solo lugar. Los cambios afectan a todas las sucursales activas.
+              </p>
+            </div>
           </div>
+          
           <div className="flex flex-wrap items-center gap-3">
             <Button
               color="primary"
-              className="bg-white text-slate-900"
+              className="bg-white text-slate-900 hover:bg-white/90 shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent"
               isLoading={isSavingAll}
               isDisabled={isLoadingTenant || isLoadingConfiguracion || !hasAnyChanges}
               onPress={onSaveAll}
             >
               Guardar todo
             </Button>
+          </div>
+          
+          {/* Ícono grande de panel de control a la derecha (complementario al sidebar) */}
+          <div className="hidden lg:flex items-center justify-center flex-shrink-0">
+            <div className="relative group">
+              {/* Glow alrededor del icono - efecto premium */}
+              <div className="absolute inset-0 bg-white/20 rounded-full blur-2xl group-hover:bg-white/30 transition-all duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-white/20 rounded-full blur-xl group-hover:from-white/40 group-hover:to-white/30 transition-all duration-500" />
+              {/* Blur suave de fondo */}
+              <div className="absolute inset-0 bg-white/15 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-300" />
+              <svg
+                className="w-32 h-32 md:w-40 md:h-40 text-white relative z-10 drop-shadow-2xl transition-transform duration-300 group-hover:scale-105"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                style={{
+                  animation: 'fadeIn 0.4s ease-out 0.1s forwards',
+                  willChange: 'transform, opacity',
+                  opacity: 0
+                }}
+              >
+                {/* Icono de panel de control - más elaborado que el engranaje del sidebar */}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </div>
           </div>
         </div>
 

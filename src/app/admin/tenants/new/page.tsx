@@ -131,7 +131,14 @@ export default function NewTenantPage() {
                 <Input name="adminNombre" label="Nombre" isRequired />
                 <Input name="adminApellido" label="Apellido" isRequired />
               </div>
-              <Input name="adminEmail" type="email" label="Email" isRequired />
+              <Input 
+                name="adminUsername" 
+                label="Nombre de usuario" 
+                placeholder="Se usará para iniciar sesión"
+                description="Si no se proporciona, se generará desde el email"
+                isRequired={false}
+              />
+              <Input name="adminEmail" type="email" label="Email personal" isRequired />
               <Input
                 name="adminPassword"
                 type="password"

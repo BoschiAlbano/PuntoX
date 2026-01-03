@@ -10,7 +10,7 @@
 - `PATCH /api/roles?id=<rolId> { nombre, descripcion, tipo, permisos }`: actualiza rol existente. No permite modificar nombre/tipo en roles del sistema. Registra auditoría `EDITAR_ROL` con `valorAnterior` y `valorNuevo` (incluye permisos).
 - `DELETE /api/roles?id=<rolId>`: elimina rol (hard delete). Bloquea si el rol tiene usuarios asignados o es rol del sistema. Registra auditoría `ELIMINAR_ROL` antes de eliminar.
 - `GET /api/empleados`: lista empleados del tenant (Persona + Usuario + Rol + Localidad) con estado (Activo/Suspendido/Invitado). Soporta paginación (`page`, `limit`) y filtros backend (`rol`, `estado`, `busqueda`).
-- `POST /api/empleados`: alta de persona + empleado + usuario + rol; crea usuario en Supabase Auth con metadata `tenant_id` y `role`. El campo `nombreUsuario` es opcional; si no se proporciona, se genera automáticamente desde el email (parte antes de `@`). Si el usuario generado ya existe, se agrega un número secuencial (ej: `usuario1`, `usuario2`). Registra auditoría `CREAR_USUARIO` y `INVITAR_USUARIO` (si `autoInvitar` es true).
+- `POST /api/empleados`: alta de persona + empleado + usuario + rol; crea usuario en Supabase Auth con metadata `tenant_id` y `role`. El campo `nombreUsuario` es **requerido**. Si el empleado no tiene email personal, se genera automáticamente un email interno `username@puntox.com`. **NO se envía invitación por email** - todos los usuarios se crean con `email_confirm: true` automáticamente. Registra auditoría `CREAR_USUARIO`.
 - `PUT /api/empleados { personaId, nombre, apellido, dni, direccion, telefono, localidadId, rolId }`: edita datos del empleado. Actualiza `Persona` y `PerfilUsuario` (rol). Registra auditoría `EDITAR_USUARIO` y `CAMBIAR_ROL` (si cambió el rol) con `valorAnterior` y `valorNuevo`.
 - `PATCH /api/empleados { usuarioId, bloquear }`: suspende/activa usuario (toggle en `EstaBloqueado`). Registra auditoría `SUSPENDER_USUARIO` o `REACTIVAR_USUARIO`.
 - `DELETE /api/empleados { personaId }`: elimina empleado definitivamente (hard delete). El `personaId` se envía en el body de la request, no como parámetro de URL. Registra auditoría `ELIMINAR_USUARIO` antes de eliminar.
@@ -67,11 +67,11 @@
   - Reset automático de página al cambiar búsqueda
 - **Columnas de la tabla**:
   - Nombre completo
-  - Email
+  - Usuario (username) - **ACTUALIZADO: Muestra username en lugar de email**
   - Rol (con chip de color)
   - Estado (Activo/Suspendido/Invitado con chip)
   - Última actividad
-  - Acciones (Edit, View, Toggle Status, Send Email, Delete)
+  - Acciones (Edit, View, Toggle Status, Delete) - **ACTUALIZADO: Removido botón "Send Email"**
 - **Adaptador**: `empleado.adapter.ts` para transformar datos de API a formato frontend
 
 #### 4. **Botón de Refresh**
@@ -105,13 +105,15 @@
   - Estilo consistente con el resto de la aplicación
   - Navegación mejorada
 
-#### 7. **Eliminación del Campo "Usuario de Acceso"**
-- **Razón**: El login se realiza mediante email, no requiere nombre de usuario
+#### 7. **Sistema de Login por Username (Enero 2025)**
+- **Cambio importante**: El login ahora se realiza mediante **username**, no email
 - **Implementación**:
-  - El backend genera automáticamente `nombreUsuario` desde el email (parte antes de `@`)
-  - Manejo de duplicados: Si el usuario generado ya existe, se agrega un número (ej: `usuario1`, `usuario2`)
-  - Validación y error de "usuario ya en uso" eliminados del frontend
-- **Endpoint actualizado**: `POST /api/empleados` ahora acepta `nombreUsuario` como opcional y lo genera automáticamente si no se proporciona
+  - El campo `nombreUsuario` es **requerido** en la creación de empleados
+  - Los empleados pueden tener email personal o recibir uno automático: `username@puntox.com`
+  - El email se genera automáticamente si no se proporciona usando `generateInternalEmail()`
+  - Normalización automática: lowercase, sin espacios, caracteres especiales permitidos
+- **Endpoint actualizado**: `POST /api/empleados` ahora requiere `nombreUsuario` y genera email automático si no se proporciona
+- **Eliminación de invitación por email**: Removida funcionalidad de "Enviar invitación por correo". Todos los usuarios se crean activos automáticamente.
 - **Roles mejorados**:
   - Creación de rol con tipo (Administrador o Empleado) desde modal
   - **Edición de roles**: Menú de acciones (⋯) con opción "Editar rol" que abre modal prellenado. Permite modificar nombre, descripción, tipo y permisos. Los roles del sistema no permiten modificar nombre/tipo.

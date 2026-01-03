@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
+import { checkRateLimit, isIpBlocked, blockIp } from "@/lib/security/rateLimiter";
+import { crearAlertaSeguridad } from "@/lib/security/suspiciousActivity";
 
 /**
  * POST /api/auth/registrar-intento-login
  * Registra un intento de login (exitoso o fallido) en la tabla IntentoLogin
+ * Ahora incluye rate limiting y detección de actividad sospechosa
  */
 export async function POST(req: NextRequest) {
   try {
@@ -25,6 +28,84 @@ export async function POST(req: NextRequest) {
       "unknown";
     
     const userAgent = req.headers.get("user-agent") || null;
+
+    // Verificar rate limiting solo para intentos fallidos
+    if (!exitoso && tenantId) {
+      // Verificar si la IP está bloqueada
+      const ipBlocked = await isIpBlocked(ipAddress, BigInt(tenantId));
+      if (ipBlocked) {
+        return NextResponse.json(
+          { error: "IP bloqueada temporalmente. Intenta más tarde." },
+          { status: 429 }
+        );
+      }
+
+      // Verificar rate limit por email
+      const emailRateLimit = await checkRateLimit({
+        maxAttempts: 5,
+        windowMinutes: 15,
+        identifier: email,
+        tenantId: BigInt(tenantId),
+      });
+
+      if (!emailRateLimit.allowed) {
+        // Bloquear IP después de muchos intentos fallidos
+        await blockIp(
+          ipAddress,
+          BigInt(tenantId),
+          "Demasiados intentos fallidos de login",
+          30 // 30 minutos
+        );
+
+        // Crear alerta de seguridad
+        await crearAlertaSeguridad({
+          tenantId: BigInt(tenantId),
+          tipo: "INTENTOS_FALLIDOS",
+          severidad: "ALTA",
+          mensaje: `Múltiples intentos fallidos desde IP ${ipAddress} para email ${email}`,
+          detalles: {
+            email,
+            ipAddress,
+            intentos: 5,
+          },
+          ipAddress: ipAddress || undefined,
+          userAgent: userAgent || undefined,
+        });
+
+        return NextResponse.json(
+          {
+            error: "Demasiados intentos fallidos. IP bloqueada temporalmente.",
+            resetAt: emailRateLimit.resetAt.toISOString(),
+          },
+          { status: 429 }
+        );
+      }
+
+      // Verificar rate limit por IP
+      const ipRateLimit = await checkRateLimit({
+        maxAttempts: 10,
+        windowMinutes: 15,
+        identifier: ipAddress,
+        tenantId: BigInt(tenantId),
+      });
+
+      if (!ipRateLimit.allowed) {
+        await blockIp(
+          ipAddress,
+          BigInt(tenantId),
+          "Demasiados intentos desde esta IP",
+          60 // 1 hora
+        );
+
+        return NextResponse.json(
+          {
+            error: "Demasiados intentos desde esta IP. Bloqueada temporalmente.",
+            resetAt: ipRateLimit.resetAt.toISOString(),
+          },
+          { status: 429 }
+        );
+      }
+    }
 
     // Si no se proporciona tenantId, intentar obtenerlo del usuario
     let finalTenantId = tenantId;

@@ -12,6 +12,7 @@ export const empleadoAdapter = (data: any): Empleado => {
     apellido: data.apellido || data.Apellido || "",
     nombreCompleto: data.nombreCompleto || `${data.nombre || ""} ${data.apellido || ""}`.trim(),
     email: data.email || data.Mail || data.mail || "",
+    username: data.username || data.nombreUsuario || data.NombreUsuario || null,
     telefono: data.telefono || data.Telefono || null,
     direccion: data.direccion || data.Direccion || null,
     localidadId: data.localidadId ? Number(data.localidadId) : null,

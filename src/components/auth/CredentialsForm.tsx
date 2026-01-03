@@ -1,17 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
-import { Mail, Lock } from "lucide-react";
-
-// Validación de email con regex
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-// Función para validar email
-const validateEmail = (email: string): boolean => {
-  return emailRegex.test(email);
-};
+import { User, Lock, Eye, EyeOff } from "lucide-react";
 
 // Función para mapear errores de Supabase a mensajes específicos
 const getErrorMessage = (error: unknown): string => {
@@ -29,7 +21,7 @@ const getErrorMessage = (error: unknown): string => {
 
   // Errores específicos de Supabase Auth
   if (errorMessage.includes("Invalid login credentials")) {
-    return "Email o contraseña incorrectos";
+    return "Nombre de usuario o contraseña incorrectos";
   }
 
   if (errorMessage.includes("Email not confirmed")) {
@@ -61,61 +53,135 @@ const getErrorMessage = (error: unknown): string => {
 };
 
 export default function CredentialsForm() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [emailError, setEmailError] = useState("");
+  const [usernameError, setUsernameError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [recordarDispositivo, setRecordarDispositivo] = useState(false);
+  const [attemptCount, setAttemptCount] = useState(0);
+  const [isRateLimited, setIsRateLimited] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Obtener callbackUrl de los parámetros de búsqueda
+  const callbackUrl = searchParams.get("callbackUrl") || "/ventas";
 
-  // Validación de email en tiempo real
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setEmail(value);
+  // Rate limiting básico: resetear después de 5 minutos
+  useEffect(() => {
+    const storedAttempts = localStorage.getItem("login_attempts");
+    const storedTime = localStorage.getItem("login_attempt_time");
+    
+    if (storedAttempts && storedTime) {
+      const timeDiff = Date.now() - parseInt(storedTime, 10);
+      const fiveMinutes = 5 * 60 * 1000;
+      
+      if (timeDiff < fiveMinutes) {
+        const attempts = parseInt(storedAttempts, 10);
+        setAttemptCount(attempts);
+        if (attempts >= 5) {
+          setIsRateLimited(true);
+          const remainingTime = Math.ceil((fiveMinutes - timeDiff) / 1000 / 60);
+          setError(`Demasiados intentos fallidos. Intenta de nuevo en ${remainingTime} minutos.`);
+        }
+      } else {
+        // Resetear contador después de 5 minutos
+        localStorage.removeItem("login_attempts");
+        localStorage.removeItem("login_attempt_time");
+        setAttemptCount(0);
+        setIsRateLimited(false);
+      }
+    }
+  }, []);
+
+  // Validación de username en tiempo real
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.trim();
+    setUsername(value);
     setError(""); // Limpiar error general al escribir
+    setUsernameError(""); // Limpiar error de username
 
-    // Validar solo si hay contenido
-    if (value && !validateEmail(value)) {
-      setEmailError("El formato del email no es válido");
+    // Validar que el username no esté vacío
+    if (value && value.length < 2) {
+      setUsernameError("El nombre de usuario debe tener al menos 2 caracteres");
     } else {
-      setEmailError("");
+      setUsernameError("");
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setEmailError("");
+    setUsernameError("");
 
-    // Validar email antes de enviar
-    if (!validateEmail(email)) {
-      setEmailError("El formato del email no es válido");
+    // Verificar rate limiting
+    if (isRateLimited) {
+      setError("Demasiados intentos fallidos. Por favor espera unos minutos antes de intentar de nuevo.");
       return;
     }
 
-    if (!password) {
-      setError("Por favor ingresa tu contraseña");
+    // Normalizar username: trim y lowercase
+    const normalizedUsername = username.trim().toLowerCase();
+
+    // Validar username antes de enviar
+    if (!normalizedUsername || normalizedUsername.length < 2) {
+      setUsernameError("El nombre de usuario debe tener al menos 2 caracteres");
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres");
       return;
     }
 
     setIsLoading(true);
 
     try {
+      // Primero, obtener el email interno por username
+      const emailResponse = await fetch("/api/auth/get-email-by-username", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: normalizedUsername }),
+      });
+
+      if (!emailResponse.ok) {
+        const errorData = await emailResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || "Usuario no encontrado");
+      }
+
+      const { email: internalEmail } = await emailResponse.json();
+
+      if (!internalEmail) {
+        throw new Error("No se pudo obtener el email del usuario");
+      }
+
+      // Ahora hacer login con el email interno
       const supabase = getSupabaseBrowserClient();
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
+        email: internalEmail,
         password,
       });
 
       if (authError) {
+        // Incrementar contador de intentos fallidos
+        const newAttemptCount = attemptCount + 1;
+        setAttemptCount(newAttemptCount);
+        localStorage.setItem("login_attempts", newAttemptCount.toString());
+        localStorage.setItem("login_attempt_time", Date.now().toString());
+        
+        // Activar rate limiting después de 5 intentos
+        if (newAttemptCount >= 5) {
+          setIsRateLimited(true);
+        }
+
         // Registrar intento fallido
         try {
           await fetch("/api/auth/registrar-intento-login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              email,
+              email: internalEmail,
               exitoso: false,
               motivoFallo: getErrorMessage(authError),
             }),
@@ -125,6 +191,12 @@ export default function CredentialsForm() {
         }
         throw authError;
       }
+
+      // Login exitoso: resetear contador de intentos
+      localStorage.removeItem("login_attempts");
+      localStorage.removeItem("login_attempt_time");
+      setAttemptCount(0);
+      setIsRateLimited(false);
 
       // Login exitoso - registrar intento exitoso y sesión
       if (authData?.user) {
@@ -157,11 +229,11 @@ export default function CredentialsForm() {
         }
 
         // Verificar si el dispositivo es confiable o si el usuario quiere recordarlo
-        const esConfiable = recordarDispositivo || localStorage.getItem(`device_trusted_${email}`) === "true";
+        const esConfiable = recordarDispositivo || localStorage.getItem(`device_trusted_${normalizedUsername}`) === "true";
         
         // Guardar en localStorage si el usuario marcó "Recordar dispositivo"
         if (recordarDispositivo) {
-          localStorage.setItem(`device_trusted_${email}`, "true");
+          localStorage.setItem(`device_trusted_${normalizedUsername}`, "true");
         }
 
         // Registrar intento exitoso (en background, no bloqueamos)
@@ -169,7 +241,7 @@ export default function CredentialsForm() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email,
+            email: internalEmail,
             exitoso: true,
             tenantId: tenantId || null,
           }),
@@ -188,8 +260,12 @@ export default function CredentialsForm() {
         }).catch((err) => console.warn("Error al registrar sesión:", err));
       }
 
-      // Redirigir después de login exitoso
-      router.push("/ventas");
+      // Redirigir después de login exitoso (usar callbackUrl si existe, sino /ventas)
+      // Validar que callbackUrl sea una ruta relativa segura
+      const safeCallbackUrl = callbackUrl.startsWith("/") && !callbackUrl.startsWith("//") 
+        ? callbackUrl 
+        : "/ventas";
+      router.push(safeCallbackUrl);
     } catch (err) {
       console.error("Error al iniciar sesion:", err);
       const errorMessage = getErrorMessage(err);
@@ -203,36 +279,37 @@ export default function CredentialsForm() {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label
-          htmlFor="email"
+          htmlFor="username"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          Correo electronico
+          Nombre de usuario
         </label>
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={handleEmailChange}
+            id="username"
+            type="text"
+            value={username}
+            onChange={handleUsernameChange}
             onBlur={() => {
               // Validar al perder el foco también
-              if (email && !validateEmail(email)) {
-                setEmailError("El formato del email no es válido");
+              if (username && username.trim().length < 2) {
+                setUsernameError("El nombre de usuario debe tener al menos 2 caracteres");
               }
             }}
             required
             disabled={isLoading}
             className={`w-full pl-10 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-              emailError
+              usernameError
                 ? "border-red-300 bg-red-50"
                 : "border-gray-300 bg-white"
             } ${isLoading ? "opacity-60 cursor-not-allowed" : ""}`}
-            placeholder="tu@email.com"
+            placeholder="juan"
+            autoComplete="username"
           />
         </div>
-        {emailError && (
-          <p className="mt-1 text-sm text-red-600">{emailError}</p>
+        {usernameError && (
+          <p className="mt-1 text-sm text-red-600">{usernameError}</p>
         )}
       </div>
 
@@ -247,7 +324,7 @@ export default function CredentialsForm() {
           <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             id="password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
@@ -255,11 +332,23 @@ export default function CredentialsForm() {
             }}
             required
             disabled={isLoading}
-            className={`w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+            className={`w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
               isLoading ? "opacity-60 cursor-not-allowed" : ""
             }`}
             placeholder="********"
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+            tabIndex={-1}
+          >
+            {showPassword ? (
+              <EyeOff className="h-5 w-5" />
+            ) : (
+              <Eye className="h-5 w-5" />
+            )}
+          </button>
         </div>
       </div>
 
@@ -287,9 +376,9 @@ export default function CredentialsForm() {
 
       <button
         type="submit"
-        disabled={isLoading || !!emailError}
+        disabled={isLoading || !!usernameError}
         className={`w-full bg-gradient-to-r from-blue-500 to-[#90c472] text-white py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 font-medium shadow-sm ${
-          isLoading || emailError
+          isLoading || usernameError
             ? "opacity-60 cursor-not-allowed"
             : "hover:from-blue-600 hover:to-[#7fb362] hover:shadow-md active:shadow-lg"
         }`}

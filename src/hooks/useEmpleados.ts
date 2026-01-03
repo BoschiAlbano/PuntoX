@@ -9,6 +9,7 @@ export interface Empleado {
   apellido: string;
   nombreCompleto: string;
   email: string;
+  username: string | null; // Nombre de usuario para login
   telefono: string | null;
   direccion: string | null;
   localidadId: number | null;
@@ -272,7 +273,7 @@ const fetchAuditorias = async ({
 const createEmpleado = async (empleadoData: {
   nombre: string;
   apellido: string;
-  email: string;
+  nombreUsuario: string;
   telefono?: string;
   direccion?: string;
   localidadId?: string;
@@ -281,20 +282,14 @@ const createEmpleado = async (empleadoData: {
   dni?: string;
   password?: string;
   rolId?: number | undefined;
-  autoInvitar?: boolean;
   tenantId?: string | null;
 }): Promise<Empleado> => {
   const tenantParam = empleadoData.tenantId ? `?tenantId=${empleadoData.tenantId}` : "";
-  const { tenantId: _tenantId, email, localidadId, rolId, ...rest } = empleadoData;
-
-  // Generar nombre de usuario automáticamente desde el email (parte antes del @)
-  const nombreUsuario = email.split("@")[0];
+  const { tenantId: _tenantId, localidadId, rolId, ...rest } = empleadoData;
 
   // Transformar al formato que espera el API
   const body = {
     ...rest,
-    mail: email,
-    nombreUsuario: nombreUsuario,
     localidadId: localidadId ? Number(localidadId) : undefined,
     rolId: rolId,
   };

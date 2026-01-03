@@ -61,6 +61,21 @@ const TIPO_MOVIMIENTO = {
 };
 
 // Tipos
+type UsuarioCaja = {
+  Id: number;
+  Nombre: string;
+  NombreCompleto: string | null;
+};
+
+type DetalleCaja = {
+  Id: number;
+  CajaId: number;
+  TipoPago: number;
+  Monto: number;
+  EstaEliminado: boolean;
+  TenantId: number;
+};
+
 type Caja = {
   Id: number;
   UsuarioAperturaId: number;
@@ -81,6 +96,9 @@ type Caja = {
   TotalSalidaTransf: number;
   Ganancia: number;
   EstaEliminado: boolean;
+  UsuarioApertura?: UsuarioCaja | null;
+  UsuarioCierre?: UsuarioCaja | null;
+  DetalleCaja?: DetalleCaja[];
 };
 
 type Movimiento = {
@@ -433,23 +451,23 @@ export default function CajaPage() {
     });
   };
 
-  // Obtener nombre del tipo de pago (función no usada actualmente, pero puede ser útil en el futuro)
-  // const nombreTipoPago = (tipo: number) => {
-  //   switch (tipo) {
-  //     case TIPO_PAGO.EFECTIVO:
-  //       return "Efectivo";
-  //     case TIPO_PAGO.TARJETA:
-  //       return "Tarjeta";
-  //     case TIPO_PAGO.CHEQUE:
-  //       return "Cheque";
-  //     case TIPO_PAGO.CUENTA_CORRIENTE:
-  //       return "Cuenta Corriente";
-  //     case TIPO_PAGO.TRANSFERENCIA:
-  //       return "Transferencia";
-  //     default:
-  //       return "Desconocido";
-  //   }
-  // };
+  // Obtener nombre del tipo de pago
+  const nombreTipoPago = (tipo: number) => {
+    switch (tipo) {
+      case TIPO_PAGO.EFECTIVO:
+        return "Efectivo";
+      case TIPO_PAGO.TARJETA:
+        return "Tarjeta";
+      case TIPO_PAGO.CHEQUE:
+        return "Cheque";
+      case TIPO_PAGO.CUENTA_CORRIENTE:
+        return "Cuenta Corriente";
+      case TIPO_PAGO.TRANSFERENCIA:
+        return "Transferencia";
+      default:
+        return "Desconocido";
+    }
+  };
 
   if (isLoading) {
     return (
@@ -461,36 +479,58 @@ export default function CajaPage() {
 
   return (
     <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center">
-      {/* Header con gradiente al estilo del proyecto */}
-      <section className="w-full relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-blue-500 to-[#90c472] text-white shadow-xl mb-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),transparent_40%)]" />
-        <div className="relative p-4 md:p-5 space-y-5">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="space-y-2">
-              <Chip variant="flat" className="bg-white/10 text-white">
+      {/* Header mejorado con parallax, glow y sombras profundas */}
+      <section className="w-full relative overflow-hidden rounded-3xl border border-slate-200/50 bg-gradient-to-r from-blue-500 via-sky-500 to-emerald-400 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] mb-10 transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]">
+        {/* Blurred circles decorativos para profundidad con parallax ligero (optimizado) */}
+        <div className="absolute inset-0 overflow-hidden" style={{ willChange: 'transform' }}>
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl parallax-bg" style={{ willChange: 'transform' }} />
+          <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-white/8 rounded-full blur-2xl parallax-bg" style={{ animationDelay: '2s', willChange: 'transform' }} />
+          <div className="absolute top-1/2 right-1/4 w-32 h-32 bg-white/5 rounded-full blur-xl parallax-bg" style={{ animationDelay: '4s', willChange: 'transform' }} />
+        </div>
+        
+        {/* Glass panel semitransparente con blur más suave */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 backdrop-blur-sm" />
+        
+        {/* Radial gradient overlay para más profundidad */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),transparent_50%)]" />
+        
+        <div className="relative p-4 md:p-6 lg:p-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="space-y-3 flex-1">
+              <Chip 
+                variant="flat" 
+                className="bg-white/25 text-white backdrop-blur-sm border border-white/40 shadow-lg shadow-white/20 transition-all duration-300 hover:bg-white/30 hover:shadow-xl hover:shadow-white/30"
+              >
                 Caja
               </Chip>
-              <h1 className="text-3xl md:text-[32px] font-bold">
-                Gestión de Caja
-              </h1>
-              <p className="text-white max-w-3xl">
-                Administra la caja, movimientos financieros y gastos del día
-              </p>
+              <div className="space-y-2">
+                <h1 className="text-3xl md:text-4xl lg:text-[40px] font-bold text-white drop-shadow-lg">
+                  Gestión de Caja
+                </h1>
+                <p className="text-white/95 max-w-2xl md:text-lg leading-relaxed drop-shadow-md">
+                  Administra la caja, movimientos financieros y gastos del día desde un solo lugar
+                </p>
+              </div>
             </div>
-            <div className="flex gap-2">
+            
+            {/* Botones de acción mejorados */}
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 variant="flat"
-                className="bg-white/10 text-white hover:bg-white/20"
+                className="bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm border border-white/30 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
                 onPress={() => cargarDatos()}
                 startContent={<RefreshCw className="w-4 h-4" />}
+                aria-label="Actualizar datos de caja"
               >
                 Actualizar
               </Button>
               {cajaAbierta && (
                 <Button
                   color="danger"
+                  className="transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2"
                   onPress={() => setOpenModalCerrarCaja(true)}
                   startContent={<Lock className="w-4 h-4" />}
+                  aria-label="Cerrar caja"
                 >
                   Cerrar Caja
                 </Button>
@@ -498,21 +538,52 @@ export default function CajaPage() {
               {!cajaAbierta && (
                 <Button
                   color="success"
-                  className="bg-white text-green-600 hover:bg-white/90"
+                  className="bg-white text-green-600 hover:bg-white/90 shadow-lg transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
                   onPress={() => setOpenModalAbrirCaja(true)}
                   startContent={<Unlock className="w-4 h-4" />}
+                  aria-label="Abrir caja"
                 >
                   Abrir Caja
                 </Button>
               )}
+            </div>
+            
+            {/* Ícono grande de billetera/caja a la derecha (complementario al sidebar) */}
+            <div className="hidden md:flex items-center justify-center flex-shrink-0">
+              <div className="relative group">
+                {/* Glow alrededor del icono - efecto premium */}
+                <div className="absolute inset-0 bg-white/20 rounded-full blur-2xl group-hover:bg-white/30 transition-all duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-white/20 rounded-full blur-xl group-hover:from-white/40 group-hover:to-white/30 transition-all duration-500" />
+                {/* Blur suave de fondo */}
+                <div className="absolute inset-0 bg-white/15 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-300" />
+                <svg
+                  className="w-32 h-32 md:w-40 md:h-40 text-white relative z-10 drop-shadow-2xl transition-transform duration-300 group-hover:scale-105"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  style={{
+                    animation: 'fadeIn 0.4s ease-out 0.1s forwards',
+                    willChange: 'transform, opacity',
+                    opacity: 0
+                  }}
+                >
+                  {/* Icono de billetera/caja registradora - más elaborado que el del sidebar */}
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-2.25 0h.008v.008H15.75V10.5z"
+                  />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Estado de caja */}
-      <Card className="mb-6 shadow-lg border-2">
-        <CardHeader className="bg-gradient-to-r from-primary-500 to-primary-600 text-white">
+      <Card className="mb-6 shadow-lg border-2 border-gray-200/50">
+        <CardHeader className="bg-gradient-to-r from-primary-500 to-primary-600 text-white transition-all duration-300">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
               {cajaAbierta ? (
@@ -525,11 +596,23 @@ export default function CajaPage() {
                   {cajaAbierta ? "Caja Abierta" : "Caja Cerrada"}
                 </h2>
                 {cajaActual && (
-                  <p className="text-sm opacity-90">
-                    {cajaAbierta
-                      ? `Abierta el ${formatearFecha(cajaActual.FechaApertura)}`
-                      : `Cerrada el ${formatearFecha(cajaActual.FechaCierre!)}`}
-                  </p>
+                  <div className="space-y-1">
+                    <p className="text-sm opacity-90">
+                      {cajaAbierta
+                        ? `Abierta el ${formatearFecha(cajaActual.FechaApertura)}`
+                        : `Cerrada el ${formatearFecha(cajaActual.FechaCierre!)}`}
+                    </p>
+                    {cajaActual.UsuarioApertura && (
+                      <p className="text-xs opacity-80">
+                        Abierta por: <span className="font-semibold">{cajaActual.UsuarioApertura.NombreCompleto || cajaActual.UsuarioApertura.Nombre}</span>
+                      </p>
+                    )}
+                    {cajaActual.UsuarioCierre && (
+                      <p className="text-xs opacity-80">
+                        Cerrada por: <span className="font-semibold">{cajaActual.UsuarioCierre.NombreCompleto || cajaActual.UsuarioCierre.Nombre}</span>
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -770,8 +853,48 @@ export default function CajaPage() {
             </CardBody>
           </Card>
 
+          {/* DetalleCaja - Detalle por tipo de pago */}
+          {cajaActual?.DetalleCaja && cajaActual.DetalleCaja.length > 0 && (
+            <Card className="shadow-md border border-gray-200/50">
+              <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100">
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <Receipt className="w-5 h-5" />
+                  Detalle por Tipo de Pago
+                </h2>
+              </CardHeader>
+              <CardBody>
+                <div className="space-y-3">
+                  {cajaActual.DetalleCaja.map((detalle) => (
+                    <div
+                      key={detalle.Id}
+                      className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-lg transition-all duration-200 hover:bg-gray-100 hover:shadow-sm"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-gray-100 rounded-lg">
+                          <Receipt className="w-5 h-5 text-gray-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold">{nombreTipoPago(detalle.TipoPago)}</p>
+                          <p className="text-xs text-gray-500">Detalle de caja</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-gray-700">
+                          ${Number(detalle.Monto).toLocaleString("es-AR", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardBody>
+            </Card>
+          )}
+
           {/* Movimientos recientes */}
-          <Card className="shadow-md">
+          <Card className="shadow-md border border-gray-200/50">
             <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 flex justify-between items-center">
               <h2 className="text-xl font-semibold flex items-center gap-2">
                 <ArrowLeftRight className="w-5 h-5" />
@@ -781,6 +904,8 @@ export default function CajaPage() {
                 size="sm"
                 variant="flat"
                 onPress={() => setOpenModalDetalle(true)}
+                className="transition-all duration-200 hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                aria-label="Ver detalle completo de movimientos"
               >
                 <Eye className="w-4 h-4" />
                 Ver Detalle
@@ -788,84 +913,98 @@ export default function CajaPage() {
             </CardHeader>
             <CardBody>
               {movimientos.length === 0 ? (
-                <div className="text-center py-12">
+                <div className="text-center py-12" role="status" aria-live="polite">
                   <ArrowLeftRight className="w-16 h-16 mx-auto text-gray-300 mb-4" />
                   <p className="text-gray-500 font-medium">
                     No hay movimientos registrados
                   </p>
                 </div>
               ) : (
-                <Table aria-label="Movimientos">
-                  <TableHeader>
-                    <TableColumn>FECHA</TableColumn>
-                    <TableColumn>DESCRIPCIÓN</TableColumn>
-                    <TableColumn>TIPO</TableColumn>
-                    <TableColumn>MONTO</TableColumn>
-                  </TableHeader>
-                  <TableBody>
-                    {movimientos.map((movimiento) => (
-                      <TableRow key={movimiento.Id}>
-                        <TableCell>
-                          {formatearFecha(movimiento.Fecha)}
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{movimiento.Descripcion}</p>
-                            {movimiento.Comprobante && (
-                              <p className="text-xs text-gray-500">
-                                Comprobante #{movimiento.Comprobante.Numero}
-                              </p>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            color={
-                              movimiento.TipoMovimiento ===
+                <div className="rounded-lg overflow-hidden shadow-sm border border-gray-200/50">
+                  <Table 
+                    aria-label="Tabla de movimientos"
+                    classNames={{
+                      wrapper: "bg-white/80 backdrop-blur-sm",
+                      th: "bg-gradient-to-b from-gray-50 to-white border-b border-gray-200 transition-colors duration-200 hover:bg-gray-100",
+                    }}
+                    style={{ contain: 'layout style paint' }}
+                  >
+                    <TableHeader>
+                      <TableColumn aria-label="Fecha del movimiento">FECHA</TableColumn>
+                      <TableColumn aria-label="Descripción del movimiento">DESCRIPCIÓN</TableColumn>
+                      <TableColumn aria-label="Tipo de movimiento">TIPO</TableColumn>
+                      <TableColumn aria-label="Monto del movimiento">MONTO</TableColumn>
+                    </TableHeader>
+                    <TableBody>
+                      {movimientos.map((movimiento) => (
+                        <TableRow 
+                          key={movimiento.Id}
+                          className="transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-sky-50/50 hover:shadow-sm cursor-pointer focus-within:bg-blue-50/30 focus-within:outline-none focus-within:ring-2 focus-within:ring-[#67afc3]/50"
+                          tabIndex={0}
+                          aria-label={`Movimiento ${movimiento.Descripcion}`}
+                        >
+                          <TableCell className="border-b border-gray-100">
+                            {formatearFecha(movimiento.Fecha)}
+                          </TableCell>
+                          <TableCell className="border-b border-gray-100">
+                            <div>
+                              <p className="font-medium">{movimiento.Descripcion}</p>
+                              {movimiento.Comprobante && (
+                                <p className="text-xs text-gray-500">
+                                  Comprobante #{movimiento.Comprobante.Numero}
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="border-b border-gray-100">
+                            <Chip
+                              color={
+                                movimiento.TipoMovimiento ===
+                                TIPO_MOVIMIENTO.ENTRADA
+                                  ? "success"
+                                  : "danger"
+                              }
+                              variant="flat"
+                              size="sm"
+                            >
+                              {movimiento.TipoMovimiento ===
+                              TIPO_MOVIMIENTO.ENTRADA ? (
+                                <div className="flex items-center gap-1">
+                                  <ArrowUpRight className="w-3 h-3" />
+                                  Entrada
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1">
+                                  <ArrowDownLeft className="w-3 h-3" />
+                                  Salida
+                                </div>
+                              )}
+                            </Chip>
+                          </TableCell>
+                          <TableCell className="border-b border-gray-100">
+                            <span
+                              className={`font-bold ${
+                                movimiento.TipoMovimiento ===
+                                TIPO_MOVIMIENTO.ENTRADA
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {movimiento.TipoMovimiento ===
                               TIPO_MOVIMIENTO.ENTRADA
-                                ? "success"
-                                : "danger"
-                            }
-                            variant="flat"
-                            size="sm"
-                          >
-                            {movimiento.TipoMovimiento ===
-                            TIPO_MOVIMIENTO.ENTRADA ? (
-                              <div className="flex items-center gap-1">
-                                <ArrowUpRight className="w-3 h-3" />
-                                Entrada
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1">
-                                <ArrowDownLeft className="w-3 h-3" />
-                                Salida
-                              </div>
-                            )}
-                          </Chip>
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={`font-bold ${
-                              movimiento.TipoMovimiento ===
-                              TIPO_MOVIMIENTO.ENTRADA
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }`}
-                          >
-                            {movimiento.TipoMovimiento ===
-                            TIPO_MOVIMIENTO.ENTRADA
-                              ? "+"
-                              : "-"}
-                            ${movimiento.Monto.toLocaleString("es-AR", {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                                ? "+"
+                                : "-"}
+                              ${movimiento.Monto.toLocaleString("es-AR", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardBody>
           </Card>
@@ -886,6 +1025,8 @@ export default function CajaPage() {
                   color="danger"
                   onPress={() => setOpenModalGasto(true)}
                   startContent={<Plus className="w-4 h-4" />}
+                  className="transition-all duration-200 hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2"
+                  aria-label="Agregar nuevo gasto"
                 >
                   Agregar
                 </Button>
@@ -902,7 +1043,7 @@ export default function CajaPage() {
                   {gastos.map((gasto) => (
                     <div
                       key={gasto.Id}
-                      className="p-3 bg-red-50 border border-red-200 rounded-lg"
+                      className="p-3 bg-red-50 border border-red-200 rounded-lg transition-all duration-200 hover:bg-red-100 hover:shadow-sm"
                     >
                       <div className="flex justify-between items-start mb-1">
                         <div>
@@ -972,6 +1113,8 @@ export default function CajaPage() {
               onChange={(e) => setMontoInicial(e.target.value)}
               startContent="$"
               placeholder="0.00"
+              className="focus-within:ring-2 focus-within:ring-success/50"
+              aria-label="Monto inicial para abrir la caja"
             />
             <p className="text-sm text-gray-500">
               Ingrese el monto inicial con el que se abrirá la caja
@@ -981,10 +1124,18 @@ export default function CajaPage() {
             <Button
               variant="light"
               onPress={() => setOpenModalAbrirCaja(false)}
+              className="focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Cancelar apertura de caja"
             >
               Cancelar
             </Button>
-            <Button color="success" onPress={abrirCaja} isLoading={isSaving}>
+            <Button 
+              color="success" 
+              onPress={abrirCaja} 
+              isLoading={isSaving}
+              className="focus:outline-none focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2"
+              aria-label="Confirmar apertura de caja"
+            >
               Abrir Caja
             </Button>
           </ModalFooter>
@@ -1019,6 +1170,8 @@ export default function CajaPage() {
                   onChange={(e) => setMontoCierre(e.target.value)}
                   startContent="$"
                   placeholder="0.00"
+                  className="focus-within:ring-2 focus-within:ring-danger/50"
+                  aria-label="Monto real en caja al cerrar"
                 />
                 {totales.totalCaja !== Number(montoCierre) && montoCierre && (
                   <div className="p-3 bg-warning-50 border border-warning-200 rounded-lg">
@@ -1040,10 +1193,18 @@ export default function CajaPage() {
             <Button
               variant="light"
               onPress={() => setOpenModalCerrarCaja(false)}
+              className="focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Cancelar cierre de caja"
             >
               Cancelar
             </Button>
-            <Button color="danger" onPress={cerrarCaja} isLoading={isSaving}>
+            <Button 
+              color="danger" 
+              onPress={cerrarCaja} 
+              isLoading={isSaving}
+              className="focus:outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2"
+              aria-label="Confirmar cierre de caja"
+            >
               Cerrar Caja
             </Button>
           </ModalFooter>
@@ -1097,10 +1258,18 @@ export default function CajaPage() {
             <Button
               variant="light"
               onPress={() => setOpenModalGasto(false)}
+              className="focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Cancelar agregar gasto"
             >
               Cancelar
             </Button>
-            <Button color="danger" onPress={agregarGasto} isLoading={isSaving}>
+            <Button 
+              color="danger" 
+              onPress={agregarGasto} 
+              isLoading={isSaving}
+              className="focus:outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2"
+              aria-label="Confirmar agregar gasto"
+            >
               Agregar Gasto
             </Button>
           </ModalFooter>
@@ -1135,6 +1304,25 @@ export default function CajaPage() {
                     </div>
                   )}
                 </div>
+                <Divider />
+                {cajaActual.UsuarioApertura && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Usuario Apertura</p>
+                      <p className="font-semibold">
+                        {cajaActual.UsuarioApertura.NombreCompleto || cajaActual.UsuarioApertura.Nombre}
+                      </p>
+                    </div>
+                    {cajaActual.UsuarioCierre && (
+                      <div>
+                        <p className="text-sm text-gray-500">Usuario Cierre</p>
+                        <p className="font-semibold">
+                          {cajaActual.UsuarioCierre.NombreCompleto || cajaActual.UsuarioCierre.Nombre}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <Divider />
                 <div>
                   <h3 className="font-semibold mb-3">Resumen por Tipo de Pago</h3>
@@ -1186,6 +1374,27 @@ export default function CajaPage() {
                     </div>
                   </div>
                 </div>
+                {cajaActual.DetalleCaja && cajaActual.DetalleCaja.length > 0 && (
+                  <>
+                    <Divider />
+                    <div>
+                      <h3 className="font-semibold mb-3">Detalle por Tipo de Pago (DetalleCaja)</h3>
+                      <div className="space-y-2">
+                        {cajaActual.DetalleCaja.map((detalle) => (
+                          <div key={detalle.Id} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                            <span className="text-sm">{nombreTipoPago(detalle.TipoPago)}:</span>
+                            <span className="font-semibold">
+                              ${Number(detalle.Monto).toLocaleString("es-AR", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </ModalBody>

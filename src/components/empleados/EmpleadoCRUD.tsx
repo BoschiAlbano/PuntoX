@@ -104,7 +104,7 @@ export default function EmpleadoCRUD({
 
   const columns: Column[] = [
     { uid: "nombreCompleto", name: "NOMBRE", sortable: true },
-    { uid: "email", name: "CORREO", sortable: true },
+    { uid: "username", name: "USUARIO", sortable: true },
     { uid: "rolNombre", name: "ROL", sortable: false },
     { uid: "legajo", name: "LEGAJO", sortable: true },
     { uid: "localidad", name: "LOCALIDAD", sortable: false },
@@ -120,8 +120,12 @@ export default function EmpleadoCRUD({
             {item.nombreCompleto}
           </span>
         );
-      case "email":
-        return <span className="text-gray-600 text-sm">{item.email}</span>;
+      case "username":
+        return (
+          <span className="text-gray-600 text-sm font-mono">
+            {item.username || item.email || "-"}
+          </span>
+        );
       case "rolNombre":
         const rolColor =
           item.rolTipo === "ADMINISTRADOR" ? "primary" : "secondary";
@@ -230,7 +234,7 @@ export default function EmpleadoCRUD({
       isError={isError}
       search={search}
       onSearchChange={setSearch}
-      searchPlaceholder="Buscar por nombre, correo o DNI..."
+      searchPlaceholder="Buscar por nombre, usuario o DNI..."
       page={page}
       onPageChange={setPage}
       paginationMeta={paginationMeta}

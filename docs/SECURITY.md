@@ -2,6 +2,8 @@
 
 Documentación sobre correcciones de seguridad, mejores prácticas y recomendaciones.
 
+> 📖 **Ver también**: [Documentación completa de CSRF](./CSRF_IMPLEMENTATION.md) - Guía detallada sobre implementación de tokens CSRF
+
 ---
 
 ## ✅ Correcciones Implementadas
@@ -135,8 +137,10 @@ catch (error) {
 - ✅ **Multi-tenancy:** Aislamiento completo por `TenantId`
 - ✅ **Autenticación:** Supabase Auth con JWT
 - ✅ **Permisos:** Sistema granular implementado
-- ⚠️ **Rate limiting:** Pendiente
-- ⚠️ **Logging de seguridad:** Pendiente
+- ✅ **Rate limiting:** Implementado en servidor (ver `src/lib/security/rateLimiter.ts`)
+- ✅ **CSRF Protection:** Implementado, pendiente de integración (ver [CSRF_IMPLEMENTATION.md](./CSRF_IMPLEMENTATION.md))
+- ✅ **Detección de actividad sospechosa:** Implementado (ver `src/lib/security/suspiciousActivity.ts`)
+- ✅ **Logging de seguridad:** Implementado (tablas `IntentoLogin`, `AlertaSeguridad`)
 - ⚠️ **Validación completa:** En progreso
 
 ---
@@ -150,5 +154,25 @@ catch (error) {
 
 ---
 
-**Última actualización:** Diciembre 2024
+---
+
+## 🔐 Protección CSRF
+
+**Estado:** ✅ Implementado, pendiente de integración
+
+La protección CSRF está completamente implementada y lista para usar. Ver documentación completa en [CSRF_IMPLEMENTATION.md](./CSRF_IMPLEMENTATION.md).
+
+**Componentes implementados:**
+- ✅ Tabla `TokenCsrf` en base de datos
+- ✅ Funciones de generación y validación (`src/lib/security/csrf.ts`)
+- ✅ Limpieza automática de tokens expirados
+
+**Pendiente:**
+- ⚠️ Crear endpoint `/api/csrf-token` para generar tokens
+- ⚠️ Integrar en formularios críticos (configuración, empleados)
+- ⚠️ Validar tokens en endpoints que modifiquen datos
+
+---
+
+**Última actualización:** Enero 2025
 

@@ -126,6 +126,16 @@ export async function GET(req: NextRequest) {
         );
       }
 
+      // Formatear nombre completo del usuario
+      const formatearNombreUsuario = (usuario: any) => {
+        if (!usuario) return null;
+        const persona = usuario.Persona_Empleado?.[0]?.Persona;
+        if (persona) {
+          return `${persona.Nombre} ${persona.Apellido}`.trim();
+        }
+        return usuario.Nombre || null;
+      };
+
       return NextResponse.json({
         caja: {
           ...caja,
@@ -133,6 +143,16 @@ export async function GET(req: NextRequest) {
           TenantId: Number(caja.TenantId),
           UsuarioAperturaId: Number(caja.UsuarioAperturaId),
           UsuarioCierreId: caja.UsuarioCierreId ? Number(caja.UsuarioCierreId) : null,
+          UsuarioApertura: caja.Usuario_Caja_UsuarioAperturaIdToUsuario ? {
+            Id: Number(caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Id),
+            Nombre: caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Nombre,
+            NombreCompleto: formatearNombreUsuario(caja.Usuario_Caja_UsuarioAperturaIdToUsuario),
+          } : null,
+          UsuarioCierre: caja.Usuario_Caja_UsuarioCierreIdToUsuario ? {
+            Id: Number(caja.Usuario_Caja_UsuarioCierreIdToUsuario.Id),
+            Nombre: caja.Usuario_Caja_UsuarioCierreIdToUsuario.Nombre,
+            NombreCompleto: formatearNombreUsuario(caja.Usuario_Caja_UsuarioCierreIdToUsuario),
+          } : null,
           DetalleCaja: caja.DetalleCaja.map((d) => ({
             ...d,
             Id: Number(d.Id),
@@ -235,6 +255,16 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ caja: null });
       }
 
+      // Formatear nombre completo del usuario
+      const formatearNombreUsuario = (usuario: any) => {
+        if (!usuario) return null;
+        const persona = usuario.Persona_Empleado?.[0]?.Persona;
+        if (persona) {
+          return `${persona.Nombre} ${persona.Apellido}`.trim();
+        }
+        return usuario.Nombre || null;
+      };
+
       return NextResponse.json({
         caja: {
           ...caja,
@@ -242,6 +272,12 @@ export async function GET(req: NextRequest) {
           TenantId: Number(caja.TenantId),
           UsuarioAperturaId: Number(caja.UsuarioAperturaId),
           UsuarioCierreId: null,
+          UsuarioApertura: caja.Usuario_Caja_UsuarioAperturaIdToUsuario ? {
+            Id: Number(caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Id),
+            Nombre: caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Nombre,
+            NombreCompleto: formatearNombreUsuario(caja.Usuario_Caja_UsuarioAperturaIdToUsuario),
+          } : null,
+          UsuarioCierre: null,
           DetalleCaja: caja.DetalleCaja.map((d) => ({
             ...d,
             Id: Number(d.Id),
@@ -535,6 +571,16 @@ export async function PATCH(req: NextRequest) {
         },
       });
 
+      // Formatear nombre completo del usuario
+      const formatearNombreUsuario = (usuario: any) => {
+        if (!usuario) return null;
+        const persona = usuario.Persona_Empleado?.[0]?.Persona;
+        if (persona) {
+          return `${persona.Nombre} ${persona.Apellido}`.trim();
+        }
+        return usuario.Nombre || null;
+      };
+
       return NextResponse.json({
         caja: {
           ...cajaCerrada,
@@ -542,6 +588,11 @@ export async function PATCH(req: NextRequest) {
           TenantId: Number(cajaCerrada.TenantId),
           UsuarioAperturaId: Number(cajaCerrada.UsuarioAperturaId),
           UsuarioCierreId: Number(cajaCerrada.UsuarioCierreId),
+          UsuarioCierre: cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario ? {
+            Id: Number(cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario.Id),
+            Nombre: cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario.Nombre,
+            NombreCompleto: formatearNombreUsuario(cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario),
+          } : null,
         },
       });
     } else if (accion === "gasto") {

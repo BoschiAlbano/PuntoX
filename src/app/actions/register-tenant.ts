@@ -3,30 +3,83 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { actualizarPermisosEnJWT } from "@/lib/auth/updateUserPermissions";
+import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+
+// Helper para convertir cadenas vacías a undefined
+const emptyStringToUndefined = z.preprocess(
+  (val) => (val === "" || val === null ? undefined : val),
+  z.string().min(2).optional()
+);
 
 const registerTenantSchema = z.object({
   tenantName: z.string().min(2),
-  tenantEmail: z.string().email().optional().or(z.literal("")),
+  tenantEmail: z.union([z.string().email(), z.literal("")]).optional(),
   adminNombre: z.string().min(1),
   adminApellido: z.string().min(1),
   adminEmail: z.string().email(),
+  adminUsername: emptyStringToUndefined, // Opcional: se genera desde email si no se proporciona
   adminPassword: z.string().min(6),
+  // Campos alternativos del otro formulario
+  storeName: z.string().min(2).optional(),
+  storeEmail: z.union([z.string().email(), z.literal("")]).optional(),
+  firstName: z.string().min(1).optional(),
+  lastName: z.string().min(1).optional(),
+  email: z.string().email().optional(),
+  username: emptyStringToUndefined,
+  password: z.string().min(6).optional(),
 });
 
 export async function registerTenant(formData: FormData) {
-  const parseResult = registerTenantSchema.safeParse({
-    tenantName: formData.get("tenantName"),
-    tenantEmail: formData.get("tenantEmail"),
-    adminNombre: formData.get("adminNombre"),
-    adminApellido: formData.get("adminApellido"),
-    adminEmail: formData.get("adminEmail"),
-    adminPassword: formData.get("adminPassword"),
-  });
-
-  if (!parseResult.success) {
+  // Verificar que solo SuperAdmin pueda crear tenants
+  try {
+    await requireSuperAdmin();
+  } catch (error) {
     return {
       ok: false as const,
-      error: "Datos inválidos en el formulario.",
+      error: "Solo los SuperAdmin pueden crear nuevos tenants.",
+    };
+  }
+
+  // Helper para obtener valores del formData y convertir null/empty a undefined
+  const getValue = (key: string, altKey?: string): string | undefined => {
+    const value = formData.get(key) || (altKey ? formData.get(altKey) : null);
+    const strValue = value ? String(value).trim() : "";
+    return strValue.length > 0 ? strValue : undefined;
+  };
+
+  // Manejar ambos formatos de formulario
+  const rawData = {
+    tenantName: getValue("tenantName", "storeName"),
+    tenantEmail: getValue("tenantEmail", "storeEmail") || "",
+    adminNombre: getValue("adminNombre", "firstName"),
+    adminApellido: getValue("adminApellido", "lastName"),
+    adminEmail: getValue("adminEmail", "email"),
+    adminUsername: getValue("adminUsername", "username") || "",
+    adminPassword: getValue("adminPassword", "password"),
+    // Campos alternativos
+    storeName: getValue("storeName"),
+    storeEmail: getValue("storeEmail") || "",
+    firstName: getValue("firstName"),
+    lastName: getValue("lastName"),
+    email: getValue("email"),
+    username: getValue("username") || "",
+    password: getValue("password"),
+  };
+
+  const parseResult = registerTenantSchema.safeParse(rawData);
+
+  if (!parseResult.success) {
+    const errorIssues = parseResult.error.issues || [];
+    console.error("Error de validación:", JSON.stringify(errorIssues, null, 2));
+    const firstError = errorIssues[0];
+    const errorMessage = firstError 
+      ? `Error en ${firstError.path.join(".")}: ${firstError.message}`
+      : "Datos inválidos en el formulario.";
+    
+    return {
+      ok: false as const,
+      error: errorMessage,
     };
   }
 
@@ -36,8 +89,20 @@ export async function registerTenant(formData: FormData) {
     adminNombre,
     adminApellido,
     adminEmail,
+    adminUsername,
     adminPassword,
   } = parseResult.data;
+
+  // Generar username desde email si no se proporciona
+  // Normalizar: lowercase, sin espacios, solo caracteres permitidos
+  const usernameRaw = (adminUsername && adminUsername.trim().length > 0) 
+    ? adminUsername 
+    : adminEmail.split("@")[0];
+  const usernameFinal = usernameRaw
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "") // Eliminar espacios
+    .replace(/[^a-z0-9._-]/g, ""); // Solo permitir letras, números, punto, guion bajo y guion
 
   try {
     // Creo el usuario en supabase
@@ -100,10 +165,23 @@ export async function registerTenant(formData: FormData) {
         },
       });
 
+      // Verificar que el username no esté en uso
+      const existingUsername = await tx.usuario.findFirst({
+        where: {
+          Nombre: usernameFinal,
+          TenantId: newTenant.Id,
+          EstaEliminado: false,
+        },
+      });
+
+      if (existingUsername) {
+        throw new Error(`El nombre de usuario "${usernameFinal}" ya está en uso. Por favor, elige otro.`);
+      }
+
       const usuario = await tx.usuario.create({
         data: {
           EmpleadoId: persona.Id,
-          Nombre: adminEmail,
+          Nombre: usernameFinal,
           EstaBloqueado: false,
           EstaEliminado: false,
           AuthUserId: authUserId,
@@ -148,40 +226,50 @@ export async function registerTenant(formData: FormData) {
 
       // Crear y asignar todos los permisos básicos al rol de administrador
       for (const permisoData of permisosBasicos) {
-        // Crear o actualizar el permiso
-        const permiso = await tx.permiso.upsert({
-          where: {
-            Clave_TenantId: {
-              Clave: permisoData.clave,
-              TenantId: newTenant.Id,
+        try {
+          // Crear o actualizar el permiso
+          const permiso = await tx.permiso.upsert({
+            where: {
+              Clave_TenantId: {
+                Clave: permisoData.clave,
+                TenantId: newTenant.Id,
+              },
             },
-          },
-          update: { EstaEliminado: false },
-          create: {
-            Clave: permisoData.clave,
-            Descripcion: permisoData.descripcion,
-            TenantId: newTenant.Id,
-            EstaEliminado: false,
-          },
-        });
-
-        // Verificar si el permiso ya está asignado al perfil
-        const permisoAsignado = await tx.perfilPermiso.findFirst({
-          where: {
-            PerfilId: perfilAdmin.Id,
-            PermisoId: permiso.Id,
-          },
-        });
-
-        // Asignar el permiso al perfil de administrador si no está asignado
-        if (!permisoAsignado) {
-          await tx.perfilPermiso.create({
-            data: {
-              PerfilId: perfilAdmin.Id,
-              PermisoId: permiso.Id,
+            update: { EstaEliminado: false },
+            create: {
+              Clave: permisoData.clave,
+              Descripcion: permisoData.descripcion,
               TenantId: newTenant.Id,
+              EstaEliminado: false,
             },
           });
+
+          // Verificar si el permiso ya está asignado al perfil
+          const permisoAsignado = await tx.perfilPermiso.findFirst({
+            where: {
+              PerfilId: perfilAdmin.Id,
+              PermisoId: permiso.Id,
+            },
+          });
+
+          // Asignar el permiso al perfil de administrador si no está asignado
+          if (!permisoAsignado) {
+            await tx.perfilPermiso.create({
+              data: {
+                PerfilId: perfilAdmin.Id,
+                PermisoId: permiso.Id,
+                TenantId: newTenant.Id,
+              },
+            });
+            console.log(`Permiso "${permisoData.clave}" creado y asignado al perfil Administrador`);
+          } else {
+            console.log(`Permiso "${permisoData.clave}" ya estaba asignado al perfil Administrador`);
+          }
+        } catch (error) {
+          console.error(`Error creando permiso "${permisoData.clave}":`, error);
+          // Continuar con los demás permisos aunque uno falle
+          // Pero lanzar el error si es crítico
+          throw error;
         }
       }
 
@@ -252,6 +340,19 @@ export async function registerTenant(formData: FormData) {
           "No se pudo actualizar el meta del usuario en Supabase: " +
           (metaError?.message ?? "error desconocido"),
       };
+    }
+
+    // Actualizar permisos en el JWT del administrador recién creado
+    // Esto asegura que el usuario tenga acceso inmediato a todas las funcionalidades
+    try {
+      await actualizarPermisosEnJWT(authUserId);
+    } catch (permisosError) {
+      console.error(
+        "Error actualizando permisos en JWT (no crítico):",
+        permisosError
+      );
+      // No fallamos la creación del tenant si falla la actualización de permisos
+      // El usuario puede cerrar sesión y volver a iniciar sesión para actualizar los permisos
     }
 
     return {
