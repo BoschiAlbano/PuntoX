@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { requirePermiso } from "@/lib/requirePermiso";
 import { handleError } from "@/lib/errors/handler";
-import { TIPO_COMPROBANTE, TIPO_PAGO } from "@/lib/constants/comprobantes";
+import {
+  TIPO_COMPROBANTE_COMPRA,
+  TIPO_COMPROBANTE_VENTA,
+  TIPO_PAGO,
+} from "@/lib/constants/comprobantes";
 
 /**
  * GET /api/analiticas/graficas
@@ -43,11 +47,11 @@ export async function GET(req: NextRequest) {
             },
             TipoComprobante: {
               in: [
-                TIPO_COMPROBANTE.FACTURA_A,
-                TIPO_COMPROBANTE.FACTURA_B,
-                TIPO_COMPROBANTE.FACTURA_C,
-                TIPO_COMPROBANTE.PRESUPUESTO,
-                TIPO_COMPROBANTE.REMITO,
+                TIPO_COMPROBANTE_VENTA.FACTURA_A,
+                TIPO_COMPROBANTE_VENTA.FACTURA_B,
+                TIPO_COMPROBANTE_VENTA.FACTURA_C,
+                TIPO_COMPROBANTE_VENTA.PRESUPUESTO,
+                TIPO_COMPROBANTE_VENTA.REMITO,
               ],
             },
           },
@@ -104,9 +108,9 @@ export async function GET(req: NextRequest) {
           datosAgrupados[key].descuentos += Number(comp.Descuento);
           datosAgrupados[key].todos += 1;
           if (
-            comp.TipoComprobante === TIPO_COMPROBANTE.FACTURA_A ||
-            comp.TipoComprobante === TIPO_COMPROBANTE.FACTURA_B ||
-            comp.TipoComprobante === TIPO_COMPROBANTE.FACTURA_C
+            comp.TipoComprobante === TIPO_COMPROBANTE_VENTA.FACTURA_A ||
+            comp.TipoComprobante === TIPO_COMPROBANTE_VENTA.FACTURA_B ||
+            comp.TipoComprobante === TIPO_COMPROBANTE_VENTA.FACTURA_C
           ) {
             datosAgrupados[key].facturas += 1;
           }

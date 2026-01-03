@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { requirePermiso } from "@/lib/requirePermiso";
 import { handleError } from "@/lib/errors/handler";
-import { TIPO_COMPROBANTE } from "@/lib/constants/comprobantes";
+import { TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
 
 /**
  * GET /api/analiticas/kpis
@@ -51,11 +51,11 @@ export async function GET(req: NextRequest) {
         },
         TipoComprobante: {
           in: [
-            TIPO_COMPROBANTE.FACTURA_A,
-            TIPO_COMPROBANTE.FACTURA_B,
-            TIPO_COMPROBANTE.FACTURA_C,
-            TIPO_COMPROBANTE.PRESUPUESTO,
-            TIPO_COMPROBANTE.REMITO,
+            TIPO_COMPROBANTE_VENTA.FACTURA_A,
+            TIPO_COMPROBANTE_VENTA.FACTURA_B,
+            TIPO_COMPROBANTE_VENTA.FACTURA_C,
+            TIPO_COMPROBANTE_VENTA.PRESUPUESTO,
+            TIPO_COMPROBANTE_VENTA.REMITO,
           ],
         },
       },
@@ -75,11 +75,11 @@ export async function GET(req: NextRequest) {
         },
         TipoComprobante: {
           in: [
-            TIPO_COMPROBANTE.FACTURA_A,
-            TIPO_COMPROBANTE.FACTURA_B,
-            TIPO_COMPROBANTE.FACTURA_C,
-            TIPO_COMPROBANTE.PRESUPUESTO,
-            TIPO_COMPROBANTE.REMITO,
+            TIPO_COMPROBANTE_VENTA.FACTURA_A,
+            TIPO_COMPROBANTE_VENTA.FACTURA_B,
+            TIPO_COMPROBANTE_VENTA.FACTURA_C,
+            TIPO_COMPROBANTE_VENTA.PRESUPUESTO,
+            TIPO_COMPROBANTE_VENTA.REMITO,
           ],
         },
       },
@@ -162,11 +162,11 @@ export async function GET(req: NextRequest) {
         },
         TipoComprobante: {
           in: [
-            TIPO_COMPROBANTE.FACTURA_A,
-            TIPO_COMPROBANTE.FACTURA_B,
-            TIPO_COMPROBANTE.FACTURA_C,
-            TIPO_COMPROBANTE.PRESUPUESTO,
-            TIPO_COMPROBANTE.REMITO,
+            TIPO_COMPROBANTE_VENTA.FACTURA_A,
+            TIPO_COMPROBANTE_VENTA.FACTURA_B,
+            TIPO_COMPROBANTE_VENTA.FACTURA_C,
+            TIPO_COMPROBANTE_VENTA.PRESUPUESTO,
+            TIPO_COMPROBANTE_VENTA.REMITO,
           ],
         },
       },
@@ -180,7 +180,7 @@ export async function GET(req: NextRequest) {
           gte: fechaDesde,
           lte: fechaHasta,
         },
-        TipoComprobante: TIPO_COMPROBANTE.NOTA_CREDITO,
+        TipoComprobante: TIPO_COMPROBANTE_VENTA.NOTA_CREDITO,
       },
     });
 
@@ -194,11 +194,11 @@ export async function GET(req: NextRequest) {
         },
         TipoComprobante: {
           in: [
-            TIPO_COMPROBANTE.FACTURA_A,
-            TIPO_COMPROBANTE.FACTURA_B,
-            TIPO_COMPROBANTE.FACTURA_C,
-            TIPO_COMPROBANTE.PRESUPUESTO,
-            TIPO_COMPROBANTE.REMITO,
+            TIPO_COMPROBANTE_VENTA.FACTURA_A,
+            TIPO_COMPROBANTE_VENTA.FACTURA_B,
+            TIPO_COMPROBANTE_VENTA.FACTURA_C,
+            TIPO_COMPROBANTE_VENTA.PRESUPUESTO,
+            TIPO_COMPROBANTE_VENTA.REMITO,
           ],
         },
       },
@@ -212,7 +212,7 @@ export async function GET(req: NextRequest) {
           gte: fechaDesdeAnterior,
           lte: fechaHastaAnterior,
         },
-        TipoComprobante: TIPO_COMPROBANTE.NOTA_CREDITO,
+        TipoComprobante: TIPO_COMPROBANTE_VENTA.NOTA_CREDITO,
       },
     });
 

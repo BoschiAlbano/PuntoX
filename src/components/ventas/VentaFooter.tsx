@@ -17,6 +17,7 @@ import {
   TableCell,
   CardHeader,
   addToast,
+  CardFooter,
 } from "@heroui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash2, Plus } from "lucide-react";
@@ -63,11 +64,7 @@ export default function VentaFooter({
     }
   }, [items]);
 
-  // Update default amount when payments change or total changes
   useEffect(() => {
-    // Only auto-set amount if there's a remainder and we are in a "fresh" state for the input
-    // or simply always suggest the remainder?
-    // User experience: if I just added a payment, I want to add the rest.
     if (restante > 0.001) {
       setCurrentMonto(restante.toFixed(2));
     } else {
@@ -107,7 +104,9 @@ export default function VentaFooter({
         description: `Venta #${data.comprobante.numero} registrada con éxito`,
       });
       queryClient.invalidateQueries({ queryKey: ["productos"] });
-      window.location.reload();
+      handleLimpiar();
+      setIsSaving(false);
+      // window.location.reload();
     },
     onError: (err: any) => {
       addToast({
@@ -138,7 +137,7 @@ export default function VentaFooter({
     const payload = {
       tipoComprobante,
       clienteId: cliente?.id || 0,
-      puestoTrabajoId: 1, // HARDCODED DEFAULT
+      // puestoTrabajoId: 1, // HARDCODED DEFAULT
       detalles: items.map((i) => ({
         articuloId: i.Id,
         codigo: i.Codigo?.toString() || "",
@@ -147,7 +146,7 @@ export default function VentaFooter({
         precio: i.precio,
         iva: Number(i.Iva?.Porcentaje || 0),
         subtotal: i.subtotal,
-        costo: i.Precio?.PrecioCosto || 0,
+        costo: Number(i.Precio?.PrecioCosto || 0),
       })),
       formasPago: pagos.map((p) => ({
         tipoPago: p.tipoPago,
@@ -180,27 +179,12 @@ export default function VentaFooter({
   return (
     <section className="flex-none w-full md:w-[320px] lg:w-[360px] flex flex-col gap-4 h-full">
       {/* Payment Card */}
-      <Card className="border-t-1 border-default-200 bg-content2 dark:bg-content1 flex-1 min-h-[350px]">
-        <CardHeader className="pb-0 pt-4 px-4 flex-col items-start">
+      <Card className="border-default-200 bg-[#ffffff] flex-1 min-h-[350px]">
+        <CardHeader className="pb-4 pt-4 px-4 flex-col items-start">
           <div className="font-bold text-large absolute top-0 left-0 flex items-center gap-2 p-2">
             <div className=" h-2 w-2 rounded-full bg-[#67afc3]"></div>
             <p className="text-xs text-default-500">Formas de Pago</p>
           </div>
-          <div className="flex justify-between w-full mt-2 bg-default-100 p-2 rounded-lg">
-            <span className="text-small text-default-500">Restante:</span>
-            <span
-              className={`font-bold ${
-                restante > 0.01 ? "text-warning" : "text-[#67afc3]"
-              }`}
-            >
-              ${Math.max(0, restante).toFixed(2)}
-            </span>
-          </div>
-          {restante < -0.01 && (
-            <div className="w-full text-right text-xs text-[#67afc3] font-bold mt-1">
-              Vuelto: ${Math.abs(restante).toFixed(2)}
-            </div>
-          )}
         </CardHeader>
         <CardBody className="overflow-hidden">
           {/* Inputs */}
@@ -220,9 +204,9 @@ export default function VentaFooter({
               </SelectItem>
               <SelectItem
                 key={TIPO_PAGO.TRANSFERENCIA}
-                textValue="Mercado Pago"
+                textValue="Transferencia"
               >
-                Mercado Pago
+                Transferencia
               </SelectItem>
               <SelectItem key={TIPO_PAGO.CHEQUE} textValue="Cheque">
                 Cheque
@@ -262,8 +246,9 @@ export default function VentaFooter({
               aria-label="Pagos"
               removeWrapper
               classNames={{
-                th: "bg-transparent h-8 text-tiny",
+                th: "bg-transparent h-8 text-tiny ",
                 td: "py-1 text-small",
+                tr: "hover:bg-default-100",
               }}
               isCompact
             >
@@ -297,10 +282,33 @@ export default function VentaFooter({
             </Table>
           </div>
         </CardBody>
+        <CardFooter>
+          <div className="flex justify-between w-full mt-2 p-2 rounded-lg">
+            <span className="text-small text-default-500">Restante:</span>
+            <span
+              className={`font-bold ${
+                restante > 0.01 ? "text-warning" : "text-[#67afc3]"
+              }`}
+            >
+              ${Math.max(0, restante).toFixed(2)}
+            </span>
+          </div>
+          {restante < -0.01 && (
+            <div className="w-full text-right text-xs text-[#67afc3] font-bold mt-1">
+              Vuelto: ${Math.abs(restante).toFixed(2)}
+            </div>
+          )}
+        </CardFooter>
       </Card>
 
       {/* Totals Card */}
-      <Card className="border-t-1 border-default-200 bg-content2 dark:bg-content1 flex-none">
+      <Card className="border-t-1 border-default-200 bg-content1 dark:bg-content1 flex-none">
+        <CardHeader className="pb-4 pt-4 px-4 flex-col items-start">
+          <div className="font-bold text-large absolute top-0 left-0 flex items-center gap-2 p-2">
+            <div className=" h-2 w-2 rounded-full bg-[#67afc3]"></div>
+            <p className="text-xs text-default-500">Totales</p>
+          </div>
+        </CardHeader>
         <CardBody className="flex flex-col gap-3">
           <div className="flex flex-col gap-2">
             <div className="flex justify-between text-sm text-default-500">

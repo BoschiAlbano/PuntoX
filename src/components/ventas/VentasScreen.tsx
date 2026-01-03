@@ -7,7 +7,7 @@ import ProductSearch from "./ProductSearch";
 import VentaGrid from "./VentaGrid";
 import VentaFooter from "./VentaFooter";
 import ClienteSearch from "./ClienteSearch";
-import { TIPO_COMPROBANTE } from "@/lib/constants/comprobantes";
+import { TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
 import { Producto } from "@/lib/validations/producto.schema";
 import { Cliente } from "@/lib/validations/cliente.schema";
 
@@ -30,7 +30,7 @@ export default function VentasScreen() {
     Nombre: "Consumidor Final",
   });
   const [tipoComprobante, setTipoComprobante] = useState<number>(
-    TIPO_COMPROBANTE.FACTURA_B
+    TIPO_COMPROBANTE_VENTA.FACTURA_B
   );
 
   // Removed tipoPago state as it is now handled in the modal
@@ -170,7 +170,7 @@ export default function VentasScreen() {
       Id: 0,
       Nombre: "Consumidor Final",
     });
-    setTipoComprobante(TIPO_COMPROBANTE.FACTURA_B);
+    setTipoComprobante(TIPO_COMPROBANTE_VENTA.FACTURA_B);
     setListaPrecios(1);
     setDescuentoGeneral(0);
   };
@@ -179,85 +179,86 @@ export default function VentasScreen() {
     <div className="flex flex-col h-full gap-4 p-2">
       {/* Header: Client & Config */}
 
-      <section className="flex-none flex flex-col md:flex-row gap-4 items-center justify-between w-full">
-        <ProductSearch onProductSelect={handleAddItem} />
-        <div className="flex flex-col md:flex-row gap-4 items-center w-auto">
-          <ClienteSearch selected={cliente} onSelect={setCliente} />
-          <div className="flex gap-4 w-full md:w-auto">
-            <Select
-              label="Comprobante"
-              size="sm"
-              className="w-40"
-              selectedKeys={[tipoComprobante.toString()]}
-              value={tipoComprobante.toString()}
-              onChange={(e) => setTipoComprobante(Number(e.target.value))}
-            >
-              <SelectItem
-                key={TIPO_COMPROBANTE.FACTURA_A}
-                textValue={"Factura A"}
-              >
-                Factura A
-              </SelectItem>
-              <SelectItem
-                key={TIPO_COMPROBANTE.FACTURA_B}
-                textValue={"Factura B"}
-              >
-                Factura B
-              </SelectItem>
-              <SelectItem
-                key={TIPO_COMPROBANTE.FACTURA_C}
-                textValue={"Factura C"}
-              >
-                Factura C
-              </SelectItem>
-              <SelectItem
-                key={TIPO_COMPROBANTE.PRESUPUESTO}
-                textValue={"Presupuesto"}
-              >
-                Presupuesto
-              </SelectItem>
-              <SelectItem key={TIPO_COMPROBANTE.REMITO} textValue={"Remito"}>
-                Remito
-              </SelectItem>
-              <SelectItem
-                key={TIPO_COMPROBANTE.NOTA_CREDITO}
-                textValue={"Nota de Credito"}
-              >
-                Nota de Credito
-              </SelectItem>
-              <SelectItem
-                key={TIPO_COMPROBANTE.NOTA_DEBITO}
-                textValue={"Nota de Debito"}
-              >
-                Nota de Debito
-              </SelectItem>
-            </Select>
-
-            <Select
-              label="Lista Precios"
-              size="sm"
-              className="w-40"
-              selectedKeys={[listaPrecios.toString()]}
-              onChange={(e) => setListaPrecios(Number(e.target.value) as 1 | 2)}
-            >
-              <SelectItem key="1" textValue="L1: General">
-                L1: General
-              </SelectItem>
-              <SelectItem key="2" textValue="L2: Mayorista">
-                L2: Mayorista
-              </SelectItem>
-            </Select>
-          </div>
-        </div>
-      </section>
-
       <div className="flex-1 flex flex-row justify-between gap-4 min-h-0">
-        {/* Grilla de items */}
-        <VentaGrid
-          items={items}
-          onUpdateQuantity={handleUpdateQuantity}
-          onRemoveItem={handleRemoveItem}
-        />
+        <section className=" flex flex-col flex-1 gap-4">
+          <section className="flex-none flex flex-col md:flex-row gap-4 items-center justify-between w-full">
+            <ProductSearch onProductSelect={handleAddItem} />
+            <div className="flex flex-col md:flex-row gap-4 items-center w-auto">
+              <ClienteSearch selected={cliente} onSelect={setCliente} />
+              <div className="flex gap-4 w-full md:w-auto">
+                <Select
+                  label="Comprobante"
+                  size="sm"
+                  className="w-40"
+                  selectedKeys={[tipoComprobante.toString()]}
+                  value={tipoComprobante.toString()}
+                  onChange={(e) => setTipoComprobante(Number(e.target.value))}
+                >
+                  <SelectItem
+                    key={TIPO_COMPROBANTE_VENTA.FACTURA_A}
+                    textValue={"Factura A"}
+                  >
+                    Factura A
+                  </SelectItem>
+                  <SelectItem
+                    key={TIPO_COMPROBANTE_VENTA.FACTURA_B}
+                    textValue={"Factura B"}
+                  >
+                    Factura B
+                  </SelectItem>
+                  <SelectItem
+                    key={TIPO_COMPROBANTE_VENTA.FACTURA_C}
+                    textValue={"Factura C"}
+                  >
+                    Factura C
+                  </SelectItem>
+                  <SelectItem
+                    key={TIPO_COMPROBANTE_VENTA.PRESUPUESTO}
+                    textValue={"Presupuesto"}
+                  >
+                    Presupuesto
+                  </SelectItem>
+                  <SelectItem
+                    key={TIPO_COMPROBANTE_VENTA.REMITO}
+                    textValue={"Remito"}
+                  >
+                    Remito
+                  </SelectItem>
+                  <SelectItem
+                    key={TIPO_COMPROBANTE_VENTA.NOTA_CREDITO}
+                    textValue={"Nota de Credito"}
+                  >
+                    Nota de Credito
+                  </SelectItem>
+                </Select>
+
+                <Select
+                  label="Lista Precios"
+                  size="sm"
+                  className="w-40"
+                  selectedKeys={[listaPrecios.toString()]}
+                  onChange={(e) =>
+                    setListaPrecios(Number(e.target.value) as 1 | 2)
+                  }
+                >
+                  <SelectItem key="1" textValue="L1: General">
+                    L1: General
+                  </SelectItem>
+                  <SelectItem key="2" textValue="L2: Mayorista">
+                    L2: Mayorista
+                  </SelectItem>
+                </Select>
+              </div>
+            </div>
+          </section>
+
+          {/* Grilla de items */}
+          <VentaGrid
+            items={items}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveItem={handleRemoveItem}
+          />
+        </section>
 
         {/* Footer: Totales y Acciones */}
         <VentaFooter
