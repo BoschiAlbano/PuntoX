@@ -17,18 +17,32 @@ export function usePagePermission() {
   const pathname = usePathname();
 
   // Usar React Query para cachear permisos (se cachea por 5 minutos)
-  const { data: permisosData, isLoading } = useQuery({
+  const { data: permisosData, isLoading, error } = useQuery({
     queryKey: ["user-permissions"],
     queryFn: async () => {
-      const res = await fetch("/api/permisos", { cache: "no-store" });
+      const res = await fetch("/api/permisos", { 
+        cache: "no-store",
+        credentials: "include",
+      });
       if (!res.ok) {
-        throw new Error("Error al obtener permisos");
+        // Si es 401, el usuario no está autenticado
+        if (res.status === 401) {
+          throw new Error("No autenticado");
+        }
+        // Para otros errores, retornar un objeto por defecto
+        console.error("Error al obtener permisos:", res.status, res.statusText);
+        return {
+          permisos: [],
+          isSuperAdmin: false,
+          roles: [],
+        };
       }
       return res.json();
     },
     enabled: status === "authenticated" && !!user,
     staleTime: 5 * 60 * 1000, // 5 minutos de cache
     retry: 1,
+    retryOnMount: true,
   });
 
   useEffect(() => {
@@ -43,13 +57,20 @@ export function usePagePermission() {
       return;
     }
 
-    // Esperar a que los permisos se carguen
-    if (!permisosData) {
+    // Si hay un error de autenticación, redirigir a login
+    if (error && error.message === "No autenticado") {
+      router.push("/signin");
       return;
     }
 
-    const permisosUsuario = Array.isArray(permisosData.permisos) ? permisosData.permisos : [];
-    const isSuperAdmin = permisosData.isSuperAdmin === true;
+    // Esperar a que los permisos se carguen (permitir acceso mientras carga si hay datos por defecto)
+    if (!permisosData && !error) {
+      return;
+    }
+
+    // Si no hay datos de permisos (por error), usar valores por defecto
+    const permisosUsuario = Array.isArray(permisosData?.permisos) ? permisosData.permisos : [];
+    const isSuperAdmin = permisosData?.isSuperAdmin === true;
 
     // SuperAdmin tiene acceso a TODO - no redirigir nunca
     if (isSuperAdmin) {
@@ -82,7 +103,7 @@ export function usePagePermission() {
         router.push("/empleados");
       }
     }
-  }, [user, status, pathname, router, permisosData, isLoading]);
+  }, [user, status, pathname, router, permisosData, isLoading, error]);
 
   const permisos = Array.isArray(permisosData?.permisos) ? permisosData.permisos : [];
   const tieneAcceso = permisosData ? (

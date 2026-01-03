@@ -4,6 +4,91 @@ Historial completo de cambios, mejoras y correcciones del proyecto.
 
 ---
 
+## Enero 2025
+
+### Sesión: Implementación de Login por Username y Mejoras en Configuración
+
+**Fecha:** Enero 2025  
+**Rama:** `agustin-v1`
+
+#### Sistema de Autenticación por Username
+
+- ✅ **Login por Nombre de Usuario**
+  - Cambio completo del sistema de autenticación de email a username
+  - Todos los usuarios (empleados, administradores y SuperAdmin) ahora inician sesión con username
+  - Nuevo endpoint `/api/auth/get-email-by-username` para resolver username a email para Supabase Auth
+  - Normalización automática de usernames (lowercase, sin espacios, caracteres especiales permitidos)
+
+- ✅ **Emails Automáticos para Empleados**
+  - Los empleados reciben emails automáticos generados: `username@puntox.com`
+  - Función `generateInternalEmail()` para generar emails estándar
+  - El campo `Persona.Mail` ahora es nullable para permitir emails internos
+
+- ✅ **Eliminación de Invitación por Email**
+  - Removida funcionalidad de "Enviar invitación por correo" en creación de empleados
+  - Todos los usuarios se crean con `email_confirm: true` automáticamente
+  - Simplificación del flujo de creación de usuarios
+
+- ✅ **Mejoras en UI de Empleados**
+  - Tabla de empleados ahora muestra "Usuario" en lugar de "Correo"
+  - Búsqueda actualizada para incluir username
+  - Removido botón de "Enviar email" de la tabla
+
+#### Mejoras en Configuración
+
+- ✅ **Validación de Campos Obligatorios**
+  - Campos obligatorios claramente marcados en la UI con asteriscos rojos (*)
+  - Descripción "Campo obligatorio" en campos requeridos
+  - Validación mejorada en backend con mensajes de error descriptivos
+  - Campos obligatorios: Razón Social, CUIT, Dirección, Localidad
+
+- ✅ **Resolución Mejorada de TenantId**
+  - Función `resolveTenantId()` mejorada para buscar tenantId en múltiples ubicaciones
+  - Fallback a consulta en base de datos si no está en JWT metadata
+  - Logging detallado para diagnóstico de problemas de autenticación
+  - Mensajes de error más descriptivos cuando no se puede determinar el tenant
+
+- ✅ **Protección de Rutas de Admin**
+  - Layout `src/app/admin/layout.tsx` que protege todas las rutas `/admin/*`
+  - Verificación de SuperAdmin en server actions
+  - Removida ruta `/admin/tenants/new` de `publicPaths` en middleware
+
+#### Correcciones de Permisos y JWT
+
+- ✅ **Sincronización de Permisos en JWT**
+  - Actualización automática de JWT después de crear tenant
+  - Endpoint `/api/permisos` ahora siempre calcula permisos desde DB para usuarios regulares
+  - Comparación y actualización en background si hay discrepancias
+  - Corrección del mapeo de permisos para ruta `/empleados` (`empleados:admin`)
+
+- ✅ **Corrección de Mapeo de Permisos**
+  - Actualizado `routePermissions.ts` para mapear correctamente `/empleados` a `empleados:admin`
+  - Soporte mejorado para permisos con formato `clave:accion`
+  - Removidas verificaciones manuales redundantes en favor de `usePagePermission`
+
+#### Archivos Modificados
+
+- `src/components/auth/CredentialsForm.tsx` - Login por username
+- `src/app/api/auth/get-email-by-username/route.ts` - Nuevo endpoint
+- `src/lib/auth/generateInternalEmail.ts` - Nuevo helper
+- `src/app/api/empleados/route.ts` - Emails automáticos, sin invitación
+- `src/app/(dashboard)/empleados/page.tsx` - UI actualizada
+- `src/components/empleados/EmpleadoCRUD.tsx` - Muestra username
+- `src/app/actions/register-tenant.ts` - Soporte para username de admin
+- `src/app/admin/tenants/new/page.tsx` - Campo username agregado
+- `src/app/admin/layout.tsx` - Nuevo layout de protección
+- `src/app/api/configuracion/route.ts` - Validación y resolución mejorada
+- `src/app/(dashboard)/configuracion/page.tsx` - Campos obligatorios marcados
+- `src/lib/permissions/routePermissions.ts` - Mapeo corregido
+- `src/lib/auth/updateUserPermissions.ts` - Sincronización mejorada
+- `prisma/schema.prisma` - `Persona.Mail` ahora nullable
+
+#### Migraciones de Base de Datos
+
+- `20260102215319_make_persona_mail_nullable` - Hace el campo Mail nullable en Persona
+
+---
+
 ## Diciembre 2024
 
 ### Sesión 6: Implementación Completa del Módulo de Analíticas

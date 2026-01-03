@@ -18,8 +18,37 @@ async function resolveTenantId() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const tenantId = user?.app_metadata?.tenantId;
-  return tenantId ? Number(tenantId) : null;
+
+  if (!user) {
+    return null;
+  }
+
+  // Buscar tenantId en diferentes lugares del metadata
+  const metadata = user.app_metadata || {};
+  const tenantId = 
+    metadata.tenantId || 
+    metadata.tenant_id || 
+    (user as any).tenantId;
+
+  if (tenantId) {
+    return Number(tenantId);
+  }
+
+  // Si no está en metadata, buscar en la base de datos
+  try {
+    const usuario = await prisma.usuario.findFirst({
+      where: { AuthUserId: user.id, EstaEliminado: false },
+      select: { TenantId: true },
+    });
+
+    if (usuario?.TenantId) {
+      return Number(usuario.TenantId);
+    }
+  } catch (error) {
+    console.error("Error buscando tenantId en DB:", error);
+  }
+
+  return null;
 }
 
 export async function GET() {

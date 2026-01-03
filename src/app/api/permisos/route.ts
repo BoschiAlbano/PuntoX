@@ -28,21 +28,12 @@ export async function GET() {
       });
     }
 
-    // Si hay permisos en JWT, usarlos (sin consultar DB)
-    if (permisosJWT.length > 0 || rolesJWT.length > 0) {
-      return NextResponse.json({
-        permisos: permisosJWT,
-        isSuperAdmin: false,
-        roles: rolesJWT,
-      });
-    }
-
-    // Fallback: Calcular desde DB si no hay en JWT
-    // Esto actualiza el JWT para futuras requests
+    // Para usuarios normales, siempre calcular desde DB para asegurar permisos actualizados
+    // Esto es especialmente importante después de crear un tenant o asignar nuevos permisos
     const { permisos, isSuperAdmin, roles } = await calcularPermisosUsuario(user.id);
 
-    // Si es SuperAdmin desde DB, actualizar JWT inmediatamente
-    if (isSuperAdmin) {
+    // Si es SuperAdmin desde DB pero no en JWT, actualizar JWT inmediatamente
+    if (isSuperAdmin && !isSuperAdminJWT) {
       actualizarPermisosEnJWT(user.id).catch((err) => {
         console.warn("No se pudo actualizar permisos en JWT:", err);
       });
@@ -53,11 +44,23 @@ export async function GET() {
       });
     }
 
-    // Actualizar JWT en background para usuarios normales (no bloqueamos la respuesta)
-    actualizarPermisosEnJWT(user.id).catch((err) => {
-      console.warn("No se pudo actualizar permisos en JWT:", err);
-    });
+    // Comparar permisos del JWT con los de la DB
+    // Si son diferentes, actualizar JWT en background
+    const permisosJWTSet = new Set(permisosJWT);
+    const permisosDBSet = new Set(permisos);
+    const permisosDiferentes = 
+      permisosJWT.length !== permisos.length ||
+      !permisosJWT.every(p => permisosDBSet.has(p)) ||
+      !permisos.every(p => permisosJWTSet.has(p));
 
+    if (permisosDiferentes) {
+      // Los permisos en JWT no coinciden con los de DB, actualizar JWT
+      actualizarPermisosEnJWT(user.id).catch((err) => {
+        console.warn("No se pudo actualizar permisos en JWT:", err);
+      });
+    }
+
+    // Retornar permisos desde DB (siempre actualizados)
     return NextResponse.json({
       permisos,
       isSuperAdmin: false,

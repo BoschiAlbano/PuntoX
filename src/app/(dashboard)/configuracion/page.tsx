@@ -966,8 +966,25 @@ export default function Configuracion() {
     
     try {
       // Preparar datos completos de configuración incluyendo stock, caja, productos y báscula
+      // Asegurar que localidadId sea un número válido
+      const localidadIdNum = configuracion.localidadId 
+        ? (typeof configuracion.localidadId === "string" 
+            ? Number(configuracion.localidadId) 
+            : configuracion.localidadId)
+        : null;
+
+      if (!localidadIdNum || localidadIdNum <= 0) {
+        addToast({
+          title: "Localidad requerida",
+          description: "Por favor, seleccione una localidad válida para continuar.",
+          color: "warning",
+        });
+        return;
+      }
+
       const configuracionCompleta = {
         ...configuracion,
+        localidadId: localidadIdNum, // Asegurar que sea número
         // Preferencias básicas
         mostrarPreciosConIva: preferencias.mostrarPreciosConIva,
         abrirCajonEfectivo: preferencias.abrirCajonEfectivo,
@@ -1212,7 +1229,7 @@ export default function Configuracion() {
                 }
               />
               <Input
-                label="Razon social"
+                label="Razón social"
                 variant="bordered"
                 classNames={{ inputWrapper: "bg-white border-slate-200" }}
                 value={configuracion.razonSocial}
@@ -1222,6 +1239,8 @@ export default function Configuracion() {
                     razonSocial: e.target.value,
                   }))
                 }
+                isRequired
+                description="Campo obligatorio"
               />
               <Input
                 label="Nombre de fantasía"
@@ -1292,6 +1311,8 @@ export default function Configuracion() {
                 onChange={(e) =>
                   setConfiguracion((prev) => ({ ...prev, cuit: e.target.value }))
                 }
+                isRequired
+                description="Campo obligatorio"
               />
               <Input
                 label="Dirección"
@@ -1304,6 +1325,8 @@ export default function Configuracion() {
                     direccion: e.target.value,
                   }))
                 }
+                isRequired
+                description="Campo obligatorio"
               />
               <div className="md:col-span-2 space-y-3">
                 <div className="space-y-1">
@@ -1311,7 +1334,7 @@ export default function Configuracion() {
                     Ubicación del negocio <span className="text-red-500">*</span>
                   </label>
                   <p className="text-xs text-gray-500">
-                    Seleccione la ubicación completa de su negocio
+                    Seleccione la ubicación completa de su negocio (Campo obligatorio)
                   </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

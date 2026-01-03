@@ -290,6 +290,7 @@ export async function GET(req: NextRequest) {
           apellido: persona.Apellido,
           nombreCompleto: `${persona.Nombre} ${persona.Apellido}`,
           email: persona.Mail,
+          username: usuario?.Nombre ?? null, // Nombre de usuario para login
           telefono: persona.Telefono,
           direccion: persona.Direccion,
           localidadId: persona.LocalidadId ? Number(persona.LocalidadId) : null,
@@ -337,14 +338,13 @@ const createEmpleadoSchema = z.object({
   dni: z.string().optional().nullable(),
   direccion: z.string().min(1),
   telefono: z.string().optional().nullable(),
-  mail: z.string().email(),
+  mail: z.string().email().optional(), // Opcional: solo para administradores, empleados usan email interno
   localidadId: z.union([z.number(), z.string()]),
   departamentoId: z.union([z.number(), z.string()]).optional().nullable(),
   provinciaId: z.union([z.number(), z.string()]).optional().nullable(),
-  nombreUsuario: z.string().min(1).optional(), // Opcional, se genera automáticamente si no se proporciona
+  nombreUsuario: z.string().min(1), // Requerido: se usa para generar email interno
   password: z.string().min(8),
   rolId: z.union([z.number(), z.string()]).optional().nullable(),
-  autoInvitar: z.boolean().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -472,22 +472,36 @@ export async function POST(req: NextRequest) {
       // rolTipo = rolValido.Tipo ?? "EMPLEADO";
     }
 
-    const mailNormalized = data.mail.trim().toLowerCase();
-    // Generar nombre de usuario automáticamente desde el email si no se proporciona
-    const usernameNormalized = data.nombreUsuario?.trim() || mailNormalized.split("@")[0];
+    // Normalizar username
+    const usernameNormalized = data.nombreUsuario.trim().toLowerCase();
+    
+    // Generar email interno automático para empleados
+    // Si se proporciona mail, se usa (para administradores), sino se genera uno interno
+    let mailNormalized: string;
+    if (data.mail && data.mail.trim()) {
+      mailNormalized = data.mail.trim().toLowerCase();
+    } else {
+      // Generar email interno automático
+      const { generateInternalEmail } = await import("@/lib/auth/generateInternalEmail");
+      mailNormalized = generateInternalEmail(usernameNormalized);
+    }
 
-    const existingPersona = await prisma.persona.findFirst({
-      where: {
-        Mail: mailNormalized,
-        TenantId: tenantIdBigInt,
-        EstaEliminado: false,
-      },
-    });
-    if (existingPersona) {
-      return NextResponse.json(
-        { error: "El correo ya esta registrado" },
-        { status: 400 }
-      );
+    // Solo verificar email duplicado si se proporcionó un email (no para emails internos generados)
+    // Los emails internos se generan únicos basados en username, así que no deberían duplicarse
+    if (data.mail && data.mail.trim()) {
+      const existingPersona = await prisma.persona.findFirst({
+        where: {
+          Mail: mailNormalized,
+          TenantId: tenantIdBigInt,
+          EstaEliminado: false,
+        },
+      });
+      if (existingPersona) {
+        return NextResponse.json(
+          { error: "El correo ya esta registrado" },
+          { status: 400 }
+        );
+      }
     }
 
     // Verificar si el nombre de usuario generado ya existe, si es así, agregar un número
@@ -519,7 +533,7 @@ export async function POST(req: NextRequest) {
       await supabaseService.auth.admin.createUser({
         email: mailNormalized,
         password: data.password,
-        email_confirm: data.autoInvitar ?? true,
+        email_confirm: true, // Siempre confirmar email automáticamente
         app_metadata: {
           tenant_id: tenantId.toString(),
           role: rolTipo === "ADMINISTRADOR" ? "Administrador" : "Empleado",
@@ -626,23 +640,10 @@ export async function POST(req: NextRequest) {
         apellido: created.persona.Apellido,
         email: created.persona.Mail,
         rolId: rolIdNumber || null,
-        autoInvitar: data.autoInvitar || false,
       },
       req, // Pasar el request para obtener headers
     });
 
-    // Registrar auditoría INVITAR_USUARIO si autoInvitar es true
-    if (data.autoInvitar) {
-      await registrarAuditoria({
-        tenantId: tenantIdBigInt,
-        usuarioId,
-        accion: "INVITAR_USUARIO",
-        empleadoId: created.personaEmpleado.Id,
-        usuarioAfectadoId: created.usuario.Id,
-        detalle: `Invitación enviada a: ${created.persona.Nombre} ${created.persona.Apellido} (${created.persona.Mail})`,
-        req,
-      });
-    }
 
     // Actualizar permisos en JWT del nuevo usuario (si tiene rol asignado)
     if (rolIdNumber && created.usuario.AuthUserId) {

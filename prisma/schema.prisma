@@ -782,7 +782,7 @@ model Persona {
   Dni              String?           @db.VarChar(8)
   Direccion        String            @db.VarChar(400)
   Telefono         String?           @db.VarChar(25)
-  Mail             String            @db.VarChar(250)
+  Mail             String?           @db.VarChar(250)
   LocalidadId      BigInt
   EstaEliminado    Boolean
   /// Tenant dueño de esta persona

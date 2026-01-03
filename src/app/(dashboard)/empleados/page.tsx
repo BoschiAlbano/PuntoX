@@ -53,6 +53,7 @@ type Empleado = {
   apellido: string;
   nombreCompleto: string;
   email: string;
+  username: string | null; // Nombre de usuario para login
   telefono: string | null;
   direccion: string | null;
   localidadId: number | null;
@@ -127,9 +128,9 @@ function estadoPill(estado: EstadoEmpleado) {
 export default function Empleados() {
   const { user, status } = useSupabaseAuthContext();
   const router = useRouter();
-  const { isLoading: isLoadingPermisos } = usePagePermission();
-
-  const [isAuthorized, setIsAuthorized] = useState(true);
+  // usePagePermission ya maneja la autorización y redirección automática
+  const { isLoading: isLoadingPermisos, tieneAcceso } = usePagePermission();
+  const isAuthorized = tieneAcceso ?? true; // Por defecto permitir acceso mientras carga
   const [selectedTab, setSelectedTab] = useState<string>("usuarios");
   
   // Estado de paginación
@@ -157,14 +158,13 @@ export default function Empleados() {
   const [nuevoUsuario, setNuevoUsuario] = useState({
     nombre: "",
     apellido: "",
-    email: "",
+    nombreUsuario: "",
     telefono: "",
     direccion: "",
     localidadId: "",
     dni: "",
     password: "",
     rolId: "",
-    autoInvitar: true,
   });
   const [provinciaSeleccionada, setProvinciaSeleccionada] =
     useState<string>("");
@@ -256,9 +256,10 @@ export default function Empleados() {
   );
 
   // Memorizar enabled para evitar cambios innecesarios
+  // usePagePermission ya maneja la autorización, solo verificar autenticación
   const enabledQuery = useMemo(
-    () => !!user && status === "authenticated" && isAuthorized,
-    [user, status, isAuthorized]
+    () => !!user && status === "authenticated" && (tieneAcceso ?? true),
+    [user, status, tieneAcceso]
   );
 
   const {
@@ -404,9 +405,9 @@ export default function Empleados() {
     prevEmpleadoAEditarRef.current = empleadoAEditar;
   }, [empleadoAEditar]);
 
-  // Verificar permisos al montar el componente
+  // Obtener permisos para verificar SuperAdmin
   useEffect(() => {
-    const checkPermissions = async () => {
+    const checkSuperAdmin = async () => {
       if (!user || status !== "authenticated") {
         return;
       }
@@ -415,53 +416,21 @@ export default function Empleados() {
         const permisosRes = await fetch("/api/permisos", {
           cache: "no-store",
           credentials: "include",
-        }).catch(() => null);
+        });
         
-        if (!permisosRes || !permisosRes.ok) {
-          const status = permisosRes?.status;
-          if (status === 401 || status === 403) {
-            setIsAuthorized(false);
-            addToast({
-              title: "Sin permisos",
-              description: "Necesitas empleados:admin para acceder.",
-              color: "danger",
-            });
-            return;
-          }
-        } else {
+        if (permisosRes.ok) {
           const permisosJson = await permisosRes.json().catch(() => null);
-          
-          // Actualizar el estado de SuperAdmin desde la API
           if (permisosJson?.isSuperAdmin === true) {
             setIsSuperAdminState(true);
           }
-          
-          // Opción B: Solo SuperAdmin tiene bypass automático
-          // Administradores y Empleados necesitan permiso explícito "empleados:admin"
-          const esSuperAdmin = permisosJson?.isSuperAdmin === true || isSuperAdminLocal;
-          const tienePermisoEspecifico = Array.isArray(permisosJson?.permisos) &&
-            permisosJson.permisos.includes("empleados:admin");
-          
-          // Solo SuperAdmin tiene acceso automático, otros necesitan permiso explícito
-          const tienePermiso = esSuperAdmin || tienePermisoEspecifico;
-          
-          if (!tienePermiso) {
-            setIsAuthorized(false);
-            addToast({
-              title: "Sin permisos",
-              description: "Necesitas empleados:admin para acceder.",
-              color: "danger",
-            });
-            return;
-          }
         }
       } catch {
-        // Si falla, continuamos pero marcaremos no autorizado al primer 401/403.
+        // Ignorar errores, usePagePermission ya maneja la autorización
       }
     };
 
-    checkPermissions();
-  }, [user, status, isSuperAdminLocal]);
+    checkSuperAdmin();
+  }, [user, status]);
 
   // Debounce para búsqueda
   useEffect(() => {
@@ -531,7 +500,7 @@ export default function Empleados() {
     if (
       !nuevoUsuario.nombre.trim() ||
       !nuevoUsuario.apellido.trim() ||
-      !nuevoUsuario.email.trim() ||
+      !nuevoUsuario.nombreUsuario.trim() ||
       !nuevoUsuario.password.trim() ||
       !nuevoUsuario.direccion.trim() ||
       !provinciaSeleccionada ||
@@ -546,12 +515,11 @@ export default function Empleados() {
       return;
     }
 
-    // Validar formato de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(nuevoUsuario.email.trim())) {
+    // Validar nombre de usuario (mínimo 2 caracteres)
+    if (nuevoUsuario.nombreUsuario.trim().length < 2) {
       addToast({
-        title: "Email inválido",
-        description: "Por favor, ingresa un email válido.",
+        title: "Nombre de usuario inválido",
+        description: "El nombre de usuario debe tener al menos 2 caracteres.",
         color: "warning",
       });
       return;
@@ -573,7 +541,7 @@ export default function Empleados() {
       {
         nombre: nuevoUsuario.nombre.trim(),
         apellido: nuevoUsuario.apellido.trim(),
-        email: nuevoUsuario.email.trim(),
+        nombreUsuario: nuevoUsuario.nombreUsuario.trim(),
         telefono: nuevoUsuario.telefono || undefined,
         direccion: nuevoUsuario.direccion.trim(),
         localidadId: nuevoUsuario.localidadId,
@@ -586,30 +554,26 @@ export default function Empleados() {
         dni: nuevoUsuario.dni || undefined,
         password: nuevoUsuario.password,
         rolId: nuevoUsuario.rolId ? Number(nuevoUsuario.rolId) : undefined,
-        autoInvitar: nuevoUsuario.autoInvitar,
         tenantId: tenantParam,
       },
       {
         onSuccess: () => {
           addToast({
             title: "Usuario creado",
-            description: nuevoUsuario.autoInvitar
-              ? "Se envió la invitación. Podrás ajustar permisos desde roles."
-              : "Usuario listo. Recuerda compartir las credenciales.",
+            description: "Usuario creado exitosamente. Recuerda compartir las credenciales.",
             color: "success",
           });
 
           setNuevoUsuario({
             nombre: "",
             apellido: "",
-            email: "",
+            nombreUsuario: "",
             telefono: "",
             direccion: "",
             localidadId: "",
             dni: "",
             password: "",
             rolId: "",
-            autoInvitar: true,
           });
           setProvinciaSeleccionada("");
           setDepartamentoSeleccionado("");
@@ -1018,7 +982,16 @@ export default function Empleados() {
     );
   };
 
-  if (!isAuthorized) {
+  // usePagePermission ya maneja la redirección, pero mostramos un mensaje mientras carga
+  if (isLoadingPermisos) {
+    return (
+      <div className="max-w-4xl mx-auto py-16 text-center space-y-3">
+        <p className="text-gray-600">Verificando permisos...</p>
+      </div>
+    );
+  }
+
+  if (!tieneAcceso) {
     return (
       <div className="max-w-4xl mx-auto py-16 text-center space-y-3">
         <h1 className="text-2xl font-semibold text-slate-900">Sin permisos</h1>
@@ -2331,17 +2304,17 @@ export default function Empleados() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
-                  label="Correo electrónico"
-                  type="email"
-                  placeholder="correo@puntox.com"
-                  value={nuevoUsuario.email}
+                  label="Nombre de usuario"
+                  type="text"
+                  placeholder="juan"
+                  value={nuevoUsuario.nombreUsuario}
                   onChange={(e) =>
                     setNuevoUsuario((prev) => ({
                       ...prev,
-                      email: e.target.value,
+                      nombreUsuario: e.target.value.toLowerCase().trim(),
                     }))
                   }
-                  description="Se usará para iniciar sesión"
+                  description="Se usará para iniciar sesión (se generará un email automático)"
                   isRequired
                 />
                 <Input
@@ -2445,41 +2418,22 @@ export default function Empleados() {
                   Configuración
                 </h4>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Select
-                  label="Rol"
-                  selectedKeys={nuevoUsuario.rolId ? [nuevoUsuario.rolId] : []}
-                  onChange={(e) =>
-                    setNuevoUsuario((prev) => ({
-                      ...prev,
-                      rolId: e.target.value,
-                    }))
-                  }
-                  placeholder="Selecciona un rol"
-                  description="Define los permisos del usuario"
-                >
-                  {roles.map((rol) => (
-                    <SelectItem key={String(rol.id)}>{rol.nombre}</SelectItem>
-                  ))}
-                </Select>
-                <div className="flex flex-col justify-end">
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200">
-                    <Switch
-                      isSelected={nuevoUsuario.autoInvitar}
-                      onValueChange={(value) =>
-                        setNuevoUsuario((prev) => ({ ...prev, autoInvitar: value }))
-                      }
-                    >
-                      <span className="text-sm font-medium text-slate-700">
-                        Enviar invitación por correo
-                      </span>
-                    </Switch>
-                    <Tooltip content="Se enviará un correo electrónico con las credenciales de acceso al usuario">
-                      <span className="text-sm text-gray-500 cursor-help">ℹ️</span>
-                    </Tooltip>
-                  </div>
-                </div>
-              </div>
+              <Select
+                label="Rol"
+                selectedKeys={nuevoUsuario.rolId ? [nuevoUsuario.rolId] : []}
+                onChange={(e) =>
+                  setNuevoUsuario((prev) => ({
+                    ...prev,
+                    rolId: e.target.value,
+                  }))
+                }
+                placeholder="Selecciona un rol"
+                description="Define los permisos del usuario"
+              >
+                {roles.map((rol) => (
+                  <SelectItem key={String(rol.id)}>{rol.nombre}</SelectItem>
+                ))}
+              </Select>
             </div>
           </ModalBody>
           <ModalFooter>
