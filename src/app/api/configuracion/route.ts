@@ -17,8 +17,8 @@ const payloadSchema = z.object({
       if (val === null || val === undefined || val === "") {
         return null;
       }
-      const num = typeof val === "string" ? Number(val) : val;
-      if (Number.isNaN(num) || num <= 0) {
+      const num = typeof val === "string" ? Number(val) : (typeof val === "number" ? val : null);
+      if (num === null || Number.isNaN(num) || num <= 0) {
         return null;
       }
       return num;
@@ -264,8 +264,9 @@ export async function PUT(req: Request) {
   const parsed = payloadSchema.safeParse(json);
 
   if (!parsed.success) {
-    console.error("Error de validación en configuración:", JSON.stringify(parsed.error.errors, null, 2));
-    const firstError = parsed.error.errors[0];
+    const errorIssues = parsed.error.issues || [];
+    console.error("Error de validación en configuración:", JSON.stringify(errorIssues, null, 2));
+    const firstError = errorIssues[0];
     const errorMessage = firstError 
       ? `${firstError.path.join(".")}: ${firstError.message}`
       : "Datos invalidos";

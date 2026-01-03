@@ -68,8 +68,8 @@ export async function POST(req: NextRequest) {
             ipAddress,
             intentos: 5,
           },
-          ipAddress,
-          userAgent,
+          ipAddress: ipAddress || undefined,
+          userAgent: userAgent || undefined,
         });
 
         return NextResponse.json(

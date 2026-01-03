@@ -70,8 +70,9 @@ export async function registerTenant(formData: FormData) {
   const parseResult = registerTenantSchema.safeParse(rawData);
 
   if (!parseResult.success) {
-    console.error("Error de validación:", JSON.stringify(parseResult.error.errors, null, 2));
-    const firstError = parseResult.error.errors[0];
+    const errorIssues = parseResult.error.issues || [];
+    console.error("Error de validación:", JSON.stringify(errorIssues, null, 2));
+    const firstError = errorIssues[0];
     const errorMessage = firstError 
       ? `Error en ${firstError.path.join(".")}: ${firstError.message}`
       : "Datos inválidos en el formulario.";
