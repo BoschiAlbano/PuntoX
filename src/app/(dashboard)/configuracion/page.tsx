@@ -124,6 +124,7 @@ export default function Configuracion() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   // Usar TanStack Query hook
+  // Optimización: Las queries tienen staleTime y refetchOnMount: false para evitar peticiones innecesarias
   const {
     tenant: tenantData,
     configuracion: configuracionData,

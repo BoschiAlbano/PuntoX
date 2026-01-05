@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import {
   Button,
   Card,
@@ -405,32 +406,33 @@ export default function Empleados() {
     prevEmpleadoAEditarRef.current = empleadoAEditar;
   }, [empleadoAEditar]);
 
-  // Obtener permisos para verificar SuperAdmin
+  // Obtener permisos para verificar SuperAdmin usando TanStack Query con cache
+  const permisosQuery = useQuery({
+    queryKey: ["permisos"],
+    queryFn: async ({ signal }) => {
+      const response = await fetch("/api/permisos", {
+        signal,
+        cache: "no-store",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Error al obtener permisos");
+      }
+      return await response.json();
+    },
+    enabled: !!user && status === "authenticated",
+    staleTime: 5 * 60 * 1000, // 5 minutos - los permisos no cambian frecuentemente
+    refetchOnMount: false, // No refetch si ya tenemos datos en cache
+    refetchOnWindowFocus: false, // No refetch al cambiar de ventana
+    retry: 1, // Solo reintentar una vez
+  });
+
+  // Sincronizar estado de SuperAdmin desde la query
   useEffect(() => {
-    const checkSuperAdmin = async () => {
-      if (!user || status !== "authenticated") {
-        return;
-      }
-
-      try {
-        const permisosRes = await fetch("/api/permisos", {
-          cache: "no-store",
-          credentials: "include",
-        });
-        
-        if (permisosRes.ok) {
-          const permisosJson = await permisosRes.json().catch(() => null);
-          if (permisosJson?.isSuperAdmin === true) {
-            setIsSuperAdminState(true);
-          }
-        }
-      } catch {
-        // Ignorar errores, usePagePermission ya maneja la autorización
-      }
-    };
-
-    checkSuperAdmin();
-  }, [user, status]);
+    if (permisosQuery.data?.isSuperAdmin === true) {
+      setIsSuperAdminState(true);
+    }
+  }, [permisosQuery.data]);
 
   // Debounce para búsqueda
   useEffect(() => {

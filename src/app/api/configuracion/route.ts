@@ -66,17 +66,12 @@ async function resolveTenantId() {
     } = await supabase.auth.getUser();
 
     if (authError) {
-      console.error("[resolveTenantId] Error al obtener usuario:", authError.message);
       return null;
     }
 
     if (!user) {
-      console.error("[resolveTenantId] Usuario no encontrado");
       return null;
     }
-
-    console.log("[resolveTenantId] Usuario encontrado:", user.id);
-    console.log("[resolveTenantId] app_metadata:", JSON.stringify(user.app_metadata, null, 2));
 
     // Buscar tenantId en diferentes lugares del metadata
     const metadata = user.app_metadata || {};
@@ -86,11 +81,8 @@ async function resolveTenantId() {
       (user as any).tenantId;
 
     if (tenantId) {
-      console.log("[resolveTenantId] tenantId encontrado en metadata:", tenantId);
       return Number(tenantId);
     }
-
-    console.log("[resolveTenantId] tenantId no encontrado en metadata, buscando en DB...");
 
     // Si no está en metadata, buscar en la base de datos
     try {
@@ -100,19 +92,14 @@ async function resolveTenantId() {
       });
 
       if (usuario?.TenantId) {
-        console.log("[resolveTenantId] tenantId encontrado en DB:", usuario.TenantId);
         return Number(usuario.TenantId);
       }
-
-      console.error("[resolveTenantId] Usuario no encontrado en DB o sin TenantId");
     } catch (error) {
-      console.error("[resolveTenantId] Error buscando tenantId en DB:", error);
+      // Error silencioso, retornamos null
     }
 
-    console.error("[resolveTenantId] No se pudo determinar el tenantId");
     return null;
   } catch (error) {
-    console.error("[resolveTenantId] Error inesperado:", error);
     return null;
   }
 }
@@ -120,7 +107,6 @@ async function resolveTenantId() {
 export async function GET() {
   const tenantId = await resolveTenantId();
   if (!tenantId) {
-    console.error("[GET /api/configuracion] No se pudo determinar el tenantId");
     return NextResponse.json(
       { error: "No se pudo determinar el tenant. Por favor, cierra sesión y vuelve a iniciar sesión." },
       { status: 401 }
@@ -128,9 +114,11 @@ export async function GET() {
   }
 
   try {
+    // Optimización: Usar findFirst con orderBy para obtener la configuración más reciente
+    // Nota: Para mejor performance, considerar índice compuesto en: (TenantId, EstaEliminado, Id DESC)
     const config = await prisma.configuracion.findFirst({
       where: { 
-        TenantId: tenantId,
+        TenantId: BigInt(tenantId),
         EstaEliminado: false,
       },
       select: {
@@ -246,7 +234,6 @@ export async function GET() {
 export async function PUT(req: Request) {
   const tenantId = await resolveTenantId();
   if (!tenantId) {
-    console.error("[PUT /api/configuracion] No se pudo determinar el tenantId");
     return NextResponse.json(
       { error: "No se pudo determinar el tenant. Por favor, cierra sesión y vuelve a iniciar sesión." },
       { status: 401 }
@@ -258,14 +245,10 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "Cuerpo de la petición inválido" }, { status: 400 });
   }
 
-  console.log("Datos recibidos en PUT /api/configuracion:", JSON.stringify(json, null, 2));
-  console.log("localidadId recibido:", json.localidadId, "tipo:", typeof json.localidadId);
-
   const parsed = payloadSchema.safeParse(json);
 
   if (!parsed.success) {
     const errorIssues = parsed.error.issues || [];
-    console.error("Error de validación en configuración:", JSON.stringify(errorIssues, null, 2));
     const firstError = errorIssues[0];
     const errorMessage = firstError 
       ? `${firstError.path.join(".")}: ${firstError.message}`
@@ -470,11 +453,6 @@ export async function PUT(req: Request) {
       { status: result.isNew ? 201 : 200 }
     );
   } catch (error: unknown) {
-    console.error("Error en PUT /api/configuracion:", error);
-    if (error instanceof Error) {
-      console.error("Error message:", error.message);
-      console.error("Error stack:", error.stack);
-    }
     return handleError(error);
   }
 }

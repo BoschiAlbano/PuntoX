@@ -559,9 +559,9 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     enabled,
     retry: 2,
     retryDelay: 1000,
-    refetchOnMount: true,
+    refetchOnMount: false, // No refetch si los datos están frescos (staleTime)
     refetchOnWindowFocus: false,
-    staleTime: 30000, // 30 segundos - los datos se consideran frescos
+    staleTime: 5 * 60 * 1000, // 5 minutos - los datos de tenant no cambian frecuentemente
   });
 
   const configuracionQuery = useQuery({
@@ -570,9 +570,9 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     enabled,
     retry: 2,
     retryDelay: 1000,
-    refetchOnMount: true,
+    refetchOnMount: false, // No refetch si los datos están frescos (staleTime)
     refetchOnWindowFocus: false,
-    staleTime: 30000, // 30 segundos - los datos se consideran frescos
+    staleTime: 5 * 60 * 1000, // 5 minutos - la configuración no cambia frecuentemente
   });
 
   // Queries en cascada para ubicación (provincia → departamento → localidad)
@@ -584,8 +584,9 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     enabled,
     retry: 2,
     retryDelay: 1000,
-    refetchOnMount: true,
+    refetchOnMount: false, // No refetch si los datos están frescos
     refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutos
   });
 
   const notificacionesQuery = useQuery({
@@ -594,8 +595,9 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     enabled,
     retry: 2,
     retryDelay: 1000,
-    refetchOnMount: true,
+    refetchOnMount: false, // No refetch si los datos están frescos
     refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutos
   });
 
   const seguridadQuery = useQuery({
@@ -604,8 +606,9 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     enabled,
     retry: 2,
     retryDelay: 1000,
-    refetchOnMount: true,
+    refetchOnMount: false, // No refetch si los datos están frescos
     refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutos
   });
 
   const fiscalQuery = useQuery({
@@ -614,8 +617,9 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     enabled,
     retry: 2,
     retryDelay: 1000,
-    refetchOnMount: true,
+    refetchOnMount: false, // No refetch si los datos están frescos
     refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutos
   });
 
   const brandingQuery = useQuery({
@@ -624,8 +628,9 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     enabled,
     retry: 2,
     retryDelay: 1000,
-    refetchOnMount: true,
+    refetchOnMount: false, // No refetch si los datos están frescos
     refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutos
   });
 
   // Mutations
@@ -782,6 +787,9 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
       queryKey: ["provincias"],
       queryFn: ({ signal }) => fetchProvincias({ signal }),
       enabled,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      staleTime: 30 * 60 * 1000, // 30 minutos - las provincias nunca cambian
     });
   };
 
@@ -790,6 +798,9 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
       queryKey: ["departamentos", provinciaId],
       queryFn: ({ signal }) => fetchDepartamentos({ signal, provinciaId: provinciaId! }),
       enabled: enabled && !!provinciaId,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      staleTime: 30 * 60 * 1000, // 30 minutos - los departamentos nunca cambian
     });
   };
 
@@ -798,6 +809,9 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
       queryKey: ["localidades", departamentoId],
       queryFn: ({ signal }) => fetchLocalidades({ signal, departamentoId: departamentoId! }),
       enabled: enabled && !!departamentoId,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      staleTime: 30 * 60 * 1000, // 30 minutos - las localidades nunca cambian
     });
   };
 
@@ -806,6 +820,9 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
       queryKey: ["condiciones-iva"],
       queryFn: ({ signal }) => fetchCondicionesIva({ signal }),
       enabled,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      staleTime: 10 * 60 * 1000, // 10 minutos - las condiciones IVA no cambian frecuentemente
     });
   };
 

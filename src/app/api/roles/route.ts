@@ -186,8 +186,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ rol: rolResponse }, { status: 201 });
   } catch (error) {
-    console.error("Error al crear rol", error);
-    return NextResponse.json({ error: "Error al crear rol" }, { status: 500 });
+    if (error instanceof PermisoError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status }
+      );
+    }
+    return handleError(error);
   }
 }
 
@@ -430,17 +435,19 @@ export async function PATCH(req: NextRequest) {
 
     // Actualizar permisos en JWT de todos los usuarios con este rol
     const { actualizarPermisosUsuariosDelRol } = await import("@/lib/auth/updateUserPermissions");
-    actualizarPermisosUsuariosDelRol(rolIdBigInt, tenantIdBigInt).catch((err) => {
-      console.warn("No se pudieron actualizar permisos en JWT:", err);
+    actualizarPermisosUsuariosDelRol(rolIdBigInt, tenantIdBigInt).catch(() => {
+      // Error no crítico, solo loguear silenciosamente
     });
 
     return NextResponse.json({ rol: rolResponse }, { status: 200 });
   } catch (error) {
-    console.error("Error al actualizar rol", error);
-    return NextResponse.json(
-      { error: "Error al actualizar el rol" },
-      { status: 500 }
-    );
+    if (error instanceof PermisoError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status }
+      );
+    }
+    return handleError(error);
   }
 }
 
@@ -552,10 +559,12 @@ export async function DELETE(req: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error al eliminar rol", error);
-    return NextResponse.json(
-      { error: "Error al eliminar el rol" },
-      { status: 500 }
-    );
+    if (error instanceof PermisoError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status }
+      );
+    }
+    return handleError(error);
   }
 }

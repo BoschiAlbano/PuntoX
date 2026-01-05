@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+import { handleError } from "@/lib/errors/handler";
 
 const preferenciasSchema = z.object({
   email: z.boolean().optional(),
@@ -43,11 +44,7 @@ export async function GET() {
       { status: 200 }
     );
   } catch (error: unknown) {
-    console.error("Error en GET /api/configuracion/preferencias:", error);
-    return NextResponse.json(
-      { error: "Error al cargar las preferencias" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -74,11 +71,7 @@ export async function PUT(req: Request) {
       { status: 200 }
     );
   } catch (error: unknown) {
-    console.error("Error actualizando preferencias", error);
-    return NextResponse.json(
-      { error: "No se pudieron actualizar las preferencias" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 

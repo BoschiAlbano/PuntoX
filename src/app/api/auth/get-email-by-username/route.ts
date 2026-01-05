@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { handleError } from "@/lib/errors/handler";
 
 /**
  * Endpoint para obtener el email interno de un usuario por su nombre de usuario
@@ -72,11 +73,7 @@ export async function POST(req: NextRequest) {
       tenantId: usuario.TenantId ? Number(usuario.TenantId) : null,
     });
   } catch (error) {
-    console.error("Error al obtener email por username:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 

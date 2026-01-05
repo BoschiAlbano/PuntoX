@@ -12,6 +12,7 @@ import {
   createPaginationResponse,
 } from "@/lib/pagination";
 import { createError } from "@/lib/errors/types";
+import { handleError } from "@/lib/errors/handler";
 
 export async function GET(req: NextRequest) {
   // Obtener la session del usuario
@@ -60,10 +61,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Error al obtener marcas" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -112,10 +110,7 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json(
-      { error: "Error al crear marca" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -128,8 +123,6 @@ export async function DELETE(req: NextRequest) {
   const idParam =
     req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
   const marcaId = idParam ? Number(idParam) : NaN;
-
-  console.log("Marca ID:", marcaId);
 
   if (!Number.isInteger(marcaId)) {
     return NextResponse.json(
@@ -164,10 +157,7 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    return NextResponse.json(
-      { error: "Error al eliminar marca" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -225,9 +215,6 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    return NextResponse.json(
-      { error: "Error al actualizar marca" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }

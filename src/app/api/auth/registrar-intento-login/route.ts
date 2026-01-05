@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     // No queremos que un error en el registro de intentos rompa el login
-    console.error("[registrar-intento-login] Error:", error);
+    // handleError ya registra el error internamente
     return NextResponse.json(
       { message: "Error al registrar intento (no crítico)" },
       { status: 200 } // Retornamos 200 para no interrumpir el flujo

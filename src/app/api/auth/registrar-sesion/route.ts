@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import crypto from "crypto";
+import { handleError } from "@/lib/errors/handler";
 
 /**
  * POST /api/auth/registrar-sesion
@@ -11,9 +12,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
     const { token, dispositivo, ubicacion, esConfiable } = body;
-    
-    // Debug: Log para verificar que esConfiable llegue correctamente
-    console.log("[registrar-sesion] esConfiable recibido:", esConfiable, typeof esConfiable);
 
     // Obtener usuario autenticado
     const supabase = await getSupabaseServerClient();
@@ -130,9 +128,7 @@ export async function POST(req: NextRequest) {
 
     // Si es confiable, también registrar en DispositivoConfiable
     // Nota: Aceptamos cualquier IP, incluyendo "::1" (localhost)
-    console.log("[registrar-sesion] Verificando dispositivo confiable:", { esConfiable, userAgent, ipAddress, tipo: typeof esConfiable });
     if (esConfiable === true && userAgent) {
-      console.log("[registrar-sesion] Intentando guardar dispositivo confiable");
       // Verificar si ya existe
       const dispositivoExistente = await prisma.$queryRawUnsafe<Array<{
         Id: bigint;
@@ -145,8 +141,6 @@ export async function POST(req: NextRequest) {
           AND "EstaActivo" = true
         LIMIT 1
       `, usuario.TenantId, usuario.Id, userAgent, ipAddress);
-      
-      console.log("[registrar-sesion] Dispositivo existente:", dispositivoExistente);
 
       if (dispositivoExistente && dispositivoExistente.length > 0) {
         // Actualizar último uso
@@ -163,7 +157,6 @@ export async function POST(req: NextRequest) {
         
         // Intentar insertar, si ya existe actualizar
         try {
-          console.log("[registrar-sesion] Insertando nuevo dispositivo confiable");
           await prisma.$executeRawUnsafe(`
             INSERT INTO "DispositivoConfiable" ("TenantId", "UsuarioId", "NombreDispositivo", "UserAgent", "IpAddress", "FechaRegistro", "FechaUltimoUso", "EstaActivo")
             VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), true)
@@ -174,12 +167,9 @@ export async function POST(req: NextRequest) {
             userAgent,
             ipAddress
           );
-          console.log("[registrar-sesion] Dispositivo confiable insertado correctamente");
         } catch (insertError: any) {
-          console.log("[registrar-sesion] Error al insertar:", insertError?.code, insertError?.message);
           // Si falla por constraint único, actualizar en su lugar
           if (insertError?.code === "23505" || insertError?.message?.includes("unique") || insertError?.message?.includes("duplicate")) {
-            console.log("[registrar-sesion] Dispositivo ya existe, actualizando");
             await prisma.$executeRawUnsafe(`
               UPDATE "DispositivoConfiable"
               SET "FechaUltimoUso" = NOW(), 
@@ -196,11 +186,8 @@ export async function POST(req: NextRequest) {
               userAgent,
               ipAddress
             );
-            console.log("[registrar-sesion] Dispositivo confiable actualizado correctamente");
-          } else {
-            console.error("[registrar-sesion] Error no manejado al insertar dispositivo:", insertError);
-            // No lanzamos el error para no interrumpir el flujo
           }
+          // No lanzamos el error para no interrumpir el flujo
         }
       }
     }
@@ -216,7 +203,7 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     // No queremos que un error en el registro de sesión rompa el login
-    console.error("[registrar-sesion] Error:", error);
+    // handleError ya registra el error internamente
     return NextResponse.json(
       { message: "Error al registrar sesión (no crítico)" },
       { status: 200 } // Retornamos 200 para no interrumpir el flujo
@@ -277,7 +264,7 @@ export async function DELETE(req: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("[registrar-sesion] Error al cerrar sesión:", error);
+    // handleError ya registra el error internamente
     return NextResponse.json(
       { message: "Error al cerrar sesión (no crítico)" },
       { status: 200 }

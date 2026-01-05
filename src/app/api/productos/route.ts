@@ -19,12 +19,10 @@ export async function GET(req: NextRequest) {
     const { tenantId, error, user } = await getAuthUser();
 
     if (error) {
-      console.error("[productos GET] Error de autenticación:", user);
       return error;
     }
 
     if (!tenantId || tenantId <= 0) {
-      console.error("[productos GET] TenantId inválido:", tenantId);
       return NextResponse.json(
         { error: { code: "INVALID_TENANT", message: "TenantId inválido" } },
         { status: 401 }
@@ -56,9 +54,11 @@ export async function GET(req: NextRequest) {
     }
 
     // Obtener total para paginación
+    // Nota: Para mejor performance, considerar índices en: TenantId, EstaEliminado, Descripcion, CodigoBarra
     const total = await prisma.articulo.count({ where });
 
     // Obtener productos paginados
+    // Optimización: Usar select específico en lugar de include para reducir datos transferidos
     const productos = await prisma.articulo.findMany({
       where,
       select: {
@@ -100,10 +100,8 @@ export async function GET(req: NextRequest) {
 
     const response = createPaginationResponse(productos, total, pagination);
 
-    console.log(`[productos GET] Tenant ${tenantId}: ${productos.length} productos de ${total} totales`);
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error("[productos GET] Error capturado:", error);
     return handleError(error);
   }
 }
@@ -287,7 +285,7 @@ export async function PATCH(req: NextRequest) {
           PrecioPublico2: validarProducto.Precio.PrecioPublico2,
           FechaActualizacion: new Date(),
           EstaEliminado: false,
-          TenantId: Number(tenantId) || 1,
+          TenantId: tenantIdBigInt,
         },
       });
 
@@ -316,7 +314,7 @@ export async function PATCH(req: NextRequest) {
           Stock: validarProducto.Stock,
           Tenant: {
             connect: {
-              Id: Number(tenantId) || 1,
+              Id: tenantIdBigInt,
             },
           },
           Iva: {
@@ -345,8 +343,44 @@ export async function PATCH(req: NextRequest) {
             },
           },
         },
-        include: {
-          Precio: true,
+        select: {
+          Id: true,
+          MarcaId: true,
+          RubroId: true,
+          UnidadMedidaId: true,
+          IvaId: true,
+          PrecioId: true,
+          Codigo: true,
+          CodigoBarra: true,
+          Abreviatura: true,
+          Descripcion: true,
+          Detalle: true,
+          Ubicacion: true,
+          PorcentajeGanancia: true,
+          ActivarLimiteVenta: true,
+          LimiteVenta: true,
+          ActivarHoraVenta: true,
+          HoraLimiteVentaDesde: true,
+          HoraLimiteVentaHasta: true,
+          PermiteStockNegativo: true,
+          DescuentaStock: true,
+          StockMinimo: true,
+          VencimientoDias: true,
+          TipoVenta: true,
+          EstaEliminado: true,
+          TenantId: true,
+          Precio: {
+            select: {
+              Id: true,
+              PrecioCosto: true,
+              PorcentajeGanancia: true,
+              PrecioPublico: true,
+              PorcentajeGanancia2: true,
+              PrecioPublico2: true,
+              FechaActualizacion: true,
+            },
+          },
+          Stock: true,
         },
       });
 
@@ -362,7 +396,6 @@ export async function PATCH(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.log(error);
     if (error instanceof ZodError) {
       return NextResponse.json(
         {
@@ -375,10 +408,7 @@ export async function PATCH(req: NextRequest) {
         { status: 400 }
       );
     }
-    return NextResponse.json(
-      { error: "Error al crear producto" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -409,7 +439,6 @@ export async function DELETE(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.log(error);
     if (error instanceof ZodError) {
       return NextResponse.json(
         {
@@ -422,10 +451,7 @@ export async function DELETE(req: NextRequest) {
         { status: 400 }
       );
     }
-    return NextResponse.json(
-      { error: "Error al crear producto" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 

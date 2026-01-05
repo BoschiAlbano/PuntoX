@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { serializeBigIntArray } from "@/utilities/serialization";
+import { handleError } from "@/lib/errors/handler";
 
 export async function GET(req: NextRequest) {
   try {
@@ -28,7 +29,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(serializeBigIntArray(departamentos));
   } catch (error) {
-    console.error("Error al obtener departamentos", error);
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+    return handleError(error);
   }
 }

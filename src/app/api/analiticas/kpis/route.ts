@@ -41,6 +41,7 @@ export async function GET(req: NextRequest) {
     const tenantIdBigInt = BigInt(tenantId);
 
     // 1. Ingresos netos del período (Total - Descuento)
+    // Nota: Para mejor performance, considerar índices en: TenantId, EstaEliminado, Fecha, TipoComprobante
     const ingresosActual = await prisma.comprobante.aggregate({
       where: {
         TenantId: tenantIdBigInt,

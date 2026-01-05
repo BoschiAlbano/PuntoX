@@ -28,8 +28,6 @@ export async function GET() {
 
     // Si no hay condiciones, crear las básicas
     if (condiciones.length === 0) {
-      console.log("No hay condiciones de IVA, creando las básicas...");
-      
       for (const descripcion of CONDICIONES_IVA_DEFAULT) {
         await prisma.condicionIva.create({
           data: {

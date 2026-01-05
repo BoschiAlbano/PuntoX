@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
+import { handleError } from "@/lib/errors/handler";
 
 export async function POST(request: NextRequest) {
   try {
@@ -138,9 +139,8 @@ export async function POST(request: NextRequest) {
       });
 
     if (authError || !authUser?.user) {
-      console.error("Error creando usuario en Supabase:", authError);
       return NextResponse.json(
-        { error: "No se pudo crear el usuario en Supabase Auth" },
+        { error: "No se pudo crear el usuario en Supabase Auth", details: authError?.message },
         { status: 500 }
       );
     }
@@ -194,10 +194,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error("Error en el registro:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }

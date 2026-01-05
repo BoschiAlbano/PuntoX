@@ -82,6 +82,9 @@ export function useGenericApi<T extends { Id: number | string }>({
   const query = useQuery({
     queryKey: [queryKey, { search, page, limit }],
     queryFn: ({ signal }) => fetchData({ signal }),
+    refetchOnMount: false, // No refetch si los datos están frescos
+    refetchOnWindowFocus: false, // No refetch al cambiar de ventana
+    staleTime: 30 * 1000, // 30 segundos - los datos se consideran frescos
   });
 
   // --- Mutations ---

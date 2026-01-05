@@ -626,7 +626,6 @@ export async function DELETE(req: NextRequest) {
       tenantId: tenantIdNumber,
     });
   } catch (error) {
-    console.error("Error eliminando tenant:", error);
     return handleError(error);
   }
 }

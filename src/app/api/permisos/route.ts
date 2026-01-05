@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import { calcularPermisosUsuario, actualizarPermisosEnJWT } from "@/lib/auth/updateUserPermissions";
+import { handleError } from "@/lib/errors/handler";
 
 export async function GET() {
   try {
@@ -34,8 +35,8 @@ export async function GET() {
 
     // Si es SuperAdmin desde DB pero no en JWT, actualizar JWT inmediatamente
     if (isSuperAdmin && !isSuperAdminJWT) {
-      actualizarPermisosEnJWT(user.id).catch((err) => {
-        console.warn("No se pudo actualizar permisos en JWT:", err);
+      actualizarPermisosEnJWT(user.id).catch(() => {
+        // Error no crítico, continuar
       });
       return NextResponse.json({
         permisos: [], // SuperAdmin no necesita permisos específicos
@@ -55,8 +56,8 @@ export async function GET() {
 
     if (permisosDiferentes) {
       // Los permisos en JWT no coinciden con los de DB, actualizar JWT
-      actualizarPermisosEnJWT(user.id).catch((err) => {
-        console.warn("No se pudo actualizar permisos en JWT:", err);
+      actualizarPermisosEnJWT(user.id).catch(() => {
+        // Error no crítico, continuar
       });
     }
 
@@ -67,10 +68,6 @@ export async function GET() {
       roles,
     });
   } catch (error) {
-    console.error("Error en GET /api/permisos:", error);
-    return NextResponse.json(
-      { error: "Error al obtener permisos" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }

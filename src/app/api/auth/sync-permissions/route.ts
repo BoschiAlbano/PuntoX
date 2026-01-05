@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import { actualizarPermisosEnJWT } from "@/lib/auth/updateUserPermissions";
+import { handleError } from "@/lib/errors/handler";
 
 /**
  * Endpoint para sincronizar permisos del usuario en el JWT
@@ -22,11 +23,7 @@ export async function POST() {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error sincronizando permisos:", error);
-    return NextResponse.json(
-      { error: "Error al sincronizar permisos" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 

@@ -52,8 +52,10 @@ export async function GET(req: NextRequest) {
     }
 
     // Obtener total para paginación
+    // Nota: Para mejor performance, considerar índices en: TenantId, EstaEliminado, Apellido, Nombre, Mail, Dni
     const total = await prisma.persona.count({ where });
 
+    // Optimización: Usar select específico para reducir datos transferidos
     const clientes = await prisma.persona.findMany({
       where,
       skip: pagination.skip,
@@ -200,8 +202,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Crear Persona + Persona_Cliente en transacción
-    const created = await prisma.$transaction(async (tx) => {
+    // Crear Persona + Persona_Cliente en transacción y retornar datos completos
+    const clienteCompleto = await prisma.$transaction(async (tx) => {
       // Crear Persona
       const persona = await tx.persona.create({
         data: {
@@ -228,13 +230,10 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return persona;
-    });
-
-    // Obtener datos completos del cliente creado
-    const clienteCompleto = await prisma.persona.findUnique({
-      where: { Id: created.Id },
-      select: {
+      // Retornar datos completos directamente de la transacción
+      return await tx.persona.findUnique({
+        where: { Id: persona.Id },
+        select: {
         Id: true,
         Nombre: true,
         Apellido: true,
@@ -307,7 +306,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ cliente: clienteResponse }, { status: 201 });
   } catch (error: unknown) {
-    console.error("Error al crear cliente:", error);
     return handleError(error);
   }
 }
@@ -326,8 +324,6 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-
-    console.log(body);
 
     const validarCliente = updateClienteSchema.parse(body);
 
@@ -430,8 +426,8 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    // Actualizar Persona y Persona_Cliente en transacción
-    await prisma.$transaction(async (tx) => {
+    // Actualizar Persona y Persona_Cliente en transacción y retornar datos completos
+    const clienteCompleto = await prisma.$transaction(async (tx) => {
       // Actualizar Persona
       const updatePersonaData: {
         Nombre?: string;
@@ -458,7 +454,7 @@ export async function PATCH(req: NextRequest) {
       if (localidadIdNumber !== null)
         updatePersonaData.LocalidadId = BigInt(localidadIdNumber);
 
-      const persona = await tx.persona.update({
+      await tx.persona.update({
         where: { Id: BigInt(validarCliente.Id), TenantId: tenantIdBigInt },
         data: updatePersonaData,
       });
@@ -485,13 +481,10 @@ export async function PATCH(req: NextRequest) {
         data: updateClienteData,
       });
 
-      return persona;
-    });
-
-    // Obtener datos completos del cliente actualizado
-    const clienteCompleto = await prisma.persona.findUnique({
-      where: { Id: BigInt(validarCliente.Id) },
-      select: {
+      // Retornar datos completos directamente de la transacción
+      return await tx.persona.findUnique({
+        where: { Id: BigInt(validarCliente.Id) },
+        select: {
         Id: true,
         Nombre: true,
         Apellido: true,

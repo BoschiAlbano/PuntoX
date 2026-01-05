@@ -67,10 +67,16 @@ export async function GET(req: NextRequest) {
     // Obtener total para paginación
     const total = await prisma.auditoriaEmpleado.count({ where });
 
-    // Obtener auditorías con relaciones
+    // Obtener auditorías con relaciones (usando select en lugar de include para mejor performance)
     const auditorias = await prisma.auditoriaEmpleado.findMany({
       where,
-      include: {
+      select: {
+        Id: true,
+        Fecha: true,
+        Accion: true,
+        Detalle: true,
+        IpAddress: true,
+        UserAgent: true,
         Usuario: {
           select: {
             Id: true,

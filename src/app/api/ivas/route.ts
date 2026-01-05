@@ -9,6 +9,7 @@ import {
   createPaginationResponse,
 } from "@/lib/pagination";
 import { createError } from "@/lib/errors/types";
+import { handleError } from "@/lib/errors/handler";
 
 export async function GET(req: NextRequest) {
   // Obtener la session del usuario
@@ -56,10 +57,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Error al obtener ivas" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -107,10 +105,7 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json(
-      { error: "Error al crear marca" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -123,8 +118,6 @@ export async function DELETE(req: NextRequest) {
   const idParam =
     req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
   const ivaId = idParam ? Number(idParam) : NaN;
-
-  console.log("Iva ID:", ivaId);
 
   if (!Number.isInteger(ivaId)) {
     return NextResponse.json({ error: "Id de iva invalido" }, { status: 400 });
@@ -152,10 +145,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Iva no encontrada" }, { status: 404 });
     }
 
-    return NextResponse.json(
-      { error: "Error al eliminar iva" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -211,9 +201,6 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    return NextResponse.json(
-      { error: "Error al actualizar iva" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }

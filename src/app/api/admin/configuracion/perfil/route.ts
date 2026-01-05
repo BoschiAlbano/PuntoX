@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+import { handleError } from "@/lib/errors/handler";
 
 const savePerfilSchema = z.object({
   nombre: z.string().min(1, "Nombre requerido"),
@@ -78,32 +79,7 @@ export async function GET() {
       { status: 200 }
     );
   } catch (error: unknown) {
-    console.error("Error en GET /api/admin/configuracion/perfil:", error);
-    
-    const errorObj = error as { code?: string; message?: string };
-    const isConnectionError =
-      errorObj?.code === "P1001" ||
-      errorObj?.code === "P1002" ||
-      errorObj?.code === "P1003" ||
-      errorObj?.message?.toLowerCase().includes("can't reach database server") ||
-      errorObj?.message?.toLowerCase().includes("connection timeout") ||
-      errorObj?.message?.toLowerCase().includes("connection refused") ||
-      errorObj?.message?.toLowerCase().includes("econnrefused") ||
-      errorObj?.message?.toLowerCase().includes("etimedout");
-
-    if (isConnectionError) {
-      return NextResponse.json(
-        {
-          error: "Error de conexión a la base de datos. Verifica tu conexión.",
-        },
-        { status: 503 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: "Error al cargar el perfil del negocio" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -239,32 +215,7 @@ export async function PUT(req: NextRequest) {
       { status: 200 }
     );
   } catch (error: unknown) {
-    console.error("Error en PUT /api/admin/configuracion/perfil:", error);
-
-    const errorObj = error as { code?: string; message?: string };
-    const isConnectionError =
-      errorObj?.code === "P1001" ||
-      errorObj?.code === "P1002" ||
-      errorObj?.code === "P1003" ||
-      errorObj?.message?.toLowerCase().includes("can't reach database server") ||
-      errorObj?.message?.toLowerCase().includes("connection timeout") ||
-      errorObj?.message?.toLowerCase().includes("connection refused") ||
-      errorObj?.message?.toLowerCase().includes("econnrefused") ||
-      errorObj?.message?.toLowerCase().includes("etimedout");
-
-    if (isConnectionError) {
-      return NextResponse.json(
-        {
-          error: "Error de conexión a la base de datos. Verifica tu conexión.",
-        },
-        { status: 503 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: "No se pudo guardar el perfil del negocio" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 

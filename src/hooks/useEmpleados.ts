@@ -499,24 +499,36 @@ export function useEmpleados({
     queryFn: ({ signal }) =>
       fetchEmpleados({ signal, page, limit, filters: { ...filters, tenantId } }),
     enabled,
+    refetchOnMount: false, // No refetch si los datos están frescos
+    refetchOnWindowFocus: false, // No refetch al cambiar de ventana
+    staleTime: 30 * 1000, // 30 segundos - los empleados pueden cambiar pero no tan frecuentemente
   });
 
   const rolesQuery = useQuery({
     queryKey: ["roles", tenantId],
     queryFn: ({ signal }) => fetchRoles({ signal, tenantId }),
     enabled,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutos - los roles no cambian frecuentemente
   });
 
   const provinciasQuery = useQuery({
     queryKey: ["provincias"],
     queryFn: ({ signal }) => fetchProvincias({ signal }),
     enabled,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    staleTime: 30 * 60 * 1000, // 30 minutos - las provincias nunca cambian
   });
 
   const auditoriasQuery = useQuery({
     queryKey: ["auditorias", auditoriaPage, auditoriaLimit, tenantId],
     queryFn: ({ signal }) => fetchAuditorias({ signal, page: auditoriaPage, limit: auditoriaLimit, tenantId }),
-    enabled: enabled, // Habilitar cuando el componente principal está habilitado
+    enabled: enabled,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    staleTime: 10 * 1000, // 10 segundos - las auditorías pueden cambiar más frecuentemente
   });
 
   // Mutations
@@ -665,6 +677,9 @@ export function useEmpleados({
       queryKey: ["departamentos", provinciaId],
       queryFn: ({ signal }) => fetchDepartamentos({ signal, provinciaId: provinciaId! }),
       enabled: !!provinciaId,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      staleTime: 30 * 60 * 1000, // 30 minutos - los departamentos nunca cambian
     });
   };
 
@@ -675,6 +690,9 @@ export function useEmpleados({
       queryFn: ({ signal }) =>
         fetchLocalidades({ signal, departamentoId: departamentoId! }),
       enabled: !!departamentoId,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      staleTime: 30 * 60 * 1000, // 30 minutos - las localidades nunca cambian
     });
   };
 

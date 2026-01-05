@@ -67,9 +67,8 @@ export async function PUT(req: NextRequest) {
     );
 
     if (authError) {
-      console.error("Error al actualizar contraseña en Supabase:", authError);
       return NextResponse.json(
-        { error: "No se pudo actualizar la contraseña" },
+        { error: "No se pudo actualizar la contraseña", details: authError.message },
         { status: 500 }
       );
     }

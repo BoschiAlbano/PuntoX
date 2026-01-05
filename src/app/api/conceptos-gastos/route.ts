@@ -3,6 +3,7 @@ import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
 import { z } from "zod";
 import { ZodError } from "zod";
+import { handleError } from "@/lib/errors/handler";
 
 const createConceptoGastoSchema = z.object({
   Descripcion: z.string().min(1, "La descripción es requerida"),
@@ -42,11 +43,7 @@ export async function GET() {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error al obtener conceptos de gastos:", error);
-    return NextResponse.json(
-      { error: "Error al obtener conceptos de gastos" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
@@ -91,10 +88,7 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json(
-      { error: "Error al crear concepto de gasto" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 

@@ -54,11 +54,7 @@ export async function GET() {
       { status: 200 }
     );
   } catch (error: unknown) {
-    console.error("Error en GET /api/configuracion/branding:", error);
-    return NextResponse.json(
-      { error: "Error al cargar el branding" },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 

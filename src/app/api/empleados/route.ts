@@ -141,61 +141,58 @@ export async function GET(req: NextRequest) {
     }
 
     // Obtener total para paginación (con filtros aplicados)
+    // Nota: Para mejor performance, considerar índices en: TenantId, EstaEliminado, Nombre, Apellido
     let total: number;
     try {
       total = await prisma.persona.count({ where });
     } catch (countError) {
-      console.error("[empleados] Error en count:", countError);
-      console.error("[empleados] Where clause:", JSON.stringify(where, null, 2));
       throw countError;
     }
 
-    let empleados;
-    try {
-      empleados = await prisma.persona.findMany({
-        where,
-        select: {
-          Id: true,
-          Apellido: true,
-          Nombre: true,
-          Dni: true,
-          Direccion: true,
-          Telefono: true,
-          Mail: true,
-          LocalidadId: true,
-          Localidad: {
-            select: {
-              Descripcion: true,
-              EstaEliminado: true,
-              Departamento: {
-                select: {
-                  Id: true,
-                  Provincia: {
-                    select: {
-                      Id: true,
-                    },
+    // Query optimizada: usar select específico para reducir datos transferidos
+    const empleados = await prisma.persona.findMany({
+      where,
+      select: {
+        Id: true,
+        Apellido: true,
+        Nombre: true,
+        Dni: true,
+        Direccion: true,
+        Telefono: true,
+        Mail: true,
+        LocalidadId: true,
+        Localidad: {
+          select: {
+            Descripcion: true,
+            EstaEliminado: true,
+            Departamento: {
+              select: {
+                Id: true,
+                Provincia: {
+                  select: {
+                    Id: true,
                   },
                 },
               },
             },
           },
-          Persona_Empleado: {
-            select: {
-              Legajo: true,
-              Usuario: {
-                where: { EstaEliminado: false },
-                select: {
-                  Id: true,
-                  Nombre: true,
-                  EstaBloqueado: true,
-                  PerfilUsuario: {
-                    select: {
-                      Perfiles: {
-                        select: {
-                          Id: true,
-                          Descripcion: true,
-                          Tipo: true,
-                        },
+        },
+        Persona_Empleado: {
+          select: {
+            Legajo: true,
+            Usuario: {
+              where: { EstaEliminado: false },
+              select: {
+                Id: true,
+                Nombre: true,
+                EstaBloqueado: true,
+                PerfilUsuario: {
+                  select: {
+                    Perfiles: {
+                      select: {
+                        Id: true,
+                        Descripcion: true,
+                        Tipo: true,
                       },
                     },
                   },
@@ -204,72 +201,11 @@ export async function GET(req: NextRequest) {
             },
           },
         },
-        orderBy: { Nombre: "asc" },
-        skip: pagination.skip,
-        take: pagination.limit,
-      });
-    } catch (err) {
-      // Fallback si falta columna Tipo en Perfiles.
-      empleados = await prisma.persona.findMany({
-        where,
-        select: {
-          Id: true,
-          Apellido: true,
-          Nombre: true,
-          Dni: true,
-          Direccion: true,
-          Telefono: true,
-          Mail: true,
-          LocalidadId: true,
-          Localidad: {
-            select: {
-              Descripcion: true,
-              EstaEliminado: true,
-              Departamento: {
-                select: {
-                  Id: true,
-                  Provincia: {
-                    select: {
-                      Id: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-          Persona_Empleado: {
-            select: {
-              Legajo: true,
-              Usuario: {
-                where: { EstaEliminado: false },
-                select: {
-                  Id: true,
-                  Nombre: true,
-                  EstaBloqueado: true,
-                  PerfilUsuario: {
-                    select: {
-                      Perfiles: {
-                        select: {
-                          Id: true,
-                          Descripcion: true,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-        orderBy: { Nombre: "asc" },
-        skip: pagination.skip,
-        take: pagination.limit,
-      });
-      console.warn(
-        "[empleados] usando fallback sin campo Tipo en Perfiles",
-        err
-      );
-    }
+      },
+      orderBy: { Nombre: "asc" },
+      skip: pagination.skip,
+      take: pagination.limit,
+    });
 
     let response;
     try {
@@ -313,8 +249,6 @@ export async function GET(req: NextRequest) {
         };
       });
     } catch (mapError) {
-      console.error("[empleados] Error en mapeo de datos:", mapError);
-      console.error("[empleados] Empleados recibidos:", JSON.stringify(empleados, null, 2));
       throw mapError;
     }
 

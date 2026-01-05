@@ -44,8 +44,8 @@ async function resolveTenantId() {
     if (usuario?.TenantId) {
       return Number(usuario.TenantId);
     }
-  } catch (error) {
-    console.error("Error buscando tenantId en DB:", error);
+  } catch {
+    // Error no crítico, retornar null
   }
 
   return null;
