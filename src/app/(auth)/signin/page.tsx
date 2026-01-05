@@ -2,6 +2,7 @@
 
 import CredentialsForm from "@/components/auth/CredentialsForm";
 import { Info } from "lucide-react";
+import Image from "next/image";
 
 export default function SignIn() {
   return (
@@ -10,10 +11,13 @@ export default function SignIn() {
         {/* Header simple (solo credenciales, sin Google) */}
         <div className="text-center">
           <div className="mx-auto h-20 w-20 bg-gradient-to-r from-blue-500 to-[#90c472] rounded-full flex items-center justify-center mb-4 shadow-md">
-            <img
+            <Image
               src="/XPdark.ico"
               alt="Punto X"
-              className="h-12 w-12 object-contain"
+              width={48}
+              height={48}
+              className="object-contain"
+              priority
             />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Bienvenido</h2>

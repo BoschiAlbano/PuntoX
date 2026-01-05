@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthUser, invalidarCacheSesionActiva } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
+import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import prisma from "@/DB/prisma";
 
 /**
@@ -8,15 +9,18 @@ import prisma from "@/DB/prisma";
  */
 export async function GET() {
   try {
-    const { tenantId, error } = await getAuthUser();
+    // Verificar sesión activa solo en endpoints críticos de seguridad
+    const { tenantId, error } = await getAuthUser(true);
 
     if (error || !tenantId) {
       return error || NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
     const tenantIdBigInt = BigInt(tenantId);
+    // Obtener sesiones agrupadas por usuario/dispositivo/IP para evitar duplicados
+    // Mostramos solo la sesión más reciente de cada combinación única
     const sesiones = await prisma.$queryRawUnsafe(`
-      SELECT 
+      SELECT DISTINCT ON (sa."UsuarioId", COALESCE(sa."Dispositivo", ''), COALESCE(sa."IpAddress", ''))
         sa."Id",
         sa."TenantId",
         sa."UsuarioId",
@@ -34,8 +38,7 @@ export async function GET() {
       INNER JOIN "Usuario" u ON sa."UsuarioId" = u."Id"
       WHERE sa."TenantId" = $1
         AND sa."EstaActiva" = true
-      ORDER BY sa."FechaUltimaActividad" DESC
-      LIMIT 50
+      ORDER BY sa."UsuarioId", COALESCE(sa."Dispositivo", ''), COALESCE(sa."IpAddress", ''), sa."FechaUltimaActividad" DESC
     `, tenantIdBigInt) as Array<{
       Id: bigint;
       TenantId: bigint;
@@ -87,7 +90,8 @@ export async function GET() {
  */
 export async function DELETE(req: Request) {
   try {
-    const { tenantId, error } = await getAuthUser();
+    // Verificar sesión activa solo en endpoints críticos de seguridad
+    const { tenantId, error } = await getAuthUser(true);
 
     if (error || !tenantId) {
       return error || NextResponse.json({ error: "No autenticado" }, { status: 401 });
@@ -103,21 +107,86 @@ export async function DELETE(req: Request) {
     const sesionIdBigInt = BigInt(sesionId);
     const tenantIdBigInt = BigInt(tenantId);
 
-    // Verificar que la sesión pertenece al tenant y cerrarla
+    // Obtener el usuario actual para verificar si es su propia sesión
+    const supabase = await getSupabaseServerClient();
+    const {
+      data: { user: currentUser },
+    } = await supabase.auth.getUser();
+
+    if (!currentUser) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
+
+    // Buscar el usuario en la BD
+    const usuarioActual = await prisma.usuario.findFirst({
+      where: {
+        AuthUserId: currentUser.id,
+        TenantId: tenantIdBigInt,
+        EstaEliminado: false,
+      },
+      select: { Id: true },
+    });
+
+    // Primero obtener la sesión para obtener usuario/dispositivo/IP
+    const sesion = await prisma.$queryRawUnsafe<Array<{
+      UsuarioId: bigint;
+      Dispositivo: string | null;
+      IpAddress: string | null;
+      TokenHash: string;
+    }>>(`
+      SELECT "UsuarioId", "Dispositivo", "IpAddress", "TokenHash"
+      FROM "SesionActiva"
+      WHERE "Id" = $1
+        AND "TenantId" = $2
+        AND "EstaActiva" = true
+      LIMIT 1
+    `, sesionIdBigInt, tenantIdBigInt);
+
+    if (!sesion || sesion.length === 0) {
+      return NextResponse.json({ error: "Sesión no encontrada o ya cerrada" }, { status: 404 });
+    }
+
+    // Verificar si es la sesión actual del usuario
+    const esSesionActual = usuarioActual && sesion[0].UsuarioId === usuarioActual.Id;
+
+    // Cerrar todas las sesiones del mismo usuario/dispositivo/IP para evitar duplicados
     const result = await prisma.$executeRawUnsafe(`
       UPDATE "SesionActiva"
       SET "EstaActiva" = false
-      WHERE "Id" = $1
-        AND "TenantId" = $2
-    `, sesionIdBigInt, tenantIdBigInt);
+      WHERE "TenantId" = $1
+        AND "UsuarioId" = $2
+        AND COALESCE("Dispositivo", '') = COALESCE($3, '')
+        AND COALESCE("IpAddress", '') = COALESCE($4, '')
+        AND "EstaActiva" = true
+    `, tenantIdBigInt, sesion[0].UsuarioId, sesion[0].Dispositivo, sesion[0].IpAddress);
 
-    // Si no se actualizó ninguna fila, la sesión no existe o no pertenece al tenant
-    if (result === 0) {
-      return NextResponse.json({ error: "Sesión no encontrada" }, { status: 404 });
+    // Si se cerró la sesión actual, también invalidar todas las sesiones activas del usuario
+    // para forzar el logout en todos sus dispositivos
+    if (esSesionActual && usuarioActual) {
+      await prisma.$executeRawUnsafe(`
+        UPDATE "SesionActiva"
+        SET "EstaActiva" = false
+        WHERE "TenantId" = $1
+          AND "UsuarioId" = $2
+          AND "EstaActiva" = true
+      `, tenantIdBigInt, usuarioActual.Id);
+    }
+
+    // Invalidar cache de sesión activa para el usuario afectado
+    if (usuarioActual) {
+      invalidarCacheSesionActiva(currentUser.id, tenantId);
     }
 
     return NextResponse.json(
-      { message: "Sesión cerrada correctamente" },
+      { 
+        message: esSesionActual 
+          ? "Tu sesión ha sido cerrada. Serás deslogueado." 
+          : "Sesión cerrada correctamente",
+        sesionesCerradas: result,
+        requiereLogout: esSesionActual, // Flag para indicar que el frontend debe hacer logout
+        sesionId: Number(sesionIdBigInt),
+        usuarioId: Number(sesion[0].UsuarioId)
+      },
       { status: 200 }
     );
   } catch (error: unknown) {

@@ -67,7 +67,8 @@ export async function POST(req: NextRequest) {
       ? crypto.createHash("sha256").update(token).digest("hex")
       : crypto.createHash("sha256").update(user.id + Date.now().toString()).digest("hex");
 
-    // Verificar si ya existe una sesión activa para este usuario y token
+    // Verificar si ya existe una sesión activa para este usuario/dispositivo/IP
+    // Esto evita crear sesiones duplicadas para el mismo dispositivo
     const sesionExistente = await prisma.$queryRawUnsafe<Array<{
       Id: bigint;
     }>>(`
@@ -75,22 +76,27 @@ export async function POST(req: NextRequest) {
       WHERE "TenantId" = $1
         AND "UsuarioId" = $2
         AND "EstaActiva" = true
-        AND "TokenHash" = $3
+        AND COALESCE("Dispositivo", '') = COALESCE($3, '')
+        AND COALESCE("IpAddress", '') = COALESCE($4, '')
+        AND COALESCE("UserAgent", '') = COALESCE($5, '')
+      ORDER BY "FechaUltimaActividad" DESC
       LIMIT 1
-    `, usuario.TenantId, usuario.Id, tokenHash);
+    `, usuario.TenantId, usuario.Id, dispositivo || null, ipAddress, userAgent);
 
     if (sesionExistente && sesionExistente.length > 0) {
-      // Actualizar sesión existente
+      // Actualizar sesión existente (incluyendo el token hash por si cambió)
       await prisma.$executeRawUnsafe(`
         UPDATE "SesionActiva"
         SET "FechaUltimaActividad" = NOW(),
-            "IpAddress" = $1,
-            "UserAgent" = $2,
-            "Dispositivo" = $3,
-            "Ubicacion" = $4,
-            "EsConfiable" = $5
-        WHERE "Id" = $6
+            "TokenHash" = $1,
+            "IpAddress" = $2,
+            "UserAgent" = $3,
+            "Dispositivo" = $4,
+            "Ubicacion" = $5,
+            "EsConfiable" = $6
+        WHERE "Id" = $7
       `, 
+        tokenHash,
         ipAddress,
         userAgent,
         dispositivo || null,

@@ -294,6 +294,10 @@ export function useKPIs({
     enabled,
     staleTime: 60000, // 1 minuto
     refetchInterval: 120000, // 2 minutos
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    gcTime: 5 * 60 * 1000, // 5 minutos
+    networkMode: "online",
   });
 }
 
@@ -315,6 +319,10 @@ export function useGraficas({
     queryFn: ({ signal }) => fetchGraficas({ tipo, fechaDesde, fechaHasta, agrupacion, signal }),
     enabled,
     staleTime: 60000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    gcTime: 5 * 60 * 1000, // 5 minutos
+    networkMode: "online",
   });
 }
 
@@ -331,6 +339,10 @@ export function useAlertas({
     enabled,
     staleTime: 30000, // 30 segundos (más frecuente para alertas)
     refetchInterval: 60000, // 1 minuto
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    gcTime: 5 * 60 * 1000, // 5 minutos
+    networkMode: "online",
   });
 }
 
@@ -350,6 +362,10 @@ export function useComplementarios({
     queryFn: ({ signal }) => fetchComplementarios({ tipo, fechaDesde, fechaHasta, signal }),
     enabled,
     staleTime: 60000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    gcTime: 5 * 60 * 1000, // 5 minutos
+    networkMode: "online",
   });
 }
 

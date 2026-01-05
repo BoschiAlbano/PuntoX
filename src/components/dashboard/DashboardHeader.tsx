@@ -2,11 +2,11 @@
 import { motion } from "framer-motion";
 import { addToast } from "@heroui/react";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, memo, useCallback, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
 
-export default function DashboardHeader({
+function DashboardHeaderComponent({
   isShow,
 }: {
   isShow: Dispatch<SetStateAction<boolean>>;
@@ -27,22 +27,20 @@ export default function DashboardHeader({
     "/configuracion": "Configuración",
   };
 
-  // Generar breadcrumbs desde la ruta
-  const generateBreadcrumbs = () => {
+  // Generar breadcrumbs desde la ruta (memoizado para evitar recalcular en cada render)
+  const breadcrumbs = useMemo(() => {
     const paths = pathname.split("/").filter(Boolean);
-    const breadcrumbs = [{ label: "Inicio", path: "/" }];
+    const result = [{ label: "Inicio", path: "/" }];
 
     let currentPath = "";
     paths.forEach((path) => {
       currentPath += `/${path}`;
       const label = routeNames[currentPath] || path.charAt(0).toUpperCase() + path.slice(1);
-      breadcrumbs.push({ label, path: currentPath });
+      result.push({ label, path: currentPath });
     });
 
-    return breadcrumbs;
-  };
-
-  const breadcrumbs = generateBreadcrumbs();
+    return result;
+  }, [pathname]);
 
   const fullName =
     typeof user?.app_metadata?.full_name === "string"
@@ -65,7 +63,7 @@ export default function DashboardHeader({
     "Usuario";
   const displayEmail = typeof user?.email === "string" ? user.email : "";
 
-  async function handleSignOut(): Promise<void> {
+  const handleSignOut = useCallback(async (): Promise<void> => {
     // Cerrar sesión en la base de datos primero
     try {
       await fetch("/api/auth/registrar-sesion", {
@@ -84,7 +82,7 @@ export default function DashboardHeader({
       description: "Has cerrado sesión correctamente",
       color: "success",
     });
-  }
+  }, [supabase]);
 
   return (
     <motion.header
@@ -312,3 +310,7 @@ export default function DashboardHeader({
     </motion.header>
   );
 }
+
+// Memoizar componente para evitar re-renders innecesarios
+const DashboardHeader = memo(DashboardHeaderComponent);
+export default DashboardHeader;

@@ -106,11 +106,16 @@ export function usePagePermission() {
   }, [user, status, pathname, router, permisosData, isLoading, error]);
 
   const permisos = Array.isArray(permisosData?.permisos) ? permisosData.permisos : [];
-  const tieneAcceso = permisosData ? (
-    permisosData.isSuperAdmin === true || 
-    !getPermisoForRoute(pathname) || 
-    tienePermisoParaRuta(permisos, pathname)
-  ) : false;
+  
+  // Si aún está cargando o no hay datos, retornar undefined para indicar que aún no se sabe
+  // Si hay datos, calcular tieneAcceso
+  const tieneAcceso = isLoading || !permisosData 
+    ? undefined 
+    : (
+        permisosData.isSuperAdmin === true || 
+        !getPermisoForRoute(pathname) || 
+        tienePermisoParaRuta(permisos, pathname)
+      );
 
   return { tieneAcceso, permisos, isLoading };
 }

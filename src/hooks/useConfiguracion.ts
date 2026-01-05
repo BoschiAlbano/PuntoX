@@ -562,6 +562,9 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     refetchOnMount: false, // No refetch si los datos están frescos (staleTime)
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutos - los datos de tenant no cambian frecuentemente
+    gcTime: 10 * 60 * 1000, // 10 minutos - mantener en cache más tiempo
+    // Evitar cancelación innecesaria de queries
+    networkMode: "online",
   });
 
   const configuracionQuery = useQuery({
@@ -573,6 +576,8 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     refetchOnMount: false, // No refetch si los datos están frescos (staleTime)
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutos - la configuración no cambia frecuentemente
+    gcTime: 10 * 60 * 1000, // 10 minutos - mantener en cache más tiempo
+    networkMode: "online",
   });
 
   // Queries en cascada para ubicación (provincia → departamento → localidad)
@@ -587,6 +592,8 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     refetchOnMount: false, // No refetch si los datos están frescos
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    networkMode: "online",
   });
 
   const notificacionesQuery = useQuery({
@@ -598,6 +605,8 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     refetchOnMount: false, // No refetch si los datos están frescos
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    networkMode: "online",
   });
 
   const seguridadQuery = useQuery({
@@ -609,6 +618,8 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     refetchOnMount: false, // No refetch si los datos están frescos
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    networkMode: "online",
   });
 
   const fiscalQuery = useQuery({
@@ -620,6 +631,8 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     refetchOnMount: false, // No refetch si los datos están frescos
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    networkMode: "online",
   });
 
   const brandingQuery = useQuery({
@@ -631,6 +644,8 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     refetchOnMount: false, // No refetch si los datos están frescos
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    networkMode: "online",
   });
 
   // Mutations
@@ -790,6 +805,8 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
       refetchOnMount: false,
       refetchOnWindowFocus: false,
       staleTime: 30 * 60 * 1000, // 30 minutos - las provincias nunca cambian
+      gcTime: 60 * 60 * 1000, // 1 hora - mantener en cache mucho tiempo
+      networkMode: "online",
     });
   };
 
@@ -823,6 +840,8 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
       refetchOnMount: false,
       refetchOnWindowFocus: false,
       staleTime: 10 * 60 * 1000, // 10 minutos - las condiciones IVA no cambian frecuentemente
+      gcTime: 30 * 60 * 1000, // 30 minutos
+      networkMode: "online",
     });
   };
 

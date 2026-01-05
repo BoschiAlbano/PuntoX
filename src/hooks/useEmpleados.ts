@@ -502,6 +502,8 @@ export function useEmpleados({
     refetchOnMount: false, // No refetch si los datos están frescos
     refetchOnWindowFocus: false, // No refetch al cambiar de ventana
     staleTime: 30 * 1000, // 30 segundos - los empleados pueden cambiar pero no tan frecuentemente
+    gcTime: 5 * 60 * 1000, // 5 minutos - mantener en cache
+    networkMode: "online", // Evitar cancelaciones innecesarias
   });
 
   const rolesQuery = useQuery({
@@ -511,6 +513,8 @@ export function useEmpleados({
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutos - los roles no cambian frecuentemente
+    gcTime: 10 * 60 * 1000, // 10 minutos - mantener en cache
+    networkMode: "online",
   });
 
   const provinciasQuery = useQuery({
@@ -520,6 +524,8 @@ export function useEmpleados({
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     staleTime: 30 * 60 * 1000, // 30 minutos - las provincias nunca cambian
+    gcTime: 60 * 60 * 1000, // 1 hora - mantener en cache mucho tiempo
+    networkMode: "online",
   });
 
   const auditoriasQuery = useQuery({
@@ -529,6 +535,8 @@ export function useEmpleados({
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     staleTime: 10 * 1000, // 10 segundos - las auditorías pueden cambiar más frecuentemente
+    gcTime: 5 * 60 * 1000, // 5 minutos - mantener en cache
+    networkMode: "online",
   });
 
   // Mutations

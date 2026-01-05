@@ -118,13 +118,16 @@ function SectionPanel({
 }
 
 export default function Configuracion() {
-  usePagePermission(); // Proteger página con permisos
+  const { tieneAcceso, isLoading: isLoadingPermisos } = usePagePermission(); // Proteger página con permisos
   const router = useRouter();
+  
+  // TODOS LOS HOOKS DEBEN IR ANTES DE LOS EARLY RETURNS
   const [openSection, setOpenSection] = useState<SectionKey>("perfil");
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   // Usar TanStack Query hook
   // Optimización: Las queries tienen staleTime y refetchOnMount: false para evitar peticiones innecesarias
+  // enabled solo se activa cuando tenemos acceso confirmado (evita cancelaciones por re-renders)
   const {
     tenant: tenantData,
     configuracion: configuracionData,
@@ -152,7 +155,7 @@ export default function Configuracion() {
     useDepartamentos,
     useLocalidades,
     useCondicionesIva,
-  } = useConfiguracion({ enabled: true });
+  } = useConfiguracion({ enabled: tieneAcceso ?? true }); // Solo habilitar cuando tenemos acceso confirmado
 
   // Estados locales para edición (se sincronizan con los datos del hook)
   const [configuracion, setConfiguracion] = useState<{
@@ -671,21 +674,51 @@ export default function Configuracion() {
         method: "DELETE",
         credentials: "include",
       });
+      
       if (response.ok) {
+        const data = await response.json().catch(() => ({}));
+        
+        // Si es la sesión actual, hacer logout de Supabase
+        if (data.requiereLogout) {
+          const { getSupabaseBrowserClient } = await import("@/lib/supabase/browserClient");
+          const supabase = getSupabaseBrowserClient();
+          
+          // Cerrar todas las sesiones en Supabase
+          await supabase.auth.signOut();
+          
+          addToast({
+            title: "Sesión cerrada",
+            description: data.message || "Tu sesión ha sido cerrada. Serás redirigido al login.",
+            color: "success",
+          });
+          
+          // Redirigir al login después de un breve delay
+          setTimeout(() => {
+            window.location.href = "/signin";
+          }, 1000);
+          return;
+        }
+        
+        // Si es otra sesión, mostrar mensaje y recargar
         addToast({
           title: "Sesión cerrada",
-          description: "La sesión se cerró correctamente",
+          description: `La sesión del usuario ha sido cerrada. Si estaba activa en otro dispositivo, será deslogueado automáticamente.`,
           color: "success",
         });
-        loadSesionesActivas();
-        loadEstadisticasSeguridad();
+        
+        // Recargar sesiones y estadísticas
+        await loadSesionesActivas();
+        await loadEstadisticasSeguridad();
       } else {
-        throw new Error("Error al cerrar sesión");
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData?.error || "Error al cerrar sesión";
+        throw new Error(errorMessage);
       }
-    } catch {
+    } catch (error) {
+      console.error("Error cerrando sesión:", error);
       addToast({
         title: "Error",
-        description: "No se pudo cerrar la sesión",
+        description: error instanceof Error ? error.message : "No se pudo cerrar la sesión",
         color: "danger",
       });
     }
@@ -1087,6 +1120,36 @@ export default function Configuracion() {
       // Los errores ya se manejan en las mutaciones individuales (onError en el hook)
     }
   };
+
+  // EARLY RETURNS DESPUÉS DE TODOS LOS HOOKS
+  // No renderizar contenido hasta que los permisos estén verificados
+  if (isLoadingPermisos) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-4">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
+          <p className="text-sm text-gray-600">Verificando permisos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si tieneAcceso es undefined, aún está cargando
+  if (tieneAcceso === undefined) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-4">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
+          <p className="text-sm text-gray-600">Verificando permisos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no tiene acceso, no renderizar nada (usePagePermission ya redirige)
+  if (tieneAcceso === false) {
+    return null;
+  }
 
   return (
     <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center">

@@ -56,13 +56,19 @@ export default function ProductSearch({
   // Query for Modal List
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ["productos", debouncedSearch, page],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const res = await fetch(
-        `/api/productos?q=${debouncedSearch}&page=${page}&limit=10`
+        `/api/productos?q=${debouncedSearch}&page=${page}&limit=10`,
+        { signal }
       );
       return res.json();
     },
     enabled: isOpen,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    staleTime: 30 * 1000, // 30 segundos
+    gcTime: 5 * 60 * 1000, // 5 minutos
+    networkMode: "online",
   });
 
   const handleInputKeyDown = async (e: React.KeyboardEvent) => {

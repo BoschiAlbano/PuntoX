@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
+// Cache simple para verificación de sesión en middleware (evita verificar en cada request)
+const sessionCache = new Map<string, { valid: boolean; timestamp: number }>();
+const SESSION_CACHE_TTL = 10 * 1000; // 10 segundos de cache
+
+// Limpiar cache expirado periódicamente
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of sessionCache.entries()) {
+    if ((now - value.timestamp) > SESSION_CACHE_TTL) {
+      sessionCache.delete(key);
+    }
+  }
+}, 30 * 1000); // Limpiar cada 30 segundos
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -39,6 +53,27 @@ export async function middleware(req: NextRequest) {
     return response;
   }
 
+  // Obtener session token de cookies para usar como cache key
+  const sessionToken = req.cookies.get("sb-access-token")?.value || 
+                       req.cookies.get("sb-refresh-token")?.value || 
+                       "unknown";
+  const cacheKey = `${sessionToken}-${pathname}`;
+  
+  // Verificar cache primero
+  const cached = sessionCache.get(cacheKey);
+  const now = Date.now();
+  
+  if (cached && (now - cached.timestamp) < SESSION_CACHE_TTL) {
+    if (cached.valid) {
+      return response;
+    } else {
+      // Sesión inválida en cache, redirigir
+      const signInUrl = new URL("/signin", req.url);
+      signInUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(signInUrl);
+    }
+  }
+
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {
@@ -65,6 +100,22 @@ export async function middleware(req: NextRequest) {
   const {
     data: { session },
   } = await supabase.auth.getSession();
+
+  // Actualizar cache
+  sessionCache.set(cacheKey, {
+    valid: !!session,
+    timestamp: now
+  });
+
+  // Limitar tamaño del cache (mantener solo últimos 500)
+  if (sessionCache.size > 500) {
+    const entries = Array.from(sessionCache.entries());
+    entries.sort((a, b) => b[1].timestamp - a[1].timestamp);
+    sessionCache.clear();
+    entries.slice(0, 500).forEach(([key, value]) => {
+      sessionCache.set(key, value);
+    });
+  }
 
   if (session) {
     return response;

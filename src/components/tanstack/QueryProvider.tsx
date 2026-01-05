@@ -13,17 +13,16 @@ export default function QueryProvider({
       new QueryClient({
         defaultOptions: {
           queries: {
-            // Tiempo que los datos se consideran frescos (no se re-fetch)
-            // staleTime: 5 * 60 * 1000, // 5 minutos de caché global
-            staleTime: Infinity,
+            // Configuración por defecto (puede ser sobrescrita por queries individuales)
+            staleTime: 30 * 1000, // 30 segundos por defecto (datos dinámicos)
             // Tiempo que los datos permanecen en caché antes de ser eliminados
             gcTime: 5 * 60 * 1000, // 5 minutos (anteriormente cacheTime)
             // Reintentar 1 vez si falla
             retry: 1,
-            // No re-fetch al cambiar de ventana por defecto (opcional)
+            // No re-fetch al cambiar de ventana por defecto
             refetchOnWindowFocus: false,
-            // Re-fetch al montar si los datos están stale (necesario para cuando enabled cambia)
-            refetchOnMount: true,
+            // Re-fetch al montar solo si los datos están stale
+            refetchOnMount: false,
           },
         },
       })

@@ -204,6 +204,9 @@ function estadoColor(estado: string) {
 function AnaliticasContent() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") || "dashboard";
+  
+  // Obtener permisos para habilitar queries solo cuando tenga acceso
+  const { tieneAcceso } = usePagePermission();
 
   // Filtros para dashboard
   const [periodo, setPeriodo] = useState<"semanal" | "mensual">("mensual");
@@ -234,11 +237,12 @@ function AnaliticasContent() {
     }
   }, [periodo, fechaDesde, fechaHasta]);
 
-  // Hooks para datos
+  // Hooks para datos (solo habilitar cuando tenga acceso confirmado)
   const { data: kpisData, isLoading: kpisLoading } = useKPIs({
     fechaDesde,
     fechaHasta,
     periodo,
+    enabled: tieneAcceso ?? true,
   });
 
   const { data: graficasIngresos, isLoading: ingresosLoading } = useGraficas({
@@ -246,25 +250,31 @@ function AnaliticasContent() {
     fechaDesde,
     fechaHasta,
     agrupacion,
+    enabled: tieneAcceso ?? true,
   });
 
   const { data: graficasPagos, isLoading: pagosLoading } = useGraficas({
     tipo: "pagos",
     fechaDesde,
     fechaHasta,
+    enabled: tieneAcceso ?? true,
   });
 
   const { data: graficasProductos, isLoading: productosLoading } = useGraficas({
     tipo: "productos",
     fechaDesde,
     fechaHasta,
+    enabled: tieneAcceso ?? true,
   });
 
-  const { data: alertasData, isLoading: alertasLoading } = useAlertas({});
+  const { data: alertasData, isLoading: alertasLoading } = useAlertas({
+    enabled: tieneAcceso ?? true,
+  });
 
   const { data: complementariosData } = useComplementarios({
     fechaDesde,
     fechaHasta,
+    enabled: tieneAcceso ?? true,
   });
 
   const logsFiltrados = useMemo(() => {
@@ -853,7 +863,37 @@ function AnaliticasContent() {
 }
 
 export default function Analiticas() {
-  usePagePermission(); // Proteger página con permisos
+  const { tieneAcceso, isLoading: isLoadingPermisos } = usePagePermission(); // Proteger página con permisos
+  
+  // No renderizar contenido hasta que los permisos estén verificados
+  if (isLoadingPermisos) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-4">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
+          <p className="text-sm text-gray-600">Verificando permisos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si tieneAcceso es undefined, aún está cargando
+  if (tieneAcceso === undefined) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-4">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
+          <p className="text-sm text-gray-600">Verificando permisos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no tiene acceso, no renderizar nada (usePagePermission ya redirige)
+  if (tieneAcceso === false) {
+    return null;
+  }
+
   return (
     <Suspense fallback={<div className="p-6">Cargando...</div>}>
       <AnaliticasContent />

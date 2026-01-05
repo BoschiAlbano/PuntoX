@@ -11,12 +11,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
+    // Solo redirigir si estamos autenticados y no estamos ya en proceso de redirección
     if (status === "authenticated" && !isRedirecting) {
       setIsRedirecting(true);
       // Obtener permisos y redirigir a la primera página disponible
       fetch("/api/permisos", { cache: "no-store" })
-        .then((res) => res.json())
+        .then((res) => {
+          // Si la respuesta es 401, no redirigir (el interceptor se encargará)
+          if (res.status === 401) {
+            setIsRedirecting(false);
+            return null;
+          }
+          return res.json();
+        })
         .then((data) => {
+          if (!data) return; // Si data es null, ya manejamos el error arriba
+          
           const permisos = Array.isArray(data.permisos) ? data.permisos : [];
           const isSuperAdmin = data.isSuperAdmin === true;
 
@@ -57,8 +67,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         })
         .catch((error) => {
           console.error("Error obteniendo permisos:", error);
-          // En caso de error, redirigir a empleados por defecto
-          router.push("/empleados");
+          setIsRedirecting(false);
+          // No redirigir en caso de error si es 401 (sesión cerrada)
+          if (error?.status !== 401) {
+            router.push("/empleados");
+          }
         });
     }
   }, [status, router, isRedirecting]);

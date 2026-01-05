@@ -1,13 +1,23 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import Sidebar from "@/components/dashboard/Sidebar";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import { useEffect, useState, Suspense } from "react";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import Loading from "@/components/loading/loading";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
+
+// Lazy loading de componentes pesados del layout
+const Sidebar = dynamic(() => import("@/components/dashboard/Sidebar"), {
+  loading: () => <div className="w-[280px] bg-slate-800 animate-pulse rounded-lg" />,
+  ssr: false, // Sidebar no necesita SSR
+});
+
+const DashboardHeader = dynamic(() => import("@/components/dashboard/DashboardHeader"), {
+  loading: () => <div className="h-16 bg-white animate-pulse rounded-lg" />,
+  ssr: true, // Header puede ser SSR
+});
 
 export default function DashboardLayout({
   children,
@@ -32,6 +42,7 @@ export default function DashboardLayout({
     }
   }, [status, router]);
 
+  // Mostrar loading solo si realmente está cargando (no bloquear si ya tenemos sesión)
   if (status === "loading") {
     return <Loading />;
   }
@@ -43,6 +54,9 @@ export default function DashboardLayout({
       </div>
     );
   }
+
+  // Si está autenticado, renderizar inmediatamente sin esperar más verificaciones
+  // Esto evita el delay en la primera carga
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 flex">

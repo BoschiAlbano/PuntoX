@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, memo, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { filtrarRutasPorPermisos } from "@/lib/permissions/routePermissions";
@@ -181,7 +181,7 @@ const menuItems: MenuItem[] = [
   },
 ];
 
-export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
+function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { supabase, user, status } = useSupabaseAuthContext();
@@ -236,7 +236,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     return filtrarRutasPorPermisos(menuItems, permisos);
   }, [permisos, isSuperAdmin]);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
     try {
@@ -247,7 +247,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       setIsLoggingOut(false);
       router.push("/signin");
     }
-  };
+  }, [isLoggingOut, supabase, router]);
 
   return (
     // <section className={`z-[99] relative flex flex-col h-auto ${isCollapsed ? "w-[80px]" : "w-[280px]"} transition-all duration-300 ease-in-out`}>
@@ -340,6 +340,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               <motion.button
                 key={item.href}
                 onClick={() => router.push(item.href)}
+                onMouseEnter={() => {
+                  // Prefetch de la ruta al hacer hover para navegación instantánea
+                  router.prefetch(item.href);
+                }}
                 whileHover={{
                   x: isCollapsed ? 0 : 2,
                   scale: isCollapsed ? 1 : 1.01,
@@ -480,3 +484,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     // </section>
   );
 }
+
+// Memoizar componente para evitar re-renders innecesarios
+const Sidebar = memo(SidebarComponent);
+export default Sidebar;

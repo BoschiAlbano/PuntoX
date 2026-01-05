@@ -234,41 +234,42 @@ export async function POST(req: NextRequest) {
       return await tx.persona.findUnique({
         where: { Id: persona.Id },
         select: {
-        Id: true,
-        Nombre: true,
-        Apellido: true,
-        Dni: true,
-        Direccion: true,
-        Telefono: true,
-        Mail: true,
-        LocalidadId: true,
-        Localidad: {
-          select: {
-            Id: true,
-            Descripcion: true,
-            Departamento: {
-              select: {
-                Id: true,
-                Descripcion: true,
-                Provincia: { select: { Id: true, Descripcion: true } },
+          Id: true,
+          Nombre: true,
+          Apellido: true,
+          Dni: true,
+          Direccion: true,
+          Telefono: true,
+          Mail: true,
+          LocalidadId: true,
+          Localidad: {
+            select: {
+              Id: true,
+              Descripcion: true,
+              Departamento: {
+                select: {
+                  Id: true,
+                  Descripcion: true,
+                  Provincia: { select: { Id: true, Descripcion: true } },
+                },
+              },
+            },
+          },
+          Persona_Cliente: {
+            select: {
+              CondicionIvaId: true,
+              ActivarCtaCte: true,
+              TieneLimiteCompra: true,
+              MontoMaximoCtaCte: true,
+              CondicionIva: {
+                select: {
+                  Descripcion: true,
+                },
               },
             },
           },
         },
-        Persona_Cliente: {
-          select: {
-            CondicionIvaId: true,
-            ActivarCtaCte: true,
-            TieneLimiteCompra: true,
-            MontoMaximoCtaCte: true,
-            CondicionIva: {
-              select: {
-                Descripcion: true,
-              },
-            },
-          },
-        },
-      },
+      });
     });
 
     const clienteResponse = {
@@ -485,43 +486,44 @@ export async function PATCH(req: NextRequest) {
       return await tx.persona.findUnique({
         where: { Id: BigInt(validarCliente.Id) },
         select: {
-        Id: true,
-        Nombre: true,
-        Apellido: true,
-        Dni: true,
-        Direccion: true,
-        Telefono: true,
-        Mail: true,
-        LocalidadId: true,
-        Localidad: {
-          select: {
-            Descripcion: true,
-            Departamento: {
-              select: {
-                Descripcion: true,
-                Provincia: {
-                  select: {
-                    Descripcion: true,
+          Id: true,
+          Nombre: true,
+          Apellido: true,
+          Dni: true,
+          Direccion: true,
+          Telefono: true,
+          Mail: true,
+          LocalidadId: true,
+          Localidad: {
+            select: {
+              Descripcion: true,
+              Departamento: {
+                select: {
+                  Descripcion: true,
+                  Provincia: {
+                    select: {
+                      Descripcion: true,
+                    },
                   },
                 },
               },
             },
           },
-        },
-        Persona_Cliente: {
-          select: {
-            CondicionIvaId: true,
-            ActivarCtaCte: true,
-            TieneLimiteCompra: true,
-            MontoMaximoCtaCte: true,
-            CondicionIva: {
-              select: {
-                Descripcion: true,
+          Persona_Cliente: {
+            select: {
+              CondicionIvaId: true,
+              ActivarCtaCte: true,
+              TieneLimiteCompra: true,
+              MontoMaximoCtaCte: true,
+              CondicionIva: {
+                select: {
+                  Descripcion: true,
+                },
               },
             },
           },
         },
-      },
+      });
     });
 
     const clienteResponse = {

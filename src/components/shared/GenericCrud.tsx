@@ -14,6 +14,7 @@ import {
 } from "@heroui/react";
 import GenericTable, { Column } from "./GenericTable";
 import { useGenericApi } from "@/hooks/useGenericApi";
+import { useDebounce } from "@/hooks/useDebounce";
 
 // Interfaz que deben cumplir los formularios pasados a este componente
 export interface GenericFormProps<T> {
@@ -85,7 +86,10 @@ export default function GenericCrud<T extends { Id: number | string }>({
     direction: "ascending",
   });
 
-  // Hook de Data
+  // Debounce de búsqueda para evitar requests en cada keystroke
+  const debouncedSearch = useDebounce(search, 400);
+
+  // Hook de Data (usa debouncedSearch en lugar de search)
   const {
     data,
     paginationMeta,
@@ -97,7 +101,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
   } = useGenericApi<T>({
     endpoint: apiPath,
     queryKey,
-    search,
+    search: debouncedSearch,
     page,
     limit,
     transformer,

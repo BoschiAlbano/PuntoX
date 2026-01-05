@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   Button,
   Card,
@@ -131,7 +132,9 @@ export default function Empleados() {
   const router = useRouter();
   // usePagePermission ya maneja la autorización y redirección automática
   const { isLoading: isLoadingPermisos, tieneAcceso } = usePagePermission();
-  const isAuthorized = tieneAcceso ?? true; // Por defecto permitir acceso mientras carga
+  
+  // TODOS LOS HOOKS DEBEN IR ANTES DE LOS EARLY RETURNS
+  const isAuthorized = tieneAcceso; // Ya verificamos que tiene acceso
   const [selectedTab, setSelectedTab] = useState<string>("usuarios");
   
   // Estado de paginación
@@ -154,7 +157,9 @@ export default function Empleados() {
     estado: "todos",
   });
   const [busquedaInput, setBusquedaInput] = useState("");
-  const busquedaTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Debounce de búsqueda usando hook (más limpio y eficiente)
+  const debouncedBusqueda = useDebounce(busquedaInput, 400);
 
   const [nuevoUsuario, setNuevoUsuario] = useState({
     nombre: "",
@@ -434,22 +439,11 @@ export default function Empleados() {
     }
   }, [permisosQuery.data]);
 
-  // Debounce para búsqueda
+  // Actualizar filtros cuando el valor debounced cambia
   useEffect(() => {
-    if (busquedaTimeoutRef.current) {
-      clearTimeout(busquedaTimeoutRef.current);
-    }
-    busquedaTimeoutRef.current = setTimeout(() => {
-      setFiltros((prev) => ({ ...prev, busqueda: busquedaInput }));
-      setPage(1);
-    }, 500); // 500ms de delay
-
-    return () => {
-      if (busquedaTimeoutRef.current) {
-        clearTimeout(busquedaTimeoutRef.current);
-      }
-    };
-  }, [busquedaInput]);
+    setFiltros((prev) => ({ ...prev, busqueda: debouncedBusqueda }));
+    setPage(1);
+  }, [debouncedBusqueda]);
 
   // Redirigir al login si el usuario cierra sesión (sin hacer peticiones)
   useEffect(() => {
@@ -993,15 +987,34 @@ export default function Empleados() {
     );
   }
 
-  if (!tieneAcceso) {
+  // EARLY RETURNS DESPUÉS DE TODOS LOS HOOKS
+  // No renderizar contenido hasta que los permisos estén verificados
+  if (isLoadingPermisos) {
     return (
-      <div className="max-w-4xl mx-auto py-16 text-center space-y-3">
-        <h1 className="text-2xl font-semibold text-slate-900">Sin permisos</h1>
-        <p className="text-gray-600">
-          Necesitas el permiso empleados:admin para acceder a esta sección.
-        </p>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-4">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
+          <p className="text-sm text-gray-600">Verificando permisos...</p>
+        </div>
       </div>
     );
+  }
+
+  // Si tieneAcceso es undefined, aún está cargando
+  if (tieneAcceso === undefined) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-4">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
+          <p className="text-sm text-gray-600">Verificando permisos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no tiene acceso, no renderizar nada (usePagePermission ya redirige)
+  if (tieneAcceso === false) {
+    return null;
   }
 
   return (
@@ -1470,7 +1483,8 @@ export default function Empleados() {
                   const { categoria, color } = mapearAccion(aud.accion);
                   const tiempoRelativo = formatTiempoRelativo(aud.fecha);
                   const descripcion = formatearAccion(aud);
-                  const severidadColor = mapearSeveridad(aud.severidad || "INFO");
+                  // La API no devuelve severidad, usar "INFO" por defecto
+                  const severidadColor = mapearSeveridad("INFO");
                   
                   return (
                     <div key={aud.id} className="flex items-center justify-between py-2">
@@ -1478,7 +1492,7 @@ export default function Empleados() {
                         <div className="flex items-center gap-2 mb-1">
                           <p className="font-semibold text-slate-900">{descripcion}</p>
                           <Chip size="sm" color={severidadColor} variant="flat">
-                            {aud.severidad || "INFO"}
+                            INFO
                           </Chip>
                         </div>
                         <p className="text-sm text-gray-500">{tiempoRelativo}</p>

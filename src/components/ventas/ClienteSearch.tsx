@@ -49,13 +49,19 @@ export default function ClienteSearch({
 
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ["clientes_ventas", debouncedSearch, page],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const res = await fetch(
-        `/api/clientes?q=${debouncedSearch}&page=${page}&limit=5`
+        `/api/clientes?q=${debouncedSearch}&page=${page}&limit=5`,
+        { signal }
       );
       return res.json();
     },
     enabled: isOpen,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    staleTime: 30 * 1000, // 30 segundos
+    gcTime: 5 * 60 * 1000, // 5 minutos
+    networkMode: "online",
   });
 
   const items = data?.data || [];

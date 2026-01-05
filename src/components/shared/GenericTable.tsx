@@ -9,9 +9,10 @@ import {
   Spinner,
   SortDescriptor,
 } from "@heroui/react";
-import { useEffect, useState, Key } from "react";
+import { useState, useEffect, Key } from "react";
 import { RefreshCw } from "lucide-react";
 import { PaginationMeta } from "@/hooks/useProductos"; // Reutilizamos interface o la movemos a types compartidos
+import { useDebounce } from "@/hooks/useDebounce";
 
 export interface Column {
   uid: string;
@@ -68,14 +69,15 @@ export default function GenericTable<T extends { Id: number | string }>({
 }: GenericTableProps<T>) {
   const [searchInput, setSearchInput] = useState(search);
 
-  // Debounce más agresivo para la búsqueda (800ms para reducir llamadas)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onSearchChange(searchInput);
-    }, 800);
+  // Debounce de búsqueda (400ms para reducir llamadas)
+  const debouncedSearch = useDebounce(searchInput, 400);
 
-    return () => clearTimeout(timer);
-  }, [searchInput, onSearchChange]);
+  // Actualizar búsqueda cuando el valor debounced cambia
+  useEffect(() => {
+    if (debouncedSearch !== search) {
+      onSearchChange(debouncedSearch);
+    }
+  }, [debouncedSearch, search, onSearchChange]);
 
   return (
     <section className="w-full h-full flex flex-col gap-4 overflow-hidden">

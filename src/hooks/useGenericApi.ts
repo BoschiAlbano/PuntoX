@@ -85,6 +85,8 @@ export function useGenericApi<T extends { Id: number | string }>({
     refetchOnMount: false, // No refetch si los datos están frescos
     refetchOnWindowFocus: false, // No refetch al cambiar de ventana
     staleTime: 30 * 1000, // 30 segundos - los datos se consideran frescos
+    gcTime: 5 * 60 * 1000, // 5 minutos - mantener en cache
+    networkMode: "online", // Evitar cancelaciones innecesarias
   });
 
   // --- Mutations ---

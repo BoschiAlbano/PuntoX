@@ -75,6 +75,8 @@ export async function GET(req: NextRequest) {
         Fecha: true,
         Accion: true,
         Detalle: true,
+        ValorAnterior: true,
+        ValorNuevo: true,
         IpAddress: true,
         UserAgent: true,
         Usuario: {
@@ -148,7 +150,7 @@ export async function GET(req: NextRequest) {
         id: Number(aud.Id),
         fecha: aud.Fecha.toISOString(),
         accion: aud.Accion,
-        severidad: aud.Severidad,
+        severidad: "INFO", // La tabla no tiene campo Severidad, usar valor por defecto
         usuario: {
           id: Number(aud.Usuario.Id),
           nombre: usuarioNombre,

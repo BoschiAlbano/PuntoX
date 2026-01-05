@@ -49,27 +49,120 @@ const SessionProviderComponent = ({
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
 
+  // Interceptor global para detectar sesiones cerradas
+  useEffect(() => {
+    // Solo interceptar si estamos en una página protegida (no en signin/signup)
+    if (typeof window === "undefined") return;
+    
+    // Guardar el fetch original
+    const originalFetch = window.fetch;
+    let isHandlingLogout = false;
+
+    // Interceptar todas las llamadas fetch
+    window.fetch = async (...args) => {
+      const url = typeof args[0] === "string" 
+        ? args[0] 
+        : args[0] instanceof URL 
+          ? args[0].href 
+          : args[0]?.url || "";
+      
+      // No interceptar llamadas a rutas públicas
+      const publicPaths = ["/signin", "/signup", "/new-tenant", "/api/auth"];
+      const isPublicPath = publicPaths.some(path => url.includes(path));
+      
+      // Si es una ruta pública, no interceptar
+      if (isPublicPath) {
+        return originalFetch(...args);
+      }
+
+      const response = await originalFetch(...args);
+
+      // Si la respuesta es 401 y no estamos manejando un logout, verificar si es por sesión cerrada
+      if (response.status === 401 && !isHandlingLogout) {
+        try {
+          const currentPath = window.location.pathname;
+          const publicPagePaths = ["/signin", "/signup", "/new-tenant"];
+          const isOnPublicPage = publicPagePaths.some(path => currentPath.startsWith(path));
+          
+          // Si ya estamos en una página pública, no hacer nada
+          if (isOnPublicPage) {
+            return response;
+          }
+
+          const clonedResponse = response.clone();
+          const data = await clonedResponse.json().catch(() => ({}));
+          
+          // Si el error indica que la sesión fue cerrada, hacer logout automáticamente
+          if (data.sesionCerrada === true || data.details?.includes("sesión ha sido cerrada")) {
+            // Prevenir loops infinitos
+            if (isHandlingLogout) return response;
+            isHandlingLogout = true;
+
+            console.warn("[SessionProvider] Sesión cerrada detectada, haciendo logout automático");
+            
+            // Actualizar estado primero
+            setSession(null);
+            setStatus("unauthenticated");
+            
+            // Cerrar sesión en Supabase (no bloqueante)
+            supabase.auth.signOut().catch((error) => {
+              console.warn("[SessionProvider] Error al cerrar sesión:", error);
+            });
+            
+            // Redirigir al login usando replace para evitar problemas de navegación
+            setTimeout(() => {
+              window.location.replace("/signin?reason=session_closed");
+            }, 100);
+          }
+        } catch (error) {
+          // Si no se puede parsear la respuesta, continuar normalmente
+          console.warn("[SessionProvider] Error al verificar respuesta 401:", error);
+        }
+      }
+
+      return response;
+    };
+
+    // Cleanup: restaurar fetch original al desmontar
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, [supabase]);
+
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
-        setSession(data.session ?? null);
-        setStatus(data.session ? "authenticated" : "unauthenticated");
+        // Obtener sesión de forma optimizada (getSession es síncrono si hay cache)
+        const { data, error } = await supabase.auth.getSession();
+        
+        // Si hay error o no hay sesión, establecer estado inmediatamente
+        if (error || !data.session) {
+          setSession(null);
+          setStatus("unauthenticated");
+          return;
+        }
 
-        // Sincronizar permisos si hay sesión y no tiene permisos en JWT
+        // Establecer sesión y estado inmediatamente (no bloquear renderizado)
+        setSession(data.session);
+        setStatus("authenticated");
+
+        // Sincronizar permisos en background (no bloqueante)
         if (data.session?.user) {
           const metadata = data.session.user.app_metadata || {};
           const tienePermisos =
             Array.isArray(metadata.permissions) &&
             metadata.permissions.length > 0;
 
-          // Si no tiene permisos en JWT, sincronizar (solo una vez)
+          // Si no tiene permisos en JWT, sincronizar en background (no bloquea)
           if (!tienePermisos) {
-            fetch("/api/auth/sync-permissions", { method: "POST" }).catch(
-              (err) => {
-                console.warn("No se pudieron sincronizar permisos:", err);
-              }
-            );
+            // Usar setTimeout para no bloquear el renderizado
+            setTimeout(() => {
+              fetch("/api/auth/sync-permissions", { method: "POST" }).catch(
+                (err) => {
+                  console.warn("No se pudieron sincronizar permisos:", err);
+                }
+              );
+            }, 0);
           }
         }
       } catch (error: any) {
@@ -85,6 +178,7 @@ const SessionProviderComponent = ({
       }
     };
 
+    // Cargar sesión inmediatamente
     fetchSession();
 
     const { data } = supabase.auth.onAuthStateChange(
