@@ -190,7 +190,9 @@ const fetchKPIs = async ({
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al cargar KPIs");
   }
 
@@ -216,12 +218,17 @@ const fetchGraficas = async ({
   if (fechaHasta) params.append("fechaHasta", fechaHasta);
   if (agrupacion) params.append("agrupacion", agrupacion);
 
-  const response = await fetch(`/api/analiticas/graficas?${params.toString()}`, {
-    signal,
-  });
+  const response = await fetch(
+    `/api/analiticas/graficas?${params.toString()}`,
+    {
+      signal,
+    }
+  );
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al cargar gráficas");
   }
 
@@ -243,7 +250,9 @@ const fetchAlertas = async ({
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al cargar alertas");
   }
 
@@ -266,12 +275,17 @@ const fetchComplementarios = async ({
   if (fechaDesde) params.append("fechaDesde", fechaDesde);
   if (fechaHasta) params.append("fechaHasta", fechaHasta);
 
-  const response = await fetch(`/api/analiticas/complementarios?${params.toString()}`, {
-    signal,
-  });
+  const response = await fetch(
+    `/api/analiticas/complementarios?${params.toString()}`,
+    {
+      signal,
+    }
+  );
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al cargar datos complementarios");
   }
 
@@ -291,7 +305,8 @@ export function useKPIs({
 }) {
   return useQuery({
     queryKey: ["analiticas", "kpis", fechaDesde, fechaHasta, periodo],
-    queryFn: ({ signal }) => fetchKPIs({ fechaDesde, fechaHasta, periodo, signal }),
+    queryFn: ({ signal }) =>
+      fetchKPIs({ fechaDesde, fechaHasta, periodo, signal }),
     enabled: enabled && !!fechaDesde && !!fechaHasta, // Solo ejecutar si las fechas están definidas
     refetchInterval: 120000, // 2 minutos
     ...analyticsQueryOptions,
@@ -312,8 +327,16 @@ export function useGraficas({
   enabled?: boolean;
 }) {
   return useQuery({
-    queryKey: ["analiticas", "graficas", tipo, fechaDesde, fechaHasta, agrupacion],
-    queryFn: ({ signal }) => fetchGraficas({ tipo, fechaDesde, fechaHasta, agrupacion, signal }),
+    queryKey: [
+      "analiticas",
+      "graficas",
+      tipo,
+      fechaDesde,
+      fechaHasta,
+      agrupacion,
+    ],
+    queryFn: ({ signal }) =>
+      fetchGraficas({ tipo, fechaDesde, fechaHasta, agrupacion, signal }),
     enabled: enabled && !!fechaDesde && !!fechaHasta, // Solo ejecutar si las fechas están definidas
     ...analyticsQueryOptions,
   });
@@ -330,7 +353,6 @@ export function useAlertas({
     queryKey: ["analiticas", "alertas", tipo],
     queryFn: ({ signal }) => fetchAlertas({ tipo, signal }),
     enabled,
-    staleTime: 30000, // 30 segundos (más frecuente para alertas)
     refetchInterval: 60000, // 1 minuto
     ...analyticsQueryOptions,
   });
@@ -349,9 +371,9 @@ export function useComplementarios({
 }) {
   return useQuery({
     queryKey: ["analiticas", "complementarios", tipo, fechaDesde, fechaHasta],
-    queryFn: ({ signal }) => fetchComplementarios({ tipo, fechaDesde, fechaHasta, signal }),
+    queryFn: ({ signal }) =>
+      fetchComplementarios({ tipo, fechaDesde, fechaHasta, signal }),
     enabled: enabled && !!fechaDesde && !!fechaHasta, // Solo ejecutar si las fechas están definidas
     ...analyticsQueryOptions,
   });
 }
-
