@@ -1,7 +1,14 @@
 ﻿"use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useMemo, memo, useCallback, startTransition } from "react";
+import {
+  useState,
+  useEffect,
+  useMemo,
+  memo,
+  useCallback,
+  startTransition,
+} from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
@@ -79,26 +86,26 @@ const menuItems: MenuItem[] = [
     label: "Productos",
     href: "/productos",
   },
-  {
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-        />
-      </svg>
-    ),
-    label: "Test",
-    href: "/test",
-    badge: "12",
-  },
+  // {
+  //   icon: (
+  //     <svg
+  //       className="w-5 h-5"
+  //       fill="none"
+  //       stroke="currentColor"
+  //       viewBox="0 0 24 24"
+  //     >
+  //       <path
+  //         strokeLinecap="round"
+  //         strokeLinejoin="round"
+  //         strokeWidth={2}
+  //         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+  //       />
+  //     </svg>
+  //   ),
+  //   label: "Test",
+  //   href: "/test",
+  //   badge: "12",
+  // },
   {
     icon: (
       <svg
@@ -207,7 +214,11 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
         if (!res.ok) {
           // Si la respuesta no es OK, intentar leer el error
           const errorText = await res.text();
-          console.error("Error en respuesta de permisos:", res.status, errorText);
+          console.error(
+            "Error en respuesta de permisos:",
+            res.status,
+            errorText
+          );
           return;
         }
 
@@ -217,7 +228,9 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
       } catch (error) {
         // Manejar diferentes tipos de errores
         if (error instanceof TypeError && error.message === "Failed to fetch") {
-          console.warn("No se pudo conectar con el servidor. Verifica que el servidor esté corriendo.");
+          console.warn(
+            "No se pudo conectar con el servidor. Verifica que el servidor esté corriendo."
+          );
         } else {
           console.error("Error cargando permisos:", error);
         }
@@ -247,21 +260,21 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
   }, [menuItemsFiltrados, router]);
 
   const queryClient = useQueryClient();
-  
+
   const handleLogout = useCallback(async () => {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
-    
+
     // Marcar que estamos haciendo logout manual para prevenir toasts de error
     startManualLogout();
-    
+
     try {
       // Cancelar todas las queries activas para evitar errores 401
       queryClient.cancelQueries();
-      
+
       // Limpiar todo el cache de queries
       queryClient.clear();
-      
+
       // Cerrar sesión en Supabase
       await supabase.auth.signOut();
     } catch (error) {
@@ -273,7 +286,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
         endManualLogout();
         setIsLoggingOut(false);
       }, 100);
-      
+
       // Redirigir al login
       router.push("/signin");
     }
@@ -297,7 +310,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
       }}
     >
       <motion.aside
-        className="fixed bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 flex flex-col h-screen"
+        className="fixed bg-[#182337] border-r border-slate-700/50 flex flex-col h-screen"
         initial={false}
         animate={{
           width: isCollapsed ? "80px" : "280px",
@@ -307,7 +320,6 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
           ease: "easeInOut",
         }}
       >
-        {/* <section className={`flex flex-col h-screen fixed ${isCollapsed ? "w-[80px]" : "w-[280px]"}`}> */}
         {/* Header del Sidebar */}
         <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
           <AnimatePresence mode="wait">
@@ -319,9 +331,6 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                 transition={{ duration: 0.2 }}
                 className="flex items-center gap-3"
               >
-                {/* <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                    <span className="text-white font-bold text-lg">P</span>
-                  </div> */}
                 <img
                   src="/XPdark.ico"
                   alt="Punto X"
@@ -411,13 +420,13 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                   `}
               >
                 {/* Active indicator */}
-                {isActive && (
+                {/* {isActive && (
                   <motion.div
                     layoutId="activeIndicator"
                     className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-full bg-gradient-to-b from-blue-500 to-[#90c472] rounded-r-full"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
-                )}
+                )} */}
 
                 <div className="relative">
                   {item.icon}

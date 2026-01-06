@@ -9,7 +9,7 @@ const SESSION_CACHE_TTL = 10 * 1000; // 10 segundos de cache
 setInterval(() => {
   const now = Date.now();
   for (const [key, value] of sessionCache.entries()) {
-    if ((now - value.timestamp) > SESSION_CACHE_TTL) {
+    if (now - value.timestamp > SESSION_CACHE_TTL) {
       sessionCache.delete(key);
     }
   }
@@ -19,6 +19,7 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const publicPaths = [
+    "/",
     "/signin",
     "/signup",
     "/favicon.ico",
@@ -54,16 +55,17 @@ export async function middleware(req: NextRequest) {
   }
 
   // Obtener session token de cookies para usar como cache key
-  const sessionToken = req.cookies.get("sb-access-token")?.value || 
-                       req.cookies.get("sb-refresh-token")?.value || 
-                       "unknown";
+  const sessionToken =
+    req.cookies.get("sb-access-token")?.value ||
+    req.cookies.get("sb-refresh-token")?.value ||
+    "unknown";
   const cacheKey = `${sessionToken}-${pathname}`;
-  
+
   // Verificar cache primero
   const cached = sessionCache.get(cacheKey);
   const now = Date.now();
-  
-  if (cached && (now - cached.timestamp) < SESSION_CACHE_TTL) {
+
+  if (cached && now - cached.timestamp < SESSION_CACHE_TTL) {
     if (cached.valid) {
       return response;
     } else {
@@ -104,7 +106,7 @@ export async function middleware(req: NextRequest) {
   // Actualizar cache
   sessionCache.set(cacheKey, {
     valid: !!session,
-    timestamp: now
+    timestamp: now,
   });
 
   // Limitar tamaño del cache (mantener solo últimos 500)

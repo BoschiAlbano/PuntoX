@@ -17,6 +17,10 @@
   --foreground: #171717;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -215,10 +219,10 @@ body {
   will-change: background-position; /* Optimize animation */
 }
 
-
 /* Parallax ligero para hero (optimizado con GPU acceleration) */
 @keyframes parallax {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate3d(0, 0, 0);
   }
   50% {
@@ -243,7 +247,8 @@ body {
 }
 
 /* Respetar preferencias de accesibilidad */
-@media (prefers-reduced-motion: reduce) {
+/* Respetar preferencias de accesibilidad */
+/* @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
@@ -251,8 +256,8 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  
+
   .parallax-bg {
     animation: none !important;
   }
-}
+} */

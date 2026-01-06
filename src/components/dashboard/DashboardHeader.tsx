@@ -35,7 +35,8 @@ function DashboardHeaderComponent({
     let currentPath = "";
     paths.forEach((path) => {
       currentPath += `/${path}`;
-      const label = routeNames[currentPath] || path.charAt(0).toUpperCase() + path.slice(1);
+      const label =
+        routeNames[currentPath] || path.charAt(0).toUpperCase() + path.slice(1);
       result.push({ label, path: currentPath });
     });
 
@@ -76,7 +77,7 @@ function DashboardHeaderComponent({
 
     // Luego cerrar sesión en Supabase
     await supabase.auth.signOut();
-    
+
     addToast({
       title: "Sesión cerrada",
       description: "Has cerrado sesión correctamente",
@@ -93,7 +94,10 @@ function DashboardHeaderComponent({
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Breadcrumbs */}
-          <nav className="flex items-center gap-2 text-sm" aria-label="Breadcrumb">
+          <nav
+            className="flex items-center gap-2 text-sm"
+            aria-label="Breadcrumb"
+          >
             <ol className="flex items-center gap-2">
               {breadcrumbs.map((crumb, index) => (
                 <li key={crumb.path} className="flex items-center gap-2">
@@ -146,83 +150,12 @@ function DashboardHeaderComponent({
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
             </motion.button>
 
-            {/* User Menu */}
-            {/* <Dropdown placement="bottom-end">
-              <DropdownTrigger>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-3 p-2 pr-4 rounded-xl hover:bg-slate-100 transition-colors"
-                >
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-[#90c472] flex items-center justify-center text-white font-semibold">
-                    {userInitials}
-                  </div>
-                  <div className="text-left hidden md:block">
-                    <p className="text-sm font-semibold text-slate-900">
-                      {displayName}
-                    </p>
-                    <p className="text-xs text-slate-500">{displayEmail}</p>
-                  </div>
-                  <svg
-                    className="w-4 h-4 text-slate-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </motion.button>
-              </DropdownTrigger>
-              <DropdownMenu
-                aria-label="User Actions"
-                className="flex flex-col p-2 w-64 rounded-xl bg-white  border border-slate-200 shadow-lg"
-              >
-                <DropdownItem
-                  key="settings"
-                  className="my-1 hover:bg-slate-100 transition-colors rounded-lg py-2 px-4 cursor-pointer"
-                >
-                  Mi Perfil
-                </DropdownItem>
-                <DropdownItem
-                  key="team_settings"
-                  className="my-1 hover:bg-slate-100 transition-colors rounded-lg py-2 px-4 cursor-pointer"
-                >
-                  Configuracion
-                </DropdownItem>
-                <DropdownItem
-                  key="analytics"
-                  className="my-1 hover:bg-slate-100 transition-colors rounded-lg py-2 px-4 cursor-pointer"
-                >
-                  Analiticas
-                </DropdownItem>
-                <DropdownItem
-                  key="help_and_feedback"
-                  className="my-1 hover:bg-slate-100 transition-colors rounded-lg py-2 px-4 cursor-pointer"
-                >
-                  Ayuda y Feedback
-                </DropdownItem>
-                <DropdownItem
-                  key="logout"
-                  color="danger"
-                  onPress={() => handleSignOut()}
-                  className=" w-full rounded-lg my-1  hover:bg-slate-100 transition-colors py-2 px-4 cursor-pointer"
-                >
-                  Cerrar Sesion
-                </DropdownItem>
-              </DropdownMenu>
-            </Dropdown> */}
-
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="items-center gap-3 p-2 pr-4 rounded-xl hover:bg-slate-100 transition-colors flex"
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-[#90c472] flex items-center justify-center text-white font-semibold">
+              <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-[#90c472] flex items-center justify-center text-white font-semibold">
                 {userInitials}
               </div>
               <div className="text-left hidden md:block">
@@ -231,19 +164,7 @@ function DashboardHeaderComponent({
                 </p>
                 <p className="text-xs text-slate-500">{displayEmail}</p>
               </div>
-              {/* <svg
-                className="w-4 h-4 text-slate-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg> */}
+
               <svg
                 onClick={() => isShow((prev) => !prev)}
                 xmlns="http://www.w3.org/2000/svg"
@@ -257,53 +178,7 @@ function DashboardHeaderComponent({
                   clipRule="evenodd"
                 />
               </svg>
-              {/* {show ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5"
-                >
-                  <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75ZM2 10a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Zm0 5.25a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              )} */}
             </motion.button>
-            {/* {show ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5"
-                >
-                  <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75ZM2 10a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Zm0 5.25a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              )} */}
           </div>
         </div>
       </div>
