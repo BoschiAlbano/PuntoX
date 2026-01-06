@@ -17,6 +17,7 @@ export function usePagePermission() {
   const pathname = usePathname();
 
   // Usar React Query para cachear permisos (se cachea por 5 minutos)
+  // Usar placeholderData para evitar cancelaciones cuando cambia el pathname
   const { data: permisosData, isLoading, error } = useQuery({
     queryKey: ["user-permissions"],
     queryFn: async () => {
@@ -41,8 +42,13 @@ export function usePagePermission() {
     },
     enabled: status === "authenticated" && !!user,
     staleTime: 5 * 60 * 1000, // 5 minutos de cache
+    gcTime: 10 * 60 * 1000, // 10 minutos en cache (antes cacheTime)
     retry: 1,
-    retryOnMount: true,
+    retryOnMount: false, // No hacer retry si ya hay datos en cache para navegación más rápida
+    refetchOnWindowFocus: false, // No refetch al cambiar de ventana
+    refetchOnMount: false, // No refetch al montar si hay datos frescos
+    // Mantener datos anteriores visibles mientras cargan nuevos (mejor UX)
+    placeholderData: (previousData) => previousData,
   });
 
   useEffect(() => {
@@ -107,16 +113,19 @@ export function usePagePermission() {
 
   const permisos = Array.isArray(permisosData?.permisos) ? permisosData.permisos : [];
   
-  // Si aún está cargando o no hay datos, retornar undefined para indicar que aún no se sabe
-  // Si hay datos, calcular tieneAcceso
-  const tieneAcceso = isLoading || !permisosData 
-    ? undefined 
+  // Optimización: Si hay datos en cache aunque isLoading sea true, usarlos para no bloquear la UI
+  // Esto permite que las páginas se rendericen inmediatamente si ya tenemos permisos en cache
+  const tieneAcceso = !permisosData && isLoading
+    ? undefined // Solo undefined si realmente no hay datos y está cargando
     : (
-        permisosData.isSuperAdmin === true || 
+        permisosData?.isSuperAdmin === true || 
         !getPermisoForRoute(pathname) || 
         tienePermisoParaRuta(permisos, pathname)
       );
 
-  return { tieneAcceso, permisos, isLoading };
+  // isLoading solo debe ser true si realmente no hay datos en cache
+  const isLoadingReal = isLoading && !permisosData;
+
+  return { tieneAcceso, permisos, isLoading: isLoadingReal };
 }
 

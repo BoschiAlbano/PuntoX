@@ -15,6 +15,7 @@ import {
 import GenericTable, { Column } from "./GenericTable";
 import { useGenericApi } from "@/hooks/useGenericApi";
 import { useDebounce } from "@/hooks/useDebounce";
+import { handleError } from "@/lib/auth/errorHandler";
 
 // Interfaz que deben cumplir los formularios pasados a este componente
 export interface GenericFormProps<T> {
@@ -184,11 +185,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
         onError: (error: any) => {
           // Manejo básico de errores, se puede mejorar parseando Zod errors
           const msg = error.error || error.message || "Error al guardar";
-          addToast({
-            title: "Error",
-            description: msg,
-            color: "danger",
-          });
+          handleError(new Error(msg), "Error al guardar");
         },
       }
     );
@@ -216,11 +213,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
           typeof error?.error === "string"
             ? error.error
             : error?.error?.message || "Error al eliminar";
-        addToast({
-          title: "Error",
-          description: errorMessage,
-          color: "danger",
-        });
+        handleError(new Error(errorMessage), "Error al eliminar");
       },
     });
   };

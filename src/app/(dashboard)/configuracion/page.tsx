@@ -26,6 +26,7 @@ import { Lock, Shield, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
 import { usePagePermission } from "@/lib/permissions/usePagePermission";
+import { useQueryEnabled } from "@/lib/react-query/useQueryEnabled";
 import { type PreferenciasVentaDTO } from "./actions-preferencias-venta";
 
 type SectionKey =
@@ -125,6 +126,9 @@ export default function Configuracion() {
   const [openSection, setOpenSection] = useState<SectionKey>("perfil");
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
+  // Usar helper para evitar cancelaciones cuando tieneAcceso cambia de undefined a true
+  const enabledQueries = useQueryEnabled(tieneAcceso, isLoadingPermisos ?? false);
+  
   // Usar TanStack Query hook
   // Optimización: Las queries tienen staleTime y refetchOnMount: false para evitar peticiones innecesarias
   // enabled solo se activa cuando tenemos acceso confirmado (evita cancelaciones por re-renders)
@@ -155,7 +159,7 @@ export default function Configuracion() {
     useDepartamentos,
     useLocalidades,
     useCondicionesIva,
-  } = useConfiguracion({ enabled: tieneAcceso ?? true }); // Solo habilitar cuando tenemos acceso confirmado
+  } = useConfiguracion({ enabled: enabledQueries }); // Solo habilitar cuando tenemos acceso confirmado
 
   // Estados locales para edición (se sincronizan con los datos del hook)
   const [configuracion, setConfiguracion] = useState<{

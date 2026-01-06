@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
+import { dynamicDataQueryOptions, staticDataQueryOptions } from "@/lib/react-query/queryDefaults";
+import { handleError } from "@/lib/auth/errorHandler";
 
 export interface Empleado {
   id: number;
@@ -499,44 +501,31 @@ export function useEmpleados({
     queryFn: ({ signal }) =>
       fetchEmpleados({ signal, page, limit, filters: { ...filters, tenantId } }),
     enabled,
-    refetchOnMount: false, // No refetch si los datos están frescos
-    refetchOnWindowFocus: false, // No refetch al cambiar de ventana
-    staleTime: 30 * 1000, // 30 segundos - los empleados pueden cambiar pero no tan frecuentemente
-    gcTime: 5 * 60 * 1000, // 5 minutos - mantener en cache
-    networkMode: "online", // Evitar cancelaciones innecesarias
+    ...dynamicDataQueryOptions,
   });
 
   const rolesQuery = useQuery({
     queryKey: ["roles", tenantId],
     queryFn: ({ signal }) => fetchRoles({ signal, tenantId }),
     enabled,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // 5 minutos - los roles no cambian frecuentemente
-    gcTime: 10 * 60 * 1000, // 10 minutos - mantener en cache
-    networkMode: "online",
+    ...staticDataQueryOptions,
   });
 
   const provinciasQuery = useQuery({
     queryKey: ["provincias"],
     queryFn: ({ signal }) => fetchProvincias({ signal }),
     enabled,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
+    ...staticDataQueryOptions,
     staleTime: 30 * 60 * 1000, // 30 minutos - las provincias nunca cambian
     gcTime: 60 * 60 * 1000, // 1 hora - mantener en cache mucho tiempo
-    networkMode: "online",
   });
 
   const auditoriasQuery = useQuery({
     queryKey: ["auditorias", auditoriaPage, auditoriaLimit, tenantId],
     queryFn: ({ signal }) => fetchAuditorias({ signal, page: auditoriaPage, limit: auditoriaLimit, tenantId }),
     enabled: enabled,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
+    ...dynamicDataQueryOptions,
     staleTime: 10 * 1000, // 10 segundos - las auditorías pueden cambiar más frecuentemente
-    gcTime: 5 * 60 * 1000, // 5 minutos - mantener en cache
-    networkMode: "online",
   });
 
   // Mutations
@@ -552,11 +541,7 @@ export function useEmpleados({
       });
     },
     onError: (error: Error) => {
-      addToast({
-        title: "Error",
-        description: error.message,
-        color: "danger",
-      });
+      handleError(error, "Error al crear empleado");
     },
   });
 
@@ -572,11 +557,7 @@ export function useEmpleados({
       });
     },
     onError: (error: Error) => {
-      addToast({
-        title: "Error",
-        description: error.message,
-        color: "danger",
-      });
+      handleError(error, "Error al crear empleado");
     },
   });
 
@@ -592,11 +573,7 @@ export function useEmpleados({
       });
     },
     onError: (error: Error) => {
-      addToast({
-        title: "Error",
-        description: error.message,
-        color: "danger",
-      });
+      handleError(error, "Error al crear empleado");
     },
   });
 
@@ -611,11 +588,7 @@ export function useEmpleados({
       });
     },
     onError: (error: Error) => {
-      addToast({
-        title: "Error",
-        description: error.message,
-        color: "danger",
-      });
+      handleError(error, "Error al crear empleado");
     },
   });
 
@@ -631,11 +604,7 @@ export function useEmpleados({
       });
     },
     onError: (error: Error) => {
-      addToast({
-        title: "Error",
-        description: error.message,
-        color: "danger",
-      });
+      handleError(error, "Error al crear empleado");
     },
   });
 
@@ -651,11 +620,7 @@ export function useEmpleados({
       });
     },
     onError: (error: Error) => {
-      addToast({
-        title: "Error",
-        description: error.message,
-        color: "danger",
-      });
+      handleError(error, "Error al crear empleado");
     },
   });
 
@@ -671,11 +636,7 @@ export function useEmpleados({
       });
     },
     onError: (error: Error) => {
-      addToast({
-        title: "Error",
-        description: error.message,
-        color: "danger",
-      });
+      handleError(error, "Error al crear empleado");
     },
   });
 
@@ -685,8 +646,7 @@ export function useEmpleados({
       queryKey: ["departamentos", provinciaId],
       queryFn: ({ signal }) => fetchDepartamentos({ signal, provinciaId: provinciaId! }),
       enabled: !!provinciaId,
-      refetchOnMount: false,
-      refetchOnWindowFocus: false,
+      ...staticDataQueryOptions,
       staleTime: 30 * 60 * 1000, // 30 minutos - los departamentos nunca cambian
     });
   };
@@ -698,8 +658,7 @@ export function useEmpleados({
       queryFn: ({ signal }) =>
         fetchLocalidades({ signal, departamentoId: departamentoId! }),
       enabled: !!departamentoId,
-      refetchOnMount: false,
-      refetchOnWindowFocus: false,
+      ...staticDataQueryOptions,
       staleTime: 30 * 60 * 1000, // 30 minutos - las localidades nunca cambian
     });
   };

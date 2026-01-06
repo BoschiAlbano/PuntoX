@@ -1,11 +1,13 @@
 ﻿"use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useMemo, memo, useCallback } from "react";
+import { useState, useEffect, useMemo, memo, useCallback, startTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { filtrarRutasPorPermisos } from "@/lib/permissions/routePermissions";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
+import { startManualLogout, endManualLogout } from "@/lib/auth/logoutManager";
 
 interface MenuItem {
   icon: React.ReactNode;
@@ -236,18 +238,46 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
     return filtrarRutasPorPermisos(menuItems, permisos);
   }, [permisos, isSuperAdmin]);
 
+  // Prefetch todas las rutas disponibles al montar el componente para navegación instantánea
+  useEffect(() => {
+    menuItemsFiltrados.forEach((item) => {
+      // Prefetch todas las rutas en paralelo
+      router.prefetch(item.href);
+    });
+  }, [menuItemsFiltrados, router]);
+
+  const queryClient = useQueryClient();
+  
   const handleLogout = useCallback(async () => {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
+    
+    // Marcar que estamos haciendo logout manual para prevenir toasts de error
+    startManualLogout();
+    
     try {
+      // Cancelar todas las queries activas para evitar errores 401
+      queryClient.cancelQueries();
+      
+      // Limpiar todo el cache de queries
+      queryClient.clear();
+      
+      // Cerrar sesión en Supabase
       await supabase.auth.signOut();
     } catch (error) {
       console.error("Error during sign out:", error);
     } finally {
-      setIsLoggingOut(false);
+      // Limpiar el estado de logout manual después de un breve delay
+      // para asegurar que cualquier error pendiente no muestre toasts
+      setTimeout(() => {
+        endManualLogout();
+        setIsLoggingOut(false);
+      }, 100);
+      
+      // Redirigir al login
       router.push("/signin");
     }
-  }, [isLoggingOut, supabase, router]);
+  }, [isLoggingOut, supabase, router, queryClient]);
 
   return (
     // <section className={`z-[99] relative flex flex-col h-auto ${isCollapsed ? "w-[80px]" : "w-[280px]"} transition-all duration-300 ease-in-out`}>
@@ -336,13 +366,34 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
         <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
           {menuItemsFiltrados.map((item) => {
             const isActive = pathname === item.href;
+            const handleClick = (e: React.MouseEvent) => {
+              e.preventDefault();
+              e.stopPropagation();
+              // Solo navegar si no estamos ya en esa ruta
+              if (pathname !== item.href) {
+                // Usar startTransition para hacer la navegación más suave y no bloquear el UI
+                startTransition(() => {
+                  router.push(item.href);
+                });
+              }
+            };
             return (
               <motion.button
                 key={item.href}
-                onClick={() => router.push(item.href)}
+                type="button"
+                onClick={handleClick}
                 onMouseEnter={() => {
-                  // Prefetch de la ruta al hacer hover para navegación instantánea
-                  router.prefetch(item.href);
+                  // Prefetch agresivo de la ruta al hacer hover para navegación instantánea
+                  // Esto se ejecuta antes del click, haciendo la navegación más rápida
+                  if (pathname !== item.href) {
+                    router.prefetch(item.href);
+                  }
+                }}
+                onFocus={() => {
+                  // También prefetch cuando el elemento recibe foco (accesibilidad)
+                  if (pathname !== item.href) {
+                    router.prefetch(item.href);
+                  }
                 }}
                 whileHover={{
                   x: isCollapsed ? 0 : 2,

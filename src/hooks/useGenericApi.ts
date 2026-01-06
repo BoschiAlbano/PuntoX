@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PaginationMeta } from "./useProductos";
+import { dynamicDataQueryOptions } from "@/lib/react-query/queryDefaults";
 
 // Interfaces Genéricas
 export interface ApiResponse<T> {
@@ -82,11 +83,7 @@ export function useGenericApi<T extends { Id: number | string }>({
   const query = useQuery({
     queryKey: [queryKey, { search, page, limit }],
     queryFn: ({ signal }) => fetchData({ signal }),
-    refetchOnMount: false, // No refetch si los datos están frescos
-    refetchOnWindowFocus: false, // No refetch al cambiar de ventana
-    staleTime: 30 * 1000, // 30 segundos - los datos se consideran frescos
-    gcTime: 5 * 60 * 1000, // 5 minutos - mantener en cache
-    networkMode: "online", // Evitar cancelaciones innecesarias
+    ...dynamicDataQueryOptions, // Aplicar optimizaciones por defecto
   });
 
   // --- Mutations ---
