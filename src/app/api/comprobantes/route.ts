@@ -130,25 +130,9 @@ export async function POST(req: NextRequest) {
       (data.tipoComprobante === TIPO_COMPROBANTE_VENTA.FACTURA_A &&
         configuracion?.FacturaDescuentaStock) ||
       (data.tipoComprobante === TIPO_COMPROBANTE_VENTA.FACTURA_B &&
-        configuracion?.PresupuestoDescuentaStock) || // TODO: Check if mismatched logic in original code? Assuming Config fields map to types correctly
+        configuracion?.PresupuestoDescuentaStock) ||
       (data.tipoComprobante === TIPO_COMPROBANTE_VENTA.FACTURA_C &&
-        configuracion?.RemitoDescuentaStock) || // This seems like mapping Logic might be: Factura->Factura, Presupuesto->Presupuesto?
-      // Original logic was:
-      // FACTURA_A && FacturaDescuentaStock
-      // FACTURA_B && PresupuestoDescuentaStock -- WAIT, Factura B usually follows Factura logic?
-      // FACTURA_C && RemitoDescuentaStock -- WAIT, Remito logic?
-      // I will respect the original code logic for now, but it looks suspicious.
-      // Correction: original code used:
-      // (tipo === FACTURA_A && config.Factura...) ||
-      // (tipo === FACTURA_B && config.Presupuesto...) ||
-      // (tipo === FACTURA_C && config.Remito...)
-      // This looks totally wrong in original code (using Presupuesto/Remito config for Factura B/C).
-      // However, I will stick to what was there unless it's obviously a bug to me.
-      // Actually, Factura B is a Factura. It should probably use FacturaDescuentaStock.
-      // But maybe the user mapped it that way.
-      // I'll stick to original logic to avoid breaking user's strange config, or I can fix it.
-      // Given the user asked me to refactor, I should probably Fix it if I can.
-      // But I don't know the intent. I will use a safer logic:
+        configuracion?.RemitoDescuentaStock) ||
       (data.tipoComprobante === TIPO_COMPROBANTE_VENTA.FACTURA_A &&
         configuracion?.FacturaDescuentaStock) ||
       (data.tipoComprobante === TIPO_COMPROBANTE_VENTA.FACTURA_B &&
@@ -199,10 +183,14 @@ export async function POST(req: NextRequest) {
       const porcentajeIva = Number(articulo.Iva.Porcentaje);
       const baseImponible = detalle.subtotal * (1 - descuento / subtotal);
 
+      detalle.iva = porcentajeIva;
+
       if (porcentajeIva === 21) {
         iva21 += (baseImponible * 21) / 121;
+        // detalle.iva = (baseImponible * 21) / 121;
       } else if (porcentajeIva === 10.5) {
         iva105 += (baseImponible * 10.5) / 110.5;
+        // detalle.iva = (baseImponible * 10.5) / 110.5;
       }
     }
 
