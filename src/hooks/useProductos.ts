@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { dynamicDataQueryOptions, staticDataQueryOptions } from "@/lib/react-query/queryDefaults";
 import { productoListAdapter } from "@/lib/adapters/producto.adapter";
 import { Producto } from "@/lib/validations/producto.schema";
 import { Marca } from "@/lib/validations/marca.schema";
@@ -112,55 +113,35 @@ export function useProductos({
   const productosQuery = useQuery({
     queryKey: ["productos", { search, page, limit }],
     queryFn: ({ signal }) => fetchProductos({ signal, search, page, limit }),
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    staleTime: 30 * 1000, // 30 segundos
-    gcTime: 5 * 60 * 1000, // 5 minutos
-    networkMode: "online",
+    ...dynamicDataQueryOptions,
   });
 
   const marcasQuery = useQuery({
     queryKey: ["marcas"],
     queryFn: fetchMarcas,
     enabled: fetchAuxiliary,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // 5 minutos - las marcas no cambian frecuentemente
-    gcTime: 10 * 60 * 1000, // 10 minutos
-    networkMode: "online",
+    ...staticDataQueryOptions,
   });
 
   const rubrosQuery = useQuery({
     queryKey: ["rubros"],
     queryFn: fetchRubros,
     enabled: fetchAuxiliary,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // 5 minutos - los rubros no cambian frecuentemente
-    gcTime: 10 * 60 * 1000, // 10 minutos
-    networkMode: "online",
+    ...staticDataQueryOptions,
   });
 
   const unidadesQuery = useQuery({
     queryKey: ["unidades-medida"],
     queryFn: fetchUnidades,
     enabled: fetchAuxiliary,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    staleTime: 10 * 60 * 1000, // 10 minutos - las unidades no cambian frecuentemente
-    gcTime: 30 * 60 * 1000, // 30 minutos
-    networkMode: "online",
+    ...staticDataQueryOptions,
   });
 
   const ivasQuery = useQuery({
     queryKey: ["ivas"],
     queryFn: fetchIvas,
     enabled: fetchAuxiliary,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    staleTime: 10 * 60 * 1000, // 10 minutos - los IVAs no cambian frecuentemente
-    gcTime: 30 * 60 * 1000, // 30 minutos
-    networkMode: "online",
+    ...staticDataQueryOptions,
   });
 
   // Mutations

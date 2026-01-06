@@ -10,6 +10,7 @@ import React, {
 import type { Session } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
 import type { TenantUser } from "@/types/auth";
+import { isManualLogoutInProgress } from "@/lib/auth/logoutManager";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
@@ -78,7 +79,8 @@ const SessionProviderComponent = ({
       const response = await originalFetch(...args);
 
       // Si la respuesta es 401 y no estamos manejando un logout, verificar si es por sesión cerrada
-      if (response.status === 401 && !isHandlingLogout) {
+      // No procesar 401s durante logout manual (evita loops y toasts innecesarios)
+      if (response.status === 401 && !isHandlingLogout && !isManualLogoutInProgress()) {
         try {
           const currentPath = window.location.pathname;
           const publicPagePaths = ["/signin", "/signup", "/new-tenant"];

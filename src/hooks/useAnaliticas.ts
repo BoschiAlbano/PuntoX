@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { analyticsQueryOptions } from "@/lib/react-query/queryDefaults";
 
 export interface KPIData {
   periodo: {
@@ -291,13 +292,9 @@ export function useKPIs({
   return useQuery({
     queryKey: ["analiticas", "kpis", fechaDesde, fechaHasta, periodo],
     queryFn: ({ signal }) => fetchKPIs({ fechaDesde, fechaHasta, periodo, signal }),
-    enabled,
-    staleTime: 60000, // 1 minuto
+    enabled: enabled && !!fechaDesde && !!fechaHasta, // Solo ejecutar si las fechas están definidas
     refetchInterval: 120000, // 2 minutos
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    gcTime: 5 * 60 * 1000, // 5 minutos
-    networkMode: "online",
+    ...analyticsQueryOptions,
   });
 }
 
@@ -317,12 +314,8 @@ export function useGraficas({
   return useQuery({
     queryKey: ["analiticas", "graficas", tipo, fechaDesde, fechaHasta, agrupacion],
     queryFn: ({ signal }) => fetchGraficas({ tipo, fechaDesde, fechaHasta, agrupacion, signal }),
-    enabled,
-    staleTime: 60000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    gcTime: 5 * 60 * 1000, // 5 minutos
-    networkMode: "online",
+    enabled: enabled && !!fechaDesde && !!fechaHasta, // Solo ejecutar si las fechas están definidas
+    ...analyticsQueryOptions,
   });
 }
 
@@ -339,10 +332,7 @@ export function useAlertas({
     enabled,
     staleTime: 30000, // 30 segundos (más frecuente para alertas)
     refetchInterval: 60000, // 1 minuto
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    gcTime: 5 * 60 * 1000, // 5 minutos
-    networkMode: "online",
+    ...analyticsQueryOptions,
   });
 }
 
@@ -360,12 +350,8 @@ export function useComplementarios({
   return useQuery({
     queryKey: ["analiticas", "complementarios", tipo, fechaDesde, fechaHasta],
     queryFn: ({ signal }) => fetchComplementarios({ tipo, fechaDesde, fechaHasta, signal }),
-    enabled,
-    staleTime: 60000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    gcTime: 5 * 60 * 1000, // 5 minutos
-    networkMode: "online",
+    enabled: enabled && !!fechaDesde && !!fechaHasta, // Solo ejecutar si las fechas están definidas
+    ...analyticsQueryOptions,
   });
 }
 

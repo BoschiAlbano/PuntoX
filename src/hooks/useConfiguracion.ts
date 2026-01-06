@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
+import { handleError } from "@/lib/auth/errorHandler";
 
 // Contador para controlar si se muestran notificaciones en las mutaciones
 // Si silentCount > 0, no se muestran notificaciones
@@ -662,11 +663,7 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
       }
     },
     onError: (error: Error) => {
-      addToast({
-        title: "Error",
-        description: error.message,
-        color: "danger",
-      });
+      handleError(error, "Error al guardar configuración");
     },
   });
 
@@ -683,11 +680,7 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
       }
     },
     onError: (error: Error) => {
-      addToast({
-        title: "Error",
-        description: error.message,
-        color: "danger",
-      });
+      handleError(error, "Error al guardar configuración");
     },
   });
 
@@ -704,11 +697,7 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
       }
     },
     onError: (error: Error) => {
-      addToast({
-        title: "Error",
-        description: error.message,
-        color: "danger",
-      });
+      handleError(error, "Error al guardar configuración");
     },
   });
 
@@ -725,11 +714,7 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
       }
     },
     onError: (error: Error) => {
-      addToast({
-        title: "Error",
-        description: error.message,
-        color: "danger",
-      });
+      handleError(error, "Error al guardar configuración");
     },
   });
 
@@ -746,11 +731,7 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
       }
     },
     onError: (error: Error) => {
-      addToast({
-        title: "Error",
-        description: error.message,
-        color: "danger",
-      });
+      handleError(error, "Error al guardar configuración");
     },
   });
 
@@ -767,11 +748,7 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
       }
     },
     onError: (error: Error) => {
-      addToast({
-        title: "Error",
-        description: error.message,
-        color: "danger",
-      });
+      handleError(error, "Error al guardar configuración");
     },
   });
 
@@ -788,11 +765,7 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
       }
     },
     onError: (error: Error) => {
-      addToast({
-        title: "Error",
-        description: error.message,
-        color: "danger",
-      });
+      handleError(error, "Error al guardar configuración");
     },
   });
 

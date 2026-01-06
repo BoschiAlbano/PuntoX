@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useMemo, Suspense, useEffect } from "react";
+import { useState, useMemo, Suspense, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { usePagePermission } from "@/lib/permissions/usePagePermission";
+import { useQueryEnabled } from "@/lib/react-query/useQueryEnabled";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   Tabs,
   Tab,
@@ -206,13 +208,44 @@ function AnaliticasContent() {
   const initialTab = searchParams.get("tab") || "dashboard";
   
   // Obtener permisos para habilitar queries solo cuando tenga acceso
-  const { tieneAcceso } = usePagePermission();
+  const { tieneAcceso, isLoading: isLoadingPermisos } = usePagePermission();
 
   // Filtros para dashboard
   const [periodo, setPeriodo] = useState<"semanal" | "mensual">("mensual");
-  const [fechaDesde, setFechaDesde] = useState<string>("");
-  const [fechaHasta, setFechaHasta] = useState<string>("");
   const [agrupacion, setAgrupacion] = useState<"dia" | "semana" | "mes">("dia");
+  
+  // Calcular fechas por defecto según período usando useMemo para evitar loops
+  const fechasPorDefecto = useMemo(() => {
+    const hoy = new Date();
+    const diasAtras = periodo === "semanal" ? 7 : 30;
+    const desde = new Date(hoy.getTime() - diasAtras * 24 * 60 * 60 * 1000);
+    return {
+      desde: desde.toISOString().split("T")[0],
+      hasta: hoy.toISOString().split("T")[0],
+    };
+  }, [periodo]);
+
+  // Estados para fechas con inicialización desde fechasPorDefecto
+  const [fechaDesde, setFechaDesde] = useState<string>(fechasPorDefecto.desde);
+  const [fechaHasta, setFechaHasta] = useState<string>(fechasPorDefecto.hasta);
+  
+  // Ref para evitar actualizar fechas si el usuario ya las modificó manualmente
+  const fechasModificadasPorUsuario = useRef(false);
+
+  // Actualizar fechas cuando cambia el período, solo si el usuario no las ha modificado
+  useEffect(() => {
+    if (!fechasModificadasPorUsuario.current) {
+      setFechaDesde(fechasPorDefecto.desde);
+      setFechaHasta(fechasPorDefecto.hasta);
+    }
+  }, [fechasPorDefecto]);
+
+  // Debounce de fechas para evitar queries canceladas (300ms de delay - más rápido para mejor UX)
+  const fechaDesdeDebounced = useDebounce(fechaDesde, 300);
+  const fechaHastaDebounced = useDebounce(fechaHasta, 300);
+  
+  // Detectar si las fechas están cambiando para mostrar indicador sutil
+  const fechasCambiando = fechaDesde !== fechaDesdeDebounced || fechaHasta !== fechaHastaDebounced;
 
   // Filtros para logs
   const [filtros, setFiltros] = useState({
@@ -226,55 +259,51 @@ function AnaliticasContent() {
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
 
-  // Calcular fechas por defecto según período
-  useEffect(() => {
-    if (!fechaDesde || !fechaHasta) {
-      const hoy = new Date();
-      const diasAtras = periodo === "semanal" ? 7 : 30;
-      const desde = new Date(hoy.getTime() - diasAtras * 24 * 60 * 60 * 1000);
-      setFechaDesde(desde.toISOString().split("T")[0]);
-      setFechaHasta(hoy.toISOString().split("T")[0]);
-    }
-  }, [periodo, fechaDesde, fechaHasta]);
-
-  // Hooks para datos (solo habilitar cuando tenga acceso confirmado)
+  // Hooks para datos (usar fechas debounced para evitar queries canceladas)
+  // Solo habilitar cuando tenga acceso confirmado Y las fechas estén establecidas
+  const fechasListas = fechaDesdeDebounced && fechaHastaDebounced;
+  
+  // Usar helper para evitar cancelaciones cuando tieneAcceso cambia de undefined a true
+  const enabledQueries = useQueryEnabled(tieneAcceso, isLoadingPermisos ?? false, fechasListas);
+  const enabledAlertas = useQueryEnabled(tieneAcceso, isLoadingPermisos ?? false);
+  
   const { data: kpisData, isLoading: kpisLoading } = useKPIs({
-    fechaDesde,
-    fechaHasta,
+    fechaDesde: fechaDesdeDebounced,
+    fechaHasta: fechaHastaDebounced,
     periodo,
-    enabled: tieneAcceso ?? true,
+    enabled: enabledQueries,
   });
 
   const { data: graficasIngresos, isLoading: ingresosLoading } = useGraficas({
     tipo: "ingresos",
-    fechaDesde,
-    fechaHasta,
+    fechaDesde: fechaDesdeDebounced,
+    fechaHasta: fechaHastaDebounced,
     agrupacion,
-    enabled: tieneAcceso ?? true,
+    enabled: enabledQueries,
   });
 
   const { data: graficasPagos, isLoading: pagosLoading } = useGraficas({
     tipo: "pagos",
-    fechaDesde,
-    fechaHasta,
-    enabled: tieneAcceso ?? true,
+    fechaDesde: fechaDesdeDebounced,
+    fechaHasta: fechaHastaDebounced,
+    enabled: enabledQueries,
   });
 
   const { data: graficasProductos, isLoading: productosLoading } = useGraficas({
     tipo: "productos",
-    fechaDesde,
-    fechaHasta,
-    enabled: tieneAcceso ?? true,
+    fechaDesde: fechaDesdeDebounced,
+    fechaHasta: fechaHastaDebounced,
+    enabled: enabledQueries,
   });
 
   const { data: alertasData, isLoading: alertasLoading } = useAlertas({
-    enabled: tieneAcceso ?? true,
+    enabled: enabledAlertas,
   });
 
   const { data: complementariosData } = useComplementarios({
-    fechaDesde,
-    fechaHasta,
-    enabled: tieneAcceso ?? true,
+    fechaDesde: fechaDesdeDebounced,
+    fechaHasta: fechaHastaDebounced,
+    enabled: enabledQueries,
   });
 
   const logsFiltrados = useMemo(() => {
@@ -418,7 +447,11 @@ function AnaliticasContent() {
                     size="sm"
                     label="Período"
                     selectedKeys={[periodo]}
-                    onChange={(e) => setPeriodo(e.target.value as "semanal" | "mensual")}
+                    onChange={(e) => {
+                      setPeriodo(e.target.value as "semanal" | "mensual");
+                      // Resetear flag cuando cambia el período para que se actualicen las fechas
+                      fechasModificadasPorUsuario.current = false;
+                    }}
                     className="w-full md:min-w-[140px]"
                   >
                     <SelectItem key="semanal">Semanal</SelectItem>
@@ -429,7 +462,10 @@ function AnaliticasContent() {
                     type="date"
                     label="Desde"
                     value={fechaDesde}
-                    onChange={(e) => setFechaDesde(e.target.value)}
+                    onChange={(e) => {
+                      setFechaDesde(e.target.value);
+                      fechasModificadasPorUsuario.current = true;
+                    }}
                     className="w-full md:min-w-[140px]"
                   />
                   <Input
@@ -437,7 +473,10 @@ function AnaliticasContent() {
                     type="date"
                     label="Hasta"
                     value={fechaHasta}
-                    onChange={(e) => setFechaHasta(e.target.value)}
+                    onChange={(e) => {
+                      setFechaHasta(e.target.value);
+                      fechasModificadasPorUsuario.current = true;
+                    }}
                     className="w-full md:min-w-[140px]"
                   />
                   <Select

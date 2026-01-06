@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useQueryEnabled } from "@/lib/react-query/useQueryEnabled";
 import {
   Button,
   Card,
@@ -32,6 +33,7 @@ import {
 } from "@heroui/react";
 import { addToast } from "@heroui/react";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
+import { handleError } from "@/lib/auth/errorHandler";
 import { usePagePermission } from "@/lib/permissions/usePagePermission";
 import { Pencil, Trash2, Eye, Zap, Mail, RefreshCw } from "lucide-react";
 import Pagination, { PaginationInfo } from "@/components/common/Pagination";
@@ -261,11 +263,11 @@ export default function Empleados() {
     [filtros.busqueda, filtros.rol, filtros.estado]
   );
 
-  // Memorizar enabled para evitar cambios innecesarios
-  // usePagePermission ya maneja la autorización, solo verificar autenticación
-  const enabledQuery = useMemo(
-    () => !!user && status === "authenticated" && (tieneAcceso ?? true),
-    [user, status, tieneAcceso]
+  // Usar helper para evitar cancelaciones cuando tieneAcceso cambia de undefined a true
+  const enabledQuery = useQueryEnabled(
+    tieneAcceso ?? undefined,
+    isLoadingPermisos,
+    !!user && status === "authenticated"
   );
 
   const {
@@ -412,8 +414,9 @@ export default function Empleados() {
   }, [empleadoAEditar]);
 
   // Obtener permisos para verificar SuperAdmin usando TanStack Query con cache
+  // Usar la misma query key que usePagePermission para compartir cache
   const permisosQuery = useQuery({
-    queryKey: ["permisos"],
+    queryKey: ["user-permissions"], // Misma key que usePagePermission para compartir cache
     queryFn: async ({ signal }) => {
       const response = await fetch("/api/permisos", {
         signal,
@@ -425,11 +428,13 @@ export default function Empleados() {
       }
       return await response.json();
     },
-    enabled: !!user && status === "authenticated",
+    enabled: !!user && status === "authenticated" && enabledQuery, // Solo si las otras queries están habilitadas
     staleTime: 5 * 60 * 1000, // 5 minutos - los permisos no cambian frecuentemente
     refetchOnMount: false, // No refetch si ya tenemos datos en cache
     refetchOnWindowFocus: false, // No refetch al cambiar de ventana
     retry: 1, // Solo reintentar una vez
+    // Usar placeholderData para evitar cancelaciones
+    placeholderData: (previousData) => previousData,
   });
 
   // Sincronizar estado de SuperAdmin desde la query
@@ -585,6 +590,7 @@ export default function Empleados() {
              errorMessage.toLowerCase().includes("existe") ||
              errorMessage.toLowerCase().includes("duplicado"))
           ) {
+            // Mostrar toast especial para correo duplicado (no es un error de autenticación)
             addToast({
               title: "Correo ya registrado",
               description: "Este correo ya se encuentra registrado. Por favor, usa otro correo electrónico.",
@@ -592,6 +598,9 @@ export default function Empleados() {
             });
             return;
           }
+          
+          // Usar el helper para otros errores
+          handleError(error, "Error al crear empleado");
         },
       }
     );
