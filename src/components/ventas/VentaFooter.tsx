@@ -70,7 +70,7 @@ export default function VentaFooter({
     } else {
       setCurrentMonto("");
     }
-  }, [totalPagado, total]);
+  }, [totalPagado, total, restante]);
 
   const handleAddPayment = () => {
     const montoVal = parseFloat(currentMonto);
@@ -193,7 +193,7 @@ export default function VentaFooter({
               label="Método"
               selectedKeys={[currentTipo.toString()]}
               onChange={(e) => setCurrentTipo(Number(e.target.value))}
-              className="flex-[2]"
+              className="flex-2"
               size="sm"
             >
               <SelectItem key={TIPO_PAGO.EFECTIVO} textValue="Efectivo">
@@ -339,7 +339,7 @@ export default function VentaFooter({
 
           <Button
             size="md"
-            className={`font-bold text-white shadow-lg bg-gradient-to-r from-blue-500 to-[#90c472] mt-2`}
+            className={`font-bold text-white shadow-lg bg-linear-to-r from-blue-500 to-[#90c472] mt-2`}
             startContent={
               <svg
                 xmlns="http://www.w3.org/2000/svg"

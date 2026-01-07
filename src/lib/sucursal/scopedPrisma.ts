@@ -2,24 +2,24 @@
  * =====================================================
  * PRISMA CON SCOPE DE TENANT Y SUCURSAL
  * =====================================================
- * 
+ *
  * Wrapper utilitario para queries de Prisma que automáticamente
  * aplica filtros de TenantId y SucursalId.
- * 
+ *
  * USO:
  * ```typescript
  * const scoped = withScope({ tenantId, sucursalId });
- * 
+ *
  * // Queries automáticamente filtradas
  * const cajas = await scoped.caja.findMany();
  * const comprobantes = await scoped.comprobante.findMany({ where: { ... } });
  * ```
- * 
+ *
  * =====================================================
  */
 
 import prisma from "@/DB/prisma";
-import type { Prisma } from "@/prisma/generated/prisma";
+import type { Prisma } from "../../../prisma/generated/prisma";
 
 /**
  * Parámetros de scope
@@ -39,7 +39,7 @@ function toBigInt(value: bigint | string | number): bigint {
 
 /**
  * Crea un cliente Prisma con scope de tenant y sucursal
- * 
+ *
  * @param params - TenantId y opcionalmente SucursalId
  * @returns Objeto con helpers para queries con scope
  */
@@ -61,10 +61,11 @@ export function withScope(params: ScopeParams) {
   const mergeWhere = <T extends Record<string, unknown>>(
     additionalWhere?: T,
     includeBranch: boolean = true
-  ): T & { TenantId: bigint; SucursalId?: bigint } => ({
-    ...baseWhere(includeBranch),
-    ...(additionalWhere || {}),
-  } as T & { TenantId: bigint; SucursalId?: bigint });
+  ): T & { TenantId: bigint; SucursalId?: bigint } =>
+    ({
+      ...baseWhere(includeBranch),
+      ...(additionalWhere || {}),
+    } as T & { TenantId: bigint; SucursalId?: bigint });
 
   return {
     // =====================================================
@@ -80,7 +81,11 @@ export function withScope(params: ScopeParams) {
       /**
        * Buscar cajas de la sucursal
        */
-      findMany: async (args?: Omit<Prisma.CajaFindManyArgs, "where"> & { where?: Prisma.CajaWhereInput }) => {
+      findMany: async (
+        args?: Omit<Prisma.CajaFindManyArgs, "where"> & {
+          where?: Prisma.CajaWhereInput;
+        }
+      ) => {
         return prisma.caja.findMany({
           ...args,
           where: mergeWhere(args?.where),
@@ -115,10 +120,26 @@ export function withScope(params: ScopeParams) {
       /**
        * Crear caja en la sucursal
        */
-      create: async (data: Omit<Prisma.CajaCreateInput, "Tenant" | "Sucursal"> & {
-        UsuarioAperturaId: bigint;
-        MontoInicial: number | Prisma.Decimal;
-      }) => {
+      create: async (
+        data: Omit<
+          Prisma.CajaUncheckedCreateInput,
+          | "TenantId"
+          | "SucursalId"
+          | "FechaApertura"
+          | "TotalEntradaEfectivo"
+          | "TotalSalidaEfectivo"
+          | "TotalEntradaTarjeta"
+          | "TotalSalidaTarjeta"
+          | "TotalEntradaCheque"
+          | "TotalSalidaCheque"
+          | "TotalEntradaCtaCte"
+          | "TotalSalidaCtaCte"
+          | "TotalEntradaTransf"
+          | "TotalSalidaTransf"
+          | "EstaEliminado"
+          | "Ganancia"
+        >
+      ) => {
         return prisma.caja.create({
           data: {
             ...data,
@@ -137,7 +158,7 @@ export function withScope(params: ScopeParams) {
             TotalSalidaTransf: 0,
             EstaEliminado: false,
             Ganancia: 0,
-          },
+          } as Prisma.CajaUncheckedCreateInput,
         });
       },
     },
@@ -149,7 +170,11 @@ export function withScope(params: ScopeParams) {
       /**
        * Buscar comprobantes de la sucursal
        */
-      findMany: async (args?: Omit<Prisma.ComprobanteFindManyArgs, "where"> & { where?: Prisma.ComprobanteWhereInput }) => {
+      findMany: async (
+        args?: Omit<Prisma.ComprobanteFindManyArgs, "where"> & {
+          where?: Prisma.ComprobanteWhereInput;
+        }
+      ) => {
         return prisma.comprobante.findMany({
           ...args,
           where: mergeWhere(args?.where),
@@ -185,7 +210,11 @@ export function withScope(params: ScopeParams) {
       /**
        * Buscar movimientos de la sucursal
        */
-      findMany: async (args?: Omit<Prisma.MovimientoFindManyArgs, "where"> & { where?: Prisma.MovimientoWhereInput }) => {
+      findMany: async (
+        args?: Omit<Prisma.MovimientoFindManyArgs, "where"> & {
+          where?: Prisma.MovimientoWhereInput;
+        }
+      ) => {
         return prisma.movimiento.findMany({
           ...args,
           where: mergeWhere(args?.where),
@@ -195,7 +224,12 @@ export function withScope(params: ScopeParams) {
       /**
        * Crear movimiento en la sucursal
        */
-      create: async (data: Omit<Prisma.MovimientoUncheckedCreateInput, "TenantId" | "SucursalId">) => {
+      create: async (
+        data: Omit<
+          Prisma.MovimientoUncheckedCreateInput,
+          "TenantId" | "SucursalId"
+        >
+      ) => {
         return prisma.movimiento.create({
           data: {
             ...data,
@@ -213,7 +247,11 @@ export function withScope(params: ScopeParams) {
       /**
        * Buscar gastos de la sucursal
        */
-      findMany: async (args?: Omit<Prisma.GastoFindManyArgs, "where"> & { where?: Prisma.GastoWhereInput }) => {
+      findMany: async (
+        args?: Omit<Prisma.GastoFindManyArgs, "where"> & {
+          where?: Prisma.GastoWhereInput;
+        }
+      ) => {
         return prisma.gasto.findMany({
           ...args,
           where: mergeWhere(args?.where),
@@ -223,7 +261,9 @@ export function withScope(params: ScopeParams) {
       /**
        * Crear gasto en la sucursal
        */
-      create: async (data: Omit<Prisma.GastoUncheckedCreateInput, "TenantId" | "SucursalId">) => {
+      create: async (
+        data: Omit<Prisma.GastoUncheckedCreateInput, "TenantId" | "SucursalId">
+      ) => {
         return prisma.gasto.create({
           data: {
             ...data,
@@ -258,7 +298,11 @@ export function withScope(params: ScopeParams) {
       /**
        * Obtener todos los stocks de la sucursal
        */
-      findMany: async (args?: Omit<Prisma.ArticuloStockFindManyArgs, "where"> & { where?: Prisma.ArticuloStockWhereInput }) => {
+      findMany: async (
+        args?: Omit<Prisma.ArticuloStockFindManyArgs, "where"> & {
+          where?: Prisma.ArticuloStockWhereInput;
+        }
+      ) => {
         return prisma.articuloStock.findMany({
           ...args,
           where: mergeWhere(args?.where),
@@ -268,11 +312,15 @@ export function withScope(params: ScopeParams) {
       /**
        * Actualizar stock de un artículo
        */
-      updateStock: async (articuloId: bigint, cantidad: number, operacion: "incrementar" | "decrementar") => {
+      updateStock: async (
+        articuloId: bigint,
+        cantidad: number,
+        operacion: "incrementar" | "decrementar"
+      ) => {
         if (!sucursalId) {
           throw new Error("SucursalId requerido para actualizar stock");
         }
-        
+
         return prisma.articuloStock.upsert({
           where: {
             ArticuloId_SucursalId: {
@@ -282,7 +330,8 @@ export function withScope(params: ScopeParams) {
           },
           update: {
             Stock: {
-              [operacion === "incrementar" ? "increment" : "decrement"]: cantidad,
+              [operacion === "incrementar" ? "increment" : "decrement"]:
+                cantidad,
             },
           },
           create: {
@@ -304,7 +353,9 @@ export function withScope(params: ScopeParams) {
        */
       getNextNumber: async (tipoComprobante: number) => {
         if (!sucursalId) {
-          throw new Error("SucursalId requerido para obtener número de comprobante");
+          throw new Error(
+            "SucursalId requerido para obtener número de comprobante"
+          );
         }
 
         // Buscar o crear contador
@@ -339,7 +390,11 @@ export function withScope(params: ScopeParams) {
       /**
        * Buscar bajas de la sucursal
        */
-      findMany: async (args?: Omit<Prisma.BajaArticuloFindManyArgs, "where"> & { where?: Prisma.BajaArticuloWhereInput }) => {
+      findMany: async (
+        args?: Omit<Prisma.BajaArticuloFindManyArgs, "where"> & {
+          where?: Prisma.BajaArticuloWhereInput;
+        }
+      ) => {
         return prisma.bajaArticulo.findMany({
           ...args,
           where: mergeWhere(args?.where),
@@ -349,13 +404,91 @@ export function withScope(params: ScopeParams) {
       /**
        * Crear baja en la sucursal
        */
-      create: async (data: Omit<Prisma.BajaArticuloUncheckedCreateInput, "TenantId" | "SucursalId">) => {
+      create: async (
+        data: Omit<
+          Prisma.BajaArticuloUncheckedCreateInput,
+          "TenantId" | "SucursalId"
+        >
+      ) => {
         return prisma.bajaArticulo.create({
           data: {
             ...data,
             TenantId: tenantId,
             SucursalId: sucursalId,
           },
+        });
+      },
+    },
+
+    // =====================================================
+    // CHEQUES - Queries con scope de sucursal
+    // =====================================================
+    cheques: {
+      findMany: async (
+        args?: Omit<Prisma.ChequeFindManyArgs, "where"> & {
+          where?: Prisma.ChequeWhereInput;
+        }
+      ) => {
+        return prisma.cheque.findMany({
+          ...args,
+          where: mergeWhere(args?.where),
+        });
+      },
+      findById: async (id: bigint) => {
+        return prisma.cheque.findFirst({
+          where: {
+            Id: id,
+            ...baseWhere(),
+          },
+        });
+      },
+      create: async (
+        data: Omit<Prisma.ChequeUncheckedCreateInput, "TenantId" | "SucursalId">
+      ) => {
+        return prisma.cheque.create({
+          data: {
+            ...data,
+            TenantId: tenantId,
+            SucursalId: sucursalId,
+          } as Prisma.ChequeUncheckedCreateInput,
+        });
+      },
+    },
+
+    // =====================================================
+    // DEPOSITO CHEQUES - Queries con scope de sucursal
+    // =====================================================
+    depositoCheques: {
+      findMany: async (
+        args?: Omit<Prisma.DepositoChequesFindManyArgs, "where"> & {
+          where?: Prisma.DepositoChequesWhereInput;
+        }
+      ) => {
+        return prisma.depositoCheques.findMany({
+          ...args,
+          where: mergeWhere(args?.where),
+        });
+      },
+      findById: async (id: bigint) => {
+        return prisma.depositoCheques.findFirst({
+          where: {
+            Id: id,
+            ...baseWhere(),
+          },
+        });
+      },
+      create: async (
+        data: Omit<
+          Prisma.DepositoChequesUncheckedCreateInput,
+          "TenantId" | "SucursalId"
+        >
+      ) => {
+        return prisma.depositoCheques.create({
+          data: {
+            ...data,
+            TenantId: tenantId,
+            SucursalId: sucursalId,
+          } as Prisma.DepositoChequesUncheckedCreateInput,
         });
       },
     },
@@ -368,7 +501,11 @@ export function withScope(params: ScopeParams) {
        * Buscar artículos del tenant (catálogo global)
        */
       articulos: {
-        findMany: async (args?: Omit<Prisma.ArticuloFindManyArgs, "where"> & { where?: Prisma.ArticuloWhereInput }) => {
+        findMany: async (
+          args?: Omit<Prisma.ArticuloFindManyArgs, "where"> & {
+            where?: Prisma.ArticuloWhereInput;
+          }
+        ) => {
           return prisma.articulo.findMany({
             ...args,
             where: mergeWhere(args?.where, false), // Sin filtro de sucursal
@@ -379,9 +516,158 @@ export function withScope(params: ScopeParams) {
       /**
        * Buscar clientes del tenant
        */
+      /**
+       * Buscar clientes del tenant
+       */
       clientes: {
         findMany: async (args?: Prisma.Persona_ClienteFindManyArgs) => {
-          return prisma.persona_Cliente.findMany(args);
+          // Persona_Cliente no tiene TenantId directo, lo hereda de Persona
+          const where = args?.where || {};
+          const personaFilter = where.Persona || {};
+
+          return prisma.persona_Cliente.findMany({
+            ...args,
+            where: {
+              ...where,
+              Persona: {
+                is: {
+                  ...personaFilter,
+                  TenantId: tenantId,
+                },
+              },
+            },
+          });
+        },
+
+        /**
+         * Buscar cliente por ID
+         */
+        findById: async (id: bigint) => {
+          return prisma.persona_Cliente.findFirst({
+            where: {
+              Id: id,
+              Persona: {
+                TenantId: tenantId,
+              },
+            },
+          });
+        },
+
+        count: async (where?: Prisma.Persona_ClienteWhereInput) => {
+          const personaFilter = where?.Persona || {};
+          return prisma.persona_Cliente.count({
+            where: {
+              ...where,
+              Persona: {
+                is: {
+                  ...personaFilter,
+                  TenantId: tenantId,
+                },
+              },
+            },
+          });
+        },
+      },
+
+      /**
+       * Buscar proveedores del tenant
+       */
+      proveedores: {
+        findMany: async (
+          args?: Omit<Prisma.ProveedorFindManyArgs, "where"> & {
+            where?: Prisma.ProveedorWhereInput;
+          }
+        ) => {
+          return prisma.proveedor.findMany({
+            ...args,
+            where: mergeWhere(args?.where, false),
+          });
+        },
+        findById: async (id: bigint) => {
+          return prisma.proveedor.findFirst({
+            where: {
+              Id: id,
+              ...baseWhere(false),
+            },
+          });
+        },
+      },
+
+      /**
+       * Buscar bancos del tenant
+       */
+      bancos: {
+        findMany: async (
+          args?: Omit<Prisma.BancoFindManyArgs, "where"> & {
+            where?: Prisma.BancoWhereInput;
+          }
+        ) => {
+          return prisma.banco.findMany({
+            ...args,
+            where: mergeWhere(args?.where, false),
+          });
+        },
+      },
+
+      /**
+       * Buscar tarjetas del tenant
+       */
+      tarjetas: {
+        findMany: async (
+          args?: Omit<Prisma.TarjetaFindManyArgs, "where"> & {
+            where?: Prisma.TarjetaWhereInput;
+          }
+        ) => {
+          return prisma.tarjeta.findMany({
+            ...args,
+            where: mergeWhere(args?.where, false),
+          });
+        },
+      },
+
+      /**
+       * Buscar unidades de medida del tenant
+       */
+      unidadesMedida: {
+        findMany: async (
+          args?: Omit<Prisma.UnidadMedidaFindManyArgs, "where"> & {
+            where?: Prisma.UnidadMedidaWhereInput;
+          }
+        ) => {
+          return prisma.unidadMedida.findMany({
+            ...args,
+            where: mergeWhere(args?.where, false),
+          });
+        },
+      },
+
+      /**
+       * Buscar conceptos de gasto del tenant
+       */
+      conceptosGastos: {
+        findMany: async (
+          args?: Omit<Prisma.ConceptoGastosFindManyArgs, "where"> & {
+            where?: Prisma.ConceptoGastosWhereInput;
+          }
+        ) => {
+          return prisma.conceptoGastos.findMany({
+            ...args,
+            where: mergeWhere(args?.where, false),
+          });
+        },
+      },
+
+      /**
+       * Configuración del tenant
+       */
+      configuracion: {
+        findFirst: async () => {
+          return prisma.configuracion.findFirst({
+            where: {
+              TenantId: tenantId,
+              EstaEliminado: false,
+            },
+          });
         },
       },
 
@@ -389,7 +675,11 @@ export function withScope(params: ScopeParams) {
        * Buscar marcas del tenant
        */
       marcas: {
-        findMany: async (args?: Omit<Prisma.MarcaFindManyArgs, "where"> & { where?: Prisma.MarcaWhereInput }) => {
+        findMany: async (
+          args?: Omit<Prisma.MarcaFindManyArgs, "where"> & {
+            where?: Prisma.MarcaWhereInput;
+          }
+        ) => {
           return prisma.marca.findMany({
             ...args,
             where: mergeWhere(args?.where, false),
@@ -401,7 +691,11 @@ export function withScope(params: ScopeParams) {
        * Buscar rubros del tenant
        */
       rubros: {
-        findMany: async (args?: Omit<Prisma.RubroFindManyArgs, "where"> & { where?: Prisma.RubroWhereInput }) => {
+        findMany: async (
+          args?: Omit<Prisma.RubroFindManyArgs, "where"> & {
+            where?: Prisma.RubroWhereInput;
+          }
+        ) => {
           return prisma.rubro.findMany({
             ...args,
             where: mergeWhere(args?.where, false),
@@ -424,4 +718,3 @@ export function withScope(params: ScopeParams) {
  * Tipo del cliente con scope
  */
 export type ScopedPrisma = ReturnType<typeof withScope>;
-

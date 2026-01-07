@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 
 interface SeguridadConfig {
@@ -26,7 +25,7 @@ export function useInactivityTimeout() {
   // Cargar configuración de seguridad (con cache en sessionStorage)
   useEffect(() => {
     const abortController = new AbortController();
-    
+
     const loadSeguridad = async () => {
       // Intentar cargar desde cache primero (solo para render inicial más rápido)
       try {
@@ -37,7 +36,7 @@ export function useInactivityTimeout() {
             setSeguridad(cachedData);
           }
         }
-      } catch (error) {
+      } catch {
         // Ignorar errores de cache
       }
 
@@ -55,12 +54,12 @@ export function useInactivityTimeout() {
             tiempoInactividadMinutos: data.tiempoInactividadMinutos ?? 30,
           };
           setSeguridad(config);
-          
+
           // Guardar en cache
           if (typeof window !== "undefined") {
             try {
               sessionStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(config));
-            } catch (error) {
+            } catch {
               // Ignorar errores de sessionStorage (puede estar lleno o deshabilitado)
             }
           }
@@ -70,7 +69,10 @@ export function useInactivityTimeout() {
         if (error instanceof Error && error.name === "AbortError") {
           return;
         }
-        console.warn("[Inactividad] Error al cargar configuración de seguridad:", error);
+        console.warn(
+          "[Inactividad] Error al cargar configuración de seguridad:",
+          error
+        );
       }
     };
 
@@ -96,7 +98,10 @@ export function useInactivityTimeout() {
     }
 
     // Si el bloqueo por inactividad está desactivado, no hacer nada
-    if (!seguridad?.bloquearPorInactividad || !seguridad?.tiempoInactividadMinutos) {
+    if (
+      !seguridad?.bloquearPorInactividad ||
+      !seguridad?.tiempoInactividadMinutos
+    ) {
       return;
     }
 
@@ -120,14 +125,16 @@ export function useInactivityTimeout() {
       }
       isClosingRef.current = true;
 
-      console.log(`[Inactividad] Sesión cerrada por inactividad después de ${seguridad.tiempoInactividadMinutos} minutos`);
-      
+      console.log(
+        `[Inactividad] Sesión cerrada por inactividad después de ${seguridad.tiempoInactividadMinutos} minutos`
+      );
+
       // Limpiar el timeout
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
-      
+
       // Cerrar sesión en la base de datos primero
       try {
         await fetch("/api/auth/registrar-sesion", {
@@ -142,11 +149,14 @@ export function useInactivityTimeout() {
       try {
         await supabase.auth.signOut();
         // Esperar un momento para que se complete el cierre de sesión
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       } catch (error) {
-        console.warn("[Inactividad] Error al cerrar sesión en Supabase:", error);
+        console.warn(
+          "[Inactividad] Error al cerrar sesión en Supabase:",
+          error
+        );
       }
-      
+
       // Redirigir al login usando window.location para forzar recarga completa
       window.location.href = "/signin";
     }, timeoutMs);
@@ -210,7 +220,10 @@ export function useInactivityTimeout() {
     }
 
     // Si el bloqueo por inactividad está desactivado, no hacer nada
-    if (!seguridad?.bloquearPorInactividad || !seguridad?.tiempoInactividadMinutos) {
+    if (
+      !seguridad?.bloquearPorInactividad ||
+      !seguridad?.tiempoInactividadMinutos
+    ) {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
@@ -226,10 +239,10 @@ export function useInactivityTimeout() {
     // - click: redundante con mousedown (click siempre incluye mousedown)
     // - keypress: deprecado y redundante con keydown
     const events = [
-      "mousedown",    // Detecta clicks del mouse
-      "keydown",      // Detecta pulsaciones de teclado
-      "scroll",       // Detecta scroll
-      "touchstart",   // Detecta toques en móviles
+      "mousedown", // Detecta clicks del mouse
+      "keydown", // Detecta pulsaciones de teclado
+      "scroll", // Detecta scroll
+      "touchstart", // Detecta toques en móviles
     ];
 
     // Agregar listeners de eventos
@@ -252,4 +265,3 @@ export function useInactivityTimeout() {
     };
   }, [seguridad, handleActivity, resetTimeout, status]);
 }
-

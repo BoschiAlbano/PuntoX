@@ -25,7 +25,6 @@ import {
   Pagination as HeroUIPagination,
   Select,
   SelectItem,
-  Switch,
   Tabs,
   Tab,
   Textarea,
@@ -35,8 +34,8 @@ import { addToast } from "@heroui/react";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { handleError } from "@/lib/auth/errorHandler";
 import { usePagePermission } from "@/lib/permissions/usePagePermission";
-import { Pencil, Trash2, Eye, Zap, Mail, RefreshCw } from "lucide-react";
-import Pagination, { PaginationInfo } from "@/components/common/Pagination";
+import { Pencil, Trash2, RefreshCw } from "lucide-react";
+import { PaginationInfo } from "@/components/common/Pagination";
 import {
   formatTiempoRelativo,
   formatearAccion,
@@ -98,7 +97,15 @@ function estadoColor(estado: EstadoEmpleado) {
   return "danger";
 }
 
-function rolChipColor(tipo: "ADMINISTRADOR" | "EMPLEADO" | "Empleado" | "Administrador" | null | undefined): "primary" | "secondary" | "default" {
+function rolChipColor(
+  tipo:
+    | "ADMINISTRADOR"
+    | "EMPLEADO"
+    | "Empleado"
+    | "Administrador"
+    | null
+    | undefined
+): "primary" | "secondary" | "default" {
   if (tipo === "ADMINISTRADOR" || tipo === "Administrador") return "primary";
   if (tipo === "EMPLEADO" || tipo === "Empleado") return "secondary";
   return "default";
@@ -134,32 +141,33 @@ export default function Empleados() {
   const router = useRouter();
   // usePagePermission ya maneja la autorización y redirección automática
   const { isLoading: isLoadingPermisos, tieneAcceso } = usePagePermission();
-  
+
   // TODOS LOS HOOKS DEBEN IR ANTES DE LOS EARLY RETURNS
   const isAuthorized = tieneAcceso; // Ya verificamos que tiene acceso
   const [selectedTab, setSelectedTab] = useState<string>("usuarios");
-  
+
   // Estado de paginación
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20);
+  const [limit, _setLimit] = useState(20);
   const [auditoriaPage, setAuditoriaPage] = useState(1);
   const [auditoriaLimit] = useState(10);
-  const [paginationAuditoria, setPaginationAuditoria] = useState<PaginationInfo>({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalPages: 1,
-    hasNextPage: false,
-    hasPreviousPage: false,
-  });
+  const [paginationAuditoria, setPaginationAuditoria] =
+    useState<PaginationInfo>({
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    });
 
   const [filtros, setFiltros] = useState({
     busqueda: "",
     rol: "todos",
     estado: "todos",
   });
-  const [busquedaInput, setBusquedaInput] = useState("");
-  
+  const [busquedaInput, _setBusquedaInput] = useState("");
+
   // Debounce de búsqueda usando hook (más limpio y eficiente)
   const debouncedBusqueda = useDebounce(busquedaInput, 400);
 
@@ -190,7 +198,7 @@ export default function Empleados() {
   const [openCrearUsuarioModal, setOpenCrearUsuarioModal] = useState(false);
   const [detalleEmpleado, setDetalleEmpleado] = useState<Empleado | null>(null);
   const [empleadoAEditar, setEmpleadoAEditar] = useState<Empleado | null>(null);
-  
+
   // Estado para el formulario de edición
   const [empleadoEditDraft, setEmpleadoEditDraft] = useState({
     nombre: "",
@@ -203,7 +211,7 @@ export default function Empleados() {
     departamentoId: "",
     rolId: "",
   });
-  
+
   // Estado para cambio de contraseña
   const [nuevaPassword, setNuevaPassword] = useState("");
   const [confirmarPassword, setConfirmarPassword] = useState("");
@@ -218,14 +226,14 @@ export default function Empleados() {
 
   // Estado para almacenar si el usuario es SuperAdmin (se obtiene de la API)
   const [isSuperAdminState, setIsSuperAdminState] = useState(false);
-  
+
   // Verificación local como fallback (basada en metadata)
   const isSuperAdminLocal =
     user?.role === "superadmin" ||
     user?.role === "SuperAdmin" ||
     (user?.app_metadata as Record<string, unknown> | undefined)?.role ===
       "SuperAdmin";
-  
+
   // Usar el estado de la API como fuente de verdad, con fallback a la verificación local
   const isSuperAdmin = isSuperAdminState || isSuperAdminLocal;
 
@@ -252,7 +260,7 @@ export default function Empleados() {
 
   // Usar TanStack Query hook
   const tenantId = isSuperAdmin ? resolveTenantIdForRequests() : null;
-  
+
   // Memorizar filters para evitar recrear el objeto en cada render
   const filtersMemo = useMemo(
     () => ({
@@ -329,19 +337,16 @@ export default function Empleados() {
   const departamentos = departamentosQuery.data || [];
   const localidades = localidadesQuery.data || [];
 
-  const resumen = useMemo(
-    () => {
-      const invitados = empleados.filter((e) => e.estado === "Invitado");
-      return {
-        activos: empleados.filter((e) => e.estado === "Activo").length,
-        invitados: invitados.length,
-        invitadosLista: invitados, // Lista de invitados para mostrar detalles
-        suspendidos: empleados.filter((e) => e.estado === "Suspendido").length,
-        roles: roles.length,
-      };
-    },
-    [empleados, roles]
-  );
+  const resumen = useMemo(() => {
+    const invitados = empleados.filter((e) => e.estado === "Invitado");
+    return {
+      activos: empleados.filter((e) => e.estado === "Activo").length,
+      invitados: invitados.length,
+      invitadosLista: invitados, // Lista de invitados para mostrar detalles
+      suspendidos: empleados.filter((e) => e.estado === "Suspendido").length,
+      roles: roles.length,
+    };
+  }, [empleados, roles]);
 
   // Debug: Mostrar errores si los hay
   useEffect(() => {
@@ -349,7 +354,10 @@ export default function Empleados() {
       console.error("Error al cargar empleados:", errorEmpleados);
       addToast({
         title: "Error al cargar empleados",
-        description: errorEmpleados instanceof Error ? errorEmpleados.message : "Error desconocido",
+        description:
+          errorEmpleados instanceof Error
+            ? errorEmpleados.message
+            : "Error desconocido",
         color: "danger",
       });
     }
@@ -357,7 +365,10 @@ export default function Empleados() {
       console.error("Error al cargar roles:", errorRoles);
       addToast({
         title: "Error al cargar roles",
-        description: errorRoles instanceof Error ? errorRoles.message : "Error desconocido",
+        description:
+          errorRoles instanceof Error
+            ? errorRoles.message
+            : "Error desconocido",
         color: "danger",
       });
     }
@@ -365,7 +376,10 @@ export default function Empleados() {
       console.error("Error al cargar provincias:", errorProvincias);
       addToast({
         title: "Error al cargar provincias",
-        description: errorProvincias instanceof Error ? errorProvincias.message : "Error desconocido",
+        description:
+          errorProvincias instanceof Error
+            ? errorProvincias.message
+            : "Error desconocido",
         color: "danger",
       });
     }
@@ -387,7 +401,18 @@ export default function Empleados() {
         errorRoles: errorRoles?.message,
       });
     }
-  }, [enabledQuery, user, status, isAuthorized, isLoadingEmpleados, isLoadingRoles, empleados.length, roles.length, errorEmpleados, errorRoles]);
+  }, [
+    enabledQuery,
+    user,
+    status,
+    isAuthorized,
+    isLoadingEmpleados,
+    isLoadingRoles,
+    empleados.length,
+    roles.length,
+    errorEmpleados,
+    errorRoles,
+  ]);
 
   // Sincronizar departamentoSeleccionado con empleadoEditDraft cuando se abre el modal
   // IMPORTANTE: Solo sincronizar cuando realmente hay un empleado siendo editado
@@ -398,7 +423,11 @@ export default function Empleados() {
         setDepartamentoSeleccionado(empleadoEditDraft.departamentoId);
       }
     }
-  }, [empleadoAEditar, empleadoEditDraft.departamentoId, departamentoSeleccionado]);
+  }, [
+    empleadoAEditar,
+    empleadoEditDraft.departamentoId,
+    departamentoSeleccionado,
+  ]);
 
   // Limpiar estados de ubicación cuando se cierra el modal de edición
   // Esto previene que queden valores residuales en el formulario de creación
@@ -561,7 +590,8 @@ export default function Empleados() {
         onSuccess: () => {
           addToast({
             title: "Usuario creado",
-            description: "Usuario creado exitosamente. Recuerda compartir las credenciales.",
+            description:
+              "Usuario creado exitosamente. Recuerda compartir las credenciales.",
             color: "success",
           });
 
@@ -582,23 +612,24 @@ export default function Empleados() {
         },
         onError: (error: Error) => {
           const errorMessage = error.message;
-          
+
           // Detectar errores específicos de correo duplicado
           if (
             errorMessage.toLowerCase().includes("correo") &&
             (errorMessage.toLowerCase().includes("registrado") ||
-             errorMessage.toLowerCase().includes("existe") ||
-             errorMessage.toLowerCase().includes("duplicado"))
+              errorMessage.toLowerCase().includes("existe") ||
+              errorMessage.toLowerCase().includes("duplicado"))
           ) {
             // Mostrar toast especial para correo duplicado (no es un error de autenticación)
             addToast({
               title: "Correo ya registrado",
-              description: "Este correo ya se encuentra registrado. Por favor, usa otro correo electrónico.",
+              description:
+                "Este correo ya se encuentra registrado. Por favor, usa otro correo electrónico.",
               color: "warning",
             });
             return;
           }
-          
+
           // Usar el helper para otros errores
           handleError(error, "Error al crear empleado");
         },
@@ -626,10 +657,15 @@ export default function Empleados() {
 
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || `Error al reenviar a ${empleado.email}`);
+            throw new Error(
+              errorData.error || `Error al reenviar a ${empleado.email}`
+            );
           }
         } catch (error) {
-          console.error(`Error al reenviar invitación a ${empleado.email}:`, error);
+          console.error(
+            `Error al reenviar invitación a ${empleado.email}:`,
+            error
+          );
           throw error;
         }
       });
@@ -638,16 +674,19 @@ export default function Empleados() {
 
       addToast({
         title: "Invitaciones reenviadas",
-        description: `Se reenviaron ${invitados.length} invitación${invitados.length > 1 ? "es" : ""} exitosamente.`,
+        description: `Se reenviaron ${invitados.length} invitación${
+          invitados.length > 1 ? "es" : ""
+        } exitosamente.`,
         color: "success",
       });
 
       // Refrescar la lista de empleados
       refetchEmpleados();
-    } catch (error) {
+    } catch (_error) {
       addToast({
         title: "Error al reenviar",
-        description: "Hubo un problema al reenviar algunas invitaciones. Revisa la consola para más detalles.",
+        description:
+          "Hubo un problema al reenviar algunas invitaciones. Revisa la consola para más detalles.",
         color: "warning",
       });
     }
@@ -850,7 +889,10 @@ export default function Empleados() {
   const handleEditarEmpleado = async () => {
     if (!empleadoAEditar) return;
 
-    if (!empleadoEditDraft.nombre.trim() || !empleadoEditDraft.apellido.trim()) {
+    if (
+      !empleadoEditDraft.nombre.trim() ||
+      !empleadoEditDraft.apellido.trim()
+    ) {
       addToast({
         title: "Campos requeridos",
         description: "Nombre y apellido son obligatorios.",
@@ -897,7 +939,10 @@ export default function Empleados() {
     if (empleadoEditDraft.telefono !== (empleadoAEditar.telefono || "")) {
       updateData.telefono = empleadoEditDraft.telefono || null;
     }
-    if (Number(empleadoEditDraft.localidadId) !== (empleadoAEditar.localidadId || null)) {
+    if (
+      Number(empleadoEditDraft.localidadId) !==
+      (empleadoAEditar.localidadId || null)
+    ) {
       updateData.localidadId = Number(empleadoEditDraft.localidadId);
     }
     if (empleadoEditDraft.provinciaId) {
@@ -906,8 +951,13 @@ export default function Empleados() {
     if (empleadoEditDraft.departamentoId) {
       updateData.departamentoId = Number(empleadoEditDraft.departamentoId);
     }
-    if (empleadoEditDraft.rolId !== (empleadoAEditar.rolId ? String(empleadoAEditar.rolId) : "")) {
-      updateData.rolId = empleadoEditDraft.rolId ? Number(empleadoEditDraft.rolId) : null;
+    if (
+      empleadoEditDraft.rolId !==
+      (empleadoAEditar.rolId ? String(empleadoAEditar.rolId) : "")
+    ) {
+      updateData.rolId = empleadoEditDraft.rolId
+        ? Number(empleadoEditDraft.rolId)
+        : null;
     }
 
     // Usar la mutación del hook en lugar de fetch manual
@@ -1028,190 +1078,68 @@ export default function Empleados() {
 
   return (
     <>
-    <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center">
-      {/* Header de la página */}
-      <section className="w-full relative overflow-hidden rounded-3xl border border-slate-200/50 bg-gradient-to-r from-blue-500 via-sky-500 to-emerald-400 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] mb-10 transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]">
-        {/* Blurred circles decorativos para profundidad con parallax ligero (optimizado) */}
-        <div className="absolute inset-0 overflow-hidden" style={{ willChange: 'transform' }}>
-          <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl parallax-bg" style={{ willChange: 'transform' }} />
-          <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-white/8 rounded-full blur-2xl parallax-bg" style={{ animationDelay: '2s', willChange: 'transform' }} />
-          <div className="absolute top-1/2 right-1/4 w-32 h-32 bg-white/5 rounded-full blur-xl parallax-bg" style={{ animationDelay: '4s', willChange: 'transform' }} />
-        </div>
-        
-        {/* Glass panel semitransparente con blur más suave */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 backdrop-blur-sm" />
-        
-        {/* Radial gradient overlay para más profundidad */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),transparent_50%)]" />
-        
-        <div className="relative p-4 md:p-6 lg:p-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div className="space-y-3 flex-1">
-              <Chip 
-                variant="flat" 
-                className="bg-white/25 text-white backdrop-blur-sm border border-white/40 shadow-lg shadow-white/20 transition-all duration-300 hover:bg-white/30 hover:shadow-xl hover:shadow-white/30"
-              >
-                Empleados
-              </Chip>
-              <div className="space-y-2">
-                <h1 className="text-3xl md:text-4xl lg:text-[40px] font-bold text-white drop-shadow-lg">
-                  Gestion de Empleados
-                </h1>
-                <p className="text-white/95 max-w-2xl md:text-lg leading-relaxed drop-shadow-md">
-                  Supervisa permisos, historiales y seguridad desde un solo sitio
-                </p>
-              </div>
-            </div>
-            
-            {/* Ícono grande de equipo/empleados a la derecha (complementario al sidebar) */}
-            <div className="hidden md:flex items-center justify-center flex-shrink-0">
-              <div className="relative group">
-                {/* Glow alrededor del icono - efecto premium */}
-                <div className="absolute inset-0 bg-white/20 rounded-full blur-2xl group-hover:bg-white/30 transition-all duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-white/20 rounded-full blur-xl group-hover:from-white/40 group-hover:to-white/30 transition-all duration-500" />
-                {/* Blur suave de fondo */}
-                <div className="absolute inset-0 bg-white/15 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-300" />
-                <svg
-                  className="w-32 h-32 md:w-40 md:h-40 text-white relative z-10 drop-shadow-2xl transition-transform duration-300 group-hover:scale-105"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                  style={{
-                    animation: 'fadeIn 0.4s ease-out 0.1s forwards',
-                    willChange: 'transform, opacity',
-                    opacity: 0
-                  }}
-                >
-                  {/* Icono de equipo trabajando - más elaborado que el del sidebar */}
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Tabs con los diferentes CRUDs */}
-      <Tabs
-        aria-label="Options"
-        className="relative"
-        selectedKey={selectedTab}
-        onSelectionChange={(key) => setSelectedTab(key as string)}
-        classNames={{
-          tabList: "bg-white/80 backdrop-blur-sm rounded-lg shadow-md border border-gray-200/50 p-1 overflow-x-auto scrollbar-hide",
-          tab: "data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-[#67afc3] data-[selected=true]:to-[#529aa6] data-[selected=true]:text-white data-[selected=true]:shadow-lg transition-all duration-300 data-[hover=true]:bg-gray-100/50 data-[hover=true]:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#67afc3] focus-visible:ring-offset-2",
-          tabContent: "group-data-[selected=true]:text-white font-medium transition-colors duration-200",
-          cursor: "bg-gradient-to-r from-[#67afc3] to-[#529aa6] shadow-lg",
-        }}
-      >
-        <Tab
-          key="usuarios"
-          title={
-            <div className="flex items-center space-x-2">
-              <span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5"
-                >
-                  <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM3 5a2 2 0 11.001 3.001A2 2 0 013 5zm14 0a2 2 0 11.001 3.001A2 2 0 0117 5zm-3.707 6.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 13H13a1 1 0 100-2H9.414l1.293-1.293zM5 12a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1zm5-4a1 1 0 011-1h5a1 1 0 110 2h-5a1 1 0 01-1-1z" />
-                </svg>
-              </span>
-              <span>Usuarios</span>
-            </div>
-          }
+      <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center h-full">
+        {/* Tabs con los diferentes CRUDs */}
+        <Tabs
+          aria-label="Options"
+          className="relative"
+          selectedKey={selectedTab}
+          onSelectionChange={(key) => setSelectedTab(key as string)}
+          classNames={{
+            tabList:
+              "bg-white backdrop-blur-sm rounded-lg shadow-none border-gray-200/50 p-1 overflow-x-auto scrollbar-hide",
+            tab: "m-[5px] p-[20px] data-[selected=true]:bg-[#67afc3]/90 data-[selected=true]:text-white data-[selected=true]:shadow-none transition-all duration-300 data-[hover=true]:bg-gray-100/50 data-[hover=true]:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#67afc3] focus-visible:ring-offset-2 text-[16px] cursor-pointer transform hover:scale-105 active:scale-95",
+            tabContent:
+              "group-data-[selected=true]:text-white font-medium transition-colors duration-200",
+            cursor: "bg-[#67afc3]/90",
+            panel: "h-full",
+          }}
         >
-          <Card className="shadow-none border-none bg-transparent">
-            <CardBody className="p-0">
-              <div className="space-y-6">
-
-            {/* Alerta de invitaciones pendientes - Sticky */}
-            {resumen.invitados > 0 && (
-              <div className="sticky top-0 z-30 -mx-6 px-6 pt-4 pb-2 bg-white/95 backdrop-blur-sm border-b border-yellow-200">
-                <Card className="shadow-md border-2 border-yellow-400 bg-gradient-to-r from-yellow-50 to-yellow-100">
-                  <CardBody className="p-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0">
-                        <div className="w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center text-2xl">
-                          📧
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-bold text-yellow-900 text-lg">
-                            Invitaciones pendientes
-                          </h3>
-                          <Chip
-                            size="sm"
-                            color="warning"
-                            variant="solid"
-                            className="font-bold"
-                          >
-                            {resumen.invitados}
-                          </Chip>
-                        </div>
-                        <p className="text-sm text-yellow-800 mb-3">
-                          {resumen.invitadosLista
-                            .map((e) => e.nombreCompleto)
-                            .join(", ")}{" "}
-                          {resumen.invitados > 1 ? "están" : "está"} esperando aceptar su invitación.
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            size="sm"
-                            variant="solid"
-                            color="warning"
-                            onPress={handleReenviarInvitaciones}
-                            className="font-semibold"
-                          >
-                            Enviar recordatorio
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="flat"
-                            color="warning"
-                            onPress={() => {
-                              setFiltros((prev) => ({ ...prev, estado: "Invitado" }));
-                              setPage(1);
-                            }}
-                          >
-                            Ver invitados
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardBody>
-                </Card>
+          <Tab
+            key="usuarios"
+            title={
+              <div className="flex items-center space-x-2">
+                <span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="size-5"
+                  >
+                    <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM3 5a2 2 0 11.001 3.001A2 2 0 013 5zm14 0a2 2 0 11.001 3.001A2 2 0 0117 5zm-3.707 6.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 13H13a1 1 0 100-2H9.414l1.293-1.293zM5 12a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1zm5-4a1 1 0 011-1h5a1 1 0 110 2h-5a1 1 0 01-1-1z" />
+                  </svg>
+                </span>
+                <span>Usuarios</span>
               </div>
-            )}
-
+            }
+          >
             {/* Tabla de empleados usando GenericTable */}
             <EmpleadoCRUD
               onCreate={() => setOpenCrearUsuarioModal(true)}
               onEdit={(empleado) => {
                 setEmpleadoAEditar(empleado);
                 // Prellenar formulario
-                const provinciaIdStr = empleado.provinciaId ? String(empleado.provinciaId) : "";
-                const departamentoIdStr = empleado.departamentoId ? String(empleado.departamentoId) : "";
-                
+                const provinciaIdStr = empleado.provinciaId
+                  ? String(empleado.provinciaId)
+                  : "";
+                const departamentoIdStr = empleado.departamentoId
+                  ? String(empleado.departamentoId)
+                  : "";
+
                 setEmpleadoEditDraft({
                   nombre: empleado.nombre,
                   apellido: empleado.apellido,
                   dni: empleado.dni || "",
                   direccion: empleado.direccion || "",
                   telefono: empleado.telefono || "",
-                  localidadId: empleado.localidadId ? String(empleado.localidadId) : "",
+                  localidadId: empleado.localidadId
+                    ? String(empleado.localidadId)
+                    : "",
                   provinciaId: provinciaIdStr,
                   departamentoId: departamentoIdStr,
                   rolId: empleado.rolId ? String(empleado.rolId) : "",
                 });
-                
+
                 // Cargar departamentos y localidades si hay provincia/departamento
                 if (provinciaIdStr) {
                   setProvinciaSeleccionada(provinciaIdStr);
@@ -1219,7 +1147,7 @@ export default function Empleados() {
                     setDepartamentoSeleccionado(departamentoIdStr);
                   }
                 }
-                
+
                 // Limpiar contraseñas
                 setNuevaPassword("");
                 setConfirmarPassword("");
@@ -1240,309 +1168,326 @@ export default function Empleados() {
                 })
               }
             />
-              </div>
-            </CardBody>
-          </Card>
-        </Tab>
+          </Tab>
 
-        <Tab
-          key="roles"
-          title={
-            <div className="flex items-center space-x-2">
-              <span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M9.293 2.293a1 1 0 0 1 1.414 0l7 7A1 1 0 0 1 17 11h-1v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6H3a1 1 0 0 1-.707-1.707l7-7Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </span>
-              <span>Roles</span>
-            </div>
-          }
-        >
-          <Card className="shadow-none border-none bg-transparent">
-            <CardBody className="p-0">
-              <Card className="shadow-sm border border-slate-200">
-            <CardHeader className="flex items-center justify-between pb-3">
-              <div>
-                <p className="text-sm text-gray-500">Roles</p>
-                <h3 className="text-lg font-semibold text-slate-900">
-                  Librería de roles
-                </h3>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleRefreshRoles}
-                  disabled={isRefreshingRoles}
-                  className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 hover:border-[#67afc3] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Actualizar datos"
-                >
-                  <RefreshCw
-                    size={18}
-                    className={`text-gray-600 transition-transform ${
-                      isRefreshingRoles ? "animate-spin" : ""
-                    }`}
-                  />
-                </button>
-                <button
-                  onClick={() => setOpenRolModal(true)}
-                  className="bg-[#67afc3] text-white px-4 py-1 rounded-lg hover:bg-[#529aa6] transition-colors"
-                >
-                  Crear nuevo rol
-                </button>
-              </div>
-            </CardHeader>
-            <Divider />
-            <CardBody className="space-y-4 pt-4">
-              {roles.map((rol) => {
-                const permisosVisibles = (
-                  rol.permisos ?? permisosDisponibles
-                ).slice(0, 5);
-                const permisosRestantes = Math.max(
-                  (rol.permisos ?? permisosDisponibles).length -
-                    permisosVisibles.length,
-                  0
-                );
-                const descripcionRol =
-                  rol.tipo === "ADMINISTRADOR"
-                    ? "Acceso completo a la configuración y gestión del negocio."
-                    : "Puede operar ventas, caja y reportes básicos.";
-                
-                // Determinar si se puede eliminar el rol
-                const nombreNormalizado = rol.nombre.trim().toLowerCase();
-                const esRolSistema =
-                  rol.id < 0 ||
-                  nombreNormalizado === "administrador" ||
-                  nombreNormalizado === "admin" ||
-                  nombreNormalizado === "superadmin";
-                const tieneUsuarios = rol.usuarios > 0;
-                const puedeEliminar = !esRolSistema && !tieneUsuarios;
-                
-                return (
-                  <div
-                    key={rol.id}
-                    className="p-4 rounded-xl border border-slate-200 flex flex-col gap-3 hover:shadow-sm transition-shadow relative"
+          <Tab
+            key="roles"
+            title={
+              <div className="flex items-center space-x-2">
+                <span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="size-5"
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="font-semibold text-slate-900">
-                          {rol.nombre}
-                        </h4>
-                        <Chip
-                          size="sm"
-                          color={rolChipColor(rol.tipo)}
-                          variant="flat"
-                        >
-                          {rol.tipo === "ADMINISTRADOR"
-                            ? "Administrador"
-                            : "Empleado"}
-                        </Chip>
-                        <Chip
-                          size="sm"
-                          color={rol.usuarios > 0 ? "success" : "default"}
-                          variant="flat"
-                        >
-                          {rol.usuarios > 0
-                            ? `Asignado (${rol.usuarios})`
-                            : "Sin usar"}
-                        </Chip>
-                        <Chip
-                          size="sm"
-                          variant="flat"
-                          className="bg-gray-100 text-gray-700"
-                        >
-                          👤 {rol.usuarios}{" "}
-                          {rol.usuarios === 1 ? "usuario" : "usuarios"}
-                        </Chip>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Dropdown>
-                          <DropdownTrigger>
-                            <Button
-                              isIconOnly
-                              size="sm"
-                              variant="light"
-                              className="min-w-0 w-8 h-8"
-                            >
-                              <span className="text-lg">⋯</span>
-                            </Button>
-                          </DropdownTrigger>
-                          <DropdownMenu
-                            aria-label="Acciones del rol"
-                            onAction={(key) => {
-                              if (key === "editar") {
-                                setRolAEditar(rol);
-                                setRolEditDraft({
-                                  nombre: rol.nombre,
-                                  descripcion: rol.descripcion ?? "",
-                                  tipo: rol.tipo,
-                                  permisos: rol.permisos ?? [],
-                                });
-                              } else if (key === "eliminar") {
-                                setRolAEliminar(rol);
-                              }
-                            }}
-                          >
-                            <DropdownItem
-                              key="editar"
-                              startContent={<Pencil size={16} />}
-                            >
-                              Editar rol
-                            </DropdownItem>
-                            <DropdownItem
-                              key="eliminar"
-                              className={puedeEliminar ? "text-danger" : ""}
-                              color={puedeEliminar ? "danger" : "default"}
-                              isDisabled={!puedeEliminar}
-                              startContent={<Trash2 size={16} />}
-                              description={
-                                !puedeEliminar
-                                  ? tieneUsuarios
-                                    ? "El rol tiene usuarios asignados"
-                                    : "No se puede eliminar un rol del sistema"
-                                  : undefined
-                              }
-                            >
-                              Eliminar
-                            </DropdownItem>
-                          </DropdownMenu>
-                        </Dropdown>
-                      </div>
+                    <path
+                      fillRule="evenodd"
+                      d="M9.293 2.293a1 1 0 0 1 1.414 0l7 7A1 1 0 0 1 17 11h-1v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6H3a1 1 0 0 1-.707-1.707l7-7Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </span>
+                <span>Roles</span>
+              </div>
+            }
+          >
+            <Card className="shadow-none border-none bg-transparent">
+              <CardBody className="p-0">
+                <Card className="shadow-sm border border-slate-200">
+                  <CardHeader className="flex items-center justify-between pb-3">
+                    <div>
+                      <p className="text-sm text-gray-500">Roles</p>
+                      <h3 className="text-lg font-semibold text-slate-900">
+                        Librería de roles
+                      </h3>
                     </div>
-                    <p className="text-sm text-gray-600">{descripcionRol}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {permisosVisibles.map((permiso) => (
-                        <span
-                          key={`${rol.id}-${permiso}`}
-                          className="inline-flex items-center rounded-full bg-gray-100 text-gray-700 px-3 py-1 text-xs font-medium"
-                        >
-                          {permiso}
-                        </span>
-                      ))}
-                      {permisosRestantes > 0 && (
-                        <span className="inline-flex items-center rounded-full bg-gray-200 text-gray-700 px-3 py-1 text-xs font-medium">
-                          +{permisosRestantes} más
-                        </span>
-                      )}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleRefreshRoles}
+                        disabled={isRefreshingRoles}
+                        className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 hover:border-[#67afc3] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Actualizar datos"
+                      >
+                        <RefreshCw
+                          size={18}
+                          className={`text-gray-600 transition-transform ${
+                            isRefreshingRoles ? "animate-spin" : ""
+                          }`}
+                        />
+                      </button>
+                      <button
+                        onClick={() => setOpenRolModal(true)}
+                        className="bg-[#67afc3] text-white px-4 py-1 rounded-lg hover:bg-[#529aa6] transition-colors"
+                      >
+                        Crear nuevo rol
+                      </button>
                     </div>
-                  </div>
-                );
-              })}
-            </CardBody>
-          </Card>
-            </CardBody>
-          </Card>
-        </Tab>
+                  </CardHeader>
+                  <Divider />
+                  <CardBody className="space-y-4 pt-4">
+                    {roles.map((rol) => {
+                      const permisosVisibles = (
+                        rol.permisos ?? permisosDisponibles
+                      ).slice(0, 5);
+                      const permisosRestantes = Math.max(
+                        (rol.permisos ?? permisosDisponibles).length -
+                          permisosVisibles.length,
+                        0
+                      );
+                      const descripcionRol =
+                        rol.tipo === "ADMINISTRADOR"
+                          ? "Acceso completo a la configuración y gestión del negocio."
+                          : "Puede operar ventas, caja y reportes básicos.";
 
-        <Tab
-          key="auditoria"
-          title={
-            <div className="flex items-center space-x-2">
-              <span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 2a.75.75 0 0 1 .75.75v16.5a.75.75 0 0 1-1.5 0V2.75A.75.75 0 0 1 10 2ZM4.5 4a.75.75 0 0 1 .75.75v11.5a.75.75 0 0 1-1.5 0V4.75A.75.75 0 0 1 4.5 4Zm11 0a.75.75 0 0 1 .75.75v11.5a.75.75 0 0 1-1.5 0V4.75A.75.75 0 0 1 15.5 4Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </span>
-              <span>Auditoría de accesos</span>
-            </div>
-          }
-        >
-          <Card className="shadow-none border-none bg-transparent">
-            <CardBody className="p-0">
-          <Card className="mt-6 shadow-sm border border-slate-200">
-            <CardHeader className="flex items-center justify-between pb-3">
-              <div>
-                <p className="text-sm text-gray-500">Preview</p>
-                <h3 className="text-lg font-semibold text-slate-900">
-                  Auditoría de accesos
-                </h3>
-              </div>
-              <Chip size="sm" variant="flat" color="warning">
-                Live
-              </Chip>
-            </CardHeader>
-            <Divider />
-            <CardBody className="space-y-4 pt-4">
-              {isLoadingAuditorias ? (
-                <div className="flex justify-center py-8">
-                  <p className="text-sm text-gray-500">Cargando auditorías...</p>
-                </div>
-              ) : auditorias.length === 0 ? (
-                <div className="flex justify-center py-8">
-                  <p className="text-sm text-gray-500">No hay auditorías registradas</p>
-                </div>
-              ) : (
-                auditorias.map((aud) => {
-                  const { categoria, color } = mapearAccion(aud.accion);
-                  const tiempoRelativo = formatTiempoRelativo(aud.fecha);
-                  const descripcion = formatearAccion(aud);
-                  // La API no devuelve severidad, usar "INFO" por defecto
-                  const severidadColor = mapearSeveridad("INFO");
-                  
-                  return (
-                    <div key={aud.id} className="flex items-center justify-between py-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-semibold text-slate-900">{descripcion}</p>
-                          <Chip size="sm" color={severidadColor} variant="flat">
-                            INFO
-                          </Chip>
+                      // Determinar si se puede eliminar el rol
+                      const nombreNormalizado = rol.nombre.trim().toLowerCase();
+                      const esRolSistema =
+                        rol.id < 0 ||
+                        nombreNormalizado === "administrador" ||
+                        nombreNormalizado === "admin" ||
+                        nombreNormalizado === "superadmin";
+                      const tieneUsuarios = rol.usuarios > 0;
+                      const puedeEliminar = !esRolSistema && !tieneUsuarios;
+
+                      return (
+                        <div
+                          key={rol.id}
+                          className="p-4 rounded-xl border border-slate-200 flex flex-col gap-3 hover:shadow-sm transition-shadow relative"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="font-semibold text-slate-900">
+                                {rol.nombre}
+                              </h4>
+                              <Chip
+                                size="sm"
+                                color={rolChipColor(rol.tipo)}
+                                variant="flat"
+                              >
+                                {rol.tipo === "ADMINISTRADOR"
+                                  ? "Administrador"
+                                  : "Empleado"}
+                              </Chip>
+                              <Chip
+                                size="sm"
+                                color={rol.usuarios > 0 ? "success" : "default"}
+                                variant="flat"
+                              >
+                                {rol.usuarios > 0
+                                  ? `Asignado (${rol.usuarios})`
+                                  : "Sin usar"}
+                              </Chip>
+                              <Chip
+                                size="sm"
+                                variant="flat"
+                                className="bg-gray-100 text-gray-700"
+                              >
+                                👤 {rol.usuarios}{" "}
+                                {rol.usuarios === 1 ? "usuario" : "usuarios"}
+                              </Chip>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Dropdown>
+                                <DropdownTrigger>
+                                  <Button
+                                    isIconOnly
+                                    size="sm"
+                                    variant="light"
+                                    className="min-w-0 w-8 h-8"
+                                  >
+                                    <span className="text-lg">⋯</span>
+                                  </Button>
+                                </DropdownTrigger>
+                                <DropdownMenu
+                                  aria-label="Acciones del rol"
+                                  onAction={(key) => {
+                                    if (key === "editar") {
+                                      setRolAEditar(rol);
+                                      setRolEditDraft({
+                                        nombre: rol.nombre,
+                                        descripcion: rol.descripcion ?? "",
+                                        tipo: rol.tipo,
+                                        permisos: rol.permisos ?? [],
+                                      });
+                                    } else if (key === "eliminar") {
+                                      setRolAEliminar(rol);
+                                    }
+                                  }}
+                                >
+                                  <DropdownItem
+                                    key="editar"
+                                    startContent={<Pencil size={16} />}
+                                  >
+                                    Editar rol
+                                  </DropdownItem>
+                                  <DropdownItem
+                                    key="eliminar"
+                                    className={
+                                      puedeEliminar ? "text-danger" : ""
+                                    }
+                                    color={puedeEliminar ? "danger" : "default"}
+                                    isDisabled={!puedeEliminar}
+                                    startContent={<Trash2 size={16} />}
+                                    description={
+                                      !puedeEliminar
+                                        ? tieneUsuarios
+                                          ? "El rol tiene usuarios asignados"
+                                          : "No se puede eliminar un rol del sistema"
+                                        : undefined
+                                    }
+                                  >
+                                    Eliminar
+                                  </DropdownItem>
+                                </DropdownMenu>
+                              </Dropdown>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            {descripcionRol}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {permisosVisibles.map((permiso) => (
+                              <span
+                                key={`${rol.id}-${permiso}`}
+                                className="inline-flex items-center rounded-full bg-gray-100 text-gray-700 px-3 py-1 text-xs font-medium"
+                              >
+                                {permiso}
+                              </span>
+                            ))}
+                            {permisosRestantes > 0 && (
+                              <span className="inline-flex items-center rounded-full bg-gray-200 text-gray-700 px-3 py-1 text-xs font-medium">
+                                +{permisosRestantes} más
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-500">{tiempoRelativo}</p>
-                      </div>
-                      <Chip size="sm" color={color} variant="flat">
-                        {categoria}
-                      </Chip>
-                    </div>
-                  );
-                })
-              )}
-              <Divider className="my-4" />
-              <div className="flex flex-col items-center gap-4 pt-2">
-                {!isLoadingAuditorias && paginationAuditoria.totalPages > 1 && (
-                  <HeroUIPagination
-                    showControls
-                    page={paginationAuditoria.page}
-                    total={paginationAuditoria.totalPages}
-                    onChange={(page) => setAuditoriaPage(page)}
-                    classNames={{
-                      cursor: "bg-[#67afc3] text-white shadow-lg",
-                      item: "bg-transparent shadow-none",
-                    }}
-                  />
-                )}
-                <Button
-                  color="primary"
-                  variant="flat"
-                  size="sm"
-                  onPress={() => router.push("/analiticas?tab=logs")}
-                >
-                  Ver logs completos
-                </Button>
+                      );
+                    })}
+                  </CardBody>
+                </Card>
+              </CardBody>
+            </Card>
+          </Tab>
+
+          <Tab
+            key="auditoria"
+            title={
+              <div className="flex items-center space-x-2">
+                <span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="size-5"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 2a.75.75 0 0 1 .75.75v16.5a.75.75 0 0 1-1.5 0V2.75A.75.75 0 0 1 10 2ZM4.5 4a.75.75 0 0 1 .75.75v11.5a.75.75 0 0 1-1.5 0V4.75A.75.75 0 0 1 4.5 4Zm11 0a.75.75 0 0 1 .75.75v11.5a.75.75 0 0 1-1.5 0V4.75A.75.75 0 0 1 15.5 4Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </span>
+                <span>Auditoría de accesos</span>
               </div>
-            </CardBody>
-          </Card>
-            </CardBody>
-          </Card>
-        </Tab>
-      </Tabs>
-    </div>
+            }
+          >
+            <Card className="shadow-none border-none bg-transparent">
+              <CardBody className="p-0">
+                <Card className="mt-6 shadow-sm border border-slate-200">
+                  <CardHeader className="flex items-center justify-between pb-3">
+                    <div>
+                      <p className="text-sm text-gray-500">Preview</p>
+                      <h3 className="text-lg font-semibold text-slate-900">
+                        Auditoría de accesos
+                      </h3>
+                    </div>
+                    <Chip size="sm" variant="flat" color="warning">
+                      Live
+                    </Chip>
+                  </CardHeader>
+                  <Divider />
+                  <CardBody className="space-y-4 pt-4">
+                    {isLoadingAuditorias ? (
+                      <div className="flex justify-center py-8">
+                        <p className="text-sm text-gray-500">
+                          Cargando auditorías...
+                        </p>
+                      </div>
+                    ) : auditorias.length === 0 ? (
+                      <div className="flex justify-center py-8">
+                        <p className="text-sm text-gray-500">
+                          No hay auditorías registradas
+                        </p>
+                      </div>
+                    ) : (
+                      auditorias.map((aud) => {
+                        const { categoria, color } = mapearAccion(aud.accion);
+                        const tiempoRelativo = formatTiempoRelativo(aud.fecha);
+                        const descripcion = formatearAccion(aud);
+                        // La API no devuelve severidad, usar "INFO" por defecto
+                        const severidadColor = mapearSeveridad("INFO");
+
+                        return (
+                          <div
+                            key={aud.id}
+                            className="flex items-center justify-between py-2"
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="font-semibold text-slate-900">
+                                  {descripcion}
+                                </p>
+                                <Chip
+                                  size="sm"
+                                  color={severidadColor}
+                                  variant="flat"
+                                >
+                                  INFO
+                                </Chip>
+                              </div>
+                              <p className="text-sm text-gray-500">
+                                {tiempoRelativo}
+                              </p>
+                            </div>
+                            <Chip size="sm" color={color} variant="flat">
+                              {categoria}
+                            </Chip>
+                          </div>
+                        );
+                      })
+                    )}
+                    <Divider className="my-4" />
+                    <div className="flex flex-col items-center gap-4 pt-2">
+                      {!isLoadingAuditorias &&
+                        paginationAuditoria.totalPages > 1 && (
+                          <HeroUIPagination
+                            showControls
+                            page={paginationAuditoria.page}
+                            total={paginationAuditoria.totalPages}
+                            onChange={(page) => setAuditoriaPage(page)}
+                            classNames={{
+                              cursor: "bg-[#67afc3] text-white shadow-lg",
+                              item: "bg-transparent shadow-none",
+                            }}
+                          />
+                        )}
+                      <Button
+                        color="primary"
+                        variant="flat"
+                        size="sm"
+                        onPress={() => router.push("/analiticas?tab=logs")}
+                      >
+                        Ver logs completos
+                      </Button>
+                    </div>
+                  </CardBody>
+                </Card>
+              </CardBody>
+            </Card>
+          </Tab>
+        </Tabs>
+      </div>
 
       <Modal
         isOpen={openRolModal}
@@ -1615,7 +1560,8 @@ export default function Empleados() {
                 </h4>
               </div>
               <p className="text-sm text-gray-600">
-                Selecciona los permisos que tendrá este rol. Puedes seleccionar múltiples permisos.
+                Selecciona los permisos que tendrá este rol. Puedes seleccionar
+                múltiples permisos.
               </p>
               <div className="flex flex-wrap gap-2">
                 {permisosDisponibles.map((permiso) => {
@@ -1684,7 +1630,8 @@ export default function Empleados() {
           </ModalHeader>
           <ModalBody className="space-y-3">
             {(() => {
-              const nombreNormalizado = rolAEditar?.nombre.trim().toLowerCase() ?? "";
+              const nombreNormalizado =
+                rolAEditar?.nombre.trim().toLowerCase() ?? "";
               const esRolSistema =
                 (rolAEditar?.id ?? 0) < 0 ||
                 nombreNormalizado === "administrador" ||
@@ -1745,7 +1692,9 @@ export default function Empleados() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <p className="text-sm font-semibold text-slate-900">Permisos</p>
+                    <p className="text-sm font-semibold text-slate-900">
+                      Permisos
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {permisosDisponibles.map((permiso) => {
                         const activo = rolEditDraft.permisos.includes(permiso);
@@ -1771,14 +1720,16 @@ export default function Empleados() {
                     </div>
                   </div>
                   {(() => {
-                    const nombreNormalizadoEdit = rolAEditar?.nombre.trim().toLowerCase() ?? "";
+                    const nombreNormalizadoEdit =
+                      rolAEditar?.nombre.trim().toLowerCase() ?? "";
                     const esRolSistemaEdit =
                       (rolAEditar?.id ?? 0) < 0 ||
                       nombreNormalizadoEdit === "administrador" ||
                       nombreNormalizadoEdit === "admin" ||
                       nombreNormalizadoEdit === "superadmin";
                     const tieneUsuariosEdit = (rolAEditar?.usuarios ?? 0) > 0;
-                    const puedeEliminarEdit = !esRolSistemaEdit && !tieneUsuariosEdit;
+                    const puedeEliminarEdit =
+                      !esRolSistemaEdit && !tieneUsuariosEdit;
 
                     return (
                       <div className="pt-4 border-t border-slate-200">
@@ -1957,7 +1908,8 @@ export default function Empleados() {
               <span className="font-semibold text-slate-900">
                 &quot;{rolAEliminar?.nombre}&quot;
               </span>
-              ? Esta acción eliminará permanentemente el rol y todos sus permisos asociados.
+              ? Esta acción eliminará permanentemente el rol y todos sus
+              permisos asociados.
             </p>
           </ModalBody>
           <ModalFooter>
@@ -2076,7 +2028,9 @@ export default function Empleados() {
               <Select
                 label="Provincia"
                 selectedKeys={
-                  empleadoEditDraft.provinciaId ? [empleadoEditDraft.provinciaId] : []
+                  empleadoEditDraft.provinciaId
+                    ? [empleadoEditDraft.provinciaId]
+                    : []
                 }
                 onChange={(e) => {
                   setEmpleadoEditDraft((prev) => ({
@@ -2087,7 +2041,11 @@ export default function Empleados() {
                   }));
                   setProvinciaSeleccionada(e.target.value);
                 }}
-                placeholder={isLoadingProvincias ? "Cargando provincias..." : "Selecciona una provincia"}
+                placeholder={
+                  isLoadingProvincias
+                    ? "Cargando provincias..."
+                    : "Selecciona una provincia"
+                }
                 isLoading={isLoadingProvincias}
                 isDisabled={isLoadingProvincias}
               >
@@ -2106,7 +2064,9 @@ export default function Empleados() {
               <Select
                 label="Departamento"
                 selectedKeys={
-                  empleadoEditDraft.departamentoId ? [empleadoEditDraft.departamentoId] : []
+                  empleadoEditDraft.departamentoId
+                    ? [empleadoEditDraft.departamentoId]
+                    : []
                 }
                 onChange={(e) => {
                   const deptId = e.target.value;
@@ -2126,9 +2086,13 @@ export default function Empleados() {
                     : "Selecciona un departamento"
                 }
                 isLoading={departamentosQuery.isLoading}
-                isDisabled={!empleadoEditDraft.provinciaId || departamentosQuery.isLoading}
+                isDisabled={
+                  !empleadoEditDraft.provinciaId || departamentosQuery.isLoading
+                }
               >
-                {departamentos.length === 0 && !departamentosQuery.isLoading && empleadoEditDraft.provinciaId ? (
+                {departamentos.length === 0 &&
+                !departamentosQuery.isLoading &&
+                empleadoEditDraft.provinciaId ? (
                   <SelectItem key="no-items" isDisabled>
                     No hay departamentos disponibles
                   </SelectItem>
@@ -2143,7 +2107,9 @@ export default function Empleados() {
               <Select
                 label="Localidad"
                 selectedKeys={
-                  empleadoEditDraft.localidadId ? [empleadoEditDraft.localidadId] : []
+                  empleadoEditDraft.localidadId
+                    ? [empleadoEditDraft.localidadId]
+                    : []
                 }
                 onChange={(e) =>
                   setEmpleadoEditDraft((prev) => ({
@@ -2159,11 +2125,16 @@ export default function Empleados() {
                     : "Selecciona una localidad"
                 }
                 isLoading={localidadesQuery.isLoading}
-                isDisabled={!empleadoEditDraft.departamentoId || localidadesQuery.isLoading}
+                isDisabled={
+                  !empleadoEditDraft.departamentoId ||
+                  localidadesQuery.isLoading
+                }
                 isRequired
                 className="md:col-span-2"
               >
-                {localidades.length === 0 && !localidadesQuery.isLoading && empleadoEditDraft.departamentoId ? (
+                {localidades.length === 0 &&
+                !localidadesQuery.isLoading &&
+                empleadoEditDraft.departamentoId ? (
                   <SelectItem key="no-items" isDisabled>
                     No hay localidades disponibles
                   </SelectItem>
@@ -2177,7 +2148,9 @@ export default function Empleados() {
               </Select>
               <Select
                 label="Rol"
-                selectedKeys={empleadoEditDraft.rolId ? [empleadoEditDraft.rolId] : []}
+                selectedKeys={
+                  empleadoEditDraft.rolId ? [empleadoEditDraft.rolId] : []
+                }
                 onChange={(e) =>
                   setEmpleadoEditDraft((prev) => ({
                     ...prev,
@@ -2220,7 +2193,11 @@ export default function Empleados() {
                 size="sm"
                 onPress={handleCambiarPassword}
                 isLoading={isChangingPassword}
-                isDisabled={!nuevaPassword || nuevaPassword.length < 8 || nuevaPassword !== confirmarPassword}
+                isDisabled={
+                  !nuevaPassword ||
+                  nuevaPassword.length < 8 ||
+                  nuevaPassword !== confirmarPassword
+                }
               >
                 Cambiar contraseña
               </Button>
@@ -2302,7 +2279,10 @@ export default function Empleados() {
                   placeholder="12345678"
                   value={nuevoUsuario.dni}
                   onChange={(e) =>
-                    setNuevoUsuario((prev) => ({ ...prev, dni: e.target.value }))
+                    setNuevoUsuario((prev) => ({
+                      ...prev,
+                      dni: e.target.value,
+                    }))
                   }
                 />
                 <Input

@@ -2,9 +2,9 @@
  * =====================================================
  * SCRIPT PARA VERIFICAR SUCURSALES DEL USUARIO
  * =====================================================
- * 
+ *
  * Ejecutar: npx tsx scripts/verificar-sucursales-usuario.ts
- * 
+ *
  * =====================================================
  */
 
@@ -39,9 +39,7 @@ async function main() {
     console.log(`📊 Total de usuarios: ${usuarios.length}\n`);
 
     for (const usuario of usuarios) {
-      const nombreCompleto = usuario.Persona_Empleado?.[0]?.Persona
-        ? `${usuario.Persona_Empleado[0].Persona.Nombre} ${usuario.Persona_Empleado[0].Persona.Apellido}`
-        : usuario.Nombre;
+      const nombreCompleto = usuario.Nombre;
 
       // Obtener sucursales asignadas al usuario
       const usuarioSucursales = await prisma.usuarioSucursal.findMany({
@@ -73,7 +71,11 @@ async function main() {
           if (us.Sucursal.EsPrincipal) marcadores.push("🏠 Principal");
           if (!us.Sucursal.EstaActiva) marcadores.push("❌ Inactiva");
 
-          console.log(`   ${index + 1}. ${us.Sucursal.Nombre} (ID: ${us.Sucursal.Id}) ${marcadores.length > 0 ? marcadores.join(", ") : ""}`);
+          console.log(
+            `   ${index + 1}. ${us.Sucursal.Nombre} (ID: ${us.Sucursal.Id}) ${
+              marcadores.length > 0 ? marcadores.join(", ") : ""
+            }`
+          );
         });
         console.log();
       }
@@ -95,7 +97,11 @@ async function main() {
           },
         },
       },
-      orderBy: [{ TenantId: "asc" }, { EsPrincipal: "desc" }, { Nombre: "asc" }],
+      orderBy: [
+        { TenantId: "asc" },
+        { EsPrincipal: "desc" },
+        { Nombre: "asc" },
+      ],
     });
 
     console.log(`Total de sucursales: ${sucursales.length}\n`);
@@ -107,9 +113,13 @@ async function main() {
       });
 
       console.log(
-        `🏢 ${sucursal.Nombre} (ID: ${sucursal.Id}) - Tenant: ${tenant?.Nombre || sucursal.TenantId}`
+        `🏢 ${sucursal.Nombre} (ID: ${sucursal.Id}) - Tenant: ${
+          tenant?.Nombre || sucursal.TenantId
+        }`
       );
-      console.log(`   Usuarios asignados: ${sucursal._count.UsuariosSucursales}`);
+      console.log(
+        `   Usuarios asignados: ${sucursal._count.UsuariosSucursales}`
+      );
       if (sucursal.EsPrincipal) console.log(`   ⭐ Sucursal Principal`);
       if (!sucursal.EstaActiva) console.log(`   ⚠️  Inactiva`);
       console.log();
@@ -127,4 +137,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-

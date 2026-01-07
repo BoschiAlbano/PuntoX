@@ -4,13 +4,13 @@
  * =====================================================
  * PÁGINA DE GESTIÓN DE SUCURSALES
  * =====================================================
- * 
+ *
  * Permite administrar las sucursales del tenant:
  * - Listar sucursales
  * - Crear nueva sucursal
  * - Editar sucursal existente
  * - Ver estadísticas por sucursal
- * 
+ *
  * =====================================================
  */
 
@@ -55,7 +55,7 @@ type Sucursal = {
 
 export default function SucursalesPage() {
   // Permisos - usar mismo permiso que configuración
-  usePagePermission("configuracion:ver");
+  usePagePermission();
 
   // Estado
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
@@ -221,17 +221,20 @@ export default function SucursalesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {sucursales.map((sucursal) => (
-            <Card key={sucursal.id} className="hover:shadow-lg transition-shadow">
+            <Card
+              key={sucursal.id}
+              className="hover:shadow-lg transition-shadow"
+            >
               <CardHeader className="flex justify-between items-start pb-2">
                 <div className="flex items-start gap-2 flex-1">
-                  <Building2 className="h-5 w-5 text-[#67afc3] mt-1 flex-shrink-0" />
+                  <Building2 className="h-5 w-5 text-[#67afc3] mt-1 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-slate-800 truncate">
                         {sucursal.nombre}
                       </h3>
                       {sucursal.esPrincipal && (
-                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 flex-shrink-0" />
+                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 shrink-0" />
                       )}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
@@ -255,18 +258,18 @@ export default function SucursalesPage() {
                 <div className="space-y-2 text-sm">
                   {sucursal.direccion && (
                     <div className="flex items-start gap-2 text-slate-600">
-                      <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
                       <span className="flex-1">{sucursal.direccion}</span>
                     </div>
                   )}
                   {sucursal.telefono && (
                     <div className="flex items-center gap-2 text-slate-600">
-                      <Phone className="h-4 w-4 flex-shrink-0" />
+                      <Phone className="h-4 w-4 shrink-0" />
                       <span>{sucursal.telefono}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-2 text-slate-600">
-                    <Users className="h-4 w-4 flex-shrink-0" />
+                    <Users className="h-4 w-4 shrink-0" />
                     <span>
                       {sucursal.cantidadUsuarios}{" "}
                       {sucursal.cantidadUsuarios === 1 ? "usuario" : "usuarios"}
@@ -380,4 +383,3 @@ export default function SucursalesPage() {
     </div>
   );
 }
-

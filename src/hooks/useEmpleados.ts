@@ -1,6 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
-import { dynamicDataQueryOptions, staticDataQueryOptions } from "@/lib/react-query/queryDefaults";
+import {
+  dynamicDataQueryOptions,
+  staticDataQueryOptions,
+} from "@/lib/react-query/queryDefaults";
 import { handleError } from "@/lib/auth/errorHandler";
 
 export interface Empleado {
@@ -112,12 +115,16 @@ const fetchEmpleados = async ({
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const errorData = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     // La API devuelve { error: { code, message } } o { error: "string" }
-    const errorMessage = 
-      typeof errorData?.error === "string" 
-        ? errorData.error 
-        : errorData?.error?.message || errorData?.error?.code || "Error al cargar empleados";
+    const errorMessage =
+      typeof errorData?.error === "string"
+        ? errorData.error
+        : errorData?.error?.message ||
+          errorData?.error?.code ||
+          "Error al cargar empleados";
     throw new Error(errorMessage);
   }
 
@@ -159,7 +166,11 @@ const fetchRoles = async ({
   return Array.isArray(data?.roles) ? data.roles : [];
 };
 
-const fetchProvincias = async ({ signal }: { signal: AbortSignal }): Promise<Provincia[]> => {
+const fetchProvincias = async ({
+  signal,
+}: {
+  signal: AbortSignal;
+}): Promise<Provincia[]> => {
   const response = await fetch("/api/provincias", {
     signal,
     cache: "no-store",
@@ -182,11 +193,14 @@ const fetchDepartamentos = async ({
   signal: AbortSignal;
   provinciaId: string;
 }): Promise<Departamento[]> => {
-  const response = await fetch(`/api/departamentos?provinciaId=${provinciaId}`, {
-    signal,
-    cache: "no-store",
-    credentials: "include",
-  });
+  const response = await fetch(
+    `/api/departamentos?provinciaId=${provinciaId}`,
+    {
+      signal,
+      cache: "no-store",
+      credentials: "include",
+    }
+  );
 
   if (!response.ok) {
     return [];
@@ -204,11 +218,14 @@ const fetchLocalidades = async ({
   signal: AbortSignal;
   departamentoId: string;
 }): Promise<Localidad[]> => {
-  const response = await fetch(`/api/localidades?departamentoId=${departamentoId}`, {
-    signal,
-    cache: "no-store",
-    credentials: "include",
-  });
+  const response = await fetch(
+    `/api/localidades?departamentoId=${departamentoId}`,
+    {
+      signal,
+      cache: "no-store",
+      credentials: "include",
+    }
+  );
 
   if (!response.ok) {
     return [];
@@ -236,11 +253,14 @@ const fetchAuditorias = async ({
   });
   if (tenantId) params.append("tenantId", tenantId);
 
-  const response = await fetch(`/api/auditoria-empleados?${params.toString()}`, {
-    signal,
-    cache: "no-store",
-    credentials: "include",
-  });
+  const response = await fetch(
+    `/api/auditoria-empleados?${params.toString()}`,
+    {
+      signal,
+      cache: "no-store",
+      credentials: "include",
+    }
+  );
 
   if (!response.ok) {
     return {
@@ -286,8 +306,11 @@ const createEmpleado = async (empleadoData: {
   rolId?: number | undefined;
   tenantId?: string | null;
 }): Promise<Empleado> => {
-  const tenantParam = empleadoData.tenantId ? `?tenantId=${empleadoData.tenantId}` : "";
-  const { tenantId: _tenantId, localidadId, rolId, ...rest } = empleadoData;
+  const tenantParam = empleadoData.tenantId
+    ? `?tenantId=${empleadoData.tenantId}`
+    : "";
+  const { tenantId, localidadId, rolId, ...rest } = empleadoData;
+  void tenantId; // Silence unused variable warning
 
   // Transformar al formato que espera el API
   const body = {
@@ -304,7 +327,9 @@ const createEmpleado = async (empleadoData: {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al crear empleado");
   }
 
@@ -322,7 +347,7 @@ const updateEmpleado = async ({
   tenantId?: string | null;
 }): Promise<Empleado> => {
   const tenantParam = tenantId ? `?tenantId=${tenantId}` : "";
-  
+
   // La API espera personaId en el body, no en la URL
   const body = {
     ...empleadoData,
@@ -337,12 +362,16 @@ const updateEmpleado = async ({
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const errorData = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     // La API devuelve { error: { code, message } } o { error: "string" }
-    const errorMessage = 
-      typeof errorData?.error === "string" 
-        ? errorData.error 
-        : errorData?.error?.message || errorData?.error?.code || "Error al actualizar empleado";
+    const errorMessage =
+      typeof errorData?.error === "string"
+        ? errorData.error
+        : errorData?.error?.message ||
+          errorData?.error?.code ||
+          "Error al actualizar empleado";
     throw new Error(errorMessage);
   }
 
@@ -367,7 +396,9 @@ const deleteEmpleado = async ({
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al eliminar empleado");
   }
 };
@@ -383,15 +414,20 @@ const changePassword = async ({
 }): Promise<void> => {
   const tenantParam = tenantId ? `?tenantId=${tenantId}` : "";
 
-  const response = await fetch(`/api/empleados/cambiar-password${tenantParam}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ usuarioId, nuevaPassword }),
-  });
+  const response = await fetch(
+    `/api/empleados/cambiar-password${tenantParam}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ usuarioId, nuevaPassword }),
+    }
+  );
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al cambiar contraseña");
   }
 };
@@ -418,7 +454,9 @@ const createRol = async ({
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al crear rol");
   }
 
@@ -446,7 +484,9 @@ const updateRol = async ({
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al actualizar rol");
   }
 
@@ -470,7 +510,9 @@ const deleteRol = async ({
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al eliminar rol");
   }
 };
@@ -497,9 +539,22 @@ export function useEmpleados({
 
   // Queries
   const empleadosQuery = useQuery({
-    queryKey: ["empleados", page, limit, filters.busqueda, filters.rol, filters.estado, tenantId],
+    queryKey: [
+      "empleados",
+      page,
+      limit,
+      filters.busqueda,
+      filters.rol,
+      filters.estado,
+      tenantId,
+    ],
     queryFn: ({ signal }) =>
-      fetchEmpleados({ signal, page, limit, filters: { ...filters, tenantId } }),
+      fetchEmpleados({
+        signal,
+        page,
+        limit,
+        filters: { ...filters, tenantId },
+      }),
     enabled,
     ...dynamicDataQueryOptions,
   });
@@ -522,7 +577,13 @@ export function useEmpleados({
 
   const auditoriasQuery = useQuery({
     queryKey: ["auditorias", auditoriaPage, auditoriaLimit, tenantId],
-    queryFn: ({ signal }) => fetchAuditorias({ signal, page: auditoriaPage, limit: auditoriaLimit, tenantId }),
+    queryFn: ({ signal }) =>
+      fetchAuditorias({
+        signal,
+        page: auditoriaPage,
+        limit: auditoriaLimit,
+        tenantId,
+      }),
     enabled: enabled,
     ...dynamicDataQueryOptions,
     staleTime: 10 * 1000, // 10 segundos - las auditorías pueden cambiar más frecuentemente
@@ -644,7 +705,8 @@ export function useEmpleados({
   const useDepartamentos = (provinciaId: string | null) => {
     return useQuery({
       queryKey: ["departamentos", provinciaId],
-      queryFn: ({ signal }) => fetchDepartamentos({ signal, provinciaId: provinciaId! }),
+      queryFn: ({ signal }) =>
+        fetchDepartamentos({ signal, provinciaId: provinciaId! }),
       enabled: !!provinciaId,
       ...staticDataQueryOptions,
       staleTime: 30 * 60 * 1000, // 30 minutos - los departamentos nunca cambian
@@ -713,4 +775,3 @@ export function useEmpleados({
     useLocalidades,
   };
 }
-

@@ -10,7 +10,6 @@ import {
   TableCell,
   Input,
   Button,
-  Tooltip,
 } from "@heroui/react";
 import { Trash2 } from "lucide-react";
 

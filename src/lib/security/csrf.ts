@@ -40,13 +40,15 @@ export async function generateCsrfToken(
 export async function validateCsrfToken(
   token: string,
   tenantId: bigint,
-  ipAddress?: string
+  _ipAddress?: string
 ): Promise<boolean> {
-  const result = await prisma.$queryRawUnsafe<Array<{
-    Usado: boolean;
-    FechaExpiracion: Date;
-    IpAddress: string | null;
-  }>>(
+  const result = await prisma.$queryRawUnsafe<
+    Array<{
+      Usado: boolean;
+      FechaExpiracion: Date;
+      IpAddress: string | null;
+    }>
+  >(
     `
     SELECT "Usado", "FechaExpiracion", "IpAddress"
     FROM "TokenCsrf"
@@ -103,4 +105,3 @@ export async function cleanupExpiredCsrfTokens(): Promise<void> {
     `
   );
 }
-

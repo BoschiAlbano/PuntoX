@@ -44,7 +44,7 @@ export default function ProductosPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center">
+    <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch  h-full">
       {/* Header de la página */}
       {/* <Header /> */}
       {/* Tabs con los diferentes CRUDs */}
@@ -52,23 +52,17 @@ export default function ProductosPage() {
         aria-label="Options"
         selectedKey={selected}
         onSelectionChange={(key) =>
-          setSelected(
-            key as
-              | "productos"
-              | "marcas"
-              | "rubros"
-              | "unidades"
-              | "marcas-test"
-          )
+          setSelected(key as "productos" | "marcas" | "rubros" | "unidades")
         }
         className="relative"
         classNames={{
           tabList:
-            "bg-transparent backdrop-blur-sm rounded-lg shadow-none border-gray-200/50 p-1 overflow-x-auto scrollbar-hide",
-          tab: "m-[5px] p-[20px] data-[selected=true]:bg-[#67afc3]/90 data-[selected=true]:text-white data-[selected=true]:shadow-none transition-all duration-300 data-[hover=true]:bg-gray-100/50 data-[hover=true]:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#67afc3] focus-visible:ring-offset-2 text-[16px]",
+            "bg-white backdrop-blur-sm rounded-lg shadow-none border-gray-200/50 p-1 overflow-x-auto scrollbar-hide",
+          tab: "m-[5px] p-[20px] data-[selected=true]:bg-[#67afc3]/90 data-[selected=true]:text-white data-[selected=true]:shadow-none transition-all duration-300 data-[hover=true]:bg-gray-100/50 data-[hover=true]:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#67afc3] focus-visible:ring-offset-2 text-[16px] cursor-pointer transform hover:scale-105 active:scale-95",
           tabContent:
             "group-data-[selected=true]:text-white font-medium transition-colors duration-200",
           cursor: "bg-[#67afc3]/90",
+          panel: "h-full",
         }}
       >
         <Tab

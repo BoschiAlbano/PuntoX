@@ -296,7 +296,9 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
       queryClient.clear();
 
       // Limpiar cookie de sucursal activa
-      await fetch("/api/sucursales/limpiar", { method: "POST" }).catch(() => {});
+      await fetch("/api/sucursales/limpiar", { method: "POST" }).catch(
+        () => {}
+      );
 
       // Limpiar sessionStorage de selección de sucursal
       if (typeof window !== "undefined") {

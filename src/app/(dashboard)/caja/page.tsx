@@ -3,19 +3,12 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { usePagePermission } from "@/lib/permissions/usePagePermission";
 import {
-  CreditCard,
-  Receipt,
   TrendingUp,
   Plus,
   Lock,
   Unlock,
   FileText,
-  ArrowUpRight,
-  ArrowDownLeft,
   Wallet,
-  Banknote,
-  Building2,
-  ArrowLeftRight,
   Eye,
   RefreshCw,
   X,
@@ -128,8 +121,16 @@ type ResumenDiaCaja = {
   TotalSalidaEfectivo: number;
   Ganancia: number;
   estaCerrada: boolean;
-  UsuarioApertura?: { Id: number; Nombre: string; NombreCompleto: string | null } | null;
-  UsuarioCierre?: { Id: number; Nombre: string; NombreCompleto: string | null } | null;
+  UsuarioApertura?: {
+    Id: number;
+    Nombre: string;
+    NombreCompleto: string | null;
+  } | null;
+  UsuarioCierre?: {
+    Id: number;
+    Nombre: string;
+    NombreCompleto: string | null;
+  } | null;
 };
 
 type ResumenDia = {
@@ -170,7 +171,7 @@ type ToastMessage = {
 export default function CajaPage() {
   // Verificar permisos de acceso a esta página
   const { tieneAcceso, isLoading: isLoadingPermisos } = usePagePermission();
-  
+
   // TODOS LOS HOOKS DEBEN IR ANTES DE LOS EARLY RETURNS
   const [cajaActual, setCajaActual] = useState<Caja | null>(null);
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
@@ -246,10 +247,10 @@ export default function CajaPage() {
     if (!tieneAcceso) {
       return;
     }
-    
+
     try {
       setIsLoading(true);
-      
+
       // Cargar caja actual, conceptos de gastos y resumen del día en paralelo
       const [cajaRes, conceptosRes, resumenRes] = await Promise.all([
         fetch("/api/caja?soloAbierta=true", { cache: "no-store" }),
@@ -274,9 +275,10 @@ export default function CajaPage() {
           return;
         }
         const errorData = await cajaRes.json().catch(() => null);
-        const errorMessage = typeof errorData?.error === "string" 
-          ? errorData.error 
-          : errorData?.error?.message || "No se pudo cargar la caja";
+        const errorMessage =
+          typeof errorData?.error === "string"
+            ? errorData.error
+            : errorData?.error?.message || "No se pudo cargar la caja";
         addToast({
           title: "Error",
           description: errorMessage,
@@ -291,9 +293,11 @@ export default function CajaPage() {
         // Si es error 401/403, no mostrar toast (el hook ya maneja la redirección)
         if (conceptosRes.status !== 401 && conceptosRes.status !== 403) {
           const errorData = await conceptosRes.json().catch(() => null);
-          const errorMessage = typeof errorData?.error === "string" 
-            ? errorData.error 
-            : errorData?.error?.message || "No se pudieron cargar los conceptos de gastos";
+          const errorMessage =
+            typeof errorData?.error === "string"
+              ? errorData.error
+              : errorData?.error?.message ||
+                "No se pudieron cargar los conceptos de gastos";
           addToast({
             title: "Error",
             description: errorMessage,
@@ -330,13 +334,17 @@ export default function CajaPage() {
           Number(cajaActual.TotalEntradaEfectivo || 0) -
           Number(cajaActual.TotalSalidaEfectivo || 0),
         tarjeta:
-          Number(cajaActual.TotalEntradaTarjeta || 0) - Number(cajaActual.TotalSalidaTarjeta || 0),
+          Number(cajaActual.TotalEntradaTarjeta || 0) -
+          Number(cajaActual.TotalSalidaTarjeta || 0),
         cheque:
-          Number(cajaActual.TotalEntradaCheque || 0) - Number(cajaActual.TotalSalidaCheque || 0),
+          Number(cajaActual.TotalEntradaCheque || 0) -
+          Number(cajaActual.TotalSalidaCheque || 0),
         cuentaCorriente:
-          Number(cajaActual.TotalEntradaCtaCte || 0) - Number(cajaActual.TotalSalidaCtaCte || 0),
+          Number(cajaActual.TotalEntradaCtaCte || 0) -
+          Number(cajaActual.TotalSalidaCtaCte || 0),
         transferencia:
-          Number(cajaActual.TotalEntradaTransf || 0) - Number(cajaActual.TotalSalidaTransf || 0),
+          Number(cajaActual.TotalEntradaTransf || 0) -
+          Number(cajaActual.TotalSalidaTransf || 0),
         totalEntradas:
           Number(cajaActual.TotalEntradaEfectivo || 0) +
           Number(cajaActual.TotalEntradaTarjeta || 0) +
@@ -439,7 +447,8 @@ export default function CajaPage() {
     } catch (error) {
       addToast({
         title: "Error",
-        description: error instanceof Error ? error.message : "No se pudo abrir la caja",
+        description:
+          error instanceof Error ? error.message : "No se pudo abrir la caja",
         color: "danger",
       });
     } finally {
@@ -483,7 +492,8 @@ export default function CajaPage() {
     } catch (error) {
       addToast({
         title: "Error",
-        description: error instanceof Error ? error.message : "No se pudo cerrar la caja",
+        description:
+          error instanceof Error ? error.message : "No se pudo cerrar la caja",
         color: "danger",
       });
     } finally {
@@ -493,7 +503,11 @@ export default function CajaPage() {
 
   // Agregar gasto
   const agregarGasto = async () => {
-    if (!nuevoGasto.conceptoId || !nuevoGasto.descripcion || !nuevoGasto.monto) {
+    if (
+      !nuevoGasto.conceptoId ||
+      !nuevoGasto.descripcion ||
+      !nuevoGasto.monto
+    ) {
       addToast({
         title: "Error",
         description: "Complete todos los campos",
@@ -530,7 +544,9 @@ export default function CajaPage() {
 
       addToast({
         title: "✓ Gasto registrado",
-        description: `Gasto de $${Number(nuevoGasto.monto).toFixed(2)} registrado`,
+        description: `Gasto de $${Number(nuevoGasto.monto).toFixed(
+          2
+        )} registrado`,
         color: "success",
       });
 
@@ -540,7 +556,10 @@ export default function CajaPage() {
     } catch (error) {
       addToast({
         title: "Error",
-        description: error instanceof Error ? error.message : "No se pudo registrar el gasto",
+        description:
+          error instanceof Error
+            ? error.message
+            : "No se pudo registrar el gasto",
         color: "danger",
       });
     } finally {
@@ -597,7 +616,9 @@ export default function CajaPage() {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`min-w-[220px] rounded-xl border px-3 py-2 text-sm shadow-sm backdrop-blur ${toastToneStyles[toast.color || "default"]}`}
+            className={`min-w-[220px] rounded-xl border px-3 py-2 text-sm shadow-sm backdrop-blur ${
+              toastToneStyles[toast.color || "default"]
+            }`}
           >
             <p className="font-semibold">{toast.title}</p>
             {toast.description && (
@@ -651,24 +672,24 @@ export default function CajaPage() {
             Ver detalle
           </button>
           {cajaAbierta ? (
-              <button
-                onClick={() => setOpenModalCerrarCaja(true)}
-                className="inline-flex items-center gap-2 rounded-xl bg-red-300 px-5 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-red-400 hover:shadow-lg"
-                aria-label="Cerrar caja"
-              >
-                <Lock className="h-4 w-4" />
-                Cerrar Caja
-              </button>
-            ) : (
-              <button
-                onClick={() => setOpenModalAbrirCaja(true)}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#67afc3] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5a9fb2]"
-                aria-label="Abrir caja"
-              >
-                <Unlock className="h-4 w-4" />
-                Abrir Caja
-              </button>
-            )}
+            <button
+              onClick={() => setOpenModalCerrarCaja(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-red-300 px-5 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-red-400 hover:shadow-lg"
+              aria-label="Cerrar caja"
+            >
+              <Lock className="h-4 w-4" />
+              Cerrar Caja
+            </button>
+          ) : (
+            <button
+              onClick={() => setOpenModalAbrirCaja(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#67afc3] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5a9fb2]"
+              aria-label="Abrir caja"
+            >
+              <Unlock className="h-4 w-4" />
+              Abrir Caja
+            </button>
+          )}
         </div>
       </div>
 
@@ -718,115 +739,135 @@ export default function CajaPage() {
       )}
 
       {/* Resumen del día - Solo mostrar si hay más de una caja o cajas cerradas */}
-      {resumenDia && resumenDia.cantidadCajas > 0 && (resumenDia.cantidadCajas > 1 || resumenDia.cajas.some(c => c.estaCerrada)) && (
-        <div className="mt-8 rounded-2xl border border-amber-200/70 bg-amber-50/50 p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5 text-amber-700"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+      {resumenDia &&
+        resumenDia.cantidadCajas > 0 &&
+        (resumenDia.cantidadCajas > 1 ||
+          resumenDia.cajas.some((c) => c.estaCerrada)) && (
+          <div className="mt-8 rounded-2xl border border-amber-200/70 bg-amber-50/50 p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="size-5 text-amber-700"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-amber-800">
+                    Resumen del día
+                  </h3>
+                  <p className="text-xs text-amber-600">
+                    {resumenDia.cantidadCajas}{" "}
+                    {resumenDia.cantidadCajas === 1 ? "caja" : "cajas"}{" "}
+                    registradas hoy
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-amber-800">
-                  Resumen del día
-                </h3>
-                <p className="text-xs text-amber-600">
-                  {resumenDia.cantidadCajas} {resumenDia.cantidadCajas === 1 ? "caja" : "cajas"} registradas hoy
-                </p>
-              </div>
+              <p className="text-2xl font-bold text-amber-900">
+                ${formatMoney(resumenDia.totales.totalCaja)}
+              </p>
             </div>
-            <p className="text-2xl font-bold text-amber-900">
-              ${formatMoney(resumenDia.totales.totalCaja)}
-            </p>
-          </div>
 
-          {/* Lista de cajas del día */}
-          <div className="space-y-2">
-            {resumenDia.cajas.map((caja, idx) => (
-              <div
-                key={caja.Id}
-                className={`flex items-center justify-between rounded-xl p-3 ${
-                  caja.estaCerrada
-                    ? "bg-white/60 border border-slate-200/50"
-                    : "bg-amber-100/50 border border-amber-200/50"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-600">
-                    {idx + 1}
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium text-slate-800">
-                      {caja.UsuarioApertura?.NombreCompleto || caja.UsuarioApertura?.Nombre || "Usuario"}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {formatearFecha(caja.FechaApertura)}
-                      {caja.estaCerrada && caja.FechaCierre && (
-                        <span> → {formatearFecha(caja.FechaCierre)}</span>
+            {/* Lista de cajas del día */}
+            <div className="space-y-2">
+              {resumenDia.cajas.map((caja, idx) => (
+                <div
+                  key={caja.Id}
+                  className={`flex items-center justify-between rounded-xl p-3 ${
+                    caja.estaCerrada
+                      ? "bg-white/60 border border-slate-200/50"
+                      : "bg-amber-100/50 border border-amber-200/50"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-600">
+                      {idx + 1}
+                    </span>
+                    <div>
+                      <p className="text-sm font-medium text-slate-800">
+                        {caja.UsuarioApertura?.NombreCompleto ||
+                          caja.UsuarioApertura?.Nombre ||
+                          "Usuario"}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {formatearFecha(caja.FechaApertura)}
+                        {caja.estaCerrada && caja.FechaCierre && (
+                          <span> → {formatearFecha(caja.FechaCierre)}</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-slate-800">
+                      $
+                      {formatMoney(
+                        caja.MontoInicial +
+                          caja.TotalEntradaEfectivo -
+                          caja.TotalSalidaEfectivo
                       )}
                     </p>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                        caja.estaCerrada
+                          ? "bg-slate-100 text-slate-600"
+                          : "bg-emerald-100 text-emerald-700"
+                      }`}
+                    >
+                      {caja.estaCerrada ? "Cerrada" : "Abierta"}
+                    </span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-slate-800">
-                    ${formatMoney(
-                      caja.MontoInicial + caja.TotalEntradaEfectivo - caja.TotalSalidaEfectivo
-                    )}
-                  </p>
-                  <span
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                      caja.estaCerrada
-                        ? "bg-slate-100 text-slate-600"
-                        : "bg-emerald-100 text-emerald-700"
-                    }`}
-                  >
-                    {caja.estaCerrada ? "Cerrada" : "Abierta"}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          {/* Totales consolidados por medio de pago */}
-          <div className="mt-4 pt-4 border-t border-amber-200/70">
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 mb-3">
-              Totales consolidados del día
-            </p>
-            <div className="grid gap-2 sm:grid-cols-5">
-              <div className="rounded-lg bg-white/60 p-2 text-center">
-                <p className="text-xs text-slate-500">Efectivo</p>
-                <p className="text-sm font-semibold text-slate-800">${formatMoney(resumenDia.totales.efectivo)}</p>
-              </div>
-              <div className="rounded-lg bg-white/60 p-2 text-center">
-                <p className="text-xs text-slate-500">Transferencia</p>
-                <p className="text-sm font-semibold text-slate-800">${formatMoney(resumenDia.totales.transferencia)}</p>
-              </div>
-              <div className="rounded-lg bg-white/60 p-2 text-center">
-                <p className="text-xs text-slate-500">Tarjeta</p>
-                <p className="text-sm font-semibold text-slate-800">${formatMoney(resumenDia.totales.tarjeta)}</p>
-              </div>
-              <div className="rounded-lg bg-white/60 p-2 text-center">
-                <p className="text-xs text-slate-500">Cheque</p>
-                <p className="text-sm font-semibold text-slate-800">${formatMoney(resumenDia.totales.cheque)}</p>
-              </div>
-              <div className="rounded-lg bg-white/60 p-2 text-center">
-                <p className="text-xs text-slate-500">Cta. Cte.</p>
-                <p className="text-sm font-semibold text-slate-800">${formatMoney(resumenDia.totales.cuentaCorriente)}</p>
+            {/* Totales consolidados por medio de pago */}
+            <div className="mt-4 pt-4 border-t border-amber-200/70">
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 mb-3">
+                Totales consolidados del día
+              </p>
+              <div className="grid gap-2 sm:grid-cols-5">
+                <div className="rounded-lg bg-white/60 p-2 text-center">
+                  <p className="text-xs text-slate-500">Efectivo</p>
+                  <p className="text-sm font-semibold text-slate-800">
+                    ${formatMoney(resumenDia.totales.efectivo)}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-white/60 p-2 text-center">
+                  <p className="text-xs text-slate-500">Transferencia</p>
+                  <p className="text-sm font-semibold text-slate-800">
+                    ${formatMoney(resumenDia.totales.transferencia)}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-white/60 p-2 text-center">
+                  <p className="text-xs text-slate-500">Tarjeta</p>
+                  <p className="text-sm font-semibold text-slate-800">
+                    ${formatMoney(resumenDia.totales.tarjeta)}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-white/60 p-2 text-center">
+                  <p className="text-xs text-slate-500">Cheque</p>
+                  <p className="text-sm font-semibold text-slate-800">
+                    ${formatMoney(resumenDia.totales.cheque)}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-white/60 p-2 text-center">
+                  <p className="text-xs text-slate-500">Cta. Cte.</p>
+                  <p className="text-sm font-semibold text-slate-800">
+                    ${formatMoney(resumenDia.totales.cuentaCorriente)}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       <div className="relative mt-10 grid gap-6 xl:grid-cols-12">
         <div className="space-y-6 xl:col-span-8">
@@ -856,12 +897,18 @@ export default function CajaPage() {
                 <table className="min-w-full text-sm">
                   <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
                     <tr>
-                      <th className="px-4 py-3 text-left font-semibold">Fecha</th>
+                      <th className="px-4 py-3 text-left font-semibold">
+                        Fecha
+                      </th>
                       <th className="px-4 py-3 text-left font-semibold">
                         Descripcion
                       </th>
-                      <th className="px-4 py-3 text-left font-semibold">Tipo</th>
-                      <th className="px-4 py-3 text-right font-semibold">Monto</th>
+                      <th className="px-4 py-3 text-left font-semibold">
+                        Tipo
+                      </th>
+                      <th className="px-4 py-3 text-right font-semibold">
+                        Monto
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -930,7 +977,8 @@ export default function CajaPage() {
                                 esEntrada ? "text-emerald-600" : "text-rose-600"
                               }`}
                             >
-                              {esEntrada ? "+" : "-"}${formatMoney(movimiento.Monto)}
+                              {esEntrada ? "+" : "-"}$
+                              {formatMoney(movimiento.Monto)}
                             </span>
                           </td>
                         </tr>
@@ -1033,14 +1081,18 @@ export default function CajaPage() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50">
                   <TrendingUp className="h-5 w-5 text-slate-700" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900">Ganancia</h3>
+                <h3 className="text-lg font-semibold text-slate-900">
+                  Ganancia
+                </h3>
               </div>
               {cajaActual.FechaCierre ? (
                 <>
                   <p className="mt-4 text-3xl font-bold text-slate-900">
                     ${formatMoney(cajaActual.Ganancia)}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">Ganancia del día</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Ganancia del día
+                  </p>
                 </>
               ) : (
                 <p className="mt-4 text-sm text-slate-500">
@@ -1160,7 +1212,8 @@ export default function CajaPage() {
             </div>
             {totales.totalCaja !== Number(montoCierre) && montoCierre && (
               <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                Diferencia: ${formatMoney(Math.abs(totales.totalCaja - Number(montoCierre)))}
+                Diferencia: $
+                {formatMoney(Math.abs(totales.totalCaja - Number(montoCierre)))}
               </div>
             )}
           </div>
@@ -1203,7 +1256,10 @@ export default function CajaPage() {
             >
               <option value="">Seleccionar</option>
               {conceptosGasto.map((concepto) => (
-                <option key={concepto.Id.toString()} value={concepto.Id.toString()}>
+                <option
+                  key={concepto.Id.toString()}
+                  value={concepto.Id.toString()}
+                >
                   {concepto.Descripcion}
                 </option>
               ))}
@@ -1299,15 +1355,21 @@ export default function CajaPage() {
               <div className="space-y-1 text-slate-600">
                 <div className="flex justify-between">
                   <span>Efectivo</span>
-                  <span className="font-semibold">${formatMoney(totales.efectivo)}</span>
+                  <span className="font-semibold">
+                    ${formatMoney(totales.efectivo)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Tarjeta</span>
-                  <span className="font-semibold">${formatMoney(totales.tarjeta)}</span>
+                  <span className="font-semibold">
+                    ${formatMoney(totales.tarjeta)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Cheque</span>
-                  <span className="font-semibold">${formatMoney(totales.cheque)}</span>
+                  <span className="font-semibold">
+                    ${formatMoney(totales.cheque)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Cuenta corriente</span>

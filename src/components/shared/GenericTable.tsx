@@ -6,11 +6,11 @@ import {
   TableRow,
   TableCell,
   Pagination,
-  Spinner,
   SortDescriptor,
+  Skeleton,
 } from "@heroui/react";
 import { useState, useEffect, Key } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCcw } from "lucide-react";
 import { PaginationMeta } from "@/hooks/useProductos"; // Reutilizamos interface o la movemos a types compartidos
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -65,7 +65,6 @@ export default function GenericTable<T extends { Id: number | string }>({
   newButtonText = "Nuevo",
   onRefresh,
   isRefreshing = false,
-  totalItems,
 }: GenericTableProps<T>) {
   const [searchInput, setSearchInput] = useState(search);
 
@@ -81,42 +80,25 @@ export default function GenericTable<T extends { Id: number | string }>({
 
   return (
     <section className="w-full h-full flex flex-col gap-4 overflow-hidden">
-      <div className="rounded-lg flex flex-col gap-4 items-center bg-white/50 backdrop-blur-sm ">
+      <div className="rounded-lg flex flex-col gap-4 bg-white/50 backdrop-blur-sm flex-1 w-full h-full">
         {/* Header & Search */}
-        <section className="w-full flex items-center justify-end gap-2">
+        <section className="w-full flex items-center justify-end gap-2 pr-4">
           {/* Boton nuevo con efecto lift */}
           {onNewClick && (
             <button
               onClick={onNewClick}
-              className="bg-[#67afc3]/90 text-white px-5 py-2 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer text-[16px]"
+              className=" px-4 h-[36px] rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 text-white cursor-pointer"
               aria-label={newButtonText}
             >
               {newButtonText}
             </button>
           )}
-          {/* Botón de actualizar */}
-          {onRefresh && (
-            <button
-              onClick={onRefresh}
-              disabled={isRefreshing}
-              className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
-              title="Actualizar datos"
-              aria-label="Actualizar datos de la tabla"
-            >
-              <RefreshCw
-                size={18}
-                className={`text-gray-600 transition-transform ${
-                  isRefreshing ? "animate-spin" : ""
-                }`}
-                aria-hidden="true"
-              />
-            </button>
-          )}
+
           {/* Search */}
-          <div className="group flex items-center gap-2 border-2 border-gray-300 rounded-xl p-1.5 bg-white transition-all duration-300 hover:border-[#67afc3]">
+          <div className="group flex items-center gap-2 border-2 border-gray-300 rounded-xl p-1.5 bg-white transition-all duration-300 hover:border-[#67afc3] relative">
             <input
               type="text"
-              placeholder={searchPlaceholder}
+              placeholder={`${searchPlaceholder}`}
               className="outline-none px-2 bg-transparent text-gray-700 placeholder:text-gray-400"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
@@ -135,18 +117,38 @@ export default function GenericTable<T extends { Id: number | string }>({
               />
             </svg>
           </div>
+
+          {/* Botón de actualizar */}
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="p-2 rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 cursor-pointer"
+              title="Actualizar datos"
+              aria-label="Actualizar datos de la tabla"
+            >
+              <RefreshCcw
+                size={18}
+                className={`text-white transition-transform ${
+                  isRefreshing ? "animate-spin" : ""
+                }`}
+                aria-hidden="true"
+              />
+            </button>
+          )}
         </section>
 
         {/* Table */}
-        <div className="w-full overflow-hidden border border-gray-200/50 overflow-x-auto">
+        <div className="w-full overflow-hidden overflow-x-auto flex-1 flex flex-col h-full">
           <Table
             aria-label="Tabla de datos"
             sortDescriptor={sortDescriptor}
             onSortChange={onSortChange}
             className="bg-white rounded-lg border-none"
             classNames={{
-              wrapper: "bg-white min-w-full",
-              th: "bg-[#67afc3]/90 text-white transition-colors duration-200 text-[13px] font-medium",
+              wrapper: "bg-white h-full shadow-none rounded-xl border-none ",
+              th: "bg-[#67afc3]/90 text-white transition-colors duration-200 text-[13px] font-medium hover:!text-white hover:[&_*]:!text-white group",
+              base: "bg-transparent h-full shadow-none rounded-xl border-none",
             }}
             // style={{ contain: "layout style paint" }} // Optimización de rendering
           >
@@ -200,13 +202,35 @@ export default function GenericTable<T extends { Id: number | string }>({
                   item.Id.startsWith("skeleton-")
                 ) {
                   return (
-                    <TableRow key={item.Id} className="animate-pulse">
-                      {columns.map((column) => (
-                        <TableCell
-                          key={column.uid}
-                          className="border-b border-gray-100"
-                        >
-                          <div className="h-4 bg-linear-to-r from-gray-200 via-gray-300 to-gray-200 rounded-md bg-size-[200%_100%] animate-shimmer" />
+                    <TableRow key={item.Id}>
+                      {columns.map((column, idx) => (
+                        <TableCell key={column.uid} className="">
+                          {column.uid === "acciones" ? (
+                            <div className="flex gap-2 opacity-50">
+                              <Skeleton className="rounded-lg">
+                                <div className="h-8 w-8 rounded-lg bg-default-200" />
+                              </Skeleton>
+                              <Skeleton className="rounded-lg">
+                                <div className="h-8 w-8 rounded-lg bg-default-200" />
+                              </Skeleton>
+                            </div>
+                          ) : column.uid === "Estado" ? (
+                            <Skeleton className="rounded-full w-20">
+                              <div className="h-6 w-20 rounded-full bg-default-200" />
+                            </Skeleton>
+                          ) : (
+                            <Skeleton
+                              className={`rounded-lg ${
+                                idx === 0
+                                  ? "w-16"
+                                  : idx === 1
+                                  ? "w-full"
+                                  : "w-24"
+                              }`}
+                            >
+                              <div className="h-4 rounded-lg bg-default-200" />
+                            </Skeleton>
+                          )}
                         </TableCell>
                       ))}
                     </TableRow>
@@ -236,19 +260,46 @@ export default function GenericTable<T extends { Id: number | string }>({
 
       {/* Pagination */}
       <div className="rounded-lg flex flex-col items-center py-2">
-        {!isLoading && !isError && (
-          <Pagination
-            showControls
-            page={page}
-            total={paginationMeta.totalPages}
-            onChange={onPageChange}
-            classNames={{
-              cursor: "bg-[#67afc3] text-white shadow-none ",
-              item: "bg-transparent shadow-none ",
-            }}
-            aria-label="Paginación de la tabla"
-          />
-        )}
+        {isLoading ? (
+          <section className="relative w-full flex flex-col items-center">
+            <div className="flex gap-2">
+              <Skeleton className="rounded-medium w-9 h-9 opacity-50">
+                <div className="h-9 w-9 rounded-medium bg-default-200" />
+              </Skeleton>
+              <Skeleton className="rounded-medium w-9 h-9 opacity-50">
+                <div className="h-9 w-9 rounded-medium bg-default-200" />
+              </Skeleton>
+              <Skeleton className="rounded-medium w-9 h-9 opacity-50">
+                <div className="h-9 w-9 rounded-medium bg-default-200" />
+              </Skeleton>
+            </div>
+            <span className="text-[#67afc3]/90 w-full text-start pl-2 text-sm absolute bottom-0">
+              {/* {`${paginationMeta.limit} de ${paginationMeta.total} registros totales`} */}
+              <Skeleton className="rounded-medium w-[120px] h-4 opacity-50">
+                <div className="h-4 w-[120px] rounded-medium bg-default-200" />
+              </Skeleton>
+            </span>
+          </section>
+        ) : !isLoading && !isError ? (
+          <section className="relative w-full flex flex-col items-center">
+            <Pagination
+              showControls
+              page={page}
+              total={paginationMeta.totalPages}
+              onChange={onPageChange}
+              classNames={{
+                cursor: "bg-[#67afc3]/90 text-white shadow-none ",
+                item: "bg-transparent shadow-none cursor-pointer",
+                next: "cursor-pointer",
+                prev: "cursor-pointer",
+              }}
+              aria-label="Paginación de la tabla"
+            />
+            <span className="text-[#67afc3]/90 w-full text-start pl-2 text-sm absolute bottom-0">
+              {`${data.length} de ${paginationMeta.total} registros totales`}
+            </span>
+          </section>
+        ) : null}
       </div>
     </section>
   );

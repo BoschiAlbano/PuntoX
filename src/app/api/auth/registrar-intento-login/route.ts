@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { checkRateLimit, isIpBlocked, blockIp } from "@/lib/security/rateLimiter";
+import {
+  checkRateLimit,
+  isIpBlocked,
+  blockIp,
+} from "@/lib/security/rateLimiter";
 import { crearAlertaSeguridad } from "@/lib/security/suspiciousActivity";
 
 /**
@@ -26,7 +30,7 @@ export async function POST(req: NextRequest) {
       req.headers.get("x-real-ip") ||
       req.headers.get("x-client-ip") ||
       "unknown";
-    
+
     const userAgent = req.headers.get("user-agent") || null;
 
     // Verificar rate limiting solo para intentos fallidos
@@ -99,7 +103,8 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json(
           {
-            error: "Demasiados intentos desde esta IP. Bloqueada temporalmente.",
+            error:
+              "Demasiados intentos desde esta IP. Bloqueada temporalmente.",
             resetAt: ipRateLimit.resetAt.toISOString(),
           },
           { status: 429 }
@@ -109,7 +114,7 @@ export async function POST(req: NextRequest) {
 
     // Si no se proporciona tenantId, intentar obtenerlo del usuario
     let finalTenantId = tenantId;
-    
+
     // Primero intentar por usuarioId si está disponible
     if (!finalTenantId && usuarioId) {
       try {
@@ -124,7 +129,7 @@ export async function POST(req: NextRequest) {
         // Ignorar errores al buscar por usuarioId
       }
     }
-    
+
     // Si aún no tenemos tenantId, intentar buscar por email
     if (!finalTenantId && email) {
       try {
@@ -132,24 +137,22 @@ export async function POST(req: NextRequest) {
         // Como no tenemos acceso directo a Supabase Auth aquí, intentamos buscar en la BD
         // por el email normalizado
         const emailNormalizado = email.trim().toLowerCase();
-        
+
         // Buscar en la tabla Usuario por el email (si hay una relación con Persona)
         const usuarioPorEmail = await prisma.usuario.findFirst({
           where: {
             Persona_Empleado: {
-              some: {
-                Persona: {
-                  Email: {
-                    equals: emailNormalizado,
-                    mode: "insensitive",
-                  },
+              Persona: {
+                Mail: {
+                  equals: emailNormalizado,
+                  mode: "insensitive",
                 },
               },
             },
           },
           select: { TenantId: true },
         });
-        
+
         if (usuarioPorEmail) {
           finalTenantId = Number(usuarioPorEmail.TenantId);
         }
@@ -162,7 +165,10 @@ export async function POST(req: NextRequest) {
     // Solo mostramos warning en desarrollo, no en producción
     if (!finalTenantId) {
       if (process.env.NODE_ENV === "development") {
-        console.warn("[registrar-intento-login] No se pudo determinar tenantId para:", email);
+        console.warn(
+          "[registrar-intento-login] No se pudo determinar tenantId para:",
+          email
+        );
       }
       return NextResponse.json(
         { message: "Intento registrado (sin tenantId)" },
@@ -172,12 +178,15 @@ export async function POST(req: NextRequest) {
 
     // Registrar el intento usando SQL directo (por si el Prisma client no está actualizado)
     const usuarioIdBigInt = usuarioId ? BigInt(usuarioId) : null;
-    const motivoFalloEscapado = motivoFallo ? motivoFallo.replace(/'/g, "''") : null;
-    
-    await prisma.$executeRawUnsafe(`
+    const motivoFalloEscapado = motivoFallo
+      ? motivoFallo.replace(/'/g, "''")
+      : null;
+
+    await prisma.$executeRawUnsafe(
+      `
       INSERT INTO "IntentoLogin" ("TenantId", "Email", "IpAddress", "UserAgent", "Exitoso", "MotivoFallo", "UsuarioId", "FechaIntento")
       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
-    `, 
+    `,
       BigInt(finalTenantId),
       email,
       ipAddress,
@@ -200,4 +209,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

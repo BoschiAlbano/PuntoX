@@ -260,10 +260,6 @@ function AnaliticasContent() {
   const fechaDesdeDebounced = useDebounce(fechaDesde, 300);
   const fechaHastaDebounced = useDebounce(fechaHasta, 300);
 
-  // Detectar si las fechas están cambiando para mostrar indicador sutil
-  const fechasCambiando =
-    fechaDesde !== fechaDesdeDebounced || fechaHasta !== fechaHastaDebounced;
-
   // Filtros para logs
   const [filtros, setFiltros] = useState({
     fechaDesde: "",
