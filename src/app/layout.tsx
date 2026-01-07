@@ -19,6 +19,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Punto X",
   description: "Ecoomerce platform for local businesses",
+  icons: {
+    icon: "/favicon-light.ico",
+    shortcut: "/favicon-light.ico",
+    apple: "/favicon-light.ico",
+  },
 };
 
 export default function RootLayout({

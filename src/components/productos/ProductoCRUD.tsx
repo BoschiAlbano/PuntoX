@@ -70,7 +70,7 @@ export default function ProductoCRUD() {
           case "acciones":
             return (
               <div className="flex gap-2">
-                <Tooltip content="Editar" color="warning">
+                <div>
                   <Button
                     isIconOnly
                     size="sm"
@@ -78,7 +78,7 @@ export default function ProductoCRUD() {
                     color="warning"
                     onPress={() => actions.onEdit(item)}
                     className="transition-all duration-200 hover:scale-110 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-warning-300 focus:ring-offset-1"
-                    aria-label={`Editar ${item.Descripcion || 'producto'}`}
+                    aria-label={`Editar ${item.Descripcion || "producto"}`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -90,8 +90,8 @@ export default function ProductoCRUD() {
                       <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0 0 10 3H4.75A2.75 2.75 0 0 0 2 5.75v9.5A2.75 2.75 0 0 0 4.75 18h9.5A2.75 2.75 0 0 0 17 15.25V10a.75.75 0 0 0-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5Z" />
                     </svg>
                   </Button>
-                </Tooltip>
-                <Tooltip content="Eliminar" color="danger">
+                </div>
+                <div>
                   <Button
                     isIconOnly
                     size="sm"
@@ -99,7 +99,7 @@ export default function ProductoCRUD() {
                     variant="light"
                     onPress={() => actions.onDelete(item)}
                     className="transition-all duration-200 hover:scale-110 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-danger-300 focus:ring-offset-1"
-                    aria-label={`Eliminar ${item.Descripcion || 'producto'}`}
+                    aria-label={`Eliminar ${item.Descripcion || "producto"}`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -114,7 +114,7 @@ export default function ProductoCRUD() {
                       />
                     </svg>
                   </Button>
-                </Tooltip>
+                </div>
               </div>
             );
           default:

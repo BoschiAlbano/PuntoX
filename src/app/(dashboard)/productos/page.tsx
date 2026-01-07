@@ -46,7 +46,7 @@ export default function ProductosPage() {
   return (
     <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center">
       {/* Header de la página */}
-      <Header />
+      {/* <Header /> */}
       {/* Tabs con los diferentes CRUDs */}
       <Tabs
         aria-label="Options"
@@ -63,10 +63,12 @@ export default function ProductosPage() {
         }
         className="relative"
         classNames={{
-          tabList: "bg-white/80 backdrop-blur-sm rounded-lg shadow-md border border-gray-200/50 p-1 overflow-x-auto scrollbar-hide",
-          tab: "data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-[#67afc3] data-[selected=true]:to-[#529aa6] data-[selected=true]:text-white data-[selected=true]:shadow-lg transition-all duration-300 data-[hover=true]:bg-gray-100/50 data-[hover=true]:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#67afc3] focus-visible:ring-offset-2",
-          tabContent: "group-data-[selected=true]:text-white font-medium transition-colors duration-200",
-          cursor: "bg-gradient-to-r from-[#67afc3] to-[#529aa6] shadow-lg",
+          tabList:
+            "bg-transparent backdrop-blur-sm rounded-lg shadow-none border-gray-200/50 p-1 overflow-x-auto scrollbar-hide",
+          tab: "m-[5px] p-[20px] data-[selected=true]:bg-[#67afc3]/90 data-[selected=true]:text-white data-[selected=true]:shadow-none transition-all duration-300 data-[hover=true]:bg-gray-100/50 data-[hover=true]:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#67afc3] focus-visible:ring-offset-2 text-[16px]",
+          tabContent:
+            "group-data-[selected=true]:text-white font-medium transition-colors duration-200",
+          cursor: "bg-[#67afc3]/90",
         }}
       >
         <Tab
@@ -181,70 +183,109 @@ export default function ProductosPage() {
 
 function Header() {
   return (
-    <section className="w-full relative overflow-hidden rounded-3xl border border-slate-200/50 bg-gradient-to-r from-blue-500 via-sky-500 to-emerald-400 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] mb-10 transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]">
-      {/* Blurred circles decorativos para profundidad con parallax ligero (optimizado) */}
-      <div className="absolute inset-0 overflow-hidden" style={{ willChange: 'transform' }}>
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl parallax-bg" style={{ willChange: 'transform' }} />
-        <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-white/8 rounded-full blur-2xl parallax-bg" style={{ animationDelay: '2s', willChange: 'transform' }} />
-        <div className="absolute top-1/2 right-1/4 w-32 h-32 bg-white/5 rounded-full blur-xl parallax-bg" style={{ animationDelay: '4s', willChange: 'transform' }} />
-      </div>
-      
-      {/* Glass panel semitransparente con blur más suave */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 backdrop-blur-sm" />
-      
-      {/* Radial gradient overlay para más profundidad */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),transparent_50%)]" />
-      
-      <div className="relative p-4 md:p-6 lg:p-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-3 flex-1">
-            <Chip 
-              variant="flat" 
-              className="bg-white/25 text-white backdrop-blur-sm border border-white/40 shadow-lg shadow-white/20 transition-all duration-300 hover:bg-white/30 hover:shadow-xl hover:shadow-white/30"
-            >
-              Productos
-            </Chip>
-            <div className="space-y-2">
-              <h1 className="text-3xl md:text-4xl lg:text-[40px] font-bold text-white drop-shadow-lg">
-                Gestión de Productos
-              </h1>
-              <p className="text-white/95 max-w-2xl md:text-lg leading-relaxed drop-shadow-md">
-                Administra tu catálogo de productos, marcas, rubros y unidades de medida desde un solo lugar
-              </p>
-            </div>
-          </div>
-          
-          {/* Ícono grande de catálogo/productos a la derecha (complementario al sidebar) */}
-          <div className="hidden md:flex items-center justify-center flex-shrink-0">
-            <div className="relative group">
-              {/* Glow alrededor del icono - efecto premium */}
-              <div className="absolute inset-0 bg-white/20 rounded-full blur-2xl group-hover:bg-white/30 transition-all duration-500" />
-              <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-white/20 rounded-full blur-xl group-hover:from-white/40 group-hover:to-white/30 transition-all duration-500" />
-              {/* Blur suave de fondo */}
-              <div className="absolute inset-0 bg-white/15 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-300" />
-              <svg
-                className="w-32 h-32 md:w-40 md:h-40 text-white relative z-10 drop-shadow-2xl transition-transform duration-300 group-hover:scale-105"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-                style={{
-                  animation: 'fadeIn 0.4s ease-out 0.1s forwards',
-                  willChange: 'transform, opacity',
-                  opacity: 0
-                }}
-              >
-                {/* Icono de catálogo/productos apilados - más elaborado que el del sidebar */}
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <div className="w-full relative">
+      <svg
+        className="z-0 absolute top-0 left-0 w-32 h-32 md:w-40 md:h-40 text-[#5fa7b8] drop-shadow-2xl transition-transform duration-300 group-hover:scale-105"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.5}
+        style={{
+          animation: "fadeIn 0.4s ease-out 0.1s forwards",
+          willChange: "transform, opacity",
+          opacity: 0,
+        }}
+      >
+        {/* Icono de catálogo/productos apilados - más elaborado que el del sidebar */}
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
+        />
+      </svg>
+    </div>
   );
 }
+
+// function Header() {
+//   return (
+//     <section className="w-full relative overflow-hidden rounded-3xl border border-slate-200/50 bg-gradient-to-r from-blue-500 via-sky-500 to-emerald-400 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] mb-10 transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]">
+//       {/* Blurred circles decorativos para profundidad con parallax ligero (optimizado) */}
+//       <div
+//         className="absolute inset-0 overflow-hidden"
+//         style={{ willChange: "transform" }}
+//       >
+//         <div
+//           className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl parallax-bg"
+//           style={{ willChange: "transform" }}
+//         />
+//         <div
+//           className="absolute -bottom-16 -left-16 w-48 h-48 bg-white/8 rounded-full blur-2xl parallax-bg"
+//           style={{ animationDelay: "2s", willChange: "transform" }}
+//         />
+//         <div
+//           className="absolute top-1/2 right-1/4 w-32 h-32 bg-white/5 rounded-full blur-xl parallax-bg"
+//           style={{ animationDelay: "4s", willChange: "transform" }}
+//         />
+//       </div>
+
+//       {/* Glass panel semitransparente con blur más suave */}
+//       <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 backdrop-blur-sm" />
+
+//       {/* Radial gradient overlay para más profundidad */}
+//       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),transparent_50%)]" />
+
+//       <div className="relative p-4 md:p-6 lg:p-8">
+//         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+//           <div className="space-y-3 flex-1">
+//             <Chip
+//               variant="flat"
+//               className="bg-white/25 text-white backdrop-blur-sm border border-white/40 shadow-lg shadow-white/20 transition-all duration-300 hover:bg-white/30 hover:shadow-xl hover:shadow-white/30"
+//             >
+//               Productos
+//             </Chip>
+//             <div className="space-y-2">
+//               <h1 className="text-3xl md:text-4xl lg:text-[40px] font-bold text-white drop-shadow-lg">
+//                 Gestión de Productos
+//               </h1>
+//               <p className="text-white/95 max-w-2xl md:text-lg leading-relaxed drop-shadow-md">
+//                 Administra tu catálogo de productos, marcas, rubros y unidades
+//                 de medida desde un solo lugar
+//               </p>
+//             </div>
+//           </div>
+
+//           {/* Ícono grande de catálogo/productos a la derecha (complementario al sidebar) */}
+//           <div className="hidden md:flex items-center justify-center flex-shrink-0">
+//             <div className="relative group">
+//               {/* Glow alrededor del icono - efecto premium */}
+//               <div className="absolute inset-0 bg-white/20 rounded-full blur-2xl group-hover:bg-white/30 transition-all duration-500" />
+//               <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-white/20 rounded-full blur-xl group-hover:from-white/40 group-hover:to-white/30 transition-all duration-500" />
+//               {/* Blur suave de fondo */}
+//               <div className="absolute inset-0 bg-white/15 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-300" />
+//               <svg
+//                 className="w-32 h-32 md:w-40 md:h-40 text-white relative z-10 drop-shadow-2xl transition-transform duration-300 group-hover:scale-105"
+//                 fill="none"
+//                 viewBox="0 0 24 24"
+//                 stroke="currentColor"
+//                 strokeWidth={1.5}
+//                 style={{
+//                   animation: "fadeIn 0.4s ease-out 0.1s forwards",
+//                   willChange: "transform, opacity",
+//                   opacity: 0,
+//                 }}
+//               >
+//                 {/* Icono de catálogo/productos apilados - más elaborado que el del sidebar */}
+//                 <path
+//                   strokeLinecap="round"
+//                   strokeLinejoin="round"
+//                   d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
+//                 />
+//               </svg>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </section>
+//   );
+// }

@@ -297,8 +297,8 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
     // hidden
     <motion.section
       onClick={(e) => e.stopPropagation()}
-      className={`z-[99] sm:relative absolute flex-col h-auto sm:flex  ${
-        isCollapsed ? "sm:w-[80px] w-[0px]" : "w-[280px]"
+      className={`z-99 sm:relative absolute flex-col h-auto sm:flex  ${
+        isCollapsed ? "sm:w-[80px] w-0" : "w-[280px]"
       }`}
       initial={false}
       animate={{
@@ -428,10 +428,24 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                   />
                 )} */}
 
-                <div className="relative">
+                {isActive && (
+                  <motion.div
+                    layoutId="activeIndicator"
+                    className="absolute top-1 left-1 w-[5px] h-[5px] rounded-full bg-[#5fa7b8] animate-pulse"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+
+                <div
+                  className={`relative ${
+                    isActive
+                      ? "text-[#5fa7b8] animate-pulse"
+                      : " text-white animate-none"
+                  }`}
+                >
                   {item.icon}
                   {item.badge && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-b from-blue-500 to-[#90c472] text-white text-xs rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-linear-to-b from-blue-500 to-[#90c472] text-white text-xs rounded-full flex items-center justify-center">
                       {item.badge}
                     </span>
                   )}
@@ -521,7 +535,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="w-full p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20"
+                className="w-full p-4 bg-linear-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20"
               >
                 <p className="text-xs text-slate-400 mb-2">Version 1.0.0</p>
                 <p className="text-xs text-slate-500">(c) 2024 Punto X SaaS</p>
