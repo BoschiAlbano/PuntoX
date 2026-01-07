@@ -109,19 +109,61 @@ export async function POST(req: NextRequest) {
 
     // Si no se proporciona tenantId, intentar obtenerlo del usuario
     let finalTenantId = tenantId;
+    
+    // Primero intentar por usuarioId si está disponible
     if (!finalTenantId && usuarioId) {
-      const usuario = await prisma.usuario.findUnique({
-        where: { Id: BigInt(usuarioId) },
-        select: { TenantId: true },
-      });
-      if (usuario) {
-        finalTenantId = Number(usuario.TenantId);
+      try {
+        const usuario = await prisma.usuario.findUnique({
+          where: { Id: BigInt(usuarioId) },
+          select: { TenantId: true },
+        });
+        if (usuario) {
+          finalTenantId = Number(usuario.TenantId);
+        }
+      } catch (error) {
+        // Ignorar errores al buscar por usuarioId
+      }
+    }
+    
+    // Si aún no tenemos tenantId, intentar buscar por email
+    if (!finalTenantId && email) {
+      try {
+        // Buscar usuario por email en Supabase Auth (necesitamos el AuthUserId)
+        // Como no tenemos acceso directo a Supabase Auth aquí, intentamos buscar en la BD
+        // por el email normalizado
+        const emailNormalizado = email.trim().toLowerCase();
+        
+        // Buscar en la tabla Usuario por el email (si hay una relación con Persona)
+        const usuarioPorEmail = await prisma.usuario.findFirst({
+          where: {
+            Persona_Empleado: {
+              some: {
+                Persona: {
+                  Email: {
+                    equals: emailNormalizado,
+                    mode: "insensitive",
+                  },
+                },
+              },
+            },
+          },
+          select: { TenantId: true },
+        });
+        
+        if (usuarioPorEmail) {
+          finalTenantId = Number(usuarioPorEmail.TenantId);
+        }
+      } catch (error) {
+        // Ignorar errores al buscar por email
       }
     }
 
     // Si no hay tenantId, no podemos registrar (pero no fallamos silenciosamente)
+    // Solo mostramos warning en desarrollo, no en producción
     if (!finalTenantId) {
-      console.warn("[registrar-intento-login] No se pudo determinar tenantId para:", email);
+      if (process.env.NODE_ENV === "development") {
+        console.warn("[registrar-intento-login] No se pudo determinar tenantId para:", email);
+      }
       return NextResponse.json(
         { message: "Intento registrado (sin tenantId)" },
         { status: 200 }

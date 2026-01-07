@@ -24,6 +24,7 @@ function DashboardHeaderComponent({
     "/clientes": "Clientes",
     "/empleados": "Empleados",
     "/analiticas": "Analíticas",
+    "/sucursales": "Sucursales",
     "/configuracion": "Configuración",
   };
 

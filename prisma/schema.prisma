@@ -21,6 +21,7 @@ model Tenant {
   EstaEliminado         Boolean                @default(false)
   AlertasSeguridad      AlertaSeguridad[]
   Articulos             Articulo[]
+  ArticulosStock        ArticuloStock[]
   AuditoriaEmpleados    AuditoriaEmpleado[]
   BajaArticulos         BajaArticulo[]
   Bancos                Banco[]
@@ -55,13 +56,100 @@ model Tenant {
   Proveedores           Proveedor[]
   Rubros                Rubro[]
   SesionesActivas       SesionActiva[]
+  Sucursales            Sucursal[]
   Tarjetas              Tarjeta[]
   Plan                  PlanSaaS?              @relation(fields: [PlanId], references: [Id])
   TokensCsrf            TokenCsrf[]
   Unidades              UnidadMedida[]
   Usuarios              Usuario[]
+  UsuariosSucursales    UsuarioSucursal[]
 
   @@index([PlanId])
+}
+
+/// Sucursales/Locales del comercio.
+/// Cada tenant puede tener múltiples sucursales.
+/// Una sucursal debe ser marcada como "Principal" (EsPrincipal=true).
+model Sucursal {
+  Id                  BigInt              @id @default(autoincrement())
+  TenantId            BigInt
+  /// Nombre identificador de la sucursal (ej: "Casa Central", "Sucursal Norte")
+  Nombre              String              @db.VarChar(250)
+  /// Dirección física de la sucursal (opcional)
+  Direccion           String?             @db.VarChar(400)
+  /// Teléfono de contacto de la sucursal
+  Telefono            String?             @db.VarChar(25)
+  /// Indica si es la sucursal principal/casa central del tenant
+  /// Solo una sucursal por tenant puede tener EsPrincipal=true
+  EsPrincipal         Boolean             @default(false)
+  /// Indica si la sucursal está activa para operaciones
+  EstaActiva          Boolean             @default(true)
+  EstaEliminado       Boolean             @default(false)
+  FechaCreacion       DateTime            @default(now())
+  FechaActualizacion  DateTime            @updatedAt
+  // Relaciones
+  Tenant              Tenant              @relation(fields: [TenantId], references: [Id])
+  ArticulosStock      ArticuloStock[]
+  AuditoriaEmpleados  AuditoriaEmpleado[]
+  BajaArticulos       BajaArticulo[]
+  Cajas               Caja[]
+  Cheques             Cheque[]
+  Comprobantes        Comprobante[]
+  Contadores          Contador[]
+  DepositosCheques    DepositoCheques[]
+  Gastos              Gasto[]
+  Movimientos         Movimiento[]
+  UsuariosSucursales  UsuarioSucursal[]
+
+  // Índices y constraints
+  @@unique([TenantId, Nombre]) // No puede haber dos sucursales con el mismo nombre en un tenant
+  @@index([TenantId])
+  @@index([TenantId, EsPrincipal])
+  @@index([TenantId, EstaActiva])
+}
+
+/// Relación muchos a muchos entre Usuario y Sucursal.
+/// Permite que un usuario pueda trabajar en múltiples sucursales.
+model UsuarioSucursal {
+  UsuarioId   BigInt
+  SucursalId  BigInt
+  TenantId    BigInt
+  /// Indica si es la sucursal por defecto del usuario
+  EsDefault   Boolean   @default(false)
+  FechaAsignacion DateTime @default(now())
+  Usuario     Usuario   @relation(fields: [UsuarioId], references: [Id], onDelete: Cascade)
+  Sucursal    Sucursal  @relation(fields: [SucursalId], references: [Id], onDelete: Cascade)
+  Tenant      Tenant    @relation(fields: [TenantId], references: [Id])
+
+  @@id([UsuarioId, SucursalId])
+  @@index([TenantId])
+  @@index([UsuarioId])
+  @@index([SucursalId])
+}
+
+/// Stock de artículos por sucursal.
+/// Permite manejar inventario independiente por cada local.
+model ArticuloStock {
+  Id            BigInt    @id @default(autoincrement())
+  ArticuloId    BigInt
+  SucursalId    BigInt
+  TenantId      BigInt
+  /// Cantidad actual en stock
+  Stock         Decimal   @default(0) @db.Decimal(18, 2)
+  /// Stock mínimo para alertas (hereda de Articulo si es null)
+  StockMinimo   Decimal?  @db.Decimal(18, 2)
+  /// Ubicación física dentro de la sucursal
+  Ubicacion     String?   @db.VarChar(200)
+  FechaActualizacion DateTime @updatedAt
+  Articulo      Articulo  @relation(fields: [ArticuloId], references: [Id], onDelete: Cascade)
+  Sucursal      Sucursal  @relation(fields: [SucursalId], references: [Id], onDelete: Cascade)
+  Tenant        Tenant    @relation(fields: [TenantId], references: [Id])
+
+  @@unique([ArticuloId, SucursalId]) // Un artículo solo tiene un registro de stock por sucursal
+  @@index([TenantId])
+  @@index([TenantId, SucursalId])
+  @@index([ArticuloId])
+  @@index([SucursalId])
 }
 
 /// Planes de suscripción SaaS disponibles (global)
@@ -91,6 +179,8 @@ model Log {
 }
 
 /// Artículos/Productos del comercio. Incluye datos de stock y atributos comerciales.
+/// El catálogo de productos es global del tenant.
+/// El stock se maneja por sucursal en la tabla ArticuloStock.
 model Articulo {
   Id                   BigInt               @id @default(autoincrement())
   MarcaId              BigInt
@@ -119,6 +209,8 @@ model Articulo {
   EstaEliminado        Boolean
   /// Tenant dueño de este artículo
   TenantId             BigInt
+  /// Stock global (DEPRECADO: usar ArticuloStock para stock por sucursal)
+  /// Se mantiene por compatibilidad durante la migración
   Stock                Decimal              @default(0) @db.Decimal(18, 2)
   Iva                  Iva                  @relation(fields: [IvaId], references: [Id], onUpdate: NoAction)
   Marca                Marca                @relation(fields: [MarcaId], references: [Id], onUpdate: NoAction)
@@ -126,6 +218,7 @@ model Articulo {
   Rubro                Rubro                @relation(fields: [RubroId], references: [Id], onUpdate: NoAction)
   Tenant               Tenant               @relation(fields: [TenantId], references: [Id])
   UnidadMedida         UnidadMedida         @relation(fields: [UnidadMedidaId], references: [Id], onUpdate: NoAction)
+  ArticuloStock        ArticuloStock[]
   BajaArticulo         BajaArticulo[]
   DetalleComprobante   DetalleComprobante[]
 
@@ -138,6 +231,7 @@ model Articulo {
 }
 
 /// Bajas de artículos (ajustes de stock por pérdida, rotura, etc.).
+/// Cada baja afecta el stock de una sucursal específica.
 model BajaArticulo {
   Id            BigInt      @id @default(autoincrement())
   ArticuloId    BigInt
@@ -148,11 +242,16 @@ model BajaArticulo {
   EstaEliminado Boolean
   /// Tenant dueño de esta baja
   TenantId      BigInt
+  /// Sucursal donde se realizó la baja (nullable durante migración)
+  SucursalId    BigInt?
   Articulo      Articulo    @relation(fields: [ArticuloId], references: [Id], onUpdate: NoAction)
   MotivoBajas   MotivoBajas @relation(fields: [MotivoBajaId], references: [Id], onUpdate: NoAction)
   Tenant        Tenant      @relation(fields: [TenantId], references: [Id])
+  Sucursal      Sucursal?   @relation(fields: [SucursalId], references: [Id])
 
   @@index([TenantId])
+  @@index([TenantId, SucursalId])
+  @@index([SucursalId])
   @@index([ArticuloId])
   @@index([MotivoBajaId])
 }
@@ -172,6 +271,7 @@ model Banco {
 }
 
 /// Movimientos de caja por turno/apertura-cierre.
+/// Cada caja pertenece a una sucursal específica.
 model Caja {
   Id                                      BigInt        @id @default(autoincrement())
   UsuarioAperturaId                       BigInt
@@ -194,7 +294,10 @@ model Caja {
   Ganancia                                Decimal       @default(0) @db.Decimal(18, 2)
   /// Tenant dueño de esta caja
   TenantId                                BigInt
+  /// Sucursal donde se abrió esta caja (nullable durante migración, luego required)
+  SucursalId                              BigInt?
   Tenant                                  Tenant        @relation(fields: [TenantId], references: [Id])
+  Sucursal                                Sucursal?     @relation(fields: [SucursalId], references: [Id])
   Usuario_Caja_UsuarioAperturaIdToUsuario Usuario       @relation("Caja_UsuarioAperturaIdToUsuario", fields: [UsuarioAperturaId], references: [Id], onUpdate: NoAction)
   Usuario_Caja_UsuarioCierreIdToUsuario   Usuario?      @relation("Caja_UsuarioCierreIdToUsuario", fields: [UsuarioCierreId], references: [Id], onDelete: NoAction, onUpdate: NoAction)
   DetalleCaja                             DetalleCaja[]
@@ -202,11 +305,14 @@ model Caja {
   Movimiento                              Movimiento[]
 
   @@index([TenantId])
+  @@index([TenantId, SucursalId])
+  @@index([SucursalId])
   @@index([UsuarioAperturaId])
   @@index([UsuarioCierreId])
 }
 
 /// Cheques recibidos de clientes.
+/// Cada cheque se recibe en una sucursal específica.
 model Cheque {
   Id               BigInt             @id @default(autoincrement())
   ClienteId        BigInt
@@ -217,18 +323,24 @@ model Cheque {
   EstaEliminado    Boolean
   /// Tenant dueño de este cheque
   TenantId         BigInt
+  /// Sucursal donde se recibió el cheque (nullable durante migración)
+  SucursalId       BigInt?
   Banco            Banco              @relation(fields: [BancoId], references: [Id], onUpdate: NoAction)
   Persona_Cliente  Persona_Cliente    @relation(fields: [ClienteId], references: [Id], onUpdate: NoAction)
   Tenant           Tenant             @relation(fields: [TenantId], references: [Id])
+  Sucursal         Sucursal?          @relation(fields: [SucursalId], references: [Id])
   DepositoCheques  DepositoCheques[]
   FormaPago_Cheque FormaPago_Cheque[]
 
   @@index([TenantId])
+  @@index([TenantId, SucursalId])
+  @@index([SucursalId])
   @@index([BancoId])
   @@index([ClienteId])
 }
 
 /// Cabecera genérica de comprobantes (facturas, notas de crédito, presupuestos, etc.).
+/// Cada comprobante se emite en una sucursal específica.
 model Comprobante {
   Id                                                                         BigInt                       @id @default(autoincrement())
   EmpleadoId                                                                 BigInt
@@ -244,8 +356,11 @@ model Comprobante {
   EstaEliminado                                                              Boolean
   /// Tenant dueño de este comprobante
   TenantId                                                                   BigInt
+  /// Sucursal donde se emitió el comprobante (nullable durante migración)
+  SucursalId                                                                 BigInt?
   Persona_Empleado                                                           Persona_Empleado             @relation(fields: [EmpleadoId], references: [Id], onUpdate: NoAction)
   Tenant                                                                     Tenant                       @relation(fields: [TenantId], references: [Id])
+  Sucursal                                                                   Sucursal?                    @relation(fields: [SucursalId], references: [Id])
   Usuario                                                                    Usuario                      @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
   Comprobante_Compra                                                         Comprobante_Compra?
   Comprobante_CtaCteProveedor                                                Comprobante_CtaCteProveedor?
@@ -260,6 +375,8 @@ model Comprobante {
   Movimiento                                                                 Movimiento[]
 
   @@index([TenantId])
+  @@index([TenantId, SucursalId])
+  @@index([SucursalId])
   @@index([EmpleadoId])
   @@index([UsuarioId])
 }
@@ -446,16 +563,23 @@ model Configuracion {
 }
 
 /// Contadores para numeración de comprobantes.
+/// Cada sucursal tiene su propia numeración de comprobantes.
 model Contador {
-  Id              BigInt  @id @default(autoincrement())
+  Id              BigInt    @id @default(autoincrement())
   TipoComprobante Int
   Valor           Int
   EstaEliminado   Boolean
   /// Tenant dueño de este contador
   TenantId        BigInt
-  Tenant          Tenant  @relation(fields: [TenantId], references: [Id])
+  /// Sucursal a la que pertenece este contador (nullable durante migración)
+  SucursalId      BigInt?
+  Tenant          Tenant    @relation(fields: [TenantId], references: [Id])
+  Sucursal        Sucursal? @relation(fields: [SucursalId], references: [Id])
 
+  @@unique([TenantId, SucursalId, TipoComprobante]) // Un contador por tipo de comprobante por sucursal
   @@index([TenantId])
+  @@index([TenantId, SucursalId])
+  @@index([SucursalId])
 }
 
 /// Cuentas bancarias del comercio.
@@ -511,6 +635,7 @@ model Localidad {
 }
 
 /// Depósitos de cheques en cuentas bancarias.
+/// Registra desde qué sucursal se realizó el depósito.
 model DepositoCheques {
   Id               BigInt          @id @default(autoincrement())
   ChequeId         BigInt
@@ -519,11 +644,16 @@ model DepositoCheques {
   EstaEliminado    Boolean
   /// Tenant dueño de este depósito de cheques
   TenantId         BigInt
+  /// Sucursal desde donde se realizó el depósito (nullable durante migración)
+  SucursalId       BigInt?
   Cheque           Cheque          @relation(fields: [ChequeId], references: [Id], onUpdate: NoAction)
   CuentaBancarias  CuentaBancarias @relation(fields: [CuentaBancariaId], references: [Id], onUpdate: NoAction)
   Tenant           Tenant          @relation(fields: [TenantId], references: [Id])
+  Sucursal         Sucursal?       @relation(fields: [SucursalId], references: [Id])
 
   @@index([TenantId])
+  @@index([TenantId, SucursalId])
+  @@index([SucursalId])
   @@index([ChequeId])
   @@index([CuentaBancariaId])
 }
@@ -658,6 +788,7 @@ model Formularios {
 }
 
 /// Gastos registrados en caja, asociados a un concepto.
+/// Hereda la sucursal de la caja, pero también tiene referencia directa para queries.
 model Gasto {
   Id              BigInt         @id @default(autoincrement())
   CajaId          BigInt
@@ -668,11 +799,16 @@ model Gasto {
   EstaEliminado   Boolean
   /// Tenant dueño de este gasto
   TenantId        BigInt
+  /// Sucursal donde se registró el gasto (nullable durante migración)
+  SucursalId      BigInt?
   Caja            Caja           @relation(fields: [CajaId], references: [Id], onUpdate: NoAction)
   ConceptoGastos  ConceptoGastos @relation(fields: [ConceptoGastoId], references: [Id], onUpdate: NoAction)
   Tenant          Tenant         @relation(fields: [TenantId], references: [Id])
+  Sucursal        Sucursal?      @relation(fields: [SucursalId], references: [Id])
 
   @@index([TenantId])
+  @@index([TenantId, SucursalId])
+  @@index([SucursalId])
   @@index([CajaId])
   @@index([ConceptoGastoId])
 }
@@ -940,6 +1076,7 @@ model Usuario {
   Movimiento                           Movimiento[]
   PerfilUsuario                        PerfilUsuario[]
   SesionesActivas                      SesionActiva[]
+  Sucursales                           UsuarioSucursal[]
   TokensCsrf                           TokenCsrf[]
   Persona_Empleado                     Persona_Empleado       @relation(fields: [EmpleadoId], references: [Id], onUpdate: NoAction)
   Tenant                               Tenant                 @relation(fields: [TenantId], references: [Id])
@@ -949,6 +1086,7 @@ model Usuario {
 }
 
 /// Movimientos de caja asociados a comprobantes y usuarios.
+/// Hereda la sucursal de la caja, pero también tiene referencia directa para queries.
 model Movimiento {
   Id                                  BigInt                               @id @default(autoincrement())
   CajaId                              BigInt
@@ -961,14 +1099,19 @@ model Movimiento {
   EstaEliminado                       Boolean
   /// Tenant dueño de este movimiento
   TenantId                            BigInt
+  /// Sucursal donde se registró el movimiento (nullable durante migración)
+  SucursalId                          BigInt?
   Caja                                Caja                                 @relation(fields: [CajaId], references: [Id], onUpdate: NoAction)
   Comprobante                         Comprobante                          @relation(fields: [ComprobanteId], references: [Id], onUpdate: NoAction)
   Tenant                              Tenant                               @relation(fields: [TenantId], references: [Id])
+  Sucursal                            Sucursal?                            @relation(fields: [SucursalId], references: [Id])
   Usuario                             Usuario                              @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
   Movimiento_CuentaCorriente          Movimiento_CuentaCorriente?
   Movimiento_CuentaCorrienteProveedor Movimiento_CuentaCorrienteProveedor?
 
   @@index([TenantId])
+  @@index([TenantId, SucursalId])
+  @@index([SucursalId])
   @@index([CajaId])
   @@index([ComprobanteId])
   @@index([UsuarioId])
@@ -999,7 +1142,8 @@ model Movimiento_CuentaCorrienteProveedor {
   @@index([ProveedorId])
 }
 
-/// Auditoría de acciones realizadas sobre empleados/usuarios
+/// Auditoría de acciones realizadas sobre empleados/usuarios.
+/// Registra opcionalmente la sucursal donde se realizó la acción.
 model AuditoriaEmpleado {
   Id                BigInt            @id @default(autoincrement())
   TenantId          BigInt
@@ -1014,12 +1158,17 @@ model AuditoriaEmpleado {
   IpAddress         String?           @db.VarChar(50)
   UserAgent         String?           @db.VarChar(500)
   Severidad         String            @default("INFO") @db.VarChar(20)
+  /// Sucursal donde se realizó la acción (opcional, para auditorías globales es null)
+  SucursalId        BigInt?
   Empleado          Persona_Empleado? @relation(fields: [EmpleadoId], references: [Id], onUpdate: NoAction)
   Tenant            Tenant            @relation(fields: [TenantId], references: [Id])
+  Sucursal          Sucursal?         @relation(fields: [SucursalId], references: [Id])
   UsuarioAfectado   Usuario?          @relation("Auditoria_UsuarioAfectado", fields: [UsuarioAfectadoId], references: [Id], onUpdate: NoAction)
   Usuario           Usuario           @relation("Auditoria_Usuario", fields: [UsuarioId], references: [Id], onUpdate: NoAction)
 
   @@index([TenantId])
+  @@index([TenantId, SucursalId])
+  @@index([SucursalId])
   @@index([Fecha])
   @@index([UsuarioId])
   @@index([EmpleadoId])

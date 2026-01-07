@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthWithBranch } from "@/lib/sucursal";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import { parsePaginationParams, createPaginationResponse } from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
@@ -26,7 +27,7 @@ const agregarGastoSchema = z.object({
 // GET: Obtener caja actual o historial
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
+    const { tenantId, sucursalId, error } = await getAuthWithBranch();
 
     if (error) {
       return error;
@@ -36,6 +37,7 @@ export async function GET(req: NextRequest) {
     const cajaId = searchParams.get("id");
     const soloAbierta = searchParams.get("soloAbierta") === "true";
     const historial = searchParams.get("historial") === "true";
+    const resumenDia = searchParams.get("resumenDia") === "true";
     const pagination = parsePaginationParams(req);
 
     // Si se solicita una caja específica
@@ -44,6 +46,7 @@ export async function GET(req: NextRequest) {
         where: {
           Id: BigInt(cajaId),
           TenantId: BigInt(tenantId),
+          SucursalId: sucursalId,
           EstaEliminado: false,
         },
         include: {
@@ -191,6 +194,7 @@ export async function GET(req: NextRequest) {
       const caja = await prisma.caja.findFirst({
         where: {
           TenantId: BigInt(tenantId),
+          SucursalId: sucursalId,
           EstaEliminado: false,
           FechaCierre: null,
         },
@@ -311,9 +315,153 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    // Resumen del día (todas las cajas del día actual)
+    if (resumenDia) {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const manana = new Date(hoy);
+      manana.setDate(manana.getDate() + 1);
+
+      const cajasDelDia = await prisma.caja.findMany({
+        where: {
+          TenantId: BigInt(tenantId),
+          EstaEliminado: false,
+          FechaApertura: {
+            gte: hoy,
+            lt: manana,
+          },
+        },
+        include: {
+          Usuario_Caja_UsuarioAperturaIdToUsuario: {
+            select: {
+              Id: true,
+              Nombre: true,
+              Persona_Empleado: {
+                select: {
+                  Persona: {
+                    select: {
+                      Nombre: true,
+                      Apellido: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          Usuario_Caja_UsuarioCierreIdToUsuario: {
+            select: {
+              Id: true,
+              Nombre: true,
+              Persona_Empleado: {
+                select: {
+                  Persona: {
+                    select: {
+                      Nombre: true,
+                      Apellido: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: { FechaApertura: "asc" },
+      });
+
+      // Calcular totales del día
+      const totalesDia = cajasDelDia.reduce(
+        (acc, caja) => ({
+          montoInicial: acc.montoInicial + Number(caja.MontoInicial),
+          totalEntradaEfectivo: acc.totalEntradaEfectivo + Number(caja.TotalEntradaEfectivo),
+          totalSalidaEfectivo: acc.totalSalidaEfectivo + Number(caja.TotalSalidaEfectivo),
+          totalEntradaTarjeta: acc.totalEntradaTarjeta + Number(caja.TotalEntradaTarjeta),
+          totalSalidaTarjeta: acc.totalSalidaTarjeta + Number(caja.TotalSalidaTarjeta),
+          totalEntradaCheque: acc.totalEntradaCheque + Number(caja.TotalEntradaCheque),
+          totalSalidaCheque: acc.totalSalidaCheque + Number(caja.TotalSalidaCheque),
+          totalEntradaCtaCte: acc.totalEntradaCtaCte + Number(caja.TotalEntradaCtaCte),
+          totalSalidaCtaCte: acc.totalSalidaCtaCte + Number(caja.TotalSalidaCtaCte),
+          totalEntradaTransf: acc.totalEntradaTransf + Number(caja.TotalEntradaTransf),
+          totalSalidaTransf: acc.totalSalidaTransf + Number(caja.TotalSalidaTransf),
+          ganancia: acc.ganancia + Number(caja.Ganancia),
+        }),
+        {
+          montoInicial: 0,
+          totalEntradaEfectivo: 0,
+          totalSalidaEfectivo: 0,
+          totalEntradaTarjeta: 0,
+          totalSalidaTarjeta: 0,
+          totalEntradaCheque: 0,
+          totalSalidaCheque: 0,
+          totalEntradaCtaCte: 0,
+          totalSalidaCtaCte: 0,
+          totalEntradaTransf: 0,
+          totalSalidaTransf: 0,
+          ganancia: 0,
+        }
+      );
+
+      // Formatear nombre completo del usuario
+      const formatearNombreUsuario = (usuario: any) => {
+        if (!usuario) return null;
+        const persona = usuario.Persona_Empleado?.[0]?.Persona;
+        if (persona) {
+          return `${persona.Nombre} ${persona.Apellido}`.trim();
+        }
+        return usuario.Nombre || null;
+      };
+
+      return NextResponse.json({
+        resumenDia: {
+          fecha: hoy.toISOString(),
+          cantidadCajas: cajasDelDia.length,
+          totales: {
+            ...totalesDia,
+            efectivo: totalesDia.montoInicial + totalesDia.totalEntradaEfectivo - totalesDia.totalSalidaEfectivo,
+            tarjeta: totalesDia.totalEntradaTarjeta - totalesDia.totalSalidaTarjeta,
+            cheque: totalesDia.totalEntradaCheque - totalesDia.totalSalidaCheque,
+            cuentaCorriente: totalesDia.totalEntradaCtaCte - totalesDia.totalSalidaCtaCte,
+            transferencia: totalesDia.totalEntradaTransf - totalesDia.totalSalidaTransf,
+            totalCaja:
+              totalesDia.montoInicial +
+              totalesDia.totalEntradaEfectivo - totalesDia.totalSalidaEfectivo +
+              totalesDia.totalEntradaTarjeta - totalesDia.totalSalidaTarjeta +
+              totalesDia.totalEntradaCheque - totalesDia.totalSalidaCheque +
+              totalesDia.totalEntradaCtaCte - totalesDia.totalSalidaCtaCte +
+              totalesDia.totalEntradaTransf - totalesDia.totalSalidaTransf,
+          },
+          cajas: cajasDelDia.map((c) => ({
+            Id: Number(c.Id),
+            FechaApertura: c.FechaApertura,
+            FechaCierre: c.FechaCierre,
+            MontoInicial: Number(c.MontoInicial),
+            MontoCierre: c.MontoCierre ? Number(c.MontoCierre) : null,
+            TotalEntradaEfectivo: Number(c.TotalEntradaEfectivo),
+            TotalSalidaEfectivo: Number(c.TotalSalidaEfectivo),
+            Ganancia: Number(c.Ganancia),
+            estaCerrada: !!c.FechaCierre,
+            UsuarioApertura: c.Usuario_Caja_UsuarioAperturaIdToUsuario
+              ? {
+                  Id: Number(c.Usuario_Caja_UsuarioAperturaIdToUsuario.Id),
+                  Nombre: c.Usuario_Caja_UsuarioAperturaIdToUsuario.Nombre,
+                  NombreCompleto: formatearNombreUsuario(c.Usuario_Caja_UsuarioAperturaIdToUsuario),
+                }
+              : null,
+            UsuarioCierre: c.Usuario_Caja_UsuarioCierreIdToUsuario
+              ? {
+                  Id: Number(c.Usuario_Caja_UsuarioCierreIdToUsuario.Id),
+                  Nombre: c.Usuario_Caja_UsuarioCierreIdToUsuario.Nombre,
+                  NombreCompleto: formatearNombreUsuario(c.Usuario_Caja_UsuarioCierreIdToUsuario),
+                }
+              : null,
+          })),
+        },
+      });
+    }
+
     // Historial de cajas
     const where: any = {
       TenantId: BigInt(tenantId),
+      SucursalId: sucursalId,
       EstaEliminado: false,
     };
 
@@ -385,7 +533,7 @@ export async function GET(req: NextRequest) {
 // POST: Abrir caja
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, error: authError } = await getAuthUser();
+    const { tenantId, sucursalId, error: authError } = await getAuthWithBranch();
 
     if (authError) {
       return authError;
@@ -413,10 +561,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verificar si ya hay una caja abierta
+    // Verificar si ya hay una caja abierta en esta sucursal
     const cajaAbierta = await prisma.caja.findFirst({
       where: {
         TenantId: BigInt(tenantId),
+        SucursalId: sucursalId,
         EstaEliminado: false,
         FechaCierre: null,
       },
@@ -424,7 +573,7 @@ export async function POST(req: NextRequest) {
 
     if (cajaAbierta) {
       return NextResponse.json(
-        { error: "Ya existe una caja abierta" },
+        { error: "Ya existe una caja abierta en esta sucursal" },
         { status: 400 }
       );
     }
@@ -435,6 +584,7 @@ export async function POST(req: NextRequest) {
     const nuevaCaja = await prisma.caja.create({
       data: {
         TenantId: BigInt(tenantId),
+        SucursalId: sucursalId,
         UsuarioAperturaId: usuario.Id,
         MontoInicial: data.montoInicial,
         FechaApertura: new Date(),
@@ -493,7 +643,7 @@ export async function POST(req: NextRequest) {
 // PATCH: Cerrar caja o agregar gasto
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, error: authError } = await getAuthUser();
+    const { tenantId, sucursalId, error: authError } = await getAuthWithBranch();
 
     if (authError) {
       return authError;
@@ -529,6 +679,7 @@ export async function PATCH(req: NextRequest) {
       const cajaAbierta = await prisma.caja.findFirst({
         where: {
           TenantId: BigInt(tenantId),
+          SucursalId: sucursalId,
           EstaEliminado: false,
           FechaCierre: null,
         },
@@ -600,6 +751,7 @@ export async function PATCH(req: NextRequest) {
       const cajaAbierta = await prisma.caja.findFirst({
         where: {
           TenantId: BigInt(tenantId),
+          SucursalId: sucursalId,
           EstaEliminado: false,
           FechaCierre: null,
         },
@@ -607,7 +759,7 @@ export async function PATCH(req: NextRequest) {
 
       if (!cajaAbierta) {
         return NextResponse.json(
-          { error: "No hay una caja abierta" },
+          { error: "No hay una caja abierta en esta sucursal" },
           { status: 400 }
         );
       }
@@ -634,6 +786,7 @@ export async function PATCH(req: NextRequest) {
       const nuevoGasto = await prisma.gasto.create({
         data: {
           TenantId: BigInt(tenantId),
+          SucursalId: sucursalId,
           CajaId: cajaAbierta.Id,
           ConceptoGastoId: BigInt(data.conceptoGastoId),
           Fecha: new Date(),

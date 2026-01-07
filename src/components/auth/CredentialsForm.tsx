@@ -260,12 +260,75 @@ export default function CredentialsForm() {
         }).catch((err) => console.warn("Error al registrar sesión:", err));
       }
 
+      // PRIMERO verificar sucursales ANTES de redirigir
+      // SIEMPRE verificar y redirigir a seleccionar-sucursal si hay múltiples
+      try {
+        const resSucursales = await fetch("/api/sucursales/mis-sucursales", {
+          cache: "no-store",
+        });
+
+        if (resSucursales.ok) {
+          const dataSucursales = await resSucursales.json();
+          const tieneSucursales = dataSucursales.sucursales && dataSucursales.sucursales.length > 0;
+          const tieneMultiples = dataSucursales.tieneMultiplesSucursales || 
+            (dataSucursales.sucursales && dataSucursales.sucursales.length > 1);
+          const tieneSucursalActiva = !!dataSucursales.sucursalActiva;
+
+          console.log("[CredentialsForm] Verificación de sucursales:", {
+            tieneSucursales,
+            tieneMultiples,
+            tieneSucursalActiva,
+            cantidad: dataSucursales.sucursales?.length || 0,
+          });
+
+          // Si tiene múltiples sucursales, SIEMPRE ir a seleccionar (incluso si hay cookie)
+          if (tieneMultiples) {
+            console.log("[CredentialsForm] Tiene múltiples sucursales - redirigiendo a /seleccionar-sucursal");
+            // Limpiar sessionStorage para forzar selección
+            if (typeof window !== "undefined") {
+              sessionStorage.removeItem("sucursal_seleccionada");
+            }
+            // Usar window.location para forzar navegación completa
+            window.location.href = "/seleccionar-sucursal";
+            return; // IMPORTANTE: Salir aquí, NO continuar con el redirect
+          }
+
+          // Si solo tiene 1 sucursal y no está activa, autoseleccionarla
+          if (tieneSucursales && !tieneMultiples && !tieneSucursalActiva) {
+            console.log("[CredentialsForm] Autoseleccionando única sucursal");
+            const resCambio = await fetch("/api/sucursales/cambiar", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ sucursalId: dataSucursales.sucursales[0].id }),
+            });
+            if (!resCambio.ok) {
+              // Si falla la autoselección, ir a seleccionar manualmente
+              window.location.href = "/seleccionar-sucursal";
+              return;
+            }
+            // Continuar con el flujo normal solo si la autoselección fue exitosa
+          }
+        } else {
+          console.warn("[CredentialsForm] Error al obtener sucursales, redirigiendo a seleccionar-sucursal");
+          // Si hay error, ir a seleccionar sucursal por seguridad
+          window.location.href = "/seleccionar-sucursal";
+          return;
+        }
+      } catch (error) {
+        console.error("[CredentialsForm] Error verificando sucursales:", error);
+        // Si hay error, ir a seleccionar sucursal por seguridad
+        window.location.href = "/seleccionar-sucursal";
+        return;
+      }
+
+      // Solo llegar aquí si tiene 1 sucursal y se autoseleccionó correctamente
       // Redirigir después de login exitoso (usar callbackUrl si existe, sino /ventas)
-      // Validar que callbackUrl sea una ruta relativa segura
       const safeCallbackUrl = callbackUrl.startsWith("/") && !callbackUrl.startsWith("//") 
         ? callbackUrl 
         : "/ventas";
-      router.push(safeCallbackUrl);
+      
+      console.log("[CredentialsForm] Redirigiendo a:", safeCallbackUrl);
+      window.location.href = safeCallbackUrl;
     } catch (err) {
       console.error("Error al iniciar sesion:", err);
       const errorMessage = getErrorMessage(err);

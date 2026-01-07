@@ -15,6 +15,7 @@ import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { filtrarRutasPorPermisos } from "@/lib/permissions/routePermissions";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
 import { startManualLogout, endManualLogout } from "@/lib/auth/logoutManager";
+import { SucursalSelector } from "@/components/sucursal";
 
 interface MenuItem {
   icon: React.ReactNode;
@@ -175,6 +176,25 @@ const menuItems: MenuItem[] = [
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth={2}
+          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+        />
+      </svg>
+    ),
+    label: "Sucursales",
+    href: "/sucursales",
+  },
+  {
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
           d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
         />
         <path
@@ -275,6 +295,14 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
       // Limpiar todo el cache de queries
       queryClient.clear();
 
+      // Limpiar cookie de sucursal activa
+      await fetch("/api/sucursales/limpiar", { method: "POST" }).catch(() => {});
+
+      // Limpiar sessionStorage de selección de sucursal
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("sucursal_seleccionada");
+      }
+
       // Cerrar sesión en Supabase
       await supabase.auth.signOut();
     } catch (error) {
@@ -370,6 +398,21 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
             </svg>
           </button>
         </div>
+
+        {/* Selector de Sucursal */}
+        <AnimatePresence mode="wait">
+          {!isCollapsed && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="px-4 py-3 border-b border-slate-700/50"
+            >
+              <SucursalSelector hideIfSingle={false} />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Menu Items */}
         <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">

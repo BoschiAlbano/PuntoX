@@ -26,6 +26,7 @@ export async function middleware(req: NextRequest) {
     "/favicon-light.ico",
     "/favicon-dark.ico",
     "/new-tenant",
+    // /seleccionar-sucursal requiere autenticación, no está en publicPaths
   ];
 
   const isPublic =
@@ -119,10 +120,13 @@ export async function middleware(req: NextRequest) {
     });
   }
 
+  // Si hay sesión, permitir acceso (incluye /seleccionar-sucursal)
   if (session) {
     return response;
   }
 
+  // Si no hay sesión, redirigir a login
+  // PERO si está intentando acceder a /seleccionar-sucursal, también necesita estar autenticado
   const signInUrl = new URL("/signin", req.url);
   signInUrl.searchParams.set("callbackUrl", pathname);
   return NextResponse.redirect(signInUrl);
