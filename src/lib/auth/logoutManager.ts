@@ -26,3 +26,4 @@ export function isManualLogoutInProgress(): boolean {
   return isManualLogout;
 }
 
+

@@ -117,3 +117,4 @@ El sistema se maneja automáticamente en `Sidebar.tsx`. No se requiere acción a
 - Los errores de autenticación (401) se manejan globalmente y no requieren toasts individuales
 - El interceptor global solo procesa 401s cuando no hay un logout manual en progreso
 
+

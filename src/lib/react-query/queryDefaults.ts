@@ -47,3 +47,4 @@ export const analyticsQueryOptions = {
   gcTime: 5 * 60 * 1000, // 5 minutos
 } satisfies Partial<UseQueryOptions<any, any, any, any>>;
 
+

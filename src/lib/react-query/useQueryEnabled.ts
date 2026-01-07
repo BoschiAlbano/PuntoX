@@ -31,3 +31,4 @@ export function useQueryEnabled(
   }, [tieneAcceso, isLoadingPermisos, additionalConditions]);
 }
 
+
