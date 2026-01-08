@@ -370,7 +370,6 @@ export default function UsuarioForm({
                   {provincias.map((provincia: any) => (
                     <SelectItem
                       key={provincia.id || provincia.Id}
-                      value={provincia.id || provincia.Id}
                     >
                       {provincia.Descripcion || provincia.descripcion}
                     </SelectItem>
@@ -400,7 +399,6 @@ export default function UsuarioForm({
                   {departamentos.map((departamento: any) => (
                     <SelectItem
                       key={departamento.id || departamento.Id}
-                      value={departamento.id || departamento.Id}
                     >
                       {departamento.Descripcion || departamento.descripcion}
                     </SelectItem>
@@ -429,7 +427,6 @@ export default function UsuarioForm({
                   {localidades.map((localidad: any) => (
                     <SelectItem
                       key={localidad.id || localidad.Id}
-                      value={localidad.id || localidad.Id}
                     >
                       {localidad.Descripcion || localidad.descripcion}
                     </SelectItem>
@@ -504,7 +501,6 @@ export default function UsuarioForm({
                   {roles.map((rol: any) => (
                     <SelectItem
                       key={rol.id || rol.Id}
-                      value={rol.id || rol.Id}
                     >
                       {rol.nombre || rol.Descripcion || rol.descripcion}
                     </SelectItem>
@@ -533,7 +529,6 @@ export default function UsuarioForm({
                     {sucursales.map((sucursal: any) => (
                       <SelectItem
                         key={sucursal.id || sucursal.Id}
-                        value={sucursal.id || sucursal.Id}
                       >
                         {sucursal.nombre || sucursal.Nombre || sucursal.descripcion}
                       </SelectItem>

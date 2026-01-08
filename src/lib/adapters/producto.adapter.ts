@@ -38,6 +38,7 @@ export const productoAdapter = (data: any): Producto => {
       PrecioCosto: Number(data.Precio?.PrecioCosto || 0),
     },
     Stock: Number(data.Stock || 0),
+    SucursalNombre: data.SucursalNombre || null,
   };
 };
 
