@@ -31,8 +31,8 @@ export default function GraficaPagos({ datos }: GraficaPagosProps) {
 
   if (!datos || datos.length === 0 || datosConPorcentaje.length === 0) {
     return (
-      <Card className="shadow-sm">
-        <CardHeader className="pb-3">
+      <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
+        <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
           <h3 className="text-lg font-semibold text-slate-900">
             Mix de Medios de Pago
           </h3>
@@ -47,8 +47,8 @@ export default function GraficaPagos({ datos }: GraficaPagosProps) {
   }
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-3">
+    <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
+      <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
         <h3 className="text-lg font-semibold text-slate-900">
           Mix de Medios de Pago
         </h3>

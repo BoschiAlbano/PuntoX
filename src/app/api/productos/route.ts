@@ -1,6 +1,7 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
+import { getSucursalId } from "@/lib/sucursal";
 import {
   createProductoSchema,
   updateProductoSchema,
@@ -31,6 +32,9 @@ export async function GET(req: NextRequest) {
 
     const pagination = parsePaginationParams(req);
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
+    
+    // Obtener sucursal activa (opcional, para filtrar stock)
+    const sucursalId = await getSucursalId();
 
     // Construir where clause
     const where: {
@@ -89,7 +93,18 @@ export async function GET(req: NextRequest) {
         EstaEliminado: true,
         TenantId: true,
         Precio: true, // Equivalent to include: { Precio: true }
-        Stock: true,
+        Stock: true, // Stock legacy (deprecated)
+        ArticulosStock: sucursalId ? {
+          where: {
+            SucursalId: BigInt(sucursalId),
+          },
+          select: {
+            Stock: true,
+            StockMinimo: true,
+            Ubicacion: true,
+          },
+          take: 1,
+        } : false,
       },
       orderBy: {
         Descripcion: "asc",
@@ -98,7 +113,20 @@ export async function GET(req: NextRequest) {
       take: pagination.limit,
     });
 
-    const response = createPaginationResponse(productos, total, pagination);
+    // Mapear productos para incluir stock de la sucursal activa
+    const productosConStock = productos.map((producto) => {
+      const stockSucursal = sucursalId && producto.ArticulosStock?.[0];
+      return {
+        ...producto,
+        Stock: stockSucursal ? Number(stockSucursal.Stock) : Number(producto.Stock || 0),
+        StockMinimo: stockSucursal?.StockMinimo ? Number(stockSucursal.StockMinimo) : (producto.StockMinimo ? Number(producto.StockMinimo) : null),
+        Ubicacion: stockSucursal?.Ubicacion || producto.Ubicacion,
+        // Remover ArticulosStock del response
+        ArticulosStock: undefined,
+      };
+    });
+
+    const response = createPaginationResponse(productosConStock, total, pagination);
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {

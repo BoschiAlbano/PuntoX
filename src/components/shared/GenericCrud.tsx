@@ -194,7 +194,13 @@ export default function GenericCrud<T extends { Id: number | string }>({
   const handleConfirmDelete = () => {
     if (!itemToDelete) return;
 
-    deleteMutation.mutate(itemToDelete.Id, {
+    // Para empleados, usar personaId en lugar de Id
+    const isEmpleados = apiPath.includes("/empleados");
+    const deleteId = isEmpleados && (itemToDelete as any).personaId 
+      ? (itemToDelete as any).personaId 
+      : itemToDelete.Id;
+
+    deleteMutation.mutate(deleteId, {
       onSuccess: () => {
         addToast({
           title: "Éxito",

@@ -58,6 +58,7 @@ export async function GET(req: NextRequest) {
     const rolFilter = searchParams.get("rol");
     const estadoFilter = searchParams.get("estado");
     const busquedaFilter = searchParams.get("busqueda");
+    const sucursalFilter = searchParams.get("sucursal");
 
     // Construir where base
     const where: any = {
@@ -92,6 +93,18 @@ export async function GET(req: NextRequest) {
         usuarioFilters.PerfilUsuario = {
           some: {
             Perfil_Id: BigInt(rolId),
+          },
+        };
+      }
+    }
+
+    // Filtro por sucursal
+    if (sucursalFilter && sucursalFilter !== "todos") {
+      const sucursalId = Number(sucursalFilter);
+      if (!Number.isNaN(sucursalId)) {
+        usuarioFilters.Sucursales = {
+          some: {
+            SucursalId: BigInt(sucursalId),
           },
         };
       }
@@ -197,6 +210,27 @@ export async function GET(req: NextRequest) {
                     },
                   },
                 },
+                Sucursales: {
+                  where: {
+                    Sucursal: {
+                      EstaActiva: true,
+                      EstaEliminado: false,
+                    },
+                  },
+                  select: {
+                    SucursalId: true,
+                    EsDefault: true,
+                    Sucursal: {
+                      select: {
+                        Nombre: true,
+                      },
+                    },
+                  },
+                  take: 1,
+                  orderBy: {
+                    EsDefault: "desc",
+                  },
+                },
               },
             },
           },
@@ -213,6 +247,7 @@ export async function GET(req: NextRequest) {
         const legajo = persona.Persona_Empleado?.Legajo ?? null;
         const usuario = persona.Persona_Empleado?.Usuario?.[0] ?? null;
         const perfil = usuario?.PerfilUsuario?.[0]?.Perfiles ?? null;
+        const sucursal = usuario?.Sucursales?.[0];
 
         const estado: EstadoEmpleado = usuario
           ? mapEstado(usuario.EstaBloqueado)
@@ -242,6 +277,8 @@ export async function GET(req: NextRequest) {
           rolId: perfil ? Number(perfil.Id) : null,
           rolNombre: perfil?.Descripcion ?? null,
           rolTipo: (perfil?.Tipo as string | undefined) ?? "EMPLEADO",
+          sucursalId: sucursal ? Number(sucursal.SucursalId) : null,
+          sucursalNombre: sucursal?.Sucursal?.Nombre ?? null,
           estado,
           legajo: legajo ? `PX-${legajo}` : null,
           dni: persona.Dni,
@@ -279,6 +316,7 @@ const createEmpleadoSchema = z.object({
   nombreUsuario: z.string().min(1), // Requerido: se usa para generar email interno
   password: z.string().min(8),
   rolId: z.union([z.number(), z.string()]).optional().nullable(),
+  sucursalId: z.union([z.number(), z.string()]).optional().nullable(), // Sucursal a la que pertenece el empleado
 });
 
 export async function POST(req: NextRequest) {
@@ -334,6 +372,32 @@ export async function POST(req: NextRequest) {
         : Number(data.rolId);
     if (data.rolId !== undefined && Number.isNaN(Number(rolIdNumber))) {
       return NextResponse.json({ error: "Rol invalido" }, { status: 400 });
+    }
+
+    // Validar sucursal si se proporciona
+    let sucursalIdNumber: number | null = null;
+    if (data.sucursalId !== null && data.sucursalId !== undefined) {
+      sucursalIdNumber = Number(data.sucursalId);
+      if (!Number.isInteger(sucursalIdNumber) || sucursalIdNumber <= 0) {
+        return NextResponse.json({ error: "Sucursal invalida" }, { status: 400 });
+      }
+      
+      // Verificar que la sucursal existe y pertenece al tenant
+      const sucursalValida = await prisma.sucursal.findFirst({
+        where: {
+          Id: BigInt(sucursalIdNumber),
+          TenantId: tenantIdBigInt,
+          EstaActiva: true,
+          EstaEliminado: false,
+        },
+      });
+      
+      if (!sucursalValida) {
+        return NextResponse.json(
+          { error: "Sucursal no valida para este tenant" },
+          { status: 400 }
+        );
+      }
     }
 
     const localidadValida = await prisma.localidad.findFirst({
@@ -537,6 +601,18 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      // Asignar sucursal al usuario si se proporciona
+      if (sucursalIdNumber) {
+        await tx.usuarioSucursal.create({
+          data: {
+            UsuarioId: usuario.Id,
+            SucursalId: BigInt(sucursalIdNumber),
+            TenantId: tenantIdBigInt,
+            EsDefault: true, // Primera sucursal asignada es la default
+          },
+        });
+      }
+
       return { persona, personaEmpleado, usuario };
     });
 
@@ -615,6 +691,7 @@ const updateEmpleadoSchema = z.object({
   departamentoId: z.union([z.number(), z.string()]).optional().nullable(),
   provinciaId: z.union([z.number(), z.string()]).optional().nullable(),
   rolId: z.union([z.number(), z.string()]).optional().nullable(),
+  sucursalId: z.union([z.number(), z.string()]).optional().nullable(), // Sucursal a la que pertenece el empleado
 });
 
 
@@ -713,6 +790,40 @@ export async function PUT(req: NextRequest) {
       }
     }
 
+    // Validar sucursal si se proporciona
+    let sucursalIdBigInt: bigint | null | undefined = undefined;
+    if (data.sucursalId !== undefined) {
+      if (data.sucursalId === null) {
+        sucursalIdBigInt = null;
+      } else {
+        const sucursalIdNum = Number(data.sucursalId);
+        if (!Number.isInteger(sucursalIdNum) || sucursalIdNum <= 0) {
+          return NextResponse.json(
+            { error: "Sucursal invalida" },
+            { status: 400 }
+          );
+        }
+        sucursalIdBigInt = BigInt(sucursalIdNum);
+
+        // Verificar que la sucursal existe y pertenece al tenant
+        const sucursalValida = await prisma.sucursal.findFirst({
+          where: {
+            Id: sucursalIdBigInt,
+            TenantId: tenantIdBig,
+            EstaActiva: true,
+            EstaEliminado: false,
+          },
+        });
+
+        if (!sucursalValida) {
+          return NextResponse.json(
+            { error: "Sucursal no encontrada" },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
     // Actualizar datos
     const updated = await prisma.$transaction(async (tx) => {
       // Actualizar Persona
@@ -760,6 +871,29 @@ export async function PUT(req: NextRequest) {
               Perfil_Id: BigInt(rolIdNum),
               Usuario_Id: usuarioActual.Id,
               TenantId: tenantIdBig,
+            },
+          });
+        }
+      }
+
+      // Actualizar sucursal si se proporciona
+      if (sucursalIdBigInt !== undefined) {
+        // Eliminar todas las asignaciones de sucursal anteriores
+        await tx.usuarioSucursal.deleteMany({
+          where: {
+            UsuarioId: usuarioActual.Id,
+            TenantId: tenantIdBig,
+          },
+        });
+
+        // Asignar nueva sucursal si se proporciona
+        if (sucursalIdBigInt !== null) {
+          await tx.usuarioSucursal.create({
+            data: {
+              UsuarioId: usuarioActual.Id,
+              SucursalId: sucursalIdBigInt,
+              TenantId: tenantIdBig,
+              EsDefault: true,
             },
           });
         }
