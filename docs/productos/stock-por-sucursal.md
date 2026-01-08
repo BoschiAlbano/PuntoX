@@ -209,3 +209,4 @@ model ArticuloStock {
 - El stock real se maneja en `ArticuloStock`
 - Todas las operaciones usan la sucursal activa del usuario (`getSucursalId()`)
 
+
