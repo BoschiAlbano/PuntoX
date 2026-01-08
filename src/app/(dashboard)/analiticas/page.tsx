@@ -353,7 +353,7 @@ function AnaliticasContent() {
   return (
     <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center">
       {/* Header mejorado con parallax, glow y sombras profundas */}
-      <section className="w-full relative overflow-hidden rounded-3xl border border-slate-200/50 bg-gradient-to-r from-blue-500 via-sky-500 to-emerald-400 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] mb-10 transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]">
+      <section className="w-full relative overflow-hidden rounded-3xl border border-slate-200/50 bg-linear-to-r from-blue-500 via-sky-500 to-emerald-400 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] mb-10 transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]">
         {/* Blurred circles decorativos para profundidad con parallax ligero (optimizado) */}
         <div
           className="absolute inset-0 overflow-hidden"
@@ -374,10 +374,10 @@ function AnaliticasContent() {
         </div>
 
         {/* Glass panel semitransparente con blur más suave */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-linear-to-br from-white/5 via-transparent to-white/5 backdrop-blur-sm" />
 
         {/* Radial gradient overlay para más profundidad */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_50%)]" />
 
         <div className="relative p-4 md:p-6 lg:p-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -400,11 +400,11 @@ function AnaliticasContent() {
             </div>
 
             {/* Ícono grande de gráficos/analíticas a la derecha (complementario al sidebar) */}
-            <div className="hidden md:flex items-center justify-center flex-shrink-0">
+            <div className="hidden md:flex items-center justify-center shrink-0">
               <div className="relative group">
                 {/* Glow alrededor del icono - efecto premium */}
                 <div className="absolute inset-0 bg-white/20 rounded-full blur-2xl group-hover:bg-white/30 transition-all duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-white/20 rounded-full blur-xl group-hover:from-white/40 group-hover:to-white/30 transition-all duration-500" />
+                <div className="absolute inset-0 bg-linear-to-br from-white/30 via-transparent to-white/20 rounded-full blur-xl group-hover:from-white/40 group-hover:to-white/30 transition-all duration-500" />
                 {/* Blur suave de fondo */}
                 <div className="absolute inset-0 bg-white/15 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-300" />
                 <svg
@@ -745,7 +745,7 @@ function AnaliticasContent() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {complementariosData.gastos && (
                     <Card className="shadow-md border border-gray-200/50">
-                      <CardHeader className="pb-3 bg-gradient-to-r from-slate-50 to-slate-100">
+                      <CardHeader className="pb-3 bg-linear-to-r from-slate-50 to-slate-100">
                         <h3 className="text-lg font-semibold text-slate-900">
                           Gastos y Caja
                         </h3>
@@ -826,7 +826,7 @@ function AnaliticasContent() {
 
                   {complementariosData.usuarios && (
                     <Card className="shadow-md border border-gray-200/50">
-                      <CardHeader className="pb-3 bg-gradient-to-r from-slate-50 to-slate-100">
+                      <CardHeader className="pb-3 bg-linear-to-r from-slate-50 to-slate-100">
                         <h3 className="text-lg font-semibold text-slate-900">
                           Usuarios Activos
                         </h3>
@@ -883,7 +883,7 @@ function AnaliticasContent() {
             }
           >
             <Card className="mt-6 shadow-md border border-gray-200/50">
-              <CardHeader className="flex flex-col gap-4 pb-3 bg-gradient-to-r from-slate-50 to-slate-100">
+              <CardHeader className="flex flex-col gap-4 pb-3 bg-linear-to-r from-slate-50 to-slate-100">
                 <div className="flex items-center justify-between w-full">
                   <div>
                     <p className="text-sm text-gray-500">Auditoría</p>
@@ -1023,7 +1023,7 @@ function AnaliticasContent() {
                       {paginatedLogs.map((log) => (
                         <TableRow
                           key={log.id}
-                          className="transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-sky-50/50 hover:shadow-sm cursor-pointer focus-within:bg-blue-50/30 focus-within:outline-none focus-within:ring-2 focus-within:ring-[#67afc3]/50"
+                          className="transition-all duration-200 hover:bg-linear-to-r hover:from-blue-50/50 hover:to-sky-50/50 hover:shadow-sm cursor-pointer focus-within:bg-blue-50/30 focus-within:outline-none focus-within:ring-2 focus-within:ring-[#67afc3]/50"
                           tabIndex={0}
                           aria-label={`Log ${log.accion} por ${log.usuario}`}
                         >

@@ -16,7 +16,7 @@ import { fotoDefault } from "@/utilities/fotoDefault";
 
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId, error, user } = await getAuthUser();
+    const { tenantId, error } = await getAuthUser();
 
     if (error) {
       return error;

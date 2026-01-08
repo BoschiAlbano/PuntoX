@@ -220,23 +220,19 @@ function AccordionSection({
 export default function AdminConfiguracionPage() {
   const queryClient = useQueryClient();
   const [openSection, setOpenSection] = useState<SectionKey | "">("perfil");
-  
+
   // TanStack Query hooks
-  const {
-    data: perfilData,
-    isLoading: isLoadingPerfil,
-  } = useQuery({
+  const { data: perfilData, isLoading: isLoadingPerfil } = useQuery({
     queryKey: ["perfil-negocio"],
     queryFn: fetchPerfilNegocio,
   });
 
-  const {
-    data: preferenciasData,
-    isLoading: isLoadingPreferencias,
-  } = useQuery({
-    queryKey: ["preferencias-venta"],
-    queryFn: fetchPreferenciasVenta,
-  });
+  const { data: preferenciasData, isLoading: isLoadingPreferencias } = useQuery(
+    {
+      queryKey: ["preferencias-venta"],
+      queryFn: fetchPreferenciasVenta,
+    }
+  );
 
   // Mutations (sin toasts aquí, se manejan en handleSaveAll)
   // Los datos se actualizan en el cache, lo que automáticamente actualiza perfilData y preferenciasData
@@ -267,7 +263,9 @@ export default function AdminConfiguracionPage() {
     cuit: "",
   });
 
-  const [preferencias, setPreferencias] = useState<PreferenciasVentaDTO | null>(null);
+  const [preferencias, setPreferencias] = useState<PreferenciasVentaDTO | null>(
+    null
+  );
 
   // Sincronizar estados locales con datos de query
   useEffect(() => {
@@ -373,7 +371,8 @@ export default function AdminConfiguracionPage() {
 
     // Guardar Preferencias de venta si hay cambios
     if (dirtyVentas && preferencias) {
-      const { existsConfiguracion: _existsConfiguracion, ...preferenciasData } = preferencias;
+      const { existsConfiguracion: _existsConfiguracion, ...preferenciasData } =
+        preferencias;
       tasks.push({
         name: "Preferencias de venta",
         promise: mutationPreferencias.mutateAsync(preferenciasData),
@@ -403,7 +402,9 @@ export default function AdminConfiguracionPage() {
     if (successes.length > 0) {
       addToast({
         title: "Cambios guardados",
-        description: `${successes.join(", ")} actualizado${successes.length > 1 ? "s" : ""}`,
+        description: `${successes.join(", ")} actualizado${
+          successes.length > 1 ? "s" : ""
+        }`,
         color: "success",
       });
     }
@@ -425,16 +426,24 @@ export default function AdminConfiguracionPage() {
 
   const summaryPerfil = useMemo(() => {
     if (!perfilData) return "Cargando...";
-    return `${perfilData.nombre || "Sin nombre"} | CUIT ${perfilData.cuit || "Sin CUIT"}`;
+    return `${perfilData.nombre || "Sin nombre"} | CUIT ${
+      perfilData.cuit || "Sin CUIT"
+    }`;
   }, [perfilData]);
 
   const summaryVentas = useMemo(() => {
     if (!preferenciasData) return "Cargando...";
-    return `Imprimir: ${preferenciasData.imprimir ? "sí" : "no"} | IVA: ${preferenciasData.mostrarPreciosConIva ? "incluido" : "excluido"} | Stock: ${preferenciasData.facturaDescuentaStock ? "descuenta" : "no descuenta"}`;
+    return `Imprimir: ${preferenciasData.imprimir ? "sí" : "no"} | IVA: ${
+      preferenciasData.mostrarPreciosConIva ? "incluido" : "excluido"
+    } | Stock: ${
+      preferenciasData.facturaDescuentaStock ? "descuenta" : "no descuenta"
+    }`;
   }, [preferenciasData]);
   const summaryNotificaciones = `Correo: ${
     notificaciones.email ? "activado" : "desactivado"
-  } | Push app: ${notificaciones.push ? "activado" : "desactivado"} | Resumen diario: ${
+  } | Push app: ${
+    notificaciones.push ? "activado" : "desactivado"
+  } | Resumen diario: ${
     notificaciones.resumenDiario ? "activado" : "desactivado"
   }`;
   const summarySeguridad = `2FA: ${
@@ -449,8 +458,8 @@ export default function AdminConfiguracionPage() {
 
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 via-blue-800 to-[#90c472] text-white shadow-xl">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),transparent_40%)]" />
+      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-linear-to-r from-slate-900 via-blue-800 to-[#90c472] text-white shadow-xl">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_40%)]" />
         <div className="relative p-4 md:p-5 space-y-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="space-y-2">
@@ -468,7 +477,12 @@ export default function AdminConfiguracionPage() {
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {hasAnyChanges && (
-                <Chip size="sm" variant="flat" color="warning" className="bg-yellow-100 text-yellow-800">
+                <Chip
+                  size="sm"
+                  variant="flat"
+                  color="warning"
+                  className="bg-yellow-100 text-yellow-800"
+                >
                   Cambios sin guardar
                 </Chip>
               )}
@@ -532,7 +546,10 @@ export default function AdminConfiguracionPage() {
                 classNames={{ inputWrapper: "bg-white border-slate-200" }}
                 value={perfil.razonSocial}
                 onChange={(e) =>
-                  setPerfil((prev) => ({ ...prev, razonSocial: e.target.value }))
+                  setPerfil((prev) => ({
+                    ...prev,
+                    razonSocial: e.target.value,
+                  }))
                 }
                 placeholder="Razón social fiscal"
               />
@@ -583,11 +600,16 @@ export default function AdminConfiguracionPage() {
             <div className="text-center py-4 text-gray-500">Cargando...</div>
           ) : !preferencias?.existsConfiguracion ? (
             <div className="space-y-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-              <Chip color="warning" variant="flat" className="bg-yellow-100 text-yellow-800 mb-2">
+              <Chip
+                color="warning"
+                variant="flat"
+                className="bg-yellow-100 text-yellow-800 mb-2"
+              >
                 Configuración requerida
               </Chip>
               <p className="text-sm text-gray-700">
-                Para habilitar las preferencias de venta, primero debes completar el{" "}
+                Para habilitar las preferencias de venta, primero debes
+                completar el{" "}
                 <button
                   type="button"
                   onClick={() => setOpenSection("perfil")}
@@ -609,11 +631,15 @@ export default function AdminConfiguracionPage() {
           ) : preferencias ? (
             <div className="space-y-4">
               <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-gray-700">Caja y Ticket</h4>
+                <h4 className="text-sm font-semibold text-gray-700">
+                  Caja y Ticket
+                </h4>
                 <Switch
                   isSelected={preferencias.imprimir}
                   onValueChange={(value) =>
-                    setPreferencias((prev) => prev ? { ...prev, imprimir: value } : null)
+                    setPreferencias((prev) =>
+                      prev ? { ...prev, imprimir: value } : null
+                    )
                   }
                   className="px-1 py-1"
                   aria-label="Imprimir ticket automáticamente"
@@ -623,7 +649,9 @@ export default function AdminConfiguracionPage() {
                 <Switch
                   isSelected={preferencias.abrirCajonEfectivo}
                   onValueChange={(value) =>
-                    setPreferencias((prev) => prev ? { ...prev, abrirCajonEfectivo: value } : null)
+                    setPreferencias((prev) =>
+                      prev ? { ...prev, abrirCajonEfectivo: value } : null
+                    )
                   }
                   className="px-1 py-1"
                   aria-label="Abrir cajón al cobrar en efectivo"
@@ -633,7 +661,9 @@ export default function AdminConfiguracionPage() {
                 <Switch
                   isSelected={preferencias.numerarPedidosPantalla}
                   onValueChange={(value) =>
-                    setPreferencias((prev) => prev ? { ...prev, numerarPedidosPantalla: value } : null)
+                    setPreferencias((prev) =>
+                      prev ? { ...prev, numerarPedidosPantalla: value } : null
+                    )
                   }
                   className="px-1 py-1"
                   aria-label="Numerar pedidos y mostrar en pantalla"
@@ -643,7 +673,11 @@ export default function AdminConfiguracionPage() {
                 <Switch
                   isSelected={preferencias.unificarRenglonesProducto}
                   onValueChange={(value) =>
-                    setPreferencias((prev) => prev ? { ...prev, unificarRenglonesProducto: value } : null)
+                    setPreferencias((prev) =>
+                      prev
+                        ? { ...prev, unificarRenglonesProducto: value }
+                        : null
+                    )
                   }
                   className="px-1 py-1"
                   aria-label="Unificar renglones del mismo producto"
@@ -657,7 +691,9 @@ export default function AdminConfiguracionPage() {
                 <Switch
                   isSelected={preferencias.mostrarPreciosConIva}
                   onValueChange={(value) =>
-                    setPreferencias((prev) => prev ? { ...prev, mostrarPreciosConIva: value } : null)
+                    setPreferencias((prev) =>
+                      prev ? { ...prev, mostrarPreciosConIva: value } : null
+                    )
                   }
                   className="px-1 py-1"
                   aria-label="Mostrar precios con IVA incluido"
@@ -671,7 +707,9 @@ export default function AdminConfiguracionPage() {
                 <Switch
                   isSelected={preferencias.facturaDescuentaStock}
                   onValueChange={(value) =>
-                    setPreferencias((prev) => prev ? { ...prev, facturaDescuentaStock: value } : null)
+                    setPreferencias((prev) =>
+                      prev ? { ...prev, facturaDescuentaStock: value } : null
+                    )
                   }
                   className="px-1 py-1"
                   aria-label="Factura descuenta stock"
@@ -681,7 +719,11 @@ export default function AdminConfiguracionPage() {
                 <Switch
                   isSelected={preferencias.presupuestoDescuentaStock}
                   onValueChange={(value) =>
-                    setPreferencias((prev) => prev ? { ...prev, presupuestoDescuentaStock: value } : null)
+                    setPreferencias((prev) =>
+                      prev
+                        ? { ...prev, presupuestoDescuentaStock: value }
+                        : null
+                    )
                   }
                   className="px-1 py-1"
                   aria-label="Presupuesto descuenta stock"
@@ -691,7 +733,9 @@ export default function AdminConfiguracionPage() {
                 <Switch
                   isSelected={preferencias.remitoDescuentaStock}
                   onValueChange={(value) =>
-                    setPreferencias((prev) => prev ? { ...prev, remitoDescuentaStock: value } : null)
+                    setPreferencias((prev) =>
+                      prev ? { ...prev, remitoDescuentaStock: value } : null
+                    )
                   }
                   className="px-1 py-1"
                   aria-label="Remito descuenta stock"
@@ -701,13 +745,22 @@ export default function AdminConfiguracionPage() {
               </div>
               <Divider />
               <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-gray-700">Forma de pago</h4>
+                <h4 className="text-sm font-semibold text-gray-700">
+                  Forma de pago
+                </h4>
                 <Select
                   label="Forma de pago por defecto"
                   selectedKeys={[preferencias.tipoFormaPagoDefault.toString()]}
                   onSelectionChange={(keys) => {
                     const value = Array.from(keys)[0] as string;
-                    setPreferencias((prev) => prev ? { ...prev, tipoFormaPagoDefault: parseInt(value) || 0 } : null);
+                    setPreferencias((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            tipoFormaPagoDefault: parseInt(value) || 0,
+                          }
+                        : null
+                    );
                   }}
                   aria-label="Forma de pago por defecto"
                 >

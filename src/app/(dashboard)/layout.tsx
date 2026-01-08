@@ -10,14 +10,19 @@ import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
 
 // Lazy loading de componentes pesados del layout
 const Sidebar = dynamic(() => import("@/components/dashboard/Sidebar"), {
-  loading: () => <div className="w-[280px] bg-slate-800 animate-pulse rounded-lg" />,
+  loading: () => (
+    <div className="w-[280px] bg-slate-800 animate-pulse rounded-lg" />
+  ),
   ssr: false, // Sidebar no necesita SSR
 });
 
-const DashboardHeader = dynamic(() => import("@/components/dashboard/DashboardHeader"), {
-  loading: () => <div className="h-16 bg-white animate-pulse rounded-lg" />,
-  ssr: true, // Header puede ser SSR
-});
+const DashboardHeader = dynamic(
+  () => import("@/components/dashboard/DashboardHeader"),
+  {
+    loading: () => <div className="h-16 bg-white animate-pulse rounded-lg" />,
+    ssr: true, // Header puede ser SSR
+  }
+);
 
 export default function DashboardLayout({
   children,
@@ -75,7 +80,9 @@ export default function DashboardLayout({
         }
 
         const data = await res.json();
-        const tieneMultiples = data.tieneMultiplesSucursales || (data.sucursales && data.sucursales.length > 1);
+        const tieneMultiples =
+          data.tieneMultiplesSucursales ||
+          (data.sucursales && data.sucursales.length > 1);
         const tieneSucursalActiva = !!data.sucursalActiva;
 
         console.log("[Dashboard Layout] Verificación de sucursales:", {
@@ -90,13 +97,19 @@ export default function DashboardLayout({
         // BLOQUEAR acceso si NO hay sucursal activa (esto es crítico)
         // El CredentialsForm ya maneja la redirección al iniciar sesión
         if (!tieneSucursalActiva) {
-          console.log("[Dashboard Layout] Sin sucursal activa - redirigiendo a /seleccionar-sucursal");
+          console.log(
+            "[Dashboard Layout] Sin sucursal activa - redirigiendo a /seleccionar-sucursal"
+          );
           window.location.href = "/seleccionar-sucursal";
           return;
         }
 
         // Si solo tiene 1 sucursal y no está activa, autoseleccionarla
-        if (!tieneSucursalActiva && data.sucursales && data.sucursales.length === 1) {
+        if (
+          !tieneSucursalActiva &&
+          data.sucursales &&
+          data.sucursales.length === 1
+        ) {
           // Autoseleccionar la única sucursal
           const resCambio = await fetch("/api/sucursales/cambiar", {
             method: "POST",
@@ -139,11 +152,11 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 flex">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-purple-50/30 flex">
       <section
         onClick={() => setshow(false)}
-        className={`z-[99] transition-all duration-300 ease-in-out sm:relative fixed sm:w-auto w-screen  sm:h-auto h-screen  ${
-          show ? `translate-x-[0%]` : `translate-x-[-100%]`
+        className={`z-99 transition-all duration-300 ease-in-out sm:relative fixed sm:w-auto w-screen  sm:h-auto h-screen  ${
+          show ? `translate-x-[0%]` : `-translate-x-full`
         }`}
       >
         {/* Sidebar */}

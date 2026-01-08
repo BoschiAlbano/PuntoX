@@ -55,12 +55,18 @@ export async function middleware(req: NextRequest) {
     return response;
   }
 
-  // Obtener session token de cookies para usar como cache key
-  const sessionToken =
-    req.cookies.get("sb-access-token")?.value ||
-    req.cookies.get("sb-refresh-token")?.value ||
-    "unknown";
-  const cacheKey = `${sessionToken}-${pathname}`;
+  // Detectar cookie de sesión de Supabase dinámicamente
+  const allCookies = req.cookies.getAll();
+  const supabaseCookie = allCookies.find(
+    (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token")
+  );
+
+  // Usar el valor de la cookie como key, o "no-session" si no existe.
+  // IMPORTANTE: No incluimos 'pathname' en la key para que requests simultáneos
+  // a diferentes rutas compartan la misma validación y eviten race conditions
+  // en el refresco del token (Reuse Detection).
+  const sessionToken = supabaseCookie?.value || "no-session";
+  const cacheKey = sessionToken;
 
   // Verificar cache primero
   const cached = sessionCache.get(cacheKey);
@@ -83,11 +89,24 @@ export async function middleware(req: NextRequest) {
         return req.cookies.get(name)?.value;
       },
       set(name: string, value: string, options) {
+        // Actualizar cookies en la respuesta
         response.cookies.set({
           name,
           value,
           ...options,
         });
+
+        // IMPORTANTE: Para que la session no se pierda en componentes de servidor
+        // en este mismo request si hubo un refresh
+        try {
+          req.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        } catch (error) {
+          // Ignorar error si req es inmutable en este punto
+        }
       },
       remove(name: string, options) {
         response.cookies.set({
@@ -96,6 +115,16 @@ export async function middleware(req: NextRequest) {
           ...options,
           maxAge: 0,
         });
+
+        try {
+          req.cookies.set({
+            name,
+            value: "",
+            ...options,
+          });
+        } catch (error) {
+          // Ignorar
+        }
       },
     },
   });
