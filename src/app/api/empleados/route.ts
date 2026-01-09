@@ -44,7 +44,10 @@ function mapEstado(estaBloqueado: boolean | null | undefined) {
 
 type EstadoEmpleado = "Activo" | "Suspendido" | "Invitado";
 
-import { parsePaginationParams, createPaginationResponse } from "@/lib/pagination";
+import {
+  parsePaginationParams,
+  createPaginationResponse,
+} from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 
@@ -265,15 +268,20 @@ export async function GET(req: NextRequest) {
           telefono: persona.Telefono,
           direccion: persona.Direccion,
           localidadId: persona.LocalidadId ? Number(persona.LocalidadId) : null,
-          localidad: persona.Localidad && !persona.Localidad.EstaEliminado 
-            ? persona.Localidad.Descripcion 
-            : null,
-          departamentoId: persona.Localidad && persona.Localidad.Departamento
-            ? Number(persona.Localidad.Departamento.Id)
-            : null,
-          provinciaId: persona.Localidad && persona.Localidad.Departamento && persona.Localidad.Departamento.Provincia
-            ? Number(persona.Localidad.Departamento.Provincia.Id)
-            : null,
+          localidad:
+            persona.Localidad && !persona.Localidad.EstaEliminado
+              ? persona.Localidad.Descripcion
+              : null,
+          departamentoId:
+            persona.Localidad && persona.Localidad.Departamento
+              ? Number(persona.Localidad.Departamento.Id)
+              : null,
+          provinciaId:
+            persona.Localidad &&
+            persona.Localidad.Departamento &&
+            persona.Localidad.Departamento.Provincia
+              ? Number(persona.Localidad.Departamento.Provincia.Id)
+              : null,
           rolId: perfil ? Number(perfil.Id) : null,
           rolNombre: perfil?.Descripcion ?? null,
           rolTipo: (perfil?.Tipo as string | undefined) ?? "EMPLEADO",
@@ -289,7 +297,11 @@ export async function GET(req: NextRequest) {
       throw mapError;
     }
 
-    const paginatedResponse = createPaginationResponse(response, total, pagination);
+    const paginatedResponse = createPaginationResponse(
+      response,
+      total,
+      pagination
+    );
 
     return NextResponse.json(paginatedResponse, { status: 200 });
   } catch (error) {
@@ -379,9 +391,12 @@ export async function POST(req: NextRequest) {
     if (data.sucursalId !== null && data.sucursalId !== undefined) {
       sucursalIdNumber = Number(data.sucursalId);
       if (!Number.isInteger(sucursalIdNumber) || sucursalIdNumber <= 0) {
-        return NextResponse.json({ error: "Sucursal invalida" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Sucursal invalida" },
+          { status: 400 }
+        );
       }
-      
+
       // Verificar que la sucursal existe y pertenece al tenant
       const sucursalValida = await prisma.sucursal.findFirst({
         where: {
@@ -391,7 +406,7 @@ export async function POST(req: NextRequest) {
           EstaEliminado: false,
         },
       });
-      
+
       if (!sucursalValida) {
         return NextResponse.json(
           { error: "Sucursal no valida para este tenant" },
@@ -434,9 +449,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let rolTipo: "ADMINISTRADOR" | "EMPLEADO" = "EMPLEADO";
+    let rolTipo: Perfiles = "EMPLEADO";
     if (rolIdNumber) {
-      let rolValido: PerfilesTipo | null | { Id: bigint } | null;
+      let rolValido: { Tipo: Perfiles } | null = null;
       try {
         rolValido = await prisma.perfiles.findFirst({
           where: {
@@ -451,28 +466,18 @@ export async function POST(req: NextRequest) {
 
         rolTipo = rolValido?.Tipo ?? "EMPLEADO";
       } catch {
-        rolValido = await prisma.perfiles.findFirst({
-          where: {
-            Id: BigInt(rolIdNumber),
-            TenantId: tenantIdBigInt,
-            EstaEliminado: false,
-          },
-          select: { Id: true },
-        });
+        if (rolValido === null) {
+          return NextResponse.json(
+            { error: "Rol no valido para este tenant" },
+            { status: 400 }
+          );
+        }
       }
-      if (!rolValido) {
-        return NextResponse.json(
-          { error: "Rol no valido para este tenant" },
-          { status: 400 }
-        );
-      }
-
-      // rolTipo = rolValido.Tipo ?? "EMPLEADO";
     }
 
     // Normalizar username
     const usernameNormalized = data.nombreUsuario.trim().toLowerCase();
-    
+
     // Generar email interno automático para empleados
     // Si se proporciona mail, se usa (para administradores), sino se genera uno interno
     let mailNormalized: string;
@@ -480,7 +485,9 @@ export async function POST(req: NextRequest) {
       mailNormalized = data.mail.trim().toLowerCase();
     } else {
       // Generar email interno automático
-      const { generateInternalEmail } = await import("@/lib/auth/generateInternalEmail");
+      const { generateInternalEmail } = await import(
+        "@/lib/auth/generateInternalEmail"
+      );
       mailNormalized = generateInternalEmail(usernameNormalized);
     }
 
@@ -512,7 +519,7 @@ export async function POST(req: NextRequest) {
         EstaEliminado: false,
       },
     });
-    
+
     // Si el nombre de usuario ya existe, agregar un número hasta encontrar uno disponible
     while (existingUsuario) {
       finalUsername = `${usernameNormalized}${counter}`;
@@ -550,7 +557,7 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-      
+
       return NextResponse.json(
         { error: "No se pudo crear el usuario en Supabase" },
         { status: 500 }
@@ -654,10 +661,11 @@ export async function POST(req: NextRequest) {
       req, // Pasar el request para obtener headers
     });
 
-
     // Actualizar permisos en JWT del nuevo usuario (si tiene rol asignado)
     if (rolIdNumber && created.usuario.AuthUserId) {
-      const { actualizarPermisosEnJWT } = await import("@/lib/auth/updateUserPermissions");
+      const { actualizarPermisosEnJWT } = await import(
+        "@/lib/auth/updateUserPermissions"
+      );
       actualizarPermisosEnJWT(created.usuario.AuthUserId).catch((err) => {
         console.warn("No se pudieron actualizar permisos en JWT:", err);
       });
@@ -694,14 +702,15 @@ const updateEmpleadoSchema = z.object({
   sucursalId: z.union([z.number(), z.string()]).optional().nullable(), // Sucursal a la que pertenece el empleado
 });
 
-
 const deleteEmpleadoSchema = z.object({
   personaId: z.union([z.number(), z.string()]),
 });
 
 export async function PUT(req: NextRequest) {
   try {
-    const { tenantId, usuarioId: usuarioIdAccion } = await requirePermiso("empleados:admin");
+    const { tenantId, usuarioId: usuarioIdAccion } = await requirePermiso(
+      "empleados:admin"
+    );
 
     const json = await req.json().catch(() => null);
     const parsed = updateEmpleadoSchema.safeParse(json);
@@ -829,11 +838,15 @@ export async function PUT(req: NextRequest) {
       // Actualizar Persona
       const personaUpdate: any = {};
       if (data.nombre !== undefined) personaUpdate.Nombre = data.nombre.trim();
-      if (data.apellido !== undefined) personaUpdate.Apellido = data.apellido.trim();
+      if (data.apellido !== undefined)
+        personaUpdate.Apellido = data.apellido.trim();
       if (data.dni !== undefined) personaUpdate.Dni = data.dni || null;
-      if (data.direccion !== undefined) personaUpdate.Direccion = data.direccion.trim();
-      if (data.telefono !== undefined) personaUpdate.Telefono = data.telefono || null;
-      if (localidadIdBigInt !== undefined) personaUpdate.LocalidadId = localidadIdBigInt;
+      if (data.direccion !== undefined)
+        personaUpdate.Direccion = data.direccion.trim();
+      if (data.telefono !== undefined)
+        personaUpdate.Telefono = data.telefono || null;
+      if (localidadIdBigInt !== undefined)
+        personaUpdate.LocalidadId = localidadIdBigInt;
 
       const persona = await tx.persona.update({
         where: { Id: personaId, TenantId: tenantIdBig },
@@ -909,17 +922,25 @@ export async function PUT(req: NextRequest) {
       dni: personaActual.Dni,
       direccion: personaActual.Direccion,
       telefono: personaActual.Telefono,
-      localidadId: personaActual.LocalidadId ? Number(personaActual.LocalidadId) : null,
+      localidadId: personaActual.LocalidadId
+        ? Number(personaActual.LocalidadId)
+        : null,
       rolId: rolIdAnterior,
     };
 
     const valorNuevo: any = {};
     if (data.nombre !== undefined) valorNuevo.nombre = updated.persona.Nombre;
-    if (data.apellido !== undefined) valorNuevo.apellido = updated.persona.Apellido;
+    if (data.apellido !== undefined)
+      valorNuevo.apellido = updated.persona.Apellido;
     if (data.dni !== undefined) valorNuevo.dni = updated.persona.Dni;
-    if (data.direccion !== undefined) valorNuevo.direccion = updated.persona.Direccion;
-    if (data.telefono !== undefined) valorNuevo.telefono = updated.persona.Telefono;
-    if (data.localidadId !== undefined) valorNuevo.localidadId = updated.persona.LocalidadId ? Number(updated.persona.LocalidadId) : null;
+    if (data.direccion !== undefined)
+      valorNuevo.direccion = updated.persona.Direccion;
+    if (data.telefono !== undefined)
+      valorNuevo.telefono = updated.persona.Telefono;
+    if (data.localidadId !== undefined)
+      valorNuevo.localidadId = updated.persona.LocalidadId
+        ? Number(updated.persona.LocalidadId)
+        : null;
     if (data.rolId !== undefined) valorNuevo.rolId = updated.rolIdNuevo;
 
     // Registrar auditoría EDITAR_USUARIO
@@ -951,7 +972,9 @@ export async function PUT(req: NextRequest) {
 
       // Actualizar permisos en JWT cuando cambia el rol
       if (usuarioActual.AuthUserId) {
-        const { actualizarPermisosEnJWT } = await import("@/lib/auth/updateUserPermissions");
+        const { actualizarPermisosEnJWT } = await import(
+          "@/lib/auth/updateUserPermissions"
+        );
         actualizarPermisosEnJWT(usuarioActual.AuthUserId).catch((err) => {
           console.warn("No se pudieron actualizar permisos en JWT:", err);
         });
@@ -968,7 +991,9 @@ export async function PUT(req: NextRequest) {
         email: updated.persona.Mail,
         telefono: updated.persona.Telefono,
         direccion: updated.persona.Direccion,
-        localidadId: updated.persona.LocalidadId ? Number(updated.persona.LocalidadId) : null,
+        localidadId: updated.persona.LocalidadId
+          ? Number(updated.persona.LocalidadId)
+          : null,
         rolId: updated.rolIdNuevo,
       },
     });
@@ -985,7 +1010,9 @@ export async function PUT(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, usuarioId: usuarioIdAccion } = await requirePermiso("empleados:admin");
+    const { tenantId, usuarioId: usuarioIdAccion } = await requirePermiso(
+      "empleados:admin"
+    );
 
     const json = await req.json().catch(() => null);
     const parsed = updateEstadoSchema.safeParse(json);
@@ -1001,7 +1028,11 @@ export async function PATCH(req: NextRequest) {
     // Obtener estado anterior para auditoría
     const usuarioAnterior = await prisma.usuario.findFirst({
       where: { Id: BigInt(usuarioIdAfectado), TenantId: BigInt(tenantId) },
-      select: { Id: true, EstaBloqueado: true, Persona_Empleado: { select: { Id: true } } },
+      select: {
+        Id: true,
+        EstaBloqueado: true,
+        Persona_Empleado: { select: { Id: true } },
+      },
     });
 
     if (!usuarioAnterior) {
@@ -1018,7 +1049,9 @@ export async function PATCH(req: NextRequest) {
     });
 
     // Registrar auditoría
-    const accion = updated.EstaBloqueado ? "SUSPENDER_USUARIO" : "REACTIVAR_USUARIO";
+    const accion = updated.EstaBloqueado
+      ? "SUSPENDER_USUARIO"
+      : "REACTIVAR_USUARIO";
     await registrarAuditoria({
       tenantId,
       usuarioId: usuarioIdAccion,
@@ -1052,7 +1085,9 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { tenantId, usuarioId: usuarioIdAccion } = await requirePermiso("empleados:admin");
+    const { tenantId, usuarioId: usuarioIdAccion } = await requirePermiso(
+      "empleados:admin"
+    );
 
     const json = await req.json().catch(() => null);
     const parsed = deleteEmpleadoSchema.safeParse(json);
@@ -1116,9 +1151,10 @@ export async function DELETE(req: NextRequest) {
       where: { Id: personaId, TenantId: tenantIdBig },
       select: { Nombre: true, Apellido: true, Mail: true },
     });
-    
+
     const empleadoId = persona.Persona_Empleado?.Id || null;
-    const usuarioAfectadoId = persona.Persona_Empleado?.Usuario?.[0]?.Id || null;
+    const usuarioAfectadoId =
+      persona.Persona_Empleado?.Usuario?.[0]?.Id || null;
 
     await prisma.$transaction(async (tx) => {
       if (usuarioIds.length) {
@@ -1179,6 +1215,4 @@ export async function DELETE(req: NextRequest) {
   }
 }
 
-type PerfilesTipo = {
-  Tipo: "ADMINISTRADOR" | "EMPLEADO";
-};
+type Perfiles = "ADMINISTRADOR" | "EMPLEADO" | "SUPERADMIN";
