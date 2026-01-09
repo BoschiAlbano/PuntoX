@@ -118,3 +118,4 @@ El sistema se maneja automáticamente en `Sidebar.tsx`. No se requiere acción a
 - El interceptor global solo procesa 401s cuando no hay un logout manual en progreso
 
 
+

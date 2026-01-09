@@ -30,12 +30,15 @@ export async function GET(req: NextRequest) {
     const empleadoIdFilter = searchParams.get("empleadoId");
     const fechaDesde = searchParams.get("fechaDesde");
     const fechaHasta = searchParams.get("fechaHasta");
+    // Soporte para búsqueda (q o busqueda)
+    const search = searchParams.get("q") || searchParams.get("busqueda") || "";
 
-    // Construir where clause
+    // Construir where clause base
     const where: any = {
       TenantId: BigInt(tenantId),
     };
 
+    // Agregar filtros específicos
     if (accionFilter) {
       where.Accion = accionFilter;
     }
@@ -64,6 +67,33 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Agregar búsqueda si existe
+    if (search && search.trim()) {
+      const searchTerm = search.trim();
+      where.OR = [
+        { Accion: { contains: searchTerm, mode: "insensitive" } },
+        { Detalle: { contains: searchTerm, mode: "insensitive" } },
+        { IpAddress: { contains: searchTerm, mode: "insensitive" } },
+        {
+          Usuario: {
+            OR: [
+              { Nombre: { contains: searchTerm, mode: "insensitive" } },
+              {
+                Persona_Empleado: {
+                  Persona: {
+                    OR: [
+                      { Nombre: { contains: searchTerm, mode: "insensitive" } },
+                      { Apellido: { contains: searchTerm, mode: "insensitive" } },
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        },
+      ];
+    }
+
     // Obtener total para paginación
     const total = await prisma.auditoriaEmpleado.count({ where });
 
@@ -79,6 +109,8 @@ export async function GET(req: NextRequest) {
         ValorNuevo: true,
         IpAddress: true,
         UserAgent: true,
+        Severidad: true,
+        SucursalId: true,
         Usuario: {
           select: {
             Id: true,
@@ -150,7 +182,7 @@ export async function GET(req: NextRequest) {
         id: Number(aud.Id),
         fecha: aud.Fecha.toISOString(),
         accion: aud.Accion,
-        severidad: "INFO", // La tabla no tiene campo Severidad, usar valor por defecto
+        severidad: aud.Severidad || "INFO",
         usuario: {
           id: Number(aud.Usuario.Id),
           nombre: usuarioNombre,
@@ -175,6 +207,7 @@ export async function GET(req: NextRequest) {
         valorNuevo: aud.ValorNuevo ? JSON.parse(aud.ValorNuevo) : null,
         ipAddress: aud.IpAddress,
         userAgent: aud.UserAgent,
+        sucursalId: aud.SucursalId ? Number(aud.SucursalId) : null,
       };
     });
 

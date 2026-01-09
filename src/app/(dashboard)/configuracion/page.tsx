@@ -100,13 +100,13 @@ function SectionPanel({
   children: React.ReactNode;
 }) {
   return (
-    <Card shadow="sm" className="rounded-2xl border border-slate-200" id={id}>
-      <CardBody className="p-4 space-y-3">
-        <div className="space-y-1">
+    <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm" id={id}>
+      <CardBody className="p-6 space-y-4">
+        <div className="space-y-2">
           <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
-          <p className="text-sm text-gray-500">{description}</p>
-          <p className="text-sm text-gray-700">{summary}</p>
-          <Divider />
+          <p className="text-sm text-gray-600">{description}</p>
+          <p className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200/50">{summary}</p>
+          <Divider className="my-2" />
         </div>
         <div className="space-y-4">{children}</div>
       </CardBody>
@@ -1369,16 +1369,15 @@ export default function Configuracion() {
             </p>
           </ModalBody>
           <ModalFooter>
-            <Button
-              variant="light"
-              onPress={() => setIsConfirmModalOpen(false)}
+            <button
+              onClick={() => setIsConfirmModalOpen(false)}
+              className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 transition-all duration-300 text-gray-700 text-sm font-semibold cursor-pointer"
             >
               Cancelar
-            </Button>
-            <Button
-              color="primary"
-              onPress={handleSavePerfil}
-              isLoading={
+            </button>
+            <button
+              onClick={handleSavePerfil}
+              disabled={
                 isSavingTenant ||
                 isSavingConfiguracion ||
                 isSavingPreferenciasVenta ||
@@ -1386,9 +1385,22 @@ export default function Configuracion() {
                 isSavingSeguridad ||
                 isSavingFiscal
               }
+              className="px-4 py-2 rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 text-white cursor-pointer text-sm font-semibold flex items-center gap-2"
             >
-              Guardar cambios
-            </Button>
+              {(isSavingTenant ||
+                isSavingConfiguracion ||
+                isSavingPreferenciasVenta ||
+                isSavingNotificaciones ||
+                isSavingSeguridad ||
+                isSavingFiscal) ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  Guardando...
+                </>
+              ) : (
+                "Guardar cambios"
+              )}
+            </button>
           </ModalFooter>
         </ModalContent>
       </Modal>
@@ -1408,6 +1420,7 @@ export default function Configuracion() {
         }
         onSaveAll={handleConfirmSave}
         seguridad={seguridad}
+        tenant={tenant}
       />
 
       {/* Tabs con las diferentes secciones */}
@@ -1418,11 +1431,12 @@ export default function Configuracion() {
         className="relative"
         classNames={{
           tabList:
-            "bg-white/80 backdrop-blur-sm rounded-lg shadow-md border border-gray-200/50 p-1 overflow-x-auto scrollbar-hide",
-          tab: "data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-[#67afc3] data-[selected=true]:to-[#529aa6] data-[selected=true]:text-white data-[selected=true]:shadow-lg transition-all duration-300 data-[hover=true]:bg-gray-100/50 data-[hover=true]:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#67afc3] focus-visible:ring-offset-2",
+            "bg-white backdrop-blur-sm rounded-lg shadow-none border-gray-200/50 p-1 overflow-x-auto scrollbar-hide",
+          tab: "m-[5px] p-[20px] data-[selected=true]:bg-[#67afc3]/90 data-[selected=true]:text-white data-[selected=true]:shadow-none transition-all duration-300 data-[hover=true]:bg-gray-100/50 data-[hover=true]:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#67afc3] focus-visible:ring-offset-2 text-[16px] cursor-pointer transform hover:scale-105 active:scale-95",
           tabContent:
             "group-data-[selected=true]:text-white font-medium transition-colors duration-200",
-          cursor: "bg-gradient-to-r from-[#67afc3] to-[#529aa6] shadow-lg",
+          cursor: "bg-[#67afc3]/90",
+          panel: "h-full",
         }}
       >
         <Tab
@@ -1847,7 +1861,7 @@ export default function Configuracion() {
                   </p>
 
                   {/* Ticket Digital */}
-                  <Card className="shadow-sm border border-slate-200">
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                     <CardBody className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-1">
@@ -1887,7 +1901,7 @@ export default function Configuracion() {
                   </Card>
 
                   {/* Mostrar Precios con IVA */}
-                  <Card className="shadow-sm border border-slate-200">
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                     <CardBody className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-1">
@@ -1927,7 +1941,7 @@ export default function Configuracion() {
                   </Card>
 
                   {/* Abrir Cajón */}
-                  <Card className="shadow-sm border border-slate-200">
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                     <CardBody className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-1">
@@ -1972,7 +1986,7 @@ export default function Configuracion() {
                   </Card>
 
                   {/* Numerar Pedidos */}
-                  <Card className="shadow-sm border border-slate-200">
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                     <CardBody className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-1">
@@ -2043,7 +2057,7 @@ export default function Configuracion() {
                     y costos
                   </p>
                   {/* Factura descuenta stock */}
-                  <Card className="shadow-sm border border-slate-200">
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                     <CardBody className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-1">
@@ -2095,7 +2109,7 @@ export default function Configuracion() {
                   </Card>
 
                   {/* Presupuesto descuenta stock */}
-                  <Card className="shadow-sm border border-slate-200">
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                     <CardBody className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-1">
@@ -2142,7 +2156,7 @@ export default function Configuracion() {
                   </Card>
 
                   {/* Remito descuenta stock */}
-                  <Card className="shadow-sm border border-slate-200">
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                     <CardBody className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-1">
@@ -2194,7 +2208,7 @@ export default function Configuracion() {
                   </Card>
 
                   {/* Actualizar costo desde compra */}
-                  <Card className="shadow-sm border border-slate-200">
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                     <CardBody className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-1">
@@ -2246,7 +2260,7 @@ export default function Configuracion() {
                   </Card>
 
                   {/* Modificar precio de venta desde compra */}
-                  <Card className="shadow-sm border border-slate-200">
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                     <CardBody className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-1">
@@ -2320,7 +2334,7 @@ export default function Configuracion() {
                     Configuración de métodos de pago, gestión de caja y retiros
                   </p>
                   {/* Forma de pago por defecto (Ventas) */}
-                  <Card className="shadow-sm border border-slate-200">
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                     <CardBody className="p-4">
                       <div className="space-y-3">
                         <div className="flex items-center gap-3">
@@ -2374,7 +2388,7 @@ export default function Configuracion() {
                   </Card>
 
                   {/* Forma de pago por defecto (Compras) */}
-                  <Card className="shadow-sm border border-slate-200">
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                     <CardBody className="p-4">
                       <div className="space-y-3">
                         <div className="flex items-center gap-3">
@@ -2428,7 +2442,7 @@ export default function Configuracion() {
                   </Card>
 
                   {/* Ingreso manual de caja inicial */}
-                  <Card className="shadow-sm border border-slate-200">
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                     <CardBody className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-1">
@@ -2472,7 +2486,7 @@ export default function Configuracion() {
                   </Card>
 
                   {/* Puesto de caja separado */}
-                  <Card className="shadow-sm border border-slate-200">
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                     <CardBody className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-1">
@@ -2511,7 +2525,7 @@ export default function Configuracion() {
                   </Card>
 
                   {/* Activar retiro de caja */}
-                  <Card className="shadow-sm border border-slate-200">
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                     <CardBody className="p-4">
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
@@ -2600,7 +2614,7 @@ export default function Configuracion() {
                     Configuración de comportamiento y gestión de productos
                   </p>
                   {/* Unificar renglones */}
-                  <Card className="shadow-sm border border-slate-200">
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                     <CardBody className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-1">
@@ -2667,7 +2681,7 @@ export default function Configuracion() {
                     etiquetado
                   </p>
                   {/* Activar báscula */}
-                  <Card className="shadow-sm border border-slate-200">
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                     <CardBody className="p-4">
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
@@ -2799,7 +2813,7 @@ export default function Configuracion() {
             >
               <div className="space-y-4">
                 {/* Notificaciones Push */}
-                <Card className="shadow-sm border border-slate-200">
+                <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                   <CardBody className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 flex-1">
@@ -2837,7 +2851,7 @@ export default function Configuracion() {
                 </Card>
 
                 {/* Stock Bajo */}
-                <Card className="shadow-sm border border-slate-200">
+                <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                   <CardBody className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 flex-1">
@@ -2880,7 +2894,7 @@ export default function Configuracion() {
                 </Card>
 
                 {/* Resumen Diario */}
-                <Card className="shadow-sm border border-slate-200">
+                <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                   <CardBody className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 flex-1">
@@ -2956,7 +2970,7 @@ export default function Configuracion() {
             >
               <div className="space-y-6">
                 {/* Card: Acceso y autenticación */}
-                <Card className="shadow-sm border border-slate-200">
+                <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                   <CardHeader className="flex items-center gap-3 pb-3">
                     <div className="p-2 rounded-lg bg-blue-100">
                       <Lock size={20} className="text-blue-600" />
@@ -3155,7 +3169,7 @@ export default function Configuracion() {
                 </Card>
 
                 {/* Card: Estado de seguridad */}
-                <Card className="shadow-sm border border-slate-200">
+                <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                   <CardHeader className="flex items-center justify-between pb-3">
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-green-100">
@@ -3170,24 +3184,31 @@ export default function Configuracion() {
                         </p>
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      color="primary"
-                      onPress={() => {
+                    <button
+                      onClick={() => {
                         loadEstadisticasSeguridad();
                         loadSesionesActivas();
                         loadDispositivosConfiable();
                         loadIntentosSospechosos();
                       }}
-                      isLoading={
+                      disabled={
                         isLoadingSesiones ||
                         isLoadingDispositivos ||
                         isLoadingIntentosSospechosos
                       }
+                      className="px-4 h-[36px] rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 text-white cursor-pointer text-sm font-semibold flex items-center gap-2"
                     >
-                      Actualizar
-                    </Button>
+                      {(isLoadingSesiones ||
+                        isLoadingDispositivos ||
+                        isLoadingIntentosSospechosos) ? (
+                        <>
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                          Actualizando...
+                        </>
+                      ) : (
+                        "Actualizar"
+                      )}
+                    </button>
                   </CardHeader>
                   <Divider />
                   <CardBody className="space-y-4 pt-4">
@@ -3332,7 +3353,7 @@ export default function Configuracion() {
                 </Card>
 
                 {/* Card: Sesiones activas */}
-                <Card className="shadow-sm border border-slate-200">
+                <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                   <CardHeader className="flex items-center justify-between pb-3">
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-blue-100">
@@ -3412,14 +3433,12 @@ export default function Configuracion() {
                                   </div>
                                 </div>
                               </div>
-                              <Button
-                                size="sm"
-                                color="danger"
-                                variant="light"
-                                onPress={() => cerrarSesion(sesion.id)}
+                              <button
+                                onClick={() => cerrarSesion(sesion.id)}
+                                className="px-3 h-[32px] rounded-lg border border-red-300 bg-red-50 hover:bg-red-100 hover:shadow-md transition-all duration-300 transform hover:scale-105 active:scale-95 text-red-700 cursor-pointer text-sm font-semibold"
                               >
                                 Cerrar
-                              </Button>
+                              </button>
                             </div>
                           </div>
                         ))}
@@ -3429,7 +3448,7 @@ export default function Configuracion() {
                 </Card>
 
                 {/* Card: Dispositivos confiables */}
-                <Card className="shadow-sm border border-slate-200">
+                <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                   <CardHeader className="flex items-center justify-between pb-3">
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-purple-100">
@@ -3522,7 +3541,7 @@ export default function Configuracion() {
                 </Card>
 
                 {/* Card: Auditoría */}
-                <Card className="shadow-sm border border-slate-200">
+                <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                   <CardHeader className="flex items-center justify-between pb-3">
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-purple-100">
@@ -3713,7 +3732,7 @@ export default function Configuracion() {
             >
               <div className="space-y-4">
                 {/* Moneda */}
-                <Card className="shadow-sm border border-slate-200">
+                <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                   <CardBody className="p-4">
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
@@ -3764,7 +3783,7 @@ export default function Configuracion() {
                 </Card>
 
                 {/* Zona horaria */}
-                <Card className="shadow-sm border border-slate-200">
+                <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                   <CardBody className="p-4">
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
@@ -3812,7 +3831,7 @@ export default function Configuracion() {
                 </Card>
 
                 {/* Idioma */}
-                <Card className="shadow-sm border border-slate-200">
+                <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                   <CardBody className="p-4">
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
@@ -3858,7 +3877,7 @@ export default function Configuracion() {
                 </Card>
 
                 {/* Condición IVA */}
-                <Card className="shadow-sm border border-slate-200">
+                <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                   <CardBody className="p-4">
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
@@ -3984,7 +4003,7 @@ export default function Configuracion() {
                 </Card>
 
                 {/* Punto de venta */}
-                <Card className="shadow-sm border border-slate-200">
+                <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                   <CardBody className="p-4">
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
@@ -4027,7 +4046,7 @@ export default function Configuracion() {
                 </Card>
 
                 {/* Inicio de actividades */}
-                <Card className="shadow-sm border border-slate-200">
+                <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                   <CardBody className="p-4">
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
@@ -4118,17 +4137,15 @@ export default function Configuracion() {
                           </Chip>
                         )}
                       </div>
-                      <Button
-                        size="sm"
-                        color="danger"
-                        variant="light"
-                        onPress={() => {
+                      <button
+                        onClick={() => {
                           cerrarSesion(sesion.id);
                           setModalDetalle(null);
                         }}
+                        className="px-4 h-[36px] rounded-lg border border-red-300 bg-red-50 hover:bg-red-100 hover:shadow-md transition-all duration-300 transform hover:scale-105 active:scale-95 text-red-700 cursor-pointer text-sm font-semibold"
                       >
                         Cerrar sesión
-                      </Button>
+                      </button>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mt-3">
                       <div>
@@ -4485,6 +4502,7 @@ function Header({
   isSavingAll,
   onSaveAll,
   seguridad,
+  tenant,
 }: {
   isLoadingTenant: boolean;
   isLoadingConfiguracion: boolean;
@@ -4492,146 +4510,72 @@ function Header({
   isSavingAll: boolean;
   onSaveAll: () => void;
   seguridad: { dobleFactor: boolean };
+  tenant: { planId: string; nombre: string };
 }) {
+  // Obtener información del plan (por ahora hardcodeado, pero debería venir del tenant)
+  const planNombre = tenant.planId ? "Business" : "Sin plan";
+  const cantidadSucursales: number = 4; // Esto debería venir de una query de sucursales activas
+
   return (
-    <section className="w-full relative overflow-hidden rounded-3xl border border-slate-200/50 bg-linear-to-r from-blue-500 via-sky-500 to-emerald-400 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] mb-10 transition-all duration-300 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]">
-      {/* Blurred circles decorativos para profundidad con parallax ligero (optimizado) */}
-      <div
-        className="absolute inset-0 overflow-hidden"
-        style={{ willChange: "transform" }}
-      >
-        <div
-          className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl parallax-bg"
-          style={{ willChange: "transform" }}
-        />
-        <div
-          className="absolute -bottom-16 -left-16 w-48 h-48 bg-white/8 rounded-full blur-2xl parallax-bg"
-          style={{ animationDelay: "2s", willChange: "transform" }}
-        />
-        <div
-          className="absolute top-1/2 right-1/4 w-32 h-32 bg-white/5 rounded-full blur-xl parallax-bg"
-          style={{ animationDelay: "4s", willChange: "transform" }}
-        />
+    <div className="mb-6 space-y-4">
+      {/* Header simple con título y botón */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Configuración</h2>
+          <p className="text-sm text-gray-600">
+            Ajusta la identidad del negocio, preferencias de venta y seguridad desde un solo lugar
+          </p>
+        </div>
+        <button
+          onClick={onSaveAll}
+          disabled={
+            isLoadingTenant || isLoadingConfiguracion || !hasAnyChanges || isSavingAll
+          }
+          className="px-4 h-[36px] rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 text-white cursor-pointer text-sm font-semibold flex items-center gap-2"
+        >
+          {isSavingAll ? (
+            <>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+              Guardando...
+            </>
+          ) : (
+            "Guardar todo"
+          )}
+        </button>
       </div>
 
-      {/* Glass panel semitransparente con blur más suave */}
-      <div className="absolute inset-0 bg-linear-to-br from-white/5 via-transparent to-white/5 backdrop-blur-sm" />
-
-      {/* Radial gradient overlay para más profundidad */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_50%)]" />
-
-      <div className="relative p-4 md:p-6 lg:p-8 space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-3 flex-1">
-            <Chip
-              variant="flat"
-              className="bg-white/25 text-white backdrop-blur-sm border border-white/40 shadow-lg shadow-white/20 transition-all duration-300 hover:bg-white/30 hover:shadow-xl hover:shadow-white/30"
-            >
-              Configuración
-            </Chip>
-            <div className="space-y-2">
-              <h1 className="text-3xl md:text-4xl lg:text-[40px] font-bold text-white drop-shadow-lg">
-                Configuración
-              </h1>
-              <p className="text-white/95 max-w-2xl md:text-lg leading-relaxed drop-shadow-md">
-                Ajusta la identidad del negocio, preferencias de venta y
-                seguridad desde un solo lugar. Los cambios afectan a todas las
-                sucursales activas.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              color="primary"
-              className="bg-white text-slate-900 hover:bg-white/90 shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent"
-              isLoading={isSavingAll}
-              isDisabled={
-                isLoadingTenant || isLoadingConfiguracion || !hasAnyChanges
-              }
-              onPress={onSaveAll}
-            >
-              Guardar todo
-            </Button>
-          </div>
-
-          {/* Ícono grande de panel de control a la derecha (complementario al sidebar) */}
-          <div className="hidden lg:flex items-center justify-center shrink-0">
-            <div className="relative group">
-              {/* Glow alrededor del icono - efecto premium */}
-              <div className="absolute inset-0 bg-white/20 rounded-full blur-2xl group-hover:bg-white/30 transition-all duration-500" />
-              <div className="absolute inset-0 bg-linear-to-br from-white/30 via-transparent to-white/20 rounded-full blur-xl group-hover:from-white/40 group-hover:to-white/30 transition-all duration-500" />
-              {/* Blur suave de fondo */}
-              <div className="absolute inset-0 bg-white/15 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-300" />
+      {/* Card con información del plan */}
+      <div className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-[#67afc3]/10">
               <svg
-                className="w-32 h-32 md:w-40 md:h-40 text-white relative z-10 drop-shadow-2xl transition-transform duration-300 group-hover:scale-105"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-                style={{
-                  animation: "fadeIn 0.4s ease-out 0.1s forwards",
-                  willChange: "transform, opacity",
-                  opacity: 0,
-                }}
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="size-5 text-[#67afc3]"
               >
-                {/* Icono de panel de control - más elaborado que el engranaje del sidebar */}
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  fillRule="evenodd"
+                  d="M2 3.5A1.5 1.5 0 0 1 3.5 2h2.879a1.5 1.5 0 0 1 1.06.44l2.122 2.12a1.5 1.5 0 0 1 .44 1.06V12.5A1.5 1.5 0 0 1 9.5 14h-7A1.5 1.5 0 0 1 2 12.5v-9Z"
+                  clipRule="evenodd"
                 />
               </svg>
             </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 w-full">
-          <div className="rounded-2xl bg-white/10 p-4 border border-white/10 h-full flex flex-col justify-between">
-            <p className="text-sm text-white/80">Plan activo</p>
-            <div className="flex items-center justify-between mt-2 gap-2">
-              <span className="text-lg font-semibold leading-tight">
-                Business
-              </span>
-              <Chip size="sm" variant="flat" className="bg-white/20 text-white">
-                4 locales
-              </Chip>
-            </div>
-          </div>
-          <div className="rounded-2xl bg-white/10 p-4 border border-white/10 h-full flex flex-col justify-between">
-            <p className="text-sm text-white/80">Respaldo</p>
-            <div className="flex items-center justify-between mt-2 gap-2">
-              <span className="text-lg font-semibold leading-tight">
-                Hoy 03:00
-              </span>
-              <Chip size="sm" variant="flat" className="bg-white/20 text-white">
-                Automático
-              </Chip>
-            </div>
-          </div>
-          <div className="rounded-2xl bg-white/10 p-4 border border-white/10 h-full flex flex-col justify-between">
-            <p className="text-sm text-white/80">Seguridad</p>
-            <div className="flex items-center justify-between mt-2 gap-2">
-              <span className="text-lg font-semibold leading-tight">
-                2FA {seguridad.dobleFactor ? "activo" : "pendiente"}
-              </span>
-              <Chip
-                size="sm"
-                color={seguridad.dobleFactor ? "success" : "warning"}
-                variant="flat"
-                className="bg-white/20 text-white"
-              >
-                {seguridad.dobleFactor ? "Protegido" : "Habilitar"}
-              </Chip>
+            <div>
+              <p className="text-sm text-gray-600">Plan activo</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-lg font-semibold text-gray-900">
+                  {planNombre}
+                </span>
+                <Chip size="sm" variant="flat" className="bg-gray-100 text-gray-700">
+                  {cantidadSucursales} {Number(cantidadSucursales) === 1 ? "local" : "locales"}
+                </Chip>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

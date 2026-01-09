@@ -35,8 +35,8 @@ export default function GraficaIngresos({
 
   if (!datos || datos.length === 0) {
     return (
-      <Card className="shadow-sm">
-        <CardHeader className="pb-3">
+      <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
+        <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
           <h3 className="text-lg font-semibold text-slate-900">
             {mostrarSoloFacturas ? "Ingresos por Facturas" : "Ingresos Totales"}
           </h3>
@@ -51,8 +51,8 @@ export default function GraficaIngresos({
   }
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-3">
+    <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
+      <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
         <h3 className="text-lg font-semibold text-slate-900">
           {mostrarSoloFacturas ? "Ingresos por Facturas" : "Ingresos Totales"}
         </h3>

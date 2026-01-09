@@ -1,6 +1,7 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
+import { getSucursalId, getActiveBranchContext } from "@/lib/sucursal";
 import {
   createProductoSchema,
   updateProductoSchema,
@@ -31,6 +32,9 @@ export async function GET(req: NextRequest) {
 
     const pagination = parsePaginationParams(req);
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
+    
+    // Obtener sucursal activa (opcional, para filtrar stock)
+    const sucursalId = await getSucursalId();
 
     // Construir where clause
     const where: {
@@ -89,7 +93,18 @@ export async function GET(req: NextRequest) {
         EstaEliminado: true,
         TenantId: true,
         Precio: true, // Equivalent to include: { Precio: true }
-        Stock: true,
+        Stock: true, // Stock legacy (deprecated)
+        ArticuloStock: sucursalId ? {
+          where: {
+            SucursalId: BigInt(sucursalId),
+          },
+          select: {
+            Stock: true,
+            StockMinimo: true,
+            Ubicacion: true,
+          },
+          take: 1,
+        } : false,
       },
       orderBy: {
         Descripcion: "asc",
@@ -98,7 +113,25 @@ export async function GET(req: NextRequest) {
       take: pagination.limit,
     });
 
-    const response = createPaginationResponse(productos, total, pagination);
+    // Obtener nombre de sucursal activa
+    const branchContext = await getActiveBranchContext();
+    const sucursalNombre = branchContext?.sucursalNombre || null;
+
+    // Mapear productos para incluir stock de la sucursal activa
+    const productosConStock = productos.map((producto) => {
+      const stockSucursal = sucursalId && Array.isArray(producto.ArticuloStock) ? producto.ArticuloStock[0] : null;
+      return {
+        ...producto,
+        Stock: stockSucursal ? Number(stockSucursal.Stock) : Number(producto.Stock || 0),
+        StockMinimo: stockSucursal?.StockMinimo ? Number(stockSucursal.StockMinimo) : (producto.StockMinimo ? Number(producto.StockMinimo) : null),
+        Ubicacion: stockSucursal?.Ubicacion || producto.Ubicacion,
+        SucursalNombre: sucursalNombre, // Nombre de la sucursal del stock mostrado
+        // Remover ArticuloStock del response
+        ArticuloStock: undefined,
+      };
+    });
+
+    const response = createPaginationResponse(productosConStock, total, pagination);
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
@@ -206,6 +239,32 @@ export async function POST(req: NextRequest) {
         data: { ArticuloId: nuevoArticulo.Id },
       });
 
+      // 4. Crear ArticuloStock para la sucursal activa (si existe)
+      const sucursalId = await getSucursalId();
+      if (sucursalId && validarProducto.Stock !== undefined) {
+        await tx.articuloStock.upsert({
+          where: {
+            ArticuloId_SucursalId: {
+              ArticuloId: nuevoArticulo.Id,
+              SucursalId: BigInt(sucursalId),
+            },
+          },
+          create: {
+            ArticuloId: nuevoArticulo.Id,
+            SucursalId: BigInt(sucursalId),
+            TenantId: BigInt(tenantId),
+            Stock: validarProducto.Stock,
+            StockMinimo: validarProducto.StockMinimo || null,
+            Ubicacion: validarProducto.Ubicacion || null,
+          },
+          update: {
+            Stock: validarProducto.Stock,
+            StockMinimo: validarProducto.StockMinimo || null,
+            Ubicacion: validarProducto.Ubicacion || null,
+          },
+        });
+      }
+
       return nuevoArticulo;
     });
 
@@ -271,6 +330,9 @@ export async function PATCH(req: NextRequest) {
         "Artículo no encontrado o no pertenece a tu tenant"
       );
     }
+
+    // Obtener sucursal activa para actualizar ArticuloStock
+    const sucursalId = await getSucursalId();
 
     const producto = await prisma.$transaction(async (tx) => {
       const precioUpdate = await tx.precio.update({
@@ -383,6 +445,31 @@ export async function PATCH(req: NextRequest) {
           Stock: true,
         },
       });
+
+      // Actualizar o crear ArticuloStock para la sucursal activa (si existe y se actualizó el stock)
+      if (sucursalId && validarProducto.Stock !== undefined) {
+        await tx.articuloStock.upsert({
+          where: {
+            ArticuloId_SucursalId: {
+              ArticuloId: articuloUpdate.Id,
+              SucursalId: BigInt(sucursalId),
+            },
+          },
+          create: {
+            ArticuloId: articuloUpdate.Id,
+            SucursalId: BigInt(sucursalId),
+            TenantId: tenantIdBigInt,
+            Stock: validarProducto.Stock,
+            StockMinimo: validarProducto.StockMinimo || null,
+            Ubicacion: validarProducto.Ubicacion || null,
+          },
+          update: {
+            Stock: validarProducto.Stock,
+            StockMinimo: validarProducto.StockMinimo || null,
+            Ubicacion: validarProducto.Ubicacion || null,
+          },
+        });
+      }
 
       return articuloUpdate;
     });

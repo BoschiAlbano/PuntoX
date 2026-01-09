@@ -183,6 +183,7 @@ export interface Producto {
   TipoVenta: number;
   Stock: number;
   EstaEliminado: boolean;
+  SucursalNombre?: string | null; // Nombre de la sucursal del stock mostrado
   Precio: {
     PorcentajeGanancia?: number;
     PorcentajeGanancia2?: number;

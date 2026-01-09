@@ -27,13 +27,31 @@ export default function AuditoriasCRUD() {
   // Transformer para adaptar la respuesta de la API
   const transformer = (data: any): AuditoriaEmpleado[] => {
     if (!Array.isArray(data)) return [];
-    const transformData = data.map((item) => ({
-      ...item,
-      Id: item.id, // Mapear id a Id para GenericCrud
-      usuario: item.usuario.nombre || "-",
-    }));
+    const transformData = data.map((item) => {
+      // Inferir exitoso basándose en la severidad
+      // Si la severidad es CRITICAL o WARNING, podría indicar un problema
+      // Por ahora, asumimos que todas son exitosas a menos que haya un indicador específico
+      const severidad = item.severidad || "INFO";
+      const exitoso = item.exitoso !== undefined 
+        ? item.exitoso 
+        : severidad !== "CRITICAL"; // Asumir exitoso excepto si es CRITICAL
 
-    console.log("Datos Trandforamdos:", transformData);
+      return {
+        ...item,
+        Id: item.id, // Mapear id a Id para GenericCrud
+        usuarioId: item.usuario?.id || item.usuarioId || 0,
+        usuario: item.usuario?.nombre || item.usuario || "-",
+        fechaHora: item.fecha || item.fechaHora || new Date().toISOString(),
+        detalles: item.detalle || item.detalles || null,
+        accion: item.accion || "",
+        ipAddress: item.ipAddress || null,
+        userAgent: item.userAgent || null,
+        exitoso,
+        motivoFallo: item.motivoFallo || null,
+      };
+    });
+
+    console.log("Datos Transformados:", transformData);
     return transformData;
   };
 

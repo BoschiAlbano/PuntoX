@@ -1,10 +1,9 @@
 "use client";
 
 import GenericCrud from "@/components/shared/GenericCrud";
-import { Chip, Tooltip } from "@heroui/react";
+import { Chip } from "@heroui/react";
 import { EditButton, DeleteButton } from "../shared/TableActions";
-import { Eye, Zap, Mail } from "lucide-react";
-import { Button } from "@heroui/react";
+import UsuarioForm from "./UsuarioForm";
 
 export type Usuario = {
   Id: number;
@@ -25,27 +24,15 @@ export type Usuario = {
   rolId: number | null;
   rolNombre: string | null;
   rolTipo?: "ADMINISTRADOR" | "EMPLEADO" | null;
+  sucursalId?: number | null;
+  sucursalNombre?: string | null;
   estado: "Activo" | "Invitado" | "Suspendido";
   legajo: string | null;
   dni: string | null;
   ultimaActividad: string | null;
 };
 
-interface UsuariosCRUDProps {
-  onEdit?: (usuario: Usuario) => void;
-  onDelete?: (usuario: Usuario) => void;
-  onView?: (usuario: Usuario) => void;
-  onToggleEstado?: (usuario: Usuario) => void;
-  onSendEmail?: (usuario: Usuario) => void;
-}
-
-export default function UsuariosCRUD({
-  onEdit,
-  onDelete,
-  onView,
-  onToggleEstado,
-  onSendEmail,
-}: UsuariosCRUDProps) {
+export default function UsuariosCRUD() {
   // Transformer para adaptar la respuesta de la API
   const transformer = (data: any): Usuario[] => {
     if (!Array.isArray(data)) return [];
@@ -67,6 +54,7 @@ export default function UsuariosCRUD({
         { uid: "username", name: "USUARIO", sortable: true },
         { uid: "rolNombre", name: "ROL", sortable: false },
         { uid: "legajo", name: "LEGAJO", sortable: true },
+        { uid: "sucursal", name: "SUCURSAL", sortable: false },
         { uid: "localidad", name: "LOCALIDAD", sortable: false },
         { uid: "estado", name: "ESTADO", sortable: false },
         { uid: "acciones", name: "ACCIONES" },
@@ -99,6 +87,12 @@ export default function UsuariosCRUD({
                 {item.legajo || "-"}
               </span>
             );
+          case "sucursal":
+            return (
+              <span className="text-gray-600 text-sm">
+                {item.sucursalNombre || "-"}
+              </span>
+            );
           case "localidad":
             return (
               <span className="text-gray-600 text-sm">
@@ -119,63 +113,22 @@ export default function UsuariosCRUD({
             );
           case "acciones":
             return (
-              <div className="flex items-center gap-2">
-                {onEdit && (
-                  <EditButton
-                    onPress={() => onEdit(item)}
-                    label={`Editar ${item.nombreCompleto}`}
-                  />
-                )}
-                {onView && (
-                  <Tooltip content="Ver detalles">
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      onPress={() => onView(item)}
-                    >
-                      <Eye size={16} />
-                    </Button>
-                  </Tooltip>
-                )}
-                {onToggleEstado && (
-                  <Tooltip content="Suspender/Activar">
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      onPress={() => onToggleEstado(item)}
-                    >
-                      <Zap size={16} />
-                    </Button>
-                  </Tooltip>
-                )}
-                {onSendEmail && (
-                  <Tooltip content="Enviar email">
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      onPress={() => onSendEmail(item)}
-                    >
-                      <Mail size={16} />
-                    </Button>
-                  </Tooltip>
-                )}
-                {onDelete && (
-                  <DeleteButton
-                    onPress={() => onDelete(item)}
-                    label={`Eliminar ${item.nombreCompleto}`}
-                  />
-                )}
+              <div className="flex gap-2">
+                <EditButton
+                  onPress={() => actions.onEdit(item)}
+                  label={`Editar ${item.nombreCompleto || "usuario"}`}
+                />
+                <DeleteButton
+                  onPress={() => actions.onDelete(item)}
+                  label={`Eliminar ${item.nombreCompleto || "usuario"}`}
+                />
               </div>
             );
           default:
             return null;
         }
       }}
-      // No usamos FormComponent porque los usuarios tienen un formulario complejo personalizado
-      FormComponent={() => null as any}
+      FormComponent={UsuarioForm}
     />
   );
 }

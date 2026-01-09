@@ -34,3 +34,9 @@ export {
   type ScopedPrisma,
 } from "./scopedPrisma";
 
+// Helper para obtener sucursalId
+export {
+  getSucursalId,
+  requireSucursalId,
+} from "./getSucursalId";
+

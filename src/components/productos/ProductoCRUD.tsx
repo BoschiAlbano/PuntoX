@@ -38,7 +38,14 @@ export default function ProductoCRUD() {
             );
           case "Stock":
             return (
-              <span className="font-medium text-gray-700">{item.Stock}</span>
+              <div className="flex flex-col">
+                <span className="font-medium text-gray-700">{item.Stock}</span>
+                {item.SucursalNombre && (
+                  <span className="text-xs text-gray-500 mt-0.5">
+                    {item.SucursalNombre}
+                  </span>
+                )}
+              </div>
             );
           case "Costo":
             return (

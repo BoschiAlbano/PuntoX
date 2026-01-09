@@ -261,23 +261,31 @@ export default function RolesCRUD() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Tooltip content="Actualizar">
-            <Button
-              isIconOnly
-              variant="flat"
-              onPress={handleRefresh}
-              isLoading={isRefreshing}
-            >
-              <RefreshCw size={18} />
-            </Button>
-          </Tooltip>
-          <Button
-            color="primary"
-            startContent={<Plus size={18} />}
-            onPress={() => setOpenCreateModal(true)}
+          {/* Botón de actualizar */}
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="p-2 rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 cursor-pointer"
+            title="Actualizar"
+            aria-label="Actualizar datos"
           >
+            <RefreshCw
+              size={18}
+              className={`text-white transition-transform ${
+                isRefreshing ? "animate-spin" : ""
+              }`}
+              aria-hidden="true"
+            />
+          </button>
+          {/* Botón nuevo con efecto lift */}
+          <button
+            onClick={() => setOpenCreateModal(true)}
+            className="px-4 h-[36px] rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 text-white cursor-pointer flex items-center gap-2"
+            aria-label="Nuevo Rol"
+          >
+            <Plus size={18} />
             Nuevo Rol
-          </Button>
+          </button>
         </div>
       </div>
 

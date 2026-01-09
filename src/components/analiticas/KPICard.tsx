@@ -65,7 +65,9 @@ export default function KPICard({
   };
 
   return (
-    <Card className={`shadow-sm border-l-4 ${colorClasses[color]}`}>
+    <Card
+      className={`rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm border-l-4 ${colorClasses[color]}`}
+    >
       <CardBody className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">

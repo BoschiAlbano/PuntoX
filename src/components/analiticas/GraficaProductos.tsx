@@ -36,8 +36,8 @@ export default function GraficaProductos({ datos }: GraficaProductosProps) {
 
   if (!datos || datos.length === 0) {
     return (
-      <Card className="shadow-sm">
-        <CardHeader className="pb-3">
+      <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
+        <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
           <h3 className="text-lg font-semibold text-slate-900">
             Top 10 Productos por Ventas
           </h3>
@@ -52,8 +52,8 @@ export default function GraficaProductos({ datos }: GraficaProductosProps) {
   }
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-3">
+    <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
+      <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
         <h3 className="text-lg font-semibold text-slate-900">
           Top 10 Productos por Ventas
         </h3>

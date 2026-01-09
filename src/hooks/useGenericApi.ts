@@ -101,7 +101,10 @@ export function useGenericApi<T extends { Id: number | string }>({
         ? endpoint.slice(0, -1)
         : endpoint;
       const url = cleanEndpoint;
-      const method = isEdit ? "PATCH" : "POST";
+      // Empleados usa PUT para edición, otros endpoints usan PATCH
+      const method = isEdit 
+        ? (endpoint.includes("/empleados") ? "PUT" : "PATCH")
+        : "POST";
 
       const response = await fetch(url, {
         method,
@@ -126,9 +129,26 @@ export function useGenericApi<T extends { Id: number | string }>({
       const cleanEndpoint = endpoint.endsWith("/")
         ? endpoint.slice(0, -1)
         : endpoint;
-      const url = `${cleanEndpoint}/?Id=${id}`; // Asume que la API borra por query param Id
-
-      const response = await fetch(url, { method: "DELETE" });
+      
+      // Empleados usa body con personaId, otros endpoints usan query param con Id
+      const isEmpleados = endpoint.includes("/empleados");
+      
+      let response: Response;
+      if (isEmpleados) {
+        // Para empleados, necesitamos obtener el personaId del item completo
+        // Pero como solo recibimos el id, asumimos que el id es el personaId
+        // O mejor, necesitamos recibir el item completo
+        // Por ahora, asumimos que el id pasado es el personaId
+        response = await fetch(cleanEndpoint, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ personaId: id }),
+        });
+      } else {
+        // Otros endpoints usan query param
+        const url = `${cleanEndpoint}/?Id=${id}`;
+        response = await fetch(url, { method: "DELETE" });
+      }
 
       if (!response.ok) {
         const errorData = await response.json();
