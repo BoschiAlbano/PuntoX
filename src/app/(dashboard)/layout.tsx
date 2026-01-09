@@ -1,11 +1,8 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
-import Loading from "@/components/loading/loading";
-import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
 
 // Lazy loading de componentes pesados del layout
@@ -29,12 +26,9 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { status } = useSupabaseAuthContext();
-  const router = useRouter();
-  const pathname = usePathname();
+  // const { status } = useSupabaseAuthContext();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [show, setshow] = useState(true);
-  const [verificandoSucursal, setVerificandoSucursal] = useState(true);
 
   // Monitorear inactividad y cerrar sesión automáticamente
   useInactivityTimeout();
@@ -42,114 +36,6 @@ export default function DashboardLayout({
   useEffect(() => {
     setshow(window.innerWidth > 768);
   }, []);
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/signin");
-    }
-  }, [status, router]);
-
-  // Verificar sucursal activa después del login
-  useEffect(() => {
-    // No verificar si estamos en la página de selección de sucursal
-    if (pathname === "/seleccionar-sucursal") {
-      setVerificandoSucursal(false);
-      return;
-    }
-
-    if (status !== "authenticated") {
-      setVerificandoSucursal(false);
-      return;
-    }
-
-    // Verificar si hay sucursal activa
-    const verificarSucursal = async () => {
-      try {
-        const res = await fetch("/api/sucursales/mis-sucursales", {
-          cache: "no-store",
-        });
-
-        if (res.status === 401) {
-          router.push("/signin");
-          return;
-        }
-
-        if (!res.ok) {
-          setVerificandoSucursal(false);
-          return;
-        }
-
-        const data = await res.json();
-        const tieneMultiples =
-          data.tieneMultiplesSucursales ||
-          (data.sucursales && data.sucursales.length > 1);
-        const tieneSucursalActiva = !!data.sucursalActiva;
-
-        console.log("[Dashboard Layout] Verificación de sucursales:", {
-          tieneMultiples,
-          tieneSucursalActiva,
-          cantidad: data.sucursales?.length || 0,
-          requiereSeleccion: data.requiereSeleccion,
-          tieneCookieValida: data.tieneCookieValida,
-          pathname: pathname,
-        });
-
-        // BLOQUEAR acceso si NO hay sucursal activa (esto es crítico)
-        // El CredentialsForm ya maneja la redirección al iniciar sesión
-        if (!tieneSucursalActiva) {
-          console.log(
-            "[Dashboard Layout] Sin sucursal activa - redirigiendo a /seleccionar-sucursal"
-          );
-          window.location.href = "/seleccionar-sucursal";
-          return;
-        }
-
-        // Si solo tiene 1 sucursal y no está activa, autoseleccionarla
-        if (
-          !tieneSucursalActiva &&
-          data.sucursales &&
-          data.sucursales.length === 1
-        ) {
-          // Autoseleccionar la única sucursal
-          const resCambio = await fetch("/api/sucursales/cambiar", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sucursalId: data.sucursales[0].id }),
-          });
-
-          if (resCambio.ok) {
-            // Recargar la página para actualizar el contexto
-            window.location.reload();
-            return;
-          }
-        }
-      } catch (error) {
-        console.error("Error verificando sucursal:", error);
-      } finally {
-        setVerificandoSucursal(false);
-      }
-    };
-
-    verificarSucursal();
-  }, [status, pathname, router]);
-
-  // Mostrar loading si está verificando autenticación o sucursal
-  if (status === "loading" || verificandoSucursal) {
-    return <Loading />;
-  }
-
-  if (status === "unauthenticated") {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-sm text-gray-600">
-        Redirigiendo a inicio de sesion...
-      </div>
-    );
-  }
-
-  // Si estamos en la página de selección de sucursal, renderizar sin sidebar
-  if (pathname === "/seleccionar-sucursal") {
-    return <>{children}</>;
-  }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-purple-50/30 flex">

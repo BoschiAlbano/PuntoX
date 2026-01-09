@@ -13,7 +13,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { filtrarRutasPorPermisos } from "@/lib/permissions/routePermissions";
-import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
 import { startManualLogout, endManualLogout } from "@/lib/auth/logoutManager";
 import { SucursalSelector } from "@/components/sucursal";
 
@@ -295,16 +294,6 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
       // Limpiar todo el cache de queries
       queryClient.clear();
 
-      // Limpiar cookie de sucursal activa
-      await fetch("/api/sucursales/limpiar", { method: "POST" }).catch(
-        () => {}
-      );
-
-      // Limpiar sessionStorage de selección de sucursal
-      if (typeof window !== "undefined") {
-        sessionStorage.removeItem("sucursal_seleccionada");
-      }
-
       // Cerrar sesión en Supabase
       await supabase.auth.signOut();
     } catch (error) {
@@ -323,8 +312,6 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
   }, [isLoggingOut, supabase, router, queryClient]);
 
   return (
-    // <section className={`z-[99] relative flex flex-col h-auto ${isCollapsed ? "w-[80px]" : "w-[280px]"} transition-all duration-300 ease-in-out`}>
-    // hidden
     <motion.section
       onClick={(e) => e.stopPropagation()}
       className={`z-99 sm:relative absolute flex-col h-auto sm:flex  ${
@@ -403,17 +390,15 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
 
         {/* Selector de Sucursal */}
         <AnimatePresence mode="wait">
-          {!isCollapsed && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="px-4 py-3 border-b border-slate-700/50"
-            >
-              <SucursalSelector hideIfSingle={false} />
-            </motion.div>
-          )}
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="px-4 py-3 border-b border-slate-700/50"
+          >
+            <SucursalSelector hideIfSingle={false} />
+          </motion.div>
         </AnimatePresence>
 
         {/* Menu Items */}
@@ -464,15 +449,6 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                     }
                   `}
               >
-                {/* Active indicator */}
-                {/* {isActive && (
-                  <motion.div
-                    layoutId="activeIndicator"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-full bg-gradient-to-b from-blue-500 to-[#90c472] rounded-r-full"
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  />
-                )} */}
-
                 {isActive && (
                   <motion.div
                     layoutId="activeIndicator"

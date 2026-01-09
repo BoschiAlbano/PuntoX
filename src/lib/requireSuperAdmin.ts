@@ -1,29 +1,22 @@
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import { prisma } from "@/lib/prisma";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
+import { Perfiles } from "@/models/perfiles_models";
 
-export async function requireSuperAdmin() {
-  const cookieStore = await cookies();
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
-  );
+export async function requireSuperAdminServer({
+  redirectUrl = "/",
+}: {
+  redirectUrl?: string;
+}) {
+  const supabase = await getSupabaseServerClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/signin");
+    redirect(redirectUrl);
   }
 
   const dbUser = await prisma.usuario.findUnique({
@@ -36,19 +29,68 @@ export async function requireSuperAdmin() {
   });
 
   if (!dbUser) {
-    redirect("/signin");
+    redirect(redirectUrl);
   }
 
+  // 🍆 POR EL MOMENTO NO USA SUPERADMIN
   const isSuperAdmin = dbUser.PerfilUsuario.some(
-    (pu) => pu.Perfiles.Descripcion === "SuperAdmin"
+    (pu) => pu.Perfiles.Tipo === Perfiles.ADMINISTRADOR
   );
 
   if (!isSuperAdmin) {
-    redirect("/");
+    redirect(redirectUrl);
   }
 
   return {
     authUser: user,
     dbUser,
   };
+}
+
+export async function requireAuthServer({
+  redirectUrl = "/",
+}: {
+  redirectUrl?: string;
+}) {
+  const supabase = await getSupabaseServerClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect(redirectUrl);
+  }
+}
+
+export async function requireAuthCliente({
+  redirectUrl = "/",
+}: {
+  redirectUrl?: string;
+}) {
+  const supabase = await getSupabaseBrowserClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect(redirectUrl);
+  }
+}
+
+export async function NorequireAuthServer({
+  redirectUrl = "/",
+}: {
+  redirectUrl?: string;
+}) {
+  const supabase = await getSupabaseServerClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    redirect(redirectUrl);
+  }
 }

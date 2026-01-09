@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireSuperAdminServer } from "@/lib/requireSuperAdmin";
 
 /**
  * Layout que protege todas las rutas de /admin
@@ -12,8 +11,9 @@ export default async function AdminLayout({
 }) {
   // Verificar que el usuario es SuperAdmin
   // Si no lo es, requireSuperAdmin redirige automáticamente
-  await requireSuperAdmin();
+  await requireSuperAdminServer({
+    redirectUrl: "/signin",
+  });
 
   return <>{children}</>;
 }
-

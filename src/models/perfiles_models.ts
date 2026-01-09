@@ -1,0 +1,5 @@
+export enum Perfiles {
+  SUPERADMIN = "SUPERADMIN",
+  ADMINISTRADOR = "ADMINISTRADOR",
+  USUARIO = "USUARIO",
+}

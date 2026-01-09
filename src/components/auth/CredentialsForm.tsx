@@ -13,7 +13,11 @@ const getErrorMessage = (error: unknown): string => {
   let errorMessage: string;
   if (error instanceof Error) {
     errorMessage = error.message;
-  } else if (typeof error === "object" && error !== null && "message" in error) {
+  } else if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error
+  ) {
     errorMessage = String((error as { message: unknown }).message);
   } else {
     errorMessage = String(error);
@@ -64,7 +68,7 @@ export default function CredentialsForm() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // Obtener callbackUrl de los parámetros de búsqueda
   const callbackUrl = searchParams.get("callbackUrl") || "/ventas";
 
@@ -72,18 +76,20 @@ export default function CredentialsForm() {
   useEffect(() => {
     const storedAttempts = localStorage.getItem("login_attempts");
     const storedTime = localStorage.getItem("login_attempt_time");
-    
+
     if (storedAttempts && storedTime) {
       const timeDiff = Date.now() - parseInt(storedTime, 10);
       const fiveMinutes = 5 * 60 * 1000;
-      
+
       if (timeDiff < fiveMinutes) {
         const attempts = parseInt(storedAttempts, 10);
         setAttemptCount(attempts);
         if (attempts >= 5) {
           setIsRateLimited(true);
           const remainingTime = Math.ceil((fiveMinutes - timeDiff) / 1000 / 60);
-          setError(`Demasiados intentos fallidos. Intenta de nuevo en ${remainingTime} minutos.`);
+          setError(
+            `Demasiados intentos fallidos. Intenta de nuevo en ${remainingTime} minutos.`
+          );
         }
       } else {
         // Resetear contador después de 5 minutos
@@ -117,7 +123,9 @@ export default function CredentialsForm() {
 
     // Verificar rate limiting
     if (isRateLimited) {
-      setError("Demasiados intentos fallidos. Por favor espera unos minutos antes de intentar de nuevo.");
+      setError(
+        "Demasiados intentos fallidos. Por favor espera unos minutos antes de intentar de nuevo."
+      );
       return;
     }
 
@@ -158,10 +166,11 @@ export default function CredentialsForm() {
 
       // Ahora hacer login con el email interno
       const supabase = getSupabaseBrowserClient();
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: internalEmail,
-        password,
-      });
+      const { data: authData, error: authError } =
+        await supabase.auth.signInWithPassword({
+          email: internalEmail,
+          password,
+        });
 
       if (authError) {
         // Incrementar contador de intentos fallidos
@@ -169,7 +178,7 @@ export default function CredentialsForm() {
         setAttemptCount(newAttemptCount);
         localStorage.setItem("login_attempts", newAttemptCount.toString());
         localStorage.setItem("login_attempt_time", Date.now().toString());
-        
+
         // Activar rate limiting después de 5 intentos
         if (newAttemptCount >= 5) {
           setIsRateLimited(true);
@@ -208,29 +217,41 @@ export default function CredentialsForm() {
         try {
           const nav = navigator as any;
           if (nav.userAgentData) {
-            dispositivo = `${nav.userAgentData.platform || "Unknown"} - ${nav.userAgentData.brands?.map((b: any) => b.brand).join(", ") || "Unknown"}`;
+            dispositivo = `${nav.userAgentData.platform || "Unknown"} - ${
+              nav.userAgentData.brands?.map((b: any) => b.brand).join(", ") ||
+              "Unknown"
+            }`;
           } else {
-            dispositivo = `${navigator.platform || "Unknown"} - ${navigator.userAgent.substring(0, 50)}`;
+            dispositivo = `${
+              navigator.platform || "Unknown"
+            } - ${navigator.userAgent.substring(0, 50)}`;
           }
         } catch {
           dispositivo = navigator.userAgent.substring(0, 100);
         }
-        
+
         // Intentar obtener ubicación aproximada (opcional, no bloqueante)
         let ubicacion = null;
         try {
           // Esto es opcional y puede fallar, no bloqueamos si falla
-          const geo = await fetch("https://ipapi.co/json/").then(r => r.json()).catch(() => null);
+          const geo = await fetch("https://ipapi.co/json/")
+            .then((r) => r.json())
+            .catch(() => null);
           if (geo && geo.city) {
-            ubicacion = `${geo.city || ""}, ${geo.region || ""}, ${geo.country_name || ""}`.trim();
+            ubicacion = `${geo.city || ""}, ${geo.region || ""}, ${
+              geo.country_name || ""
+            }`.trim();
           }
         } catch {
           // Ignorar errores de geolocalización
         }
 
         // Verificar si el dispositivo es confiable o si el usuario quiere recordarlo
-        const esConfiable = recordarDispositivo || localStorage.getItem(`device_trusted_${normalizedUsername}`) === "true";
-        
+        const esConfiable =
+          recordarDispositivo ||
+          localStorage.getItem(`device_trusted_${normalizedUsername}`) ===
+            "true";
+
         // Guardar en localStorage si el usuario marcó "Recordar dispositivo"
         if (recordarDispositivo) {
           localStorage.setItem(`device_trusted_${normalizedUsername}`, "true");
@@ -245,7 +266,9 @@ export default function CredentialsForm() {
             exitoso: true,
             tenantId: tenantId || null,
           }),
-        }).catch((err) => console.warn("Error al registrar intento exitoso:", err));
+        }).catch((err) =>
+          console.warn("Error al registrar intento exitoso:", err)
+        );
 
         // Registrar sesión activa (en background, no bloqueamos)
         fetch("/api/auth/registrar-sesion", {
@@ -260,73 +283,12 @@ export default function CredentialsForm() {
         }).catch((err) => console.warn("Error al registrar sesión:", err));
       }
 
-      // PRIMERO verificar sucursales ANTES de redirigir
-      // SIEMPRE verificar y redirigir a seleccionar-sucursal si hay múltiples
-      try {
-        const resSucursales = await fetch("/api/sucursales/mis-sucursales", {
-          cache: "no-store",
-        });
-
-        if (resSucursales.ok) {
-          const dataSucursales = await resSucursales.json();
-          const tieneSucursales = dataSucursales.sucursales && dataSucursales.sucursales.length > 0;
-          const tieneMultiples = dataSucursales.tieneMultiplesSucursales || 
-            (dataSucursales.sucursales && dataSucursales.sucursales.length > 1);
-          const tieneSucursalActiva = !!dataSucursales.sucursalActiva;
-
-          console.log("[CredentialsForm] Verificación de sucursales:", {
-            tieneSucursales,
-            tieneMultiples,
-            tieneSucursalActiva,
-            cantidad: dataSucursales.sucursales?.length || 0,
-          });
-
-          // Si tiene múltiples sucursales, SIEMPRE ir a seleccionar (incluso si hay cookie)
-          if (tieneMultiples) {
-            console.log("[CredentialsForm] Tiene múltiples sucursales - redirigiendo a /seleccionar-sucursal");
-            // Limpiar sessionStorage para forzar selección
-            if (typeof window !== "undefined") {
-              sessionStorage.removeItem("sucursal_seleccionada");
-            }
-            // Usar window.location para forzar navegación completa
-            window.location.href = "/seleccionar-sucursal";
-            return; // IMPORTANTE: Salir aquí, NO continuar con el redirect
-          }
-
-          // Si solo tiene 1 sucursal y no está activa, autoseleccionarla
-          if (tieneSucursales && !tieneMultiples && !tieneSucursalActiva) {
-            console.log("[CredentialsForm] Autoseleccionando única sucursal");
-            const resCambio = await fetch("/api/sucursales/cambiar", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ sucursalId: dataSucursales.sucursales[0].id }),
-            });
-            if (!resCambio.ok) {
-              // Si falla la autoselección, ir a seleccionar manualmente
-              window.location.href = "/seleccionar-sucursal";
-              return;
-            }
-            // Continuar con el flujo normal solo si la autoselección fue exitosa
-          }
-        } else {
-          console.warn("[CredentialsForm] Error al obtener sucursales, redirigiendo a seleccionar-sucursal");
-          // Si hay error, ir a seleccionar sucursal por seguridad
-          window.location.href = "/seleccionar-sucursal";
-          return;
-        }
-      } catch (error) {
-        console.error("[CredentialsForm] Error verificando sucursales:", error);
-        // Si hay error, ir a seleccionar sucursal por seguridad
-        window.location.href = "/seleccionar-sucursal";
-        return;
-      }
-
-      // Solo llegar aquí si tiene 1 sucursal y se autoseleccionó correctamente
       // Redirigir después de login exitoso (usar callbackUrl si existe, sino /ventas)
-      const safeCallbackUrl = callbackUrl.startsWith("/") && !callbackUrl.startsWith("//") 
-        ? callbackUrl 
-        : "/ventas";
-      
+      const safeCallbackUrl =
+        callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
+          ? callbackUrl
+          : "/ventas";
+
       console.log("[CredentialsForm] Redirigiendo a:", safeCallbackUrl);
       window.location.href = safeCallbackUrl;
     } catch (err) {
@@ -357,7 +319,9 @@ export default function CredentialsForm() {
             onBlur={() => {
               // Validar al perder el foco también
               if (username && username.trim().length < 2) {
-                setUsernameError("El nombre de usuario debe tener al menos 2 caracteres");
+                setUsernameError(
+                  "El nombre de usuario debe tener al menos 2 caracteres"
+                );
               }
             }}
             required
@@ -440,7 +404,7 @@ export default function CredentialsForm() {
       <button
         type="submit"
         disabled={isLoading || !!usernameError}
-        className={`w-full bg-gradient-to-r from-blue-500 to-[#90c472] text-white py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 font-medium shadow-sm ${
+        className={`w-full bg-linear-to-r from-blue-500 to-[#90c472] text-white py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 font-medium shadow-sm ${
           isLoading || usernameError
             ? "opacity-60 cursor-not-allowed"
             : "hover:from-blue-600 hover:to-[#7fb362] hover:shadow-md active:shadow-lg"
