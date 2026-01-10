@@ -3,39 +3,6 @@ import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { requirePermiso, PermisoError } from "@/lib/requirePermiso";
-// import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
-
-// API de empleados: lista, alta (con Supabase Auth) y suspensión/activación.
-// async function resolveTenantId(req?: NextRequest) {
-//   const supabase = await getSupabaseServerClient();
-//   const {
-//     data: { user },
-//   } = await supabase.auth.getUser();
-
-//   const isSuperAdmin =
-//     user?.role === "superadmin" ||
-//     user?.role === "SuperAdmin" ||
-//     (user?.app_metadata as Record<string, unknown> | undefined)?.role ===
-//       "SuperAdmin";
-
-//   const tenantFromQuery = req?.nextUrl.searchParams.get("tenantId");
-//   const tenantRaw =
-//     (user?.app_metadata as Record<string, unknown> | undefined)?.tenantId ??
-//     (user?.app_metadata as Record<string, unknown> | undefined)?.tenant_id ??
-//     (user as unknown as any)?.tenantId;
-//   const resolved =
-//     tenantFromQuery ?? tenantRaw ?? process.env.DEFAULT_TENANT_ID;
-
-//   if (isSuperAdmin) {
-//     if (!resolved) return null;
-//     const parsed = Number(resolved);
-//     return Number.isNaN(parsed) ? null : parsed;
-//   }
-
-//   if (!tenantRaw) return null;
-//   const parsed = Number(tenantRaw);
-//   return Number.isNaN(parsed) ? null : parsed;
-// }
 
 function mapEstado(estaBloqueado: boolean | null | undefined) {
   if (estaBloqueado) return "Suspendido" as const;
@@ -50,6 +17,7 @@ import {
 } from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
+import { PerfilTipo } from "../../../../prisma/generated/prisma";
 
 export async function GET(req: NextRequest) {
   try {
@@ -225,11 +193,11 @@ export async function GET(req: NextRequest) {
                     EsDefault: true,
                     Sucursal: {
                       select: {
+                        Id: true,
                         Nombre: true,
                       },
                     },
                   },
-                  take: 1,
                   orderBy: {
                     EsDefault: "desc",
                   },
@@ -250,7 +218,9 @@ export async function GET(req: NextRequest) {
         const legajo = persona.Persona_Empleado?.Legajo ?? null;
         const usuario = persona.Persona_Empleado?.Usuario?.[0] ?? null;
         const perfil = usuario?.PerfilUsuario?.[0]?.Perfiles ?? null;
-        const sucursal = usuario?.Sucursales?.[0];
+        const sucursales = usuario?.Sucursales ?? [];
+        const sucursalDefault =
+          sucursales.find((s) => s.EsDefault) || sucursales[0];
 
         const estado: EstadoEmpleado = usuario
           ? mapEstado(usuario.EstaBloqueado)
@@ -285,8 +255,16 @@ export async function GET(req: NextRequest) {
           rolId: perfil ? Number(perfil.Id) : null,
           rolNombre: perfil?.Descripcion ?? null,
           rolTipo: (perfil?.Tipo as string | undefined) ?? "EMPLEADO",
-          sucursalId: sucursal ? Number(sucursal.SucursalId) : null,
-          sucursalNombre: sucursal?.Sucursal?.Nombre ?? null,
+          sucursales: sucursales.map((s) => ({
+            Id: Number(s.Sucursal.Id),
+            Nombre: s.Sucursal.Nombre,
+            EsDefault: s.EsDefault,
+          })),
+          // Mantenemos compatibilidad con sucursalId singular (la default)
+          sucursalId: sucursalDefault
+            ? Number(sucursalDefault.SucursalId)
+            : null,
+          sucursalNombre: sucursalDefault?.Sucursal?.Nombre ?? null,
           estado,
           legajo: legajo ? `PX-${legajo}` : null,
           dni: persona.Dni,
@@ -328,7 +306,10 @@ const createEmpleadoSchema = z.object({
   nombreUsuario: z.string().min(1), // Requerido: se usa para generar email interno
   password: z.string().min(8),
   rolId: z.union([z.number(), z.string()]).optional().nullable(),
-  sucursalId: z.union([z.number(), z.string()]).optional().nullable(), // Sucursal a la que pertenece el empleado
+  sucursalId: z
+    .array(z.union([z.number(), z.string()]))
+    .optional()
+    .nullable(), // Sucursales a las que pertenece el empleado
 });
 
 export async function POST(req: NextRequest) {
@@ -386,32 +367,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Rol invalido" }, { status: 400 });
     }
 
-    // Validar sucursal si se proporciona
-    let sucursalIdNumber: number | null = null;
-    if (data.sucursalId !== null && data.sucursalId !== undefined) {
-      sucursalIdNumber = Number(data.sucursalId);
-      if (!Number.isInteger(sucursalIdNumber) || sucursalIdNumber <= 0) {
-        return NextResponse.json(
-          { error: "Sucursal invalida" },
-          { status: 400 }
-        );
+    // Validar sucursales si se proporcionan
+    let sucursalesIdsNumbers: number[] = [];
+    if (data.sucursalId && Array.isArray(data.sucursalId)) {
+      const ids = data.sucursalId as (string | number)[];
+      for (const id of ids) {
+        const idNum = Number(id);
+        if (!Number.isInteger(idNum) || idNum <= 0) {
+          return NextResponse.json(
+            { error: "Sucursal invalida" },
+            { status: 400 }
+          );
+        }
+        sucursalesIdsNumbers.push(idNum);
       }
 
-      // Verificar que la sucursal existe y pertenece al tenant
-      const sucursalValida = await prisma.sucursal.findFirst({
-        where: {
-          Id: BigInt(sucursalIdNumber),
-          TenantId: tenantIdBigInt,
-          EstaActiva: true,
-          EstaEliminado: false,
-        },
-      });
+      if (sucursalesIdsNumbers.length > 0) {
+        // Verificar que las sucursales existen y pertenecen al tenant
+        const count = await prisma.sucursal.count({
+          where: {
+            Id: { in: sucursalesIdsNumbers.map((id) => BigInt(id)) },
+            TenantId: tenantIdBigInt,
+            EstaActiva: true,
+            EstaEliminado: false,
+          },
+        });
 
-      if (!sucursalValida) {
-        return NextResponse.json(
-          { error: "Sucursal no valida para este tenant" },
-          { status: 400 }
-        );
+        if (count !== sucursalesIdsNumbers.length) {
+          return NextResponse.json(
+            { error: "Alguna de las sucursales no es válida para este tenant" },
+            { status: 400 }
+          );
+        }
       }
     }
 
@@ -449,11 +436,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let rolTipo: Perfiles = "EMPLEADO";
+    let rolTipo: PerfilTipo = "EMPLEADO";
     if (rolIdNumber) {
-      let rolValido: { Tipo: Perfiles } | null = null;
+      let rolValido: { Tipo: PerfilTipo } | null = null;
       try {
-        rolValido = await prisma.perfiles.findFirst({
+        const db = await prisma.perfiles.findFirst({
           where: {
             Id: BigInt(rolIdNumber),
             TenantId: tenantIdBigInt,
@@ -463,6 +450,12 @@ export async function POST(req: NextRequest) {
             Tipo: true,
           },
         });
+
+        if (!db) {
+          throw new Error("Rol no valido para este tenant");
+        }
+
+        rolValido = db;
 
         rolTipo = rolValido?.Tipo ?? "EMPLEADO";
       } catch {
@@ -608,16 +601,18 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Asignar sucursal al usuario si se proporciona
-      if (sucursalIdNumber) {
-        await tx.usuarioSucursal.create({
-          data: {
-            UsuarioId: usuario.Id,
-            SucursalId: BigInt(sucursalIdNumber),
-            TenantId: tenantIdBigInt,
-            EsDefault: true, // Primera sucursal asignada es la default
-          },
-        });
+      // Asignar sucursales al usuario si se proporcionan
+      if (sucursalesIdsNumbers.length > 0) {
+        for (let i = 0; i < sucursalesIdsNumbers.length; i++) {
+          await tx.usuarioSucursal.create({
+            data: {
+              UsuarioId: usuario.Id,
+              SucursalId: BigInt(sucursalesIdsNumbers[i]),
+              TenantId: tenantIdBigInt,
+              EsDefault: i === 0, // Primera sucursal asignada es la default
+            },
+          });
+        }
       }
 
       return { persona, personaEmpleado, usuario };
@@ -673,6 +668,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ empleado: empleadoResponse }, { status: 201 });
   } catch (error) {
+    console.error("Error al crear empleado:", error);
     if (error instanceof PermisoError) {
       return NextResponse.json(
         { error: error.message },
@@ -699,7 +695,10 @@ const updateEmpleadoSchema = z.object({
   departamentoId: z.union([z.number(), z.string()]).optional().nullable(),
   provinciaId: z.union([z.number(), z.string()]).optional().nullable(),
   rolId: z.union([z.number(), z.string()]).optional().nullable(),
-  sucursalId: z.union([z.number(), z.string()]).optional().nullable(), // Sucursal a la que pertenece el empleado
+  sucursalId: z
+    .array(z.union([z.number(), z.string()]))
+    .optional()
+    .nullable(), // Sucursales a las que pertenece el empleado
 });
 
 const deleteEmpleadoSchema = z.object({
@@ -799,36 +798,43 @@ export async function PUT(req: NextRequest) {
       }
     }
 
-    // Validar sucursal si se proporciona
-    let sucursalIdBigInt: bigint | null | undefined = undefined;
+    // Validar sucursales si se proporcionan
+    let sucursalesIdsNumbers: number[] | undefined = undefined;
     if (data.sucursalId !== undefined) {
       if (data.sucursalId === null) {
-        sucursalIdBigInt = null;
-      } else {
-        const sucursalIdNum = Number(data.sucursalId);
-        if (!Number.isInteger(sucursalIdNum) || sucursalIdNum <= 0) {
-          return NextResponse.json(
-            { error: "Sucursal invalida" },
-            { status: 400 }
-          );
+        sucursalesIdsNumbers = [];
+      } else if (Array.isArray(data.sucursalId)) {
+        sucursalesIdsNumbers = [];
+        const ids = data.sucursalId as (string | number)[];
+        for (const id of ids) {
+          const idNum = Number(id);
+          if (!Number.isInteger(idNum) || idNum <= 0) {
+            return NextResponse.json(
+              { error: "Sucursal invalida" },
+              { status: 400 }
+            );
+          }
+          sucursalesIdsNumbers.push(idNum);
         }
-        sucursalIdBigInt = BigInt(sucursalIdNum);
 
-        // Verificar que la sucursal existe y pertenece al tenant
-        const sucursalValida = await prisma.sucursal.findFirst({
-          where: {
-            Id: sucursalIdBigInt,
-            TenantId: tenantIdBig,
-            EstaActiva: true,
-            EstaEliminado: false,
-          },
-        });
+        if (sucursalesIdsNumbers.length > 0) {
+          const count = await prisma.sucursal.count({
+            where: {
+              Id: { in: sucursalesIdsNumbers.map((id) => BigInt(id)) },
+              TenantId: tenantIdBig,
+              EstaActiva: true,
+              EstaEliminado: false,
+            },
+          });
 
-        if (!sucursalValida) {
-          return NextResponse.json(
-            { error: "Sucursal no encontrada" },
-            { status: 400 }
-          );
+          if (count !== sucursalesIdsNumbers.length) {
+            return NextResponse.json(
+              {
+                error: "Alguna de las sucursales no es válida para este tenant",
+              },
+              { status: 400 }
+            );
+          }
         }
       }
     }
@@ -889,8 +895,8 @@ export async function PUT(req: NextRequest) {
         }
       }
 
-      // Actualizar sucursal si se proporciona
-      if (sucursalIdBigInt !== undefined) {
+      // Actualizar sucursales si se proporcionan
+      if (sucursalesIdsNumbers !== undefined) {
         // Eliminar todas las asignaciones de sucursal anteriores
         await tx.usuarioSucursal.deleteMany({
           where: {
@@ -899,16 +905,18 @@ export async function PUT(req: NextRequest) {
           },
         });
 
-        // Asignar nueva sucursal si se proporciona
-        if (sucursalIdBigInt !== null) {
-          await tx.usuarioSucursal.create({
-            data: {
-              UsuarioId: usuarioActual.Id,
-              SucursalId: sucursalIdBigInt,
-              TenantId: tenantIdBig,
-              EsDefault: true,
-            },
-          });
+        // Asignar nuevas sucursales
+        if (sucursalesIdsNumbers.length > 0) {
+          for (let i = 0; i < sucursalesIdsNumbers.length; i++) {
+            await tx.usuarioSucursal.create({
+              data: {
+                UsuarioId: usuarioActual.Id,
+                SucursalId: BigInt(sucursalesIdsNumbers[i]),
+                TenantId: tenantIdBig,
+                EsDefault: i === 0, // Primera sucursal asignada es la default (aunque idealmente debería preservarse la default anterior si sigue asignada)
+              },
+            });
+          }
         }
       }
 
@@ -1214,5 +1222,3 @@ export async function DELETE(req: NextRequest) {
     return handleError(error);
   }
 }
-
-type Perfiles = "ADMINISTRADOR" | "EMPLEADO" | "SUPERADMIN";

@@ -15,6 +15,7 @@ import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { filtrarRutasPorPermisos } from "@/lib/permissions/routePermissions";
 import { startManualLogout, endManualLogout } from "@/lib/auth/logoutManager";
 import { SucursalSelector } from "@/components/sucursal";
+import { useUserStore } from "@/store/useUserStore";
 
 interface MenuItem {
   icon: React.ReactNode;
@@ -212,68 +213,31 @@ const menuItems: MenuItem[] = [
 function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { supabase, user, status } = useSupabaseAuthContext();
+  // const pathname = usePathname(); // Already defined above
+  // const router = useRouter(); // Already defined above
+  const { supabase } = useSupabaseAuthContext();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [permisos, setPermisos] = useState<string[]>([]);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
-  // Cargar permisos del usuario
-  useEffect(() => {
-    async function cargarPermisos() {
-      if (status !== "authenticated" || !user) {
-        return;
-      }
+  // Use global store
+  const { permissions, roles } = useUserStore();
 
-      try {
-        const res = await fetch("/api/permisos", {
-          cache: "no-store",
-          credentials: "include",
-        });
+  const isSuperAdmin = useMemo(() => {
+    return roles.some((r) => r.Tipo === "SUPERADMIN");
+  }, [roles]);
 
-        if (!res.ok) {
-          // Si la respuesta no es OK, intentar leer el error
-          const errorText = await res.text();
-          console.error(
-            "Error en respuesta de permisos:",
-            res.status,
-            errorText
-          );
-          return;
-        }
-
-        const data = await res.json();
-        setPermisos(Array.isArray(data.permisos) ? data.permisos : []);
-        setIsSuperAdmin(data.isSuperAdmin === true);
-      } catch (error) {
-        // Manejar diferentes tipos de errores
-        if (error instanceof TypeError && error.message === "Failed to fetch") {
-          console.warn(
-            "No se pudo conectar con el servidor. Verifica que el servidor esté corriendo."
-          );
-        } else {
-          console.error("Error cargando permisos:", error);
-        }
-        // En caso de error, establecer valores por defecto para evitar bloqueos
-        setPermisos([]);
-        setIsSuperAdmin(false);
-      }
-    }
-
-    cargarPermisos();
-  }, [user, status]);
+  const permisosKeys = permissions;
 
   // Filtrar menuItems según permisos (SuperAdmin ve todo)
   const menuItemsFiltrados = useMemo(() => {
     if (isSuperAdmin) {
       return menuItems;
     }
-    return filtrarRutasPorPermisos(menuItems, permisos);
-  }, [permisos, isSuperAdmin]);
+    return filtrarRutasPorPermisos(menuItems, permisosKeys);
+  }, [permisosKeys, isSuperAdmin]);
 
   // Prefetch todas las rutas disponibles al montar el componente para navegación instantánea
   useEffect(() => {
     menuItemsFiltrados.forEach((item) => {
-      // Prefetch todas las rutas en paralelo
       router.prefetch(item.href);
     });
   }, [menuItemsFiltrados, router]);

@@ -25,8 +25,6 @@ import {
 import { Lock, Shield, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
-import { usePagePermission } from "@/lib/permissions/usePagePermission";
-import { useQueryEnabled } from "@/lib/react-query/useQueryEnabled";
 import { type PreferenciasVentaDTO } from "./actions-preferencias-venta";
 
 type SectionKey =
@@ -100,12 +98,17 @@ function SectionPanel({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm" id={id}>
+    <Card
+      className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm"
+      id={id}
+    >
       <CardBody className="p-6 space-y-4">
         <div className="space-y-2">
           <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
           <p className="text-sm text-gray-600">{description}</p>
-          <p className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200/50">{summary}</p>
+          <p className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200/50">
+            {summary}
+          </p>
           <Divider className="my-2" />
         </div>
         <div className="space-y-4">{children}</div>
@@ -115,18 +118,11 @@ function SectionPanel({
 }
 
 export default function Configuracion() {
-  const { tieneAcceso, isLoading: isLoadingPermisos } = usePagePermission(); // Proteger página con permisos
   const router = useRouter();
 
   // TODOS LOS HOOKS DEBEN IR ANTES DE LOS EARLY RETURNS
   const [openSection, setOpenSection] = useState<SectionKey>("perfil");
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-
-  // Usar helper para evitar cancelaciones cuando tieneAcceso cambia de undefined a true
-  const enabledQueries = useQueryEnabled(
-    tieneAcceso,
-    isLoadingPermisos ?? false
-  );
 
   // Usar TanStack Query hook
   // Optimización: Las queries tienen staleTime y refetchOnMount: false para evitar peticiones innecesarias
@@ -158,7 +154,7 @@ export default function Configuracion() {
     useDepartamentos,
     useLocalidades,
     useCondicionesIva,
-  } = useConfiguracion({ enabled: enabledQueries }); // Solo habilitar cuando tenemos acceso confirmado
+  } = useConfiguracion();
 
   // Estados locales para edición (se sincronizan con los datos del hook)
   const [configuracion, setConfiguracion] = useState<{
@@ -1317,36 +1313,6 @@ export default function Configuracion() {
     }
   };
 
-  // EARLY RETURNS DESPUÉS DE TODOS LOS HOOKS
-  // No renderizar contenido hasta que los permisos estén verificados
-  if (isLoadingPermisos) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-4">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
-          <p className="text-sm text-gray-600">Verificando permisos...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Si tieneAcceso es undefined, aún está cargando
-  if (tieneAcceso === undefined) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-4">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
-          <p className="text-sm text-gray-600">Verificando permisos...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Si no tiene acceso, no renderizar nada (usePagePermission ya redirige)
-  if (tieneAcceso === false) {
-    return null;
-  }
-
   return (
     <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center">
       {/* Modal de confirmación */}
@@ -1387,12 +1353,12 @@ export default function Configuracion() {
               }
               className="px-4 py-2 rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 text-white cursor-pointer text-sm font-semibold flex items-center gap-2"
             >
-              {(isSavingTenant ||
-                isSavingConfiguracion ||
-                isSavingPreferenciasVenta ||
-                isSavingNotificaciones ||
-                isSavingSeguridad ||
-                isSavingFiscal) ? (
+              {isSavingTenant ||
+              isSavingConfiguracion ||
+              isSavingPreferenciasVenta ||
+              isSavingNotificaciones ||
+              isSavingSeguridad ||
+              isSavingFiscal ? (
                 <>
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                   Guardando...
@@ -1419,7 +1385,6 @@ export default function Configuracion() {
           isSavingFiscal
         }
         onSaveAll={handleConfirmSave}
-        seguridad={seguridad}
         tenant={tenant}
       />
 
@@ -3198,9 +3163,9 @@ export default function Configuracion() {
                       }
                       className="px-4 h-[36px] rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 text-white cursor-pointer text-sm font-semibold flex items-center gap-2"
                     >
-                      {(isLoadingSesiones ||
-                        isLoadingDispositivos ||
-                        isLoadingIntentosSospechosos) ? (
+                      {isLoadingSesiones ||
+                      isLoadingDispositivos ||
+                      isLoadingIntentosSospechosos ? (
                         <>
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                           Actualizando...
@@ -4501,7 +4466,6 @@ function Header({
   hasAnyChanges,
   isSavingAll,
   onSaveAll,
-  seguridad,
   tenant,
 }: {
   isLoadingTenant: boolean;
@@ -4509,7 +4473,6 @@ function Header({
   hasAnyChanges: boolean;
   isSavingAll: boolean;
   onSaveAll: () => void;
-  seguridad: { dobleFactor: boolean };
   tenant: { planId: string; nombre: string };
 }) {
   // Obtener información del plan (por ahora hardcodeado, pero debería venir del tenant)
@@ -4523,13 +4486,17 @@ function Header({
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Configuración</h2>
           <p className="text-sm text-gray-600">
-            Ajusta la identidad del negocio, preferencias de venta y seguridad desde un solo lugar
+            Ajusta la identidad del negocio, preferencias de venta y seguridad
+            desde un solo lugar
           </p>
         </div>
         <button
           onClick={onSaveAll}
           disabled={
-            isLoadingTenant || isLoadingConfiguracion || !hasAnyChanges || isSavingAll
+            isLoadingTenant ||
+            isLoadingConfiguracion ||
+            !hasAnyChanges ||
+            isSavingAll
           }
           className="px-4 h-[36px] rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 text-white cursor-pointer text-sm font-semibold flex items-center gap-2"
         >
@@ -4568,8 +4535,13 @@ function Header({
                 <span className="text-lg font-semibold text-gray-900">
                   {planNombre}
                 </span>
-                <Chip size="sm" variant="flat" className="bg-gray-100 text-gray-700">
-                  {cantidadSucursales} {Number(cantidadSucursales) === 1 ? "local" : "locales"}
+                <Chip
+                  size="sm"
+                  variant="flat"
+                  className="bg-gray-100 text-gray-700"
+                >
+                  {cantidadSucursales}{" "}
+                  {Number(cantidadSucursales) === 1 ? "local" : "locales"}
                 </Chip>
               </div>
             </div>

@@ -1,19 +1,5 @@
 "use client";
 
-/**
- * =====================================================
- * PÁGINA DE GESTIÓN DE SUCURSALES
- * =====================================================
- *
- * Permite administrar las sucursales del tenant:
- * - Listar sucursales
- * - Crear nueva sucursal
- * - Editar sucursal existente
- * - Ver estadísticas por sucursal
- *
- * =====================================================
- */
-
 import { useState, useEffect } from "react";
 import {
   Button,
@@ -54,9 +40,6 @@ type Sucursal = {
 };
 
 export default function SucursalesPage() {
-  // Permisos - usar mismo permiso que configuración
-  usePagePermission();
-
   // Estado
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [isLoading, setIsLoading] = useState(true);

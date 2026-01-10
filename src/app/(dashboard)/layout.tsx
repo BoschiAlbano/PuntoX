@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
-
+import { useUserStore } from "@/store/useUserStore";
+import ProtectRoute from "@/components/auth/ProtectRoute";
+import Loading from "@/components/loading/loading";
+import { redirect } from "next/navigation";
 // Lazy loading de componentes pesados del layout
 const Sidebar = dynamic(() => import("@/components/dashboard/Sidebar"), {
   loading: () => (
@@ -26,7 +29,8 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // const { status } = useSupabaseAuthContext();
+  const { initialize, isInitialized, isLoading, branches, roles } =
+    useUserStore();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [show, setshow] = useState(true);
 
@@ -34,8 +38,17 @@ export default function DashboardLayout({
   useInactivityTimeout();
 
   useEffect(() => {
+    initialize();
     setshow(window.innerWidth > 768);
   }, []);
+
+  if (isLoading && !isInitialized) {
+    return <Loading message="Verificando autenticación..." />;
+  }
+
+  if (!branches.length && roles.some((role) => role.Tipo !== "SUPERADMIN")) {
+    return redirect("/not-branches");
+  }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-purple-50/30 flex">
@@ -55,33 +68,35 @@ export default function DashboardLayout({
       <div className="flex-1 flex flex-col h-screen overflow-y-scroll overflow-x-hidden">
         <DashboardHeader isShow={setshow} show={show} />
 
-        <main className="flex-1">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="p-6 h-full"
-          >
-            {children}
-          </motion.div>
-        </main>
+        <ProtectRoute>
+          <main className="flex-1">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="p-6 h-full"
+            >
+              {children}
+            </motion.div>
+          </main>
 
-        <footer className="bg-white/50 backdrop-blur-sm border-t border-slate-200 py-4 px-6">
-          <div className="flex items-center justify-between text-sm text-slate-600">
-            <p>ЖИ 2024 Punto X SaaS. Todos los derechos reservados.</p>
-            <div className="flex items-center gap-4">
-              <a href="#" className="hover:text-blue-600 transition-colors">
-                Terminos
-              </a>
-              <a href="#" className="hover:text-blue-600 transition-colors">
-                Privacidad
-              </a>
-              <a href="#" className="hover:text-blue-600 transition-colors">
-                Soporte
-              </a>
+          <footer className="bg-white/50 backdrop-blur-sm border-t border-slate-200 py-4 px-6">
+            <div className="flex items-center justify-between text-sm text-slate-600">
+              <p>ЖИ 2024 Punto X SaaS. Todos los derechos reservados.</p>
+              <div className="flex items-center gap-4">
+                <a href="#" className="hover:text-blue-600 transition-colors">
+                  Terminos
+                </a>
+                <a href="#" className="hover:text-blue-600 transition-colors">
+                  Privacidad
+                </a>
+                <a href="#" className="hover:text-blue-600 transition-colors">
+                  Soporte
+                </a>
+              </div>
             </div>
-          </div>
-        </footer>
+          </footer>
+        </ProtectRoute>
       </div>
     </div>
   );

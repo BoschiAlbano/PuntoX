@@ -375,459 +375,470 @@ function AnaliticasContent() {
           panel: "h-full",
         }}
       >
-          <Tab
-            key="dashboard"
-            title={
-              <div className="flex items-center space-x-2">
-                <span>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    className="size-5"
-                  >
-                    <path d="M10 1a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 1ZM5.05 3.05a.75.75 0 0 1 1.06 0l1.062 1.06A.75.75 0 1 1 6.11 5.173L5.05 4.11a.75.75 0 0 1 0-1.06Zm9.9 0a.75.75 0 0 1 0 1.06l-1.06 1.062a.75.75 0 0 1-1.062-1.061l1.061-1.06a.75.75 0 0 1 1.06 0ZM3 8a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5A.75.75 0 0 1 3 8Zm11 0a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5A.75.75 0 0 1 14 8Zm-6.828 2.828a.75.75 0 0 1 0 1.061L6.11 12.95a.75.75 0 0 1-1.06-1.06l1.06-1.06a.75.75 0 0 1 1.06 0Zm3.594-3.317a.75.75 0 0 0-1.37.364l-.492 6.861a.75.75 0 0 0 1.204.65l1.043-.799.985 3.678a.75.75 0 0 0 1.45-.388l-.978-3.646 1.292.204a.75.75 0 0 0 .74-1.16l-3.874-5.764Z" />
-                  </svg>
-                </span>
-                <span>Dashboard</span>
-              </div>
-            }
-          >
-            <div className="mt-6 space-y-6">
-              {/* Header de la sección con botón de refresh */}
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
-                  <p className="text-sm text-gray-600">
-                    Visualiza métricas, reportes y actividad del sistema en un solo lugar
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    // Refrescar todas las queries de analíticas
-                    queryClient.invalidateQueries({ queryKey: ["analiticas"] });
-                  }}
-                  disabled={kpisLoading || ingresosLoading || pagosLoading || productosLoading}
-                  className="p-2 rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 cursor-pointer"
-                  title="Actualizar datos"
-                  aria-label="Actualizar datos del dashboard"
+        <Tab
+          key="dashboard"
+          title={
+            <div className="flex items-center space-x-2">
+              <span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="size-5"
                 >
-                  <RefreshCw
-                    size={18}
-                    className={`text-white transition-transform ${
-                      kpisLoading || ingresosLoading || pagosLoading || productosLoading ? "animate-spin" : ""
-                    }`}
-                    aria-hidden="true"
-                  />
-                </button>
+                  <path d="M10 1a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 1ZM5.05 3.05a.75.75 0 0 1 1.06 0l1.062 1.06A.75.75 0 1 1 6.11 5.173L5.05 4.11a.75.75 0 0 1 0-1.06Zm9.9 0a.75.75 0 0 1 0 1.06l-1.06 1.062a.75.75 0 0 1-1.062-1.061l1.061-1.06a.75.75 0 0 1 1.06 0ZM3 8a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5A.75.75 0 0 1 3 8Zm11 0a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5A.75.75 0 0 1 14 8Zm-6.828 2.828a.75.75 0 0 1 0 1.061L6.11 12.95a.75.75 0 0 1-1.06-1.06l1.06-1.06a.75.75 0 0 1 1.06 0Zm3.594-3.317a.75.75 0 0 0-1.37.364l-.492 6.861a.75.75 0 0 0 1.204.65l1.043-.799.985 3.678a.75.75 0 0 0 1.45-.388l-.978-3.646 1.292.204a.75.75 0 0 0 .74-1.16l-3.874-5.764Z" />
+                </svg>
+              </span>
+              <span>Dashboard</span>
+            </div>
+          }
+        >
+          <div className="mt-6 space-y-6">
+            {/* Header de la sección con botón de refresh */}
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
+                <p className="text-sm text-gray-600">
+                  Visualiza métricas, reportes y actividad del sistema en un
+                  solo lugar
+                </p>
               </div>
+              <button
+                onClick={() => {
+                  // Refrescar todas las queries de analíticas
+                  queryClient.invalidateQueries({ queryKey: ["analiticas"] });
+                }}
+                disabled={
+                  kpisLoading ||
+                  ingresosLoading ||
+                  pagosLoading ||
+                  productosLoading
+                }
+                className="p-2 rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 cursor-pointer"
+                title="Actualizar datos"
+                aria-label="Actualizar datos del dashboard"
+              >
+                <RefreshCw
+                  size={18}
+                  className={`text-white transition-transform ${
+                    kpisLoading ||
+                    ingresosLoading ||
+                    pagosLoading ||
+                    productosLoading
+                      ? "animate-spin"
+                      : ""
+                  }`}
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
 
-              {/* Filtros */}
-              <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-                <CardBody className="p-4">
-                  <div className="flex flex-col md:flex-row gap-4">
-                    <Select
-                      size="sm"
-                      label="Período"
-                      selectedKeys={[periodo]}
-                      onChange={(e) => {
-                        setPeriodo(e.target.value as "semanal" | "mensual");
-                        // Resetear flag cuando cambia el período para que se actualicen las fechas
-                        fechasModificadasPorUsuario.current = false;
-                      }}
-                      className="w-full md:min-w-[140px]"
-                    >
-                      <SelectItem key="semanal">Semanal</SelectItem>
-                      <SelectItem key="mensual">Mensual</SelectItem>
-                    </Select>
-                    <Input
-                      size="sm"
-                      type="date"
-                      label="Desde"
-                      value={fechaDesde}
-                      onChange={(e) => {
-                        setFechaDesde(e.target.value);
-                        fechasModificadasPorUsuario.current = true;
-                      }}
-                      className="w-full md:min-w-[140px]"
-                    />
-                    <Input
-                      size="sm"
-                      type="date"
-                      label="Hasta"
-                      value={fechaHasta}
-                      onChange={(e) => {
-                        setFechaHasta(e.target.value);
-                        fechasModificadasPorUsuario.current = true;
-                      }}
-                      className="w-full md:min-w-[140px]"
-                    />
-                    <Select
-                      size="sm"
-                      label="Agrupación"
-                      selectedKeys={[agrupacion]}
-                      onChange={(e) =>
-                        setAgrupacion(
-                          e.target.value as "dia" | "semana" | "mes"
-                        )
-                      }
-                      className="w-full md:min-w-[140px]"
-                    >
-                      <SelectItem key="dia">Por Día</SelectItem>
-                      <SelectItem key="semana">Por Semana</SelectItem>
-                      <SelectItem key="mes">Por Mes</SelectItem>
-                    </Select>
-                  </div>
-                </CardBody>
-              </Card>
-
-              {/* KPIs */}
-              {kpisLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                  {Array.from({ length: 10 }).map((_, i) => (
-                    <Card key={i} className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-                      <CardBody className="p-4">
-                        <div className="animate-pulse">
-                          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                          <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-                        </div>
-                      </CardBody>
-                    </Card>
-                  ))}
+            {/* Filtros */}
+            <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
+              <CardBody className="p-4">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <Select
+                    size="sm"
+                    label="Período"
+                    selectedKeys={[periodo]}
+                    onChange={(e) => {
+                      setPeriodo(e.target.value as "semanal" | "mensual");
+                      // Resetear flag cuando cambia el período para que se actualicen las fechas
+                      fechasModificadasPorUsuario.current = false;
+                    }}
+                    className="w-full md:min-w-[140px]"
+                  >
+                    <SelectItem key="semanal">Semanal</SelectItem>
+                    <SelectItem key="mensual">Mensual</SelectItem>
+                  </Select>
+                  <Input
+                    size="sm"
+                    type="date"
+                    label="Desde"
+                    value={fechaDesde}
+                    onChange={(e) => {
+                      setFechaDesde(e.target.value);
+                      fechasModificadasPorUsuario.current = true;
+                    }}
+                    className="w-full md:min-w-[140px]"
+                  />
+                  <Input
+                    size="sm"
+                    type="date"
+                    label="Hasta"
+                    value={fechaHasta}
+                    onChange={(e) => {
+                      setFechaHasta(e.target.value);
+                      fechasModificadasPorUsuario.current = true;
+                    }}
+                    className="w-full md:min-w-[140px]"
+                  />
+                  <Select
+                    size="sm"
+                    label="Agrupación"
+                    selectedKeys={[agrupacion]}
+                    onChange={(e) =>
+                      setAgrupacion(e.target.value as "dia" | "semana" | "mes")
+                    }
+                    className="w-full md:min-w-[140px]"
+                  >
+                    <SelectItem key="dia">Por Día</SelectItem>
+                    <SelectItem key="semana">Por Semana</SelectItem>
+                    <SelectItem key="mes">Por Mes</SelectItem>
+                  </Select>
                 </div>
-              ) : kpisData ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                  <KPICard
-                    title="Ingresos Netos"
-                    value={kpisData.kpis.ingresosNetos.valor}
-                    variation={kpisData.kpis.ingresosNetos.variacion}
-                    format="currency"
-                    icon={<DollarSign size={24} />}
-                    color="success"
-                  />
-                  <KPICard
-                    title="Descuentos"
-                    value={kpisData.kpis.descuentos.valor}
-                    variation={kpisData.kpis.descuentos.variacion}
-                    format="currency"
-                    icon={<Percent size={24} />}
-                    color="warning"
-                  />
-                  <KPICard
-                    title="IVA Facturado"
-                    value={kpisData.kpis.ivaFacturado.valor}
-                    variation={kpisData.kpis.ivaFacturado.variacion}
-                    format="currency"
-                    icon={<Receipt size={24} />}
-                    color="primary"
-                  />
-                  <KPICard
-                    title="Tickets"
-                    value={kpisData.kpis.tickets.valor}
-                    variation={kpisData.kpis.tickets.variacion}
-                    format="number"
-                    icon={<TrendingUp size={24} />}
-                    color="default"
-                  />
-                  <KPICard
-                    title="Ticket Promedio"
-                    value={kpisData.kpis.ticketPromedio.valor}
-                    variation={kpisData.kpis.ticketPromedio.variacion}
-                    format="currency"
-                    icon={<DollarSign size={24} />}
-                    color="success"
-                  />
-                  <KPICard
-                    title="Margen de Ganancia"
-                    value={kpisData.kpis.margenGanancia.valor}
-                    variation={kpisData.kpis.margenGanancia.variacion}
-                    format="currency"
-                    icon={<TrendingUp size={24} />}
-                    color="success"
-                  />
-                  <KPICard
-                    title="Productos Vendidos"
-                    value={kpisData.kpis.productosVendidos.valor}
-                    variation={kpisData.kpis.productosVendidos.variacion}
-                    format="number"
-                    icon={<ShoppingCart size={24} />}
-                    color="default"
-                  />
-                  <KPICard
-                    title="Clientes Activos"
-                    value={kpisData.kpis.clientesActivos.valor}
-                    variation={kpisData.kpis.clientesActivos.variacion}
-                    format="number"
-                    icon={<Users size={24} />}
-                    color="primary"
-                  />
-                  <KPICard
-                    title="Notas de Crédito"
-                    value={kpisData.kpis.notasCredito.valor}
-                    format="number"
-                    icon={<Package size={24} />}
-                    color="warning"
-                  />
-                  {kpisData.kpis.estadoCaja && (
-                    <KPICard
-                      title="Estado de Caja"
-                      value={
-                        kpisData.kpis.estadoCaja.estaAbierta
-                          ? "Abierta"
-                          : "Cerrada"
-                      }
-                      format="custom"
-                      icon={<Store size={24} />}
-                      color={
-                        kpisData.kpis.estadoCaja.estaAbierta
-                          ? "success"
-                          : "default"
-                      }
-                    />
-                  )}
-                </div>
-              ) : null}
+              </CardBody>
+            </Card>
 
-              {/* Gráficas */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {ingresosLoading ? (
-                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-                    <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
-                      <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse"></div>
-                    </CardHeader>
-                    <CardBody className="p-6">
-                      <div className="h-[300px] bg-gray-100 rounded animate-pulse"></div>
+            {/* KPIs */}
+            {kpisLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <Card
+                    key={i}
+                    className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm"
+                  >
+                    <CardBody className="p-4">
+                      <div className="animate-pulse">
+                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                      </div>
                     </CardBody>
                   </Card>
-                ) : graficasIngresos ? (
-                  <GraficaIngresos datos={graficasIngresos.datos} />
-                ) : null}
-
-                {pagosLoading ? (
-                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-                    <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
-                      <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse"></div>
-                    </CardHeader>
-                    <CardBody className="p-6">
-                      <div className="h-[300px] bg-gray-100 rounded animate-pulse"></div>
-                    </CardBody>
-                  </Card>
-                ) : graficasPagos ? (
-                  <GraficaPagos datos={graficasPagos.datos} />
-                ) : null}
+                ))}
               </div>
+            ) : kpisData ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                <KPICard
+                  title="Ingresos Netos"
+                  value={kpisData.kpis.ingresosNetos.valor}
+                  variation={kpisData.kpis.ingresosNetos.variacion}
+                  format="currency"
+                  icon={<DollarSign size={24} />}
+                  color="success"
+                />
+                <KPICard
+                  title="Descuentos"
+                  value={kpisData.kpis.descuentos.valor}
+                  variation={kpisData.kpis.descuentos.variacion}
+                  format="currency"
+                  icon={<Percent size={24} />}
+                  color="warning"
+                />
+                <KPICard
+                  title="IVA Facturado"
+                  value={kpisData.kpis.ivaFacturado.valor}
+                  variation={kpisData.kpis.ivaFacturado.variacion}
+                  format="currency"
+                  icon={<Receipt size={24} />}
+                  color="primary"
+                />
+                <KPICard
+                  title="Tickets"
+                  value={kpisData.kpis.tickets.valor}
+                  variation={kpisData.kpis.tickets.variacion}
+                  format="number"
+                  icon={<TrendingUp size={24} />}
+                  color="default"
+                />
+                <KPICard
+                  title="Ticket Promedio"
+                  value={kpisData.kpis.ticketPromedio.valor}
+                  variation={kpisData.kpis.ticketPromedio.variacion}
+                  format="currency"
+                  icon={<DollarSign size={24} />}
+                  color="success"
+                />
+                <KPICard
+                  title="Margen de Ganancia"
+                  value={kpisData.kpis.margenGanancia.valor}
+                  variation={kpisData.kpis.margenGanancia.variacion}
+                  format="currency"
+                  icon={<TrendingUp size={24} />}
+                  color="success"
+                />
+                <KPICard
+                  title="Productos Vendidos"
+                  value={kpisData.kpis.productosVendidos.valor}
+                  variation={kpisData.kpis.productosVendidos.variacion}
+                  format="number"
+                  icon={<ShoppingCart size={24} />}
+                  color="default"
+                />
+                <KPICard
+                  title="Clientes Activos"
+                  value={kpisData.kpis.clientesActivos.valor}
+                  variation={kpisData.kpis.clientesActivos.variacion}
+                  format="number"
+                  icon={<Users size={24} />}
+                  color="primary"
+                />
+                <KPICard
+                  title="Notas de Crédito"
+                  value={kpisData.kpis.notasCredito.valor}
+                  format="number"
+                  icon={<Package size={24} />}
+                  color="warning"
+                />
+                {kpisData.kpis.estadoCaja && (
+                  <KPICard
+                    title="Estado de Caja"
+                    value={
+                      kpisData.kpis.estadoCaja.estaAbierta
+                        ? "Abierta"
+                        : "Cerrada"
+                    }
+                    format="custom"
+                    icon={<Store size={24} />}
+                    color={
+                      kpisData.kpis.estadoCaja.estaAbierta
+                        ? "success"
+                        : "default"
+                    }
+                  />
+                )}
+              </div>
+            ) : null}
 
-              {productosLoading ? (
+            {/* Gráficas */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {ingresosLoading ? (
                 <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
                   <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
                     <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse"></div>
                   </CardHeader>
                   <CardBody className="p-6">
-                    <div className="h-[400px] bg-gray-100 rounded animate-pulse"></div>
+                    <div className="h-[300px] bg-gray-100 rounded animate-pulse"></div>
                   </CardBody>
                 </Card>
-              ) : graficasProductos ? (
-                <GraficaProductos datos={graficasProductos.datos} />
+              ) : graficasIngresos ? (
+                <GraficaIngresos datos={graficasIngresos.datos} />
               ) : null}
 
-              {/* Alertas */}
-              {alertasData && (
-                <PanelAlertas data={alertasData} isLoading={alertasLoading} />
-              )}
+              {pagosLoading ? (
+                <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
+                  <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
+                    <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+                  </CardHeader>
+                  <CardBody className="p-6">
+                    <div className="h-[300px] bg-gray-100 rounded animate-pulse"></div>
+                  </CardBody>
+                </Card>
+              ) : graficasPagos ? (
+                <GraficaPagos datos={graficasPagos.datos} />
+              ) : null}
+            </div>
 
-              {/* Datos complementarios */}
-              {complementariosData && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {complementariosData.gastos && (
-                    <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-                      <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
-                        <h3 className="text-lg font-semibold text-slate-900">
-                          Gastos y Caja
-                        </h3>
-                      </CardHeader>
-                      <CardBody>
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">
-                              Total Gastos:
-                            </span>
-                            <span className="text-lg font-semibold">
-                              {new Intl.NumberFormat("es-AR", {
-                                style: "currency",
-                                currency: "ARS",
-                              }).format(complementariosData.gastos.total)}
-                            </span>
+            {productosLoading ? (
+              <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
+                <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
+                  <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+                </CardHeader>
+                <CardBody className="p-6">
+                  <div className="h-[400px] bg-gray-100 rounded animate-pulse"></div>
+                </CardBody>
+              </Card>
+            ) : graficasProductos ? (
+              <GraficaProductos datos={graficasProductos.datos} />
+            ) : null}
+
+            {/* Alertas */}
+            {alertasData && (
+              <PanelAlertas data={alertasData} isLoading={alertasLoading} />
+            )}
+
+            {/* Datos complementarios */}
+            {complementariosData && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {complementariosData.gastos && (
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
+                    <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
+                      <h3 className="text-lg font-semibold text-slate-900">
+                        Gastos y Caja
+                      </h3>
+                    </CardHeader>
+                    <CardBody>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">
+                            Total Gastos:
+                          </span>
+                          <span className="text-lg font-semibold">
+                            {new Intl.NumberFormat("es-AR", {
+                              style: "currency",
+                              currency: "ARS",
+                            }).format(complementariosData.gastos.total)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">
+                            Total Ganancia:
+                          </span>
+                          <span className="text-lg font-semibold text-green-600">
+                            {new Intl.NumberFormat("es-AR", {
+                              style: "currency",
+                              currency: "ARS",
+                            }).format(complementariosData.gastos.totalGanancia)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">
+                            Eficiencia:
+                          </span>
+                          <Chip
+                            size="sm"
+                            color={
+                              complementariosData.gastos.eficiencia >= 50
+                                ? "success"
+                                : "warning"
+                            }
+                            variant="flat"
+                          >
+                            {complementariosData.gastos.eficiencia.toFixed(1)}%
+                          </Chip>
+                        </div>
+                        <Divider />
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 mb-2">
+                            Gastos por Concepto:
+                          </p>
+                          <div className="space-y-2">
+                            {complementariosData.gastos.porConcepto
+                              .slice(0, 5)
+                              .map((gasto, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex justify-between items-center text-sm"
+                                >
+                                  <span className="text-gray-600">
+                                    {gasto.concepto}
+                                  </span>
+                                  <span className="font-medium">
+                                    {new Intl.NumberFormat("es-AR", {
+                                      style: "currency",
+                                      currency: "ARS",
+                                    }).format(gasto.monto)}
+                                  </span>
+                                </div>
+                              ))}
                           </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">
-                              Total Ganancia:
-                            </span>
-                            <span className="text-lg font-semibold text-green-600">
-                              {new Intl.NumberFormat("es-AR", {
-                                style: "currency",
-                                currency: "ARS",
-                              }).format(
-                                complementariosData.gastos.totalGanancia
-                              )}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">
-                              Eficiencia:
-                            </span>
-                            <Chip
-                              size="sm"
-                              color={
-                                complementariosData.gastos.eficiencia >= 50
-                                  ? "success"
-                                  : "warning"
-                              }
-                              variant="flat"
-                            >
-                              {complementariosData.gastos.eficiencia.toFixed(1)}
-                              %
-                            </Chip>
-                          </div>
-                          <Divider />
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+                )}
+
+                {complementariosData.usuarios && (
+                  <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
+                    <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
+                      <h3 className="text-lg font-semibold text-slate-900">
+                        Usuarios Activos
+                      </h3>
+                    </CardHeader>
+                    <CardBody>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">
+                            Activos Ahora:
+                          </span>
+                          <Chip size="sm" color="success" variant="flat">
+                            {complementariosData.usuarios.activosAhora}
+                          </Chip>
+                        </div>
+                        {complementariosData.usuarios.dispositivosNoConfiables
+                          .length > 0 && (
                           <div>
                             <p className="text-sm font-medium text-gray-700 mb-2">
-                              Gastos por Concepto:
+                              Dispositivos No Confiables:
                             </p>
                             <div className="space-y-2">
-                              {complementariosData.gastos.porConcepto
-                                .slice(0, 5)
-                                .map((gasto, idx) => (
+                              {complementariosData.usuarios.dispositivosNoConfiables.map(
+                                (d) => (
                                   <div
-                                    key={idx}
-                                    className="flex justify-between items-center text-sm"
+                                    key={d.id}
+                                    className="text-sm p-2 rounded border border-yellow-200 bg-yellow-50"
                                   >
-                                    <span className="text-gray-600">
-                                      {gasto.concepto}
-                                    </span>
-                                    <span className="font-medium">
-                                      {new Intl.NumberFormat("es-AR", {
-                                        style: "currency",
-                                        currency: "ARS",
-                                      }).format(gasto.monto)}
-                                    </span>
+                                    <p className="font-medium">{d.usuario}</p>
+                                    <p className="text-xs text-gray-500">
+                                      {d.dispositivo || "Desconocido"}
+                                    </p>
                                   </div>
-                                ))}
+                                )
+                              )}
                             </div>
                           </div>
-                        </div>
-                      </CardBody>
-                    </Card>
-                  )}
-
-                  {complementariosData.usuarios && (
-                    <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-                      <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
-                        <h3 className="text-lg font-semibold text-slate-900">
-                          Usuarios Activos
-                        </h3>
-                      </CardHeader>
-                      <CardBody>
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">
-                              Activos Ahora:
-                            </span>
-                            <Chip size="sm" color="success" variant="flat">
-                              {complementariosData.usuarios.activosAhora}
-                            </Chip>
-                          </div>
-                          {complementariosData.usuarios.dispositivosNoConfiables
-                            .length > 0 && (
-                            <div>
-                              <p className="text-sm font-medium text-gray-700 mb-2">
-                                Dispositivos No Confiables:
-                              </p>
-                              <div className="space-y-2">
-                                {complementariosData.usuarios.dispositivosNoConfiables.map(
-                                  (d) => (
-                                    <div
-                                      key={d.id}
-                                      className="text-sm p-2 rounded border border-yellow-200 bg-yellow-50"
-                                    >
-                                      <p className="font-medium">{d.usuario}</p>
-                                      <p className="text-xs text-gray-500">
-                                        {d.dispositivo || "Desconocido"}
-                                      </p>
-                                    </div>
-                                  )
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </CardBody>
-                    </Card>
-                  )}
-                </div>
-              )}
-            </div>
-          </Tab>
-
-          <Tab
-            key="logs"
-            title={
-              <div className="flex items-center space-x-2">
-                <span>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    className="size-5"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M4.5 2A1.5 1.5 0 0 0 3 3.5v13A1.5 1.5 0 0 0 4.5 18h11a1.5 1.5 0 0 0 1.5-1.5V7.621a1.5 1.5 0 0 0-.44-1.06l-4.12-4.122A1.5 1.5 0 0 0 11.378 2H4.5Zm2.25 8.5a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Zm0 3a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </span>
-                <span>Logs</span>
+                        )}
+                      </div>
+                    </CardBody>
+                  </Card>
+                )}
               </div>
-            }
-          >
-            <div className="mt-6 space-y-6">
-              {/* Header de la sección con botón de refresh */}
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Logs de Actividad</h2>
-                  <p className="text-sm text-gray-600">
-                    Registro completo de acciones y eventos del sistema
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    // Refrescar logs (cuando esté conectado al API)
-                    setPage(1);
-                  }}
-                  className="p-2 rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 cursor-pointer"
-                  title="Actualizar logs"
-                  aria-label="Actualizar logs de actividad"
+            )}
+          </div>
+        </Tab>
+
+        <Tab
+          key="logs"
+          title={
+            <div className="flex items-center space-x-2">
+              <span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="size-5"
                 >
-                  <RefreshCw
-                    size={18}
-                    className="text-white transition-transform"
-                    aria-hidden="true"
+                  <path
+                    fillRule="evenodd"
+                    d="M4.5 2A1.5 1.5 0 0 0 3 3.5v13A1.5 1.5 0 0 0 4.5 18h11a1.5 1.5 0 0 0 1.5-1.5V7.621a1.5 1.5 0 0 0-.44-1.06l-4.12-4.122A1.5 1.5 0 0 0 11.378 2H4.5Zm2.25 8.5a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Zm0 3a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Z"
+                    clipRule="evenodd"
                   />
-                </button>
+                </svg>
+              </span>
+              <span>Logs</span>
+            </div>
+          }
+        >
+          <div className="mt-6 space-y-6">
+            {/* Header de la sección con botón de refresh */}
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Logs de Actividad
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Registro completo de acciones y eventos del sistema
+                </p>
               </div>
+              <button
+                onClick={() => {
+                  // Refrescar logs (cuando esté conectado al API)
+                  setPage(1);
+                }}
+                className="p-2 rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 cursor-pointer"
+                title="Actualizar logs"
+                aria-label="Actualizar logs de actividad"
+              >
+                <RefreshCw
+                  size={18}
+                  className="text-white transition-transform"
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
 
-              <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-                <CardHeader className="flex flex-col gap-4 pb-3 border-b border-slate-200/70 bg-slate-50/70">
-                  <div className="flex items-center justify-between w-full">
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-900">
-                        Filtros de búsqueda
-                      </h3>
-                      <p className="text-xs text-slate-500">
-                        {logsFiltrados.length} registros encontrados
-                      </p>
-                    </div>
+            <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
+              <CardHeader className="flex flex-col gap-4 pb-3 border-b border-slate-200/70 bg-slate-50/70">
+                <div className="flex items-center justify-between w-full">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      Filtros de búsqueda
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      {logsFiltrados.length} registros encontrados
+                    </p>
                   </div>
+                </div>
                 <div className="flex flex-col md:flex-row gap-3 w-full">
                   <div className="group flex items-center gap-2 border-2 border-gray-300 rounded-xl p-1.5 bg-white transition-all duration-300 hover:border-[#67afc3] relative w-full md:max-w-xs">
                     <input
@@ -958,16 +969,24 @@ function AnaliticasContent() {
                           aria-label={`Log ${log.accion} por ${log.usuario}`}
                         >
                           <TableCell>
-                            <span className="text-sm text-gray-700">{log.fecha}</span>
+                            <span className="text-sm text-gray-700">
+                              {log.fecha}
+                            </span>
                           </TableCell>
                           <TableCell>
-                            <span className="font-medium text-gray-700">{log.usuario}</span>
+                            <span className="font-medium text-gray-700">
+                              {log.usuario}
+                            </span>
                           </TableCell>
                           <TableCell>
-                            <span className="text-sm text-gray-600">{log.accion}</span>
+                            <span className="text-sm text-gray-600">
+                              {log.accion}
+                            </span>
                           </TableCell>
                           <TableCell>
-                            <span className="text-sm text-gray-600">{log.modulo}</span>
+                            <span className="text-sm text-gray-600">
+                              {log.modulo}
+                            </span>
                           </TableCell>
                           <TableCell>
                             <span className="text-xs text-gray-500 font-mono">
@@ -1005,52 +1024,17 @@ function AnaliticasContent() {
                 )}
               </CardBody>
             </Card>
-            </div>
-          </Tab>
-        </Tabs>
+          </div>
+        </Tab>
+      </Tabs>
     </div>
   );
 }
 
 export default function Analiticas() {
-  const { tieneAcceso, isLoading: isLoadingPermisos } = usePagePermission(); // Proteger página con permisos
-
-  // No renderizar contenido hasta que los permisos estén verificados
-  if (isLoadingPermisos) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-4">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
-          <p className="text-sm text-gray-600">Verificando permisos...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Si tieneAcceso es undefined, aún está cargando
-  if (tieneAcceso === undefined) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-4">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
-          <p className="text-sm text-gray-600">Verificando permisos...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Si no tiene acceso, no renderizar nada (usePagePermission ya redirige)
-  if (tieneAcceso === false) {
-    return null;
-  }
-
   return (
     <Suspense fallback={<div className="p-6">Cargando...</div>}>
       <AnaliticasContent />
     </Suspense>
   );
 }
-
-
-
-

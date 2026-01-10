@@ -30,7 +30,8 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "recharts": "^3.6.0",
-    "zod": "^4.1.13"
+    "zod": "^4.1.13",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

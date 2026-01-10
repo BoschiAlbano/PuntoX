@@ -14,20 +14,29 @@ import {
 import { createError } from "@/lib/errors/types";
 import { handleError } from "@/lib/errors/handler";
 
+import { verifyUserBranchAccess } from "@/lib/sucursal/verifyUserBranch";
+
 export async function GET(req: NextRequest) {
   // Obtener la session del usuario
-  const { tenantId, error } = await getAuthUser();
+  const { tenantId, user, error } = await getAuthUser();
 
-  if (error) {
-    return error;
+  if (error || !user) {
+    return (
+      error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    );
   }
 
   try {
     const pagination = parsePaginationParams(req);
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
+    const sucursalIdParam = req.nextUrl.searchParams.get("sucursalId");
+
+    if (sucursalIdParam) {
+      await verifyUserBranchAccess(BigInt(tenantId), user.id, sucursalIdParam);
+    }
 
     const where: any = {
-      TenantId: tenantId,
+      TenantId: BigInt(tenantId),
     };
 
     if (search) {

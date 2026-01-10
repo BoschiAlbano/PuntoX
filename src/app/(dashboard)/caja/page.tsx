@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { usePagePermission } from "@/lib/permissions/usePagePermission";
 import {
   TrendingUp,
   Plus,
@@ -13,6 +12,7 @@ import {
   RefreshCw,
   X,
 } from "lucide-react";
+import { useUserStore } from "@/store/useUserStore";
 
 // Constantes de tipos de pago
 const TIPO_PAGO = {
@@ -169,9 +169,6 @@ type ToastMessage = {
 };
 
 export default function CajaPage() {
-  // Verificar permisos de acceso a esta página
-  const { tieneAcceso, isLoading: isLoadingPermisos } = usePagePermission();
-
   // TODOS LOS HOOKS DEBEN IR ANTES DE LOS EARLY RETURNS
   const [cajaActual, setCajaActual] = useState<Caja | null>(null);
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
@@ -181,6 +178,8 @@ export default function CajaPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const { currentBranch } = useUserStore();
 
   const addToast = (toast: Omit<ToastMessage, "id">) => {
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -205,57 +204,25 @@ export default function CajaPage() {
     monto: "",
   });
 
-  // Cargar datos iniciales solo si tiene acceso
   useEffect(() => {
-    if (tieneAcceso && !isLoadingPermisos) {
-      cargarDatos();
-    }
-  }, [tieneAcceso, isLoadingPermisos]);
-
-  // EARLY RETURNS DESPUÉS DE TODOS LOS HOOKS
-  // No renderizar contenido hasta que los permisos estén verificados
-  if (isLoadingPermisos) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-4">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
-          <p className="text-sm text-gray-600">Verificando permisos...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Si tieneAcceso es undefined, aún está cargando
-  if (tieneAcceso === undefined) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-4">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
-          <p className="text-sm text-gray-600">Verificando permisos...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Si no tiene acceso, no renderizar nada (usePagePermission ya redirige)
-  if (tieneAcceso === false) {
-    return null;
-  }
+    cargarDatos();
+  }, []);
 
   const cargarDatos = async () => {
-    // No hacer peticiones si no tiene acceso
-    if (!tieneAcceso) {
-      return;
-    }
-
     try {
       setIsLoading(true);
 
       // Cargar caja actual, conceptos de gastos y resumen del día en paralelo
       const [cajaRes, conceptosRes, resumenRes] = await Promise.all([
-        fetch("/api/caja?soloAbierta=true", { cache: "no-store" }),
-        fetch("/api/conceptos-gastos", { cache: "no-store" }),
-        fetch("/api/caja?resumenDia=true", { cache: "no-store" }),
+        fetch(`/api/caja?soloAbierta=true&sucursalId=${currentBranch.Id}`, {
+          cache: "no-store",
+        }),
+        fetch(`/api/conceptos-gastos?sucursalId=${currentBranch.Id}`, {
+          cache: "no-store",
+        }),
+        fetch(`/api/caja?resumenDia=true&sucursalId=${currentBranch.Id}`, {
+          cache: "no-store",
+        }),
       ]);
 
       if (cajaRes.ok) {
@@ -424,7 +391,7 @@ export default function CajaPage() {
 
     try {
       setIsSaving(true);
-      const res = await fetch("/api/caja", {
+      const res = await fetch(`/api/caja?&sucursalId=${currentBranch.Id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ montoInicial: Number(montoInicial) }),
@@ -469,11 +436,14 @@ export default function CajaPage() {
 
     try {
       setIsSaving(true);
-      const res = await fetch("/api/caja?accion=cerrar", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ montoCierre: Number(montoCierre) }),
-      });
+      const res = await fetch(
+        `/api/caja?accion=cerrar&sucursalId=${currentBranch.Id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ montoCierre: Number(montoCierre) }),
+        }
+      );
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => null);
@@ -527,15 +497,18 @@ export default function CajaPage() {
 
     try {
       setIsSaving(true);
-      const res = await fetch("/api/caja?accion=gasto", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          conceptoGastoId: Number(nuevoGasto.conceptoId),
-          descripcion: nuevoGasto.descripcion,
-          monto: Number(nuevoGasto.monto),
-        }),
-      });
+      const res = await fetch(
+        `/api/caja?accion=gasto&sucursalId=${currentBranch.Id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            conceptoGastoId: Number(nuevoGasto.conceptoId),
+            descripcion: nuevoGasto.descripcion,
+            monto: Number(nuevoGasto.monto),
+          }),
+        }
+      );
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => null);

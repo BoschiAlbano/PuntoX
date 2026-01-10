@@ -1,46 +1,14 @@
 ﻿"use client";
-
 import { useState } from "react";
 import { Tabs, Tab } from "@heroui/react";
-import { usePagePermission } from "@/lib/permissions/usePagePermission";
 import UsuariosCRUD from "@/components/empleados/UsuariosCRUD";
 import RolesCRUD from "@/components/empleados/RolesCRUD";
 import AuditoriasCRUD from "@/components/empleados/AuditoriasCRUD";
 
 export default function EmpleadosPage() {
-  const { tieneAcceso, isLoading: isLoadingPermisos } = usePagePermission();
   const [selected, setSelected] = useState<"usuarios" | "roles" | "auditoria">(
     "usuarios"
   );
-
-  // No renderizar contenido hasta que los permisos estén verificados
-  if (isLoadingPermisos) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-4">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
-          <p className="text-sm text-gray-600">Verificando permisos...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Si tieneAcceso es undefined, aún está cargando
-  if (tieneAcceso === undefined) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-4">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
-          <p className="text-sm text-gray-600">Verificando permisos...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Si no tiene acceso, no renderizar nada (usePagePermission ya redirige)
-  if (tieneAcceso === false) {
-    return null;
-  }
 
   return (
     <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch h-full">

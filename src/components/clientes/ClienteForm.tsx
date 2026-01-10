@@ -23,7 +23,7 @@ const fetchCondicionesIva = async () => {
   const res = await fetch("/api/condiciones-iva");
   if (!res.ok) throw new Error("Error fetching condiciones iva");
   const data = await res.json();
-  return Array.isArray(data?.condicionesIva) ? data.condicionesIva : [];
+  return Array.isArray(data) ? data : data?.condicionesIva || [];
 };
 
 const fetchProvincias = async () => {

@@ -1,9 +1,15 @@
+"use client";
+
 import React from "react";
 import { motion } from "framer-motion";
 
-export default function Loading() {
+export default function Loading({
+  message = "Verificando autenticación...",
+}: {
+  message?: string;
+}) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 flex items-center justify-center">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-purple-50/30 flex items-center justify-center">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -15,8 +21,7 @@ export default function Loading() {
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 border-r-[#90c472]"
           />
-          <div className="absolute inset-2 rounded-full bg-gradient-to-br from-blue-500 to-[#90c472] flex items-center justify-center">
-            {/* <span className="text-white font-bold text-2xl">P</span> */}
+          <div className="absolute inset-2 rounded-full bg-linear-to-br from-blue-500 to-[#90c472] flex items-center justify-center">
             <img
               src="/XP.ico"
               alt="Punto X"
@@ -30,7 +35,7 @@ export default function Loading() {
           transition={{ delay: 0.2 }}
           className="text-slate-600 font-medium"
         >
-          Verificando autenticación...
+          {message}
         </motion.p>
       </motion.div>
     </div>

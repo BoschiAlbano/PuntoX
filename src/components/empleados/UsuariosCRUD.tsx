@@ -4,6 +4,8 @@ import GenericCrud from "@/components/shared/GenericCrud";
 import { Chip } from "@heroui/react";
 import { EditButton, DeleteButton } from "../shared/TableActions";
 import UsuarioForm from "./UsuarioForm";
+import { PerfilTipo } from "../../../prisma/generated/prisma";
+import { Sucursal } from "../../../prisma/generated/prisma";
 
 export type Usuario = {
   Id: number;
@@ -23,9 +25,8 @@ export type Usuario = {
   provinciaId?: number | null;
   rolId: number | null;
   rolNombre: string | null;
-  rolTipo?: "ADMINISTRADOR" | "EMPLEADO" | null;
-  sucursalId?: number | null;
-  sucursalNombre?: string | null;
+  rolTipo?: PerfilTipo;
+  sucursales?: Sucursal[];
   estado: "Activo" | "Invitado" | "Suspendido";
   legajo: string | null;
   dni: string | null;
@@ -90,7 +91,8 @@ export default function UsuariosCRUD() {
           case "sucursal":
             return (
               <span className="text-gray-600 text-sm">
-                {item.sucursalNombre || "-"}
+                {/* {item.sucursales?.[0].Nombre || "-"} */}
+                Eliminar despues
               </span>
             );
           case "localidad":

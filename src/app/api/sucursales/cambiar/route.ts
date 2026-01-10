@@ -1,31 +1,17 @@
-/**
- * =====================================================
- * API PARA CAMBIAR SUCURSAL ACTIVA
- * =====================================================
- * 
- * POST /api/sucursales/cambiar
- * Cambia la sucursal activa del usuario
- * 
- * =====================================================
- */
-
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
-import { switchBranch, getUserBranches } from "@/lib/sucursal";
 import { handleError } from "@/lib/errors/handler";
+import { verifyUserBranchAccess } from "@/lib/sucursal/verifyUserBranch";
+import prisma from "@/DB/prisma";
 
 const cambiarSucursalSchema = z.object({
   sucursalId: z.number().int().positive(),
 });
 
-/**
- * POST /api/sucursales/cambiar
- * Cambia la sucursal activa
- */
 export async function POST(req: NextRequest) {
   try {
-    const { error } = await getAuthUser();
+    const { error, tenantId, user } = await getAuthUser();
 
     if (error) {
       return error;
@@ -35,28 +21,49 @@ export async function POST(req: NextRequest) {
     const data = cambiarSucursalSchema.parse(body);
 
     // Intentar cambiar la sucursal
-    const success = await switchBranch(BigInt(data.sucursalId));
+    const accessResult = await verifyUserBranchAccess(
+      BigInt(tenantId),
+      user.id,
+      BigInt(data.sucursalId)
+    );
 
-    if (!success) {
+    if (!accessResult) {
       return NextResponse.json(
         { error: "No tiene acceso a esta sucursal" },
         { status: 403 }
       );
     }
 
-    // Obtener info de la sucursal seleccionada
-    const branches = await getUserBranches();
-    const selectedBranch = branches.find((b) => b.id === BigInt(data.sucursalId));
+    const { usuarioId } = accessResult;
+
+    await prisma.$transaction([
+      prisma.usuarioSucursal.updateMany({
+        where: {
+          UsuarioId: usuarioId,
+          TenantId: BigInt(tenantId),
+        },
+        data: {
+          EsDefault: false,
+        },
+      }),
+      prisma.usuarioSucursal.update({
+        where: {
+          UsuarioId_SucursalId: {
+            UsuarioId: usuarioId,
+            SucursalId: BigInt(data.sucursalId),
+          },
+        },
+        data: {
+          EsDefault: true,
+        },
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,
-      sucursal: selectedBranch ? {
-        id: Number(selectedBranch.id),
-        nombre: selectedBranch.nombre,
-        esPrincipal: selectedBranch.esPrincipal,
-      } : null,
     });
   } catch (error) {
+    console.log(error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.issues[0]?.message || "Datos inválidos" },
@@ -66,4 +73,3 @@ export async function POST(req: NextRequest) {
     return handleError(error);
   }
 }
-

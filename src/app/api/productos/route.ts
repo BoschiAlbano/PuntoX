@@ -1,7 +1,6 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { getSucursalId, getActiveBranchContext } from "@/lib/sucursal";
 import {
   createProductoSchema,
   updateProductoSchema,
@@ -15,12 +14,16 @@ import { handleError } from "@/lib/errors/handler";
 import { createError } from "@/lib/errors/types";
 import { fotoDefault } from "@/utilities/fotoDefault";
 
+import { verifyUserBranchAccess } from "@/lib/sucursal/verifyUserBranch";
+
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
+    const { tenantId, user, error } = await getAuthUser();
 
-    if (error) {
-      return error;
+    if (error || !user) {
+      return (
+        error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      );
     }
 
     if (!tenantId || tenantId <= 0) {
@@ -32,9 +35,23 @@ export async function GET(req: NextRequest) {
 
     const pagination = parsePaginationParams(req);
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
-    
-    // Obtener sucursal activa (opcional, para filtrar stock)
-    const sucursalId = await getSucursalId();
+    // Leer sucursalId de los query params
+    const sucursalIdParam = req.nextUrl.searchParams.get("sucursalId");
+
+    let sucursalId: bigint | null = null;
+    let sucursalNombre: string | null = null;
+
+    if (sucursalIdParam) {
+      const access = await verifyUserBranchAccess(
+        BigInt(tenantId),
+        user.id,
+        sucursalIdParam
+      );
+      if (access) {
+        sucursalId = access.sucursal.Id;
+        sucursalNombre = access.sucursal.Nombre;
+      }
+    }
 
     // Construir where clause
     const where: {
@@ -58,11 +75,9 @@ export async function GET(req: NextRequest) {
     }
 
     // Obtener total para paginación
-    // Nota: Para mejor performance, considerar índices en: TenantId, EstaEliminado, Descripcion, CodigoBarra
     const total = await prisma.articulo.count({ where });
 
     // Obtener productos paginados
-    // Optimización: Usar select específico en lugar de include para reducir datos transferidos
     const productos = await prisma.articulo.findMany({
       where,
       select: {
@@ -94,17 +109,19 @@ export async function GET(req: NextRequest) {
         TenantId: true,
         Precio: true, // Equivalent to include: { Precio: true }
         Stock: true, // Stock legacy (deprecated)
-        ArticuloStock: sucursalId ? {
-          where: {
-            SucursalId: BigInt(sucursalId),
-          },
-          select: {
-            Stock: true,
-            StockMinimo: true,
-            Ubicacion: true,
-          },
-          take: 1,
-        } : false,
+        ArticuloStock: sucursalId
+          ? {
+              where: {
+                SucursalId: sucursalId,
+              },
+              select: {
+                Stock: true,
+                StockMinimo: true,
+                Ubicacion: true,
+              },
+              take: 1,
+            }
+          : false,
       },
       orderBy: {
         Descripcion: "asc",
@@ -113,17 +130,22 @@ export async function GET(req: NextRequest) {
       take: pagination.limit,
     });
 
-    // Obtener nombre de sucursal activa
-    const branchContext = await getActiveBranchContext();
-    const sucursalNombre = branchContext?.sucursalNombre || null;
-
     // Mapear productos para incluir stock de la sucursal activa
     const productosConStock = productos.map((producto) => {
-      const stockSucursal = sucursalId && Array.isArray(producto.ArticuloStock) ? producto.ArticuloStock[0] : null;
+      const stockSucursal =
+        sucursalId && Array.isArray(producto.ArticuloStock)
+          ? producto.ArticuloStock[0]
+          : null;
       return {
         ...producto,
-        Stock: stockSucursal ? Number(stockSucursal.Stock) : Number(producto.Stock || 0),
-        StockMinimo: stockSucursal?.StockMinimo ? Number(stockSucursal.StockMinimo) : (producto.StockMinimo ? Number(producto.StockMinimo) : null),
+        Stock: stockSucursal
+          ? Number(stockSucursal.Stock)
+          : Number(producto.Stock || 0),
+        StockMinimo: stockSucursal?.StockMinimo
+          ? Number(stockSucursal.StockMinimo)
+          : producto.StockMinimo
+          ? Number(producto.StockMinimo)
+          : null,
         Ubicacion: stockSucursal?.Ubicacion || producto.Ubicacion,
         SucursalNombre: sucursalNombre, // Nombre de la sucursal del stock mostrado
         // Remover ArticuloStock del response
@@ -131,7 +153,11 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    const response = createPaginationResponse(productosConStock, total, pagination);
+    const response = createPaginationResponse(
+      productosConStock,
+      total,
+      pagination
+    );
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
@@ -141,10 +167,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
+    const { tenantId, user, error } = await getAuthUser();
 
-    if (error) {
-      return error;
+    if (error || !user) {
+      return (
+        error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      );
     }
 
     // Validar tenantId - NO permitir fallbacks
@@ -153,6 +181,19 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
+
+    // Validar sucursalId del body
+    const { sucursalId } = body;
+    let sucursalVerifiedId: bigint | null = null;
+
+    if (sucursalId) {
+      const access = await verifyUserBranchAccess(
+        BigInt(tenantId),
+        user.id,
+        sucursalId
+      );
+      if (access) sucursalVerifiedId = access.sucursal.Id;
+    }
 
     const validarProducto = createProductoSchema.parse(body);
 
@@ -239,19 +280,18 @@ export async function POST(req: NextRequest) {
         data: { ArticuloId: nuevoArticulo.Id },
       });
 
-      // 4. Crear ArticuloStock para la sucursal activa (si existe)
-      const sucursalId = await getSucursalId();
-      if (sucursalId && validarProducto.Stock !== undefined) {
+      // 4. Crear ArticuloStock para la sucursal proporcionada (si existe)
+      if (sucursalVerifiedId && validarProducto.Stock !== undefined) {
         await tx.articuloStock.upsert({
           where: {
             ArticuloId_SucursalId: {
               ArticuloId: nuevoArticulo.Id,
-              SucursalId: BigInt(sucursalId),
+              SucursalId: sucursalVerifiedId,
             },
           },
           create: {
             ArticuloId: nuevoArticulo.Id,
-            SucursalId: BigInt(sucursalId),
+            SucursalId: sucursalVerifiedId,
             TenantId: BigInt(tenantId),
             Stock: validarProducto.Stock,
             StockMinimo: validarProducto.StockMinimo || null,
@@ -296,10 +336,12 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
+    const { tenantId, user, error } = await getAuthUser();
 
-    if (error) {
-      return error;
+    if (error || !user) {
+      return (
+        error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      );
     }
 
     // Validar tenantId - NO permitir fallbacks
@@ -308,6 +350,19 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
+
+    // Validar sucursalId del body
+    const { sucursalId } = body;
+    let sucursalVerifiedId: bigint | null = null;
+
+    if (sucursalId) {
+      const access = await verifyUserBranchAccess(
+        BigInt(tenantId),
+        user.id,
+        sucursalId
+      );
+      if (access) sucursalVerifiedId = access.sucursal.Id;
+    }
 
     const validarProducto = updateProductoSchema.parse(body);
 
@@ -330,9 +385,6 @@ export async function PATCH(req: NextRequest) {
         "Artículo no encontrado o no pertenece a tu tenant"
       );
     }
-
-    // Obtener sucursal activa para actualizar ArticuloStock
-    const sucursalId = await getSucursalId();
 
     const producto = await prisma.$transaction(async (tx) => {
       const precioUpdate = await tx.precio.update({
@@ -447,17 +499,17 @@ export async function PATCH(req: NextRequest) {
       });
 
       // Actualizar o crear ArticuloStock para la sucursal activa (si existe y se actualizó el stock)
-      if (sucursalId && validarProducto.Stock !== undefined) {
+      if (sucursalVerifiedId && validarProducto.Stock !== undefined) {
         await tx.articuloStock.upsert({
           where: {
             ArticuloId_SucursalId: {
               ArticuloId: articuloUpdate.Id,
-              SucursalId: BigInt(sucursalId),
+              SucursalId: sucursalVerifiedId,
             },
           },
           create: {
             ArticuloId: articuloUpdate.Id,
-            SucursalId: BigInt(sucursalId),
+            SucursalId: sucursalVerifiedId,
             TenantId: tenantIdBigInt,
             Stock: validarProducto.Stock,
             StockMinimo: validarProducto.StockMinimo || null,

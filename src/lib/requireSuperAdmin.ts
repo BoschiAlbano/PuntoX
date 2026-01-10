@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import { prisma } from "@/lib/prisma";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
-import { Perfiles } from "@/models/perfiles_models";
+import { PerfilTipo } from "../../prisma/generated/prisma";
 
 export async function requireSuperAdminServer({
   redirectUrl = "/",
@@ -34,7 +34,7 @@ export async function requireSuperAdminServer({
 
   // 🍆 POR EL MOMENTO NO USA SUPERADMIN
   const isSuperAdmin = dbUser.PerfilUsuario.some(
-    (pu) => pu.Perfiles.Tipo === Perfiles.ADMINISTRADOR
+    (pu) => pu.Perfiles.Tipo === PerfilTipo.ADMINISTRADOR
   );
 
   if (!isSuperAdmin) {

@@ -1,18 +1,6 @@
 "use client";
 
-/**
- * =====================================================
- * SELECTOR DE SUCURSAL
- * =====================================================
- * 
- * Componente para seleccionar la sucursal activa.
- * Se muestra en el navbar cuando el usuario tiene acceso
- * a múltiples sucursales.
- * 
- * =====================================================
- */
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dropdown,
   DropdownTrigger,
@@ -20,81 +8,57 @@ import {
   DropdownItem,
   Button,
   Spinner,
+  addToast,
 } from "@heroui/react";
 import { Building2, ChevronDown, Check } from "lucide-react";
-
-type Sucursal = {
-  id: number;
-  nombre: string;
-  direccion: string | null;
-  esPrincipal: boolean;
-  estaActiva: boolean;
-  esDefault: boolean;
-};
-
-type SucursalActiva = {
-  id: number;
-  nombre: string;
-  esPrincipal: boolean;
-};
+import { useUserStore } from "@/store/useUserStore";
 
 type Props = {
   /** Callback cuando cambia la sucursal */
-  onBranchChange?: (sucursalId: number) => void;
+  onBranchChange?: (sucursalId: string) => void;
   /** Mostrar solo si hay múltiples sucursales */
   hideIfSingle?: boolean;
 };
 
-export default function SucursalSelector({ onBranchChange, hideIfSingle = true }: Props) {
-  const [sucursales, setSucursales] = useState<Sucursal[]>([]);
-  const [sucursalActiva, setSucursalActiva] = useState<SucursalActiva | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export default function SucursalSelector({
+  onBranchChange,
+  hideIfSingle = true,
+}: Props) {
+  const sucursales = useUserStore((state) => state.branches);
+  const sucursalActiva = useUserStore((state) => state.currentBranch);
+  const isLoading = useUserStore((state) => state.isLoading);
+
   const [isChanging, setIsChanging] = useState(false);
 
-  // Cargar sucursales del usuario
-  useEffect(() => {
-    const fetchSucursales = async () => {
-      try {
-        const res = await fetch("/api/sucursales/mis-sucursales");
-        if (res.ok) {
-          const data = await res.json();
-          setSucursales(data.sucursales || []);
-          setSucursalActiva(data.sucursalActiva || null);
-        }
-      } catch (error) {
-        console.error("Error cargando sucursales:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchSucursales();
-  }, []);
-
   // Cambiar sucursal activa
-  const handleChangeBranch = async (sucursalId: number) => {
-    if (sucursalActiva?.id === sucursalId) return;
+  const handleChangeBranch = async (sucursalId: string) => {
+    if (sucursalActiva?.Id === sucursalId) return;
 
     setIsChanging(true);
     try {
-      const res = await fetch("/api/sucursales/cambiar", {
+      const response = await fetch(`/api/sucursales/cambiar`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sucursalId }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ sucursalId: Number(sucursalId) }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setSucursalActiva(data.sucursal);
-        
-        // Notificar el cambio
-        onBranchChange?.(sucursalId);
-        
-        // Recargar la página para actualizar todos los datos
+      if (!response.ok) {
+        addToast({
+          title: "Error",
+          description: "Error al cambiar la sucursal",
+          color: "danger",
+        });
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success) {
         window.location.reload();
       }
     } catch (error) {
-      console.error("Error cambiando sucursal:", error);
+      console.error("Error al cambiar la sucursal:", error);
     } finally {
       setIsChanging(false);
     }
@@ -133,38 +97,41 @@ export default function SucursalSelector({ onBranchChange, hideIfSingle = true }
           disabled={isChanging}
         >
           <span className="truncate flex-1 text-left">
-            {sucursalActiva?.nombre || "Seleccionar sucursal"}
+            {sucursalActiva?.Nombre || "Seleccionar sucursal"}
           </span>
         </Button>
       </DropdownTrigger>
       <DropdownMenu
         aria-label="Sucursales disponibles"
         selectionMode="single"
-        selectedKeys={sucursalActiva ? new Set([sucursalActiva.id.toString()]) : new Set()}
+        selectedKeys={sucursalActiva ? new Set([sucursalActiva.Id]) : new Set()}
         onSelectionChange={(keys) => {
-          const selected = Array.from(keys)[0];
+          const selected = Array.from(keys)[0] as string;
           if (selected) {
-            handleChangeBranch(Number(selected));
+            handleChangeBranch(selected);
           }
         }}
       >
         {sucursales.map((sucursal) => (
           <DropdownItem
-            key={sucursal.id.toString()}
-            description={sucursal.esPrincipal ? "Casa Central" : sucursal.direccion || undefined}
+            key={sucursal.Id}
+            description={
+              sucursal.EsPrincipal
+                ? "Casa Central"
+                : sucursal.Direccion || undefined
+            }
             startContent={
-              sucursalActiva?.id === sucursal.id ? (
+              sucursalActiva?.Id === sucursal.Id ? (
                 <Check className="h-4 w-4 text-emerald-500" />
               ) : (
                 <Building2 className="h-4 w-4 text-slate-400" />
               )
             }
           >
-            {sucursal.nombre}
+            {sucursal.Nombre}
           </DropdownItem>
         ))}
       </DropdownMenu>
     </Dropdown>
   );
 }
-

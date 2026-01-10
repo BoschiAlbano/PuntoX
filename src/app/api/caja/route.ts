@@ -2,19 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
-import { getAuthWithBranch } from "@/lib/sucursal";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
-import { parsePaginationParams, createPaginationResponse } from "@/lib/pagination";
+import {
+  parsePaginationParams,
+  createPaginationResponse,
+} from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
+import { verifyUserBranchAccess } from "@/lib/sucursal/verifyUserBranch";
 
 // Schema para abrir caja
 const abrirCajaSchema = z.object({
-  montoInicial: z.number().min(0, "El monto inicial debe ser mayor o igual a 0"),
+  montoInicial: z
+    .number()
+    .min(0, "El monto inicial debe ser mayor o igual a 0"),
 });
 
 // Schema para cerrar caja
 const cerrarCajaSchema = z.object({
-  montoCierre: z.number().min(0, "El monto de cierre debe ser mayor o igual a 0"),
+  montoCierre: z
+    .number()
+    .min(0, "El monto de cierre debe ser mayor o igual a 0"),
 });
 
 // Schema para agregar gasto
@@ -27,7 +34,7 @@ const agregarGastoSchema = z.object({
 // GET: Obtener caja actual o historial
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId, sucursalId, error } = await getAuthWithBranch();
+    const { tenantId, user, error } = await getAuthUser();
 
     if (error) {
       return error;
@@ -39,6 +46,28 @@ export async function GET(req: NextRequest) {
     const historial = searchParams.get("historial") === "true";
     const resumenDia = searchParams.get("resumenDia") === "true";
     const pagination = parsePaginationParams(req);
+
+    const sucursalIdParam = req.nextUrl.searchParams.get("sucursalId");
+
+    console.log(
+      "sucursalIdParam **************************************",
+      sucursalIdParam
+    );
+
+    let sucursalId: bigint | null = null;
+    let sucursalNombre: string | null = null;
+
+    if (sucursalIdParam) {
+      const access = await verifyUserBranchAccess(
+        BigInt(tenantId),
+        user.id,
+        sucursalIdParam
+      );
+      if (access) {
+        sucursalId = access.sucursal.Id;
+        sucursalNombre = access.sucursal.Nombre;
+      }
+    }
 
     // Si se solicita una caja específica
     if (cajaId) {
@@ -145,17 +174,27 @@ export async function GET(req: NextRequest) {
           Id: Number(caja.Id),
           TenantId: Number(caja.TenantId),
           UsuarioAperturaId: Number(caja.UsuarioAperturaId),
-          UsuarioCierreId: caja.UsuarioCierreId ? Number(caja.UsuarioCierreId) : null,
-          UsuarioApertura: caja.Usuario_Caja_UsuarioAperturaIdToUsuario ? {
-            Id: Number(caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Id),
-            Nombre: caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Nombre,
-            NombreCompleto: formatearNombreUsuario(caja.Usuario_Caja_UsuarioAperturaIdToUsuario),
-          } : null,
-          UsuarioCierre: caja.Usuario_Caja_UsuarioCierreIdToUsuario ? {
-            Id: Number(caja.Usuario_Caja_UsuarioCierreIdToUsuario.Id),
-            Nombre: caja.Usuario_Caja_UsuarioCierreIdToUsuario.Nombre,
-            NombreCompleto: formatearNombreUsuario(caja.Usuario_Caja_UsuarioCierreIdToUsuario),
-          } : null,
+          UsuarioCierreId: caja.UsuarioCierreId
+            ? Number(caja.UsuarioCierreId)
+            : null,
+          UsuarioApertura: caja.Usuario_Caja_UsuarioAperturaIdToUsuario
+            ? {
+                Id: Number(caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Id),
+                Nombre: caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Nombre,
+                NombreCompleto: formatearNombreUsuario(
+                  caja.Usuario_Caja_UsuarioAperturaIdToUsuario
+                ),
+              }
+            : null,
+          UsuarioCierre: caja.Usuario_Caja_UsuarioCierreIdToUsuario
+            ? {
+                Id: Number(caja.Usuario_Caja_UsuarioCierreIdToUsuario.Id),
+                Nombre: caja.Usuario_Caja_UsuarioCierreIdToUsuario.Nombre,
+                NombreCompleto: formatearNombreUsuario(
+                  caja.Usuario_Caja_UsuarioCierreIdToUsuario
+                ),
+              }
+            : null,
           DetalleCaja: caja.DetalleCaja.map((d) => ({
             ...d,
             Id: Number(d.Id),
@@ -276,11 +315,15 @@ export async function GET(req: NextRequest) {
           TenantId: Number(caja.TenantId),
           UsuarioAperturaId: Number(caja.UsuarioAperturaId),
           UsuarioCierreId: null,
-          UsuarioApertura: caja.Usuario_Caja_UsuarioAperturaIdToUsuario ? {
-            Id: Number(caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Id),
-            Nombre: caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Nombre,
-            NombreCompleto: formatearNombreUsuario(caja.Usuario_Caja_UsuarioAperturaIdToUsuario),
-          } : null,
+          UsuarioApertura: caja.Usuario_Caja_UsuarioAperturaIdToUsuario
+            ? {
+                Id: Number(caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Id),
+                Nombre: caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Nombre,
+                NombreCompleto: formatearNombreUsuario(
+                  caja.Usuario_Caja_UsuarioAperturaIdToUsuario
+                ),
+              }
+            : null,
           UsuarioCierre: null,
           DetalleCaja: caja.DetalleCaja.map((d) => ({
             ...d,
@@ -372,16 +415,26 @@ export async function GET(req: NextRequest) {
       const totalesDia = cajasDelDia.reduce(
         (acc, caja) => ({
           montoInicial: acc.montoInicial + Number(caja.MontoInicial),
-          totalEntradaEfectivo: acc.totalEntradaEfectivo + Number(caja.TotalEntradaEfectivo),
-          totalSalidaEfectivo: acc.totalSalidaEfectivo + Number(caja.TotalSalidaEfectivo),
-          totalEntradaTarjeta: acc.totalEntradaTarjeta + Number(caja.TotalEntradaTarjeta),
-          totalSalidaTarjeta: acc.totalSalidaTarjeta + Number(caja.TotalSalidaTarjeta),
-          totalEntradaCheque: acc.totalEntradaCheque + Number(caja.TotalEntradaCheque),
-          totalSalidaCheque: acc.totalSalidaCheque + Number(caja.TotalSalidaCheque),
-          totalEntradaCtaCte: acc.totalEntradaCtaCte + Number(caja.TotalEntradaCtaCte),
-          totalSalidaCtaCte: acc.totalSalidaCtaCte + Number(caja.TotalSalidaCtaCte),
-          totalEntradaTransf: acc.totalEntradaTransf + Number(caja.TotalEntradaTransf),
-          totalSalidaTransf: acc.totalSalidaTransf + Number(caja.TotalSalidaTransf),
+          totalEntradaEfectivo:
+            acc.totalEntradaEfectivo + Number(caja.TotalEntradaEfectivo),
+          totalSalidaEfectivo:
+            acc.totalSalidaEfectivo + Number(caja.TotalSalidaEfectivo),
+          totalEntradaTarjeta:
+            acc.totalEntradaTarjeta + Number(caja.TotalEntradaTarjeta),
+          totalSalidaTarjeta:
+            acc.totalSalidaTarjeta + Number(caja.TotalSalidaTarjeta),
+          totalEntradaCheque:
+            acc.totalEntradaCheque + Number(caja.TotalEntradaCheque),
+          totalSalidaCheque:
+            acc.totalSalidaCheque + Number(caja.TotalSalidaCheque),
+          totalEntradaCtaCte:
+            acc.totalEntradaCtaCte + Number(caja.TotalEntradaCtaCte),
+          totalSalidaCtaCte:
+            acc.totalSalidaCtaCte + Number(caja.TotalSalidaCtaCte),
+          totalEntradaTransf:
+            acc.totalEntradaTransf + Number(caja.TotalEntradaTransf),
+          totalSalidaTransf:
+            acc.totalSalidaTransf + Number(caja.TotalSalidaTransf),
           ganancia: acc.ganancia + Number(caja.Ganancia),
         }),
         {
@@ -416,18 +469,30 @@ export async function GET(req: NextRequest) {
           cantidadCajas: cajasDelDia.length,
           totales: {
             ...totalesDia,
-            efectivo: totalesDia.montoInicial + totalesDia.totalEntradaEfectivo - totalesDia.totalSalidaEfectivo,
-            tarjeta: totalesDia.totalEntradaTarjeta - totalesDia.totalSalidaTarjeta,
-            cheque: totalesDia.totalEntradaCheque - totalesDia.totalSalidaCheque,
-            cuentaCorriente: totalesDia.totalEntradaCtaCte - totalesDia.totalSalidaCtaCte,
-            transferencia: totalesDia.totalEntradaTransf - totalesDia.totalSalidaTransf,
+            efectivo:
+              totalesDia.montoInicial +
+              totalesDia.totalEntradaEfectivo -
+              totalesDia.totalSalidaEfectivo,
+            tarjeta:
+              totalesDia.totalEntradaTarjeta - totalesDia.totalSalidaTarjeta,
+            cheque:
+              totalesDia.totalEntradaCheque - totalesDia.totalSalidaCheque,
+            cuentaCorriente:
+              totalesDia.totalEntradaCtaCte - totalesDia.totalSalidaCtaCte,
+            transferencia:
+              totalesDia.totalEntradaTransf - totalesDia.totalSalidaTransf,
             totalCaja:
               totalesDia.montoInicial +
-              totalesDia.totalEntradaEfectivo - totalesDia.totalSalidaEfectivo +
-              totalesDia.totalEntradaTarjeta - totalesDia.totalSalidaTarjeta +
-              totalesDia.totalEntradaCheque - totalesDia.totalSalidaCheque +
-              totalesDia.totalEntradaCtaCte - totalesDia.totalSalidaCtaCte +
-              totalesDia.totalEntradaTransf - totalesDia.totalSalidaTransf,
+              totalesDia.totalEntradaEfectivo -
+              totalesDia.totalSalidaEfectivo +
+              totalesDia.totalEntradaTarjeta -
+              totalesDia.totalSalidaTarjeta +
+              totalesDia.totalEntradaCheque -
+              totalesDia.totalSalidaCheque +
+              totalesDia.totalEntradaCtaCte -
+              totalesDia.totalSalidaCtaCte +
+              totalesDia.totalEntradaTransf -
+              totalesDia.totalSalidaTransf,
           },
           cajas: cajasDelDia.map((c) => ({
             Id: Number(c.Id),
@@ -443,14 +508,18 @@ export async function GET(req: NextRequest) {
               ? {
                   Id: Number(c.Usuario_Caja_UsuarioAperturaIdToUsuario.Id),
                   Nombre: c.Usuario_Caja_UsuarioAperturaIdToUsuario.Nombre,
-                  NombreCompleto: formatearNombreUsuario(c.Usuario_Caja_UsuarioAperturaIdToUsuario),
+                  NombreCompleto: formatearNombreUsuario(
+                    c.Usuario_Caja_UsuarioAperturaIdToUsuario
+                  ),
                 }
               : null,
             UsuarioCierre: c.Usuario_Caja_UsuarioCierreIdToUsuario
               ? {
                   Id: Number(c.Usuario_Caja_UsuarioCierreIdToUsuario.Id),
                   Nombre: c.Usuario_Caja_UsuarioCierreIdToUsuario.Nombre,
-                  NombreCompleto: formatearNombreUsuario(c.Usuario_Caja_UsuarioCierreIdToUsuario),
+                  NombreCompleto: formatearNombreUsuario(
+                    c.Usuario_Caja_UsuarioCierreIdToUsuario
+                  ),
                 }
               : null,
           })),
@@ -533,18 +602,13 @@ export async function GET(req: NextRequest) {
 // POST: Abrir caja
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, sucursalId, error: authError } = await getAuthWithBranch();
+    const { tenantId, user, error } = await getAuthUser();
 
-    if (authError) {
-      return authError;
+    if (error) {
+      return error;
     }
 
     // Obtener usuario actual
-    const supabase = await getSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
     if (!user) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
@@ -559,6 +623,23 @@ export async function POST(req: NextRequest) {
         { error: "Usuario no encontrado" },
         { status: 401 }
       );
+    }
+
+    const sucursalIdParam = req.nextUrl.searchParams.get("sucursalId");
+
+    let sucursalId: bigint | null = null;
+    let sucursalNombre: string | null = null;
+
+    if (sucursalIdParam) {
+      const access = await verifyUserBranchAccess(
+        BigInt(tenantId),
+        user.id,
+        sucursalIdParam
+      );
+      if (access) {
+        sucursalId = access.sucursal.Id;
+        sucursalNombre = access.sucursal.Nombre;
+      }
     }
 
     // Verificar si ya hay una caja abierta en esta sucursal
@@ -643,17 +724,11 @@ export async function POST(req: NextRequest) {
 // PATCH: Cerrar caja o agregar gasto
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, sucursalId, error: authError } = await getAuthWithBranch();
+    const { tenantId, user, error } = await getAuthUser();
 
-    if (authError) {
-      return authError;
+    if (error) {
+      return error;
     }
-
-    // Obtener usuario actual
-    const supabase = await getSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
@@ -669,6 +744,23 @@ export async function PATCH(req: NextRequest) {
         { error: "Usuario no encontrado" },
         { status: 401 }
       );
+    }
+
+    const sucursalIdParam = req.nextUrl.searchParams.get("sucursalId");
+
+    let sucursalId: bigint | null = null;
+    let sucursalNombre: string | null = null;
+
+    if (sucursalIdParam) {
+      const access = await verifyUserBranchAccess(
+        BigInt(tenantId),
+        user.id,
+        sucursalIdParam
+      );
+      if (access) {
+        sucursalId = access.sucursal.Id;
+        sucursalNombre = access.sucursal.Nombre;
+      }
     }
 
     const searchParams = req.nextUrl.searchParams;
@@ -739,11 +831,18 @@ export async function PATCH(req: NextRequest) {
           TenantId: Number(cajaCerrada.TenantId),
           UsuarioAperturaId: Number(cajaCerrada.UsuarioAperturaId),
           UsuarioCierreId: Number(cajaCerrada.UsuarioCierreId),
-          UsuarioCierre: cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario ? {
-            Id: Number(cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario.Id),
-            Nombre: cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario.Nombre,
-            NombreCompleto: formatearNombreUsuario(cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario),
-          } : null,
+          UsuarioCierre: cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario
+            ? {
+                Id: Number(
+                  cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario.Id
+                ),
+                Nombre:
+                  cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario.Nombre,
+                NombreCompleto: formatearNombreUsuario(
+                  cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario
+                ),
+              }
+            : null,
         },
       });
     } else if (accion === "gasto") {
@@ -825,10 +924,7 @@ export async function PATCH(req: NextRequest) {
       });
     }
 
-    return NextResponse.json(
-      { error: "Acción no válida" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Acción no válida" }, { status: 400 });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -839,4 +935,3 @@ export async function PATCH(req: NextRequest) {
     return handleError(error);
   }
 }
-
