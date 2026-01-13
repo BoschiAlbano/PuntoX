@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function Loading({
   message = "Verificando autenticación...",
@@ -22,10 +23,12 @@ export default function Loading({
             className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 border-r-[#90c472]"
           />
           <div className="absolute inset-2 rounded-full bg-linear-to-br from-blue-500 to-[#90c472] flex items-center justify-center">
-            <img
+            <Image
               src="/XP.ico"
               alt="Punto X"
-              className="w-10 h-10 object-contain"
+              width={40}
+              height={40}
+              className="object-contain"
             />
           </div>
         </div>

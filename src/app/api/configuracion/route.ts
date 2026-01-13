@@ -12,24 +12,25 @@ const payloadSchema = z.object({
   telefono: z.string().optional().nullable(),
   celular: z.string().optional().nullable(),
   direccion: z.string().min(1, "Dirección requerida"),
-  localidadId: z.preprocess(
-    (val) => {
+  localidadId: z
+    .preprocess((val) => {
       if (val === null || val === undefined || val === "") {
         return null;
       }
-      const num = typeof val === "string" ? Number(val) : (typeof val === "number" ? val : null);
+      const num =
+        typeof val === "string"
+          ? Number(val)
+          : typeof val === "number"
+          ? val
+          : null;
       if (num === null || Number.isNaN(num) || num <= 0) {
         return null;
       }
       return num;
-    },
-    z.union([
-      z.number().int().positive("Debe seleccionar una localidad válida"),
-      z.null()
-    ])
-  ).refine((val) => val !== null && val > 0, {
-    message: "Debe seleccionar una localidad"
-  }),
+    }, z.union([z.number().int().positive("Debe seleccionar una localidad válida"), z.null()]))
+    .refine((val) => val !== null && val > 0, {
+      message: "Debe seleccionar una localidad",
+    }),
   observacionPieFactura: z.string().optional().nullable(),
   // Preferencias de venta básicas
   mostrarPreciosConIva: z.boolean().optional(),
@@ -75,10 +76,8 @@ async function resolveTenantId() {
 
     // Buscar tenantId en diferentes lugares del metadata
     const metadata = user.app_metadata || {};
-    const tenantId = 
-      metadata.tenantId || 
-      metadata.tenant_id || 
-      (user as any).tenantId;
+    const tenantId =
+      metadata.tenantId || metadata.tenant_id || (user as any).tenantId;
 
     if (tenantId) {
       return Number(tenantId);
@@ -96,10 +95,12 @@ async function resolveTenantId() {
       }
     } catch (error) {
       // Error silencioso, retornamos null
+      console.error(error);
     }
 
     return null;
   } catch (error) {
+    console.error(error);
     return null;
   }
 }
@@ -108,7 +109,10 @@ export async function GET() {
   const tenantId = await resolveTenantId();
   if (!tenantId) {
     return NextResponse.json(
-      { error: "No se pudo determinar el tenant. Por favor, cierra sesión y vuelve a iniciar sesión." },
+      {
+        error:
+          "No se pudo determinar el tenant. Por favor, cierra sesión y vuelve a iniciar sesión.",
+      },
       { status: 401 }
     );
   }
@@ -117,7 +121,7 @@ export async function GET() {
     // Optimización: Usar findFirst con orderBy para obtener la configuración más reciente
     // Nota: Para mejor performance, considerar índice compuesto en: (TenantId, EstaEliminado, Id DESC)
     const config = await prisma.configuracion.findFirst({
-      where: { 
+      where: {
         TenantId: BigInt(tenantId),
         EstaEliminado: false,
       },
@@ -177,7 +181,7 @@ export async function GET() {
         // NotificacionesStockBajo: true,
       },
       orderBy: {
-        Id: 'desc',
+        Id: "desc",
       },
     });
 
@@ -200,8 +204,12 @@ export async function GET() {
           celular: config.Celular ?? "",
           direccion: config.Direccion ?? "",
           localidadId: config.LocalidadId ? Number(config.LocalidadId) : null,
-          departamentoId: config.Localidad?.DepartamentoId ? Number(config.Localidad.DepartamentoId) : null,
-          provinciaId: config.Localidad?.Departamento?.ProvinciaId ? Number(config.Localidad.Departamento.ProvinciaId) : null,
+          departamentoId: config.Localidad?.DepartamentoId
+            ? Number(config.Localidad.DepartamentoId)
+            : null,
+          provinciaId: config.Localidad?.Departamento?.ProvinciaId
+            ? Number(config.Localidad.Departamento.ProvinciaId)
+            : null,
           observacionPieFactura: config.ObservacionEnPieFactura ?? "",
           mostrarPreciosConIva: config.MostrarPreciosConIva ?? true,
           abrirCajonEfectivo: config.AbrirCajonEfectivo ?? true,
@@ -212,13 +220,16 @@ export async function GET() {
           remitoDescuentaStock: config.RemitoDescuentaStock,
           actualizaCostoDesdeCompra: config.ActualizaCostoDesdeCompra,
           modificaPrecioVentaDesdeCompra: config.ModificaPrecioVentaDesdeCompra,
-          tipoFormaPagoPorDefectoVenta: config.TipoFormaPagoPorDefectoVenta ?? 0,
-          tipoFormaPagoPorDefectoCompra: config.TipoFormaPagoPorDefectoCompra ?? 0,
+          tipoFormaPagoPorDefectoVenta:
+            config.TipoFormaPagoPorDefectoVenta ?? 0,
+          tipoFormaPagoPorDefectoCompra:
+            config.TipoFormaPagoPorDefectoCompra ?? 0,
           ingresoManualCajaInicial: config.IngresoManualCajaInicial ?? false,
           puestoCajaSeparado: config.PuestoCajaSeparado ?? false,
           activarRetiroDeCaja: config.ActivarRetiroDeCaja ?? false,
           montoMaximoRetiroCaja: Number(config.MontoMaximoRetiroCaja) ?? 0,
-          unificarRenglonesIngresarMismoProducto: config.UnificarRenglonesIngresarMismoProducto ?? true,
+          unificarRenglonesIngresarMismoProducto:
+            config.UnificarRenglonesIngresarMismoProducto ?? true,
           activarBascula: config.ActivarBascula ?? false,
           etiquetaPorPeso: config.EtiquetaPorPeso ?? false,
           codigoBascula: config.CodigoBascula ?? "",
@@ -235,14 +246,20 @@ export async function PUT(req: Request) {
   const tenantId = await resolveTenantId();
   if (!tenantId) {
     return NextResponse.json(
-      { error: "No se pudo determinar el tenant. Por favor, cierra sesión y vuelve a iniciar sesión." },
+      {
+        error:
+          "No se pudo determinar el tenant. Por favor, cierra sesión y vuelve a iniciar sesión.",
+      },
       { status: 401 }
     );
   }
 
   const json = await req.json().catch(() => null);
   if (!json) {
-    return NextResponse.json({ error: "Cuerpo de la petición inválido" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Cuerpo de la petición inválido" },
+      { status: 400 }
+    );
   }
 
   const parsed = payloadSchema.safeParse(json);
@@ -250,7 +267,7 @@ export async function PUT(req: Request) {
   if (!parsed.success) {
     const errorIssues = parsed.error.issues || [];
     const firstError = errorIssues[0];
-    const errorMessage = firstError 
+    const errorMessage = firstError
       ? `${firstError.path.join(".")}: ${firstError.message}`
       : "Datos invalidos";
     return NextResponse.json({ error: errorMessage }, { status: 400 });
@@ -260,13 +277,13 @@ export async function PUT(req: Request) {
 
   try {
     const config = await prisma.configuracion.findFirst({
-      where: { 
+      where: {
         TenantId: tenantId,
         EstaEliminado: false,
       },
       select: { Id: true },
       orderBy: {
-        Id: 'desc',
+        Id: "desc",
       },
     });
 
@@ -290,12 +307,16 @@ export async function PUT(req: Request) {
             PresupuestoDescuentaStock: data.presupuestoDescuentaStock ?? false,
             RemitoDescuentaStock: data.remitoDescuentaStock ?? true,
             ActualizaCostoDesdeCompra: data.actualizaCostoDesdeCompra ?? true,
-            ModificaPrecioVentaDesdeCompra: data.modificaPrecioVentaDesdeCompra ?? false,
+            ModificaPrecioVentaDesdeCompra:
+              data.modificaPrecioVentaDesdeCompra ?? false,
             Imprimir: data.imprimir ?? false,
             Instalada: 1,
-            TipoFormaPagoPorDefectoVenta: data.tipoFormaPagoPorDefectoVenta ?? 0,
-            TipoFormaPagoPorDefectoCompra: data.tipoFormaPagoPorDefectoCompra ?? 0,
-            UnificarRenglonesIngresarMismoProducto: data.unificarRenglonesIngresarMismoProducto ?? true,
+            TipoFormaPagoPorDefectoVenta:
+              data.tipoFormaPagoPorDefectoVenta ?? 0,
+            TipoFormaPagoPorDefectoCompra:
+              data.tipoFormaPagoPorDefectoCompra ?? 0,
+            UnificarRenglonesIngresarMismoProducto:
+              data.unificarRenglonesIngresarMismoProducto ?? true,
             IngresoManualCajaInicial: data.ingresoManualCajaInicial ?? false,
             PuestoCajaSeparado: data.puestoCajaSeparado ?? false,
             ActivarRetiroDeCaja: data.activarRetiroDeCaja ?? false,
@@ -344,7 +365,7 @@ export async function PUT(req: Request) {
 
         return { config: newConfig, isNew: true };
       }
-      
+
       // Actualizar configuración existente
       const updated = await tx.configuracion.update({
         where: { Id: config.Id, TenantId: tenantId },
@@ -363,17 +384,30 @@ export async function PUT(req: Request) {
           NumerarPedidosPantalla: data.numerarPedidosPantalla ?? undefined,
           Imprimir: data.imprimir ?? undefined,
           FacturaDescuentaStock: data.facturaDescuentaStock ?? undefined,
-          PresupuestoDescuentaStock: data.presupuestoDescuentaStock ?? undefined,
+          PresupuestoDescuentaStock:
+            data.presupuestoDescuentaStock ?? undefined,
           RemitoDescuentaStock: data.remitoDescuentaStock ?? undefined,
-          ActualizaCostoDesdeCompra: data.actualizaCostoDesdeCompra ?? undefined,
-          ModificaPrecioVentaDesdeCompra: data.modificaPrecioVentaDesdeCompra ?? undefined,
-          TipoFormaPagoPorDefectoVenta: data.tipoFormaPagoPorDefectoVenta !== undefined ? data.tipoFormaPagoPorDefectoVenta : undefined,
-          TipoFormaPagoPorDefectoCompra: data.tipoFormaPagoPorDefectoCompra !== undefined ? data.tipoFormaPagoPorDefectoCompra : undefined,
+          ActualizaCostoDesdeCompra:
+            data.actualizaCostoDesdeCompra ?? undefined,
+          ModificaPrecioVentaDesdeCompra:
+            data.modificaPrecioVentaDesdeCompra ?? undefined,
+          TipoFormaPagoPorDefectoVenta:
+            data.tipoFormaPagoPorDefectoVenta !== undefined
+              ? data.tipoFormaPagoPorDefectoVenta
+              : undefined,
+          TipoFormaPagoPorDefectoCompra:
+            data.tipoFormaPagoPorDefectoCompra !== undefined
+              ? data.tipoFormaPagoPorDefectoCompra
+              : undefined,
           IngresoManualCajaInicial: data.ingresoManualCajaInicial ?? undefined,
           PuestoCajaSeparado: data.puestoCajaSeparado ?? undefined,
           ActivarRetiroDeCaja: data.activarRetiroDeCaja ?? undefined,
-          MontoMaximoRetiroCaja: data.montoMaximoRetiroCaja !== undefined ? data.montoMaximoRetiroCaja : undefined,
-          UnificarRenglonesIngresarMismoProducto: data.unificarRenglonesIngresarMismoProducto ?? undefined,
+          MontoMaximoRetiroCaja:
+            data.montoMaximoRetiroCaja !== undefined
+              ? data.montoMaximoRetiroCaja
+              : undefined,
+          UnificarRenglonesIngresarMismoProducto:
+            data.unificarRenglonesIngresarMismoProducto ?? undefined,
           ActivarBascula: data.activarBascula ?? undefined,
           EtiquetaPorPeso: data.etiquetaPorPeso ?? undefined,
           CodigoBascula: data.codigoBascula ?? undefined,
@@ -427,24 +461,34 @@ export async function PUT(req: Request) {
           telefono: configResult.Telefono ?? "",
           celular: configResult.Celular ?? "",
           direccion: configResult.Direccion ?? "",
-          localidadId: configResult.LocalidadId ? Number(configResult.LocalidadId) : null,
+          localidadId: configResult.LocalidadId
+            ? Number(configResult.LocalidadId)
+            : null,
           observacionPieFactura: configResult.ObservacionEnPieFactura ?? "",
           mostrarPreciosConIva: configResult.MostrarPreciosConIva ?? true,
           abrirCajonEfectivo: configResult.AbrirCajonEfectivo ?? true,
           numerarPedidosPantalla: configResult.NumerarPedidosPantalla ?? true,
           imprimir: configResult.Imprimir ?? false,
           facturaDescuentaStock: configResult.FacturaDescuentaStock ?? true,
-          presupuestoDescuentaStock: configResult.PresupuestoDescuentaStock ?? false,
+          presupuestoDescuentaStock:
+            configResult.PresupuestoDescuentaStock ?? false,
           remitoDescuentaStock: configResult.RemitoDescuentaStock ?? true,
-          actualizaCostoDesdeCompra: configResult.ActualizaCostoDesdeCompra ?? true,
-          modificaPrecioVentaDesdeCompra: configResult.ModificaPrecioVentaDesdeCompra ?? false,
-          tipoFormaPagoPorDefectoVenta: configResult.TipoFormaPagoPorDefectoVenta ?? 0,
-          tipoFormaPagoPorDefectoCompra: configResult.TipoFormaPagoPorDefectoCompra ?? 0,
-          ingresoManualCajaInicial: configResult.IngresoManualCajaInicial ?? false,
+          actualizaCostoDesdeCompra:
+            configResult.ActualizaCostoDesdeCompra ?? true,
+          modificaPrecioVentaDesdeCompra:
+            configResult.ModificaPrecioVentaDesdeCompra ?? false,
+          tipoFormaPagoPorDefectoVenta:
+            configResult.TipoFormaPagoPorDefectoVenta ?? 0,
+          tipoFormaPagoPorDefectoCompra:
+            configResult.TipoFormaPagoPorDefectoCompra ?? 0,
+          ingresoManualCajaInicial:
+            configResult.IngresoManualCajaInicial ?? false,
           puestoCajaSeparado: configResult.PuestoCajaSeparado ?? false,
           activarRetiroDeCaja: configResult.ActivarRetiroDeCaja ?? false,
-          montoMaximoRetiroCaja: Number(configResult.MontoMaximoRetiroCaja) ?? 0,
-          unificarRenglonesIngresarMismoProducto: configResult.UnificarRenglonesIngresarMismoProducto ?? true,
+          montoMaximoRetiroCaja:
+            Number(configResult.MontoMaximoRetiroCaja) ?? 0,
+          unificarRenglonesIngresarMismoProducto:
+            configResult.UnificarRenglonesIngresarMismoProducto ?? true,
           activarBascula: configResult.ActivarBascula ?? false,
           etiquetaPorPeso: configResult.EtiquetaPorPeso ?? false,
           codigoBascula: configResult.CodigoBascula ?? "",

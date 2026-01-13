@@ -15,6 +15,7 @@ import {
   Switch,
 } from "@heroui/react";
 import { addToast } from "@heroui/react";
+import Image from "next/image";
 
 // Types
 type PerfilNegocioDTO = {
@@ -961,7 +962,7 @@ export default function AdminConfiguracionPage() {
               {branding.logoPreview ? (
                 <div className="flex items-center gap-3">
                   <div className="w-14 h-14 rounded-lg border border-slate-200 overflow-hidden bg-white">
-                    <img
+                    <Image
                       src={branding.logoPreview}
                       alt="Logo preview"
                       className="object-contain w-full h-full"

@@ -2,7 +2,8 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, BarChart3, Box, ShieldCheck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import Image from "next/image";
 
 export const LandingHero = () => {
   return (
@@ -76,20 +77,8 @@ export const LandingHero = () => {
                 </div>
               </div>
               <div className="absolute inset-0 flex items-center justify-center z-30">
-                {/* <span className="text-[#90c472] text-xl font-medium tracking-widest uppercase">
-                  Vista Previa del Sistema
-                </span> */}
-
-                {/* <video
-                  className="object-cover rounded-4xl mask-[radial-gradient(ellipse_at_center,black_70%,transparent_100%)]"
-                  src="/puntoxDemo.mp4"
-                  autoPlay
-                  loop
-                  muted
-                /> */}
-
                 <div className="w-full h-full m-4 sm:m-10 flex flex-col items-center justify-center">
-                  <img
+                  <Image
                     src="/puntoxDemo.png"
                     alt="Dashboard Preview"
                     className=" object-cover rounded-lg"

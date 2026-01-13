@@ -17,7 +17,6 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Chip,
 } from "@heroui/react";
 import { Trash2, Plus, AlertCircle, CheckCircle2 } from "lucide-react";
 import { TIPO_PAGO } from "@/lib/constants/comprobantes";
@@ -26,7 +25,7 @@ interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   total: number;
-  onConfirm: (pagos: any[]) => void;
+  onConfirm: (pagos: { tipoPago: number; monto: number }[]) => void;
 }
 
 export default function PaymentModal({

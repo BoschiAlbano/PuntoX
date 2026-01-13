@@ -1,6 +1,7 @@
 "use client";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
 import { redirect } from "next/navigation";
+import Image from "next/image";
 export default function page() {
   const handleLogout = async () => {
     const supabase = getSupabaseBrowserClient();
@@ -9,7 +10,7 @@ export default function page() {
   };
   return (
     <section className="flex flex-col items-center justify-center h-screen gap-4">
-      <img
+      <Image
         src="/favicon-light.ico"
         alt="Punto X"
         className="w-24 h-24 object-contain"

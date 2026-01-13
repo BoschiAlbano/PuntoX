@@ -368,7 +368,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validar sucursales si se proporcionan
-    let sucursalesIdsNumbers: number[] = [];
+    const sucursalesIdsNumbers: number[] = [];
     if (data.sucursalId && Array.isArray(data.sucursalId)) {
       const ids = data.sucursalId as (string | number)[];
       for (const id of ids) {

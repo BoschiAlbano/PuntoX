@@ -26,7 +26,7 @@ import { Lock, Shield, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
 import { type PreferenciasVentaDTO } from "./actions-preferencias-venta";
-
+import Image from "next/image";
 type SectionKey =
   | "perfil"
   | "ventas"
@@ -1442,7 +1442,7 @@ export default function Configuracion() {
                   <div className="flex items-center gap-4">
                     {logoPreview && (
                       <div className="relative">
-                        <img
+                        <Image
                           src={logoPreview}
                           alt="Logo preview"
                           className="w-24 h-24 object-contain border border-slate-200 rounded-lg bg-white"

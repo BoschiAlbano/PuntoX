@@ -104,7 +104,7 @@ export async function middleware(req: NextRequest) {
             value,
             ...options,
           });
-        } catch (error) {
+        } catch {
           // Ignorar error si req es inmutable en este punto
         }
       },
@@ -122,7 +122,7 @@ export async function middleware(req: NextRequest) {
             value: "",
             ...options,
           });
-        } catch (error) {
+        } catch {
           // Ignorar
         }
       },

@@ -1,10 +1,10 @@
 /**
  * Tests para el componente CredentialsForm
- * 
+ *
  * Tests unitarios para las funciones de validación y manejo de errores
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 
 // Importar las funciones que queremos testear
 // Como son funciones internas, las extraeremos o las testaremos indirectamente
@@ -23,7 +23,11 @@ const getErrorMessage = (error: unknown): string => {
   let errorMessage: string;
   if (error instanceof Error) {
     errorMessage = error.message;
-  } else if (typeof error === "object" && error !== null && "message" in error) {
+  } else if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error
+  ) {
     errorMessage = String((error as { message: unknown }).message);
   } else {
     errorMessage = String(error);
@@ -140,9 +144,7 @@ describe("CredentialsForm - Manejo de Errores", () => {
 
     it("debe mapear 'Invalid email' correctamente", () => {
       const error = new Error("Invalid email");
-      expect(getErrorMessage(error)).toBe(
-        "El formato del email no es válido"
-      );
+      expect(getErrorMessage(error)).toBe("El formato del email no es válido");
     });
 
     it("debe mapear errores de Password correctamente", () => {
@@ -171,13 +173,15 @@ describe("CredentialsForm - Manejo de Errores", () => {
       expect(getErrorMessage("Invalid login credentials")).toBe(
         "Email o contraseña incorrectos"
       );
-      expect(getErrorMessage("Error personalizado")).toBe("Error personalizado");
+      expect(getErrorMessage("Error personalizado")).toBe(
+        "Error personalizado"
+      );
     });
 
     it("debe manejar objetos con message", () => {
       const error = { message: "Invalid login credentials" };
       expect(getErrorMessage(error)).toBe("Email o contraseña incorrectos");
-      
+
       // También debe funcionar con otros mensajes
       const error2 = { message: "Too many requests" };
       expect(getErrorMessage(error2)).toBe(
@@ -218,4 +222,3 @@ describe("CredentialsForm - Integración", () => {
     });
   });
 });
-

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 
 export const LandingNavbar = () => {
@@ -26,10 +27,12 @@ export const LandingNavbar = () => {
         <Link href="/" className="flex items-center gap-3 group">
           <div className="relative w-10 h-10">
             <div className="absolute inset-0 bg-[#90c472] rounded-lg blur opacity-20 group-hover:opacity-40 transition-opacity" />
-            <img
+            <Image
               src="/XPdark.ico"
               alt="Punto X"
-              className="relative w-full h-full object-contain"
+              width={40}
+              height={40}
+              className="relative object-contain"
             />
           </div>
           <span className="text-xl font-bold bg-clip-text text-transparent bg-linear-to-r from-white to-gray-300">

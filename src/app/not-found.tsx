@@ -1,10 +1,11 @@
 "use client";
 import React from "react";
+import Image from "next/image";
 
 export default function page() {
   return (
     <section className="flex flex-col items-center justify-center h-screen gap-4">
-      <img
+      <Image
         src="/favicon-light.ico"
         alt="Punto X"
         className="w-24 h-24 object-contain"

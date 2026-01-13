@@ -55,7 +55,7 @@ export async function GET() {
     }));
 
     // Determine default branch (or first available if none default)
-    let currentBranch =
+    const currentBranch =
       branches.find((b) => b.esDefault) || branches[0] || null;
 
     // Extract permissions (keys) from all profiles

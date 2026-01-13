@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import { handleError } from "@/lib/errors/handler";
@@ -33,37 +33,51 @@ export async function GET() {
 
     // Obtener estadísticas usando SQL directo (PostgreSQL)
     // Primero obtener totales
-    const totalEventosResult = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
+    const totalEventosResult = await prisma.$queryRawUnsafe<
+      Array<{ count: bigint }>
+    >(
       `SELECT COUNT(*) as count FROM "AuditoriaEmpleado" WHERE "TenantId" = $1`,
       tenantIdBigInt
     );
     const totalEventos = Number(totalEventosResult[0]?.count || 0);
 
-    const eventosErrorResult = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
+    const eventosErrorResult = await prisma.$queryRawUnsafe<
+      Array<{ count: bigint }>
+    >(
       `SELECT COUNT(*) as count FROM "AuditoriaEmpleado" WHERE "TenantId" = $1 AND "Severidad" = 'ERROR'`,
       tenantIdBigInt
     );
     const eventosError = Number(eventosErrorResult[0]?.count || 0);
 
-    const eventosWarningResult = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
+    const eventosWarningResult = await prisma.$queryRawUnsafe<
+      Array<{ count: bigint }>
+    >(
       `SELECT COUNT(*) as count FROM "AuditoriaEmpleado" WHERE "TenantId" = $1 AND "Severidad" = 'WARNING'`,
       tenantIdBigInt
     );
     const eventosWarning = Number(eventosWarningResult[0]?.count || 0);
 
-    const eventosUltimos7DiasResult = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
+    const eventosUltimos7DiasResult = await prisma.$queryRawUnsafe<
+      Array<{ count: bigint }>
+    >(
       `SELECT COUNT(*) as count FROM "AuditoriaEmpleado" WHERE "TenantId" = $1 AND "Fecha" >= $2`,
       tenantIdBigInt,
       fecha7DiasAtras
     );
-    const eventosUltimos7Dias = Number(eventosUltimos7DiasResult[0]?.count || 0);
+    const eventosUltimos7Dias = Number(
+      eventosUltimos7DiasResult[0]?.count || 0
+    );
 
-    const eventosUltimos30DiasResult = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
+    const eventosUltimos30DiasResult = await prisma.$queryRawUnsafe<
+      Array<{ count: bigint }>
+    >(
       `SELECT COUNT(*) as count FROM "AuditoriaEmpleado" WHERE "TenantId" = $1 AND "Fecha" >= $2`,
       tenantIdBigInt,
       fecha30DiasAtras
     );
-    const eventosUltimos30Dias = Number(eventosUltimos30DiasResult[0]?.count || 0);
+    const eventosUltimos30Dias = Number(
+      eventosUltimos30DiasResult[0]?.count || 0
+    );
 
     const stats = {
       totalEventos,
@@ -74,17 +88,20 @@ export async function GET() {
     };
 
     // Obtener últimos 5 eventos recientes
-    const eventosRecientes = await prisma.$queryRawUnsafe<Array<{
-      Id: bigint;
-      Fecha: Date;
-      Accion: string;
-      Severidad: string;
-      Detalle: string | null;
-      IpAddress: string | null;
-      UsuarioNombre: string;
-      PersonaNombre: string | null;
-      PersonaApellido: string | null;
-    }>>(`
+    const eventosRecientes = await prisma.$queryRawUnsafe<
+      Array<{
+        Id: bigint;
+        Fecha: Date;
+        Accion: string;
+        Severidad: string;
+        Detalle: string | null;
+        IpAddress: string | null;
+        UsuarioNombre: string;
+        PersonaNombre: string | null;
+        PersonaApellido: string | null;
+      }>
+    >(
+      `
       SELECT 
         a."Id",
         a."Fecha",
@@ -102,13 +119,15 @@ export async function GET() {
       WHERE a."TenantId" = $1
       ORDER BY a."Fecha" DESC
       LIMIT 5
-    `, tenantIdBigInt);
-
+    `,
+      tenantIdBigInt
+    );
 
     const eventos = eventosRecientes.map((evento) => {
-      const nombreCompleto = evento.PersonaNombre && evento.PersonaApellido
-        ? `${evento.PersonaNombre} ${evento.PersonaApellido}`
-        : evento.UsuarioNombre;
+      const nombreCompleto =
+        evento.PersonaNombre && evento.PersonaApellido
+          ? `${evento.PersonaNombre} ${evento.PersonaApellido}`
+          : evento.UsuarioNombre;
 
       return {
         id: Number(evento.Id),
@@ -129,4 +148,3 @@ export async function GET() {
     return handleError(error);
   }
 }
-

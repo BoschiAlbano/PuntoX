@@ -17,11 +17,6 @@ interface Item extends Producto {
   subtotal: number;
 }
 
-interface Advertencia {
-  id: number;
-  advertencia: string;
-}
-
 export default function VentasScreen() {
   // State
   const [items, setItems] = useState<Item[]>([]);
@@ -120,10 +115,12 @@ export default function VentasScreen() {
           },
         ];
       });
-    } catch (error: any) {
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Error desconocido";
       addToast({
-        title: "Error al agregar producto",
-        description: error.message,
+        title: "Error",
+        description: message,
         color: "danger",
       });
     }
@@ -146,10 +143,12 @@ export default function VentasScreen() {
           return item;
         })
       );
-    } catch (error: any) {
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Error desconocido";
       addToast({
         title: "Error al actualizar cantidad",
-        description: error.message,
+        description: message,
         color: "danger",
       });
     }

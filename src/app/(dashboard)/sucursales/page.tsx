@@ -26,7 +26,6 @@ import {
   Trash2,
   Star,
 } from "lucide-react";
-import { usePagePermission } from "@/lib/permissions/usePagePermission";
 
 type Sucursal = {
   id: number;

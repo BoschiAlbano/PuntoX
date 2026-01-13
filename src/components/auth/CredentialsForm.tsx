@@ -66,7 +66,6 @@ export default function CredentialsForm() {
   const [attemptCount, setAttemptCount] = useState(0);
   const [isRateLimited, setIsRateLimited] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   // Obtener callbackUrl de los parámetros de búsqueda

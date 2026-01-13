@@ -15,7 +15,7 @@ export interface GenericApiOptions<T> {
   search?: string;
   page?: number;
   limit?: number;
-  transformer?: (data: any) => T[]; // Para transformar datos si la API devuelve estructura plana
+  transformer?: (data: unknown) => T[]; // Para transformar datos si la API devuelve estructura plana
 }
 
 export function useGenericApi<T extends { Id: number | string }>({
@@ -52,13 +52,14 @@ export function useGenericApi<T extends { Id: number | string }>({
 
     // Adaptar respuesta: empleados devuelve { empleados: [...], pagination: {...} }
     // otros endpoints devuelven { data: [...], meta: {...} }
-    let data: T[];
-    let meta: any;
+    // Adaptar respuesta: empleados devuelve { empleados: [...], pagination: {...} }
+    // otros endpoints devuelven { data: [...], meta: {...} }
 
-    data = transformer
+    const data: T[] = transformer
       ? transformer(json.data || [])
       : ((json.data || []) as T[]);
-    meta = json.meta ||
+
+    const meta = json.meta ||
       json.pagination || {
         total: 0,
         page: 1,

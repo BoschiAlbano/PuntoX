@@ -23,7 +23,7 @@ type Props = {
 };
 
 export default function SucursalSelector({
-  onBranchChange,
+  // onBranchChange,
   hideIfSingle = true,
   isCollapsed = false,
 }: Props) {

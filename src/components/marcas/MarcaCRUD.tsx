@@ -2,7 +2,7 @@
 
 import GenericCrud from "@/components/shared/GenericCrud";
 import MarcaForm, { Marca } from "./MarcaForm";
-import { Chip, Tooltip, Button } from "@heroui/react";
+import { Chip } from "@heroui/react";
 import { DeleteButton, EditButton } from "../shared/TableActions";
 
 export default function MarcaCRUD() {

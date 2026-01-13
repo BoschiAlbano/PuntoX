@@ -35,6 +35,7 @@ export async function registerTenant(formData: FormData) {
   try {
     await requireSuperAdminServer({ redirectUrl: "/signin" });
   } catch (error) {
+    console.error(error);
     return {
       ok: false as const,
       error: "Solo los SuperAdmin pueden crear nuevos tenants.",

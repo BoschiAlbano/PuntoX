@@ -20,6 +20,7 @@ import {
 } from "@heroui/react";
 import { Search, ScanBarcode } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { Producto } from "@/lib/validations/producto.schema";
 
 // Simple custom debounce hook if uidotdev is not available or to be safe
 function useDebounceValue<T>(value: T, delay: number): T {
@@ -41,11 +42,11 @@ function useDebounceValue<T>(value: T, delay: number): T {
 export default function ProductSearch({
   onProductSelect,
 }: {
-  onProductSelect: (p: any) => void;
+  onProductSelect: (p: Producto) => void;
 }) {
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   // Search state for Modal
   const [searchQuery, setSearchQuery] = useState("");

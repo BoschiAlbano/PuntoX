@@ -127,6 +127,7 @@ export async function POST(req: NextRequest) {
         }
       } catch (error) {
         // Ignorar errores al buscar por usuarioId
+        console.error(error);
       }
     }
 
@@ -158,6 +159,7 @@ export async function POST(req: NextRequest) {
         }
       } catch (error) {
         // Ignorar errores al buscar por email
+        console.error(error);
       }
     }
 
@@ -203,6 +205,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     // No queremos que un error en el registro de intentos rompa el login
     // handleError ya registra el error internamente
+    console.error(error);
     return NextResponse.json(
       { message: "Error al registrar intento (no crítico)" },
       { status: 200 } // Retornamos 200 para no interrumpir el flujo

@@ -3,7 +3,6 @@ import prisma from "@/DB/prisma";
 import { requirePermiso } from "@/lib/requirePermiso";
 import { handleError } from "@/lib/errors/handler";
 import {
-  TIPO_COMPROBANTE_COMPRA,
   TIPO_COMPROBANTE_VENTA,
   TIPO_PAGO,
 } from "@/lib/constants/comprobantes";

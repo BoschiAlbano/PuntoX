@@ -1,8 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
-import { addToast } from "@heroui/react";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
-import { Dispatch, SetStateAction, memo, useCallback, useMemo } from "react";
+import { Dispatch, SetStateAction, memo, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
 
@@ -12,7 +11,7 @@ function DashboardHeaderComponent({
   isShow: Dispatch<SetStateAction<boolean>>;
   show: boolean;
 }) {
-  const { user, supabase } = useSupabaseAuthContext();
+  const { user } = useSupabaseAuthContext();
   const pathname = usePathname();
 
   // Mapeo de rutas a nombres amigables
@@ -64,27 +63,6 @@ function DashboardHeaderComponent({
     (typeof user?.email === "string" ? user.email : "") ||
     "Usuario";
   const displayEmail = typeof user?.email === "string" ? user.email : "";
-
-  const handleSignOut = useCallback(async (): Promise<void> => {
-    // Cerrar sesión en la base de datos primero
-    try {
-      await fetch("/api/auth/registrar-sesion", {
-        method: "DELETE",
-        credentials: "include",
-      });
-    } catch (error) {
-      console.warn("Error al cerrar sesión en BD:", error);
-    }
-
-    // Luego cerrar sesión en Supabase
-    await supabase.auth.signOut();
-
-    addToast({
-      title: "Sesión cerrada",
-      description: "Has cerrado sesión correctamente",
-      color: "success",
-    });
-  }, [supabase]);
 
   return (
     <motion.header

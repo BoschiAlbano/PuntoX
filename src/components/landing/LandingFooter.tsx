@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
-
+import { Facebook, Twitter, Instagram } from "lucide-react";
+import Image from "next/image";
 export const LandingFooter = () => {
   return (
     <footer className="bg-[#182337] pt-20 pb-10 border-t border-white/5 text-white">
@@ -10,7 +10,7 @@ export const LandingFooter = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           <div className="col-span-1 md:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-6">
-              <img
+              <Image
                 src="/XPdark.ico"
                 alt="Punto X"
                 className="w-8 h-8 object-contain"

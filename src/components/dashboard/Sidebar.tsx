@@ -16,6 +16,7 @@ import { filtrarRutasPorPermisos } from "@/lib/permissions/routePermissions";
 import { startManualLogout, endManualLogout } from "@/lib/auth/logoutManager";
 import { SucursalSelector } from "@/components/sucursal";
 import { useUserStore } from "@/store/useUserStore";
+import Image from "next/image";
 
 interface MenuItem {
   icon: React.ReactNode;
@@ -313,7 +314,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                   transition={{ duration: 0.4 }}
                   className="flex items-center gap-3"
                 >
-                  <img
+                  <Image
                     src="/XPdark.ico"
                     alt="Punto X"
                     className="w-7 h-7 object-contain"
