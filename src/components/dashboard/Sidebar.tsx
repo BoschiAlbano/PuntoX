@@ -302,25 +302,27 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
         }}
       >
         {/* Header del Sidebar */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
+        <div className="flex items-center justify-between p-6 border-b border-slate-700/50 overflow-hidden">
           <AnimatePresence mode="wait">
             {!isCollapsed && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-                className="flex items-center gap-3"
-              >
-                <img
-                  src="/XPdark.ico"
-                  alt="Punto X"
-                  className="w-7 h-7 object-contain"
-                />
-                <span className="text-white font-semibold text-lg">
-                  Punto X
-                </span>
-              </motion.div>
+              <>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.4 }}
+                  className="flex items-center gap-3"
+                >
+                  <img
+                    src="/XPdark.ico"
+                    alt="Punto X"
+                    className="w-7 h-7 object-contain"
+                  />
+                  <span className="text-white font-semibold text-lg truncate">
+                    PuntoX
+                  </span>
+                </motion.div>
+              </>
             )}
           </AnimatePresence>
           <button
@@ -359,9 +361,9 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="px-4 py-3 border-b border-slate-700/50"
+            className="px-3 py-6 border-b border-slate-700/50  space-y-2"
           >
-            <SucursalSelector hideIfSingle={false} />
+            <SucursalSelector hideIfSingle={false} isCollapsed={isCollapsed} />
           </motion.div>
         </AnimatePresence>
 
@@ -404,7 +406,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                 }}
                 whileTap={{ scale: 0.98 }}
                 className={`
-                    w-full flex items-center gap-3 px-4 py-3 rounded-xl overflow-hidden
+                    w-full h-[50px] flex items-center gap-3 px-4 py-3 rounded-xl overflow-hidden
                     relative group
                     ${
                       isActive
@@ -522,8 +524,12 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                 exit={{ opacity: 0 }}
                 className="w-full p-4 bg-linear-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20"
               >
-                <p className="text-xs text-slate-400 mb-2">Version 1.0.0</p>
-                <p className="text-xs text-slate-500">(c) 2024 Punto X SaaS</p>
+                <p className="text-xs text-slate-400 mb-2 truncate">
+                  Version 1.0.0
+                </p>
+                <p className="text-xs text-slate-500 truncate">
+                  (c) 2024 Punto X SaaS
+                </p>
               </motion.div>
             ) : (
               <motion.div
@@ -532,7 +538,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                 exit={{ opacity: 0 }}
                 className="flex justify-center"
               >
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <div className="w-2  rounded-full bg-green-500 animate-pulse" />
               </motion.div>
             )}
           </AnimatePresence>

@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 let browserClient: SupabaseClient | null = null;
 
+// funcion para obtener el cliente de supabase en el browser cliente
 export function getSupabaseBrowserClient() {
   if (browserClient) return browserClient;
 

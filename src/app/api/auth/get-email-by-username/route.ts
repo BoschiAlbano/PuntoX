@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 
 /**
@@ -54,9 +54,11 @@ export async function POST(req: NextRequest) {
     // Si no hay email, significa que es un empleado nuevo con email interno
     // Generamos el email interno basado en el username
     if (!email) {
-      const { generateInternalEmail } = await import("@/lib/auth/generateInternalEmail");
+      const { generateInternalEmail } = await import(
+        "@/lib/auth/generateInternalEmail"
+      );
       const internalEmail = generateInternalEmail(usernameNormalized);
-      
+
       return NextResponse.json({
         email: internalEmail,
         isInternal: true,
@@ -76,4 +78,3 @@ export async function POST(req: NextRequest) {
     return handleError(error);
   }
 }
-

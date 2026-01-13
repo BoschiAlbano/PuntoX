@@ -1,10 +1,10 @@
 "use server";
 
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import prisma from "@/DB/prisma";
+import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { actualizarPermisosEnJWT } from "@/lib/auth/updateUserPermissions";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireSuperAdminServer } from "@/lib/requireSuperAdmin";
 
 // Helper para convertir cadenas vacías a undefined
 const emptyStringToUndefined = z.preprocess(
@@ -33,7 +33,7 @@ const registerTenantSchema = z.object({
 export async function registerTenant(formData: FormData) {
   // Verificar que solo SuperAdmin pueda crear tenants
   try {
-    await requireSuperAdmin();
+    await requireSuperAdminServer({ redirectUrl: "/signin" });
   } catch (error) {
     return {
       ok: false as const,
@@ -73,10 +73,10 @@ export async function registerTenant(formData: FormData) {
     const errorIssues = parseResult.error.issues || [];
     console.error("Error de validación:", JSON.stringify(errorIssues, null, 2));
     const firstError = errorIssues[0];
-    const errorMessage = firstError 
+    const errorMessage = firstError
       ? `Error en ${firstError.path.join(".")}: ${firstError.message}`
       : "Datos inválidos en el formulario.";
-    
+
     return {
       ok: false as const,
       error: errorMessage,
@@ -95,9 +95,10 @@ export async function registerTenant(formData: FormData) {
 
   // Generar username desde email si no se proporciona
   // Normalizar: lowercase, sin espacios, solo caracteres permitidos
-  const usernameRaw = (adminUsername && adminUsername.trim().length > 0) 
-    ? adminUsername 
-    : adminEmail.split("@")[0];
+  const usernameRaw =
+    adminUsername && adminUsername.trim().length > 0
+      ? adminUsername
+      : adminEmail.split("@")[0];
   const usernameFinal = usernameRaw
     .toLowerCase()
     .trim()
@@ -106,11 +107,12 @@ export async function registerTenant(formData: FormData) {
 
   try {
     // Creo el usuario en supabase
-    const { data, error } = await supabaseAdmin.auth.admin.createUser({
-      email: adminEmail,
-      password: adminPassword,
-      email_confirm: true,
-    });
+    const { data, error } =
+      await getSupabaseServiceClient().auth.admin.createUser({
+        email: adminEmail,
+        password: adminPassword,
+        email_confirm: true,
+      });
 
     if (error || !data?.user) {
       console.error("Error creando usuario en Supabase", error);
@@ -140,7 +142,9 @@ export async function registerTenant(formData: FormData) {
       });
 
       if (!localidadDefault) {
-        throw new Error("No hay localidades disponibles en la base de datos. Por favor, configure al menos una localidad.");
+        throw new Error(
+          "No hay localidades disponibles en la base de datos. Por favor, configure al menos una localidad."
+        );
       }
 
       const persona = await tx.persona.create({
@@ -175,7 +179,9 @@ export async function registerTenant(formData: FormData) {
       });
 
       if (existingUsername) {
-        throw new Error(`El nombre de usuario "${usernameFinal}" ya está en uso. Por favor, elige otro.`);
+        throw new Error(
+          `El nombre de usuario "${usernameFinal}" ya está en uso. Por favor, elige otro.`
+        );
       }
 
       const usuario = await tx.usuario.create({
@@ -215,7 +221,10 @@ export async function registerTenant(formData: FormData) {
 
       // Definir los permisos básicos que debe tener un administrador
       const permisosBasicos = [
-        { clave: "empleados:admin", descripcion: "Administración completa de empleados" },
+        {
+          clave: "empleados:admin",
+          descripcion: "Administración completa de empleados",
+        },
         { clave: "ventas", descripcion: "Acceso a ventas" },
         { clave: "caja", descripcion: "Acceso a caja" },
         { clave: "clientes", descripcion: "Acceso a clientes" },
@@ -261,9 +270,13 @@ export async function registerTenant(formData: FormData) {
                 TenantId: newTenant.Id,
               },
             });
-            console.log(`Permiso "${permisoData.clave}" creado y asignado al perfil Administrador`);
+            console.log(
+              `Permiso "${permisoData.clave}" creado y asignado al perfil Administrador`
+            );
           } else {
-            console.log(`Permiso "${permisoData.clave}" ya estaba asignado al perfil Administrador`);
+            console.log(
+              `Permiso "${permisoData.clave}" ya estaba asignado al perfil Administrador`
+            );
           }
         } catch (error) {
           console.error(`Error creando permiso "${permisoData.clave}":`, error);
@@ -320,14 +333,12 @@ export async function registerTenant(formData: FormData) {
     });
 
     // actualizo las metadatos del usuario para guardar el id del tenant
-    const { error: metaError } = await supabaseAdmin.auth.admin.updateUserById(
-      authUserId,
-      {
+    const { error: metaError } =
+      await getSupabaseServiceClient().auth.admin.updateUserById(authUserId, {
         app_metadata: {
           tenantId: tenant.Id.toString(),
         },
-      }
-    );
+      });
 
     if (metaError) {
       console.error(

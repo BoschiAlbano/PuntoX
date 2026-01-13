@@ -1,5 +1,4 @@
 import { PrismaClient } from "../prisma/generated/prisma";
-import { supabaseAdmin } from "../src/lib/supabaseAdmin";
 import { actualizarPermisosEnJWT } from "../src/lib/auth/updateUserPermissions";
 
 const prisma = new PrismaClient();
@@ -39,25 +38,35 @@ async function main() {
     },
   });
 
-  console.log(`📊 Encontrados ${perfilesAdmin.length} perfiles de Administrador\n`);
+  console.log(
+    `📊 Encontrados ${perfilesAdmin.length} perfiles de Administrador\n`
+  );
 
   let usuariosActualizados = 0;
   let errores = 0;
 
   for (const perfil of perfilesAdmin) {
-    console.log(`\n🏢 Tenant: ${perfil.Tenant.Nombre} (ID: ${perfil.Tenant.Id})`);
-    console.log(`  👥 Usuarios con este perfil: ${perfil.PerfilUsuario.length}`);
+    console.log(
+      `\n🏢 Tenant: ${perfil.Tenant.Nombre} (ID: ${perfil.Tenant.Id})`
+    );
+    console.log(
+      `  👥 Usuarios con este perfil: ${perfil.PerfilUsuario.length}`
+    );
 
     for (const perfilUsuario of perfil.PerfilUsuario) {
       const usuario = perfilUsuario.Usuario;
-      
+
       if (!usuario.AuthUserId) {
-        console.log(`  ⚠️  Usuario ${usuario.Nombre} (ID: ${usuario.Id}) no tiene AuthUserId`);
+        console.log(
+          `  ⚠️  Usuario ${usuario.Nombre} (ID: ${usuario.Id}) no tiene AuthUserId`
+        );
         continue;
       }
 
       try {
-        console.log(`  🔄 Actualizando permisos para usuario: ${usuario.Nombre} (AuthUserId: ${usuario.AuthUserId})`);
+        console.log(
+          `  🔄 Actualizando permisos para usuario: ${usuario.Nombre} (AuthUserId: ${usuario.AuthUserId})`
+        );
         await actualizarPermisosEnJWT(usuario.AuthUserId);
         usuariosActualizados++;
         console.log(`  ✅ Permisos actualizados correctamente`);
@@ -71,7 +80,9 @@ async function main() {
   console.log(`\n📈 Resumen:`);
   console.log(`  ✅ Usuarios actualizados: ${usuariosActualizados}`);
   console.log(`  ❌ Errores: ${errores}`);
-  console.log(`\n💡 Nota: Los usuarios pueden necesitar cerrar sesión y volver a iniciar sesión para que los cambios surtan efecto completamente`);
+  console.log(
+    `\n💡 Nota: Los usuarios pueden necesitar cerrar sesión y volver a iniciar sesión para que los cambios surtan efecto completamente`
+  );
 }
 
 main()
@@ -82,4 +93,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-

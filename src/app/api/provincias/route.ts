@@ -1,7 +1,6 @@
 ﻿// API de provincias (catálogo) con búsqueda opcional.
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { serializeBigIntArray } from "@/utilities/serialization";
 import { handleError } from "@/lib/errors/handler";
 
 export async function GET(req: NextRequest) {
@@ -20,7 +19,7 @@ export async function GET(req: NextRequest) {
       take: 50,
     });
 
-    return NextResponse.json(serializeBigIntArray(provincias));
+    return NextResponse.json(provincias, { status: 200 });
   } catch (error) {
     return handleError(error);
   }

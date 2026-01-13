@@ -1,7 +1,6 @@
 ﻿// API de departamentos, filtrados por provincia y búsqueda parcial.
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { serializeBigIntArray } from "@/utilities/serialization";
 import { handleError } from "@/lib/errors/handler";
 
 export async function GET(req: NextRequest) {
@@ -11,7 +10,10 @@ export async function GET(req: NextRequest) {
     const provinciaId = provinciaParam ? Number(provinciaParam) : null;
 
     if (provinciaParam && !Number.isInteger(provinciaId)) {
-      return NextResponse.json({ error: "Provincia invalida" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Provincia invalida" },
+        { status: 400 }
+      );
     }
 
     const departamentos = await prisma.departamento.findMany({
@@ -27,7 +29,7 @@ export async function GET(req: NextRequest) {
       take: 50,
     });
 
-    return NextResponse.json(serializeBigIntArray(departamentos));
+    return NextResponse.json(departamentos, { status: 200 });
   } catch (error) {
     return handleError(error);
   }

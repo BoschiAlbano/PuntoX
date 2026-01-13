@@ -54,7 +54,7 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-purple-50/30 flex">
       <section
         onClick={() => setshow(false)}
-        className={`z-99 transition-all duration-300 ease-in-out sm:relative fixed sm:w-auto w-screen  sm:h-auto h-screen  ${
+        className={`z-99 transition-all duration-400 ease-in-out sm:relative fixed sm:w-auto w-screen  sm:h-auto h-screen  ${
           show ? `translate-x-[0%]` : `-translate-x-full`
         }`}
       >

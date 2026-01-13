@@ -34,8 +34,8 @@ export function useGenericApi<T extends { Id: number | string }>({
   // --- Fetch Query ---
   const fetchData = async ({ signal }: { signal: AbortSignal }) => {
     const params = new URLSearchParams();
-    // Para empleados usa "busqueda", para otros endpoints usa "q"
-    const searchParam = endpoint.includes("/empleados") ? "busqueda" : "q";
+    // Usa "q" para búsqueda en todos los endpoints
+    const searchParam = "q";
     if (search) params.append(searchParam, search);
     params.append("page", page.toString());
     params.append("limit", limit.toString());
@@ -55,35 +55,45 @@ export function useGenericApi<T extends { Id: number | string }>({
     let data: T[];
     let meta: any;
 
-    if (endpoint.includes("/empleados")) {
-      // Formato de empleados: { empleados: [...], pagination: {...} }
-      data = transformer
-        ? transformer(json.empleados || json.data || [])
-        : ((json.empleados || json.data || []) as T[]);
-      // Asegurar que meta tenga la estructura correcta
-      const pagination = json.pagination || {};
-      meta = {
-        total: pagination.total || 0,
-        page: pagination.page || 1,
-        limit: pagination.limit || limit,
-        totalPages:
-          pagination.totalPages ||
-          Math.ceil((pagination.total || 0) / (pagination.limit || limit)) ||
-          1,
+    data = transformer
+      ? transformer(json.data || [])
+      : ((json.data || []) as T[]);
+    meta = json.meta ||
+      json.pagination || {
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 0,
       };
-    } else {
-      // Formato estándar
-      data = transformer
-        ? transformer(json.data || [])
-        : ((json.data || []) as T[]);
-      meta = json.meta ||
-        json.pagination || {
-          total: 0,
-          page: 1,
-          limit: 10,
-          totalPages: 0,
-        };
-    }
+    // if (endpoint.includes("/empleados")) {
+    //   // Formato de empleados: { empleados: [...], pagination: {...} }
+    //   data = transformer
+    //     ? transformer(json.empleados || json.data || [])
+    //     : ((json.empleados || json.data || []) as T[]);
+    //   // Asegurar que meta tenga la estructura correcta
+    //   const pagination = json.pagination || {};
+    //   meta = {
+    //     total: pagination.total || 0,
+    //     page: pagination.page || 1,
+    //     limit: pagination.limit || limit,
+    //     totalPages:
+    //       pagination.totalPages ||
+    //       Math.ceil((pagination.total || 0) / (pagination.limit || limit)) ||
+    //       1,
+    //   };
+    // } else {
+    //   // Formato estándar
+    //   data = transformer
+    //     ? transformer(json.data || [])
+    //     : ((json.data || []) as T[]);
+    //   meta = json.meta ||
+    //     json.pagination || {
+    //       total: 0,
+    //       page: 1,
+    //       limit: 10,
+    //       totalPages: 0,
+    //     };
+    // }
 
     return { data, meta };
   };

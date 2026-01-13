@@ -1,7 +1,6 @@
 ﻿// API de localidades con filtro por departamento y búsqueda parcial.
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { serializeBigIntArray } from "@/utilities/serialization";
 import { handleError } from "@/lib/errors/handler";
 
 export async function GET(req: NextRequest) {
@@ -11,7 +10,10 @@ export async function GET(req: NextRequest) {
     const departamentoId = departamentoParam ? Number(departamentoParam) : null;
 
     if (departamentoParam && !Number.isInteger(departamentoId)) {
-      return NextResponse.json({ error: "Departamento invalido" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Departamento invalido" },
+        { status: 400 }
+      );
     }
 
     const localidades = await prisma.localidad.findMany({
@@ -43,9 +45,7 @@ export async function GET(req: NextRequest) {
       take: 50,
     });
 
-    const localidadesSerializadas = serializeBigIntArray(localidades);
-
-    return NextResponse.json(localidadesSerializadas);
+    return NextResponse.json(localidades, { status: 200 });
   } catch (error) {
     return handleError(error);
   }

@@ -1,4 +1,4 @@
 // el menu sidebar tiene en select 3 sucursales, pero solo deberian aparecer 2 verificas que esta pasando.
 // Entra automaticamente en ventas, pero si el usuario no tiene acceso?.
 // La api generica "GenericApi" envia por param "sucursalId" -> si solo se necesita en articulos para obtener el stock entonces quitar el param "sucursalId" para las otras consultas.
-// 
+// verifyUserBranchAccess no usar en todas las apis

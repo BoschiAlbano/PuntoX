@@ -1,10 +1,9 @@
-import { prisma } from "../src/lib/prisma";
-import { generateInternalEmail } from "../src/lib/auth/generateInternalEmail";
+import prisma from "@/DB/prisma";
 
 /**
  * Script para actualizar el username del SuperAdmin
  * Uso: npx tsx scripts/actualizar-username-superadmin.ts <nuevo-username>
- * 
+ *
  * Si no se proporciona username, se generará uno desde el email
  */
 async function main() {
@@ -12,8 +11,12 @@ async function main() {
 
   if (!nuevoUsername) {
     console.log("❌ Error: Debes proporcionar un nuevo username");
-    console.log("\nUso: npx tsx scripts/actualizar-username-superadmin.ts <nuevo-username>");
-    console.log("\nEjemplo: npx tsx scripts/actualizar-username-superadmin.ts superadmin");
+    console.log(
+      "\nUso: npx tsx scripts/actualizar-username-superadmin.ts <nuevo-username>"
+    );
+    console.log(
+      "\nEjemplo: npx tsx scripts/actualizar-username-superadmin.ts superadmin"
+    );
     process.exit(1);
   }
 
@@ -73,13 +76,17 @@ async function main() {
     });
 
     if (existingUser) {
-      console.log(`❌ Error: El username "${usernameNormalized}" ya está en uso por otro usuario.`);
+      console.log(
+        `❌ Error: El username "${usernameNormalized}" ya está en uso por otro usuario.`
+      );
       process.exit(1);
     }
 
     console.log(`📝 Información actual:`);
     console.log(`   - Username actual: ${superAdmin.Nombre}`);
-    console.log(`   - Email: ${superAdmin.Persona_Empleado?.Persona?.Mail || "Sin email"}`);
+    console.log(
+      `   - Email: ${superAdmin.Persona_Empleado?.Persona?.Mail || "Sin email"}`
+    );
     console.log(`\n🔄 Actualizando username a: ${usernameNormalized}...\n`);
 
     // Actualizar username
@@ -105,4 +112,3 @@ async function main() {
 }
 
 main();
-

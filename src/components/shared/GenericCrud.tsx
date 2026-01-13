@@ -64,7 +64,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
   renderCell,
   FormComponent,
   searchPlaceholder,
-  initialLimit = 2,
+  initialLimit = 10,
   transformer,
 }: GenericCrudProps<T>) {
   // Estados de UI
@@ -196,9 +196,10 @@ export default function GenericCrud<T extends { Id: number | string }>({
 
     // Para empleados, usar personaId en lugar de Id
     const isEmpleados = apiPath.includes("/empleados");
-    const deleteId = isEmpleados && (itemToDelete as any).personaId 
-      ? (itemToDelete as any).personaId 
-      : itemToDelete.Id;
+    const deleteId =
+      isEmpleados && (itemToDelete as any).personaId
+        ? (itemToDelete as any).personaId
+        : itemToDelete.Id;
 
     deleteMutation.mutate(deleteId, {
       onSuccess: () => {

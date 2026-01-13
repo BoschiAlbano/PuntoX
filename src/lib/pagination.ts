@@ -23,7 +23,9 @@ export interface PaginationResult<T> {
 /**
  * Parsea los parámetros de paginación desde query params
  */
-export function parsePaginationParams(req: { nextUrl: { searchParams: URLSearchParams } }): PaginationParams {
+export function parsePaginationParams(req: {
+  nextUrl: { searchParams: URLSearchParams };
+}): PaginationParams {
   const page = parseInt(req.nextUrl.searchParams.get("page") || "1", 10);
   const limit = parseInt(req.nextUrl.searchParams.get("limit") || "20", 10);
 
@@ -46,7 +48,7 @@ export function createPaginationResponse<T>(
   total: number,
   params: PaginationParams
 ): PaginationResult<T> {
-  const { page = 1, limit = 20 } = params;
+  const { page = 1, limit = 10 } = params;
   const totalPages = Math.ceil(total / limit);
 
   return {
@@ -61,4 +63,3 @@ export function createPaginationResponse<T>(
     },
   };
 }
-

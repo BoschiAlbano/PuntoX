@@ -48,7 +48,6 @@ export default function UsuariosCRUD() {
       apiPath="/api/empleados"
       queryKey="usuarios-crud"
       searchPlaceholder="Buscar por nombre, usuario o DNI..."
-      initialLimit={15}
       transformer={transformer}
       columns={[
         { uid: "nombreCompleto", name: "NOMBRE", sortable: true },

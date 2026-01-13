@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const rolFilter = searchParams.get("rol");
     const estadoFilter = searchParams.get("estado");
-    const busquedaFilter = searchParams.get("busqueda");
+    const busquedaFilter = searchParams.get("q");
     const sucursalFilter = searchParams.get("sucursal");
 
     // Construir where base

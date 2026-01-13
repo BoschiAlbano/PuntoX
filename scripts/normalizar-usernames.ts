@@ -1,4 +1,4 @@
-import { prisma } from "../src/lib/prisma";
+import prisma from "@/DB/prisma";
 
 /**
  * Script para normalizar todos los usernames a minúsculas
@@ -29,21 +29,27 @@ async function main() {
       },
     });
 
-    const usuariosConMayusculas = usuarios.filter(u => /[A-Z]/.test(u.Nombre));
+    const usuariosConMayusculas = usuarios.filter((u) =>
+      /[A-Z]/.test(u.Nombre)
+    );
 
     if (usuariosConMayusculas.length === 0) {
       console.log("✅ Todos los usernames ya están en minúsculas.");
       return;
     }
 
-    console.log(`⚠️  Se encontraron ${usuariosConMayusculas.length} usuario(s) con mayúsculas:\n`);
+    console.log(
+      `⚠️  Se encontraron ${usuariosConMayusculas.length} usuario(s) con mayúsculas:\n`
+    );
 
     for (const usuario of usuariosConMayusculas) {
       const usernameNormalizado = usuario.Nombre.toLowerCase();
       const persona = usuario.Persona_Empleado?.Persona;
-      
+
       console.log(`   - "${usuario.Nombre}" → "${usernameNormalizado}"`);
-      console.log(`     Nombre: ${persona?.Nombre || "N/A"} ${persona?.Apellido || "N/A"}`);
+      console.log(
+        `     Nombre: ${persona?.Nombre || "N/A"} ${persona?.Apellido || "N/A"}`
+      );
 
       // Verificar si el username normalizado ya existe
       const existingUser = await prisma.usuario.findFirst({
@@ -57,8 +63,12 @@ async function main() {
       });
 
       if (existingUser) {
-        console.log(`     ⚠️  ERROR: El username "${usernameNormalizado}" ya está en uso.`);
-        console.log(`     No se puede normalizar este usuario automáticamente.\n`);
+        console.log(
+          `     ⚠️  ERROR: El username "${usernameNormalizado}" ya está en uso.`
+        );
+        console.log(
+          `     No se puede normalizar este usuario automáticamente.\n`
+        );
         continue;
       }
 
@@ -84,4 +94,3 @@ async function main() {
 }
 
 main();
-

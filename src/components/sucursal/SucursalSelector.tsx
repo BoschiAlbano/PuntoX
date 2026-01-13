@@ -18,11 +18,14 @@ type Props = {
   onBranchChange?: (sucursalId: string) => void;
   /** Mostrar solo si hay múltiples sucursales */
   hideIfSingle?: boolean;
+  /** Mostrar comprimido (solo icono) */
+  isCollapsed?: boolean;
 };
 
 export default function SucursalSelector({
   onBranchChange,
   hideIfSingle = true,
+  isCollapsed = false,
 }: Props) {
   const sucursales = useUserStore((state) => state.branches);
   const sucursalActiva = useUserStore((state) => state.currentBranch);
@@ -85,10 +88,16 @@ export default function SucursalSelector({
         <Button
           variant="flat"
           size="sm"
-          className="w-full gap-2 bg-slate-700/50 text-white hover:bg-slate-700 border border-slate-600/50"
-          startContent={<Building2 className="h-4 w-4" />}
+          className={`
+            ${
+              isCollapsed
+                ? "w-auto justify-center bg-transparent hover:bg-slate-700/30 text-slate-300 hover:text-white "
+                : "w-full gap-2 bg-slate-700/50 text-white hover:bg-slate-700 border border-slate-600/50 px-4 py-3"
+            }
+          `}
+          startContent={isCollapsed ? null : <Building2 className="h-4 w-4" />}
           endContent={
-            isChanging ? (
+            isCollapsed ? null : isChanging ? (
               <Spinner size="sm" color="white" />
             ) : (
               <ChevronDown className="h-3 w-3" />
@@ -96,14 +105,19 @@ export default function SucursalSelector({
           }
           disabled={isChanging}
         >
-          <span className="truncate flex-1 text-left">
-            {sucursalActiva?.Nombre || "Seleccionar sucursal"}
-          </span>
+          {isCollapsed ? (
+            <Building2 className="h-5 w-5" />
+          ) : (
+            <span className="truncate flex-1 text-left">
+              {sucursalActiva?.Nombre || "Seleccionar sucursal"}
+            </span>
+          )}
         </Button>
       </DropdownTrigger>
       <DropdownMenu
         aria-label="Sucursales disponibles"
         selectionMode="single"
+        className="w-[235px]"
         selectedKeys={sucursalActiva ? new Set([sucursalActiva.Id]) : new Set()}
         onSelectionChange={(keys) => {
           const selected = Array.from(keys)[0] as string;

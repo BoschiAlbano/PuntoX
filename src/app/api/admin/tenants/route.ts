@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { handleError } from "@/lib/errors/handler";
 
 async function checkSuperAdmin() {
@@ -60,13 +60,17 @@ export async function GET(req: NextRequest) {
     if (search) {
       where.OR = [
         { Nombre: { contains: search, mode: "insensitive" } },
-        { Configuraciones: { some: { 
-          OR: [
-            { Email: { contains: search, mode: "insensitive" } },
-            { RazonSocial: { contains: search, mode: "insensitive" } },
-          ],
-          EstaEliminado: false,
-        } } },
+        {
+          Configuraciones: {
+            some: {
+              OR: [
+                { Email: { contains: search, mode: "insensitive" } },
+                { RazonSocial: { contains: search, mode: "insensitive" } },
+              ],
+              EstaEliminado: false,
+            },
+          },
+        },
       ];
     }
 
@@ -158,7 +162,10 @@ export async function GET(req: NextRequest) {
     const adminsMap = new Map<bigint, number>();
     perfilesAdmin.forEach((perfil) => {
       const count = perfil.PerfilUsuario.length;
-      adminsMap.set(perfil.TenantId, (adminsMap.get(perfil.TenantId) || 0) + count);
+      adminsMap.set(
+        perfil.TenantId,
+        (adminsMap.get(perfil.TenantId) || 0) + count
+      );
     });
 
     // Formatear respuesta
@@ -601,17 +608,17 @@ export async function DELETE(req: NextRequest) {
     // Eliminar usuarios de Supabase Auth (después de la transacción de Prisma)
     if (authUserIds.length > 0) {
       const deletePromises = authUserIds.map((authUserId) =>
-        supabaseAdmin.auth.admin.deleteUser(authUserId)
+        getSupabaseServiceClient().auth.admin.deleteUser(authUserId)
       );
-      
+
       // Ejecutar todas las eliminaciones en paralelo y capturar errores
       const deleteResults = await Promise.allSettled(deletePromises);
-      
+
       // Verificar si hubo errores (pero no fallar si algunos usuarios ya no existen)
       const errors = deleteResults.filter(
         (result) => result.status === "rejected"
       );
-      
+
       if (errors.length > 0) {
         console.warn(
           `Advertencia: No se pudieron eliminar ${errors.length} de ${authUserIds.length} usuarios de Supabase Auth.`,
@@ -629,4 +636,3 @@ export async function DELETE(req: NextRequest) {
     return handleError(error);
   }
 }
-

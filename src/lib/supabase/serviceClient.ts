@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 let serviceClient: SupabaseClient | null = null;
 
+// funcion para obtener el cliente de supabase como superadmin
 export function getSupabaseServiceClient(): SupabaseClient {
   if (serviceClient) return serviceClient;
 

@@ -1,12 +1,10 @@
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import prisma from "@/DB/prisma";
 
 /**
  * Calcula los permisos de un usuario desde la base de datos
  */
-export async function calcularPermisosUsuario(
-  authUserId: string
-): Promise<{
+export async function calcularPermisosUsuario(authUserId: string): Promise<{
   permisos: string[];
   isSuperAdmin: boolean;
   roles: Array<{ id: number; nombre: string; tipo: string }>;
@@ -45,12 +43,12 @@ export async function calcularPermisosUsuario(
     };
   }
 
-  const isSuperAdmin = usuario.PerfilUsuario.some(
-    (pu) => {
-      const descripcion = pu.Perfiles.Descripcion?.trim() || "";
-      return descripcion === "SuperAdmin" || descripcion.toLowerCase() === "superadmin";
-    }
-  );
+  const isSuperAdmin = usuario.PerfilUsuario.some((pu) => {
+    const descripcion = pu.Perfiles.Descripcion?.trim() || "";
+    return (
+      descripcion === "SuperAdmin" || descripcion.toLowerCase() === "superadmin"
+    );
+  });
 
   const permisos = usuario.PerfilUsuario.flatMap((pu) =>
     pu.Perfiles.PerfilPermiso.filter((pp) => !pp.Permiso?.EstaEliminado).map(
@@ -78,12 +76,17 @@ export async function calcularPermisosUsuario(
  * - Cuando se cambian roles/permisos de un usuario
  * - Cuando se actualiza un rol que tiene usuarios asignados
  */
-export async function actualizarPermisosEnJWT(authUserId: string): Promise<void> {
+export async function actualizarPermisosEnJWT(
+  authUserId: string
+): Promise<void> {
   try {
-    const { permisos, isSuperAdmin, roles } = await calcularPermisosUsuario(authUserId);
+    const { permisos, isSuperAdmin, roles } = await calcularPermisosUsuario(
+      authUserId
+    );
 
     // Obtener el usuario actual para preservar otros metadatos
-    const { data: currentUser } = await supabaseAdmin.auth.admin.getUserById(authUserId);
+    const { data: currentUser } =
+      await getSupabaseServiceClient().auth.admin.getUserById(authUserId);
     const currentMetadata = currentUser?.user?.app_metadata || {};
 
     // Actualizar app_metadata con permisos y versión
@@ -95,12 +98,16 @@ export async function actualizarPermisosEnJWT(authUserId: string): Promise<void>
       permissionsVersion: Date.now(), // Timestamp para invalidar cache
     };
 
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(authUserId, {
-      app_metadata: newMetadata,
-    });
+    const { error } =
+      await getSupabaseServiceClient().auth.admin.updateUserById(authUserId, {
+        app_metadata: newMetadata,
+      });
 
     if (error) {
-      console.error(`Error actualizando permisos para usuario ${authUserId}:`, error);
+      console.error(
+        `Error actualizando permisos para usuario ${authUserId}:`,
+        error
+      );
       throw error;
     }
   } catch (error) {
@@ -145,4 +152,3 @@ export async function actualizarPermisosUsuariosDelRol(
     throw error;
   }
 }
-

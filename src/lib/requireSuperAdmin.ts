@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/DB/prisma";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
 import { PerfilTipo } from "../../prisma/generated/prisma";
 
