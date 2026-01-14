@@ -14,6 +14,8 @@ export default function page() {
         src="/favicon-light.ico"
         alt="Punto X"
         className="w-24 h-24 object-contain"
+        width={96}
+        height={96}
       />
 
       <div className="flex flex-col items-center gap-2">

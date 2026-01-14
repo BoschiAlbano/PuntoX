@@ -318,6 +318,8 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                     src="/XPdark.ico"
                     alt="Punto X"
                     className="w-7 h-7 object-contain"
+                    width={28}
+                    height={28}
                   />
                   <span className="text-white font-semibold text-lg truncate">
                     PuntoX

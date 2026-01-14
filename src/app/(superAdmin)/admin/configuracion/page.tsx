@@ -966,6 +966,9 @@ export default function AdminConfiguracionPage() {
                       src={branding.logoPreview}
                       alt="Logo preview"
                       className="object-contain w-full h-full"
+                      layout="responsive"
+                      width={56}
+                      height={56}
                     />
                   </div>
                   <p className="text-sm text-gray-600">

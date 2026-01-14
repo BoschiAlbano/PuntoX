@@ -82,6 +82,9 @@ export const LandingHero = () => {
                     src="/puntoxDemo.png"
                     alt="Dashboard Preview"
                     className=" object-cover rounded-lg"
+                    layout="responsive"
+                    width={1024}
+                    height={768}
                   />
                 </div>
               </div>

@@ -14,6 +14,8 @@ export const LandingFooter = () => {
                 src="/XPdark.ico"
                 alt="Punto X"
                 className="w-8 h-8 object-contain"
+                width={32}
+                height={32}
               />
               <span className="text-xl font-bold">Punto X Saas</span>
             </Link>

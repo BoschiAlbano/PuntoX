@@ -1446,6 +1446,8 @@ export default function Configuracion() {
                           src={logoPreview}
                           alt="Logo preview"
                           className="w-24 h-24 object-contain border border-slate-200 rounded-lg bg-white"
+                          width={96}
+                          height={96}
                         />
                         <button
                           type="button"
