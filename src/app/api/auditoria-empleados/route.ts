@@ -1,27 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
-import { requirePermiso, PermisoError } from "@/lib/requirePermiso";
-import { parsePaginationParams, createPaginationResponse } from "@/lib/pagination";
+import { PermisoError } from "@/lib/requirePermiso";
+import {
+  parsePaginationParams,
+  createPaginationResponse,
+} from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 
-/**
- * GET /api/auditoria-empleados
- * Consulta las auditorías de acciones sobre empleados/usuarios
- * 
- * Query params:
- * - page: número de página (default: 1)
- * - limit: cantidad por página (default: 20)
- * - accion: filtrar por tipo de acción
- * - usuarioId: filtrar por usuario que realizó la acción
- * - empleadoId: filtrar por empleado afectado
- * - fechaDesde: fecha desde (ISO string)
- * - fechaHasta: fecha hasta (ISO string)
- */
+const crearAuditoriaSchema = z.object({
+  accion: z.enum([
+    "CREAR_USUARIO",
+    "EDITAR_USUARIO",
+    "INVITAR_USUARIO",
+    "REENVIAR_INVITACION",
+    "ACEPTAR_INVITACION",
+    "CAMBIAR_ROL",
+    "CAMBIAR_PASSWORD",
+    "SUSPENDER_USUARIO",
+    "REACTIVAR_USUARIO",
+    "ELIMINAR_USUARIO",
+    "CREAR_ROL",
+    "EDITAR_ROL",
+    "ELIMINAR_ROL",
+    "CAMBIAR_CONFIG_SEGURIDAD",
+  ]),
+  empleadoId: z.number().optional().nullable(),
+  usuarioAfectadoId: z.number().optional().nullable(),
+  detalle: z.string().optional().nullable(),
+  valorAnterior: z.record(z.string(), z.unknown()).optional().nullable(),
+  valorNuevo: z.record(z.string(), z.unknown()).optional().nullable(),
+});
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId } = await requirePermiso("empleados:admin");
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "empleados:admin", // Mismo permiso que productos por coherencia
+    });
     const pagination = parsePaginationParams(req);
 
     const searchParams = req.nextUrl.searchParams;
@@ -83,7 +100,9 @@ export async function GET(req: NextRequest) {
                   Persona: {
                     OR: [
                       { Nombre: { contains: searchTerm, mode: "insensitive" } },
-                      { Apellido: { contains: searchTerm, mode: "insensitive" } },
+                      {
+                        Apellido: { contains: searchTerm, mode: "insensitive" },
+                      },
                     ],
                   },
                 },
@@ -163,10 +182,9 @@ export async function GET(req: NextRequest) {
 
     // Mapear respuesta
     const response = auditorias.map((aud) => {
-      const usuarioNombre =
-        aud.Usuario.Persona_Empleado?.Persona
-          ? `${aud.Usuario.Persona_Empleado.Persona.Nombre} ${aud.Usuario.Persona_Empleado.Persona.Apellido}`
-          : aud.Usuario.Nombre;
+      const usuarioNombre = aud.Usuario.Persona_Empleado?.Persona
+        ? `${aud.Usuario.Persona_Empleado.Persona.Nombre} ${aud.Usuario.Persona_Empleado.Persona.Apellido}`
+        : aud.Usuario.Nombre;
 
       const empleadoNombre = aud.Empleado
         ? `${aud.Empleado.Persona.Nombre} ${aud.Empleado.Persona.Apellido}`
@@ -201,9 +219,7 @@ export async function GET(req: NextRequest) {
             }
           : null,
         detalle: aud.Detalle,
-        valorAnterior: aud.ValorAnterior
-          ? JSON.parse(aud.ValorAnterior)
-          : null,
+        valorAnterior: aud.ValorAnterior ? JSON.parse(aud.ValorAnterior) : null,
         valorNuevo: aud.ValorNuevo ? JSON.parse(aud.ValorNuevo) : null,
         ipAddress: aud.IpAddress,
         userAgent: aud.UserAgent,
@@ -228,39 +244,12 @@ export async function GET(req: NextRequest) {
     return handleError(error);
   }
 }
-
-/**
- * POST /api/auditoria-empleados
- * Registra una nueva auditoría (usado principalmente para testing o casos especiales)
- * En la mayoría de los casos, se usa la función helper registrarAuditoria()
- */
-const crearAuditoriaSchema = z.object({
-  accion: z.enum([
-    "CREAR_USUARIO",
-    "EDITAR_USUARIO",
-    "INVITAR_USUARIO",
-    "REENVIAR_INVITACION",
-    "ACEPTAR_INVITACION",
-    "CAMBIAR_ROL",
-    "CAMBIAR_PASSWORD",
-    "SUSPENDER_USUARIO",
-    "REACTIVAR_USUARIO",
-    "ELIMINAR_USUARIO",
-    "CREAR_ROL",
-    "EDITAR_ROL",
-    "ELIMINAR_ROL",
-    "CAMBIAR_CONFIG_SEGURIDAD",
-  ]),
-  empleadoId: z.number().optional().nullable(),
-  usuarioAfectadoId: z.number().optional().nullable(),
-  detalle: z.string().optional().nullable(),
-  valorAnterior: z.record(z.string(), z.unknown()).optional().nullable(),
-  valorNuevo: z.record(z.string(), z.unknown()).optional().nullable(),
-});
-
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, usuarioId } = await requirePermiso("empleados:admin");
+    const { tenantId, usuarioId } = await getAuthContext({
+      req,
+      permission: "empleados:admin", // Mismo permiso que productos por coherencia
+    });
 
     const json = await req.json().catch(() => null);
     const parsed = crearAuditoriaSchema.safeParse(json);
@@ -298,4 +287,3 @@ export async function POST(req: NextRequest) {
     return handleError(error);
   }
 }
-

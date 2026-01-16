@@ -82,7 +82,7 @@ export const useUserStore = create<UserState>()(
                 isInitialized: true,
               },
               false,
-              "initialize/success"
+              "initialize/success",
             );
           }
         } catch (e) {
@@ -101,6 +101,9 @@ export const useUserStore = create<UserState>()(
 
       hasPermission: (path: string) => {
         const { permissions, roles } = get();
+
+        console.log(path, permissions, roles);
+
         // SuperAdmin has access to everything
         if (roles.some((r) => r.Tipo === "SUPERADMIN")) return true;
 
@@ -110,6 +113,6 @@ export const useUserStore = create<UserState>()(
         return tienePermisoParaRuta(permissions, path);
       },
     }),
-    { name: "UserStore" }
-  )
+    { name: "UserStore" },
+  ),
 );

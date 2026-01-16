@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import {
   createUnidadMedidaSchema,
   updateUnidadMedidaSchema,
@@ -11,29 +11,17 @@ import {
   parsePaginationParams,
   createPaginationResponse,
 } from "@/lib/pagination";
-import { createError } from "@/lib/errors/types";
 import { handleError } from "@/lib/errors/handler";
 
-import { verifyUserBranchAccess } from "@/lib/sucursal/verifyUserBranch";
-
 export async function GET(req: NextRequest) {
-  // Obtener la session del usuario
-  const { tenantId, user, error } = await getAuthUser();
-
-  if (error || !user) {
-    return (
-      error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    );
-  }
-
   try {
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "productos", // Permiso compartido
+    });
+
     const pagination = parsePaginationParams(req);
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
-    const sucursalIdParam = req.nextUrl.searchParams.get("sucursalId");
-
-    if (sucursalIdParam) {
-      await verifyUserBranchAccess(BigInt(tenantId), user.id, sucursalIdParam);
-    }
 
     const where: any = {
       TenantId: BigInt(tenantId),
@@ -68,23 +56,19 @@ export async function GET(req: NextRequest) {
       pagination
     );
 
-    // Ajustamos la respuesta para que cumpla con { data: [], meta: ... } si quisiéramos ser estrictos
-    // Pero el helper devuelve { data, pagination }, y nuestro hook GenericCrud lee 'pagination' también, así que está bien.
-
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
     return handleError(error);
   }
 }
 
-export async function POST(req: Request) {
-  const { tenantId, error } = await getAuthUser();
-
-  if (error) {
-    return error;
-  }
-
+export async function POST(req: NextRequest) {
   try {
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "productos",
+    });
+
     const body = await req.json();
 
     // Validar el body con Zod
@@ -95,7 +79,7 @@ export async function POST(req: Request) {
       data: {
         Descripcion: validatedData.Descripcion,
         EstaEliminado: validatedData.EstaEliminado,
-        TenantId: tenantId,
+        TenantId: BigInt(tenantId),
       },
     });
 
@@ -121,33 +105,32 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-
     return handleError(error);
   }
 }
 
 export async function DELETE(req: NextRequest) {
-  const { tenantId, error } = await getAuthUser();
-
-  if (error) {
-    return error;
-  }
-  const idParam =
-    req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
-  const unidadMedidaId = idParam ? Number(idParam) : NaN;
-
-  if (!Number.isInteger(unidadMedidaId)) {
-    return NextResponse.json(
-      { error: "Id de unidad de medida invalido" },
-      { status: 400 }
-    );
-  }
-
   try {
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "productos",
+    });
+
+    const idParam =
+      req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
+    const unidadMedidaId = idParam ? Number(idParam) : NaN;
+
+    if (!Number.isInteger(unidadMedidaId)) {
+      return NextResponse.json(
+        { error: "Id de unidad de medida invalido" },
+        { status: 400 }
+      );
+    }
+
     const unidadMedidaActualizada = await prisma.unidadMedida.delete({
       where: {
         Id: unidadMedidaId,
-        TenantId: tenantId,
+        TenantId: BigInt(tenantId),
       },
       select: {
         Id: true,
@@ -175,15 +158,10 @@ export async function DELETE(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
-
-    if (!tenantId || tenantId <= 0) {
-      throw createError.unauthorized("TenantId inválido o no proporcionado");
-    }
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "productos",
+    });
 
     const body = await req.json();
 

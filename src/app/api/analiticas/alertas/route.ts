@@ -1,18 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { requirePermiso } from "@/lib/requirePermiso";
 import { handleError } from "@/lib/errors/handler";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 
 /**
  * GET /api/analiticas/alertas
- * 
+ *
  * Retorna alertas y acciones pendientes
  * Query params:
  * - tipo: "stock" | "cobranzas" | "actividad" | "cheques" | "cajas" | "todos" (default: "todos")
  */
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId } = await requirePermiso("analiticas");
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "analiticas", // Mismo permiso que productos por coherencia
+    });
+
     const searchParams = req.nextUrl.searchParams;
     const tipo = searchParams.get("tipo") || "todos";
 
@@ -41,7 +45,8 @@ export async function GET(req: NextRequest) {
       // Filtrar productos críticos (Stock <= StockMinimo o Stock <= 0)
       const productosCriticos = todosProductos
         .filter(
-          (p) => Number(p.Stock) <= Number(p.StockMinimo) || Number(p.Stock) <= 0
+          (p) =>
+            Number(p.Stock) <= Number(p.StockMinimo) || Number(p.Stock) <= 0
         )
         .slice(0, 50)
         .sort((a, b) => Number(a.Stock) - Number(b.Stock));
@@ -68,13 +73,17 @@ export async function GET(req: NextRequest) {
 
       const ventasPorProducto: Record<string, number> = {};
       ventasPromedio.forEach((v) => {
-        ventasPorProducto[v.ArticuloId.toString()] = Number(v._avg.Cantidad || 0) / 30; // Promedio diario
+        ventasPorProducto[v.ArticuloId.toString()] =
+          Number(v._avg.Cantidad || 0) / 30; // Promedio diario
       });
 
       alertas.stock = productosCriticos.map((prod) => {
         const ventaDiaria = ventasPorProducto[prod.Id.toString()] || 0;
-        const diasHastaAgotar = ventaDiaria > 0 ? Number(prod.Stock) / ventaDiaria : null;
-        const esUrgente = Number(prod.Stock) <= 0 || Number(prod.Stock) < Number(prod.StockMinimo) * 0.5;
+        const diasHastaAgotar =
+          ventaDiaria > 0 ? Number(prod.Stock) / ventaDiaria : null;
+        const esUrgente =
+          Number(prod.Stock) <= 0 ||
+          Number(prod.Stock) < Number(prod.StockMinimo) * 0.5;
 
         return {
           id: Number(prod.Id),
@@ -91,55 +100,61 @@ export async function GET(req: NextRequest) {
     // 2. Alertas de cobranzas vencidas
     if (tipo === "todos" || tipo === "cobranzas") {
       // Obtener movimientos de cuenta corriente con saldo pendiente
-      const movimientosPendientes = await prisma.movimiento_CuentaCorriente.findMany({
-        where: {
-          Movimiento: {
-            TenantId: tenantIdBigInt,
-            EstaEliminado: false,
-            TipoMovimiento: 2, // Salida (deuda)
-          },
-        },
-        include: {
-          Movimiento: {
-            select: {
-              Fecha: true,
-              Monto: true,
+      const movimientosPendientes =
+        await prisma.movimiento_CuentaCorriente.findMany({
+          where: {
+            Movimiento: {
+              TenantId: tenantIdBigInt,
+              EstaEliminado: false,
+              TipoMovimiento: 2, // Salida (deuda)
             },
           },
-          Persona_Cliente: {
-            select: {
-              Persona: {
-                select: {
-                  Id: true,
-                  Nombre: true,
-                  Apellido: true,
-                  Mail: true,
-                  Telefono: true,
+          include: {
+            Movimiento: {
+              select: {
+                Fecha: true,
+                Monto: true,
+              },
+            },
+            Persona_Cliente: {
+              select: {
+                Persona: {
+                  select: {
+                    Id: true,
+                    Nombre: true,
+                    Apellido: true,
+                    Mail: true,
+                    Telefono: true,
+                  },
                 },
               },
             },
           },
-        },
-        take: 100,
-      });
+          take: 100,
+        });
 
       // Calcular saldo pendiente por cliente
-      const saldosPorCliente: Record<string, {
-        id: bigint;
-        nombre: string;
-        email: string;
-        telefono: string | null;
-        saldo: number;
-        fechaUltimoMovimiento: Date;
-        diasVencido: number;
-      }> = {};
+      const saldosPorCliente: Record<
+        string,
+        {
+          id: bigint;
+          nombre: string;
+          email: string;
+          telefono: string | null;
+          saldo: number;
+          fechaUltimoMovimiento: Date;
+          diasVencido: number;
+        }
+      > = {};
 
       movimientosPendientes.forEach((mov) => {
         const clienteId = mov.ClienteId.toString();
         const persona = mov.Persona_Cliente.Persona;
         const monto = Number(mov.Movimiento.Monto);
         const fecha = mov.Movimiento.Fecha;
-        const diasVencido = Math.floor((Date.now() - fecha.getTime()) / (24 * 60 * 60 * 1000));
+        const diasVencido = Math.floor(
+          (Date.now() - fecha.getTime()) / (24 * 60 * 60 * 1000)
+        );
 
         if (!saldosPorCliente[clienteId]) {
           saldosPorCliente[clienteId] = {
@@ -262,7 +277,8 @@ export async function GET(req: NextRequest) {
 
       alertas.cheques = chequesProximos.map((cheque) => {
         const diasHastaVencimiento = Math.ceil(
-          (cheque.FechaVencimiento.getTime() - Date.now()) / (24 * 60 * 60 * 1000)
+          (cheque.FechaVencimiento.getTime() - Date.now()) /
+            (24 * 60 * 60 * 1000)
         );
 
         return {
@@ -316,9 +332,12 @@ export async function GET(req: NextRequest) {
       });
 
       alertas.cajas = cajasAbiertas.map((caja) => {
-        const fechaUltimoMovimiento = caja.Movimiento[0]?.Fecha || caja.FechaApertura;
-        const horasSinActividad = (Date.now() - fechaUltimoMovimiento.getTime()) / (1000 * 60 * 60);
-        const empleado = caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Persona_Empleado;
+        const fechaUltimoMovimiento =
+          caja.Movimiento[0]?.Fecha || caja.FechaApertura;
+        const horasSinActividad =
+          (Date.now() - fechaUltimoMovimiento.getTime()) / (1000 * 60 * 60);
+        const empleado =
+          caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Persona_Empleado;
 
         return {
           id: Number(caja.Id),
@@ -337,12 +356,15 @@ export async function GET(req: NextRequest) {
       stock: alertas.stock?.length || 0,
       stockUrgentes: alertas.stock?.filter((s: any) => s.esUrgente).length || 0,
       cobranzas: alertas.cobranzas?.length || 0,
-      cobranzasVencidas: alertas.cobranzas?.filter((c: any) => c.esVencido).length || 0,
+      cobranzasVencidas:
+        alertas.cobranzas?.filter((c: any) => c.esVencido).length || 0,
       actividad: alertas.actividad?.length || 0,
       cheques: alertas.cheques?.length || 0,
-      chequesUrgentes: alertas.cheques?.filter((c: any) => c.esUrgente).length || 0,
+      chequesUrgentes:
+        alertas.cheques?.filter((c: any) => c.esUrgente).length || 0,
       cajas: alertas.cajas?.length || 0,
-      cajasSinActividad: alertas.cajas?.filter((c: any) => c.requiereAtencion).length || 0,
+      cajasSinActividad:
+        alertas.cajas?.filter((c: any) => c.requiereAtencion).length || 0,
     };
 
     return NextResponse.json({
@@ -353,4 +375,3 @@ export async function GET(req: NextRequest) {
     return handleError(error);
   }
 }
-

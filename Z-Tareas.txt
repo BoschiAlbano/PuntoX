@@ -1,4 +1,27 @@
-// el menu sidebar tiene en select 3 sucursales, pero solo deberian aparecer 2 verificas que esta pasando.
-// Entra automaticamente en ventas, pero si el usuario no tiene acceso?.
-// La api generica "GenericApi" envia por param "sucursalId" -> si solo se necesita en articulos para obtener el stock entonces quitar el param "sucursalId" para las otras consultas.
-// verifyUserBranchAccess no usar en todas las apis
+1-> paginas empleados, analiticas y sucursales las apis piden permiso de "empleados:admin", por ejemplo no existe el permiso "sucursales".
+permisos del "adminitrador" ->
+    0(pin):"empleados:admin"
+    1(pin):"ventas"
+    2(pin):"caja"
+    3(pin):"clientes"
+    4(pin):"productos"
+    5(pin):"analiticas"
+    6(pin):"configuracion"
+
+
+2-> Entra automaticamente en dashboard, si el usuario no tiene permiso.
+dashboard -> No existe la pagina.
+ejemplo. si un usuario empleado se le asigna el permiso de empleados no podra ingresar por que tiene que ser empleado:admin
+
+
+3-> Toda la pagina caja hace muchos fetch y no se guardan en tanstack query.
+
+
+4-> el archivo favicon-light.ico se descarga varias veces.
+
+5-> no se bien el fin de esto logoutManager.ts pero demoraba y se usaba en Cerrar session del sidebar.
+
+6-> el login demora por que hace fetch de muchas cosas, no se si se puede optimizar. como por ejemplo: api/auth/registrar-sesion - api/auth/registrar-intento-login - /configuracion/seguridad (useInactivityTimeout)
+
+8-> al crear una sucursal no se actualiza la lista de sucursales. se debe ir a empleados y asignar la nueva sucursal. quizas el empleado administrador por defecto se deba asignar a la sucursal creada.
+

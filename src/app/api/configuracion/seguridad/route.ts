@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
 import { createError } from "@/lib/errors/types";
 import prisma from "@/DB/prisma";
@@ -18,12 +18,15 @@ const seguridadSchema = z.object({
 /**
  * GET: Obtiene la configuración de seguridad del tenant
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "configuracion",
+    });
 
-    if (error || !tenantId) {
-      return error || NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    if (!tenantId) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
     // Buscar configuración del tenant
@@ -42,7 +45,7 @@ export async function GET() {
         RecordarSesion30Dias: true,
       },
       orderBy: {
-        Id: 'desc',
+        Id: "desc",
       },
     });
 
@@ -58,18 +61,19 @@ export async function GET() {
           tiempoInactividadMinutos: 30,
           recordarSesion30Dias: true,
         },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
     // Convertir BloquearTrasIntentos a formato string
-    const bloquearTrasIntentos = config.BloquearTrasIntentos === null 
-      ? "nunca" as const
-      : config.BloquearTrasIntentos === 5 
-        ? "5" as const 
-        : config.BloquearTrasIntentos === 10 
-          ? "10" as const 
-          : "5" as const;
+    const bloquearTrasIntentos =
+      config.BloquearTrasIntentos === null
+        ? ("nunca" as const)
+        : config.BloquearTrasIntentos === 5
+          ? ("5" as const)
+          : config.BloquearTrasIntentos === 10
+            ? ("10" as const)
+            : ("5" as const);
 
     return NextResponse.json(
       {
@@ -81,7 +85,7 @@ export async function GET() {
         tiempoInactividadMinutos: config.TiempoInactividadMinutos ?? 30,
         recordarSesion30Dias: config.RecordarSesion30Dias ?? true,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error: unknown) {
     return handleError(error);
@@ -91,16 +95,19 @@ export async function GET() {
 /**
  * PUT: Actualiza la configuración de seguridad del tenant
  */
-export async function PUT(req: Request) {
+export async function PUT(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "configuracion",
+    });
 
-    if (error || !tenantId) {
-      return error || NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    if (!tenantId) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
     const json = await req.json().catch(() => null);
-    
+
     if (!json) {
       throw createError.validation("Cuerpo de la petición inválido");
     }
@@ -123,14 +130,17 @@ export async function PUT(req: Request) {
       },
       select: { Id: true },
       orderBy: {
-        Id: 'desc',
+        Id: "desc",
       },
     });
 
     if (!config) {
       return NextResponse.json(
-        { error: "Configuración no encontrada. Debe crear la configuración primero." },
-        { status: 404 }
+        {
+          error:
+            "Configuración no encontrada. Debe crear la configuración primero.",
+        },
+        { status: 404 },
       );
     }
 
@@ -152,9 +162,10 @@ export async function PUT(req: Request) {
       updateData.ExpirarSesiones30Dias = data.expirarSesiones30Dias;
     }
     if (data.bloquearTrasIntentos !== undefined) {
-      updateData.BloquearTrasIntentos = data.bloquearTrasIntentos === "nunca" 
-        ? null 
-        : parseInt(data.bloquearTrasIntentos);
+      updateData.BloquearTrasIntentos =
+        data.bloquearTrasIntentos === "nunca"
+          ? null
+          : parseInt(data.bloquearTrasIntentos);
     }
     if (data.alertarNuevoDispositivo !== undefined) {
       updateData.AlertarNuevoDispositivo = data.alertarNuevoDispositivo;
@@ -190,13 +201,14 @@ export async function PUT(req: Request) {
     });
 
     // Convertir BloquearTrasIntentos a formato string
-    const bloquearTrasIntentos = updatedConfig?.BloquearTrasIntentos === null 
-      ? "nunca" as const
-      : updatedConfig?.BloquearTrasIntentos === 5 
-        ? "5" as const 
-        : updatedConfig?.BloquearTrasIntentos === 10 
-          ? "10" as const 
-          : "5" as const;
+    const bloquearTrasIntentos =
+      updatedConfig?.BloquearTrasIntentos === null
+        ? ("nunca" as const)
+        : updatedConfig?.BloquearTrasIntentos === 5
+          ? ("5" as const)
+          : updatedConfig?.BloquearTrasIntentos === 10
+            ? ("10" as const)
+            : ("5" as const);
 
     return NextResponse.json(
       {
@@ -208,13 +220,9 @@ export async function PUT(req: Request) {
         tiempoInactividadMinutos: updatedConfig?.TiempoInactividadMinutos ?? 30,
         recordarSesion30Dias: updatedConfig?.RecordarSesion30Dias ?? true,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error: unknown) {
     return handleError(error);
   }
 }
-
-
-
-

@@ -2,18 +2,18 @@
  * =====================================================
  * API DE SUCURSAL INDIVIDUAL
  * =====================================================
- * 
+ *
  * GET    /api/sucursales/[id]      - Obtener sucursal
  * PATCH  /api/sucursales/[id]      - Actualizar sucursal
  * DELETE /api/sucursales/[id]      - Eliminar sucursal
- * 
+ *
  * =====================================================
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
-import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
 
 // Schema de validación para actualizar sucursal
@@ -33,11 +33,10 @@ type RouteParams = { params: Promise<{ id: string }> };
  */
 export async function GET(req: NextRequest, { params }: RouteParams) {
   try {
-    const { tenantId, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "empleados:admin",
+    });
 
     const { id } = await params;
     const sucursalId = BigInt(id);
@@ -81,7 +80,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     if (!sucursal) {
       return NextResponse.json(
         { error: "Sucursal no encontrada" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -119,11 +118,10 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
  */
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
   try {
-    const { tenantId, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "empleados:admin",
+    });
 
     const { id } = await params;
     const sucursalId = BigInt(id);
@@ -140,7 +138,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     if (!sucursalExistente) {
       return NextResponse.json(
         { error: "Sucursal no encontrada" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -161,7 +159,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       if (nombreDuplicado) {
         return NextResponse.json(
           { error: "Ya existe una sucursal con ese nombre" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -187,7 +185,9 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         ...(data.nombre && { Nombre: data.nombre }),
         ...(data.direccion !== undefined && { Direccion: data.direccion }),
         ...(data.telefono !== undefined && { Telefono: data.telefono }),
-        ...(data.esPrincipal !== undefined && { EsPrincipal: data.esPrincipal }),
+        ...(data.esPrincipal !== undefined && {
+          EsPrincipal: data.esPrincipal,
+        }),
         ...(data.estaActiva !== undefined && { EstaActiva: data.estaActiva }),
       },
     });
@@ -206,7 +206,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.issues[0]?.message || "Datos inválidos" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     return handleError(error);
@@ -219,11 +219,10 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
  */
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   try {
-    const { tenantId, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "empleados:admin",
+    });
 
     const { id } = await params;
     const sucursalId = BigInt(id);
@@ -240,7 +239,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     if (!sucursal) {
       return NextResponse.json(
         { error: "Sucursal no encontrada" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -248,7 +247,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     if (sucursal.EsPrincipal) {
       return NextResponse.json(
         { error: "No se puede eliminar la sucursal principal" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -264,7 +263,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     if (cajasAbiertas > 0) {
       return NextResponse.json(
         { error: "No se puede eliminar una sucursal con cajas abiertas" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -282,4 +281,3 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     return handleError(error);
   }
 }
-

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { requirePermiso } from "@/lib/requirePermiso";
 import { handleError } from "@/lib/errors/handler";
 import { TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 
 /**
  * GET /api/analiticas/kpis
@@ -15,7 +15,11 @@ import { TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
  */
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId } = await requirePermiso("analiticas");
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "analiticas", // Mismo permiso que productos por coherencia
+    });
+
     const searchParams = req.nextUrl.searchParams;
 
     // Parsear fechas

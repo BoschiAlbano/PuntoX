@@ -32,9 +32,8 @@ export async function requireSuperAdminServer({
     redirect(redirectUrl);
   }
 
-  // 🍆 POR EL MOMENTO NO USA SUPERADMIN
   const isSuperAdmin = dbUser.PerfilUsuario.some(
-    (pu) => pu.Perfiles.Tipo === PerfilTipo.ADMINISTRADOR
+    (pu) => pu.Perfiles.Tipo === PerfilTipo.SUPERADMIN
   );
 
   if (!isSuperAdmin) {

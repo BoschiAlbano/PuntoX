@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import {
   createRubroSchema,
   updateRubroSchema,
@@ -11,29 +11,17 @@ import {
   parsePaginationParams,
   createPaginationResponse,
 } from "@/lib/pagination";
-import { createError } from "@/lib/errors/types";
 import { handleError } from "@/lib/errors/handler";
 
-import { verifyUserBranchAccess } from "@/lib/sucursal/verifyUserBranch";
-
 export async function GET(req: NextRequest) {
-  // Obtener la session del usuario
-  const { tenantId, user, error } = await getAuthUser();
-
-  if (error || !user) {
-    return (
-      error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    );
-  }
-
   try {
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "productos", // Permiso de productos para rubros
+    });
+
     const pagination = parsePaginationParams(req);
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
-    const sucursalIdParam = req.nextUrl.searchParams.get("sucursalId");
-
-    if (sucursalIdParam) {
-      await verifyUserBranchAccess(BigInt(tenantId), user.id, sucursalIdParam);
-    }
 
     const where: any = {
       TenantId: BigInt(tenantId),
@@ -70,25 +58,24 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: Request) {
-  const { tenantId, error } = await getAuthUser();
-
-  if (error) {
-    return error;
-  }
-
+export async function POST(req: NextRequest) {
   try {
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "productos",
+    });
+
     const body = await req.json();
 
     // Validar el body con Zod
     const validatedData = createRubroSchema.parse(body);
 
-    // Crear la marca con datos validados
+    // Crear el rubro con datos validados
     const rubro = await prisma.rubro.create({
       data: {
         Descripcion: validatedData.Descripcion,
         EstaEliminado: validatedData.EstaEliminado,
-        TenantId: tenantId,
+        TenantId: BigInt(tenantId),
       },
     });
 
@@ -120,27 +107,27 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const { tenantId, error } = await getAuthUser();
-
-  if (error) {
-    return error;
-  }
-  const idParam =
-    req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
-  const rubroId = idParam ? Number(idParam) : NaN;
-
-  if (!Number.isInteger(rubroId)) {
-    return NextResponse.json(
-      { error: "Id de rubro invalido" },
-      { status: 400 }
-    );
-  }
-
   try {
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "productos",
+    });
+
+    const idParam =
+      req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
+    const rubroId = idParam ? Number(idParam) : NaN;
+
+    if (!Number.isInteger(rubroId)) {
+      return NextResponse.json(
+        { error: "Id de rubro invalido" },
+        { status: 400 }
+      );
+    }
+
     const rubroActualizada = await prisma.rubro.delete({
       where: {
         Id: rubroId,
-        TenantId: tenantId,
+        TenantId: BigInt(tenantId),
       },
       select: {
         Id: true,
@@ -168,15 +155,10 @@ export async function DELETE(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
-
-    if (!tenantId || tenantId <= 0) {
-      throw createError.unauthorized("TenantId inválido o no proporcionado");
-    }
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "productos",
+    });
 
     const body = await req.json();
 
@@ -185,7 +167,7 @@ export async function PATCH(req: NextRequest) {
 
     const tenantIdBigInt = BigInt(tenantId);
 
-    // Crear la marca con datos validados
+    // Actualizar rubro
     const rubro = await prisma.rubro.update({
       where: {
         Id: BigInt(validatedData.Id),

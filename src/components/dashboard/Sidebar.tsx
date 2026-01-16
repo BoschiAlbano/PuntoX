@@ -13,7 +13,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { filtrarRutasPorPermisos } from "@/lib/permissions/routePermissions";
-import { startManualLogout, endManualLogout } from "@/lib/auth/logoutManager";
 import { SucursalSelector } from "@/components/sucursal";
 import { useUserStore } from "@/store/useUserStore";
 import Image from "next/image";
@@ -88,26 +87,6 @@ const menuItems: MenuItem[] = [
     label: "Productos",
     href: "/productos",
   },
-  // {
-  //   icon: (
-  //     <svg
-  //       className="w-5 h-5"
-  //       fill="none"
-  //       stroke="currentColor"
-  //       viewBox="0 0 24 24"
-  //     >
-  //       <path
-  //         strokeLinecap="round"
-  //         strokeLinejoin="round"
-  //         strokeWidth={2}
-  //         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-  //       />
-  //     </svg>
-  //   ),
-  //   label: "Test",
-  //   href: "/test",
-  //   badge: "12",
-  // },
   {
     icon: (
       <svg
@@ -217,10 +196,12 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
   // const pathname = usePathname(); // Already defined above
   // const router = useRouter(); // Already defined above
   const { supabase } = useSupabaseAuthContext();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  // const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Use global store
   const { permissions, roles } = useUserStore();
+
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const isSuperAdmin = useMemo(() => {
     return roles.some((r) => r.Tipo === "SUPERADMIN");
@@ -245,36 +226,49 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
 
   const queryClient = useQueryClient();
 
-  const handleLogout = useCallback(async () => {
-    if (isLoggingOut) return;
-    setIsLoggingOut(true);
-
-    // Marcar que estamos haciendo logout manual para prevenir toasts de error
-    startManualLogout();
-
+  const handleLogout = async () => {
     try {
-      // Cancelar todas las queries activas para evitar errores 401
+      setIsLoggingOut(true);
       queryClient.cancelQueries();
-
-      // Limpiar todo el cache de queries
       queryClient.clear();
-
-      // Cerrar sesión en Supabase
       await supabase.auth.signOut();
+      router.push("/signin");
     } catch (error) {
       console.error("Error during sign out:", error);
     } finally {
-      // Limpiar el estado de logout manual después de un breve delay
-      // para asegurar que cualquier error pendiente no muestre toasts
-      setTimeout(() => {
-        endManualLogout();
-        setIsLoggingOut(false);
-      }, 100);
-
-      // Redirigir al login
-      router.push("/signin");
+      setIsLoggingOut(false);
     }
-  }, [isLoggingOut, supabase, router, queryClient]);
+  };
+  // const handleLogout = useCallback(async () => {
+  //   if (isLoggingOut) return;
+  //   setIsLoggingOut(true);
+
+  //   // Marcar que estamos haciendo logout manual para prevenir toasts de error
+  //   startManualLogout();
+
+  //   try {
+  //     // Cancelar todas las queries activas para evitar errores 401
+  //     queryClient.cancelQueries();
+
+  //     // Limpiar todo el cache de queries
+  //     queryClient.clear();
+
+  //     // Cerrar sesión en Supabase
+  //     await supabase.auth.signOut();
+  //   } catch (error) {
+  //     console.error("Error during sign out:", error);
+  //   } finally {
+  //     // Limpiar el estado de logout manual después de un breve delay
+  //     // para asegurar que cualquier error pendiente no muestre toasts
+  //     setTimeout(() => {
+  //       endManualLogout();
+  //       setIsLoggingOut(false);
+  //     }, 100);
+
+  //     // Redirigir al login
+  //     router.push("/signin");
+  //   }
+  // }, [isLoggingOut, supabase, router, queryClient]);
 
   return (
     <motion.section

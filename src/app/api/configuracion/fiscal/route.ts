@@ -1,30 +1,26 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
-import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
 
-const fiscalSchema = z.object({
-  moneda: z.string().optional(),
-  zonaHoraria: z.string().optional(),
-  idioma: z.string().optional(),
-  condicionIvaId: z.number().int().positive().optional().nullable(),
-  puntoVenta: z.string().optional(),
-  inicioActividades: z.string().optional(), // ISO date string
-  tipoIva: z.string().optional(), // Campo informativo, se ignora al guardar
-}).passthrough(); // Permite campos adicionales que se ignoran
+const fiscalSchema = z
+  .object({
+    moneda: z.string().optional(),
+    zonaHoraria: z.string().optional(),
+    idioma: z.string().optional(),
+    condicionIvaId: z.number().int().positive().optional().nullable(),
+    puntoVenta: z.string().optional(),
+    inicioActividades: z.string().optional(), // ISO date string
+    tipoIva: z.string().optional(), // Campo informativo, se ignora al guardar
+  })
+  .passthrough(); // Permite campos adicionales que se ignoran
 
-async function resolveTenantId() {
-  const supabase = await getSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const tenantId = user?.app_metadata?.tenantId;
-  return tenantId ? Number(tenantId) : null;
-}
-
-export async function GET() {
-  const tenantId = await resolveTenantId();
+export async function GET(req: NextRequest) {
+  const { tenantId } = await getAuthContext({
+    req,
+    permission: "configuracion",
+  });
   if (!tenantId) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
@@ -68,7 +64,7 @@ export async function GET() {
             inicioActividades: "",
           },
         },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
@@ -79,22 +75,28 @@ export async function GET() {
           zonaHoraria: config.ZonaHoraria ?? "America/Argentina/Buenos_Aires",
           idioma: config.Idioma ?? "es-AR",
           tipoIva: config.CondicionIva?.Descripcion ?? "",
-          condicionIvaId: config.CondicionIvaId ? Number(config.CondicionIvaId) : null,
+          condicionIvaId: config.CondicionIvaId
+            ? Number(config.CondicionIvaId)
+            : null,
           puntoVenta: config.PuntoVenta ?? "",
           inicioActividades: config.InicioActividades
             ? new Date(config.InicioActividades).toISOString().split("T")[0]
             : "",
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error: unknown) {
     return handleError(error);
   }
 }
 
-export async function PUT(req: Request) {
-  const tenantId = await resolveTenantId();
+export async function PUT(req: NextRequest) {
+  const { tenantId } = await getAuthContext({
+    req,
+    permission: "configuracion",
+  });
+
   if (!tenantId) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
@@ -105,7 +107,7 @@ export async function PUT(req: Request) {
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Datos inválidos", details: parsed.error.issues },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -126,8 +128,11 @@ export async function PUT(req: Request) {
 
     if (!config) {
       return NextResponse.json(
-        { error: "Configuración no encontrada. Debe crear la configuración primero." },
-        { status: 404 }
+        {
+          error:
+            "Configuración no encontrada. Debe crear la configuración primero.",
+        },
+        { status: 404 },
       );
     }
 
@@ -151,7 +156,9 @@ export async function PUT(req: Request) {
       updateData.Idioma = data.idioma;
     }
     if (data.condicionIvaId !== undefined) {
-      updateData.CondicionIvaId = data.condicionIvaId ? BigInt(data.condicionIvaId) : null;
+      updateData.CondicionIvaId = data.condicionIvaId
+        ? BigInt(data.condicionIvaId)
+        : null;
     }
     if (data.puntoVenta !== undefined) {
       updateData.PuntoVenta = data.puntoVenta;
@@ -197,7 +204,8 @@ export async function PUT(req: Request) {
       {
         fiscal: {
           moneda: updatedConfig?.Moneda ?? "ARS",
-          zonaHoraria: updatedConfig?.ZonaHoraria ?? "America/Argentina/Buenos_Aires",
+          zonaHoraria:
+            updatedConfig?.ZonaHoraria ?? "America/Argentina/Buenos_Aires",
           idioma: updatedConfig?.Idioma ?? "es-AR",
           tipoIva: updatedConfig?.CondicionIva?.Descripcion ?? "",
           condicionIvaId: updatedConfig?.CondicionIvaId
@@ -205,11 +213,13 @@ export async function PUT(req: Request) {
             : null,
           puntoVenta: updatedConfig?.PuntoVenta ?? "",
           inicioActividades: updatedConfig?.InicioActividades
-            ? new Date(updatedConfig.InicioActividades).toISOString().split("T")[0]
+            ? new Date(updatedConfig.InicioActividades)
+                .toISOString()
+                .split("T")[0]
             : "",
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error: unknown) {
     return handleError(error);

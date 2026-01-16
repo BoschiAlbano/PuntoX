@@ -3,9 +3,9 @@
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
-import { actualizarPermisosEnJWT } from "@/lib/auth/updateUserPermissions";
+// import { actualizarPermisosEnJWT } from "@/lib/auth/updateUserPermissions";
 import { requireSuperAdminServer } from "@/lib/requireSuperAdmin";
-
+import { PerfilTipo } from "../../../prisma/generated/prisma";
 // Helper para convertir cadenas vacías a undefined
 const emptyStringToUndefined = z.preprocess(
   (val) => (val === "" || val === null ? undefined : val),
@@ -137,6 +137,18 @@ export async function registerTenant(formData: FormData) {
         },
       });
 
+      // Crear Sucursal "Casa Central"
+      const sucursalCentral = await tx.sucursal.create({
+        data: {
+          TenantId: newTenant.Id,
+          Nombre: "Casa Central",
+          EsPrincipal: true,
+          EstaActiva: true,
+          EstaEliminado: false,
+          Direccion: "Sin dirección",
+        },
+      });
+
       // Buscar una localidad por defecto (la primera disponible)
       const localidadDefault = await tx.localidad.findFirst({
         orderBy: { Id: "asc" },
@@ -196,6 +208,16 @@ export async function registerTenant(formData: FormData) {
         },
       });
 
+      // Asignar sucursal al usuario
+      await tx.usuarioSucursal.create({
+        data: {
+          UsuarioId: usuario.Id,
+          SucursalId: sucursalCentral.Id,
+          TenantId: newTenant.Id,
+          EsDefault: true,
+        },
+      });
+
       let perfilAdmin = await tx.perfiles.findFirst({
         where: {
           Descripcion: "Administrador",
@@ -207,16 +229,16 @@ export async function registerTenant(formData: FormData) {
         perfilAdmin = await tx.perfiles.create({
           data: {
             Descripcion: "Administrador",
-            Tipo: "ADMINISTRADOR",
+            Tipo: PerfilTipo.ADMINISTRADOR,
             EstaEliminado: false,
             TenantId: newTenant.Id,
           },
         });
-      } else if (perfilAdmin.Tipo !== "ADMINISTRADOR") {
+      } else if (perfilAdmin.Tipo !== PerfilTipo.ADMINISTRADOR) {
         // Asegurar que el perfil existente tenga el tipo correcto
         perfilAdmin = await tx.perfiles.update({
           where: { Id: perfilAdmin.Id },
-          data: { Tipo: "ADMINISTRADOR" },
+          data: { Tipo: PerfilTipo.ADMINISTRADOR },
         });
       }
 
@@ -352,19 +374,6 @@ export async function registerTenant(formData: FormData) {
           "No se pudo actualizar el meta del usuario en Supabase: " +
           (metaError?.message ?? "error desconocido"),
       };
-    }
-
-    // Actualizar permisos en el JWT del administrador recién creado
-    // Esto asegura que el usuario tenga acceso inmediato a todas las funcionalidades
-    try {
-      await actualizarPermisosEnJWT(authUserId);
-    } catch (permisosError) {
-      console.error(
-        "Error actualizando permisos en JWT (no crítico):",
-        permisosError
-      );
-      // No fallamos la creación del tenant si falla la actualización de permisos
-      // El usuario puede cerrar sesión y volver a iniciar sesión para actualizar los permisos
     }
 
     return {

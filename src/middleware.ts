@@ -19,7 +19,6 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const publicPaths = [
-    "/",
     "/signin",
     "/signup",
     "/favicon.ico",
@@ -30,6 +29,7 @@ export async function middleware(req: NextRequest) {
   ];
 
   const isPublic =
+    pathname === "/" ||
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
     pathname.match(/\.(ico|png|jpg|jpeg|svg|gif|webp)$/) ||

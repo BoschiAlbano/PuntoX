@@ -1,24 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
-
-async function resolveTenantId() {
-  const supabase = await getSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const tenantId = user?.app_metadata?.tenantId;
-  return tenantId ? Number(tenantId) : null;
-}
 
 /**
  * GET /api/configuracion/seguridad/auditoria
  * Obtiene estadísticas de auditoría para la sección de seguridad
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const tenantId = await resolveTenantId();
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "configuracion",
+    });
     if (!tenantId) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
@@ -37,7 +31,7 @@ export async function GET() {
       Array<{ count: bigint }>
     >(
       `SELECT COUNT(*) as count FROM "AuditoriaEmpleado" WHERE "TenantId" = $1`,
-      tenantIdBigInt
+      tenantIdBigInt,
     );
     const totalEventos = Number(totalEventosResult[0]?.count || 0);
 
@@ -45,7 +39,7 @@ export async function GET() {
       Array<{ count: bigint }>
     >(
       `SELECT COUNT(*) as count FROM "AuditoriaEmpleado" WHERE "TenantId" = $1 AND "Severidad" = 'ERROR'`,
-      tenantIdBigInt
+      tenantIdBigInt,
     );
     const eventosError = Number(eventosErrorResult[0]?.count || 0);
 
@@ -53,7 +47,7 @@ export async function GET() {
       Array<{ count: bigint }>
     >(
       `SELECT COUNT(*) as count FROM "AuditoriaEmpleado" WHERE "TenantId" = $1 AND "Severidad" = 'WARNING'`,
-      tenantIdBigInt
+      tenantIdBigInt,
     );
     const eventosWarning = Number(eventosWarningResult[0]?.count || 0);
 
@@ -62,10 +56,10 @@ export async function GET() {
     >(
       `SELECT COUNT(*) as count FROM "AuditoriaEmpleado" WHERE "TenantId" = $1 AND "Fecha" >= $2`,
       tenantIdBigInt,
-      fecha7DiasAtras
+      fecha7DiasAtras,
     );
     const eventosUltimos7Dias = Number(
-      eventosUltimos7DiasResult[0]?.count || 0
+      eventosUltimos7DiasResult[0]?.count || 0,
     );
 
     const eventosUltimos30DiasResult = await prisma.$queryRawUnsafe<
@@ -73,10 +67,10 @@ export async function GET() {
     >(
       `SELECT COUNT(*) as count FROM "AuditoriaEmpleado" WHERE "TenantId" = $1 AND "Fecha" >= $2`,
       tenantIdBigInt,
-      fecha30DiasAtras
+      fecha30DiasAtras,
     );
     const eventosUltimos30Dias = Number(
-      eventosUltimos30DiasResult[0]?.count || 0
+      eventosUltimos30DiasResult[0]?.count || 0,
     );
 
     const stats = {
@@ -120,7 +114,7 @@ export async function GET() {
       ORDER BY a."Fecha" DESC
       LIMIT 5
     `,
-      tenantIdBigInt
+      tenantIdBigInt,
     );
 
     const eventos = eventosRecientes.map((evento) => {

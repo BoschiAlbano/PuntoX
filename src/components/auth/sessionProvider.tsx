@@ -11,6 +11,7 @@ import type { Session } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
 import type { TenantUser } from "@/types/auth";
 import { isManualLogoutInProgress } from "@/lib/auth/logoutManager";
+import { useUserStore } from "@/store/useUserStore";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
@@ -54,38 +55,67 @@ const SessionProviderComponent = ({
   useEffect(() => {
     // Solo interceptar si estamos en una página protegida (no en signin/signup)
     if (typeof window === "undefined") return;
-    
+
     // Guardar el fetch original
     const originalFetch = window.fetch;
     let isHandlingLogout = false;
 
     // Interceptar todas las llamadas fetch
     window.fetch = async (...args) => {
-      const url = typeof args[0] === "string" 
-        ? args[0] 
-        : args[0] instanceof URL 
-          ? args[0].href 
+      const url =
+        typeof args[0] === "string"
+          ? args[0]
+          : args[0] instanceof URL
+          ? args[0].href
           : args[0]?.url || "";
-      
+
       // No interceptar llamadas a rutas públicas
       const publicPaths = ["/signin", "/signup", "/new-tenant", "/api/auth"];
-      const isPublicPath = publicPaths.some(path => url.includes(path));
-      
+      const isPublicPath = publicPaths.some((path) => url.includes(path));
+
       // Si es una ruta pública, no interceptar
       if (isPublicPath) {
         return originalFetch(...args);
       }
 
-      const response = await originalFetch(...args);
+      // Importar dinámicamente o usar getState para evitar conflictos de inicialización
+      // import { useUserStore } from "@/store/useUserStore"; <-- Asumimos import arriba
+
+      const currentBranch = useUserStore.getState().currentBranch;
+      const sucursalId = currentBranch?.Id;
+
+      // Si tenemos sucursalId, agregarlo a los headers
+      let headers: HeadersInit = args[1]?.headers || {};
+
+      if (sucursalId) {
+        if (headers instanceof Headers) {
+          headers.set("x-sucursal-id", sucursalId);
+        } else if (Array.isArray(headers)) {
+          headers.push(["x-sucursal-id", sucursalId]);
+        } else {
+          headers = { ...headers, "x-sucursal-id": sucursalId };
+        }
+      }
+
+      const response = await originalFetch(args[0], {
+        ...args[1],
+        headers,
+      });
 
       // Si la respuesta es 401 y no estamos manejando un logout, verificar si es por sesión cerrada
       // No procesar 401s durante logout manual (evita loops y toasts innecesarios)
-      if (response.status === 401 && !isHandlingLogout && !isManualLogoutInProgress()) {
+      if (
+        response.status === 401 &&
+        !isHandlingLogout &&
+        !isManualLogoutInProgress()
+      ) {
         try {
           const currentPath = window.location.pathname;
           const publicPagePaths = ["/signin", "/signup", "/new-tenant"];
-          const isOnPublicPage = publicPagePaths.some(path => currentPath.startsWith(path));
-          
+          const isOnPublicPage = publicPagePaths.some((path) =>
+            currentPath.startsWith(path)
+          );
+
           // Si ya estamos en una página pública, no hacer nada
           if (isOnPublicPage) {
             return response;
@@ -93,24 +123,29 @@ const SessionProviderComponent = ({
 
           const clonedResponse = response.clone();
           const data = await clonedResponse.json().catch(() => ({}));
-          
+
           // Si el error indica que la sesión fue cerrada, hacer logout automáticamente
-          if (data.sesionCerrada === true || data.details?.includes("sesión ha sido cerrada")) {
+          if (
+            data.sesionCerrada === true ||
+            data.details?.includes("sesión ha sido cerrada")
+          ) {
             // Prevenir loops infinitos
             if (isHandlingLogout) return response;
             isHandlingLogout = true;
 
-            console.warn("[SessionProvider] Sesión cerrada detectada, haciendo logout automático");
-            
+            console.warn(
+              "[SessionProvider] Sesión cerrada detectada, haciendo logout automático"
+            );
+
             // Actualizar estado primero
             setSession(null);
             setStatus("unauthenticated");
-            
+
             // Cerrar sesión en Supabase (no bloqueante)
             supabase.auth.signOut().catch((error) => {
               console.warn("[SessionProvider] Error al cerrar sesión:", error);
             });
-            
+
             // Redirigir al login usando replace para evitar problemas de navegación
             setTimeout(() => {
               window.location.replace("/signin?reason=session_closed");
@@ -118,7 +153,10 @@ const SessionProviderComponent = ({
           }
         } catch (error) {
           // Si no se puede parsear la respuesta, continuar normalmente
-          console.warn("[SessionProvider] Error al verificar respuesta 401:", error);
+          console.warn(
+            "[SessionProvider] Error al verificar respuesta 401:",
+            error
+          );
         }
       }
 
@@ -136,7 +174,7 @@ const SessionProviderComponent = ({
       try {
         // Obtener sesión de forma optimizada (getSession es síncrono si hay cache)
         const { data, error } = await supabase.auth.getSession();
-        
+
         // Si hay error o no hay sesión, establecer estado inmediatamente
         if (error || !data.session) {
           setSession(null);

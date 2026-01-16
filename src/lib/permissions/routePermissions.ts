@@ -1,7 +1,7 @@
 /**
  * Mapeo de permisos a rutas del sistema
  * Cada permiso corresponde a una sección/página del dashboard
- * 
+ *
  * Nota: Los permisos se guardan normalizados (minúsculas, sin espacios)
  * pero se muestran con mayúsculas en la UI
  */
@@ -46,6 +46,7 @@ export const ROUTE_TO_PERMISO_KEY: Record<string, string> = {
   "/analiticas": "analiticas",
   "/configuracion": "configuracion",
   "/empleados": "empleados:admin", // El permiso real es "empleados:admin"
+  "/sucursales": "empleados:admin",
 };
 
 /**
@@ -65,19 +66,19 @@ function normalizePermisoKey(permiso: string): string {
 export function getPermisoForRoute(route: string): string | null {
   // Normalizar la ruta (remover query params, trailing slashes, etc.)
   const normalizedRoute = route.split("?")[0].replace(/\/$/, "") || "/";
-  
+
   // Buscar permiso exacto
   if (ROUTE_TO_PERMISO_KEY[normalizedRoute]) {
     return ROUTE_TO_PERMISO_KEY[normalizedRoute];
   }
-  
+
   // Buscar por prefijo (para rutas anidadas como /configuracion/seguridad)
   for (const [routePath, permisoKey] of Object.entries(ROUTE_TO_PERMISO_KEY)) {
     if (normalizedRoute.startsWith(routePath)) {
       return permisoKey;
     }
   }
-  
+
   return null;
 }
 
@@ -88,26 +89,26 @@ export function getPermisoForRoute(route: string): string | null {
  */
 export function tienePermisoParaRuta(
   permisos: string[],
-  route: string
+  route: string,
 ): boolean {
   const permisoRequerido = getPermisoForRoute(route);
-  
+
   if (!permisoRequerido) {
     // Si no hay permiso requerido para esta ruta, permitir acceso
     return true;
   }
-  
+
   // Para permisos con ":" (como "empleados:admin"), comparar directamente sin normalizar
   // Para otros permisos, normalizar
   if (permisoRequerido.includes(":")) {
     // Permiso con formato "clave:subclave", comparar directamente
     return permisos.includes(permisoRequerido);
   }
-  
+
   // Normalizar los permisos del usuario para comparar
   const permisosNormalizados = permisos.map((p) => normalizePermisoKey(p));
   const permisoRequeridoNormalizado = normalizePermisoKey(permisoRequerido);
-  
+
   // Verificar si el usuario tiene el permiso (comparación normalizada)
   return permisosNormalizados.includes(permisoRequeridoNormalizado);
 }
@@ -117,8 +118,11 @@ export function tienePermisoParaRuta(
  */
 export function filtrarRutasPorPermisos<T extends { href: string }>(
   rutas: T[],
-  permisos: string[]
+  permisos: string[],
 ): T[] {
-  return rutas.filter((ruta) => tienePermisoParaRuta(permisos, ruta.href));
+  const rutasFiltradas = rutas.filter((ruta) =>
+    tienePermisoParaRuta(permisos, ruta.href),
+  );
+  console.log(rutasFiltradas);
+  return rutasFiltradas;
 }
-

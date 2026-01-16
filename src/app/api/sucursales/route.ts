@@ -2,19 +2,20 @@
  * =====================================================
  * API DE SUCURSALES
  * =====================================================
- * 
+ *
  * Endpoints para gestión de sucursales del tenant.
- * 
+ *
  * GET    /api/sucursales           - Listar sucursales del tenant
  * POST   /api/sucursales           - Crear nueva sucursal
- * 
+ *
  * =====================================================
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
-import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
+
 import { handleError } from "@/lib/errors/handler";
 
 // Schema de validación para crear sucursal
@@ -31,11 +32,10 @@ const crearSucursalSchema = z.object({
  */
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "empleados:admin",
+    });
 
     // Obtener parámetros de búsqueda
     const searchParams = req.nextUrl.searchParams;
@@ -58,10 +58,7 @@ export async function GET(req: NextRequest) {
     // Obtener sucursales
     const sucursales = await prisma.sucursal.findMany({
       where,
-      orderBy: [
-        { EsPrincipal: "desc" },
-        { Nombre: "asc" },
-      ],
+      orderBy: [{ EsPrincipal: "desc" }, { Nombre: "asc" }],
       select: {
         Id: true,
         Nombre: true,
@@ -101,11 +98,10 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "empleados:admin",
+    });
 
     const body = await req.json();
     const data = crearSucursalSchema.parse(body);
@@ -122,7 +118,7 @@ export async function POST(req: NextRequest) {
     if (existente) {
       return NextResponse.json(
         { error: "Ya existe una sucursal con ese nombre" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -163,16 +159,15 @@ export async function POST(req: NextRequest) {
           estaActiva: nuevaSucursal.EstaActiva,
         },
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.issues[0]?.message || "Datos inválidos" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     return handleError(error);
   }
 }
-

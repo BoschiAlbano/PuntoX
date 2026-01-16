@@ -1,28 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
 import { useUserStore } from "@/store/useUserStore";
 import ProtectRoute from "@/components/auth/ProtectRoute";
 import Loading from "@/components/loading/loading";
 import { redirect } from "next/navigation";
-// Lazy loading de componentes pesados del layout
-const Sidebar = dynamic(() => import("@/components/dashboard/Sidebar"), {
-  loading: () => (
-    <div className="w-[280px] bg-slate-800 animate-pulse rounded-lg" />
-  ),
-  ssr: false, // Sidebar no necesita SSR
-});
-
-const DashboardHeader = dynamic(
-  () => import("@/components/dashboard/DashboardHeader"),
-  {
-    loading: () => <div className="h-16 bg-white animate-pulse rounded-lg" />,
-    ssr: true, // Header puede ser SSR
-  }
-);
+import Sidebar from "@/components/dashboard/Sidebar";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
 
 export default function DashboardLayout({
   children,
@@ -51,29 +37,29 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-purple-50/30 flex">
-      <section
-        onClick={() => setshow(false)}
-        className={`z-99 transition-all duration-400 ease-in-out sm:relative fixed sm:w-auto w-screen  sm:h-auto h-screen  ${
-          show ? `translate-x-[0%]` : `-translate-x-full`
-        }`}
-      >
-        {/* Sidebar */}
-        <Sidebar
-          isCollapsed={isSidebarCollapsed}
-          onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        />
-      </section>
+    <ProtectRoute>
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-purple-50/30 flex">
+        <section
+          onClick={() => setshow(false)}
+          className={`z-99 transition-all duration-400 ease-in-out sm:relative fixed sm:w-auto w-screen  sm:h-auto h-screen  ${
+            show ? `translate-x-[0%]` : `-translate-x-full`
+          }`}
+        >
+          {/* Sidebar */}
+          <Sidebar
+            isCollapsed={isSidebarCollapsed}
+            onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          />
+        </section>
 
-      <div className="flex-1 flex flex-col h-screen overflow-y-scroll overflow-x-hidden">
-        <DashboardHeader isShow={setshow} show={show} />
+        <div className="flex-1 flex flex-col h-screen overflow-hidden">
+          <DashboardHeader isShow={setshow} show={show} />
 
-        <ProtectRoute>
-          <main className="flex-1">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
               className="p-6 h-full"
             >
               {children}
@@ -96,8 +82,8 @@ export default function DashboardLayout({
               </div>
             </div>
           </footer>
-        </ProtectRoute>
+        </div>
       </div>
-    </div>
+    </ProtectRoute>
   );
 }

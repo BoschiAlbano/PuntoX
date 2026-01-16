@@ -2,13 +2,54 @@
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
-import { requirePermiso, PermisoError } from "@/lib/requirePermiso";
+import { PermisoError } from "@/lib/requirePermiso";
+
+const createEmpleadoSchema = z.object({
+  nombre: z.string().min(1),
+  apellido: z.string().min(1),
+  dni: z.string().optional().nullable(),
+  direccion: z.string().min(1),
+  telefono: z.string().optional().nullable(),
+  mail: z.string().email().optional(), // Opcional: solo para administradores, empleados usan email interno
+  localidadId: z.union([z.number(), z.string()]),
+  departamentoId: z.union([z.number(), z.string()]).optional().nullable(),
+  provinciaId: z.union([z.number(), z.string()]).optional().nullable(),
+  nombreUsuario: z.string().min(1), // Requerido: se usa para generar email interno
+  password: z.string().min(8),
+  rolId: z.union([z.number(), z.string()]).optional().nullable(),
+  sucursalId: z
+    .array(z.union([z.number(), z.string()]))
+    .optional()
+    .nullable(), // Sucursales a las que pertenece el empleado
+});
+const updateEstadoSchema = z.object({
+  usuarioId: z.union([z.number(), z.string()]),
+  bloquear: z.boolean(),
+});
+const updateEmpleadoSchema = z.object({
+  personaId: z.union([z.number(), z.string()]),
+  nombre: z.string().min(1).optional(),
+  apellido: z.string().min(1).optional(),
+  dni: z.string().optional().nullable(),
+  direccion: z.string().min(1).optional(),
+  telefono: z.string().optional().nullable(),
+  localidadId: z.union([z.number(), z.string()]).optional(),
+  departamentoId: z.union([z.number(), z.string()]).optional().nullable(),
+  provinciaId: z.union([z.number(), z.string()]).optional().nullable(),
+  rolId: z.union([z.number(), z.string()]).optional().nullable(),
+  sucursalId: z
+    .array(z.union([z.number(), z.string()]))
+    .optional()
+    .nullable(), // Sucursales a las que pertenece el empleado
+});
+const deleteEmpleadoSchema = z.object({
+  personaId: z.union([z.number(), z.string()]),
+});
 
 function mapEstado(estaBloqueado: boolean | null | undefined) {
   if (estaBloqueado) return "Suspendido" as const;
   return "Activo" as const;
 }
-
 type EstadoEmpleado = "Activo" | "Suspendido" | "Invitado";
 
 import {
@@ -18,10 +59,15 @@ import {
 import { handleError } from "@/lib/errors/handler";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 import { PerfilTipo } from "../../../../prisma/generated/prisma";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId } = await requirePermiso("empleados:admin");
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "empleados:admin",
+    });
+
     const pagination = parsePaginationParams(req);
 
     // Obtener filtros de query params
@@ -90,7 +136,7 @@ export async function GET(req: NextRequest) {
           // Retornar vacío
           return NextResponse.json(
             createPaginationResponse([], 0, pagination),
-            { status: 200 }
+            { status: 200 },
           );
         }
         personaEmpleadoFilters.Usuario = {
@@ -278,7 +324,7 @@ export async function GET(req: NextRequest) {
     const paginatedResponse = createPaginationResponse(
       response,
       total,
-      pagination
+      pagination,
     );
 
     return NextResponse.json(paginatedResponse, { status: 200 });
@@ -286,35 +332,19 @@ export async function GET(req: NextRequest) {
     if (error instanceof PermisoError) {
       return NextResponse.json(
         { error: error.message },
-        { status: error.status }
+        { status: error.status },
       );
     }
     return handleError(error);
   }
 }
-
-const createEmpleadoSchema = z.object({
-  nombre: z.string().min(1),
-  apellido: z.string().min(1),
-  dni: z.string().optional().nullable(),
-  direccion: z.string().min(1),
-  telefono: z.string().optional().nullable(),
-  mail: z.string().email().optional(), // Opcional: solo para administradores, empleados usan email interno
-  localidadId: z.union([z.number(), z.string()]),
-  departamentoId: z.union([z.number(), z.string()]).optional().nullable(),
-  provinciaId: z.union([z.number(), z.string()]).optional().nullable(),
-  nombreUsuario: z.string().min(1), // Requerido: se usa para generar email interno
-  password: z.string().min(8),
-  rolId: z.union([z.number(), z.string()]).optional().nullable(),
-  sucursalId: z
-    .array(z.union([z.number(), z.string()]))
-    .optional()
-    .nullable(), // Sucursales a las que pertenece el empleado
-});
-
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, usuarioId } = await requirePermiso("empleados:admin");
+    const { tenantId, usuarioId } = await getAuthContext({
+      req,
+      permission: "empleados:admin", // Mismo permiso que productos por coherencia
+    });
+
     const tenantIdBigInt = BigInt(tenantId);
 
     const json = await req.json().catch(() => null);
@@ -329,7 +359,7 @@ export async function POST(req: NextRequest) {
     if (!Number.isInteger(localidadIdNumber)) {
       return NextResponse.json(
         { error: "Localidad invalida" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -341,7 +371,7 @@ export async function POST(req: NextRequest) {
       if (!Number.isInteger(departamentoIdNumber)) {
         return NextResponse.json(
           { error: "Departamento invalido" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -354,7 +384,7 @@ export async function POST(req: NextRequest) {
       if (!Number.isInteger(provinciaIdNumber)) {
         return NextResponse.json(
           { error: "Provincia invalida" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -376,7 +406,7 @@ export async function POST(req: NextRequest) {
         if (!Number.isInteger(idNum) || idNum <= 0) {
           return NextResponse.json(
             { error: "Sucursal invalida" },
-            { status: 400 }
+            { status: 400 },
           );
         }
         sucursalesIdsNumbers.push(idNum);
@@ -396,7 +426,7 @@ export async function POST(req: NextRequest) {
         if (count !== sucursalesIdsNumbers.length) {
           return NextResponse.json(
             { error: "Alguna de las sucursales no es válida para este tenant" },
-            { status: 400 }
+            { status: 400 },
           );
         }
       }
@@ -412,7 +442,7 @@ export async function POST(req: NextRequest) {
     if (!localidadValida) {
       return NextResponse.json(
         { error: "Localidad no valida" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -422,7 +452,7 @@ export async function POST(req: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "La localidad no pertenece al departamento indicado" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -432,7 +462,7 @@ export async function POST(req: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "La localidad no pertenece a la provincia indicada" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -462,7 +492,7 @@ export async function POST(req: NextRequest) {
         if (rolValido === null) {
           return NextResponse.json(
             { error: "Rol no valido para este tenant" },
-            { status: 400 }
+            { status: 400 },
           );
         }
       }
@@ -478,9 +508,8 @@ export async function POST(req: NextRequest) {
       mailNormalized = data.mail.trim().toLowerCase();
     } else {
       // Generar email interno automático
-      const { generateInternalEmail } = await import(
-        "@/lib/auth/generateInternalEmail"
-      );
+      const { generateInternalEmail } =
+        await import("@/lib/auth/generateInternalEmail");
       mailNormalized = generateInternalEmail(usernameNormalized);
     }
 
@@ -497,7 +526,7 @@ export async function POST(req: NextRequest) {
       if (existingPersona) {
         return NextResponse.json(
           { error: "El correo ya esta registrado" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -547,13 +576,13 @@ export async function POST(req: NextRequest) {
       ) {
         return NextResponse.json(
           { error: "Este correo ya se encuentra registrado" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       return NextResponse.json(
         { error: "No se pudo crear el usuario en Supabase" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -658,9 +687,8 @@ export async function POST(req: NextRequest) {
 
     // Actualizar permisos en JWT del nuevo usuario (si tiene rol asignado)
     if (rolIdNumber && created.usuario.AuthUserId) {
-      const { actualizarPermisosEnJWT } = await import(
-        "@/lib/auth/updateUserPermissions"
-      );
+      const { actualizarPermisosEnJWT } =
+        await import("@/lib/auth/updateUserPermissions");
       actualizarPermisosEnJWT(created.usuario.AuthUserId).catch((err) => {
         console.warn("No se pudieron actualizar permisos en JWT:", err);
       });
@@ -672,44 +700,18 @@ export async function POST(req: NextRequest) {
     if (error instanceof PermisoError) {
       return NextResponse.json(
         { error: error.message },
-        { status: error.status }
+        { status: error.status },
       );
     }
     return handleError(error);
   }
 }
-
-const updateEstadoSchema = z.object({
-  usuarioId: z.union([z.number(), z.string()]),
-  bloquear: z.boolean(),
-});
-
-const updateEmpleadoSchema = z.object({
-  personaId: z.union([z.number(), z.string()]),
-  nombre: z.string().min(1).optional(),
-  apellido: z.string().min(1).optional(),
-  dni: z.string().optional().nullable(),
-  direccion: z.string().min(1).optional(),
-  telefono: z.string().optional().nullable(),
-  localidadId: z.union([z.number(), z.string()]).optional(),
-  departamentoId: z.union([z.number(), z.string()]).optional().nullable(),
-  provinciaId: z.union([z.number(), z.string()]).optional().nullable(),
-  rolId: z.union([z.number(), z.string()]).optional().nullable(),
-  sucursalId: z
-    .array(z.union([z.number(), z.string()]))
-    .optional()
-    .nullable(), // Sucursales a las que pertenece el empleado
-});
-
-const deleteEmpleadoSchema = z.object({
-  personaId: z.union([z.number(), z.string()]),
-});
-
 export async function PUT(req: NextRequest) {
   try {
-    const { tenantId, usuarioId: usuarioIdAccion } = await requirePermiso(
-      "empleados:admin"
-    );
+    const { tenantId, usuarioId: usuarioIdAccion } = await getAuthContext({
+      req,
+      permission: "empleados:admin", // Mismo permiso que productos por coherencia
+    });
 
     const json = await req.json().catch(() => null);
     const parsed = updateEmpleadoSchema.safeParse(json);
@@ -758,7 +760,7 @@ export async function PUT(req: NextRequest) {
     if (!personaActual) {
       return NextResponse.json(
         { error: "Empleado no encontrado" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -766,7 +768,7 @@ export async function PUT(req: NextRequest) {
     if (!usuarioActual) {
       return NextResponse.json(
         { error: "Usuario no encontrado" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -781,7 +783,7 @@ export async function PUT(req: NextRequest) {
       if (!Number.isInteger(localidadIdNum)) {
         return NextResponse.json(
           { error: "Localidad invalida" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       localidadIdBigInt = BigInt(localidadIdNum);
@@ -793,7 +795,7 @@ export async function PUT(req: NextRequest) {
       if (!localidadValida) {
         return NextResponse.json(
           { error: "Localidad no encontrada" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -811,7 +813,7 @@ export async function PUT(req: NextRequest) {
           if (!Number.isInteger(idNum) || idNum <= 0) {
             return NextResponse.json(
               { error: "Sucursal invalida" },
-              { status: 400 }
+              { status: 400 },
             );
           }
           sucursalesIdsNumbers.push(idNum);
@@ -832,7 +834,7 @@ export async function PUT(req: NextRequest) {
               {
                 error: "Alguna de las sucursales no es válida para este tenant",
               },
-              { status: 400 }
+              { status: 400 },
             );
           }
         }
@@ -980,9 +982,8 @@ export async function PUT(req: NextRequest) {
 
       // Actualizar permisos en JWT cuando cambia el rol
       if (usuarioActual.AuthUserId) {
-        const { actualizarPermisosEnJWT } = await import(
-          "@/lib/auth/updateUserPermissions"
-        );
+        const { actualizarPermisosEnJWT } =
+          await import("@/lib/auth/updateUserPermissions");
         actualizarPermisosEnJWT(usuarioActual.AuthUserId).catch((err) => {
           console.warn("No se pudieron actualizar permisos en JWT:", err);
         });
@@ -1009,18 +1010,18 @@ export async function PUT(req: NextRequest) {
     if (error instanceof PermisoError) {
       return NextResponse.json(
         { error: error.message },
-        { status: error.status }
+        { status: error.status },
       );
     }
     return handleError(error);
   }
 }
-
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, usuarioId: usuarioIdAccion } = await requirePermiso(
-      "empleados:admin"
-    );
+    const { tenantId, usuarioId: usuarioIdAccion } = await getAuthContext({
+      req,
+      permission: "empleados:admin", // Mismo permiso que productos por coherencia
+    });
 
     const json = await req.json().catch(() => null);
     const parsed = updateEstadoSchema.safeParse(json);
@@ -1046,7 +1047,7 @@ export async function PATCH(req: NextRequest) {
     if (!usuarioAnterior) {
       return NextResponse.json(
         { error: "Usuario no encontrado" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -1084,18 +1085,18 @@ export async function PATCH(req: NextRequest) {
     if (error instanceof PermisoError) {
       return NextResponse.json(
         { error: error.message },
-        { status: error.status }
+        { status: error.status },
       );
     }
     return handleError(error);
   }
 }
-
 export async function DELETE(req: NextRequest) {
   try {
-    const { tenantId, usuarioId: usuarioIdAccion } = await requirePermiso(
-      "empleados:admin"
-    );
+    const { tenantId, usuarioId: usuarioIdAccion } = await getAuthContext({
+      req,
+      permission: "empleados:admin", // Mismo permiso que productos por coherencia
+    });
 
     const json = await req.json().catch(() => null);
     const parsed = deleteEmpleadoSchema.safeParse(json);
@@ -1127,7 +1128,7 @@ export async function DELETE(req: NextRequest) {
     if (!persona) {
       return NextResponse.json(
         { error: "Empleado no encontrado" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -1144,7 +1145,7 @@ export async function DELETE(req: NextRequest) {
     if (personaActualId && personaActualId === personaId) {
       return NextResponse.json(
         { error: "No puedes eliminar tu propio usuario." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -1216,7 +1217,7 @@ export async function DELETE(req: NextRequest) {
     if (error instanceof PermisoError) {
       return NextResponse.json(
         { error: error.message },
-        { status: error.status }
+        { status: error.status },
       );
     }
     return handleError(error);

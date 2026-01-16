@@ -1,41 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import {
   parsePaginationParams,
   createPaginationResponse,
 } from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
-import { createError } from "@/lib/errors/types";
 import {
   createClienteSchema,
   updateClienteSchema,
 } from "@/lib/validations/cliente.schema";
+import { Prisma } from "../../../../prisma/generated/prisma";
 
 // GET: Listar clientes
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
+    const { tenantId } = await getAuthContext({ req, permission: "clientes" });
 
     const pagination = parsePaginationParams(req);
     const searchParams = req.nextUrl.searchParams;
     const busqueda = searchParams.get("q")?.trim() || "";
 
-    const where: {
-      TenantId: bigint;
-      EstaEliminado: boolean;
-      Persona_Cliente?: { isNot: null };
-      OR?: Array<{
-        Nombre?: { contains: string; mode: "insensitive" };
-        Apellido?: { contains: string; mode: "insensitive" };
-        Mail?: { contains: string; mode: "insensitive" };
-        Dni?: { contains: string; mode: "insensitive" };
-      }>;
-    } = {
+    const where: Prisma.PersonaWhereInput = {
       TenantId: BigInt(tenantId),
       EstaEliminado: false,
       Persona_Cliente: { isNot: null },
@@ -51,11 +37,8 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    // Obtener total para paginación
-    // Nota: Para mejor performance, considerar índices en: TenantId, EstaEliminado, Apellido, Nombre, Mail, Dni
     const total = await prisma.persona.count({ where });
 
-    // Optimización: Usar select específico para reducir datos transferidos
     const clientes = await prisma.persona.findMany({
       where,
       skip: pagination.skip,
@@ -117,11 +100,7 @@ export async function GET(req: NextRequest) {
 // POST: Crear cliente
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
+    const { tenantId } = await getAuthContext({ req, permission: "clientes" });
 
     const json = await req.json().catch(() => null);
     const parsed = createClienteSchema.safeParse(json);
@@ -226,7 +205,9 @@ export async function POST(req: NextRequest) {
           CondicionIvaId: BigInt(condicionIvaIdNumber),
           ActivarCtaCte: data.ActivarCtaCte ?? false,
           TieneLimiteCompra: data.TieneLimiteCompra ?? false,
-          MontoMaximoCtaCte: data.MontoMaximoCtaCte ?? 0,
+          MontoMaximoCtaCte: data.MontoMaximoCtaCte
+            ? new Prisma.Decimal(data.MontoMaximoCtaCte)
+            : new Prisma.Decimal(0),
         },
       });
 
@@ -314,15 +295,7 @@ export async function POST(req: NextRequest) {
 // PATCH: Actualizar cliente
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
-
-    if (!tenantId || tenantId <= 0) {
-      throw createError.unauthorized("TenantId inválido o no proporcionado");
-    }
+    const { tenantId } = await getAuthContext({ req, permission: "clientes" });
 
     const body = await req.json();
 
@@ -430,57 +403,52 @@ export async function PATCH(req: NextRequest) {
     // Actualizar Persona y Persona_Cliente en transacción y retornar datos completos
     const clienteCompleto = await prisma.$transaction(async (tx) => {
       // Actualizar Persona
-      const updatePersonaData: {
-        Nombre?: string;
-        Apellido?: string;
-        Dni?: string;
-        Telefono?: string;
-        Mail?: string;
-        Direccion?: string;
-        LocalidadId?: bigint;
-      } = {};
+      const updatePersonaData: Prisma.PersonaUpdateInput = {};
       if (validarCliente.Nombre !== undefined)
         updatePersonaData.Nombre = validarCliente.Nombre.trim();
       if (validarCliente.Apellido !== undefined)
         updatePersonaData.Apellido = validarCliente.Apellido.trim();
       if (validarCliente.Dni !== undefined)
-        updatePersonaData.Dni = validarCliente.Dni?.trim() || undefined;
+        updatePersonaData.Dni = validarCliente.Dni?.trim() || null;
       if (validarCliente.Direccion !== undefined)
         updatePersonaData.Direccion = validarCliente.Direccion.trim();
       if (validarCliente.Telefono !== undefined)
-        updatePersonaData.Telefono =
-          validarCliente.Telefono?.trim() || undefined;
+        updatePersonaData.Telefono = validarCliente.Telefono?.trim() || null;
       if (validarCliente.Mail !== undefined)
         updatePersonaData.Mail = validarCliente.Mail.trim().toLowerCase();
       if (localidadIdNumber !== null)
-        updatePersonaData.LocalidadId = BigInt(localidadIdNumber);
+        updatePersonaData.Localidad = {
+          connect: { Id: BigInt(localidadIdNumber) },
+        }; // Uso más limpio de connect
 
-      await tx.persona.update({
-        where: { Id: BigInt(validarCliente.Id), TenantId: tenantIdBigInt },
-        data: updatePersonaData,
-      });
+      if (Object.keys(updatePersonaData).length > 0) {
+        await tx.persona.update({
+          where: { Id: BigInt(validarCliente.Id), TenantId: tenantIdBigInt },
+          data: updatePersonaData,
+        });
+      }
 
       // Actualizar Persona_Cliente
-      const updateClienteData: {
-        CondicionIvaId?: bigint;
-        ActivarCtaCte?: boolean;
-        TieneLimiteCompra?: boolean;
-        LimiteCompra?: number;
-        MontoMaximoCtaCte?: number;
-      } = {};
+      const updateClienteData: Prisma.Persona_ClienteUpdateInput = {};
       if (condicionIvaIdNumber !== null)
-        updateClienteData.CondicionIvaId = BigInt(condicionIvaIdNumber);
+        updateClienteData.CondicionIva = {
+          connect: { Id: BigInt(condicionIvaIdNumber) },
+        };
       if (validarCliente.ActivarCtaCte !== undefined)
         updateClienteData.ActivarCtaCte = validarCliente.ActivarCtaCte;
       if (validarCliente.TieneLimiteCompra !== undefined)
         updateClienteData.TieneLimiteCompra = validarCliente.TieneLimiteCompra;
       if (validarCliente.MontoMaximoCtaCte !== undefined)
-        updateClienteData.MontoMaximoCtaCte = validarCliente.MontoMaximoCtaCte;
+        updateClienteData.MontoMaximoCtaCte = new Prisma.Decimal(
+          validarCliente.MontoMaximoCtaCte
+        );
 
-      await tx.persona_Cliente.update({
-        where: { Id: BigInt(validarCliente.Id) },
-        data: updateClienteData,
-      });
+      if (Object.keys(updateClienteData).length > 0) {
+        await tx.persona_Cliente.update({
+          where: { Id: BigInt(validarCliente.Id) },
+          data: updateClienteData,
+        });
+      }
 
       // Retornar datos completos directamente de la transacción
       return await tx.persona.findUnique({
@@ -564,11 +532,7 @@ export async function PATCH(req: NextRequest) {
 // DELETE: Eliminar cliente (soft delete)
 export async function DELETE(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
+    const { tenantId } = await getAuthContext({ req, permission: "clientes" });
 
     const searchParams = req.nextUrl.searchParams;
     const clienteId = searchParams.get("Id");

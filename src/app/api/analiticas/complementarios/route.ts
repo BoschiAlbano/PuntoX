@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { requirePermiso } from "@/lib/requirePermiso";
 import { handleError } from "@/lib/errors/handler";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 
 /**
  * GET /api/analiticas/complementarios
- * 
+ *
  * Retorna datos complementarios del dashboard
  * Query params:
  * - tipo: "gastos" | "usuarios" | "auditoria" | "todos" (default: "todos")
@@ -14,7 +14,10 @@ import { handleError } from "@/lib/errors/handler";
  */
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId } = await requirePermiso("analiticas");
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "analiticas", // Mismo permiso que productos por coherencia
+    });
     const searchParams = req.nextUrl.searchParams;
     const tipo = searchParams.get("tipo") || "todos";
 
@@ -59,7 +62,8 @@ export async function GET(req: NextRequest) {
       const gastosPorConcepto: Record<string, number> = {};
       gastos.forEach((gasto) => {
         const concepto = gasto.ConceptoGastos.Descripcion;
-        gastosPorConcepto[concepto] = (gastosPorConcepto[concepto] || 0) + Number(gasto.Monto);
+        gastosPorConcepto[concepto] =
+          (gastosPorConcepto[concepto] || 0) + Number(gasto.Monto);
       });
 
       // Obtener cajas del período
@@ -81,8 +85,14 @@ export async function GET(req: NextRequest) {
       });
 
       const totalGastos = gastos.reduce((sum, g) => sum + Number(g.Monto), 0);
-      const totalGanancia = cajas.reduce((sum, c) => sum + Number(c.Ganancia), 0);
-      const eficiencia = totalGanancia > 0 ? ((totalGanancia - totalGastos) / totalGanancia) * 100 : 0;
+      const totalGanancia = cajas.reduce(
+        (sum, c) => sum + Number(c.Ganancia),
+        0
+      );
+      const eficiencia =
+        totalGanancia > 0
+          ? ((totalGanancia - totalGastos) / totalGanancia) * 100
+          : 0;
 
       datos.gastos = {
         total: totalGastos,
@@ -251,4 +261,3 @@ export async function GET(req: NextRequest) {
     return handleError(error);
   }
 }
-

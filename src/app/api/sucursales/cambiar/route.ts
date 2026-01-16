@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
 import { verifyUserBranchAccess } from "@/lib/sucursal/verifyUserBranch";
 import prisma from "@/DB/prisma";
@@ -11,11 +11,10 @@ const cambiarSucursalSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const { error, tenantId, user } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
+    const { tenantId, user } = await getAuthContext({
+      req,
+      permission: "empleados:admin",
+    });
 
     const body = await req.json();
     const data = cambiarSucursalSchema.parse(body);
@@ -24,13 +23,13 @@ export async function POST(req: NextRequest) {
     const accessResult = await verifyUserBranchAccess(
       BigInt(tenantId),
       user.id,
-      BigInt(data.sucursalId)
+      BigInt(data.sucursalId),
     );
 
     if (!accessResult) {
       return NextResponse.json(
         { error: "No tiene acceso a esta sucursal" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -67,7 +66,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.issues[0]?.message || "Datos inválidos" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     return handleError(error);

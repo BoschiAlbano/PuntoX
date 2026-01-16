@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
-import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import { handleError } from "@/lib/errors/handler";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 
 const payloadSchema = z.object({
   razonSocial: z.string().min(1, "Razon social requerida"),
@@ -13,21 +13,27 @@ const payloadSchema = z.object({
   celular: z.string().optional().nullable(),
   direccion: z.string().min(1, "Dirección requerida"),
   localidadId: z
-    .preprocess((val) => {
-      if (val === null || val === undefined || val === "") {
-        return null;
-      }
-      const num =
-        typeof val === "string"
-          ? Number(val)
-          : typeof val === "number"
-          ? val
-          : null;
-      if (num === null || Number.isNaN(num) || num <= 0) {
-        return null;
-      }
-      return num;
-    }, z.union([z.number().int().positive("Debe seleccionar una localidad válida"), z.null()]))
+    .preprocess(
+      (val) => {
+        if (val === null || val === undefined || val === "") {
+          return null;
+        }
+        const num =
+          typeof val === "string"
+            ? Number(val)
+            : typeof val === "number"
+              ? val
+              : null;
+        if (num === null || Number.isNaN(num) || num <= 0) {
+          return null;
+        }
+        return num;
+      },
+      z.union([
+        z.number().int().positive("Debe seleccionar una localidad válida"),
+        z.null(),
+      ]),
+    )
     .refine((val) => val !== null && val > 0, {
       message: "Debe seleccionar una localidad",
     }),
@@ -58,62 +64,19 @@ const payloadSchema = z.object({
   codigoBascula: z.string().optional().nullable(),
 });
 
-async function resolveTenantId() {
-  try {
-    const supabase = await getSupabaseServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+export async function GET(req: NextRequest) {
+  const { tenantId } = await getAuthContext({
+    req,
+    permission: "configuracion",
+  });
 
-    if (authError) {
-      return null;
-    }
-
-    if (!user) {
-      return null;
-    }
-
-    // Buscar tenantId en diferentes lugares del metadata
-    const metadata = user.app_metadata || {};
-    const tenantId =
-      metadata.tenantId || metadata.tenant_id || (user as any).tenantId;
-
-    if (tenantId) {
-      return Number(tenantId);
-    }
-
-    // Si no está en metadata, buscar en la base de datos
-    try {
-      const usuario = await prisma.usuario.findFirst({
-        where: { AuthUserId: user.id, EstaEliminado: false },
-        select: { TenantId: true },
-      });
-
-      if (usuario?.TenantId) {
-        return Number(usuario.TenantId);
-      }
-    } catch (error) {
-      // Error silencioso, retornamos null
-      console.error(error);
-    }
-
-    return null;
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-}
-
-export async function GET() {
-  const tenantId = await resolveTenantId();
   if (!tenantId) {
     return NextResponse.json(
       {
         error:
           "No se pudo determinar el tenant. Por favor, cierra sesión y vuelve a iniciar sesión.",
       },
-      { status: 401 }
+      { status: 401 },
     );
   }
 
@@ -188,7 +151,7 @@ export async function GET() {
     if (!config) {
       return NextResponse.json(
         { error: "Configuracion no encontrada" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -235,22 +198,26 @@ export async function GET() {
           codigoBascula: config.CodigoBascula ?? "",
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error: unknown) {
     return handleError(error);
   }
 }
 
-export async function PUT(req: Request) {
-  const tenantId = await resolveTenantId();
+export async function PUT(req: NextRequest) {
+  const { tenantId } = await getAuthContext({
+    req,
+    permission: "configuracion",
+  });
+
   if (!tenantId) {
     return NextResponse.json(
       {
         error:
           "No se pudo determinar el tenant. Por favor, cierra sesión y vuelve a iniciar sesión.",
       },
-      { status: 401 }
+      { status: 401 },
     );
   }
 
@@ -258,7 +225,7 @@ export async function PUT(req: Request) {
   if (!json) {
     return NextResponse.json(
       { error: "Cuerpo de la petición inválido" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -494,7 +461,7 @@ export async function PUT(req: Request) {
           codigoBascula: configResult.CodigoBascula ?? "",
         },
       },
-      { status: result.isNew ? 201 : 200 }
+      { status: result.isNew ? 201 : 200 },
     );
   } catch (error: unknown) {
     return handleError(error);

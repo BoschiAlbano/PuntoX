@@ -2,7 +2,7 @@
 
 import { useState, useMemo, Suspense, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { usePagePermission } from "@/lib/permissions/usePagePermission";
+// import { usePagePermission } from "@/lib/permissions/usePagePermission";
 import { useQueryEnabled } from "@/lib/react-query/useQueryEnabled";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useQueryClient } from "@tanstack/react-query";
@@ -226,7 +226,7 @@ function AnaliticasContent() {
   const queryClient = useQueryClient();
 
   // Obtener permisos para habilitar queries solo cuando tenga acceso
-  const { tieneAcceso, isLoading: isLoadingPermisos } = usePagePermission();
+  // const { tieneAcceso, isLoading: isLoadingPermisos } = usePagePermission();
 
   // Filtros para dashboard
   const [periodo, setPeriodo] = useState<"semanal" | "mensual">("mensual");
@@ -279,21 +279,21 @@ function AnaliticasContent() {
   const fechasListas = fechaDesdeDebounced && fechaHastaDebounced;
 
   // Usar helper para evitar cancelaciones cuando tieneAcceso cambia de undefined a true
-  const enabledQueries = useQueryEnabled(
-    tieneAcceso,
-    isLoadingPermisos ?? false,
-    fechasListas ? true : false
-  );
-  const enabledAlertas = useQueryEnabled(
-    tieneAcceso,
-    isLoadingPermisos ?? false
-  );
+  // const enabledQueries = useQueryEnabled(
+  //   tieneAcceso,
+  //   isLoadingPermisos ?? false,
+  //   fechasListas ? true : false
+  // );
+  // const enabledAlertas = useQueryEnabled(
+  //   tieneAcceso,
+  //   isLoadingPermisos ?? false
+  // );
 
   const { data: kpisData, isLoading: kpisLoading } = useKPIs({
     fechaDesde: fechaDesdeDebounced,
     fechaHasta: fechaHastaDebounced,
     periodo,
-    enabled: enabledQueries,
+    // enabled: enabledQueries,
   });
 
   const { data: graficasIngresos, isLoading: ingresosLoading } = useGraficas({
@@ -301,31 +301,31 @@ function AnaliticasContent() {
     fechaDesde: fechaDesdeDebounced,
     fechaHasta: fechaHastaDebounced,
     agrupacion,
-    enabled: enabledQueries,
+    // enabled: enabledQueries,
   });
 
   const { data: graficasPagos, isLoading: pagosLoading } = useGraficas({
     tipo: "pagos",
     fechaDesde: fechaDesdeDebounced,
     fechaHasta: fechaHastaDebounced,
-    enabled: enabledQueries,
+    // enabled: enabledQueries,
   });
 
   const { data: graficasProductos, isLoading: productosLoading } = useGraficas({
     tipo: "productos",
     fechaDesde: fechaDesdeDebounced,
     fechaHasta: fechaHastaDebounced,
-    enabled: enabledQueries,
+    // enabled: enabledQueries,
   });
 
   const { data: alertasData, isLoading: alertasLoading } = useAlertas({
-    enabled: enabledAlertas,
+    // enabled: enabledAlertas,
   });
 
   const { data: complementariosData } = useComplementarios({
     fechaDesde: fechaDesdeDebounced,
     fechaHasta: fechaHastaDebounced,
-    enabled: enabledQueries,
+    // enabled: enabledQueries,
   });
 
   const logsFiltrados = useMemo(() => {
@@ -762,7 +762,7 @@ function AnaliticasContent() {
                                       {d.dispositivo || "Desconocido"}
                                     </p>
                                   </div>
-                                )
+                                ),
                               )}
                             </div>
                           </div>

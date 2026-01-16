@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
-import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
 
 const saveNotificacionesSchema = z.object({
@@ -10,17 +10,11 @@ const saveNotificacionesSchema = z.object({
   stockBajo: z.boolean(),
 });
 
-async function resolveTenantId() {
-  const supabase = await getSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const tenantId = user?.app_metadata?.tenantId;
-  return tenantId ? Number(tenantId) : null;
-}
-
-export async function GET() {
-  const tenantId = await resolveTenantId();
+export async function GET(req: NextRequest) {
+  const { tenantId } = await getAuthContext({
+    req,
+    permission: "configuracion",
+  });
   if (!tenantId) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
@@ -50,7 +44,7 @@ export async function GET() {
             stockBajo: true,
           },
         },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
@@ -62,7 +56,7 @@ export async function GET() {
           stockBajo: config.NotificacionesStockBajo ?? true,
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error: unknown) {
     return handleError(error);
@@ -70,7 +64,10 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
-  const tenantId = await resolveTenantId();
+  const { tenantId } = await getAuthContext({
+    req,
+    permission: "configuracion",
+  });
   if (!tenantId) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
@@ -81,7 +78,7 @@ export async function PUT(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Datos inválidos", details: parsed.error.issues },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -102,7 +99,7 @@ export async function PUT(req: NextRequest) {
     if (!config) {
       return NextResponse.json(
         { error: "Configuracion no encontrada" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -128,10 +125,9 @@ export async function PUT(req: NextRequest) {
           stockBajo: updated.NotificacionesStockBajo,
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error: unknown) {
     return handleError(error);
   }
 }
-

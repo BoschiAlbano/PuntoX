@@ -1,4 +1,4 @@
-import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import {
@@ -14,44 +14,18 @@ import { handleError } from "@/lib/errors/handler";
 import { createError } from "@/lib/errors/types";
 import { fotoDefault } from "@/utilities/fotoDefault";
 
-import { verifyUserBranchAccess } from "@/lib/sucursal/verifyUserBranch";
-
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId, user, error } = await getAuthUser();
+    const { tenantId, sucursalId } = await getAuthContext({
+      req,
+      permission: "productos", // Opcional: Requiere permiso de visualización
+    });
 
-    if (error || !user) {
-      return (
-        error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-      );
-    }
-
-    if (!tenantId || tenantId <= 0) {
-      return NextResponse.json(
-        { error: { code: "INVALID_TENANT", message: "TenantId inválido" } },
-        { status: 401 }
-      );
-    }
+    console.log("tenantId", tenantId);
+    console.log("sucursalId", sucursalId);
 
     const pagination = parsePaginationParams(req);
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
-    // Leer sucursalId de los query params
-    const sucursalIdParam = req.nextUrl.searchParams.get("sucursalId");
-
-    let sucursalId: bigint | null = null;
-    let sucursalNombre: string | null = null;
-
-    if (sucursalIdParam) {
-      const access = await verifyUserBranchAccess(
-        BigInt(tenantId),
-        user.id,
-        sucursalIdParam
-      );
-      if (access) {
-        sucursalId = access.sucursal.Id;
-        sucursalNombre = access.sucursal.Nombre;
-      }
-    }
 
     // Construir where clause
     const where: {
@@ -109,19 +83,22 @@ export async function GET(req: NextRequest) {
         TenantId: true,
         Precio: true, // Equivalent to include: { Precio: true }
         Stock: true, // Stock legacy (deprecated)
-        ArticuloStock: sucursalId
-          ? {
-              where: {
-                SucursalId: sucursalId,
-              },
+        ArticuloStock: {
+          where: {
+            SucursalId: BigInt(sucursalId),
+          },
+          take: 1,
+          select: {
+            Stock: true,
+            StockMinimo: true,
+            Ubicacion: true,
+            Sucursal: {
               select: {
-                Stock: true,
-                StockMinimo: true,
-                Ubicacion: true,
+                Nombre: true,
               },
-              take: 1,
-            }
-          : false,
+            },
+          },
+        },
       },
       orderBy: {
         Descripcion: "asc",
@@ -129,6 +106,8 @@ export async function GET(req: NextRequest) {
       skip: pagination.skip,
       take: pagination.limit,
     });
+
+    console.log("productos", productos);
 
     // Mapear productos para incluir stock de la sucursal activa
     const productosConStock = productos.map((producto) => {
@@ -138,25 +117,22 @@ export async function GET(req: NextRequest) {
           : null;
       return {
         ...producto,
-        Stock: stockSucursal
-          ? Number(stockSucursal.Stock)
-          : Number(producto.Stock || 0),
+        Stock: producto.ArticuloStock[0]?.Stock || 0,
         StockMinimo: stockSucursal?.StockMinimo
           ? Number(stockSucursal.StockMinimo)
           : producto.StockMinimo
-          ? Number(producto.StockMinimo)
-          : null,
+            ? Number(producto.StockMinimo)
+            : null,
         Ubicacion: stockSucursal?.Ubicacion || producto.Ubicacion,
-        SucursalNombre: sucursalNombre, // Nombre de la sucursal del stock mostrado
-        // Remover ArticuloStock del response
-        ArticuloStock: undefined,
+        SucursalNombre:
+          producto.ArticuloStock[0]?.Sucursal.Nombre || "Sucursal actual",
       };
     });
 
     const response = createPaginationResponse(
       productosConStock,
       total,
-      pagination
+      pagination,
     );
 
     return NextResponse.json(response, { status: 200 });
@@ -167,34 +143,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, user, error } = await getAuthUser();
-
-    if (error || !user) {
-      return (
-        error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-      );
-    }
-
-    // Validar tenantId - NO permitir fallbacks
-    if (!tenantId || tenantId <= 0) {
-      throw createError.unauthorized("TenantId inválido o no proporcionado");
-    }
+    const { tenantId, sucursalId, user } = await getAuthContext({
+      req,
+      permission: "productos", // Permiso de escritura
+    });
 
     const body = await req.json();
-
-    // Validar sucursalId del body
-    const { sucursalId } = body;
-    let sucursalVerifiedId: bigint | null = null;
-
-    if (sucursalId) {
-      const access = await verifyUserBranchAccess(
-        BigInt(tenantId),
-        user.id,
-        sucursalId
-      );
-      if (access) sucursalVerifiedId = access.sucursal.Id;
-    }
-
     const validarProducto = createProductoSchema.parse(body);
 
     // Iniciar transacción para crear Precio y Artículo
@@ -280,18 +234,18 @@ export async function POST(req: NextRequest) {
         data: { ArticuloId: nuevoArticulo.Id },
       });
 
-      // 4. Crear ArticuloStock para la sucursal proporcionada (si existe)
-      if (sucursalVerifiedId && validarProducto.Stock !== undefined) {
+      // 4. Crear ArticuloStock para la sucursal activa
+      if (sucursalId && validarProducto.Stock !== undefined) {
         await tx.articuloStock.upsert({
           where: {
             ArticuloId_SucursalId: {
               ArticuloId: nuevoArticulo.Id,
-              SucursalId: sucursalVerifiedId,
+              SucursalId: BigInt(sucursalId),
             },
           },
           create: {
             ArticuloId: nuevoArticulo.Id,
-            SucursalId: sucursalVerifiedId,
+            SucursalId: BigInt(sucursalId),
             TenantId: BigInt(tenantId),
             Stock: validarProducto.Stock,
             StockMinimo: validarProducto.StockMinimo || null,
@@ -315,7 +269,7 @@ export async function POST(req: NextRequest) {
           Id: Number(producto.Id),
         },
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     if (error instanceof ZodError) {
@@ -327,7 +281,7 @@ export async function POST(req: NextRequest) {
             message: issue.message,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
     return handleError(error);
@@ -336,34 +290,12 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, user, error } = await getAuthUser();
-
-    if (error || !user) {
-      return (
-        error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-      );
-    }
-
-    // Validar tenantId - NO permitir fallbacks
-    if (!tenantId || tenantId <= 0) {
-      throw createError.unauthorized("TenantId inválido o no proporcionado");
-    }
+    const { tenantId, sucursalId, user } = await getAuthContext({
+      req,
+      permission: "productos", // Permiso de escritura
+    });
 
     const body = await req.json();
-
-    // Validar sucursalId del body
-    const { sucursalId } = body;
-    let sucursalVerifiedId: bigint | null = null;
-
-    if (sucursalId) {
-      const access = await verifyUserBranchAccess(
-        BigInt(tenantId),
-        user.id,
-        sucursalId
-      );
-      if (access) sucursalVerifiedId = access.sucursal.Id;
-    }
-
     const validarProducto = updateProductoSchema.parse(body);
 
     const tenantIdBigInt = BigInt(tenantId);
@@ -382,7 +314,7 @@ export async function PATCH(req: NextRequest) {
 
     if (!articulo) {
       throw createError.notFound(
-        "Artículo no encontrado o no pertenece a tu tenant"
+        "Artículo no encontrado o no pertenece a tu tenant",
       );
     }
 
@@ -498,18 +430,18 @@ export async function PATCH(req: NextRequest) {
         },
       });
 
-      // Actualizar o crear ArticuloStock para la sucursal activa (si existe y se actualizó el stock)
-      if (sucursalVerifiedId && validarProducto.Stock !== undefined) {
+      // Actualizar o crear ArticuloStock para la sucursal activa
+      if (sucursalId && validarProducto.Stock !== undefined) {
         await tx.articuloStock.upsert({
           where: {
             ArticuloId_SucursalId: {
               ArticuloId: articuloUpdate.Id,
-              SucursalId: sucursalVerifiedId,
+              SucursalId: BigInt(sucursalId),
             },
           },
           create: {
             ArticuloId: articuloUpdate.Id,
-            SucursalId: sucursalVerifiedId,
+            SucursalId: BigInt(sucursalId),
             TenantId: tenantIdBigInt,
             Stock: validarProducto.Stock,
             StockMinimo: validarProducto.StockMinimo || null,
@@ -532,7 +464,7 @@ export async function PATCH(req: NextRequest) {
           ...producto,
         },
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     if (error instanceof ZodError) {
@@ -544,7 +476,7 @@ export async function PATCH(req: NextRequest) {
             message: issue.message,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
     return handleError(error);
@@ -553,11 +485,10 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "productos", // Permiso de eliminación
+    });
 
     const params = req.nextUrl.searchParams;
     const Id = params.get("Id");
@@ -565,7 +496,7 @@ export async function DELETE(req: NextRequest) {
     const articulo = await prisma.articulo.delete({
       where: {
         Id: Number(Id),
-        TenantId: Number(tenantId),
+        TenantId: BigInt(tenantId),
       },
     });
 
@@ -575,7 +506,7 @@ export async function DELETE(req: NextRequest) {
           ...articulo,
         },
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     if (error instanceof ZodError) {
@@ -587,7 +518,7 @@ export async function DELETE(req: NextRequest) {
             message: issue.message,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
     return handleError(error);

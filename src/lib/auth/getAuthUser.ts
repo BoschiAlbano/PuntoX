@@ -1,146 +1,193 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import prisma from "@/DB/prisma";
+import { User } from "@supabase/supabase-js";
+import { PerfilTipo } from "../../../prisma/generated/prisma";
+import { PermisoError } from "../requirePermiso";
 
-// Cache simple para verificación de sesión activa (evita verificar en cada request)
-const sesionActivaCache = new Map<string, { valido: boolean; timestamp: number }>();
-const CACHE_TTL = 30 * 1000; // 30 segundos de cache
+// Cache simple para verificación de sesión activa
+const sessionCache = new Map<string, { valid: boolean; timestamp: number }>();
+const CACHE_TTL = 30 * 1000; // 30 segundos
 
-/**
- * Invalida el cache de sesión activa para un usuario específico
- * Útil cuando se cierra una sesión
- */
-export function invalidarCacheSesionActiva(userId: string, tenantId: number | string) {
-  const cacheKey = `${userId}-${tenantId}`;
-  sesionActivaCache.delete(cacheKey);
+export interface AuthContext {
+  user: User;
+  tenantId: number;
+  usuarioId: number;
+  sucursalId: number; // Siempre presente si se valida contexto
+  isSuperAdmin: boolean;
+}
+
+interface GetAuthContextOptions {
+  req?: NextRequest; // Para leer headers (x-sucursal-id)
+  permission?: string; // Permiso requerido
+  checkActiveSession?: boolean; // Verificar en DB si la sesión sigue activa
 }
 
 /**
- * Obtiene el usuario autenticado y su tenantId desde Supabase app_metadata
- * Soporta tanto tenantId (camelCase) como tenant_id (snake_case)
- * @param verificarSesionActiva - Si es true, verifica que el usuario tenga al menos una sesión activa en la BD (por defecto: false para mejor performance)
- * @returns Objeto con user, tenantId y una función errorResponse si no está autenticado
+ * Función UNIFICADA de seguridad para Backend (API Routes / Server Actions).
+ * Valida:
+ * 1. Autenticación (Supabase)
+ * 2. Tenant (app_metadata)
+ * 3. Sucursal (Header x-sucursal-id + pertenencia en DB)
+ * 4. Permisos (JWT o DB)
  */
-export async function getAuthUser(verificarSesionActiva: boolean = false) {
+export async function getAuthContext(
+  options: GetAuthContextOptions = {}
+): Promise<AuthContext> {
+  const { req, permission, checkActiveSession = false } = options;
   const supabase = await getSupabaseServerClient();
+
+  // 1. Autenticación
   const {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser();
 
-  // Si hay error al obtener el usuario o no hay usuario
   if (authError || !user) {
-    console.error("[getAuthUser] Error al obtener usuario:", authError?.message || "Usuario no encontrado");
-    return {
-      user: null,
-      tenantId: null,
-      error: NextResponse.json({ message: "No autenticado" }, { status: 401 }),
-    };
+    throw new Error("No autenticado");
   }
 
-  // Obtener tenantId de app_metadata (busca primero tenant_id, luego tenantId como fallback)
-  const tenantId = user?.app_metadata?.tenant_id || user?.app_metadata?.tenantId;
+  // 2. Extraer Tenant
+  const tenantIdRaw =
+    user.app_metadata?.tenant_id || user.app_metadata?.tenantId;
+  if (!tenantIdRaw) {
+    throw new Error("Usuario sin TenantId configurado");
+  }
+  const tenantId = Number(tenantIdRaw);
 
-  // Si no hay tenantId, retornamos un objeto con error
-  if (!tenantId) {
-    console.error("[getAuthUser] Usuario sin tenantId en app_metadata:", {
-      userId: user.id,
-      email: user.email,
-      app_metadata: user.app_metadata,
-    });
-    return {
-      user: null,
-      tenantId: null,
-      error: NextResponse.json({ 
-        message: "Usuario sin tenantId configurado",
-        details: "El usuario no tiene un tenantId asociado en app_metadata"
-      }, { status: 401 }),
-    };
+  // 3. Verificar Sesión Activa (Opcional, para logout forzado)
+  if (checkActiveSession) {
+    const isValid = await checkSessionAlive(user.id, tenantId);
+    if (!isValid) throw new Error("Sesión cerrada o expirada");
   }
 
-  // Verificar si el usuario tiene sesiones activas (opcional, para detectar sesiones cerradas)
-  if (verificarSesionActiva) {
-    try {
-      const cacheKey = `${user.id}-${tenantId}`;
-      const cached = sesionActivaCache.get(cacheKey);
-      const now = Date.now();
+  // Buscar Usuario en DB para obtener ID numérico y validar estado
+  // Usamos cache de request si fuera necesario, pero aquí es directo
+  const dbUsuario = await prisma.usuario.findFirst({
+    where: {
+      AuthUserId: user.id,
+      TenantId: BigInt(tenantId),
+      EstaEliminado: false,
+    },
+    select: {
+      Id: true,
+      EstaBloqueado: true,
+      PerfilUsuario: {
+        select: {
+          Perfiles: { select: { Tipo: true } },
+        },
+      },
+    },
+  });
 
-      // Si hay cache válido, usarlo
-      if (cached && (now - cached.timestamp) < CACHE_TTL) {
-        if (!cached.valido) {
-          return {
-            user: null,
-            tenantId: null,
-            error: NextResponse.json({ 
-              message: "Sesión cerrada",
-              details: "Tu sesión ha sido cerrada. Por favor, inicia sesión nuevamente.",
-              sesionCerrada: true
-            }, { status: 401 }),
-          };
-        }
-      } else {
-        // Verificar en BD solo si no hay cache o está expirado
-        const usuario = await prisma.usuario.findFirst({
+  if (!dbUsuario) throw new Error("Usuario no encontrado en base de datos");
+  if (dbUsuario.EstaBloqueado) throw new Error("Usuario bloqueado");
+
+  const usuarioId = Number(dbUsuario.Id);
+  const isSuperAdmin = dbUsuario.PerfilUsuario.some(
+    (pu) => pu.Perfiles.Tipo === PerfilTipo.SUPERADMIN
+  );
+
+  // 4. Validar Sucursal (Si se provee request)
+  let sucursalId = 0;
+  if (req) {
+    const sucursalHeader = req.headers.get("x-sucursal-id");
+    if (sucursalHeader) {
+      sucursalId = Number(sucursalHeader);
+
+      // Si es SuperAdmin, tiene acceso a todo. Si no, verificamos.
+      if (!isSuperAdmin) {
+        const tieneAcceso = await prisma.usuarioSucursal.count({
           where: {
-            AuthUserId: user.id,
+            UsuarioId: BigInt(usuarioId),
+            SucursalId: BigInt(sucursalId),
             TenantId: BigInt(tenantId),
-            EstaEliminado: false,
           },
-          select: { Id: true },
         });
 
-        if (usuario) {
-          // Verificación optimizada: solo verificar si existe al menos una sesión activa (más rápido que COUNT)
-          const sesionesActivas = await prisma.$queryRawUnsafe<Array<{
-            Id: bigint;
-          }>>(`
-            SELECT "Id"
-            FROM "SesionActiva"
-            WHERE "TenantId" = $1
-              AND "UsuarioId" = $2
-              AND "EstaActiva" = true
-            LIMIT 1
-          `, BigInt(tenantId), usuario.Id);
-
-          const tieneSesionActiva = sesionesActivas && sesionesActivas.length > 0;
-
-          // Actualizar cache
-          sesionActivaCache.set(cacheKey, {
-            valido: tieneSesionActiva,
-            timestamp: now
-          });
-
-          // Limpiar cache expirado periódicamente (solo mantener últimos 100)
-          if (sesionActivaCache.size > 100) {
-            for (const [key, value] of sesionActivaCache.entries()) {
-              if ((now - value.timestamp) > CACHE_TTL) {
-                sesionActivaCache.delete(key);
-              }
-            }
-          }
-
-          if (!tieneSesionActiva) {
-            return {
-              user: null,
-              tenantId: null,
-              error: NextResponse.json({ 
-                message: "Sesión cerrada",
-                details: "Tu sesión ha sido cerrada. Por favor, inicia sesión nuevamente.",
-                sesionCerrada: true
-              }, { status: 401 }),
-            };
-          }
+        if (tieneAcceso === 0) {
+          throw new Error("No tienes acceso a la sucursal solicitada");
         }
       }
-    } catch (error) {
-      // Si hay error verificando la sesión, continuar (no bloquear el acceso)
-      console.warn("[getAuthUser] Error verificando sesión activa:", error);
+    } else {
+      // Si el endpoint requiere contexto de sucursal pero no se envió header
+      // Podríamos fallar o dejar pasar si es una operación global.
+      // Por seguridad "secure by default", si no hay header, sucursalId es 0.
+      // Si la lógica de negocio necesita sucursal, fallará más adelante.
+    }
+  }
+
+  // 5. Validar Permiso (Si se requiere)
+  if (permission) {
+    // Si es SuperAdmin, pase libre
+    if (!isSuperAdmin) {
+      // Reutilizamos la lógica robusta de requirePermiso
+      // Nota: requirePermiso hace sus propias queries, podríamos optimizarlo
+      // integrando la lógica aquí, pero por ahora delegamos.
+      // Hack: requirePermiso espera obtener el user de supabase de nuevo.
+      // Para optimizar, le pasamos el permiso a validar manual o llamamos a la función.
+
+      // Verificación rápida en JWT
+      const permisosJWT = (user.app_metadata?.permissions as string[]) || [];
+      if (!permisosJWT.includes(permission)) {
+        // Fallback a DB (más lento pero seguro si el JWT está desactualizado)
+        // Por ahora lanzamos error, el cliente debería refrescar token si faltan permisos.
+        throw new PermisoError(`Permiso denegado: ${permission}`, 403);
+      }
     }
   }
 
   return {
     user,
-    tenantId: Number(tenantId),
-    error: null,
+    tenantId,
+    usuarioId,
+    sucursalId,
+    isSuperAdmin,
   };
+}
+
+// Helper interno para cache de sesión
+async function checkSessionAlive(userId: string, tenantId: number) {
+  const cacheKey = `${userId}-${tenantId}`;
+  const now = Date.now();
+  const cached = sessionCache.get(cacheKey);
+
+  if (cached && now - cached.timestamp < CACHE_TTL) {
+    return cached.valid;
+  }
+
+  // Verificar en DB
+  // Optimizamos query raw para velocidad
+  const sesiones = await prisma.$queryRaw`
+    SELECT "Id" FROM "SesionActiva"
+    WHERE "TenantId" = ${BigInt(tenantId)}
+    AND "UsuarioId" = (SELECT "Id" FROM "Usuario" WHERE "AuthUserId" = ${userId} LIMIT 1)
+    AND "EstaActiva" = true
+    LIMIT 1
+  `;
+
+  const isValid = Array.isArray(sesiones) && sesiones.length > 0;
+
+  sessionCache.set(cacheKey, { valid: isValid, timestamp: now });
+  return isValid;
+}
+
+// Mantenemos compatibilidad hacia atrás temporalmente (opcional)
+export async function getAuthUser(verificarSesionActiva: boolean = false) {
+  try {
+    const ctx = await getAuthContext({
+      checkActiveSession: verificarSesionActiva,
+    });
+    return {
+      user: ctx.user,
+      tenantId: ctx.tenantId,
+      error: null,
+    };
+  } catch (e: any) {
+    return {
+      user: null,
+      tenantId: null,
+      error: NextResponse.json({ message: e.message }, { status: 401 }),
+    };
+  }
 }

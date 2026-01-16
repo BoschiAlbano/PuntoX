@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
 
 const preferenciasSchema = z.object({
@@ -10,21 +10,11 @@ const preferenciasSchema = z.object({
   stockBajo: z.boolean().optional(),
 });
 
-async function resolveTenantId() {
-  const supabase = await getSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const tenantId = user?.app_metadata?.tenantId;
-  return tenantId ? Number(tenantId) : null;
-}
-
-// Por ahora guardamos en una tabla JSON o en Tenant
-// Como no hay tabla específica, usaremos Tenant para almacenar preferencias
-// En el futuro se puede crear una tabla TenantPreferencias
-
-export async function GET() {
-  const tenantId = await resolveTenantId();
+export async function GET(req: NextRequest) {
+  const { tenantId } = await getAuthContext({
+    req,
+    permission: "configuracion",
+  });
   if (!tenantId) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
@@ -41,15 +31,18 @@ export async function GET() {
           stockBajo: true,
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error: unknown) {
     return handleError(error);
   }
 }
 
-export async function PUT(req: Request) {
-  const tenantId = await resolveTenantId();
+export async function PUT(req: NextRequest) {
+  const { tenantId } = await getAuthContext({
+    req,
+    permission: "configuracion",
+  });
   if (!tenantId) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
@@ -68,13 +61,9 @@ export async function PUT(req: Request) {
       {
         preferencias: parsed.data,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error: unknown) {
     return handleError(error);
   }
 }
-
-
-
-

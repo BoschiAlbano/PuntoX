@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
-import { requirePermiso, PermisoError } from "@/lib/requirePermiso";
+import { PermisoError } from "@/lib/requirePermiso";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 import { handleError } from "@/lib/errors/handler";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 
 type RolTipo = "ADMINISTRADOR" | "EMPLEADO";
 
@@ -27,9 +28,12 @@ function mapRolTipo(tipo?: string | null): RolTipo {
   return "EMPLEADO";
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const { tenantId } = await requirePermiso("empleados:admin");
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: "empleados:admin", // Mismo permiso que productos por coherencia
+    });
 
     const roles = await prisma.perfiles.findMany({
       where: { TenantId: BigInt(tenantId), EstaEliminado: false },
@@ -74,7 +78,10 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, usuarioId } = await requirePermiso("empleados:admin");
+    const { tenantId, usuarioId } = await getAuthContext({
+      req,
+      permission: "empleados:admin", // Mismo permiso que productos por coherencia
+    });
     const json = await req.json().catch(() => null);
     const parsed = rolSchema.safeParse(json);
     if (!parsed.success) {
@@ -198,7 +205,10 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, usuarioId } = await requirePermiso("empleados:admin");
+    const { tenantId, usuarioId } = await getAuthContext({
+      req,
+      permission: "empleados:admin", // Mismo permiso que productos por coherencia
+    });
     const tenantIdBigInt = BigInt(tenantId);
 
     const { searchParams } = new URL(req.url);
@@ -272,7 +282,10 @@ export async function PATCH(req: NextRequest) {
         data.tipo !== rolExistente.Tipo
       ) {
         return NextResponse.json(
-          { error: "No se puede modificar el nombre o tipo de un rol del sistema" },
+          {
+            error:
+              "No se puede modificar el nombre o tipo de un rol del sistema",
+          },
           { status: 400 }
         );
       }
@@ -407,13 +420,13 @@ export async function PATCH(req: NextRequest) {
     };
 
     // Registrar auditoría EDITAR_ROL
-    const permisosAnteriores = rolExistente.PerfilPermiso
-      .filter((pp) => !pp.Permiso?.EstaEliminado)
-      .map((pp) => pp.Permiso?.Descripcion ?? pp.Permiso?.Clave ?? "");
-    
-    const permisosNuevos = updated.rol.PerfilPermiso
-      .filter((pp) => !pp.Permiso?.EstaEliminado)
-      .map((pp) => pp.Permiso?.Descripcion ?? pp.Permiso?.Clave ?? "");
+    const permisosAnteriores = rolExistente.PerfilPermiso.filter(
+      (pp) => !pp.Permiso?.EstaEliminado
+    ).map((pp) => pp.Permiso?.Descripcion ?? pp.Permiso?.Clave ?? "");
+
+    const permisosNuevos = updated.rol.PerfilPermiso.filter(
+      (pp) => !pp.Permiso?.EstaEliminado
+    ).map((pp) => pp.Permiso?.Descripcion ?? pp.Permiso?.Clave ?? "");
 
     await registrarAuditoria({
       tenantId: tenantIdBigInt,
@@ -434,7 +447,9 @@ export async function PATCH(req: NextRequest) {
     });
 
     // Actualizar permisos en JWT de todos los usuarios con este rol
-    const { actualizarPermisosUsuariosDelRol } = await import("@/lib/auth/updateUserPermissions");
+    const { actualizarPermisosUsuariosDelRol } = await import(
+      "@/lib/auth/updateUserPermissions"
+    );
     actualizarPermisosUsuariosDelRol(rolIdBigInt, tenantIdBigInt).catch(() => {
       // Error no crítico, solo loguear silenciosamente
     });
@@ -453,7 +468,10 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { tenantId, usuarioId } = await requirePermiso("empleados:admin");
+    const { tenantId, usuarioId } = await getAuthContext({
+      req,
+      permission: "empleados:admin", // Mismo permiso que productos por coherencia
+    });
     const tenantIdBigInt = BigInt(tenantId);
 
     const { searchParams } = new URL(req.url);
