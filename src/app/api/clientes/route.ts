@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
     const paginatedResponse = createPaginationResponse(
       clientes,
       total,
-      pagination
+      pagination,
     );
 
     return NextResponse.json(paginatedResponse, { status: 200 });
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
           error: "Datos inválidos",
           details: parsed.error.issues,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
     if (!Number.isInteger(localidadIdNumber)) {
       return NextResponse.json(
         { error: "Localidad inválida" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
     if (!localidadValida) {
       return NextResponse.json(
         { error: "Localidad no válida" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
     if (!Number.isInteger(condicionIvaIdNumber)) {
       return NextResponse.json(
         { error: "Condición IVA inválida" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
     if (!condicionIvaValida) {
       return NextResponse.json(
         { error: "Condición IVA no válida" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
     if (existingPersona) {
       return NextResponse.json(
         { error: "El correo ya está registrado" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -268,13 +268,13 @@ export async function POST(req: NextRequest) {
       departamento:
         clienteCompleto!.Localidad?.Departamento?.Descripcion ?? null,
       provinciaId: Number(
-        clienteCompleto!.Localidad?.Departamento?.Provincia?.Id ?? 0
+        clienteCompleto!.Localidad?.Departamento?.Provincia?.Id ?? 0,
       ),
       provincia:
         clienteCompleto!.Localidad?.Departamento?.Provincia?.Descripcion ??
         null,
       condicionIvaId: Number(
-        clienteCompleto!.Persona_Cliente?.CondicionIvaId ?? 0
+        clienteCompleto!.Persona_Cliente?.CondicionIvaId ?? 0,
       ),
       condicionIva:
         clienteCompleto!.Persona_Cliente?.CondicionIva?.Descripcion ?? null,
@@ -324,7 +324,7 @@ export async function PATCH(req: NextRequest) {
     if (!clienteExistente) {
       return NextResponse.json(
         { error: "Cliente no encontrado" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -335,7 +335,7 @@ export async function PATCH(req: NextRequest) {
       if (!Number.isInteger(localidadIdNumber)) {
         return NextResponse.json(
           { error: "Localidad inválida" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -349,7 +349,7 @@ export async function PATCH(req: NextRequest) {
       if (!localidadValida) {
         return NextResponse.json(
           { error: "Localidad no válida" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -361,7 +361,7 @@ export async function PATCH(req: NextRequest) {
       if (!Number.isInteger(condicionIvaIdNumber)) {
         return NextResponse.json(
           { error: "Condición IVA inválida" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -375,7 +375,7 @@ export async function PATCH(req: NextRequest) {
       if (!condicionIvaValida) {
         return NextResponse.json(
           { error: "Condición IVA no válida" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -395,7 +395,7 @@ export async function PATCH(req: NextRequest) {
       if (existingPersona) {
         return NextResponse.json(
           { error: "El correo ya está registrado" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -440,7 +440,7 @@ export async function PATCH(req: NextRequest) {
         updateClienteData.TieneLimiteCompra = validarCliente.TieneLimiteCompra;
       if (validarCliente.MontoMaximoCtaCte !== undefined)
         updateClienteData.MontoMaximoCtaCte = new Prisma.Decimal(
-          validarCliente.MontoMaximoCtaCte
+          validarCliente.MontoMaximoCtaCte,
         );
 
       if (Object.keys(updateClienteData).length > 0) {
@@ -511,7 +511,7 @@ export async function PATCH(req: NextRequest) {
         clienteCompleto!.Localidad?.Departamento?.Provincia?.Descripcion ??
         null,
       condicionIvaId: Number(
-        clienteCompleto!.Persona_Cliente?.CondicionIvaId ?? 0
+        clienteCompleto!.Persona_Cliente?.CondicionIvaId ?? 0,
       ),
       condicionIva:
         clienteCompleto!.Persona_Cliente?.CondicionIva?.Descripcion ?? null,
@@ -540,7 +540,7 @@ export async function DELETE(req: NextRequest) {
     if (!clienteId) {
       return NextResponse.json(
         { error: "ID de cliente requerido" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -548,7 +548,7 @@ export async function DELETE(req: NextRequest) {
     if (!Number.isInteger(clienteIdNumber)) {
       return NextResponse.json(
         { error: "ID de cliente inválido" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -571,7 +571,7 @@ export async function DELETE(req: NextRequest) {
     if (!clienteExistente) {
       return NextResponse.json(
         { error: "Cliente no encontrado" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -585,7 +585,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json(
       { ok: true, clienteId: clienteIdNumber },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error: unknown) {
     return handleError(error);

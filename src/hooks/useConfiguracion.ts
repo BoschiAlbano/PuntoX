@@ -78,6 +78,7 @@ export interface Fiscal {
   condicionIvaId: number | null;
   puntoVenta: string;
   inicioActividades: string;
+  ingresosBrutos: string;
 }
 
 export interface CondicionIva {
@@ -118,7 +119,11 @@ export interface Departamento {
 }
 
 // Fetch functions
-const fetchTenant = async ({ signal }: { signal: AbortSignal }): Promise<Tenant> => {
+const fetchTenant = async ({
+  signal,
+}: {
+  signal: AbortSignal;
+}): Promise<Tenant> => {
   const response = await fetch("/api/tenant", {
     signal,
     cache: "no-store",
@@ -126,7 +131,9 @@ const fetchTenant = async ({ signal }: { signal: AbortSignal }): Promise<Tenant>
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al cargar tenant");
   }
 
@@ -152,15 +159,19 @@ const fetchConfiguracion = async ({
         return {} as Configuracion;
       }
       // Si es 500 u otro error, intentar parsear el error pero no cancelar
-      const error = await response.json().catch(() => ({ error: "Error desconocido" }));
-      throw new Error(error?.error || `Error al cargar configuración (${response.status})`);
+      const error = await response
+        .json()
+        .catch(() => ({ error: "Error desconocido" }));
+      throw new Error(
+        error?.error || `Error al cargar configuración (${response.status})`,
+      );
     }
 
     const data = await response.json();
     return data?.configuracion || ({} as Configuracion);
   } catch (error) {
     // Si el error es por cancelación (AbortError), relanzarlo
-    if (error instanceof Error && error.name === 'AbortError') {
+    if (error instanceof Error && error.name === "AbortError") {
       throw error;
     }
     // Para otros errores, también relanzarlos pero con más información
@@ -194,11 +205,14 @@ const fetchDepartamentos = async ({
   signal: AbortSignal;
   provinciaId: string;
 }): Promise<Departamento[]> => {
-  const response = await fetch(`/api/departamentos?provinciaId=${provinciaId}`, {
-    signal,
-    cache: "no-store",
-    credentials: "include",
-  });
+  const response = await fetch(
+    `/api/departamentos?provinciaId=${provinciaId}`,
+    {
+      signal,
+      cache: "no-store",
+      credentials: "include",
+    },
+  );
 
   if (!response.ok) {
     return [];
@@ -215,11 +229,14 @@ const fetchLocalidades = async ({
   signal: AbortSignal;
   departamentoId: string;
 }): Promise<Localidad[]> => {
-  const response = await fetch(`/api/localidades?departamentoId=${departamentoId}`, {
-    signal,
-    cache: "no-store",
-    credentials: "include",
-  });
+  const response = await fetch(
+    `/api/localidades?departamentoId=${departamentoId}`,
+    {
+      signal,
+      cache: "no-store",
+      credentials: "include",
+    },
+  );
 
   if (!response.ok) {
     return [];
@@ -270,12 +287,14 @@ const fetchPreferenciasVenta = async ({
   }
 
   const data = await response.json();
-  return data?.preferencias || {
-    ticketDigitalPorCorreo: true,
-    mostrarPreciosConIva: true,
-    abrirCajonEfectivo: true,
-    numerarPedidosPantalla: true,
-  };
+  return (
+    data?.preferencias || {
+      ticketDigitalPorCorreo: true,
+      mostrarPreciosConIva: true,
+      abrirCajonEfectivo: true,
+      numerarPedidosPantalla: true,
+    }
+  );
 };
 
 const fetchNotificaciones = async ({
@@ -298,11 +317,13 @@ const fetchNotificaciones = async ({
   }
 
   const data = await response.json();
-  return data?.notificaciones || {
-    push: true,
-    resumenDiario: false,
-    stockBajo: true,
-  };
+  return (
+    data?.notificaciones || {
+      push: true,
+      resumenDiario: false,
+      stockBajo: true,
+    }
+  );
 };
 
 const fetchSeguridad = async ({
@@ -330,18 +351,24 @@ const fetchSeguridad = async ({
 
   const data = await response.json();
   // El GET y PUT retornan los datos directamente, no envueltos en 'seguridad'
-  return data || {
-    dobleFactor: false,
-    expirarSesiones30Dias: true,
-    bloquearTrasIntentos: "5",
-    alertarNuevoDispositivo: true,
-    bloquearPorInactividad: false,
-    tiempoInactividadMinutos: 30,
-    recordarSesion30Dias: true,
-  };
+  return (
+    data || {
+      dobleFactor: false,
+      expirarSesiones30Dias: true,
+      bloquearTrasIntentos: "5",
+      alertarNuevoDispositivo: true,
+      bloquearPorInactividad: false,
+      tiempoInactividadMinutos: 30,
+      recordarSesion30Dias: true,
+    }
+  );
 };
 
-const fetchFiscal = async ({ signal }: { signal: AbortSignal }): Promise<Fiscal> => {
+const fetchFiscal = async ({
+  signal,
+}: {
+  signal: AbortSignal;
+}): Promise<Fiscal> => {
   const response = await fetch("/api/configuracion/fiscal", {
     signal,
     cache: "no-store",
@@ -357,19 +384,23 @@ const fetchFiscal = async ({ signal }: { signal: AbortSignal }): Promise<Fiscal>
       condicionIvaId: null,
       puntoVenta: "",
       inicioActividades: "",
+      ingresosBrutos: "",
     };
   }
 
   const data = await response.json();
-  return data?.fiscal || {
-    moneda: "ARS",
-    zonaHoraria: "America/Argentina/Buenos_Aires",
-    idioma: "es-AR",
-    tipoIva: "",
-    condicionIvaId: null,
-    puntoVenta: "",
-    inicioActividades: "",
-  };
+  return (
+    data?.fiscal || {
+      moneda: "ARS",
+      zonaHoraria: "America/Argentina/Buenos_Aires",
+      idioma: "es-AR",
+      tipoIva: "",
+      condicionIvaId: null,
+      puntoVenta: "",
+      inicioActividades: "",
+      ingresosBrutos: "",
+    }
+  );
 };
 
 const fetchBranding = async ({
@@ -392,11 +423,13 @@ const fetchBranding = async ({
   }
 
   const data = await response.json();
-  return data?.branding || {
-    slogan: "Mejor precio, mejor servicio.",
-    color: "#90c472",
-    logoPreview: "",
-  };
+  return (
+    data?.branding || {
+      slogan: "Mejor precio, mejor servicio.",
+      color: "#90c472",
+      logoPreview: "",
+    }
+  );
 };
 
 // Mutation functions
@@ -409,7 +442,9 @@ const saveTenant = async (tenantData: Partial<Tenant>): Promise<Tenant> => {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al guardar tenant");
   }
 
@@ -418,7 +453,7 @@ const saveTenant = async (tenantData: Partial<Tenant>): Promise<Tenant> => {
 };
 
 const saveConfiguracion = async (
-  configData: Partial<Configuracion>
+  configData: Partial<Configuracion>,
 ): Promise<Configuracion> => {
   const response = await fetch("/api/configuracion", {
     method: "PUT",
@@ -428,7 +463,9 @@ const saveConfiguracion = async (
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al guardar configuración");
   }
 
@@ -437,7 +474,7 @@ const saveConfiguracion = async (
 };
 
 const savePreferenciasVenta = async (
-  preferencias: PreferenciasVenta
+  preferencias: PreferenciasVenta,
 ): Promise<PreferenciasVenta> => {
   const response = await fetch("/api/configuracion/preferencias", {
     method: "PUT",
@@ -447,7 +484,9 @@ const savePreferenciasVenta = async (
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al guardar preferencias");
   }
 
@@ -456,7 +495,7 @@ const savePreferenciasVenta = async (
 };
 
 const saveNotificaciones = async (
-  notificaciones: Notificaciones
+  notificaciones: Notificaciones,
 ): Promise<Notificaciones> => {
   const response = await fetch("/api/configuracion/notificaciones", {
     method: "PUT",
@@ -466,7 +505,9 @@ const saveNotificaciones = async (
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al guardar notificaciones");
   }
 
@@ -483,7 +524,9 @@ const saveSeguridad = async (seguridad: Seguridad): Promise<Seguridad> => {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al guardar seguridad");
   }
 
@@ -510,7 +553,9 @@ const saveFiscal = async (fiscal: Omit<Fiscal, "tipoIva">): Promise<Fiscal> => {
         } else if ("message" in error && typeof error.message === "string") {
           errorMessage = error.message;
         } else if (Array.isArray(error.details)) {
-          errorMessage = error.details.map((d: any) => d.message || String(d)).join(", ");
+          errorMessage = error.details
+            .map((d: any) => d.message || String(d))
+            .join(", ");
         }
       } else if (typeof error === "string") {
         errorMessage = error;
@@ -526,7 +571,9 @@ const saveFiscal = async (fiscal: Omit<Fiscal, "tipoIva">): Promise<Fiscal> => {
   return data?.fiscal;
 };
 
-const saveBranding = async (branding: Branding): Promise<Omit<Branding, "logo">> => {
+const saveBranding = async (
+  branding: Branding,
+): Promise<Omit<Branding, "logo">> => {
   const formData = new FormData();
   formData.append("slogan", branding.slogan);
   formData.append("color", branding.color);
@@ -541,7 +588,9 @@ const saveBranding = async (branding: Branding): Promise<Omit<Branding, "logo">>
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Error desconocido" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al guardar branding");
   }
 
@@ -550,7 +599,9 @@ const saveBranding = async (branding: Branding): Promise<Omit<Branding, "logo">>
 };
 
 // Hook principal
-export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {}) {
+export function useConfiguracion({
+  enabled = true,
+}: { enabled?: boolean } = {}) {
   const queryClient = useQueryClient();
 
   // Queries
@@ -708,7 +759,8 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
       if (silentCount === 0) {
         addToast({
           title: "Notificaciones guardadas",
-          description: "Las preferencias de notificaciones se guardaron correctamente.",
+          description:
+            "Las preferencias de notificaciones se guardaron correctamente.",
           color: "success",
         });
       }
@@ -786,7 +838,8 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
   const useDepartamentos = (provinciaId: string | null) => {
     return useQuery({
       queryKey: ["departamentos", provinciaId],
-      queryFn: ({ signal }) => fetchDepartamentos({ signal, provinciaId: provinciaId! }),
+      queryFn: ({ signal }) =>
+        fetchDepartamentos({ signal, provinciaId: provinciaId! }),
       enabled: enabled && !!provinciaId,
       refetchOnMount: false,
       refetchOnWindowFocus: false,
@@ -797,7 +850,8 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
   const useLocalidades = (departamentoId: string | null) => {
     return useQuery({
       queryKey: ["localidades", departamentoId],
-      queryFn: ({ signal }) => fetchLocalidades({ signal, departamentoId: departamentoId! }),
+      queryFn: ({ signal }) =>
+        fetchLocalidades({ signal, departamentoId: departamentoId! }),
       enabled: enabled && !!departamentoId,
       refetchOnMount: false,
       refetchOnWindowFocus: false,
@@ -874,7 +928,10 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
         }
       }
     },
-    saveConfiguracion: async (data: Partial<Configuracion>, silent?: boolean) => {
+    saveConfiguracion: async (
+      data: Partial<Configuracion>,
+      silent?: boolean,
+    ) => {
       if (silent) {
         silentCount++;
       }
@@ -886,7 +943,10 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
         }
       }
     },
-    savePreferenciasVenta: async (data: PreferenciasVenta, silent?: boolean) => {
+    savePreferenciasVenta: async (
+      data: PreferenciasVenta,
+      silent?: boolean,
+    ) => {
       if (silent) {
         silentCount++;
       }
@@ -957,4 +1017,3 @@ export function useConfiguracion({ enabled = true }: { enabled?: boolean } = {})
     isSavingBranding: saveBrandingMutation.isPending,
   };
 }
-

@@ -10,7 +10,6 @@ import React, {
 import type { Session } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
 import type { TenantUser } from "@/types/auth";
-import { isManualLogoutInProgress } from "@/lib/auth/logoutManager";
 import { useUserStore } from "@/store/useUserStore";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
@@ -23,7 +22,7 @@ type SupabaseAuthContextValue = {
 };
 
 const SupabaseAuthContext = createContext<SupabaseAuthContextValue | undefined>(
-  undefined
+  undefined,
 );
 
 function resolveTenantId(metadata: Record<string, unknown> | undefined) {
@@ -66,8 +65,8 @@ const SessionProviderComponent = ({
         typeof args[0] === "string"
           ? args[0]
           : args[0] instanceof URL
-          ? args[0].href
-          : args[0]?.url || "";
+            ? args[0].href
+            : args[0]?.url || "";
 
       // No interceptar llamadas a rutas públicas
       const publicPaths = ["/signin", "/signup", "/new-tenant", "/api/auth"];
@@ -104,16 +103,12 @@ const SessionProviderComponent = ({
 
       // Si la respuesta es 401 y no estamos manejando un logout, verificar si es por sesión cerrada
       // No procesar 401s durante logout manual (evita loops y toasts innecesarios)
-      if (
-        response.status === 401 &&
-        !isHandlingLogout &&
-        !isManualLogoutInProgress()
-      ) {
+      if (response.status === 401 && !isHandlingLogout) {
         try {
           const currentPath = window.location.pathname;
           const publicPagePaths = ["/signin", "/signup", "/new-tenant"];
           const isOnPublicPage = publicPagePaths.some((path) =>
-            currentPath.startsWith(path)
+            currentPath.startsWith(path),
           );
 
           // Si ya estamos en una página pública, no hacer nada
@@ -134,7 +129,7 @@ const SessionProviderComponent = ({
             isHandlingLogout = true;
 
             console.warn(
-              "[SessionProvider] Sesión cerrada detectada, haciendo logout automático"
+              "[SessionProvider] Sesión cerrada detectada, haciendo logout automático",
             );
 
             // Actualizar estado primero
@@ -155,7 +150,7 @@ const SessionProviderComponent = ({
           // Si no se puede parsear la respuesta, continuar normalmente
           console.warn(
             "[SessionProvider] Error al verificar respuesta 401:",
-            error
+            error,
           );
         }
       }
@@ -200,7 +195,7 @@ const SessionProviderComponent = ({
               fetch("/api/auth/sync-permissions", { method: "POST" }).catch(
                 (err) => {
                   console.warn("No se pudieron sincronizar permisos:", err);
-                }
+                },
               );
             }, 0);
           }
@@ -248,7 +243,7 @@ const SessionProviderComponent = ({
             fetch("/api/auth/sync-permissions", { method: "POST" }).catch(
               (err) => {
                 console.warn("No se pudieron sincronizar permisos:", err);
-              }
+              },
             );
           }
 
@@ -294,8 +289,8 @@ const SessionProviderComponent = ({
           }).catch((err) =>
             console.warn(
               "Error al registrar sesión desde sessionProvider:",
-              err
-            )
+              err,
+            ),
           );
         }
 
@@ -305,10 +300,10 @@ const SessionProviderComponent = ({
             method: "DELETE",
             credentials: "include",
           }).catch((err) =>
-            console.warn("Error al cerrar sesión desde sessionProvider:", err)
+            console.warn("Error al cerrar sesión desde sessionProvider:", err),
           );
         }
-      }
+      },
     );
 
     return () => {
@@ -358,7 +353,7 @@ export function useSupabaseAuthContext() {
   const ctx = useContext(SupabaseAuthContext);
   if (!ctx) {
     throw new Error(
-      "useSupabaseAuthContext debe usarse dentro de SessionProviderComponent"
+      "useSupabaseAuthContext debe usarse dentro de SessionProviderComponent",
     );
   }
   return ctx;

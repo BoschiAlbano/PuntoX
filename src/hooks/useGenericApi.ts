@@ -16,6 +16,7 @@ export interface GenericApiOptions<T> {
   page?: number;
   limit?: number;
   transformer?: (data: unknown) => T[]; // Para transformar datos si la API devuelve estructura plana
+  additionalInvalidateQueryKeys?: any[];
 }
 
 export function useGenericApi<T extends { Id: number | string }>({
@@ -25,11 +26,12 @@ export function useGenericApi<T extends { Id: number | string }>({
   page = 1,
   limit = 10,
   transformer,
+  additionalInvalidateQueryKeys = [],
 }: GenericApiOptions<T>) {
   const queryClient = useQueryClient();
 
   //sucursalId
-  const { currentBranch } = useUserStore();
+  // const { currentBranch } = useUserStore();
 
   // --- Fetch Query ---
   const fetchData = async ({ signal }: { signal: AbortSignal }) => {
@@ -39,7 +41,7 @@ export function useGenericApi<T extends { Id: number | string }>({
     if (search) params.append(searchParam, search);
     params.append("page", page.toString());
     params.append("limit", limit.toString());
-    params.append("sucursalId", currentBranch?.Id?.toString());
+    // params.append("sucursalId", currentBranch?.Id?.toString());
     // Asegurar que el endpoint no termine en /
     const cleanEndpoint = endpoint.endsWith("/")
       ? endpoint.slice(0, -1)
@@ -141,6 +143,11 @@ export function useGenericApi<T extends { Id: number | string }>({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
+      additionalInvalidateQueryKeys.forEach((key) => {
+        queryClient.invalidateQueries({
+          queryKey: Array.isArray(key) ? key : [key],
+        });
+      });
     },
   });
 

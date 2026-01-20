@@ -1,18 +1,20 @@
 "use client";
 import { motion } from "framer-motion";
-import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
+// import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { Dispatch, SetStateAction, memo, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
-
+import { useUserStore } from "@/store/useUserStore";
 function DashboardHeaderComponent({
   isShow,
 }: {
   isShow: Dispatch<SetStateAction<boolean>>;
   show: boolean;
 }) {
-  const { user } = useSupabaseAuthContext();
+  // const { user } = useSupabaseAuthContext();
   const pathname = usePathname();
+
+  const { user, roles } = useUserStore();
 
   // Mapeo de rutas a nombres amigables
   const routeNames: Record<string, string> = {
@@ -43,10 +45,7 @@ function DashboardHeaderComponent({
     return result;
   }, [pathname]);
 
-  const fullName =
-    typeof user?.app_metadata?.full_name === "string"
-      ? user.app_metadata.full_name
-      : "";
+  const fullName = typeof user?.Email === "string" ? user.Email : "";
   const initialsFromName = fullName
     ? fullName
         .split(" ")
@@ -56,14 +55,17 @@ function DashboardHeaderComponent({
         .toUpperCase()
     : "";
   const userInitials =
-    initialsFromName || user?.email?.[0]?.toUpperCase() || "U";
+    initialsFromName || user?.Email?.[0]?.toUpperCase() || "U";
 
   const displayName =
     fullName.trim() ||
-    (typeof user?.email === "string" ? user.email : "") ||
+    (typeof user?.Usuario === "string" ? user.Usuario : "") ||
     "Usuario";
-  const displayEmail = typeof user?.email === "string" ? user.email : "";
+  const displayEmail = typeof user?.Usuario === "string" ? user.Usuario : "";
 
+  const displayRol = roles.map((rol) => rol.Descripcion).join(" - ");
+
+  console.log(user);
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
@@ -141,7 +143,9 @@ function DashboardHeaderComponent({
                 <p className="text-sm font-semibold text-slate-900">
                   {displayName}
                 </p>
-                <p className="text-xs text-slate-500">{displayEmail}</p>
+                <p className="text-xs text-slate-500">
+                  {displayEmail} - {displayRol}
+                </p>
               </div>
 
               <svg

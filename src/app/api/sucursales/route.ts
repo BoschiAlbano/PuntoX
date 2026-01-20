@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext({
+    const { tenantId, usuarioId } = await getAuthContext({
       req,
       permission: "empleados:admin",
     });
@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Crear la sucursal
+    // Crear la sucursal y asignar al usuario creador
     const nuevaSucursal = await prisma.sucursal.create({
       data: {
         TenantId: BigInt(tenantId),
@@ -145,6 +145,14 @@ export async function POST(req: NextRequest) {
         EsPrincipal: data.esPrincipal,
         EstaActiva: true,
         EstaEliminado: false,
+        // Crear relación automática con el usuario creador
+        UsuariosSucursales: {
+          create: {
+            TenantId: BigInt(tenantId),
+            UsuarioId: BigInt(usuarioId),
+            EsDefault: false, // Por defecto no es la principal del usuario, salvo que sea la única
+          },
+        },
       },
     });
 

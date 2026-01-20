@@ -50,11 +50,16 @@ export default function UsuariosCRUD() {
       searchPlaceholder="Buscar por nombre, usuario o DNI..."
       transformer={transformer}
       columns={[
-        { uid: "nombreCompleto", name: "NOMBRE", sortable: true },
+        {
+          uid: "nombreCompleto",
+          name: "NOMBRE",
+          sortable: true,
+          align: "start",
+        },
         { uid: "username", name: "USUARIO", sortable: true },
         { uid: "rolNombre", name: "ROL", sortable: false },
         { uid: "legajo", name: "LEGAJO", sortable: true },
-        { uid: "sucursal", name: "SUCURSAL", sortable: false },
+        // { uid: "sucursal", name: "SUCURSAL", sortable: false },
         { uid: "localidad", name: "LOCALIDAD", sortable: false },
         { uid: "estado", name: "ESTADO", sortable: false },
         { uid: "acciones", name: "ACCIONES" },
@@ -87,13 +92,13 @@ export default function UsuariosCRUD() {
                 {item.legajo || "-"}
               </span>
             );
-          case "sucursal":
-            return (
-              <span className="text-gray-600 text-sm">
-                {/* {item.sucursales?.[0].Nombre || "-"} */}
-                Eliminar despues
-              </span>
-            );
+          // case "sucursal":
+          //   return (
+          //     <span className="text-gray-600 text-sm">
+          //       {/* {item.sucursales?.[0].Nombre || "-"} */}
+          //       Eliminar despues
+          //     </span>
+          //   );
           case "localidad":
             return (
               <span className="text-gray-600 text-sm">
@@ -105,8 +110,8 @@ export default function UsuariosCRUD() {
               item.estado === "Activo"
                 ? "success"
                 : item.estado === "Invitado"
-                ? "warning"
-                : "danger";
+                  ? "warning"
+                  : "danger";
             return (
               <Chip size="sm" color={estadoColor} variant="flat">
                 {item.estado}
@@ -114,7 +119,7 @@ export default function UsuariosCRUD() {
             );
           case "acciones":
             return (
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full justify-center items-center">
                 <EditButton
                   onPress={() => actions.onEdit(item)}
                   label={`Editar ${item.nombreCompleto || "usuario"}`}

@@ -52,38 +52,45 @@ export default function DashboardLayout({
           />
         </section>
 
-        <div className="flex-1 flex flex-col h-screen overflow-hidden">
+        <div className="flex-1 flex flex-col h-screen overflow-x-hidden ">
           <DashboardHeader isShow={setshow} show={show} />
 
-          <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
+          <main className="flex-1  overflow-x-hidden relative ">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.2 }}
-              className="p-6 h-full"
+              className="sm:p-6 py-4 px-0 h-full min-h-auto "
             >
               {children}
+              <Footer />
             </motion.div>
           </main>
-
-          <footer className="bg-white/50 backdrop-blur-sm border-t border-slate-200 py-4 px-6">
-            <div className="flex items-center justify-between text-sm text-slate-600">
-              <p>ЖИ 2024 Punto X SaaS. Todos los derechos reservados.</p>
-              <div className="flex items-center gap-4">
-                <a href="#" className="hover:text-blue-600 transition-colors">
-                  Terminos
-                </a>
-                <a href="#" className="hover:text-blue-600 transition-colors">
-                  Privacidad
-                </a>
-                <a href="#" className="hover:text-blue-600 transition-colors">
-                  Soporte
-                </a>
-              </div>
-            </div>
-          </footer>
         </div>
       </div>
     </ProtectRoute>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="bg-white/50 backdrop-blur-sm border-t border-slate-200 py-4 px-6">
+      <div className="flex flex-col sm:flex-row items-center justify-between sm:gap-0 gap-2 text-sm text-slate-600">
+        <p className="text-center">
+          ЖИ 2024 Punto X SaaS. Todos los derechos reservados.
+        </p>
+        <div className="flex items-center gap-4">
+          <a href="#" className="hover:text-blue-600 transition-colors">
+            Terminos
+          </a>
+          <a href="#" className="hover:text-blue-600 transition-colors">
+            Privacidad
+          </a>
+          <a href="#" className="hover:text-blue-600 transition-colors">
+            Soporte
+          </a>
+        </div>
+      </div>
+    </footer>
   );
 }

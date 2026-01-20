@@ -16,6 +16,7 @@ import { GenericFormProps } from "@/components/shared/GenericCrud";
 import { useQuery } from "@tanstack/react-query";
 import { Usuario } from "./UsuariosCRUD";
 import { Sucursal } from "../../../prisma/generated/prisma";
+import { useSucursales } from "@/hooks/useSucursales";
 
 // Funciones de fetch para los selects
 const fetchProvincias = async () => {
@@ -44,13 +45,6 @@ const fetchRoles = async () => {
   if (!res.ok) throw new Error("Error fetching roles");
   const data = await res.json();
   return Array.isArray(data?.roles) ? data.roles : [];
-};
-
-const fetchSucursales = async () => {
-  const res = await fetch("/api/sucursales");
-  if (!res.ok) throw new Error("Error fetching sucursales");
-  const data = await res.json();
-  return Array.isArray(data?.sucursales) ? data.sucursales : [];
 };
 
 interface UsuarioFormData {
@@ -122,11 +116,8 @@ export default function UsuarioForm({
     enabled: isOpen,
   });
 
-  const { data: sucursales = [], isLoading: isLoadingSucursales } = useQuery({
-    queryKey: ["sucursales"],
-    queryFn: fetchSucursales,
-    enabled: isOpen,
-  });
+  const { data: sucursales = [], isLoading: isLoadingSucursales } =
+    useSucursales();
 
   // Initialization
   useEffect(() => {
@@ -448,14 +439,14 @@ export default function UsuarioForm({
                   selectedKeys={
                     formData.sucursales
                       ? formData.sucursales.map((s: any) =>
-                          (s.Id || s.sucursalId || s.id).toString()
+                          (s.Id || s.sucursalId || s.id).toString(),
                         )
                       : []
                   }
                   onSelectionChange={(keys) => {
                     const selectedIds = Array.from(keys).map((k) => Number(k));
                     const selectedSucursales = sucursales.filter((s: any) =>
-                      selectedIds.includes(Number(s.Id || s.id))
+                      selectedIds.includes(Number(s.Id || s.id)),
                     );
                     handleChange("sucursales", selectedSucursales);
                   }}

@@ -46,6 +46,7 @@ export default function ProductSearch({
 }) {
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isSearching, setIsSearching] = useState(false);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   // Search state for Modal
@@ -58,8 +59,8 @@ export default function ProductSearch({
     queryKey: ["productos", debouncedSearch, page],
     queryFn: async ({ signal }) => {
       const res = await fetch(
-        `/api/productos?q=${debouncedSearch}&page=${page}&limit=10`,
-        { signal }
+        `/api/ventas/productos?q=${debouncedSearch}&page=${page}&limit=10`,
+        { signal },
       );
       return res.json();
     },
@@ -73,10 +74,11 @@ export default function ProductSearch({
 
   const handleInputKeyDown = async (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && inputValue.trim()) {
+      setIsSearching(true);
       // Search by specific code/barcode directly
       try {
         const res = await fetch(
-          `/api/productos?q=${inputValue.trim()}&limit=5`
+          `/api/ventas/productos?q=${inputValue.trim()}&limit=5`,
         );
         const result = await res.json();
 
@@ -97,6 +99,8 @@ export default function ProductSearch({
         }
       } catch (err) {
         console.error(err);
+      } finally {
+        setIsSearching(false);
       }
     }
   };
@@ -129,9 +133,13 @@ export default function ProductSearch({
               isIconOnly
               variant="light"
               size="sm"
-              onClick={handleManualSearch}
+              onPress={handleManualSearch}
             >
-              <Search className="text-[#67afc3] " />
+              {isSearching ? (
+                <Spinner size="sm" className="text-[#67afc3]" />
+              ) : (
+                <Search className="text-[#67afc3] " />
+              )}
             </Button>
           }
         />

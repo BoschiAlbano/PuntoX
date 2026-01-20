@@ -20,8 +20,8 @@ export async function GET(req: NextRequest) {
       permission: "productos", // Mismo permiso que productos por coherencia
     });
 
-    const pagination = parsePaginationParams(req);
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
+    const limitParam = req.nextUrl.searchParams.get("limit");
 
     const where: any = {
       TenantId: BigInt(tenantId),
@@ -34,7 +34,39 @@ export async function GET(req: NextRequest) {
     // 1. Obtener Total
     const total = await prisma.marca.count({ where });
 
-    // 2. Obtener Datos Paginados
+    // 2. Si no hay límite, devolver todo
+    if (!limitParam) {
+      const marcas = await prisma.marca.findMany({
+        where,
+        select: {
+          Id: true,
+          Descripcion: true,
+          EstaEliminado: true,
+        },
+        orderBy: {
+          Descripcion: "asc",
+        },
+      });
+
+      return NextResponse.json(
+        {
+          data: marcas,
+          pagination: {
+            page: 1,
+            limit: total > 0 ? total : 1,
+            total,
+            totalPages: 1,
+            hasNextPage: false,
+            hasPreviousPage: false,
+          },
+        },
+        { status: 200 },
+      );
+    }
+
+    // 3. Paginación normal
+    const pagination = parsePaginationParams(req);
+
     const marcas = await prisma.marca.findMany({
       where,
       select: {
@@ -49,7 +81,7 @@ export async function GET(req: NextRequest) {
       take: pagination.limit,
     });
 
-    // 3. Formatear Respuesta
+    // 4. Formatear Respuesta
     const response = createPaginationResponse(marcas, total, pagination);
 
     return NextResponse.json(response, { status: 200 });
@@ -85,7 +117,7 @@ export async function POST(req: NextRequest) {
         Id: Number(marca.Id),
         TenantId: tenantId,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     // Manejo de errores de validación de Zod
@@ -98,7 +130,7 @@ export async function POST(req: NextRequest) {
             message: issue.message,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
     return handleError(error);
@@ -119,7 +151,7 @@ export async function DELETE(req: NextRequest) {
     if (!Number.isInteger(marcaId)) {
       return NextResponse.json(
         { error: "Id de marca invalido" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -135,7 +167,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json(
       { success: true, Id: Number(marcaActualizada.Id) },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     if (
@@ -144,7 +176,7 @@ export async function DELETE(req: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Marca no encontrada" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -184,7 +216,7 @@ export async function PATCH(req: NextRequest) {
         Id: Number(marca.Id),
         TenantId: tenantId,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     // Manejo de errores de validación de Zod
@@ -197,7 +229,7 @@ export async function PATCH(req: NextRequest) {
             message: issue.message,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 

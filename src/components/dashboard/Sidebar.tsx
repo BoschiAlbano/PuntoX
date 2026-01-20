@@ -1,14 +1,6 @@
 ﻿"use client";
-
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  useState,
-  useEffect,
-  useMemo,
-  memo,
-  useCallback,
-  startTransition,
-} from "react";
+import { useState, useEffect, useMemo, memo, startTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
@@ -193,10 +185,7 @@ const menuItems: MenuItem[] = [
 function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  // const pathname = usePathname(); // Already defined above
-  // const router = useRouter(); // Already defined above
   const { supabase } = useSupabaseAuthContext();
-  // const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Use global store
   const { permissions, roles } = useUserStore();
@@ -239,36 +228,6 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
       setIsLoggingOut(false);
     }
   };
-  // const handleLogout = useCallback(async () => {
-  //   if (isLoggingOut) return;
-  //   setIsLoggingOut(true);
-
-  //   // Marcar que estamos haciendo logout manual para prevenir toasts de error
-  //   startManualLogout();
-
-  //   try {
-  //     // Cancelar todas las queries activas para evitar errores 401
-  //     queryClient.cancelQueries();
-
-  //     // Limpiar todo el cache de queries
-  //     queryClient.clear();
-
-  //     // Cerrar sesión en Supabase
-  //     await supabase.auth.signOut();
-  //   } catch (error) {
-  //     console.error("Error during sign out:", error);
-  //   } finally {
-  //     // Limpiar el estado de logout manual después de un breve delay
-  //     // para asegurar que cualquier error pendiente no muestre toasts
-  //     setTimeout(() => {
-  //       endManualLogout();
-  //       setIsLoggingOut(false);
-  //     }, 100);
-
-  //     // Redirigir al login
-  //     router.push("/signin");
-  //   }
-  // }, [isLoggingOut, supabase, router, queryClient]);
 
   return (
     <motion.section

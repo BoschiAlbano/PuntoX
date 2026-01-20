@@ -37,6 +37,17 @@ export async function GET() {
             },
           },
         },
+        Persona_Empleado: {
+          select: {
+            Persona: {
+              select: {
+                Nombre: true,
+                Apellido: true,
+                Mail: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -47,6 +58,14 @@ export async function GET() {
     // Extract basic user info
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { Password, ...userSafe } = dbUser as any;
+
+    const usuarioDTO: UserDto = {
+      Id: userSafe.Id,
+      Nombre: userSafe.Persona_Empleado.Persona.Nombre,
+      Apellido: userSafe.Persona_Empleado.Persona.Apellido,
+      Email: userSafe.Persona_Empleado.Persona.Mail,
+      Usuario: userSafe.Nombre,
+    };
 
     // Extract branches
     const branches = dbUser.Sucursales.map((us) => ({
@@ -73,30 +92,27 @@ export async function GET() {
 
     const permissions = Array.from(permissionsSet);
 
-    // Helper to handle BigInt serialization
-    const serialize = (data: any): any => {
-      return JSON.parse(
-        JSON.stringify(data, (key, value) =>
-          typeof value === "bigint" ? value.toString() : value
-        )
-      );
-    };
-
-    return NextResponse.json(
-      serialize({
-        user: userSafe,
-        tenant: dbUser.Tenant,
-        branches,
-        currentBranch,
-        permissions,
-        roles,
-      })
-    );
+    return NextResponse.json({
+      user: usuarioDTO,
+      tenant: dbUser.Tenant,
+      branches,
+      currentBranch,
+      permissions,
+      roles,
+    });
   } catch (error) {
     console.error("Error fetching user data:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
+}
+
+interface UserDto {
+  Id: string;
+  Nombre: string;
+  Apellido: string;
+  Email: string;
+  Usuario: string;
 }

@@ -20,9 +20,12 @@ export const metadata: Metadata = {
   title: "Punto X",
   description: "Ecoomerce platform for local businesses",
   icons: {
-    icon: "/favicon-light.ico",
-    shortcut: "/favicon-light.ico",
-    apple: "/favicon-light.ico",
+    icon: [
+      { url: "/favicon-light.ico", media: "(prefers-color-scheme: light)" },
+      { url: "/favicon-dark.ico", media: "(prefers-color-scheme: dark)" },
+    ],
+    shortcut: ["/favicon-light.ico"],
+    apple: ["/favicon-light.ico"],
   },
 };
 
@@ -33,22 +36,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      {/* Favicon para Modo CLARO (Por defecto, si no hay match) */}
-      <link
-        rel="icon"
-        href="/favicon-light.ico" // ⬅️ Tu icono para modo claro
-        media="(prefers-color-scheme: light)"
-      />
-
-      {/* Favicon para Modo OSCURO */}
-      <link
-        rel="icon"
-        href="/favicon-dark.ico" // ⬅️ Tu icono para modo oscuro
-        media="(prefers-color-scheme: dark)"
-      />
-
-      {/* 💡 Opcional: Un favicon por defecto para navegadores que no soporten media queries */}
-      <link rel="icon" href="/favicon-light.ico" />
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

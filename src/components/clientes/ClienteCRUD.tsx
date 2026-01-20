@@ -15,8 +15,14 @@ export default function ClienteCRUD() {
       searchPlaceholder="Buscar por nombre, email, dni"
       FormComponent={ClienteForm}
       transformer={(item) => clienteListAdapter(item)}
+      additionalInvalidateQueryKeys={["cliente"]}
       columns={[
-        { uid: "nombreCompleto", name: "CLIENTE", sortable: true },
+        {
+          uid: "nombreCompleto",
+          name: "CLIENTE",
+          sortable: true,
+          align: "start",
+        },
         { uid: "condicionIva", name: "CONDICIÓN IVA", sortable: true },
         { uid: "localidad", name: "UBICACIÓN", sortable: false },
         { uid: "contacto", name: "CONTACTO", sortable: false },
@@ -91,7 +97,7 @@ export default function ClienteCRUD() {
             );
           case "acciones":
             return (
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full justify-center items-center">
                 <Tooltip content="Editar" color="warning">
                   <Button
                     isIconOnly

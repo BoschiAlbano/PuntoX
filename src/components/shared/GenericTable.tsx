@@ -82,7 +82,7 @@ export default function GenericTable<T extends { Id: number | string }>({
     <section className="w-full h-full flex flex-col gap-4 overflow-hidden">
       <div className="rounded-lg flex flex-col gap-4 bg-white/50 backdrop-blur-sm flex-1 w-full h-full">
         {/* Header & Search */}
-        <section className="w-full flex items-center justify-end gap-2 pr-4">
+        <section className="w-full flex items-center sm:justify-end justify-start gap-2 sm:px-4 px-1">
           {/* Boton nuevo con efecto lift */}
           {onNewClick && (
             <button
@@ -95,11 +95,11 @@ export default function GenericTable<T extends { Id: number | string }>({
           )}
 
           {/* Search */}
-          <div className="group flex items-center gap-2 border-2 border-gray-300 rounded-xl p-1.5 bg-white transition-all duration-300 hover:border-[#67afc3] relative">
+          <div className=" group flex justify-between gap-2 border-2 border-gray-300 rounded-xl p-1.5 bg-white transition-all duration-300 hover:border-[#67afc3] relative sm:w-auto w-[200px]">
             <input
               type="text"
               placeholder={`${searchPlaceholder}`}
-              className="outline-none px-2 bg-transparent text-gray-700 placeholder:text-gray-400"
+              className="outline-none pl-2 w-full bg-transparent text-gray-700 placeholder:text-gray-400 truncate"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               aria-label="Buscar en la tabla"
@@ -146,17 +146,17 @@ export default function GenericTable<T extends { Id: number | string }>({
             onSortChange={onSortChange}
             className="bg-white rounded-lg border-none"
             classNames={{
-              wrapper: "bg-white h-full shadow-none rounded-xl border-none ",
+              wrapper:
+                "bg-white h-full shadow-none rounded-xl border-none sm:p-4 p-1",
               th: "bg-[#67afc3]/90 text-white transition-colors duration-200 text-[13px] font-medium hover:!text-white hover:[&_*]:!text-white group",
               base: "bg-transparent h-full shadow-none rounded-xl border-none",
             }}
-            // style={{ contain: "layout style paint" }} // Optimización de rendering
           >
             <TableHeader columns={columns}>
               {(column) => (
                 <TableColumn
                   key={column.uid}
-                  align={column.align || "start"}
+                  align={column.align || "center"}
                   allowsSorting={column.sortable}
                   aria-label={`Columna ${column.name}, ${
                     column.sortable ? "ordenable" : "no ordenable"
@@ -170,7 +170,7 @@ export default function GenericTable<T extends { Id: number | string }>({
               items={
                 isLoading
                   ? Array.from({ length: 5 }).map(
-                      (_, i) => ({ Id: `skeleton-${i}` } as T)
+                      (_, i) => ({ Id: `skeleton-${i}` }) as T,
                     )
                   : data
               }
@@ -206,7 +206,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                       {columns.map((column, idx) => (
                         <TableCell key={column.uid} className="">
                           {column.uid === "acciones" ? (
-                            <div className="flex gap-2 opacity-50">
+                            <div className="opacity-50 flex gap-2 w-full justify-center items-center">
                               <Skeleton className="rounded-lg">
                                 <div className="h-8 w-8 rounded-lg bg-default-200" />
                               </Skeleton>
@@ -224,8 +224,8 @@ export default function GenericTable<T extends { Id: number | string }>({
                                 idx === 0
                                   ? "w-16"
                                   : idx === 1
-                                  ? "w-full"
-                                  : "w-24"
+                                    ? "w-full"
+                                    : "w-24"
                               }`}
                             >
                               <div className="h-4 rounded-lg bg-default-200" />
@@ -261,7 +261,7 @@ export default function GenericTable<T extends { Id: number | string }>({
       {/* Pagination */}
       <div className="rounded-lg flex flex-col items-center py-2">
         {isLoading ? (
-          <section className="relative w-full flex flex-col items-center">
+          <section className="relative w-full flex flex-col sm:gap-0 gap-2 items-center">
             <div className="flex gap-2">
               <Skeleton className="rounded-medium w-9 h-9 opacity-50">
                 <div className="h-9 w-9 rounded-medium bg-default-200" />
@@ -273,29 +273,31 @@ export default function GenericTable<T extends { Id: number | string }>({
                 <div className="h-9 w-9 rounded-medium bg-default-200" />
               </Skeleton>
             </div>
-            <span className="text-[#67afc3]/90 w-full text-start pl-2 text-sm absolute bottom-0">
+            <span className="text-[#67afc3]/90 w-full sm:text-start text-center sm:pl-2 pl-0 text-sm sm:absolute relative bottom-0 flex flex-col sm:items-start items-center">
               {/* {`${paginationMeta.limit} de ${paginationMeta.total} registros totales`} */}
-              <Skeleton className="rounded-medium w-[120px] h-4 opacity-50">
+              <Skeleton className="rounded-medium w-[120px] h-4 opacity-50 ">
                 <div className="h-4 w-[120px] rounded-medium bg-default-200" />
               </Skeleton>
             </span>
           </section>
         ) : !isLoading && !isError ? (
-          <section className="relative w-full flex flex-col items-center">
+          <section className="relative w-full flex flex-col sm:gap-0 gap-2 items-center">
             <Pagination
               showControls
               page={page}
               total={paginationMeta.totalPages}
               onChange={onPageChange}
+              size={window.innerWidth < 640 ? "sm" : "md"}
               classNames={{
                 cursor: "bg-[#67afc3]/90 text-white shadow-none ",
-                item: "bg-transparent shadow-none cursor-pointer",
+                item: "bg-transparent shadow-none cursor-pointer text-sm sm:text-md",
                 next: "cursor-pointer",
                 prev: "cursor-pointer",
+                wrapper: "gap-1",
               }}
               aria-label="Paginación de la tabla"
             />
-            <span className="text-[#67afc3]/90 w-full text-start pl-2 text-sm absolute bottom-0">
+            <span className="text-[#67afc3]/90 w-full sm:text-start text-center pl-2 text-sm sm:absolute relative  bottom-0">
               {`${data.length} de ${paginationMeta.total} registros totales`}
             </span>
           </section>

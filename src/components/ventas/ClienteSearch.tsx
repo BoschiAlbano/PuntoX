@@ -52,7 +52,7 @@ export default function ClienteSearch({
     queryFn: async ({ signal }) => {
       const res = await fetch(
         `/api/clientes?q=${debouncedSearch}&page=${page}&limit=5`,
-        { signal }
+        { signal },
       );
       return res.json();
     },

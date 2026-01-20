@@ -1,4 +1,4 @@
-1-> paginas empleados, analiticas y sucursales las apis piden permiso de "empleados:admin", por ejemplo no existe el permiso "sucursales".
+1-> paginas empleados, analiticas y sucursales las apis piden permiso de "empleados:admin", por ejemplo no existe el permiso "sucursales". DEJAR COMO ESTA ✔✔✔🤔
 permisos del "adminitrador" ->
     0(pin):"empleados:admin"
     1(pin):"ventas"
@@ -9,19 +9,20 @@ permisos del "adminitrador" ->
     6(pin):"configuracion"
 
 
-2-> Entra automaticamente en dashboard, si el usuario no tiene permiso.
-dashboard -> No existe la pagina.
-ejemplo. si un usuario empleado se le asigna el permiso de empleados no podra ingresar por que tiene que ser empleado:admin
+2-> Entra automaticamente en dashboard, si el usuario no tiene permiso. dashboard -> No existe la pagina. ejemplo. si un usuario empleado se le asigna el permiso de empleados no podra ingresar por que tiene que ser empleado:admin SOLUCIONADO ✔✔✔
 
 
-3-> Toda la pagina caja hace muchos fetch y no se guardan en tanstack query.
+3-> Toda la pagina caja hace muchos fetch y no se guardan en tanstack query. DEJAR COMO ESTA ✔✔✔🤔
 
 
-4-> el archivo favicon-light.ico se descarga varias veces.
+4-> el archivo favicon-light.ico se descarga varias veces. PENDIENTE ❌❌❌
 
-5-> no se bien el fin de esto logoutManager.ts pero demoraba y se usaba en Cerrar session del sidebar.
+5-> no se bien el fin de esto logoutManager.ts pero demoraba y se usaba en Cerrar session del sidebar. ELIMINADO ✔✔✔
 
-6-> el login demora por que hace fetch de muchas cosas, no se si se puede optimizar. como por ejemplo: api/auth/registrar-sesion - api/auth/registrar-intento-login - /configuracion/seguridad (useInactivityTimeout)
+6-> el login demora por que hace fetch de muchas cosas, no se si se puede optimizar. como por ejemplo: api/auth/registrar-sesion - api/auth/registrar-intento-login - /configuracion/seguridad (useInactivityTimeout) DEJAR COMO ESTA ✔✔✔🤔
 
-8-> al crear una sucursal no se actualiza la lista de sucursales. se debe ir a empleados y asignar la nueva sucursal. quizas el empleado administrador por defecto se deba asignar a la sucursal creada.
+8-> al crear una sucursal no se actualiza la lista de sucursales. se debe ir a empleados y asignar la nueva sucursal. quizas el empleado administrador por defecto se deba asignar a la sucursal creada. SOLUCIONADO ✔✔✔
 
+9-> si busco en ventas un producto y el usuario no tiene permisos en productos, no muestra resultados. ya que la api esta protegida por permisos. SOLUCIONADO ✔✔✔
+
+10-> si agrego una sucursal nueva al memento de buscar el empleado para asignarle la sucursal no aparece por que ya habia hecho el fetch antes y no esta usando tanstack query mutation. igual que select sucursales en el sidebar. osea todo tiene que usar tanstack query y mutation. SOLUCIONADO ✔✔✔

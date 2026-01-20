@@ -33,6 +33,7 @@ interface UserState {
   isInitialized: boolean;
 
   initialize: () => Promise<void>;
+  refreshUserData: () => Promise<void>;
   setCurrentBranch: (branch: Sucursal) => void;
   hasPermission: (path: string) => boolean;
 }
@@ -55,13 +56,16 @@ export const useUserStore = create<UserState>()(
       initialize: async () => {
         // Prevent double init
         if (get().isInitialized) return;
+        await get().refreshUserData();
+      },
 
-        set({ isLoading: true }, false, "initialize/loading");
+      refreshUserData: async () => {
+        set({ isLoading: true }, false, "refresh/loading");
         try {
           const res = await fetch("/api/auth/me");
           if (res.ok) {
             const data = await res.json();
-            console.log(data);
+            // console.log(data);
             let branchToUse = data.currentBranch;
             // Client-side restoration of selected branch
             if (typeof window !== "undefined") {
@@ -82,13 +86,13 @@ export const useUserStore = create<UserState>()(
                 isInitialized: true,
               },
               false,
-              "initialize/success",
+              "refresh/success",
             );
           }
         } catch (e) {
-          console.error("Failed to initialize user store", e);
+          console.error("Failed to refresh user data", e);
         } finally {
-          set({ isLoading: false }, false, "initialize/done");
+          set({ isLoading: false }, false, "refresh/done");
         }
       },
 

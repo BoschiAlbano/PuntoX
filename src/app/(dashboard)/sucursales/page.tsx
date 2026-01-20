@@ -26,6 +26,9 @@ import {
   Trash2,
   Star,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSucursales } from "@/hooks/useSucursales";
+import { useUserStore } from "@/store/useUserStore";
 
 type Sucursal = {
   id: number;
@@ -39,9 +42,12 @@ type Sucursal = {
 };
 
 export default function SucursalesPage() {
+  const queryClient = useQueryClient();
+  const { data: sucursales = [], isLoading } = useSucursales();
+
   // Estado
-  const [sucursales, setSucursales] = useState<Sucursal[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // const [sucursales, setSucursales] = useState<Sucursal[]>([]); // Replaced by hook
+  // const [isLoading, setIsLoading] = useState(true); // Replaced by hook
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingSucursal, setEditingSucursal] = useState<Sucursal | null>(null);
@@ -53,26 +59,6 @@ export default function SucursalesPage() {
     telefono: "",
     esPrincipal: false,
   });
-
-  // Cargar sucursales
-  const cargarSucursales = async () => {
-    try {
-      setIsLoading(true);
-      const res = await fetch("/api/sucursales");
-      if (res.ok) {
-        const data = await res.json();
-        setSucursales(data.sucursales || []);
-      }
-    } catch (error) {
-      console.error("Error cargando sucursales:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    cargarSucursales();
-  }, []);
 
   // Abrir modal para crear
   const handleNuevaSucursal = () => {
@@ -120,7 +106,8 @@ export default function SucursalesPage() {
 
       if (res.ok) {
         setIsModalOpen(false);
-        await cargarSucursales();
+        await queryClient.invalidateQueries({ queryKey: ["sucursales"] });
+        await useUserStore.getState().refreshUserData();
       } else {
         const data = await res.json();
         alert(data.error || "Error al guardar");
@@ -145,7 +132,8 @@ export default function SucursalesPage() {
       });
 
       if (res.ok) {
-        await cargarSucursales();
+        await queryClient.invalidateQueries({ queryKey: ["sucursales"] });
+        await useUserStore.getState().refreshUserData();
       } else {
         const data = await res.json();
         alert(data.error || "Error al eliminar");
@@ -157,7 +145,7 @@ export default function SucursalesPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch  h-full">
       {/* Header */}
       <div className="mb-6 flex justify-between items-center">
         <div>

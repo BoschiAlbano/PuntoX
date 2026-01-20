@@ -15,7 +15,12 @@ export default function RubroCRUD() {
       FormComponent={RubroForm}
       // Definimos las columnas
       columns={[
-        { uid: "Descripcion", name: "DESCRIPCIÓN", sortable: true },
+        {
+          uid: "Descripcion",
+          name: "DESCRIPCIÓN",
+          sortable: true,
+          align: "start",
+        },
         { uid: "Estado", name: "ESTADO" },
         { uid: "acciones", name: "ACCIONES" },
       ]}
@@ -42,7 +47,7 @@ export default function RubroCRUD() {
             );
           case "acciones":
             return (
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full justify-center items-center">
                 <EditButton
                   onPress={() => actions.onEdit(item)}
                   label={`Editar ${item.Descripcion || "rubro"}`}

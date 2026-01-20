@@ -7,7 +7,7 @@ import AuditoriasCRUD from "@/components/empleados/AuditoriasCRUD";
 
 export default function EmpleadosPage() {
   const [selected, setSelected] = useState<"usuarios" | "roles" | "auditoria">(
-    "usuarios"
+    "usuarios",
   );
 
   return (

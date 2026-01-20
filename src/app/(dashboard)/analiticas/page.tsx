@@ -353,7 +353,7 @@ function AnaliticasContent() {
   const totalPages = Math.ceil(logsFiltrados.length / rowsPerPage);
 
   return (
-    <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch h-full">
+    <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch  h-auto">
       <Tabs
         aria-label="Analíticas"
         selectedKey={initialTab}

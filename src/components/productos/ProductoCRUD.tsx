@@ -16,9 +16,15 @@ export default function ProductoCRUD() {
       searchPlaceholder="Buscar productos..."
       FormComponent={ProductoForm}
       transformer={(item) => productoListAdapter(item)}
+      additionalInvalidateQueryKeys={["producto-detail"]}
       columns={[
         { uid: "Codigo", name: "CODIGO", sortable: false },
-        { uid: "Descripcion", name: "DESCRIPCIÓN", sortable: true },
+        {
+          uid: "Descripcion",
+          name: "DESCRIPCIÓN",
+          sortable: true,
+          align: "start",
+        },
         { uid: "Stock", name: "STOCK", sortable: true },
         { uid: "Costo", name: "COSTO", sortable: true },
         { uid: "Minorista", name: "MINORISTA", sortable: true },
@@ -77,7 +83,7 @@ export default function ProductoCRUD() {
             );
           case "acciones":
             return (
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full justify-center items-center">
                 <EditButton
                   onPress={() => actions.onEdit(item)}
                   label={`Editar ${item.Descripcion || "producto"}`}

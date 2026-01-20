@@ -21,9 +21,6 @@ export async function GET(req: NextRequest) {
       permission: "productos", // Opcional: Requiere permiso de visualización
     });
 
-    console.log("tenantId", tenantId);
-    console.log("sucursalId", sucursalId);
-
     const pagination = parsePaginationParams(req);
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
 
@@ -56,33 +53,22 @@ export async function GET(req: NextRequest) {
       where,
       select: {
         Id: true,
-        MarcaId: true,
-        RubroId: true,
-        UnidadMedidaId: true,
-        IvaId: true,
-        PrecioId: true,
         Codigo: true,
         CodigoBarra: true,
-        Abreviatura: true,
         Descripcion: true,
-        Detalle: true,
-        Ubicacion: true,
-        PorcentajeGanancia: true,
-        // Foto: excluded to improve performance
-        ActivarLimiteVenta: true,
-        LimiteVenta: true,
-        ActivarHoraVenta: true,
-        HoraLimiteVentaDesde: true,
-        HoraLimiteVentaHasta: true,
-        PermiteStockNegativo: true,
-        DescuentaStock: true,
-        StockMinimo: true,
-        VencimientoDias: true,
-        TipoVenta: true,
         EstaEliminado: true,
-        TenantId: true,
-        Precio: true, // Equivalent to include: { Precio: true }
-        Stock: true, // Stock legacy (deprecated)
+        Stock: true, // Legacy/Global
+
+        // Relacion Precio: Solo lo necesario para la tabla
+        Precio: {
+          select: {
+            PrecioCosto: true,
+            PrecioPublico: true,
+            PrecioPublico2: true,
+          },
+        },
+
+        // Stock por sucursal para mostrar correcto
         ArticuloStock: {
           where: {
             SucursalId: BigInt(sucursalId),
@@ -90,8 +76,6 @@ export async function GET(req: NextRequest) {
           take: 1,
           select: {
             Stock: true,
-            StockMinimo: true,
-            Ubicacion: true,
             Sucursal: {
               select: {
                 Nombre: true,
@@ -107,25 +91,31 @@ export async function GET(req: NextRequest) {
       take: pagination.limit,
     });
 
-    console.log("productos", productos);
-
-    // Mapear productos para incluir stock de la sucursal activa
+    // Mapear productos
     const productosConStock = productos.map((producto) => {
       const stockSucursal =
         sucursalId && Array.isArray(producto.ArticuloStock)
           ? producto.ArticuloStock[0]
           : null;
+
       return {
-        ...producto,
-        Stock: producto.ArticuloStock[0]?.Stock || 0,
-        StockMinimo: stockSucursal?.StockMinimo
-          ? Number(stockSucursal.StockMinimo)
-          : producto.StockMinimo
-            ? Number(producto.StockMinimo)
-            : null,
-        Ubicacion: stockSucursal?.Ubicacion || producto.Ubicacion,
-        SucursalNombre:
-          producto.ArticuloStock[0]?.Sucursal.Nombre || "Sucursal actual",
+        // Campos basicos
+        Id: Number(producto.Id),
+        Codigo: producto.Codigo,
+        CodigoBarra: producto.CodigoBarra,
+        Descripcion: producto.Descripcion,
+        EstaEliminado: producto.EstaEliminado,
+
+        // Stock logic
+        Stock: stockSucursal ? Number(stockSucursal.Stock) : Number(0),
+        SucursalNombre: stockSucursal?.Sucursal.Nombre || null,
+
+        // Precio
+        Precio: {
+          PrecioCosto: Number(producto.Precio.PrecioCosto),
+          PrecioPublico: Number(producto.Precio.PrecioPublico),
+          PrecioPublico2: Number(producto.Precio.PrecioPublico2),
+        },
       };
     });
 
@@ -143,7 +133,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, sucursalId, user } = await getAuthContext({
+    const { tenantId, sucursalId } = await getAuthContext({
       req,
       permission: "productos", // Permiso de escritura
     });

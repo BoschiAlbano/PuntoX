@@ -14,6 +14,7 @@ import {
   NumberInput,
   Tabs,
   Tab,
+  Spinner,
 } from "@heroui/react";
 import { Producto } from "@/lib/validations/producto.schema";
 import { tiposVenta } from "@/lib/validations/tiposVenta.schema";
@@ -110,15 +111,32 @@ export default function ProductoForm({
     queryFn: fetchIvas,
   });
 
+  // Query para obtener datos completos del producto en edición
+  const { data: fullProduct, isLoading: isLoadingFullProduct } = useQuery({
+    queryKey: ["producto-detail", initialData?.Id],
+    queryFn: async () => {
+      const res = await fetch(`/api/productos/${initialData?.Id}`);
+      if (!res.ok) throw new Error("Error loading product");
+      return res.json();
+    },
+    enabled: !!initialData?.Id && isOpen,
+    staleTime: 0,
+  });
+
   useEffect(() => {
-    if (initialData) {
+    if (fullProduct) {
+      // Si tenemos datos completos, los usamos
+      setFormData(fullProduct);
+    } else if (initialData) {
+      // Si solo tenemos datos parciales (de la tabla), los usamos mientras carga
       setFormData(initialData);
     } else {
       setFormData(defaultProducto);
     }
-  }, [initialData, isOpen]);
+  }, [initialData, fullProduct, isOpen]);
 
   const handleSubmit = () => {
+    console.log(formData);
     onSubmit(formData);
   };
 
@@ -137,7 +155,7 @@ export default function ProductoForm({
           ? value
           : currentPrecio.PorcentajeGanancia || 0;
       newPrecio.PrecioPublico = parseFloat(
-        (costo * (1 + ganancia / 100)).toFixed(2)
+        (costo * (1 + ganancia / 100)).toFixed(2),
       );
     }
 
@@ -145,7 +163,7 @@ export default function ProductoForm({
     if (field === "PrecioPublico") {
       if (costo > 0) {
         newPrecio.PorcentajeGanancia = parseFloat(
-          ((value / costo - 1) * 100).toFixed(2)
+          ((value / costo - 1) * 100).toFixed(2),
         );
       }
     }
@@ -157,7 +175,7 @@ export default function ProductoForm({
           ? value
           : currentPrecio.PorcentajeGanancia2 || 0;
       newPrecio.PrecioPublico2 = parseFloat(
-        (costo * (1 + ganancia2 / 100)).toFixed(2)
+        (costo * (1 + ganancia2 / 100)).toFixed(2),
       );
     }
 
@@ -165,7 +183,7 @@ export default function ProductoForm({
     if (field === "PrecioPublico2") {
       if (costo > 0) {
         newPrecio.PorcentajeGanancia2 = parseFloat(
-          ((value / costo - 1) * 100).toFixed(2)
+          ((value / costo - 1) * 100).toFixed(2),
         );
       }
     }
@@ -175,10 +193,10 @@ export default function ProductoForm({
       const ganancia1 = currentPrecio.PorcentajeGanancia || 0;
       const ganancia2 = currentPrecio.PorcentajeGanancia2 || 0;
       newPrecio.PrecioPublico = parseFloat(
-        (value * (1 + ganancia1 / 100)).toFixed(2)
+        (value * (1 + ganancia1 / 100)).toFixed(2),
       );
       newPrecio.PrecioPublico2 = parseFloat(
-        (value * (1 + ganancia2 / 100)).toFixed(2)
+        (value * (1 + ganancia2 / 100)).toFixed(2),
       );
     }
 
@@ -204,7 +222,12 @@ export default function ProductoForm({
             {isEdit ? "Editar Producto" : "Nuevo Producto"}
           </h3>
         </ModalHeader>
-        <ModalBody className="p-0">
+        <ModalBody className="p-0 relative">
+          {isLoadingFullProduct && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/50">
+              <Spinner label="Cargando detalles..." />
+            </div>
+          )}
           <div className="px-6 py-4">
             <Tabs
               aria-label="Opciones del producto"
@@ -623,11 +646,11 @@ export default function ProductoForm({
                         <NumberInput
                           label="Límite"
                           placeholder="0.00"
-                          value={Number(formData.LimiteVenta) || 0}
+                          value={Number(formData.LimiteVenta) || Number(0)}
                           onValueChange={(value) =>
                             setFormData({
                               ...formData,
-                              LimiteVenta: value,
+                              LimiteVenta: Number(value),
                             })
                           }
                           className="max-w-xs"

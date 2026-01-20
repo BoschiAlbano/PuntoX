@@ -44,7 +44,7 @@ interface GenericCrudProps<T> {
   renderCell: (
     item: T,
     columnKey: Key,
-    actions: CrudActions<T>
+    actions: CrudActions<T>,
   ) => React.ReactNode;
 
   // Componente de Formulario
@@ -55,6 +55,7 @@ interface GenericCrudProps<T> {
   searchPlaceholder?: string;
   initialLimit?: number;
   transformer?: (data: any) => T[];
+  additionalInvalidateQueryKeys?: any[];
 }
 
 export default function GenericCrud<T extends { Id: number | string }>({
@@ -66,6 +67,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
   searchPlaceholder,
   initialLimit = 10,
   transformer,
+  additionalInvalidateQueryKeys,
 }: GenericCrudProps<T>) {
   // Estados de UI
   const { isOpen, onOpen, onClose } = useDisclosure(); // Modal Form
@@ -106,6 +108,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
     page,
     limit,
     transformer,
+    additionalInvalidateQueryKeys,
   });
 
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -187,7 +190,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
           const msg = error.error || error.message || "Error al guardar";
           handleError(new Error(msg), "Error al guardar");
         },
-      }
+      },
     );
   };
 
