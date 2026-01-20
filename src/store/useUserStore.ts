@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { tienePermisoParaRuta } from "@/lib/permissions/routePermissions";
+import { addToast } from "@heroui/react";
 
 // Define simplified types matching API response (which converts BigInt to string)
 interface User {
@@ -17,6 +18,8 @@ interface Sucursal {
   [key: string]: any;
 }
 
+type UserBranch = Sucursal & { esDefault: boolean };
+
 interface Role {
   Id: string;
   Descripcion: string;
@@ -25,8 +28,8 @@ interface Role {
 
 interface UserState {
   user: User | null;
-  branches: (Sucursal & { esDefault: boolean })[];
-  currentBranch: Sucursal;
+  branches: UserBranch[];
+  currentBranch: UserBranch;
   permissions: string[];
   roles: Role[];
   isLoading: boolean;
@@ -34,8 +37,10 @@ interface UserState {
 
   initialize: () => Promise<void>;
   refreshUserData: () => Promise<void>;
-  setCurrentBranch: (branch: Sucursal) => void;
+  setCurrentBranch: (branch: UserBranch) => void;
   hasPermission: (path: string) => boolean;
+  pushBranch: (branch: UserBranch) => void;
+  removeBranch: (branchId: string) => void;
 }
 
 export const useUserStore = create<UserState>()(
@@ -47,6 +52,7 @@ export const useUserStore = create<UserState>()(
         Id: "",
         Nombre: "",
         EsPrincipal: false,
+        esDefault: false,
       },
       permissions: [],
       roles: [],
@@ -115,6 +121,24 @@ export const useUserStore = create<UserState>()(
         if (path === "/" || path === "/dashboard") return true;
 
         return tienePermisoParaRuta(permissions, path);
+      },
+
+      pushBranch: (branch) => {
+        const { branches } = get();
+        set({ branches: [...branches, branch] });
+      },
+
+      removeBranch: (branchId: string) => {
+        const { currentBranch } = get();
+        if (currentBranch.Id == branchId) {
+          addToast({
+            title: "Sucursal",
+            description: "No se puede eliminar la sucursal actual",
+          });
+          return;
+        }
+        const { branches } = get();
+        set({ branches: branches.filter((b) => b.Id != branchId) });
       },
     }),
     { name: "UserStore" },

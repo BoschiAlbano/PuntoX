@@ -20,6 +20,11 @@ export async function GET() {
       include: {
         Tenant: true,
         Sucursales: {
+          where: {
+            Sucursal: {
+              EstaEliminado: false,
+            },
+          },
           include: {
             Sucursal: true,
           },

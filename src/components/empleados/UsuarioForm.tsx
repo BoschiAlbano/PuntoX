@@ -250,6 +250,7 @@ export default function UsuarioForm({
                 <Input
                   label="DNI"
                   placeholder="Ingrese el DNI (opcional)"
+                  maxLength={8}
                   value={formData.dni || ""}
                   onValueChange={(value) => handleChange("dni", value || null)}
                   isDisabled={isSaving}
@@ -257,6 +258,7 @@ export default function UsuarioForm({
                 <Input
                   label="Teléfono"
                   placeholder="Ingrese el teléfono (opcional)"
+                  maxLength={25}
                   value={formData.telefono || ""}
                   onValueChange={(value) =>
                     handleChange("telefono", value || null)

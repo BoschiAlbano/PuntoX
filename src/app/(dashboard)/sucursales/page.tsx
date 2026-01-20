@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Button,
   Card,
@@ -15,6 +15,7 @@ import {
   Switch,
   Chip,
   Spinner,
+  addToast,
 } from "@heroui/react";
 import {
   Building2,
@@ -45,13 +46,11 @@ export default function SucursalesPage() {
   const queryClient = useQueryClient();
   const { data: sucursales = [], isLoading } = useSucursales();
 
-  // Estado
-  // const [sucursales, setSucursales] = useState<Sucursal[]>([]); // Replaced by hook
-  // const [isLoading, setIsLoading] = useState(true); // Replaced by hook
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingSucursal, setEditingSucursal] = useState<Sucursal | null>(null);
 
+  const userStore = useUserStore();
   // Form state
   const [formData, setFormData] = useState({
     nombre: "",
@@ -87,7 +86,10 @@ export default function SucursalesPage() {
   // Guardar sucursal
   const handleGuardar = async () => {
     if (!formData.nombre.trim()) {
-      alert("El nombre es requerido");
+      addToast({
+        title: "Sucursal",
+        description: "El nombre es requerido",
+      });
       return;
     }
 
@@ -107,14 +109,26 @@ export default function SucursalesPage() {
       if (res.ok) {
         setIsModalOpen(false);
         await queryClient.invalidateQueries({ queryKey: ["sucursales"] });
-        await useUserStore.getState().refreshUserData();
-      } else {
         const data = await res.json();
-        alert(data.error || "Error al guardar");
+        userStore.pushBranch({
+          Id: data?.sucursal?.id || "",
+          Nombre: data?.sucursal?.nombre || "",
+          EsPrincipal: data?.sucursal?.esPrincipal || false,
+          esDefault: false,
+        });
+      } else {
+        // const data = await res.json();
+        // alert(data.error || "Error al guardar");
+        addToast({
+          title: "Sucursal",
+          description: "Error al guardar",
+        });
       }
     } catch (error) {
-      console.error("Error guardando sucursal:", error);
-      alert("Error al guardar");
+      addToast({
+        title: "Sucursal",
+        description: "Error al guardar",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -122,30 +136,59 @@ export default function SucursalesPage() {
 
   // Eliminar sucursal
   const handleEliminar = async (sucursal: Sucursal) => {
-    if (!confirm(`¿Eliminar sucursal "${sucursal.nombre}"?`)) {
+    if (userStore.currentBranch.Id == sucursal.id.toString()) {
+      addToast({
+        title: "Sucursal",
+        description: "No se puede eliminar la sucursal actual",
+      });
       return;
     }
 
     try {
-      const res = await fetch(`/api/sucursales/${sucursal.id}`, {
-        method: "DELETE",
+      addToast({
+        title: "Sucursal",
+        description: "Cargando...",
+        promise: fetch(`/api/sucursales/${sucursal.id}`, {
+          method: "DELETE",
+        }).then((res) => {
+          if (res.ok) {
+            userStore.removeBranch(sucursal.id.toString());
+            queryClient.invalidateQueries({ queryKey: ["sucursales"] });
+          } else {
+            addToast({
+              title: "Sucursal",
+              description: "Error al eliminar",
+            });
+          }
+        }),
+        shouldShowTimeoutProgress: true,
+        timeout: 500,
       });
+      // const res = await fetch(`/api/sucursales/${sucursal.id}`, {
+      //   method: "DELETE",
+      // });
 
-      if (res.ok) {
-        await queryClient.invalidateQueries({ queryKey: ["sucursales"] });
-        await useUserStore.getState().refreshUserData();
-      } else {
-        const data = await res.json();
-        alert(data.error || "Error al eliminar");
-      }
+      // if (res.ok) {
+      //   userStore.removeBranch(sucursal.id.toString());
+      //   await queryClient.invalidateQueries({ queryKey: ["sucursales"] });
+      // } else {
+      //   // const data = await res.json();
+      //   // alert(data.error || "Error al eliminar");
+      //   addToast({
+      //     title: "Sucursal",
+      //     description: "Error al eliminar",
+      //   });
+      // }
     } catch (error) {
-      console.error("Error eliminando sucursal:", error);
-      alert("Error al eliminar");
+      addToast({
+        title: "Sucursal",
+        description: "Error al eliminar",
+      });
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch  h-full">
+    <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch h-auto  min-h-full">
       {/* Header */}
       <div className="mb-6 flex justify-between items-center">
         <div>
@@ -264,7 +307,22 @@ export default function SucursalesPage() {
                       variant="flat"
                       color="danger"
                       startContent={<Trash2 className="h-3 w-3" />}
-                      onPress={() => handleEliminar(sucursal)}
+                      onPress={() =>
+                        addToast({
+                          title: "Sucursal",
+                          description:
+                            "¿Eliminar sucursal " + sucursal.nombre + "?",
+                          endContent: (
+                            <Button
+                              size="sm"
+                              variant="flat"
+                              onPress={() => handleEliminar(sucursal)}
+                            >
+                              Aceptar
+                            </Button>
+                          ),
+                        })
+                      }
                       className="flex-1"
                     >
                       Eliminar

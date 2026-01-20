@@ -116,7 +116,6 @@ export async function POST(req: NextRequest) {
     }
 
     const data = parsed.data;
-    const tenantIdBigInt = BigInt(tenantId);
 
     // Validar localidad
     const localidadIdNumber = Number(data.LocalidadId);
@@ -169,7 +168,7 @@ export async function POST(req: NextRequest) {
     const existingPersona = await prisma.persona.findFirst({
       where: {
         Mail: mailNormalized,
-        TenantId: tenantIdBigInt,
+        TenantId: tenantId,
         EstaEliminado: false,
       },
     });
@@ -181,19 +180,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const dataPersona = {
+      TenantId: tenantId,
+      Nombre: data.Nombre.trim(),
+      Apellido: data.Apellido.trim(),
+      Dni: data.Dni?.trim() || null,
+      Direccion: data.Direccion.trim(),
+      Telefono: data.Telefono?.trim() || null,
+      Mail: mailNormalized,
+      LocalidadId: localidadIdNumber,
+      EstaEliminado: false,
+    };
+
+    console.log(dataPersona);
+
     // Crear Persona + Persona_Cliente en transacción y retornar datos completos
     const clienteCompleto = await prisma.$transaction(async (tx) => {
       // Crear Persona
       const persona = await tx.persona.create({
         data: {
-          TenantId: tenantIdBigInt,
+          TenantId: tenantId,
           Nombre: data.Nombre.trim(),
           Apellido: data.Apellido.trim(),
           Dni: data.Dni?.trim() || null,
           Direccion: data.Direccion.trim(),
           Telefono: data.Telefono?.trim() || null,
           Mail: mailNormalized,
-          LocalidadId: BigInt(localidadIdNumber),
+          LocalidadId: localidadIdNumber,
           EstaEliminado: false,
         },
       });

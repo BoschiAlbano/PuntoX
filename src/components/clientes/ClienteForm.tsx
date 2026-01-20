@@ -207,6 +207,7 @@ export default function ClienteForm({
             <Input
               label="DNI"
               placeholder="12345678"
+              maxLength={8}
               value={formData?.Dni || ""}
               onChange={(e) => handleChange("Dni", e.target.value)}
             />
@@ -222,6 +223,7 @@ export default function ClienteForm({
               label="Teléfono"
               placeholder="+54 11 1234-5678"
               value={formData?.Telefono || ""}
+              maxLength={25}
               onChange={(e) => handleChange("Telefono", e.target.value)}
             />
             <Input

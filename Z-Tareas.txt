@@ -26,3 +26,31 @@ permisos del "adminitrador" ->
 9-> si busco en ventas un producto y el usuario no tiene permisos en productos, no muestra resultados. ya que la api esta protegida por permisos. SOLUCIONADO ✔✔✔
 
 10-> si agrego una sucursal nueva al memento de buscar el empleado para asignarle la sucursal no aparece por que ya habia hecho el fetch antes y no esta usando tanstack query mutation. igual que select sucursales en el sidebar. osea todo tiene que usar tanstack query y mutation. SOLUCIONADO ✔✔✔
+
+
+
+
+
+ERRORES VENTAS: ❌❌❌
+11-> AL BUSCAR UN PRODUCTO POR NOMBRE DEBERÍA MOSTRAR SUGERENCIAS DE ACUERDO A LO QUE VOY ESCRIBIENDO AL CAMBIAR DE VENTANA, NO RETIENE LA INFORMACIÓN QUE CARGUE.
+
+12-> AL CARGAR UN PRODUCTO, SI PRESIONO UNA FLECHA PARA AUMENTAR LA CANTIDAD, SE AUMENTA EN DECIMALES.
+
+13-> CUANDO DA VUELTO, DEBERÍA SER UN POCO MÁS GRANDE LAS LETRAS O UN POCO MÁS LLAMATIVO, QUE SE BORRE LO RESTANTE CUANDO EXCEDA EL PRECIO Y DIGA VUELTO SOLAMENTE. AL CONFIRMAR LA VENTA TIRA ERROR Y NO SE REALIZA.
+
+ERRORES DE PRODUCTOS:
+14-> AL AGREGAR UN PRODUCTO, NO TE PIDE QUE HAYAS CREADO LA MARCA. ✔✔✔
+15-> AL CREAR MARCA DA ERROR. SOLUCIONADO ✔✔✔
+16-> AL CREAR RUBRO TAMBIEN DA ERROR. SOLUCIONADO ✔✔✔
+
+ERRORES CLIENTES:
+17-> CUANDO CREO UN CLIENTE, SELECCIONO TUCUMAN Y NO ME MUESTRA TODOS LOS DEPARTAMENTOS, SOLO CAPITAL. NO TENIA PROBLEMAS ✔✔✔ - no hay departamentos en la base de datos.
+18-> AL ELIMINAR UN CLIENTE, NO SE HACE UNA ELIMINACIÓN FISICA, SOLO LOGICA. NO TENIA PROBLEMAS ✔✔✔ trabajamos con eliminacion logica.
+19-> FALTA CUENTA CORRIENTE. ❌❌❌
+
+ERRORES EMPLEADOS:
+20-> AL CREAR UN EMPLEADO, NO ME MUESTRA LOS ROLES YA CREADOS. NO TENIA PROBLEMAS ✔✔✔
+21-> EN ROLES NO PUEDO EDITAR EL ROL. SOLUCIONADO ✔✔✔
+
+ERRORES SUCURSALES:
+22-> Al crear una sucursal se refresca, como si presionara f5. SOLUCIONADO ✔✔✔

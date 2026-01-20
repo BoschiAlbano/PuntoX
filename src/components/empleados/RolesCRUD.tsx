@@ -122,7 +122,7 @@ export default function RolesCRUD() {
       data: typeof rolEditDraft;
     }) => {
       const response = await fetch(`/api/roles?id=${id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });

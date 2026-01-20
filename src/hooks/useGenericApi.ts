@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PaginationMeta } from "./useProductos";
 import { dynamicDataQueryOptions } from "@/lib/react-query/queryDefaults";
-import { useUserStore } from "@/store/useUserStore";
 
 // Interfaces Genéricas
 export interface ApiResponse<T> {

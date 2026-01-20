@@ -83,7 +83,7 @@ export default function SucursalSelector({
   }
 
   return (
-    <Dropdown>
+    <Dropdown key={sucursales.length}>
       <DropdownTrigger>
         <Button
           variant="flat"

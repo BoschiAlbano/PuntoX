@@ -19,7 +19,12 @@ import {
 import { Producto } from "@/lib/validations/producto.schema";
 import { tiposVenta } from "@/lib/validations/tiposVenta.schema";
 import { GenericFormProps } from "@/components/shared/GenericCrud";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { addToast } from "@heroui/react";
+import { PlusIcon } from "lucide-react";
+import MarcaGenericForm from "../marcas/MarcaForm";
+import RubroGenericForm from "../rubros/RubroForm";
+import UnidadMedidaGenericForm from "../unidad-medida/UnidadMedidaForm";
 
 const defaultProducto: Producto = {
   Id: 0,
@@ -84,6 +89,13 @@ const fetchIvas = async () => {
   return data.data;
 };
 
+const fetchUltimoCodigo = async () => {
+  const res = await fetch("/api/productos/ultimo-codigo");
+  if (!res.ok) throw new Error("Error fetching ultimo codigo");
+  const data = await res.json();
+  return data;
+};
+
 export default function ProductoForm({
   isOpen,
   onClose,
@@ -92,6 +104,113 @@ export default function ProductoForm({
   isSaving,
 }: GenericFormProps<Producto>) {
   const [formData, setFormData] = useState<Partial<Producto>>(defaultProducto);
+
+  const queryClient = useQueryClient();
+  const [isMarcaModalOpen, setIsMarcaModalOpen] = useState(false);
+  const [isRubroModalOpen, setIsRubroModalOpen] = useState(false);
+  const [isUnidadModalOpen, setIsUnidadModalOpen] = useState(false);
+
+  const createMarcaMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await fetch("/api/marcas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Error al crear marca");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["marcas-generic"] });
+      setFormData((prev) => ({ ...prev, MarcaId: data.Id }));
+      setIsMarcaModalOpen(false);
+      addToast({
+        title: "Éxito",
+        description: "Marca creada correctamente",
+        color: "success",
+        timeout: 3000,
+      });
+    },
+    onError: (error: any) => {
+      addToast({
+        title: "Error",
+        description: error.message || "Error al crear marca",
+        color: "danger",
+        timeout: 3000,
+      });
+    },
+  });
+
+  const createRubroMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await fetch("/api/rubros", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Error al crear rubro");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["rubros-generic"] });
+      setFormData((prev) => ({ ...prev, RubroId: data.Id }));
+      setIsRubroModalOpen(false);
+      addToast({
+        title: "Éxito",
+        description: "Rubro creado correctamente",
+        color: "success",
+        timeout: 3000,
+      });
+    },
+    onError: (error: any) => {
+      addToast({
+        title: "Error",
+        description: error.message || "Error al crear rubro",
+        color: "danger",
+        timeout: 3000,
+      });
+    },
+  });
+
+  const createUnidadMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await fetch("/api/unidades-medidas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Error al crear unidad");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["unidades-medidas-generic"] });
+      setFormData((prev) => ({ ...prev, UnidadMedidaId: data.Id }));
+      setIsUnidadModalOpen(false);
+      addToast({
+        title: "Éxito",
+        description: "Unidad creada correctamente",
+        color: "success",
+        timeout: 3000,
+      });
+    },
+    onError: (error: any) => {
+      addToast({
+        title: "Error",
+        description: error.message || "Error al crear unidad",
+        color: "danger",
+        timeout: 3000,
+      });
+    },
+  });
 
   // Queries para llenar los selects
   const { data: marcas = [], isLoading: isLoadingMarcas } = useQuery({
@@ -109,6 +228,12 @@ export default function ProductoForm({
   const { data: ivas = [], isLoading: isLoadingIvas } = useQuery({
     queryKey: ["ivas-generic"],
     queryFn: fetchIvas,
+  });
+
+  const { data: nextCodeData } = useQuery({
+    queryKey: ["ultimo-codigo"],
+    queryFn: fetchUltimoCodigo,
+    enabled: !initialData && isOpen,
   });
 
   // Query para obtener datos completos del producto en edición
@@ -134,6 +259,15 @@ export default function ProductoForm({
       setFormData(defaultProducto);
     }
   }, [initialData, fullProduct, isOpen]);
+
+  useEffect(() => {
+    if (!initialData && nextCodeData?.ultimoCodigo && isOpen) {
+      setFormData((prev) => ({
+        ...prev,
+        Codigo: nextCodeData.ultimoCodigo,
+      }));
+    }
+  }, [nextCodeData, initialData, isOpen]);
 
   const handleSubmit = () => {
     console.log(formData);
@@ -249,12 +383,15 @@ export default function ProductoForm({
                       placeholder="Ingrese el código"
                       type="number"
                       value={formData.Codigo?.toString() || ""}
+                      max={1000}
+                      min={1}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
                           Codigo: parseInt(e.target.value) || 0,
                         })
                       }
+                      disabled
                       isRequired
                       isDisabled={isSaving}
                     />
@@ -268,6 +405,7 @@ export default function ProductoForm({
                           CodigoBarra: e.target.value,
                         })
                       }
+                      type="number"
                       isRequired
                       isDisabled={isSaving}
                     />
@@ -322,98 +460,132 @@ export default function ProductoForm({
               <Tab key="categorizacion" title="Categorización">
                 <div className="space-y-4 pt-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Select
-                      label="Marca"
-                      placeholder="Seleccione una marca"
-                      selectedKeys={
-                        formData.MarcaId ? [formData.MarcaId.toString()] : []
-                      }
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          MarcaId: parseInt(e.target.value),
-                        })
-                      }
-                      isRequired
-                      isDisabled={isSaving}
-                    >
-                      {isLoadingMarcas ? (
-                        <SelectItem key="0" textValue="Cargando...">
-                          Cargando...
-                        </SelectItem>
-                      ) : (
-                        marcas?.map((marca: any) => (
-                          <SelectItem
-                            key={marca.Id.toString()}
-                            textValue={marca.Descripcion}
-                          >
-                            {marca.Descripcion}
+                    <div className="flex items-center gap-2">
+                      <Select
+                        label="Marca"
+                        placeholder="Seleccione una marca"
+                        selectedKeys={
+                          formData.MarcaId ? [formData.MarcaId.toString()] : []
+                        }
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            MarcaId: parseInt(e.target.value),
+                          })
+                        }
+                        isRequired
+                        isDisabled={isSaving}
+                      >
+                        {isLoadingMarcas ? (
+                          <SelectItem key="0" textValue="Cargando...">
+                            Cargando...
                           </SelectItem>
-                        ))
-                      )}
-                    </Select>
-                    <Select
-                      label="Rubro"
-                      placeholder="Seleccione un rubro"
-                      selectedKeys={
-                        formData.RubroId ? [formData.RubroId.toString()] : []
-                      }
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          RubroId: parseInt(e.target.value),
-                        })
-                      }
-                      isRequired
-                      isDisabled={isSaving}
-                    >
-                      {isLoadingRubros ? (
-                        <SelectItem key="0" textValue="Cargando...">
-                          Cargando...
-                        </SelectItem>
-                      ) : (
-                        rubros?.map((rubro: any) => (
-                          <SelectItem
-                            key={rubro.Id.toString()}
-                            textValue={rubro.Descripcion}
-                          >
-                            {rubro.Descripcion}
+                        ) : (
+                          marcas?.map((marca: any) => (
+                            <SelectItem
+                              key={marca.Id.toString()}
+                              textValue={marca.Descripcion}
+                            >
+                              {marca.Descripcion}
+                            </SelectItem>
+                          ))
+                        )}
+                      </Select>
+                      <Button
+                        color="primary"
+                        variant="flat"
+                        onPress={() => setIsMarcaModalOpen(true)}
+                        className="h-full"
+                      >
+                        <PlusIcon />
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Select
+                        label="Rubro"
+                        placeholder="Seleccione un rubro"
+                        selectedKeys={
+                          formData.RubroId ? [formData.RubroId.toString()] : []
+                        }
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            RubroId: parseInt(e.target.value),
+                          })
+                        }
+                        isRequired
+                        isDisabled={isSaving}
+                      >
+                        {isLoadingRubros ? (
+                          <SelectItem key="0" textValue="Cargando...">
+                            Cargando...
                           </SelectItem>
-                        ))
-                      )}
-                    </Select>
-                    <Select
-                      label="Unidad de Medida"
-                      placeholder="Seleccione unidad"
-                      selectedKeys={
-                        formData.UnidadMedidaId
-                          ? [formData.UnidadMedidaId.toString()]
-                          : []
-                      }
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          UnidadMedidaId: parseInt(e.target.value),
-                        })
-                      }
-                      isRequired
-                      isDisabled={isSaving}
-                    >
-                      {isLoadingUnidades ? (
-                        <SelectItem key="0" textValue="Cargando...">
-                          Cargando...
-                        </SelectItem>
-                      ) : (
-                        unidades?.map((unidad: any) => (
-                          <SelectItem
-                            key={unidad.Id.toString()}
-                            textValue={unidad.Descripcion}
-                          >
-                            {unidad.Descripcion}
+                        ) : (
+                          rubros?.map((rubro: any) => (
+                            <SelectItem
+                              key={rubro.Id.toString()}
+                              textValue={rubro.Descripcion}
+                            >
+                              {rubro.Descripcion}
+                            </SelectItem>
+                          ))
+                        )}
+                      </Select>
+                      <Button
+                        color="primary"
+                        variant="flat"
+                        onPress={() => setIsRubroModalOpen(true)}
+                        className="h-full"
+                      >
+                        <PlusIcon />
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Select
+                        label="Unidad de Medida"
+                        placeholder="Seleccione unidad"
+                        selectedKeys={
+                          formData.UnidadMedidaId
+                            ? [formData.UnidadMedidaId.toString()]
+                            : []
+                        }
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            UnidadMedidaId: parseInt(e.target.value),
+                          })
+                        }
+                        isRequired
+                        isDisabled={isSaving}
+                      >
+                        {isLoadingUnidades ? (
+                          <SelectItem key="0" textValue="Cargando...">
+                            Cargando...
                           </SelectItem>
-                        ))
-                      )}
-                    </Select>
+                        ) : (
+                          unidades?.map((unidad: any) => (
+                            <SelectItem
+                              key={unidad.Id.toString()}
+                              textValue={unidad.Descripcion}
+                            >
+                              {unidad.Descripcion}
+                            </SelectItem>
+                          ))
+                        )}
+                      </Select>
+
+                      <Button
+                        color="primary"
+                        variant="flat"
+                        onPress={() => setIsUnidadModalOpen(true)}
+                        className="h-full"
+                      >
+                        <PlusIcon />
+                      </Button>
+                    </div>
+
                     <Select
                       label="IVA"
                       placeholder="Seleccione IVA"
@@ -739,6 +911,75 @@ export default function ProductoForm({
           </Button>
         </ModalFooter>
       </ModalContent>
+
+      <Modal
+        isOpen={isMarcaModalOpen}
+        onClose={() => setIsMarcaModalOpen(false)}
+        size="2xl"
+        backdrop="opaque"
+        isDismissable={!isSaving}
+        scrollBehavior="inside"
+        classNames={{
+          backdrop: "bg-black/50 backdrop-blur-sm",
+          base: "bg-white",
+        }}
+      >
+        <MarcaGenericForm
+          isOpen={isMarcaModalOpen}
+          onClose={() => setIsMarcaModalOpen(false)}
+          initialData={null}
+          onSubmit={(data) => {
+            createMarcaMutation.mutate(data);
+          }}
+          isSaving={createMarcaMutation.isPending}
+        />
+      </Modal>
+
+      <Modal
+        isOpen={isRubroModalOpen}
+        onClose={() => setIsRubroModalOpen(false)}
+        size="2xl"
+        backdrop="opaque"
+        isDismissable={!isSaving}
+        scrollBehavior="inside"
+        classNames={{
+          backdrop: "bg-black/50 backdrop-blur-sm",
+          base: "bg-white",
+        }}
+      >
+        <RubroGenericForm
+          isOpen={isRubroModalOpen}
+          onClose={() => setIsRubroModalOpen(false)}
+          initialData={null}
+          onSubmit={(data) => {
+            createRubroMutation.mutate(data);
+          }}
+          isSaving={createRubroMutation.isPending}
+        />
+      </Modal>
+
+      <Modal
+        isOpen={isUnidadModalOpen}
+        onClose={() => setIsUnidadModalOpen(false)}
+        size="2xl"
+        backdrop="opaque"
+        isDismissable={!isSaving}
+        scrollBehavior="inside"
+        classNames={{
+          backdrop: "bg-black/50 backdrop-blur-sm",
+          base: "bg-white",
+        }}
+      >
+        <UnidadMedidaGenericForm
+          isOpen={isUnidadModalOpen}
+          onClose={() => setIsUnidadModalOpen(false)}
+          initialData={null}
+          onSubmit={(data) => {
+            createUnidadMutation.mutate(data);
+          }}
+          isSaving={createUnidadMutation.isPending}
+        />
+      </Modal>
     </Modal>
   );
 }
