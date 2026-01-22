@@ -205,7 +205,7 @@ model Articulo {
   DescuentaStock       Boolean
   StockMinimo          Decimal              @db.Decimal(18, 2)
   VencimientoDias      Int
-  TipoVenta            Int
+  TipoVenta            TiposVenta           @default(UNIDAD)
   EstaEliminado        Boolean
   /// Tenant dueño de este artículo
   TenantId             BigInt
@@ -1325,4 +1325,9 @@ enum PerfilTipo {
   ADMINISTRADOR
   EMPLEADO
   SUPERADMIN
+}
+
+enum TiposVenta {
+  UNIDAD
+  PESO
 }

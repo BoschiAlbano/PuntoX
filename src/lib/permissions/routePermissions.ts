@@ -123,6 +123,5 @@ export function filtrarRutasPorPermisos<T extends { href: string }>(
   const rutasFiltradas = rutas.filter((ruta) =>
     tienePermisoParaRuta(permisos, ruta.href),
   );
-  console.log(rutasFiltradas);
   return rutasFiltradas;
 }

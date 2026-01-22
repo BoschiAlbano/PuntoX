@@ -17,7 +17,6 @@ import {
   Spinner,
 } from "@heroui/react";
 import { Producto } from "@/lib/validations/producto.schema";
-import { tiposVenta } from "@/lib/validations/tiposVenta.schema";
 import { GenericFormProps } from "@/components/shared/GenericCrud";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
@@ -25,6 +24,7 @@ import { PlusIcon } from "lucide-react";
 import MarcaGenericForm from "../marcas/MarcaForm";
 import RubroGenericForm from "../rubros/RubroForm";
 import UnidadMedidaGenericForm from "../unidad-medida/UnidadMedidaForm";
+import { TiposVenta } from "../../../prisma/generated/prisma";
 
 const defaultProducto: Producto = {
   Id: 0,
@@ -48,7 +48,7 @@ const defaultProducto: Producto = {
   DescuentaStock: true,
   StockMinimo: 0,
   VencimientoDias: 0,
-  TipoVenta: 0,
+  TipoVenta: TiposVenta.UNIDAD,
   EstaEliminado: false,
   Precio: {
     PorcentajeGanancia: 0,
@@ -619,23 +619,28 @@ export default function ProductoForm({
                     <Select
                       label="Tipo de Venta"
                       placeholder="Seleccione tipo"
-                      selectedKeys={[formData.TipoVenta?.toString() || "0"]}
+                      selectedKeys={[formData.TipoVenta || TiposVenta.UNIDAD]}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          TipoVenta: parseInt(e.target.value),
+                          TipoVenta: e.target.value as TiposVenta,
                         })
                       }
                       isDisabled={isSaving}
                     >
-                      {tiposVenta.map((tipo) => (
-                        <SelectItem
-                          key={tipo.id.toString()}
-                          textValue={tipo.nombre}
-                        >
-                          {tipo.nombre}
-                        </SelectItem>
-                      ))}
+                      <SelectItem
+                        key={TiposVenta.PESO}
+                        textValue={TiposVenta.PESO}
+                      >
+                        {TiposVenta.PESO}
+                      </SelectItem>
+
+                      <SelectItem
+                        key={TiposVenta.UNIDAD}
+                        textValue={TiposVenta.UNIDAD}
+                      >
+                        {TiposVenta.UNIDAD}
+                      </SelectItem>
                     </Select>
                   </div>
                 </div>

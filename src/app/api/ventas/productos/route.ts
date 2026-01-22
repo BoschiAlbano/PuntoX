@@ -84,14 +84,14 @@ export async function GET(req: NextRequest) {
     const data = productos.map((p) => {
       const stockSucursal = p.ArticuloStock[0];
       // Prioridad: Stock Sucursal -> Stock Global -> 0
-      const stockReal = stockSucursal ? stockSucursal.Stock : p.Stock;
+      const stockReal = stockSucursal ? stockSucursal.Stock : 0;
 
       return {
         Id: Number(p.Id),
         Codigo: p.Codigo,
         CodigoBarra: p.CodigoBarra,
         Descripcion: p.Descripcion,
-        Stock: Number(stockReal || 0),
+        Stock: Number(stockReal),
 
         DescuentaStock: p.DescuentaStock,
         PermiteStockNegativo: p.PermiteStockNegativo,

@@ -280,7 +280,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, sucursalId, user } = await getAuthContext({
+    const { tenantId, sucursalId } = await getAuthContext({
       req,
       permission: "productos", // Permiso de escritura
     });
@@ -309,138 +309,139 @@ export async function PATCH(req: NextRequest) {
     }
 
     const producto = await prisma.$transaction(async (tx) => {
-      const precioUpdate = await tx.precio.update({
-        where: {
-          Id: articulo.Precio.Id,
-        },
-        data: {
-          PrecioCosto: validarProducto.Precio.PrecioCosto,
-          PorcentajeGanancia: validarProducto.Precio.PorcentajeGanancia,
-          PrecioPublico: validarProducto.Precio.PrecioPublico,
-          PorcentajeGanancia2: validarProducto.Precio.PorcentajeGanancia2,
-          PrecioPublico2: validarProducto.Precio.PrecioPublico2,
+      let precioUpdate = null;
+
+      // 1. Update Price (Only if provided)
+      if (validarProducto.Precio) {
+        // Build price data dynamically
+        const priceData: any = {
           FechaActualizacion: new Date(),
-          EstaEliminado: false,
           TenantId: tenantIdBigInt,
-        },
+        };
+        const p = validarProducto.Precio;
+        if (p.PrecioCosto !== undefined) priceData.PrecioCosto = p.PrecioCosto;
+        if (p.PorcentajeGanancia !== undefined)
+          priceData.PorcentajeGanancia = p.PorcentajeGanancia;
+        if (p.PrecioPublico !== undefined)
+          priceData.PrecioPublico = p.PrecioPublico;
+        if (p.PorcentajeGanancia2 !== undefined)
+          priceData.PorcentajeGanancia2 = p.PorcentajeGanancia2;
+        if (p.PrecioPublico2 !== undefined)
+          priceData.PrecioPublico2 = p.PrecioPublico2;
+
+        precioUpdate = await tx.precio.update({
+          where: { Id: articulo.Precio.Id },
+          data: priceData,
+        });
+      }
+
+      // 2. Prepare Articulo Update Data
+      const articuloData: any = {};
+
+      // Direct fields mapping
+      const directFields = [
+        "Codigo",
+        "CodigoBarra",
+        "Abreviatura",
+        "Descripcion",
+        "Detalle",
+        "Ubicacion",
+        "ActivarLimiteVenta",
+        "LimiteVenta",
+        "ActivarHoraVenta",
+        "PermiteStockNegativo",
+        "DescuentaStock",
+        "StockMinimo",
+        "VencimientoDias",
+        "TipoVenta",
+        "EstaEliminado",
+      ] as const;
+
+      directFields.forEach((field) => {
+        // @ts-ignore
+        if (validarProducto[field] !== undefined) {
+          // @ts-ignore
+          articuloData[field] = validarProducto[field];
+        }
       });
 
-      const articuloUpdate = await tx.articulo.update({
-        where: {
-          Id: Number(validarProducto.Id),
-        },
-        data: {
-          Id: Number(validarProducto.Id),
-          Codigo: validarProducto.Codigo,
-          CodigoBarra: validarProducto.CodigoBarra,
-          Abreviatura: validarProducto.Abreviatura,
-          Descripcion: validarProducto.Descripcion,
-          Detalle: validarProducto.Detalle,
-          DescuentaStock: validarProducto.DescuentaStock,
-          EstaEliminado: validarProducto.EstaEliminado,
-          HoraLimiteVentaDesde: parseTime(validarProducto.HoraLimiteVentaDesde),
-          HoraLimiteVentaHasta: parseTime(validarProducto.HoraLimiteVentaHasta),
-          LimiteVenta: validarProducto.LimiteVenta,
-          PermiteStockNegativo: validarProducto.PermiteStockNegativo,
-          StockMinimo: validarProducto.StockMinimo,
-          VencimientoDias: validarProducto.VencimientoDias,
-          TipoVenta: validarProducto.TipoVenta,
-          PorcentajeGanancia: validarProducto.Precio.PorcentajeGanancia,
-          Ubicacion: validarProducto.Ubicacion,
-          Stock: validarProducto.Stock,
-          Tenant: {
-            connect: {
-              Id: tenantIdBigInt,
-            },
-          },
-          Iva: {
-            connect: {
-              Id: validarProducto.IvaId,
-            },
-          },
-          Marca: {
-            connect: {
-              Id: validarProducto.MarcaId,
-            },
-          },
-          Rubro: {
-            connect: {
-              Id: validarProducto.RubroId,
-            },
-          },
-          UnidadMedida: {
-            connect: {
-              Id: validarProducto.UnidadMedidaId,
-            },
-          },
-          Precio: {
-            connect: {
-              Id: precioUpdate.Id,
-            },
-          },
-        },
-        select: {
-          Id: true,
-          MarcaId: true,
-          RubroId: true,
-          UnidadMedidaId: true,
-          IvaId: true,
-          PrecioId: true,
-          Codigo: true,
-          CodigoBarra: true,
-          Abreviatura: true,
-          Descripcion: true,
-          Detalle: true,
-          Ubicacion: true,
-          PorcentajeGanancia: true,
-          ActivarLimiteVenta: true,
-          LimiteVenta: true,
-          ActivarHoraVenta: true,
-          HoraLimiteVentaDesde: true,
-          HoraLimiteVentaHasta: true,
-          PermiteStockNegativo: true,
-          DescuentaStock: true,
-          StockMinimo: true,
-          VencimientoDias: true,
-          TipoVenta: true,
-          EstaEliminado: true,
-          TenantId: true,
-          Precio: {
-            select: {
-              Id: true,
-              PrecioCosto: true,
-              PorcentajeGanancia: true,
-              PrecioPublico: true,
-              PorcentajeGanancia2: true,
-              PrecioPublico2: true,
-              FechaActualizacion: true,
-            },
-          },
-          Stock: true,
-        },
-      });
+      // Special fields
+      if (validarProducto.HoraLimiteVentaDesde !== undefined) {
+        articuloData.HoraLimiteVentaDesde = parseTime(
+          validarProducto.HoraLimiteVentaDesde,
+        );
+      }
+      if (validarProducto.HoraLimiteVentaHasta !== undefined) {
+        articuloData.HoraLimiteVentaHasta = parseTime(
+          validarProducto.HoraLimiteVentaHasta,
+        );
+      }
+      // Sync PorcentajeGanancia if Price is updated
+      if (validarProducto.Precio?.PorcentajeGanancia !== undefined) {
+        articuloData.PorcentajeGanancia =
+          validarProducto.Precio.PorcentajeGanancia;
+      }
 
-      // Actualizar o crear ArticuloStock para la sucursal activa
+      // Relationships
+      if (validarProducto.MarcaId !== undefined)
+        articuloData.Marca = { connect: { Id: validarProducto.MarcaId } };
+      if (validarProducto.RubroId !== undefined)
+        articuloData.Rubro = { connect: { Id: validarProducto.RubroId } };
+      if (validarProducto.UnidadMedidaId !== undefined)
+        articuloData.UnidadMedida = {
+          connect: { Id: validarProducto.UnidadMedidaId },
+        };
+      if (validarProducto.IvaId !== undefined)
+        articuloData.Iva = { connect: { Id: validarProducto.IvaId } };
+
+      let articuloUpdate = null;
+
+      // Only run update if there is data or force check
+      if (Object.keys(articuloData).length > 0) {
+        articuloUpdate = await tx.articulo.update({
+          where: { Id: Number(validarProducto.Id) },
+          data: articuloData,
+          select: {
+            Id: true,
+            Codigo: true,
+            CodigoBarra: true,
+            Descripcion: true,
+            Stock: true, // Select current global stock
+            Precio: { select: { Id: true, PrecioPublico: true } },
+          },
+        });
+      } else {
+        // If no update needed, just return the current state or a minimal object
+        articuloUpdate = { Id: Number(validarProducto.Id) };
+      }
+
+      // 3. Update ArticuloStock (Sucursal Branch Stock)
+      // Only if Stock is provided and SucursalId is available
       if (sucursalId && validarProducto.Stock !== undefined) {
+        // Also update StockMinimo/Ubicacion if provided
         await tx.articuloStock.upsert({
           where: {
             ArticuloId_SucursalId: {
-              ArticuloId: articuloUpdate.Id,
+              ArticuloId: Number(validarProducto.Id),
               SucursalId: BigInt(sucursalId),
             },
           },
           create: {
-            ArticuloId: articuloUpdate.Id,
+            ArticuloId: Number(validarProducto.Id),
             SucursalId: BigInt(sucursalId),
             TenantId: tenantIdBigInt,
             Stock: validarProducto.Stock,
-            StockMinimo: validarProducto.StockMinimo || null,
-            Ubicacion: validarProducto.Ubicacion || null,
+            StockMinimo: validarProducto.StockMinimo ?? null,
+            Ubicacion: validarProducto.Ubicacion ?? null,
           },
           update: {
             Stock: validarProducto.Stock,
-            StockMinimo: validarProducto.StockMinimo || null,
-            Ubicacion: validarProducto.Ubicacion || null,
+            ...(validarProducto.StockMinimo !== undefined && {
+              StockMinimo: validarProducto.StockMinimo,
+            }),
+            ...(validarProducto.Ubicacion !== undefined && {
+              Ubicacion: validarProducto.Ubicacion,
+            }),
           },
         });
       }

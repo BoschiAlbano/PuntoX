@@ -10,6 +10,7 @@ import ClienteSearch from "./ClienteSearch";
 import { TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
 import { Producto } from "@/lib/validations/producto.schema";
 import { Cliente } from "@/lib/validations/cliente.schema";
+import { useConfiguracion } from "@/hooks/useConfiguracion";
 
 interface Item extends Producto {
   cantidad: number;
@@ -18,6 +19,8 @@ interface Item extends Producto {
 }
 
 export default function VentasScreen() {
+  const { configuracion } = useConfiguracion();
+
   // State
   const [items, setItems] = useState<Item[]>([]);
   const [cliente, setCliente] = useState<Partial<Cliente>>({
@@ -25,7 +28,7 @@ export default function VentasScreen() {
     Nombre: "Consumidor Final",
   });
   const [tipoComprobante, setTipoComprobante] = useState<number>(
-    TIPO_COMPROBANTE_VENTA.FACTURA_B
+    TIPO_COMPROBANTE_VENTA.FACTURA_B,
   );
 
   // Removed tipoPago state as it is now handled in the modal
@@ -38,7 +41,7 @@ export default function VentasScreen() {
     if (product.DescuentaStock && !product.PermiteStockNegativo) {
       if (product.Stock < newQuantity) {
         throw new Error(
-          `No hay suficiente stock disponible. Stock actual: ${product.Stock}`
+          `No hay suficiente stock disponible. Stock actual: ${product.Stock}`,
         );
       }
     }
@@ -47,7 +50,7 @@ export default function VentasScreen() {
     if (product.ActivarLimiteVenta && product.LimiteVenta > 0) {
       if (newQuantity > product.LimiteVenta) {
         throw new Error(
-          `Supera el límite de venta permitido (${product.LimiteVenta} unidades).`
+          `Supera el límite de venta permitido (${product.LimiteVenta} unidades).`,
         );
       }
     }
@@ -61,6 +64,7 @@ export default function VentasScreen() {
       const now = new Date();
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
+      // ejemplo: inicio 00:00 fin 06:00
       const [startH, startM] =
         product.HoraLimiteVentaDesde.split(":").map(Number);
       const [endH, endM] = product.HoraLimiteVentaHasta.split(":").map(Number);
@@ -68,9 +72,27 @@ export default function VentasScreen() {
       const startMinutes = startH * 60 + startM;
       const endMinutes = endH * 60 + endM;
 
-      if (currentMinutes < startMinutes || currentMinutes > endMinutes) {
+      console.log(product.HoraLimiteVentaDesde, product.HoraLimiteVentaHasta);
+      console.log(currentMinutes, startMinutes, endMinutes);
+
+      let isRestricted = false;
+
+      // Case 1: Standard range (e.g., 14:00 to 16:00)
+      if (startMinutes <= endMinutes) {
+        if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
+          isRestricted = true;
+        }
+      }
+      // Case 2: Overnight range (e.g., 22:00 to 06:00)
+      else {
+        if (currentMinutes >= startMinutes || currentMinutes <= endMinutes) {
+          isRestricted = true;
+        }
+      }
+
+      if (isRestricted) {
         throw new Error(
-          `Producto fuera de horario de venta (${product.HoraLimiteVentaDesde} - ${product.HoraLimiteVentaHasta})`
+          `Producto restringido en el horario (${product.HoraLimiteVentaDesde} - ${product.HoraLimiteVentaHasta})`,
         );
       }
     }
@@ -102,7 +124,7 @@ export default function VentasScreen() {
                   cantidad: i.cantidad + cantidad,
                   subtotal: (i.cantidad + cantidad) * i.precio,
                 }
-              : i
+              : i,
           );
         }
         return [
@@ -141,7 +163,7 @@ export default function VentasScreen() {
             return { ...item, cantidad, subtotal: item.precio * cantidad };
           }
           return item;
-        })
+        }),
       );
     } catch (error) {
       const message =

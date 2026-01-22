@@ -1,5 +1,6 @@
+import { TiposVenta } from "../../../prisma/generated/prisma";
+
 export const tiposVenta = [
-  { id: 0, nombre: "Normal" },
-  { id: 1, nombre: "Por Peso" },
-  { id: 2, nombre: "Por Unidad" },
+  { id: TiposVenta.UNIDAD, nombre: "Por Unidad" },
+  { id: TiposVenta.PESO, nombre: "Por Peso" },
 ];

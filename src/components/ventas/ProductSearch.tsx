@@ -18,8 +18,9 @@ import {
   Pagination,
   Spinner,
 } from "@heroui/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Search, ScanBarcode } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useProductosVentas, fetchProductosVentas } from "@/hooks/useProductos";
 import { Producto } from "@/lib/validations/producto.schema";
 
 // Simple custom debounce hook if uidotdev is not available or to be safe
@@ -46,8 +47,10 @@ export default function ProductSearch({
 }) {
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+
   const [isSearching, setIsSearching] = useState(false);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const queryClient = useQueryClient();
 
   // Search state for Modal
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,32 +58,30 @@ export default function ProductSearch({
   const debouncedSearch = useDebounceValue(searchQuery, 500);
 
   // Query for Modal List
-  const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["productos", debouncedSearch, page],
-    queryFn: async ({ signal }) => {
-      const res = await fetch(
-        `/api/ventas/productos?q=${debouncedSearch}&page=${page}&limit=10`,
-        { signal },
-      );
-      return res.json();
-    },
+  // Query for Modal List
+  const { data, isLoading, isFetching } = useProductosVentas({
+    search: debouncedSearch,
+    page,
     enabled: isOpen,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    staleTime: 30 * 1000, // 30 segundos
-    gcTime: 5 * 60 * 1000, // 5 minutos
-    networkMode: "online",
   });
 
   const handleInputKeyDown = async (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && inputValue.trim()) {
       setIsSearching(true);
       // Search by specific code/barcode directly
+      // Search by specific code/barcode directly
       try {
-        const res = await fetch(
-          `/api/ventas/productos?q=${inputValue.trim()}&limit=5`,
-        );
-        const result = await res.json();
+        const result = await queryClient.fetchQuery({
+          queryKey: ["productos-ventas", inputValue.trim(), 1],
+          queryFn: ({ signal }) =>
+            fetchProductosVentas({
+              signal,
+              search: inputValue.trim(),
+              page: 1,
+              limit: 5,
+            }),
+          staleTime: 10 * 1000,
+        });
 
         if (result.data && result.data.length === 1) {
           const product = result.data[0];

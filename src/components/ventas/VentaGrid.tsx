@@ -8,10 +8,11 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Input,
   Button,
+  NumberInput,
 } from "@heroui/react";
 import { Trash2 } from "lucide-react";
+import { TiposVenta } from "../../../prisma/generated/prisma";
 
 interface VentaGridProps {
   items: any[];
@@ -24,6 +25,7 @@ export default function VentaGrid({
   onUpdateQuantity,
   onRemoveItem,
 }: VentaGridProps) {
+  console.log(items);
   return (
     <div className="flex-1 overflow-auto min-h-0 bg-content1 rounded-medium border-1 border-default-200">
       <Table
@@ -67,17 +69,23 @@ export default function VentaGrid({
                 </div>
               </TableCell>
               <TableCell>
-                <Input
-                  type="number"
+                <NumberInput
+                  label="Cantidad"
+                  placeholder="0.000"
                   size="sm"
                   variant="bordered"
-                  min={0.001}
-                  max={parseFloat(item.Stock?.toString()).toFixed(3)}
-                  step={0.001}
-                  value={item.cantidad.toString()}
-                  onChange={(e) => {
-                    const val = parseFloat(e.target.value);
-                    onUpdateQuantity(item.Id, isNaN(val) ? 0 : val);
+                  minValue={0}
+                  maxValue={parseFloat(item.Stock)}
+                  step={item.TipoVenta === TiposVenta.PESO ? 0.001 : 1}
+                  formatOptions={{
+                    minimumFractionDigits:
+                      item.TipoVenta === TiposVenta.PESO ? 3 : 0,
+                    maximumFractionDigits:
+                      item.TipoVenta === TiposVenta.PESO ? 3 : 0,
+                  }}
+                  value={Number(item.cantidad) || Number(0)}
+                  onValueChange={(value) => {
+                    onUpdateQuantity(item.Id, Number(value));
                   }}
                   classNames={{
                     input: "text-right font-bold",
@@ -93,7 +101,7 @@ export default function VentaGrid({
                 <span className="font-mono font-bold text-[#67afc3]">
                   $
                   {(item.precio.toFixed(2) * item.cantidad.toFixed(2)).toFixed(
-                    2
+                    2,
                   )}
                 </span>
               </TableCell>

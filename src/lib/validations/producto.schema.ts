@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TiposVenta } from "../../../prisma/generated/prisma";
 
 export const createProductoSchema = z.object({
   // Relaciones (IDs) - Se esperan números
@@ -35,7 +36,7 @@ export const createProductoSchema = z.object({
   // Las horas suelen venir como string "HH:mm" del input type="time" o ISO Dates
   HoraLimiteVentaDesde: z.string().optional().nullable(),
   HoraLimiteVentaHasta: z.string().optional().nullable(),
-  TipoVenta: z.number().int().default(0), // 0: Normal, 1: Peso, etc.
+  TipoVenta: z.nativeEnum(TiposVenta).default(TiposVenta.UNIDAD),
 
   // Stock
   PermiteStockNegativo: z.boolean().default(false),
@@ -106,49 +107,51 @@ export const updateProductoSchema = z.object({
   Ubicacion: z.string().max(500).optional().nullable(),
 
   // Precios (Se reciben como number desde el front, Prisma usa Decimal)
-  Precio: z.object({
-    PrecioCosto: z
-      .number({ message: "El precio de costo debe ser un número" })
-      .min(0)
-      .optional(),
-    PorcentajeGanancia: z
-      .number({ message: "El porcentaje de ganancia debe ser un número" })
-      .min(0)
-      .optional(),
-    PrecioPublico: z
-      .number({
-        message: "El precio publico debe ser un número",
-      })
-      .optional(),
-    PorcentajeGanancia2: z
-      .number({ message: "El porcentaje de ganancia debe ser un número" })
-      .min(0)
-      .optional(),
-    PrecioPublico2: z
-      .number({
-        message: "El precio publico debe ser un número",
-      })
-      .optional(),
-  }),
+  Precio: z
+    .object({
+      PrecioCosto: z
+        .number({ message: "El precio de costo debe ser un número" })
+        .min(0)
+        .optional(),
+      PorcentajeGanancia: z
+        .number({ message: "El porcentaje de ganancia debe ser un número" })
+        .min(0)
+        .optional(),
+      PrecioPublico: z
+        .number({
+          message: "El precio publico debe ser un número",
+        })
+        .optional(),
+      PorcentajeGanancia2: z
+        .number({ message: "El porcentaje de ganancia debe ser un número" })
+        .min(0)
+        .optional(),
+      PrecioPublico2: z
+        .number({
+          message: "El precio publico debe ser un número",
+        })
+        .optional(),
+    })
+    .optional(),
   // Configuración de Venta
-  ActivarLimiteVenta: z.boolean().default(false).optional(),
-  LimiteVenta: z.number().min(0).default(0).optional(),
-  ActivarHoraVenta: z.boolean().default(false).optional(),
+  ActivarLimiteVenta: z.boolean().optional(),
+  LimiteVenta: z.number().min(0).optional(),
+  ActivarHoraVenta: z.boolean().optional(),
   // Las horas suelen venir como string "HH:mm" del input type="time" o ISO Dates
   HoraLimiteVentaDesde: z.string().optional().nullable(),
   HoraLimiteVentaHasta: z.string().optional().nullable(),
-  TipoVenta: z.number().int().default(0).optional(), // 0: Normal, 1: Peso, etc.
+  TipoVenta: z.nativeEnum(TiposVenta).optional(),
 
   // Stock
-  PermiteStockNegativo: z.boolean().default(false).optional(),
-  DescuentaStock: z.boolean().default(true).optional(),
-  StockMinimo: z.number().min(0).default(0).optional(),
-  VencimientoDias: z.number().int().min(0).default(0).optional(),
+  PermiteStockNegativo: z.boolean().optional(),
+  DescuentaStock: z.boolean().optional(),
+  StockMinimo: z.number().min(0).optional(),
+  VencimientoDias: z.number().int().min(0).optional(),
 
-  Stock: z.number().min(0).default(0).optional(),
+  Stock: z.number().optional(),
 
   // Estado
-  EstaEliminado: z.boolean().default(false).optional(),
+  EstaEliminado: z.boolean().optional(),
 
   // Imagen (Opcional, puede ser base64)
   Foto: z.any().optional(), // Se valida aparte o se procesa como Buffer
@@ -180,7 +183,7 @@ export interface Producto {
   DescuentaStock: boolean;
   StockMinimo: number;
   VencimientoDias: number;
-  TipoVenta: number;
+  TipoVenta: TiposVenta;
   Stock: number;
   EstaEliminado: boolean;
   SucursalNombre?: string | null; // Nombre de la sucursal del stock mostrado

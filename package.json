@@ -11,6 +11,7 @@
     "prisma:generate": "npx prisma generate",
     "prisma:migrate": "npx prisma migrate dev",
     "prisma:pull": "npx prisma db pull",
+    "prisma:reset": "npx prisma migrate reset",
     "check-env": "node scripts/check-env.js",
     "db-seed": "npx prisma db seed"
   },

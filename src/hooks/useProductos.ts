@@ -1,5 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { dynamicDataQueryOptions, staticDataQueryOptions } from "@/lib/react-query/queryDefaults";
+import {
+  dynamicDataQueryOptions,
+  staticDataQueryOptions,
+} from "@/lib/react-query/queryDefaults";
 import { productoListAdapter } from "@/lib/adapters/producto.adapter";
 import { Producto } from "@/lib/validations/producto.schema";
 import { Marca } from "@/lib/validations/marca.schema";
@@ -45,7 +48,9 @@ const fetchProductos = async ({
   });
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    const errorMessage = errorData?.error?.message || `Error al cargar productos (${response.status})`;
+    const errorMessage =
+      errorData?.error?.message ||
+      `Error al cargar productos (${response.status})`;
     console.error("[useProductos] Error en fetch:", errorMessage, errorData);
     throw new Error(errorMessage);
   }
@@ -100,6 +105,72 @@ const fetchIvas = async ({
   const data = await response.json();
   return Array.isArray(data?.ivas) ? data.ivas : [];
 };
+
+export const fetchProductosVentas = async ({
+  signal,
+  search = "",
+  page = 1,
+  limit = 10,
+}: {
+  signal: AbortSignal;
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<ProductosResponse> => {
+  const params = new URLSearchParams();
+  if (search) params.append("q", search);
+  params.append("page", page.toString());
+  params.append("limit", limit.toString());
+
+  const response = await fetch(`/api/ventas/productos?${params.toString()}`, {
+    signal,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const errorMessage =
+      errorData?.error?.message ||
+      `Error al cargar productos (${response.status})`;
+    console.error(
+      "[useProductosVentas] Error en fetch:",
+      errorMessage,
+      errorData,
+    );
+    throw new Error(errorMessage);
+  }
+  const data = await response.json();
+
+  return {
+    data: productoListAdapter(data?.data || []),
+    meta: data?.meta || { total: 0, page: 1, limit: 10, totalPages: 0 },
+  };
+};
+
+export function useProductosVentas({
+  search = "",
+  page = 1,
+  limit = 10,
+  enabled = true,
+}: {
+  search?: string;
+  page?: number;
+  limit?: number;
+  enabled?: boolean;
+}) {
+  const query = useQuery({
+    queryKey: ["productos-ventas", search, page],
+    queryFn: ({ signal }) =>
+      fetchProductosVentas({ signal, search, page, limit }),
+    enabled,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    staleTime: 30 * 1000, // 30 segundos
+    gcTime: 5 * 60 * 1000, // 5 minutos
+    networkMode: "online",
+  });
+
+  return query;
+}
 
 export function useProductos({
   fetchAuxiliary = false,
@@ -216,6 +287,40 @@ export function useProductos({
     },
   });
 
+  const addStockMutation = useMutation({
+    mutationFn: async ({
+      productoId,
+      cantidad,
+    }: {
+      productoId: number;
+      cantidad: number;
+    }) => {
+      const response = await fetch("/api/productos", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ Id: productoId, Stock: cantidad }),
+      });
+
+      if (!response.ok) {
+        console.log(response);
+        const errorData = await response.json();
+        throw errorData;
+      }
+
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["productos-generic"] });
+      // Remove specific detail query to force hard fetch next time it's mounted
+      // preventing any stale cache from briefly overwriting the form data
+      queryClient.removeQueries({
+        queryKey: ["producto-detail", variables.productoId],
+      });
+    },
+  });
+
   return {
     productos: productosQuery.data?.data || [],
     paginationMeta: productosQuery.data?.meta || {
@@ -232,5 +337,6 @@ export function useProductos({
     ivas: ivasQuery.data || [],
     saveMutation,
     deleteMutation,
+    addStockMutation,
   };
 }

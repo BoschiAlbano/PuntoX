@@ -54,3 +54,10 @@ ERRORES EMPLEADOS:
 
 ERRORES SUCURSALES:
 22-> Al crear una sucursal se refresca, como si presionara f5. SOLUCIONADO ✔✔✔
+
+
+
+23-> Eliminar Stock de articulos y dejar solo articulostock. y ver que otro datos se repiten.
+
+
+ventas decimales - si ya existe el articulo no buscar de nuevo y agregar la cantidad..
