@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getAuthUser } from "@/lib/auth/getAuthUser";
-import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import {
   parsePaginationParams,
   createPaginationResponse,
@@ -51,7 +50,7 @@ export async function GET(req: NextRequest) {
 
     console.log(
       "sucursalIdParam **************************************",
-      sucursalIdParam
+      sucursalIdParam,
     );
 
     let sucursalId: bigint | null = null;
@@ -61,7 +60,7 @@ export async function GET(req: NextRequest) {
       const access = await verifyUserBranchAccess(
         BigInt(tenantId),
         user.id,
-        sucursalIdParam
+        sucursalIdParam,
       );
       if (access) {
         sucursalId = access.sucursal.Id;
@@ -154,7 +153,7 @@ export async function GET(req: NextRequest) {
       if (!caja) {
         return NextResponse.json(
           { error: "Caja no encontrada" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -182,7 +181,7 @@ export async function GET(req: NextRequest) {
                 Id: Number(caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Id),
                 Nombre: caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Nombre,
                 NombreCompleto: formatearNombreUsuario(
-                  caja.Usuario_Caja_UsuarioAperturaIdToUsuario
+                  caja.Usuario_Caja_UsuarioAperturaIdToUsuario,
                 ),
               }
             : null,
@@ -191,7 +190,7 @@ export async function GET(req: NextRequest) {
                 Id: Number(caja.Usuario_Caja_UsuarioCierreIdToUsuario.Id),
                 Nombre: caja.Usuario_Caja_UsuarioCierreIdToUsuario.Nombre,
                 NombreCompleto: formatearNombreUsuario(
-                  caja.Usuario_Caja_UsuarioCierreIdToUsuario
+                  caja.Usuario_Caja_UsuarioCierreIdToUsuario,
                 ),
               }
             : null,
@@ -320,7 +319,7 @@ export async function GET(req: NextRequest) {
                 Id: Number(caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Id),
                 Nombre: caja.Usuario_Caja_UsuarioAperturaIdToUsuario.Nombre,
                 NombreCompleto: formatearNombreUsuario(
-                  caja.Usuario_Caja_UsuarioAperturaIdToUsuario
+                  caja.Usuario_Caja_UsuarioAperturaIdToUsuario,
                 ),
               }
             : null,
@@ -450,7 +449,7 @@ export async function GET(req: NextRequest) {
           totalEntradaTransf: 0,
           totalSalidaTransf: 0,
           ganancia: 0,
-        }
+        },
       );
 
       // Formatear nombre completo del usuario
@@ -509,7 +508,7 @@ export async function GET(req: NextRequest) {
                   Id: Number(c.Usuario_Caja_UsuarioAperturaIdToUsuario.Id),
                   Nombre: c.Usuario_Caja_UsuarioAperturaIdToUsuario.Nombre,
                   NombreCompleto: formatearNombreUsuario(
-                    c.Usuario_Caja_UsuarioAperturaIdToUsuario
+                    c.Usuario_Caja_UsuarioAperturaIdToUsuario,
                   ),
                 }
               : null,
@@ -518,7 +517,7 @@ export async function GET(req: NextRequest) {
                   Id: Number(c.Usuario_Caja_UsuarioCierreIdToUsuario.Id),
                   Nombre: c.Usuario_Caja_UsuarioCierreIdToUsuario.Nombre,
                   NombreCompleto: formatearNombreUsuario(
-                    c.Usuario_Caja_UsuarioCierreIdToUsuario
+                    c.Usuario_Caja_UsuarioCierreIdToUsuario,
                   ),
                 }
               : null,
@@ -590,7 +589,7 @@ export async function GET(req: NextRequest) {
         UsuarioCierreId: c.UsuarioCierreId ? Number(c.UsuarioCierreId) : null,
       })),
       total,
-      pagination
+      pagination,
     );
 
     return NextResponse.json(response);
@@ -621,7 +620,7 @@ export async function POST(req: NextRequest) {
     if (!usuario) {
       return NextResponse.json(
         { error: "Usuario no encontrado" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -634,7 +633,7 @@ export async function POST(req: NextRequest) {
       const access = await verifyUserBranchAccess(
         BigInt(tenantId),
         user.id,
-        sucursalIdParam
+        sucursalIdParam,
       );
       if (access) {
         sucursalId = access.sucursal.Id;
@@ -655,7 +654,7 @@ export async function POST(req: NextRequest) {
     if (cajaAbierta) {
       return NextResponse.json(
         { error: "Ya existe una caja abierta en esta sucursal" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -714,7 +713,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.issues[0]?.message || "Datos inválidos" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     return handleError(error);
@@ -742,7 +741,7 @@ export async function PATCH(req: NextRequest) {
     if (!usuario) {
       return NextResponse.json(
         { error: "Usuario no encontrado" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -755,7 +754,7 @@ export async function PATCH(req: NextRequest) {
       const access = await verifyUserBranchAccess(
         BigInt(tenantId),
         user.id,
-        sucursalIdParam
+        sucursalIdParam,
       );
       if (access) {
         sucursalId = access.sucursal.Id;
@@ -780,7 +779,7 @@ export async function PATCH(req: NextRequest) {
       if (!cajaAbierta) {
         return NextResponse.json(
           { error: "No hay una caja abierta" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -834,12 +833,12 @@ export async function PATCH(req: NextRequest) {
           UsuarioCierre: cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario
             ? {
                 Id: Number(
-                  cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario.Id
+                  cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario.Id,
                 ),
                 Nombre:
                   cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario.Nombre,
                 NombreCompleto: formatearNombreUsuario(
-                  cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario
+                  cajaCerrada.Usuario_Caja_UsuarioCierreIdToUsuario,
                 ),
               }
             : null,
@@ -859,7 +858,7 @@ export async function PATCH(req: NextRequest) {
       if (!cajaAbierta) {
         return NextResponse.json(
           { error: "No hay una caja abierta en esta sucursal" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -878,7 +877,7 @@ export async function PATCH(req: NextRequest) {
       if (!concepto) {
         return NextResponse.json(
           { error: "Concepto de gasto no encontrado" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -929,7 +928,7 @@ export async function PATCH(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.issues[0]?.message || "Datos inválidos" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     return handleError(error);

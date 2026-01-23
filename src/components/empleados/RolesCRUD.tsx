@@ -94,6 +94,7 @@ export default function RolesCRUD() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles-crud"] });
+      queryClient.invalidateQueries({ queryKey: ["roles-select"] });
       addToast({
         title: "Rol creado",
         description: "El rol se creó exitosamente",
@@ -134,6 +135,7 @@ export default function RolesCRUD() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles-crud"] });
+      queryClient.invalidateQueries({ queryKey: ["roles-select"] });
       addToast({
         title: "Rol actualizado",
         description: "Los cambios se guardaron exitosamente",
@@ -157,6 +159,7 @@ export default function RolesCRUD() {
     mutationFn: async (id: number) => {
       const response = await fetch(`/api/roles?id=${id}`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
       });
       if (!response.ok) {
         const error = await response.json();
@@ -166,6 +169,7 @@ export default function RolesCRUD() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles-crud"] });
+      queryClient.invalidateQueries({ queryKey: ["roles-select"] });
       addToast({
         title: "Rol eliminado",
         description: "El rol se eliminó exitosamente",

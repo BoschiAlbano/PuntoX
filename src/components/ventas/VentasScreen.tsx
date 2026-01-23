@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Select, SelectItem, addToast } from "@heroui/react";
 
 import ProductSearch from "./ProductSearch";
@@ -11,6 +11,7 @@ import { TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
 import { Producto } from "@/lib/validations/producto.schema";
 import { Cliente } from "@/lib/validations/cliente.schema";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
+import { useCaja } from "@/hooks/useCaja";
 
 interface Item extends Producto {
   cantidad: number;
@@ -20,6 +21,17 @@ interface Item extends Producto {
 
 export default function VentasScreen() {
   const { configuracion } = useConfiguracion();
+  const { cajaActual } = useCaja();
+
+  useEffect(() => {
+    if (!cajaActual) {
+      addToast({
+        title: "Caja cerrada",
+        description: "Debe abrir la caja para realizar ventas",
+        color: "danger",
+      });
+    }
+  }, []);
 
   // State
   const [items, setItems] = useState<Item[]>([]);

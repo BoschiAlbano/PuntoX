@@ -32,11 +32,13 @@ permisos del "adminitrador" ->
 
 
 ERRORES VENTAS: ❌❌❌
-11-> AL BUSCAR UN PRODUCTO POR NOMBRE DEBERÍA MOSTRAR SUGERENCIAS DE ACUERDO A LO QUE VOY ESCRIBIENDO AL CAMBIAR DE VENTANA, NO RETIENE LA INFORMACIÓN QUE CARGUE.
+11-> AL BUSCAR UN PRODUCTO POR NOMBRE DEBERÍA MOSTRAR SUGERENCIAS DE ACUERDO A LO QUE VOY ESCRIBIENDO AL CAMBIAR DE VENTANA, NO RETIENE LA INFORMACIÓN QUE CARGUE. SOLUCIONADO ✔✔✔
 
-12-> AL CARGAR UN PRODUCTO, SI PRESIONO UNA FLECHA PARA AUMENTAR LA CANTIDAD, SE AUMENTA EN DECIMALES.
+12-> AL CARGAR UN PRODUCTO, SI PRESIONO UNA FLECHA PARA AUMENTAR LA CANTIDAD, SE AUMENTA EN DECIMALES. SOLUCIONADO ✔✔✔
 
-13-> CUANDO DA VUELTO, DEBERÍA SER UN POCO MÁS GRANDE LAS LETRAS O UN POCO MÁS LLAMATIVO, QUE SE BORRE LO RESTANTE CUANDO EXCEDA EL PRECIO Y DIGA VUELTO SOLAMENTE. AL CONFIRMAR LA VENTA TIRA ERROR Y NO SE REALIZA.
+13-> CUANDO DA VUELTO, DEBERÍA SER UN POCO MÁS GRANDE LAS LETRAS O UN POCO MÁS LLAMATIVO, QUE SE BORRE LO RESTANTE CUANDO EXCEDA EL PRECIO Y DIGA VUELTO SOLAMENTE. SOLUCIONADO ✔✔✔
+
+13,5-> AL CONFIRMAR LA VENTA TIRA ERROR Y NO SE REALIZA. SOLUCIONADO ✔✔✔
 
 ERRORES DE PRODUCTOS:
 14-> AL AGREGAR UN PRODUCTO, NO TE PIDE QUE HAYAS CREADO LA MARCA. ✔✔✔
@@ -57,7 +59,25 @@ ERRORES SUCURSALES:
 
 
 
-23-> Eliminar Stock de articulos y dejar solo articulostock. y ver que otro datos se repiten.
+23-> Eliminar Stock de articulos y dejar solo articulostock. y ver que otro datos se repiten.❌❌❌
+
+VENTAS:
+24-> ventas decimales SOLUCIONADO ✔✔✔
+25-> si ya existe el articulo no buscar de nuevo y agregar la cantidad.. SOLUCIONADO ✔✔✔ staleTime: 10 * 1000,
 
 
-ventas decimales - si ya existe el articulo no buscar de nuevo y agregar la cantidad..
+26-> Crear un consumidor final por defecto para cada tienda. SOLUCIONADO ✔✔✔
+
+
+Admin:
+
+27-> Eiminar una tenant nose se elimina por: (usar script de supabase)
+    Foreign key constraint violated on the constraint: `SesionActiva_UsuarioId_fkey` 
+    Foreign key constraint violated on the constraint: `IntentoLogin_TenantId_fkey`
+    Foreign key constraint violated on the constraint: `Sucursal_TenantId_fkey`
+    mas....
+    ❌❌❌
+
+28-> Crear superAdmin por script de supabase. (Agregar un persona cliente consumidor final) ❌❌❌
+
+

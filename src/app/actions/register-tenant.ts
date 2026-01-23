@@ -5,11 +5,11 @@ import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 // import { actualizarPermisosEnJWT } from "@/lib/auth/updateUserPermissions";
 import { requireSuperAdminServer } from "@/lib/requireSuperAdmin";
-import { PerfilTipo } from "../../../prisma/generated/prisma";
+import { PerfilTipo, Prisma } from "../../../prisma/generated/prisma";
 // Helper para convertir cadenas vacías a undefined
 const emptyStringToUndefined = z.preprocess(
   (val) => (val === "" || val === null ? undefined : val),
-  z.string().min(2).optional()
+  z.string().min(2).optional(),
 );
 
 const registerTenantSchema = z.object({
@@ -156,7 +156,7 @@ export async function registerTenant(formData: FormData) {
 
       if (!localidadDefault) {
         throw new Error(
-          "No hay localidades disponibles en la base de datos. Por favor, configure al menos una localidad."
+          "No hay localidades disponibles en la base de datos. Por favor, configure al menos una localidad.",
         );
       }
 
@@ -193,7 +193,7 @@ export async function registerTenant(formData: FormData) {
 
       if (existingUsername) {
         throw new Error(
-          `El nombre de usuario "${usernameFinal}" ya está en uso. Por favor, elige otro.`
+          `El nombre de usuario "${usernameFinal}" ya está en uso. Por favor, elige otro.`,
         );
       }
 
@@ -217,6 +217,43 @@ export async function registerTenant(formData: FormData) {
           EsDefault: true,
         },
       });
+
+      // Crear Cliente "Consumidor Final" por defecto
+      let condicionIvaCF = await tx.condicionIva.findFirst({
+        where: {
+          Descripcion: { contains: "Consumidor Final", mode: "insensitive" },
+        },
+      });
+
+      if (!condicionIvaCF) {
+        condicionIvaCF = await tx.condicionIva.findFirst();
+      }
+
+      if (condicionIvaCF) {
+        const consumidorFinal = await tx.persona.create({
+          data: {
+            Nombre: "Consumidor",
+            Apellido: "Final",
+            Dni: null,
+            Direccion: "Sin dirección",
+            Telefono: null,
+            Mail: null,
+            LocalidadId: localidadDefault.Id,
+            EstaEliminado: false,
+            TenantId: newTenant.Id,
+          },
+        });
+
+        await tx.persona_Cliente.create({
+          data: {
+            Id: consumidorFinal.Id,
+            CondicionIvaId: condicionIvaCF.Id,
+            ActivarCtaCte: false,
+            TieneLimiteCompra: false,
+            MontoMaximoCtaCte: new Prisma.Decimal(0),
+          },
+        });
+      }
 
       let perfilAdmin = await tx.perfiles.findFirst({
         where: {
@@ -294,11 +331,11 @@ export async function registerTenant(formData: FormData) {
               },
             });
             console.log(
-              `Permiso "${permisoData.clave}" creado y asignado al perfil Administrador`
+              `Permiso "${permisoData.clave}" creado y asignado al perfil Administrador`,
             );
           } else {
             console.log(
-              `Permiso "${permisoData.clave}" ya estaba asignado al perfil Administrador`
+              `Permiso "${permisoData.clave}" ya estaba asignado al perfil Administrador`,
             );
           }
         } catch (error) {
@@ -366,7 +403,7 @@ export async function registerTenant(formData: FormData) {
     if (metaError) {
       console.error(
         "Error actualizando meta de usuario en Supabase",
-        metaError
+        metaError,
       );
       return {
         ok: false as const,

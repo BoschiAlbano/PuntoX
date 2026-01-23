@@ -111,9 +111,10 @@ export default function UsuarioForm({
   });
 
   const { data: roles = [], isLoading: isLoadingRoles } = useQuery({
-    queryKey: ["roles"],
+    queryKey: ["roles-select"],
     queryFn: fetchRoles,
     enabled: isOpen,
+    refetchOnMount: "always",
   });
 
   const { data: sucursales = [], isLoading: isLoadingSucursales } =

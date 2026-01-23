@@ -28,7 +28,7 @@ export const productoAdapter = (data: any): Producto => {
     DescuentaStock: Boolean(data.DescuentaStock),
     StockMinimo: Number(data.StockMinimo),
     VencimientoDias: Number(data.VencimientoDias),
-    TipoVenta: Number(data.TipoVenta),
+    TipoVenta: data.TipoVenta,
     EstaEliminado: Boolean(data.EstaEliminado),
     Precio: {
       PorcentajeGanancia: Number(data.Precio?.PorcentajeGanancia || 0),

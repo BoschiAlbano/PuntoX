@@ -284,20 +284,34 @@ export default function VentaFooter({
         </CardBody>
         <CardFooter>
           <div className="flex justify-between w-full mt-2 p-2 rounded-lg">
-            <span className="text-small text-default-500">Restante:</span>
-            <span
-              className={`font-bold ${
-                restante > 0.01 ? "text-warning" : "text-[#67afc3]"
-              }`}
-            >
-              ${Math.max(0, restante).toFixed(2)}
-            </span>
+            {restante > 0.01 ? (
+              <>
+                <span className="text-small text-default-500">Restante 1:</span>
+                <span
+                  className={`font-bold ${restante > 0.01 && "text-warning"}`}
+                >
+                  $
+                  {Math.max(0, restante).toLocaleString("es-AR", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="text-small text-default-500">Vuelto:</span>
+                <span
+                  className={`font-bold ${restante < 0.01 && "text-[#67afc3]"}`}
+                >
+                  $
+                  {Math.abs(restante).toLocaleString("es-AR", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+              </>
+            )}
           </div>
-          {restante < -0.01 && (
-            <div className="w-full text-right text-xs text-[#67afc3] font-bold mt-1">
-              Vuelto: ${Math.abs(restante).toFixed(2)}
-            </div>
-          )}
         </CardFooter>
       </Card>
 
@@ -313,7 +327,13 @@ export default function VentaFooter({
           <div className="flex flex-col gap-2">
             <div className="flex justify-between text-sm text-default-500">
               <span>Subtotal:</span>
-              <span>${subtotal.toFixed(2)}</span>
+              <span>
+                $
+                {subtotal.toLocaleString("es-AR", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
             </div>
             <div className="flex justify-between items-center text-sm text-default-500 gap-2">
               <span>Descuento:</span>
@@ -360,7 +380,14 @@ export default function VentaFooter({
           >
             {Math.abs(restante) < 0.01 || items.length === 0
               ? "CONFIRMAR VENTA"
-              : `FALTA $${restante > 0 ? restante.toFixed(2) : "AJUSTE"}`}
+              : `FALTA $${
+                  restante > 0
+                    ? restante.toLocaleString("es-AR", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    : "AJUSTE"
+                }`}
           </Button>
           <Button
             size="md"

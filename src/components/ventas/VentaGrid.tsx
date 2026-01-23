@@ -71,7 +71,9 @@ export default function VentaGrid({
               <TableCell>
                 <NumberInput
                   label="Cantidad"
-                  placeholder="0.000"
+                  placeholder={
+                    item.TipoVenta === TiposVenta.PESO ? "0,000" : "0"
+                  }
                   size="sm"
                   variant="bordered"
                   minValue={0}

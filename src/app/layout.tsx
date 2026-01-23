@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import SessionProviderComponent from "@/components/auth/sessionProvider";
-import { HeroUIProvider } from "@heroui/react";
-import { ToastProvider } from "@heroui/toast";
-import QueryProvider from "@/components/tanstack/QueryProvider";
+import Providers from "@/components/providers/providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,16 +32,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ToastProvider />
-        <HeroUIProvider disableAnimation={false}>
-          <QueryProvider>
-            <SessionProviderComponent>{children}</SessionProviderComponent>
-          </QueryProvider>
-        </HeroUIProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

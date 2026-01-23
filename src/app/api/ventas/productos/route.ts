@@ -56,6 +56,7 @@ export async function GET(req: NextRequest) {
           HoraLimiteVentaDesde: true,
           HoraLimiteVentaHasta: true,
 
+          TipoVenta: true,
           // Stock global (fallback)
           Stock: true,
 
@@ -111,6 +112,8 @@ export async function GET(req: NextRequest) {
         },
 
         IvaId: Number(p.IvaId),
+
+        TipoVenta: p.TipoVenta,
       };
     });
 

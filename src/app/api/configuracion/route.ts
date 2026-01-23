@@ -67,7 +67,7 @@ const payloadSchema = z.object({
 export async function GET(req: NextRequest) {
   const { tenantId } = await getAuthContext({
     req,
-    permission: "configuracion",
+    // permission: "configuracion",
   });
 
   if (!tenantId) {

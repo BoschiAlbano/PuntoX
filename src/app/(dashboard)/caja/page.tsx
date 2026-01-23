@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   TrendingUp,
   Plus,
@@ -12,7 +12,7 @@ import {
   RefreshCw,
   X,
 } from "lucide-react";
-import { useUserStore } from "@/store/useUserStore";
+import { useCaja } from "@/hooks/useCaja";
 
 // Constantes de tipos de pago
 const TIPO_PAGO = {
@@ -28,137 +28,6 @@ const TIPO_MOVIMIENTO = {
   SALIDA: 2,
 };
 
-// Tipos
-type UsuarioCaja = {
-  Id: number;
-  Nombre: string;
-  NombreCompleto: string | null;
-};
-
-type DetalleCaja = {
-  Id: number;
-  CajaId: number;
-  TipoPago: number;
-  Monto: number;
-  EstaEliminado: boolean;
-  TenantId: number;
-};
-
-type Caja = {
-  Id: number;
-  UsuarioAperturaId: number;
-  MontoInicial: number;
-  FechaApertura: string;
-  UsuarioCierreId: number | null;
-  FechaCierre: string | null;
-  MontoCierre: number | null;
-  TotalEntradaEfectivo: number;
-  TotalSalidaEfectivo: number;
-  TotalEntradaTarjeta: number;
-  TotalSalidaTarjeta: number;
-  TotalEntradaCheque: number;
-  TotalSalidaCheque: number;
-  TotalEntradaCtaCte: number;
-  TotalSalidaCtaCte: number;
-  TotalEntradaTransf: number;
-  TotalSalidaTransf: number;
-  Ganancia: number;
-  EstaEliminado: boolean;
-  UsuarioApertura?: UsuarioCaja | null;
-  UsuarioCierre?: UsuarioCaja | null;
-  DetalleCaja?: DetalleCaja[];
-};
-
-type Movimiento = {
-  Id: number;
-  CajaId: number;
-  ComprobanteId: number;
-  UsuarioId: number;
-  Monto: number;
-  Fecha: string;
-  Descripcion: string;
-  TipoMovimiento: number;
-  EstaEliminado: boolean;
-  Comprobante?: {
-    Id: number;
-    Numero: number;
-    TipoComprobante: number;
-    Total: number;
-    Fecha: string;
-  };
-  Usuario?: {
-    Id: number;
-    Nombre: string;
-  };
-};
-
-type Gasto = {
-  Id: number;
-  CajaId: number;
-  ConceptoGastoId: number;
-  Fecha: string;
-  Descripcion: string;
-  Monto: number;
-  EstaEliminado: boolean;
-  ConceptoGastos?: {
-    Id: number;
-    Descripcion: string;
-  };
-};
-
-type ConceptoGasto = {
-  Id: number;
-  Descripcion: string;
-};
-
-type ResumenDiaCaja = {
-  Id: number;
-  FechaApertura: string;
-  FechaCierre: string | null;
-  MontoInicial: number;
-  MontoCierre: number | null;
-  TotalEntradaEfectivo: number;
-  TotalSalidaEfectivo: number;
-  Ganancia: number;
-  estaCerrada: boolean;
-  UsuarioApertura?: {
-    Id: number;
-    Nombre: string;
-    NombreCompleto: string | null;
-  } | null;
-  UsuarioCierre?: {
-    Id: number;
-    Nombre: string;
-    NombreCompleto: string | null;
-  } | null;
-};
-
-type ResumenDia = {
-  fecha: string;
-  cantidadCajas: number;
-  totales: {
-    montoInicial: number;
-    totalEntradaEfectivo: number;
-    totalSalidaEfectivo: number;
-    totalEntradaTarjeta: number;
-    totalSalidaTarjeta: number;
-    totalEntradaCheque: number;
-    totalSalidaCheque: number;
-    totalEntradaCtaCte: number;
-    totalSalidaCtaCte: number;
-    totalEntradaTransf: number;
-    totalSalidaTransf: number;
-    ganancia: number;
-    efectivo: number;
-    tarjeta: number;
-    cheque: number;
-    cuentaCorriente: number;
-    transferencia: number;
-    totalCaja: number;
-  };
-  cajas: ResumenDiaCaja[];
-};
-
 type ToastTone = "success" | "warning" | "danger" | "default";
 
 type ToastMessage = {
@@ -169,17 +38,22 @@ type ToastMessage = {
 };
 
 export default function CajaPage() {
-  // TODOS LOS HOOKS DEBEN IR ANTES DE LOS EARLY RETURNS
-  const [cajaActual, setCajaActual] = useState<Caja | null>(null);
-  const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
-  const [gastos, setGastos] = useState<Gasto[]>([]);
-  const [conceptosGasto, setConceptosGasto] = useState<ConceptoGasto[]>([]);
-  const [resumenDia, setResumenDia] = useState<ResumenDia | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const {
+    cajaActual,
+    conceptosGasto,
+    resumenDia,
+    isLoading,
+    isOpening,
+    isClosing,
+    isAddingGasto,
+    abrirCaja: abrirCajaMutation,
+    cerrarCaja: cerrarCajaMutation,
+    agregarGasto: agregarGastoMutation,
+    refetch,
+    isCajaAbierta: cajaAbierta,
+  } = useCaja();
 
-  const { currentBranch } = useUserStore();
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   const addToast = (toast: Omit<ToastMessage, "id">) => {
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -204,96 +78,11 @@ export default function CajaPage() {
     monto: "",
   });
 
-  useEffect(() => {
-    cargarDatos();
-  }, []);
+  // Datos derivados
+  const movimientos = cajaActual?.Movimiento || [];
+  const gastos = cajaActual?.Gasto || [];
 
-  const cargarDatos = async () => {
-    try {
-      setIsLoading(true);
-
-      // Cargar caja actual, conceptos de gastos y resumen del día en paralelo
-      const [cajaRes, conceptosRes, resumenRes] = await Promise.all([
-        fetch(`/api/caja?soloAbierta=true&sucursalId=${currentBranch.Id}`, {
-          cache: "no-store",
-        }),
-        fetch(`/api/conceptos-gastos?sucursalId=${currentBranch.Id}`, {
-          cache: "no-store",
-        }),
-        fetch(`/api/caja?resumenDia=true&sucursalId=${currentBranch.Id}`, {
-          cache: "no-store",
-        }),
-      ]);
-
-      if (cajaRes.ok) {
-        const cajaData = await cajaRes.json();
-        if (cajaData.caja) {
-          setCajaActual(cajaData.caja);
-          setMovimientos(cajaData.caja.Movimiento || []);
-          setGastos(cajaData.caja.Gasto || []);
-        } else {
-          setCajaActual(null);
-          setMovimientos([]);
-          setGastos([]);
-        }
-      } else {
-        // Si es error 401/403, no mostrar toast (el hook ya maneja la redirección)
-        if (cajaRes.status === 401 || cajaRes.status === 403) {
-          return;
-        }
-        const errorData = await cajaRes.json().catch(() => null);
-        const errorMessage =
-          typeof errorData?.error === "string"
-            ? errorData.error
-            : errorData?.error?.message || "No se pudo cargar la caja";
-        addToast({
-          title: "Error",
-          description: errorMessage,
-          color: "warning",
-        });
-      }
-
-      if (conceptosRes.ok) {
-        const conceptosData = await conceptosRes.json();
-        setConceptosGasto(conceptosData.conceptosGasto || []);
-      } else {
-        // Si es error 401/403, no mostrar toast (el hook ya maneja la redirección)
-        if (conceptosRes.status !== 401 && conceptosRes.status !== 403) {
-          const errorData = await conceptosRes.json().catch(() => null);
-          const errorMessage =
-            typeof errorData?.error === "string"
-              ? errorData.error
-              : errorData?.error?.message ||
-                "No se pudieron cargar los conceptos de gastos";
-          addToast({
-            title: "Error",
-            description: errorMessage,
-            color: "warning",
-          });
-        }
-      }
-
-      if (resumenRes.ok) {
-        const resumenData = await resumenRes.json();
-        setResumenDia(resumenData.resumenDia || null);
-      }
-    } catch (error) {
-      // No mostrar error si es por falta de permisos (el hook ya maneja la redirección)
-      if (error instanceof Error && error.message.includes("401")) {
-        return;
-      }
-      console.error("Error cargando datos", error);
-      addToast({
-        title: "Error",
-        description: "No se pudieron cargar los datos de caja",
-        color: "danger",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Calcular totales - Convertir todos los valores a números para evitar concatenación
+  // Calcular totales
   const totales = cajaActual
     ? {
         efectivo:
@@ -339,7 +128,6 @@ export default function CajaPage() {
       }
     : null;
 
-  const cajaAbierta = cajaActual && !cajaActual.FechaCierre;
   const toastToneStyles: Record<ToastTone, string> = {
     success: "border-emerald-200/70 text-emerald-700 bg-emerald-50/90",
     warning: "border-amber-200/70 text-amber-700 bg-amber-50/90",
@@ -378,7 +166,7 @@ export default function CajaPage() {
       ]
     : [];
 
-  // Abrir caja
+  // Actions
   const abrirCaja = async () => {
     if (!montoInicial || Number(montoInicial) < 0) {
       addToast({
@@ -390,27 +178,14 @@ export default function CajaPage() {
     }
 
     try {
-      setIsSaving(true);
-      const res = await fetch(`/api/caja?&sucursalId=${currentBranch.Id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ montoInicial: Number(montoInicial) }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => null);
-        throw new Error(errorData?.error || "No se pudo abrir la caja");
-      }
-
+      await abrirCajaMutation(Number(montoInicial));
       addToast({
         title: "✓ Caja abierta",
         description: `Caja abierta con $${Number(montoInicial).toFixed(2)}`,
         color: "success",
       });
-
       setOpenModalAbrirCaja(false);
       setMontoInicial("0");
-      await cargarDatos();
     } catch (error) {
       addToast({
         title: "Error",
@@ -418,12 +193,9 @@ export default function CajaPage() {
           error instanceof Error ? error.message : "No se pudo abrir la caja",
         color: "danger",
       });
-    } finally {
-      setIsSaving(false);
     }
   };
 
-  // Cerrar caja
   const cerrarCaja = async () => {
     if (!montoCierre || Number(montoCierre) < 0) {
       addToast({
@@ -435,30 +207,14 @@ export default function CajaPage() {
     }
 
     try {
-      setIsSaving(true);
-      const res = await fetch(
-        `/api/caja?accion=cerrar&sucursalId=${currentBranch.Id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ montoCierre: Number(montoCierre) }),
-        }
-      );
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => null);
-        throw new Error(errorData?.error || "No se pudo cerrar la caja");
-      }
-
+      await cerrarCajaMutation(Number(montoCierre));
       addToast({
         title: "✓ Caja cerrada",
         description: `Caja cerrada con $${Number(montoCierre).toFixed(2)}`,
         color: "success",
       });
-
       setOpenModalCerrarCaja(false);
       setMontoCierre("0");
-      await cargarDatos();
     } catch (error) {
       addToast({
         title: "Error",
@@ -466,12 +222,9 @@ export default function CajaPage() {
           error instanceof Error ? error.message : "No se pudo cerrar la caja",
         color: "danger",
       });
-    } finally {
-      setIsSaving(false);
     }
   };
 
-  // Agregar gasto
   const agregarGasto = async () => {
     if (
       !nuevoGasto.conceptoId ||
@@ -496,36 +249,22 @@ export default function CajaPage() {
     }
 
     try {
-      setIsSaving(true);
-      const res = await fetch(
-        `/api/caja?accion=gasto&sucursalId=${currentBranch.Id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            conceptoGastoId: Number(nuevoGasto.conceptoId),
-            descripcion: nuevoGasto.descripcion,
-            monto: Number(nuevoGasto.monto),
-          }),
-        }
-      );
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => null);
-        throw new Error(errorData?.error || "No se pudo registrar el gasto");
-      }
+      await agregarGastoMutation({
+        conceptoId: Number(nuevoGasto.conceptoId),
+        descripcion: nuevoGasto.descripcion,
+        monto: Number(nuevoGasto.monto),
+      });
 
       addToast({
         title: "✓ Gasto registrado",
         description: `Gasto de $${Number(nuevoGasto.monto).toFixed(
-          2
+          2,
         )} registrado`,
         color: "success",
       });
 
       setOpenModalGasto(false);
       setNuevoGasto({ conceptoId: "", descripcion: "", monto: "" });
-      await cargarDatos();
     } catch (error) {
       addToast({
         title: "Error",
@@ -535,8 +274,6 @@ export default function CajaPage() {
             : "No se pudo registrar el gasto",
         color: "danger",
       });
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -629,7 +366,7 @@ export default function CajaPage() {
 
         <div className="flex flex-wrap items-center justify-start gap-2 md:justify-end">
           <button
-            onClick={() => cargarDatos()}
+            onClick={() => refetch()}
             className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
             aria-label="Actualizar datos de caja"
           >
@@ -784,7 +521,7 @@ export default function CajaPage() {
                       {formatMoney(
                         caja.MontoInicial +
                           caja.TotalEntradaEfectivo -
-                          caja.TotalSalidaEfectivo
+                          caja.TotalSalidaEfectivo,
                       )}
                     </p>
                     <span
@@ -1114,10 +851,10 @@ export default function CajaPage() {
             </button>
             <button
               onClick={abrirCaja}
-              disabled={isSaving}
+              disabled={isOpening}
               className="rounded-lg bg-[#67afc3] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#5a9fb2] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSaving ? "Abriendo..." : "Abrir Caja"}
+              {isOpening ? "Abriendo..." : "Abrir Caja"}
             </button>
           </>
         }
@@ -1154,10 +891,10 @@ export default function CajaPage() {
             </button>
             <button
               onClick={cerrarCaja}
-              disabled={isSaving}
+              disabled={isClosing}
               className="rounded-lg bg-red-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSaving ? "Cerrando..." : "Cerrar Caja"}
+              {isClosing ? "Cerrando..." : "Cerrar Caja"}
             </button>
           </>
         }
@@ -1207,10 +944,10 @@ export default function CajaPage() {
             </button>
             <button
               onClick={agregarGasto}
-              disabled={isSaving}
+              disabled={isAddingGasto}
               className="rounded-lg bg-red-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSaving ? "Guardando..." : "Agregar Gasto"}
+              {isAddingGasto ? "Guardando..." : "Agregar Gasto"}
             </button>
           </>
         }

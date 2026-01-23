@@ -1,38 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { handleError } from "@/lib/errors/handler";
-
-async function checkSuperAdmin() {
-  const supabase = await getSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { isSuperAdmin: false, error: "No autenticado" };
-  }
-
-  const dbUser = await prisma.usuario.findFirst({
-    where: { AuthUserId: user.id, EstaEliminado: false },
-    include: {
-      PerfilUsuario: {
-        include: { Perfiles: true },
-      },
-    },
-  });
-
-  if (!dbUser) {
-    return { isSuperAdmin: false, error: "Usuario no encontrado" };
-  }
-
-  const isSuperAdmin = dbUser.PerfilUsuario.some(
-    (pu) => pu.Perfiles.Descripcion === "SuperAdmin"
-  );
-
-  return { isSuperAdmin, error: null };
-}
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 
 /**
  * GET /api/admin/tenants
@@ -41,12 +11,12 @@ async function checkSuperAdmin() {
  */
 export async function GET(req: NextRequest) {
   try {
-    const { isSuperAdmin, error } = await checkSuperAdmin();
+    const { isSuperAdmin } = await getAuthContext({
+      req,
+    });
+
     if (!isSuperAdmin) {
-      return NextResponse.json(
-        { error: error || "No autorizado" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
     const searchParams = req.nextUrl.searchParams;
@@ -164,7 +134,7 @@ export async function GET(req: NextRequest) {
       const count = perfil.PerfilUsuario.length;
       adminsMap.set(
         perfil.TenantId,
-        (adminsMap.get(perfil.TenantId) || 0) + count
+        (adminsMap.get(perfil.TenantId) || 0) + count,
       );
     });
 
@@ -174,8 +144,8 @@ export async function GET(req: NextRequest) {
       const status = tenant.EstaActivo
         ? "activo"
         : tenant.OnboardingCompleto
-        ? "cancelado"
-        : "pendiente";
+          ? "cancelado"
+          : "pendiente";
       const configuracion = tenant.Configuraciones[0];
 
       return {
@@ -224,12 +194,11 @@ export async function GET(req: NextRequest) {
  */
 export async function PATCH(req: NextRequest) {
   try {
-    const { isSuperAdmin, error } = await checkSuperAdmin();
+    const { isSuperAdmin } = await getAuthContext({
+      req,
+    });
     if (!isSuperAdmin) {
-      return NextResponse.json(
-        { error: error || "No autorizado" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
     const body = await req.json();
@@ -238,7 +207,7 @@ export async function PATCH(req: NextRequest) {
     if (!tenantId || !action) {
       return NextResponse.json(
         { error: "tenantId y action son requeridos" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -257,7 +226,7 @@ export async function PATCH(req: NextRequest) {
       default:
         return NextResponse.json(
           { error: "Acción no válida" },
-          { status: 400 }
+          { status: 400 },
         );
     }
 
@@ -293,12 +262,11 @@ export async function PATCH(req: NextRequest) {
  */
 export async function DELETE(req: NextRequest) {
   try {
-    const { isSuperAdmin, error } = await checkSuperAdmin();
+    const { isSuperAdmin } = await getAuthContext({
+      req,
+    });
     if (!isSuperAdmin) {
-      return NextResponse.json(
-        { error: error || "No autorizado" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
     const { searchParams } = new URL(req.url);
@@ -307,7 +275,7 @@ export async function DELETE(req: NextRequest) {
     if (!tenantIdParam) {
       return NextResponse.json(
         { error: "ID de tenant requerido" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -315,7 +283,7 @@ export async function DELETE(req: NextRequest) {
     if (!Number.isInteger(tenantIdNumber)) {
       return NextResponse.json(
         { error: "ID de tenant inválido" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -330,7 +298,7 @@ export async function DELETE(req: NextRequest) {
     if (!tenantExistente) {
       return NextResponse.json(
         { error: "Tenant no encontrado" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -608,7 +576,7 @@ export async function DELETE(req: NextRequest) {
     // Eliminar usuarios de Supabase Auth (después de la transacción de Prisma)
     if (authUserIds.length > 0) {
       const deletePromises = authUserIds.map((authUserId) =>
-        getSupabaseServiceClient().auth.admin.deleteUser(authUserId)
+        getSupabaseServiceClient().auth.admin.deleteUser(authUserId),
       );
 
       // Ejecutar todas las eliminaciones en paralelo y capturar errores
@@ -616,13 +584,13 @@ export async function DELETE(req: NextRequest) {
 
       // Verificar si hubo errores (pero no fallar si algunos usuarios ya no existen)
       const errors = deleteResults.filter(
-        (result) => result.status === "rejected"
+        (result) => result.status === "rejected",
       );
 
       if (errors.length > 0) {
         console.warn(
           `Advertencia: No se pudieron eliminar ${errors.length} de ${authUserIds.length} usuarios de Supabase Auth.`,
-          errors.map((e) => e.reason)
+          errors.map((e) => e.reason),
         );
       }
     }

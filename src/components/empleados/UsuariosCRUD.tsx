@@ -49,6 +49,7 @@ export default function UsuariosCRUD() {
       queryKey="usuarios-crud"
       searchPlaceholder="Buscar por nombre, usuario o DNI..."
       transformer={transformer}
+      additionalInvalidateQueryKeys={["roles-select"]}
       columns={[
         {
           uid: "nombreCompleto",

@@ -358,9 +358,7 @@ export async function PATCH(req: NextRequest) {
       ] as const;
 
       directFields.forEach((field) => {
-        // @ts-ignore
         if (validarProducto[field] !== undefined) {
-          // @ts-ignore
           articuloData[field] = validarProducto[field];
         }
       });
