@@ -1,6 +1,0 @@
--- AlterTable
-ALTER TABLE "Tenant" DROP COLUMN IF EXISTS "RazonSocial",
-DROP COLUMN IF EXISTS "Cuit",
-DROP COLUMN IF EXISTS "Email",
-DROP COLUMN IF EXISTS "Telefono";
-

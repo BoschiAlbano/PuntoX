@@ -9,7 +9,9 @@ export function ConfiguracionStock() {
     configuracion: configuracionData,
     saveConfiguracion,
     isSavingConfiguracion,
-  } = useConfiguracion();
+  } = useConfiguracion({
+    enableConfiguracion: true,
+  });
 
   // Local state for optimistic updates and tracking changes
   const [configStock, setConfigStock] = useState({

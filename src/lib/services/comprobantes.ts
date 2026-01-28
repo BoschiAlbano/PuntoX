@@ -43,14 +43,15 @@ export const createComprobanteBaseSchema = z.object({
   detalles: z.array(detalleComprobanteSchema).min(1),
   formasPago: z.array(formaPagoSchema).min(1),
   // Additional fields for specific types
-  comprobanteAsociadoId: z.number().int().positive().optional(), // For Nota de Credito
+  comprobanteAsociadoId: z.number().int().positive().optional().nullable(), // For Nota de Credito
+  numeroComprobanteAsociado: z.number().int().positive().optional().nullable(), // Alternative to ID
 });
 
 export type CreateComprobanteData = z.infer<typeof createComprobanteBaseSchema>;
 
 export async function ensureConsumerFinal(
   tx: TransactionClient,
-  tenantId: bigint
+  tenantId: bigint,
 ) {
   const condicionIvaConsumidorFinal = await tx.condicionIva.findFirst({
     where: {
@@ -131,7 +132,8 @@ async function createBaseComprobante(
   empleadoId: bigint,
   numero: number,
   descuentaStock: boolean,
-  cajaId?: bigint
+  sucursalId: bigint,
+  cajaId?: bigint,
 ) {
   // Totals
   const subtotal = data.detalles.reduce((sum, d) => sum + d.subtotal, 0);
@@ -148,6 +150,7 @@ async function createBaseComprobante(
       TenantId: tenantId,
       EmpleadoId: empleadoId,
       UsuarioId: usuarioId,
+      SucursalId: sucursalId,
       Fecha: fecha,
       Numero: numero,
       SubTotal: subtotal,
@@ -188,14 +191,19 @@ async function createBaseComprobante(
     if (descuentaStock) {
       const art = articulos.find(
         (a: { Id: bigint; DescuentaStock: boolean }) =>
-          a.Id === BigInt(detalle.articuloId)
+          a.Id === BigInt(detalle.articuloId),
       );
       if (art && art.DescuentaStock) {
+        const isNotaCredito =
+          data.tipoComprobante === TIPO_COMPROBANTE_VENTA.NOTA_CREDITO;
+
         await tx.articulo.update({
           where: { Id: art.Id },
           data: {
             Stock: {
-              decrement: detalle.cantidad,
+              // Si es Nota de Credito, incrementamos el stock (devolución)
+              // Si es Venta normal, decrementamos
+              [isNotaCredito ? "increment" : "decrement"]: detalle.cantidad,
             },
           },
         });
@@ -375,7 +383,8 @@ export async function createFacturaA(
   iva21: number,
   iva105: number,
   descuentaStock: boolean,
-  cajaId?: bigint
+  sucursalId: bigint,
+  cajaId?: bigint,
 ) {
   const { comprobante } = await createBaseComprobante(
     tx,
@@ -385,7 +394,8 @@ export async function createFacturaA(
     empleadoId,
     numero,
     descuentaStock,
-    cajaId
+    sucursalId,
+    cajaId,
   );
   // Update IVA
   await tx.comprobante.update({
@@ -414,7 +424,8 @@ export async function createFacturaB(
   iva21: number,
   iva105: number,
   descuentaStock: boolean,
-  cajaId?: bigint
+  sucursalId: bigint,
+  cajaId?: bigint,
 ) {
   const { comprobante } = await createBaseComprobante(
     tx,
@@ -424,7 +435,8 @@ export async function createFacturaB(
     empleadoId,
     numero,
     descuentaStock,
-    cajaId
+    sucursalId,
+    cajaId,
   );
   await tx.comprobante.update({
     where: { Id: comprobante.Id },
@@ -450,7 +462,8 @@ export async function createFacturaC(
   numero: number,
   clienteId: number,
   descuentaStock: boolean,
-  cajaId?: bigint
+  sucursalId: bigint,
+  cajaId?: bigint,
 ) {
   // Factura C has NO IVA discriminator usually, but the table has fields.
   const { comprobante } = await createBaseComprobante(
@@ -461,7 +474,8 @@ export async function createFacturaC(
     empleadoId,
     numero,
     descuentaStock,
-    cajaId
+    sucursalId,
+    cajaId,
   );
 
   await tx.comprobante_Factura.create({
@@ -482,7 +496,8 @@ export async function createPresupuesto(
   empleadoId: bigint,
   numero: number,
   clienteId: number,
-  descuentaStock: boolean
+  descuentaStock: boolean,
+  sucursalId: bigint,
 ) {
   const { comprobante } = await createBaseComprobante(
     tx,
@@ -491,7 +506,8 @@ export async function createPresupuesto(
     usuarioId,
     empleadoId,
     numero,
-    descuentaStock
+    descuentaStock,
+    sucursalId,
   );
   await tx.comprobante_Presupuesto.create({
     data: {
@@ -510,7 +526,8 @@ export async function createRemito(
   empleadoId: bigint,
   numero: number,
   clienteId: number,
-  descuentaStock: boolean
+  descuentaStock: boolean,
+  sucursalId: bigint,
 ) {
   const { comprobante } = await createBaseComprobante(
     tx,
@@ -519,7 +536,8 @@ export async function createRemito(
     usuarioId,
     empleadoId,
     numero,
-    descuentaStock
+    descuentaStock,
+    sucursalId,
   );
   await tx.comprobante_Remito.create({
     data: {
@@ -541,9 +559,37 @@ export async function createNotaCredito(
   iva21: number,
   iva105: number,
   descuentaStock: boolean,
-  cajaId?: bigint
+  sucursalId: bigint,
+  cajaId?: bigint,
 ) {
-  if (!data.comprobanteAsociadoId) {
+  let comprobanteAsociadoId = data.comprobanteAsociadoId;
+
+  if (!comprobanteAsociadoId && data.numeroComprobanteAsociado) {
+    const invoice = await tx.comprobante.findFirst({
+      where: {
+        TenantId: tenantId,
+        Numero: data.numeroComprobanteAsociado,
+        TipoComprobante: {
+          in: [
+            TIPO_COMPROBANTE_VENTA.FACTURA_A,
+            TIPO_COMPROBANTE_VENTA.FACTURA_B,
+            TIPO_COMPROBANTE_VENTA.FACTURA_C,
+          ],
+        },
+        EstaEliminado: false,
+      },
+    });
+
+    if (invoice) {
+      comprobanteAsociadoId = Number(invoice.Id);
+    } else {
+      throw new Error(
+        `No se encontró una factura con el número ${data.numeroComprobanteAsociado}`,
+      );
+    }
+  }
+
+  if (!comprobanteAsociadoId) {
     throw new Error("Comprobante asociado requerido para Nota de Crédito");
   }
 
@@ -555,7 +601,8 @@ export async function createNotaCredito(
     empleadoId,
     numero,
     descuentaStock,
-    cajaId
+    sucursalId,
+    cajaId,
   );
   await tx.comprobante.update({
     where: { Id: comprobante.Id },
@@ -565,7 +612,7 @@ export async function createNotaCredito(
   await tx.comprobante_NotaCredito.create({
     data: {
       Id: comprobante.Id,
-      ComprobanteId: BigInt(data.comprobanteAsociadoId),
+      ComprobanteId: BigInt(comprobanteAsociadoId),
     },
   });
   return comprobante;
@@ -579,7 +626,8 @@ export async function createCuentaCorrienteCliente(
   empleadoId: bigint,
   numero: number,
   clienteId: number,
-  cajaId: bigint
+  cajaId: bigint,
+  sucursalId: bigint,
 ) {
   // This is typically for a Payment Receipt on Account (Cobranza). Does it affect stock? PROBABLY NOT.
   // We pass descuentaStock=false
@@ -592,7 +640,8 @@ export async function createCuentaCorrienteCliente(
     empleadoId,
     numero,
     false,
-    cajaId
+    cajaId,
+    sucursalId,
   );
 
   if (!movimiento) {

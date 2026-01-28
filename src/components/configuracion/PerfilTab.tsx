@@ -19,7 +19,11 @@ export function PerfilTab() {
     useProvincias,
     useDepartamentos,
     useLocalidades,
-  } = useConfiguracion();
+  } = useConfiguracion({
+    enableTenant: true,
+    enableConfiguracion: true,
+    enableBranding: true,
+  });
 
   // Local state for form fields
   const [tenant, setTenant] = useState({
@@ -180,13 +184,13 @@ export function PerfilTab() {
             <div className="flex-1">
               <Input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg, image/jpg, image/png"
                 variant="bordered"
                 classNames={{ inputWrapper: "bg-white border-slate-200" }}
                 onChange={handleLogoChange}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Formatos: JPG, PNG, GIF. Máximo 5MB
+                Formatos: JPG, JPEG, PNG. Máximo 5MB
               </p>
             </div>
           </div>

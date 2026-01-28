@@ -81,3 +81,13 @@ Admin:
 28-> Crear superAdmin por script de supabase. (Agregar un persona cliente consumidor final) ❌❌❌
 
 
+29-> tipo de pago por defecto en ventas y compras y configuracion SOLUCIONADO ✔✔✔   
+
+30-> descontar stock de sucursale cuando se realiza una venta. ❌❌❌
+
+
+31->  en ventas la caja hace peticiones de mas, solo quiero saber si la caja esta abierta o cerrada. SOLUCIONADO ✔✔✔
+
+32->  en el futuro agreagar comprobante por defecto en ventas y compras. ❌❌❌
+
+33-> logo en configuracion. SOLUCIONADO ✔✔✔

@@ -40,13 +40,23 @@ export async function POST(req: NextRequest) {
       select: {
         Id: true,
         EmpleadoId: true,
+        Sucursales: {
+          where: {
+            EsDefault: true,
+          },
+          select: {
+            EsDefault: true,
+            SucursalId: true,
+          },
+          take: 1,
+        },
       },
     });
 
     if (!usuario) {
       return NextResponse.json(
         { error: "Usuario no encontrado" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -59,7 +69,7 @@ export async function POST(req: NextRequest) {
           error: "Datos inválidos",
           details: parsed.error.issues,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -67,6 +77,14 @@ export async function POST(req: NextRequest) {
     const tenantIdBigInt = BigInt(tenantId);
     const usuarioId = usuario.Id;
     const empleadoId = usuario.EmpleadoId;
+    const sucursalId = usuario.Sucursales[0].SucursalId;
+
+    if (!sucursalId) {
+      return NextResponse.json(
+        { error: "Error, Sucursal no encontrada" },
+        { status: 401 },
+      );
+    }
 
     // Si clienteId es null o undefined, usar 0 para Consumidor Final
     if (data.clienteId === null || data.clienteId === undefined) {
@@ -92,14 +110,14 @@ export async function POST(req: NextRequest) {
     if (articulos.length !== data.detalles.length) {
       return NextResponse.json(
         { error: "Uno o más productos no fueron encontrados" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     // Validar stock si corresponde
     for (const detalle of data.detalles) {
       const articulo = articulos.find(
-        (a) => Number(a.Id) === detalle.articuloId
+        (a) => Number(a.Id) === detalle.articuloId,
       );
       if (!articulo) continue;
 
@@ -112,7 +130,7 @@ export async function POST(req: NextRequest) {
             {
               error: `Stock insuficiente para ${articulo.Descripcion}. Stock disponible: ${articulo.Stock}`,
             },
-            { status: 400 }
+            { status: 400 },
           );
         }
       }
@@ -143,6 +161,8 @@ export async function POST(req: NextRequest) {
         configuracion?.PresupuestoDescuentaStock) ||
       (data.tipoComprobante === TIPO_COMPROBANTE_VENTA.REMITO &&
         configuracion?.RemitoDescuentaStock) ||
+      (data.tipoComprobante === TIPO_COMPROBANTE_VENTA.NOTA_CREDITO &&
+        configuracion?.FacturaDescuentaStock) ||
       false;
 
     // Obtener próximo número de comprobante
@@ -152,14 +172,14 @@ export async function POST(req: NextRequest) {
         headers: {
           cookie: req.headers.get("cookie") || "",
         },
-      }
+      },
     );
 
     if (!numeroResponse.ok) {
       // Fallback or error?
       return NextResponse.json(
         { error: "Error al obtener número de comprobante" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -176,7 +196,7 @@ export async function POST(req: NextRequest) {
 
     for (const detalle of data.detalles) {
       const articulo = articulos.find(
-        (a) => Number(a.Id) === detalle.articuloId
+        (a) => Number(a.Id) === detalle.articuloId,
       );
       if (!articulo) continue;
 
@@ -199,7 +219,7 @@ export async function POST(req: NextRequest) {
     // Validar formas de pago
     const totalFormasPago = data.formasPago.reduce(
       (sum, fp) => sum + fp.monto,
-      0
+      0,
     );
 
     if (Math.abs(totalFormasPago - total) > 0.01) {
@@ -207,7 +227,7 @@ export async function POST(req: NextRequest) {
         {
           error: `El total de formas de pago (${totalFormasPago}) no coincide con el total de la venta (${total})`,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -215,12 +235,19 @@ export async function POST(req: NextRequest) {
     const caja = await prisma.caja.findFirst({
       where: {
         UsuarioAperturaId: usuarioId,
-        FechaCierre: null,
+        UsuarioCierreId: null,
         EstaEliminado: false,
       },
     });
 
-    const cajaId = caja?.Id;
+    if (!caja) {
+      return NextResponse.json(
+        { error: "No tienes una caja abierta" },
+        { status: 400 },
+      );
+    }
+
+    const cajaId = caja.Id;
 
     if (
       data.tipoComprobante ===
@@ -232,7 +259,7 @@ export async function POST(req: NextRequest) {
           error:
             "No tienes una caja abierta para realizar cobros en cuenta corriente.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -256,7 +283,8 @@ export async function POST(req: NextRequest) {
             iva21,
             iva105,
             !!descuentaStock,
-            cajaId
+            sucursalId,
+            cajaId,
           );
         case TIPO_COMPROBANTE_VENTA.FACTURA_B:
           return createFacturaB(
@@ -270,7 +298,8 @@ export async function POST(req: NextRequest) {
             iva21,
             iva105,
             !!descuentaStock,
-            cajaId
+            sucursalId,
+            cajaId,
           );
         case TIPO_COMPROBANTE_VENTA.FACTURA_C:
           return createFacturaC(
@@ -282,7 +311,8 @@ export async function POST(req: NextRequest) {
             numero,
             clienteIdFinal,
             !!descuentaStock,
-            cajaId
+            sucursalId,
+            cajaId,
           );
         case TIPO_COMPROBANTE_VENTA.PRESUPUESTO:
           return createPresupuesto(
@@ -293,7 +323,8 @@ export async function POST(req: NextRequest) {
             empleadoId,
             numero,
             clienteIdFinal,
-            !!descuentaStock
+            !!descuentaStock,
+            sucursalId,
           );
         case TIPO_COMPROBANTE_VENTA.REMITO:
           return createRemito(
@@ -304,7 +335,8 @@ export async function POST(req: NextRequest) {
             empleadoId,
             numero,
             clienteIdFinal,
-            !!descuentaStock
+            !!descuentaStock,
+            sucursalId,
           );
         case TIPO_COMPROBANTE_VENTA.NOTA_CREDITO:
           return createNotaCredito(
@@ -318,7 +350,8 @@ export async function POST(req: NextRequest) {
             iva21,
             iva105,
             !!descuentaStock,
-            cajaId
+            sucursalId,
+            cajaId,
           );
         case TIPO_COMPROBANTE_VENTA.CUENTA_CORRIENTE_CLIENTE:
           return createCuentaCorrienteCliente(
@@ -329,7 +362,8 @@ export async function POST(req: NextRequest) {
             empleadoId,
             numero,
             clienteIdFinal,
-            cajaId!
+            sucursalId,
+            cajaId!,
           );
         default:
           throw new Error("Tipo de comprobante no soportado");
@@ -346,7 +380,7 @@ export async function POST(req: NextRequest) {
           fecha: resultado.Fecha.toISOString(),
         },
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error: unknown) {
     return handleError(error);

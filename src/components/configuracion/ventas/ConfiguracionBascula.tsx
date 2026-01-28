@@ -9,7 +9,9 @@ export function ConfiguracionBascula() {
     configuracion: configuracionData,
     saveConfiguracion,
     isSavingConfiguracion,
-  } = useConfiguracion();
+  } = useConfiguracion({
+    enableConfiguracion: true,
+  });
 
   const [configBascula, setConfigBascula] = useState({
     activarBascula: false,

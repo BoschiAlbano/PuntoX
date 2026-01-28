@@ -83,6 +83,8 @@ export default function ProductSearch({
           staleTime: 10 * 1000,
         });
 
+        console.log("api: ", result.data);
+
         if (result.data && result.data.length === 1) {
           const product = result.data[0];
           onProductSelect(product);

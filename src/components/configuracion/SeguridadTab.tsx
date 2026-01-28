@@ -69,7 +69,9 @@ export function SeguridadTab() {
     seguridad: seguridadData,
     saveSeguridad,
     isSavingSeguridad,
-  } = useConfiguracion();
+  } = useConfiguracion({
+    enableSeguridad: true,
+  });
 
   const [seguridad, setSeguridad] = useState<Seguridad>({
     dobleFactor: false,

@@ -9,14 +9,17 @@ import {
   SelectItem,
   Button,
 } from "@heroui/react";
-import { useConfiguracion, Configuracion } from "@/hooks/useConfiguracion";
+import { useConfiguracion } from "@/hooks/useConfiguracion";
+import { TIPO_PAGO } from "@/lib/constants/comprobantes";
 
 export function ConfiguracionCaja() {
   const {
     configuracion: configuracionData,
     saveConfiguracion,
     isSavingConfiguracion,
-  } = useConfiguracion();
+  } = useConfiguracion({
+    enableConfiguracion: true,
+  });
 
   const [configCaja, setConfigCaja] = useState({
     tipoFormaPagoPorDefectoVenta: 0,
@@ -31,9 +34,9 @@ export function ConfiguracionCaja() {
     if (configuracionData) {
       setConfigCaja({
         tipoFormaPagoPorDefectoVenta:
-          configuracionData.tipoFormaPagoPorDefectoVenta ?? 0,
+          configuracionData.tipoFormaPagoPorDefectoVenta ?? 1,
         tipoFormaPagoPorDefectoCompra:
-          configuracionData.tipoFormaPagoPorDefectoCompra ?? 0,
+          configuracionData.tipoFormaPagoPorDefectoCompra ?? 1,
         ingresoManualCajaInicial:
           configuracionData.ingresoManualCajaInicial ?? false,
         puestoCajaSeparado: configuracionData.puestoCajaSeparado ?? false,
@@ -53,9 +56,9 @@ export function ConfiguracionCaja() {
 
   const hasChanges = configuracionData
     ? configCaja.tipoFormaPagoPorDefectoVenta !==
-        (configuracionData.tipoFormaPagoPorDefectoVenta ?? 0) ||
+        (configuracionData.tipoFormaPagoPorDefectoVenta ?? 1) ||
       configCaja.tipoFormaPagoPorDefectoCompra !==
-        (configuracionData.tipoFormaPagoPorDefectoCompra ?? 0) ||
+        (configuracionData.tipoFormaPagoPorDefectoCompra ?? 1) ||
       configCaja.ingresoManualCajaInicial !==
         (configuracionData.ingresoManualCajaInicial ?? false) ||
       configCaja.puestoCajaSeparado !==
@@ -120,23 +123,43 @@ export function ConfiguracionCaja() {
               </div>
             </div>
             <Select
+              label="Método"
               selectedKeys={[
                 configCaja.tipoFormaPagoPorDefectoVenta.toString(),
               ]}
-              onSelectionChange={(keys) => {
-                const selected = Array.from(keys)[0];
+              onChange={(e) => {
+                if (!e.target.value) return;
                 setConfigCaja((prev) => ({
                   ...prev,
-                  tipoFormaPagoPorDefectoVenta: selected ? Number(selected) : 0,
+                  tipoFormaPagoPorDefectoVenta: Number(e.target.value),
                 }));
               }}
-              classNames={{ trigger: "bg-white border-slate-200" }}
+              className="max-w-xs"
+              size="sm"
               isDisabled={isSavingConfiguracion || !configuracionData}
+              disallowEmptySelection
             >
-              <SelectItem key="0">Efectivo</SelectItem>
-              <SelectItem key="1">Débito</SelectItem>
-              <SelectItem key="2">Crédito</SelectItem>
-              <SelectItem key="3">QR</SelectItem>
+              <SelectItem key={TIPO_PAGO.EFECTIVO} textValue="Efectivo">
+                Efectivo
+              </SelectItem>
+              <SelectItem key={TIPO_PAGO.TARJETA} textValue="Tarjeta">
+                Tarjeta
+              </SelectItem>
+              <SelectItem
+                key={TIPO_PAGO.TRANSFERENCIA}
+                textValue="Transferencia"
+              >
+                Transferencia
+              </SelectItem>
+              <SelectItem key={TIPO_PAGO.CHEQUE} textValue="Cheque">
+                Cheque
+              </SelectItem>
+              <SelectItem
+                key={TIPO_PAGO.CUENTA_CORRIENTE}
+                textValue="Cta. Corriente"
+              >
+                Cta. Corriente
+              </SelectItem>
             </Select>
           </div>
         </CardBody>
@@ -172,25 +195,43 @@ export function ConfiguracionCaja() {
               </div>
             </div>
             <Select
+              label="Método"
               selectedKeys={[
                 configCaja.tipoFormaPagoPorDefectoCompra.toString(),
               ]}
-              onSelectionChange={(keys) => {
-                const selected = Array.from(keys)[0];
+              onChange={(e) => {
+                if (!e.target.value) return;
                 setConfigCaja((prev) => ({
                   ...prev,
-                  tipoFormaPagoPorDefectoCompra: selected
-                    ? Number(selected)
-                    : 0,
+                  tipoFormaPagoPorDefectoCompra: Number(e.target.value),
                 }));
               }}
-              classNames={{ trigger: "bg-white border-slate-200" }}
+              className="max-w-xs"
+              size="sm"
               isDisabled={isSavingConfiguracion || !configuracionData}
+              disallowEmptySelection
             >
-              <SelectItem key="0">Efectivo</SelectItem>
-              <SelectItem key="1">Débito</SelectItem>
-              <SelectItem key="2">Crédito</SelectItem>
-              <SelectItem key="3">QR</SelectItem>
+              <SelectItem key={TIPO_PAGO.EFECTIVO} textValue="Efectivo">
+                Efectivo
+              </SelectItem>
+              <SelectItem key={TIPO_PAGO.TARJETA} textValue="Tarjeta">
+                Tarjeta
+              </SelectItem>
+              <SelectItem
+                key={TIPO_PAGO.TRANSFERENCIA}
+                textValue="Transferencia"
+              >
+                Transferencia
+              </SelectItem>
+              <SelectItem key={TIPO_PAGO.CHEQUE} textValue="Cheque">
+                Cheque
+              </SelectItem>
+              <SelectItem
+                key={TIPO_PAGO.CUENTA_CORRIENTE}
+                textValue="Cta. Corriente"
+              >
+                Cta. Corriente
+              </SelectItem>
             </Select>
           </div>
         </CardBody>

@@ -57,7 +57,7 @@ export default function VentaGrid({
         <TableBody emptyContent={"Escanea o busca productos para comenzar."}>
           {items.map((item) => (
             <TableRow key={item.Id} className="hover:bg-default-100">
-              <TableCell>{item.Codigo}</TableCell>
+              <TableCell>{item.Codigo.toString().padStart(6, "0")}</TableCell>
               <TableCell>
                 <div className="flex flex-col">
                   <span className="font-semibold">{item.Descripcion}</span>

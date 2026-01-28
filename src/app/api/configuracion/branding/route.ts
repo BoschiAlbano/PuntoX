@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
-import { fileToBuffer } from "@/utilities/fotoDefault";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 
 export async function GET(req: NextRequest) {
-  const { tenantId } = await getAuthContext({
-    req,
-    permission: "configuracion",
-  });
+  const { tenantId } = await getAuthContext({ req });
+
   if (!tenantId) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    return NextResponse.json(
+      { error: "No se pudo determinar el tenant." },
+      { status: 401 },
+    );
   }
 
   try {
@@ -21,33 +22,20 @@ export async function GET(req: NextRequest) {
       },
       select: {
         Foto: true,
-        ShowFoto: true,
       },
       orderBy: {
         Id: "desc",
       },
     });
 
-    let logoPreview = "";
-    if (config?.Foto && config.ShowFoto) {
-      // Convertir Bytes a base64
-      logoPreview = `data:image/png;base64,${Buffer.from(config.Foto).toString(
-        "base64",
-      )}`;
-    }
-
-    return NextResponse.json(
-      {
-        branding: {
-          slogan: "",
-          color: "#90c472",
-          logoPreview: logoPreview,
-          tieneLogo: config?.ShowFoto || false,
-        },
+    return NextResponse.json({
+      branding: {
+        slogan: "Mejor precio, mejor servicio.", // Placeholder as per current hook behavior
+        color: "#90c472", // Placeholder
+        logoPreview: config?.Foto || "",
       },
-      { status: 200 },
-    );
-  } catch (error: unknown) {
+    });
+  } catch (error) {
     return handleError(error);
   }
 }
@@ -59,57 +47,81 @@ export async function PUT(req: NextRequest) {
   });
 
   if (!tenantId) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    return NextResponse.json(
+      { error: "No se pudo determinar el tenant." },
+      { status: 401 },
+    );
   }
 
   try {
     const formData = await req.formData();
-    const slogan = formData.get("slogan") as string;
-    const color = formData.get("color") as string;
-    const logoFile = formData.get("logo") as File | null;
+    const file = formData.get("logo") as File | null;
+    const slogan = formData.get("slogan") as string | null;
+    const color = formData.get("color") as string | null;
 
-    // Usar transacción para asegurar atomicidad
-    const result = await prisma.$transaction(async (tx) => {
-      // Buscar configuración existente
-      const config = await tx.configuracion.findFirst({
-        where: {
-          TenantId: BigInt(tenantId),
-          EstaEliminado: false,
-        },
-        orderBy: {
-          Id: "desc",
-        },
-      });
+    let fotoUrl: string | null = null;
 
-      if (!config) {
-        throw new Error("No se encontró una configuración existente");
+    if (file) {
+      const supabase = getSupabaseServiceClient();
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const fileName = `${tenantId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
+
+      // Upload to 'logos' bucket
+      const { error: uploadError } = await supabase.storage
+        .from("logos")
+        .upload(fileName, buffer, {
+          contentType: file.type,
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error("Supabase upload error:", uploadError);
+        throw new Error("Error al subir la imagen a Supabase");
       }
 
-      const fotoBytes = await fileToBuffer(logoFile);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("logos").getPublicUrl(fileName);
 
-      // Actualizar configuración existente dentro de la transacción
-      await tx.configuracion.update({
-        where: { Id: config.Id },
-        data: {
-          Foto: fotoBytes as Uint8Array<ArrayBuffer> | null,
-          ShowFoto: fotoBytes !== null,
-        },
-      });
+      fotoUrl = publicUrl;
+    }
 
-      return {
-        slogan: slogan || "",
-        color: color || "#90c472",
-        tieneLogo: fotoBytes !== null,
-      };
+    // Update Configuration in DB
+    const config = await prisma.configuracion.findFirst({
+      where: {
+        TenantId: BigInt(tenantId),
+        EstaEliminado: false,
+      },
+      orderBy: {
+        Id: "desc",
+      },
     });
 
-    return NextResponse.json(
-      {
-        branding: result,
+    if (!config) {
+      // If no config exists, we might need to create it, but usually it exists.
+      // For now assume it exists or fail.
+      throw new Error("Configuración no encontrada");
+    }
+
+    const updated = await prisma.configuracion.update({
+      where: { Id: config.Id },
+      data: {
+        Foto: fotoUrl || undefined, // Only update if we have a new URL
+        ShowFoto: fotoUrl ? true : undefined,
       },
-      { status: 200 },
-    );
-  } catch (error: unknown) {
+      select: {
+        Foto: true,
+      },
+    });
+
+    return NextResponse.json({
+      branding: {
+        slogan: slogan || "Mejor precio, mejor servicio.",
+        color: color || "#90c472",
+        logoPreview: updated.Foto || "",
+      },
+    });
+  } catch (error) {
     return handleError(error);
   }
 }

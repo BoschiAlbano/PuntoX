@@ -234,6 +234,7 @@ export default function ProductoForm({
     queryKey: ["ultimo-codigo"],
     queryFn: fetchUltimoCodigo,
     enabled: !initialData && isOpen,
+    refetchOnMount: "always",
   });
 
   // Query para obtener datos completos del producto en edición
@@ -383,7 +384,7 @@ export default function ProductoForm({
                       placeholder="Ingrese el código"
                       type="number"
                       value={formData.Codigo?.toString() || ""}
-                      max={1000}
+                      max={Number(process.env.MAX_ARTICLE_CODE || 999)}
                       min={1}
                       onChange={(e) =>
                         setFormData({
@@ -391,9 +392,8 @@ export default function ProductoForm({
                           Codigo: parseInt(e.target.value) || 0,
                         })
                       }
-                      disabled
                       isRequired
-                      isDisabled={isSaving}
+                      isDisabled={isLoadingFullProduct}
                     />
                     <Input
                       label="Código de Barras"

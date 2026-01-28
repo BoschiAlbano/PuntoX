@@ -10,7 +10,9 @@ export function NotificacionesTab() {
     notificaciones: notificacionesData,
     saveNotificaciones,
     isSavingNotificaciones,
-  } = useConfiguracion();
+  } = useConfiguracion({
+    enableNotificaciones: true,
+  });
 
   const [notificaciones, setNotificaciones] = useState<Notificaciones>({
     push: true,

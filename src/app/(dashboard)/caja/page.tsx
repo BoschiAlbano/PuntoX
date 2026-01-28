@@ -51,7 +51,11 @@ export default function CajaPage() {
     agregarGasto: agregarGastoMutation,
     refetch,
     isCajaAbierta: cajaAbierta,
-  } = useCaja();
+  } = useCaja({
+    enableCaja: true,
+    enableConceptos: true,
+    enableResumen: true,
+  });
 
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 

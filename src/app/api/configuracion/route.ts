@@ -50,8 +50,8 @@ const payloadSchema = z.object({
   actualizaCostoDesdeCompra: z.boolean().optional(),
   modificaPrecioVentaDesdeCompra: z.boolean().optional(),
   // Caja y pagos
-  tipoFormaPagoPorDefectoVenta: z.number().int().min(0).max(3).optional(),
-  tipoFormaPagoPorDefectoCompra: z.number().int().min(0).max(3).optional(),
+  tipoFormaPagoPorDefectoVenta: z.number().int().min(0).max(10).optional(),
+  tipoFormaPagoPorDefectoCompra: z.number().int().min(0).max(10).optional(),
   ingresoManualCajaInicial: z.boolean().optional(),
   puestoCajaSeparado: z.boolean().optional(),
   activarRetiroDeCaja: z.boolean().optional(),
@@ -62,6 +62,8 @@ const payloadSchema = z.object({
   activarBascula: z.boolean().optional(),
   etiquetaPorPeso: z.boolean().optional(),
   codigoBascula: z.string().optional().nullable(),
+  foto: z.string().optional().nullable(),
+  ShowFoto: z.boolean().optional(),
 });
 
 export async function GET(req: NextRequest) {
@@ -138,6 +140,8 @@ export async function GET(req: NextRequest) {
         ActivarBascula: true,
         EtiquetaPorPeso: true,
         CodigoBascula: true,
+        Foto: true,
+        ShowFoto: true,
         // Notificaciones - comentado temporalmente hasta regenerar Prisma
         // NotificacionesPush: true,
         // NotificacionesResumenDiario: true,
@@ -196,6 +200,8 @@ export async function GET(req: NextRequest) {
           activarBascula: config.ActivarBascula ?? false,
           etiquetaPorPeso: config.EtiquetaPorPeso ?? false,
           codigoBascula: config.CodigoBascula ?? "",
+          foto: config.Foto ?? "",
+          ShowFoto: config.ShowFoto ?? false,
         },
       },
       { status: 200 },
@@ -292,7 +298,8 @@ export async function PUT(req: NextRequest) {
             EtiquetaPorPeso: data.etiquetaPorPeso ?? false,
             CodigoBascula: data.codigoBascula ?? null,
             EstaEliminado: false,
-            ShowFoto: false,
+            Foto: data.foto ?? null,
+            ShowFoto: !!data.foto,
             MostrarPreciosConIva: data.mostrarPreciosConIva ?? true,
             AbrirCajonEfectivo: data.abrirCajonEfectivo ?? true,
             NumerarPedidosPantalla: data.numerarPedidosPantalla ?? true,
@@ -327,6 +334,8 @@ export async function PUT(req: NextRequest) {
             ActivarBascula: true,
             EtiquetaPorPeso: true,
             CodigoBascula: true,
+            Foto: true,
+            ShowFoto: true,
           },
         });
 
@@ -378,6 +387,8 @@ export async function PUT(req: NextRequest) {
           ActivarBascula: data.activarBascula ?? undefined,
           EtiquetaPorPeso: data.etiquetaPorPeso ?? undefined,
           CodigoBascula: data.codigoBascula ?? undefined,
+          Foto: data.foto ?? undefined,
+          ShowFoto: data.ShowFoto ?? undefined,
         },
         select: {
           Id: true,
@@ -409,6 +420,8 @@ export async function PUT(req: NextRequest) {
           ActivarBascula: true,
           EtiquetaPorPeso: true,
           CodigoBascula: true,
+          Foto: true,
+          ShowFoto: true,
         },
       });
 
@@ -459,6 +472,8 @@ export async function PUT(req: NextRequest) {
           activarBascula: configResult.ActivarBascula ?? false,
           etiquetaPorPeso: configResult.EtiquetaPorPeso ?? false,
           codigoBascula: configResult.CodigoBascula ?? "",
+          foto: configResult.Foto ?? "",
+          ShowFoto: configResult.ShowFoto ?? false,
         },
       },
       { status: result.isNew ? 201 : 200 },

@@ -34,7 +34,13 @@ const idiomas = [
 ];
 
 export function FiscalTab() {
-  const { fiscal: fiscalData, saveFiscal, isSavingFiscal } = useConfiguracion();
+  const {
+    fiscal: fiscalData,
+    saveFiscal,
+    isSavingFiscal,
+  } = useConfiguracion({
+    enableFiscal: true,
+  });
 
   const [regional, setRegional] = useState<Fiscal>({
     moneda: "ARS",

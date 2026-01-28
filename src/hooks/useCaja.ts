@@ -180,7 +180,17 @@ const fetchResumenDia = async (
 };
 
 // Hook principal
-export function useCaja() {
+export function useCaja(options?: {
+  enableCaja?: boolean;
+  enableConceptos?: boolean;
+  enableResumen?: boolean;
+}) {
+  const {
+    enableCaja = false,
+    enableConceptos = false,
+    enableResumen = false,
+  } = options || {};
+
   const { currentBranch } = useUserStore();
   const queryClient = useQueryClient();
   const sucursalId = currentBranch?.Id ? Number(currentBranch.Id) : undefined;
@@ -189,7 +199,7 @@ export function useCaja() {
   const cajaQuery = useQuery({
     queryKey: ["caja", "actual", sucursalId],
     queryFn: () => fetchCajaActual(sucursalId),
-    enabled: !!sucursalId,
+    enabled: !!sucursalId && enableCaja,
     ...dynamicDataQueryOptions,
   });
 
@@ -197,7 +207,7 @@ export function useCaja() {
   const conceptosQuery = useQuery({
     queryKey: ["conceptos-gastos", sucursalId],
     queryFn: () => fetchConceptosGastos(sucursalId),
-    enabled: !!sucursalId,
+    enabled: !!sucursalId && enableConceptos,
     ...staticDataQueryOptions,
   });
 
@@ -205,7 +215,7 @@ export function useCaja() {
   const resumenQuery = useQuery({
     queryKey: ["caja", "resumen-dia", sucursalId],
     queryFn: () => fetchResumenDia(sucursalId),
-    enabled: !!sucursalId,
+    enabled: !!sucursalId && enableResumen,
     ...dynamicDataQueryOptions,
   });
 
@@ -312,11 +322,11 @@ export function useCaja() {
 
     // Refetch
     refetch: async () => {
-      await Promise.all([
-        cajaQuery.refetch(),
-        conceptosQuery.refetch(),
-        resumenQuery.refetch(),
-      ]);
+      const promises = [];
+      if (enableCaja) promises.push(cajaQuery.refetch());
+      if (enableConceptos) promises.push(conceptosQuery.refetch());
+      if (enableResumen) promises.push(resumenQuery.refetch());
+      await Promise.all(promises);
     },
   };
 }

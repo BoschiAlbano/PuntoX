@@ -45,6 +45,8 @@ export interface Configuracion {
   activarBascula?: boolean;
   etiquetaPorPeso?: boolean;
   codigoBascula?: string;
+  foto?: string;
+  ShowFoto?: boolean;
 }
 
 export interface PreferenciasVenta {
@@ -599,16 +601,34 @@ const saveBranding = async (
 };
 
 // Hook principal
-export function useConfiguracion({
-  enabled = true,
-}: { enabled?: boolean } = {}) {
+export function useConfiguracion(options?: {
+  enabled?: boolean;
+  enableTenant?: boolean;
+  enableConfiguracion?: boolean;
+  enablePreferenciasVenta?: boolean;
+  enableNotificaciones?: boolean;
+  enableSeguridad?: boolean;
+  enableFiscal?: boolean;
+  enableBranding?: boolean;
+}) {
+  const {
+    enabled = true,
+    enableTenant = false,
+    enableConfiguracion = false,
+    enablePreferenciasVenta = false,
+    enableNotificaciones = false,
+    enableSeguridad = false,
+    enableFiscal = false,
+    enableBranding = false,
+  } = options || {};
+
   const queryClient = useQueryClient();
 
   // Queries
   const tenantQuery = useQuery({
     queryKey: ["tenant"],
     queryFn: ({ signal }) => fetchTenant({ signal }),
-    enabled,
+    enabled: enableTenant,
     retry: 2,
     retryDelay: 1000,
     refetchOnMount: false, // No refetch si los datos están frescos (staleTime)
@@ -622,7 +642,7 @@ export function useConfiguracion({
   const configuracionQuery = useQuery({
     queryKey: ["configuracion"],
     queryFn: ({ signal }) => fetchConfiguracion({ signal }),
-    enabled,
+    enabled: enableConfiguracion,
     retry: 2,
     retryDelay: 1000,
     refetchOnMount: false, // No refetch si los datos están frescos (staleTime)
@@ -638,7 +658,7 @@ export function useConfiguracion({
   const preferenciasVentaQuery = useQuery({
     queryKey: ["preferencias-venta"],
     queryFn: ({ signal }) => fetchPreferenciasVenta({ signal }),
-    enabled,
+    enabled: enablePreferenciasVenta,
     retry: 2,
     retryDelay: 1000,
     refetchOnMount: false, // No refetch si los datos están frescos
@@ -651,7 +671,7 @@ export function useConfiguracion({
   const notificacionesQuery = useQuery({
     queryKey: ["notificaciones"],
     queryFn: ({ signal }) => fetchNotificaciones({ signal }),
-    enabled,
+    enabled: enableNotificaciones,
     retry: 2,
     retryDelay: 1000,
     refetchOnMount: false, // No refetch si los datos están frescos
@@ -664,7 +684,7 @@ export function useConfiguracion({
   const seguridadQuery = useQuery({
     queryKey: ["seguridad"],
     queryFn: ({ signal }) => fetchSeguridad({ signal }),
-    enabled,
+    enabled: enableSeguridad,
     retry: 2,
     retryDelay: 1000,
     refetchOnMount: false, // No refetch si los datos están frescos
@@ -677,7 +697,7 @@ export function useConfiguracion({
   const fiscalQuery = useQuery({
     queryKey: ["fiscal"],
     queryFn: ({ signal }) => fetchFiscal({ signal }),
-    enabled,
+    enabled: enableFiscal,
     retry: 2,
     retryDelay: 1000,
     refetchOnMount: false, // No refetch si los datos están frescos
@@ -690,7 +710,7 @@ export function useConfiguracion({
   const brandingQuery = useQuery({
     queryKey: ["branding"],
     queryFn: ({ signal }) => fetchBranding({ signal }),
-    enabled,
+    enabled: enableBranding,
     retry: 2,
     retryDelay: 1000,
     refetchOnMount: false, // No refetch si los datos están frescos

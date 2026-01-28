@@ -530,7 +530,7 @@ model Configuracion {
   EtiquetaPorPeso                        Boolean
   CodigoBascula                          String?       @db.VarChar(8000)
   EstaEliminado                          Boolean
-  Foto                                   Bytes?
+  Foto                                   String?       @db.VarChar(8000)
   ShowFoto                               Boolean       @default(false)
   /// Tenant dueño de esta configuración
   TenantId                               BigInt

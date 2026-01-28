@@ -194,4 +194,9 @@ export interface Producto {
     PrecioPublico2?: number;
     PrecioCosto?: number;
   };
+  Iva?: {
+    Id?: number;
+    Porcentaje?: number;
+    Descripcion?: string;
+  };
 }

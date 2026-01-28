@@ -10,7 +10,9 @@ export function PreferenciasBasicas() {
     savePreferenciasVenta,
     isSavingPreferenciasVenta,
     isLoadingPreferenciasVenta,
-  } = useConfiguracion();
+  } = useConfiguracion({
+    enablePreferenciasVenta: true,
+  });
 
   const [preferencias, setPreferencias] = useState<PreferenciasVenta>({
     ticketDigitalPorCorreo: true,

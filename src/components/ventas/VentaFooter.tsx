@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ReactNode } from "react";
 import {
   Card,
   CardBody,
@@ -18,10 +18,19 @@ import {
   CardHeader,
   addToast,
   CardFooter,
+  Skeleton,
 } from "@heroui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Trash2, Plus } from "lucide-react";
-import { TIPO_PAGO } from "@/lib/constants/comprobantes";
+import { Trash2, Plus, X } from "lucide-react";
+import { useReactToPrint } from "react-to-print";
+import {
+  TIPO_PAGO,
+  TIPO_COMPROBANTE_VENTA,
+} from "@/lib/constants/comprobantes";
+import { useConfiguracion } from "@/hooks/useConfiguracion";
+import { useCaja } from "@/hooks/useCaja";
+import { useVentaStore } from "@/store/ventaStore";
+import { TicketImpresion } from "./TicketImpresion";
 
 interface VentaFooterProps {
   subtotal: number;
@@ -46,23 +55,76 @@ export default function VentaFooter({
 }: VentaFooterProps) {
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
+  const { configuracion } = useConfiguracion({
+    enableConfiguracion: true,
+  });
+  const { cajaActual, abrirCaja, isLoading } = useCaja({
+    enableCaja: true,
+  });
+
+  // Global Store
+  const { pagos, addPago, removePago, setPagos, numeroComprobanteAsociado } =
+    useVentaStore();
 
   // Payment Logic State
-  const [pagos, setPagos] = useState<{ tipoPago: number; monto: number }[]>([]);
-  const [currentTipo, setCurrentTipo] = useState<number>(TIPO_PAGO.EFECTIVO);
+  const [currentTipo, setCurrentTipo] = useState<number>(
+    configuracion?.tipoFormaPagoPorDefectoVenta || TIPO_PAGO.EFECTIVO,
+  );
   const [currentMonto, setCurrentMonto] = useState<string>("");
+
+  const [openModalAbrirCaja, setOpenModalAbrirCaja] = useState(false);
+
+  const [isOpening, setIsOpening] = useState(false);
+  const [montoInicial, setMontoInicial] = useState<string>("0");
+
+  // Ticket Printing
+  const [lastSaleData, setLastSaleData] = useState<any>(null);
+  const ticketRef = React.useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: ticketRef,
+    documentTitle: "Ticket de Venta",
+  });
 
   const totalPagado = pagos.reduce((acc, p) => acc + p.monto, 0);
   const restante = total - totalPagado;
+
+  const handleAbrirCaja = async () => {
+    try {
+      setIsOpening(true);
+      const montoVal = parseFloat(montoInicial);
+      if (isNaN(montoVal) || montoVal < 0) {
+        addToast({
+          title: "Error",
+          description: "Monto inicial inválido",
+          color: "danger",
+        });
+        return;
+      }
+      await abrirCaja(montoVal);
+      setOpenModalAbrirCaja(false);
+      setMontoInicial("");
+    } catch (error) {
+      addToast({
+        title: "Error",
+        description: "Error al abrir caja",
+        color: "danger",
+      });
+    } finally {
+      setIsOpening(false);
+    }
+  };
 
   // Reset payments if items are cleared
   useEffect(() => {
     if (items.length === 0) {
       setPagos([]);
-      setCurrentTipo(TIPO_PAGO.EFECTIVO);
+      setCurrentTipo(
+        configuracion?.tipoFormaPagoPorDefectoVenta || TIPO_PAGO.EFECTIVO,
+      );
       setCurrentMonto("");
     }
-  }, [items]);
+  }, [items, configuracion, setPagos]);
 
   useEffect(() => {
     if (restante > 0.001) {
@@ -76,13 +138,11 @@ export default function VentaFooter({
     const montoVal = parseFloat(currentMonto);
     if (isNaN(montoVal) || montoVal <= 0) return;
 
-    setPagos([...pagos, { tipoPago: currentTipo, monto: montoVal }]);
+    addPago({ tipoPago: currentTipo, monto: montoVal });
   };
 
   const handleRemovePayment = (index: number) => {
-    const newPagos = [...pagos];
-    newPagos.splice(index, 1);
-    setPagos(newPagos);
+    removePago(index);
   };
 
   const createSaleMutation = useMutation({
@@ -99,14 +159,37 @@ export default function VentaFooter({
       return res.json();
     },
     onSuccess: (data) => {
+      // Prepare data for printing BEFORE clearing state
+      const ticketData = {
+        items: [...items], // Copy items
+        cliente: cliente,
+        subtotal: items.reduce(
+          (acc: number, item: any) => acc + item.subtotal,
+          0,
+        ),
+        descuento: subtotal * (descuento / 100),
+        total: total,
+        fecha: data.comprobante.fecha,
+        numeroComprobante: data.comprobante.numero,
+        tipoComprobante: getTipoComprobanteLabel(tipoComprobante),
+        formasPago: [...pagos],
+      };
+
+      setLastSaleData(ticketData);
+
       addToast({
         title: "Venta registrada",
         description: `Venta #${data.comprobante.numero} registrada con éxito`,
       });
+
+      // Trigger print with a small delay to ensure state update
+      setTimeout(() => {
+        handlePrint();
+      }, 500);
+
       queryClient.invalidateQueries({ queryKey: ["productos"] });
       handleLimpiar();
       setIsSaving(false);
-      // window.location.reload();
     },
     onError: (err: any) => {
       addToast({
@@ -116,6 +199,25 @@ export default function VentaFooter({
       setIsSaving(false);
     },
   });
+
+  const getTipoComprobanteLabel = (tipo: number) => {
+    switch (tipo) {
+      case TIPO_COMPROBANTE_VENTA.FACTURA_A:
+        return "Factura A";
+      case TIPO_COMPROBANTE_VENTA.FACTURA_B:
+        return "Factura B";
+      case TIPO_COMPROBANTE_VENTA.FACTURA_C:
+        return "Factura C";
+      case TIPO_COMPROBANTE_VENTA.PRESUPUESTO:
+        return "Presupuesto";
+      case TIPO_COMPROBANTE_VENTA.REMITO:
+        return "Remito";
+      case TIPO_COMPROBANTE_VENTA.NOTA_CREDITO:
+        return "Nota de Crédito";
+      default:
+        return "Comprobante";
+    }
+  };
 
   const handleFinalizeSale = () => {
     if (items.length === 0) {
@@ -127,6 +229,19 @@ export default function VentaFooter({
       addToast({
         title: "Error",
         description: "El pago debe ser exacto (cubrir el total sin excedente)",
+        color: "danger",
+      });
+      return;
+    }
+
+    if (
+      tipoComprobante === TIPO_COMPROBANTE_VENTA.NOTA_CREDITO &&
+      !numeroComprobanteAsociado
+    ) {
+      addToast({
+        title: "Error",
+        description:
+          "Debe ingresar el número de factura asociada para la Nota de Crédito",
         color: "danger",
       });
       return;
@@ -152,11 +267,34 @@ export default function VentaFooter({
         tipoPago: p.tipoPago,
         monto: p.monto,
       })),
-      descuento,
+      descuento: subtotal * (descuento / 100),
       fecha: new Date().toISOString(),
+      numeroComprobanteAsociado,
     };
 
-    createSaleMutation.mutate(payload);
+    // test
+    const ticketData = {
+      items: [...items], // Copy items
+      cliente: cliente,
+      subtotal: items.reduce(
+        (acc: number, item: any) => acc + item.subtotal,
+        0,
+      ),
+      descuento: subtotal * (descuento / 100),
+      total: total,
+      fecha: new Date().toISOString(),
+      numeroComprobante: "999",
+      tipoComprobante: getTipoComprobanteLabel(tipoComprobante),
+      formasPago: [...pagos],
+    };
+
+    setLastSaleData(ticketData);
+
+    handlePrint();
+    setIsSaving(false);
+
+    // fin test
+    // createSaleMutation.mutate(payload);
   };
 
   const getTipoLabel = (tipo: number) => {
@@ -286,7 +424,7 @@ export default function VentaFooter({
           <div className="flex justify-between w-full mt-2 p-2 rounded-lg">
             {restante > 0.01 ? (
               <>
-                <span className="text-small text-default-500">Restante 1:</span>
+                <span className="text-small text-default-500">Restante:</span>
                 <span
                   className={`font-bold ${restante > 0.01 && "text-warning"}`}
                 >
@@ -336,19 +474,30 @@ export default function VentaFooter({
               </span>
             </div>
             <div className="flex justify-between items-center text-sm text-default-500 gap-2">
-              <span>Descuento:</span>
-              <Input
-                size="sm"
-                type="number"
-                value={descuento.toString()}
-                onChange={(e) => setDescuento(parseFloat(e.target.value) || 0)}
-                startContent="$"
-                classNames={{
-                  inputWrapper: "h-6",
-                  input: "text-right",
-                }}
-                className="w-24"
-              />
+              <span>Descuento (%):</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-default-400">
+                  - $
+                  {(subtotal * (descuento / 100)).toLocaleString("es-AR", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+                <Input
+                  size="sm"
+                  type="number"
+                  value={descuento.toString()}
+                  onChange={(e) =>
+                    setDescuento(parseFloat(e.target.value) || 0)
+                  }
+                  endContent="%"
+                  classNames={{
+                    inputWrapper: "h-6",
+                    input: "text-right",
+                  }}
+                  className="w-20"
+                />
+              </div>
             </div>
             <Divider className="my-1" />
             <div className="flex justify-between text-xl font-bold text-[#67afc3]">
@@ -357,38 +506,67 @@ export default function VentaFooter({
             </div>
           </div>
 
-          <Button
-            size="md"
-            className={`font-bold text-white shadow-lg bg-linear-to-r from-blue-500 to-[#90c472] mt-2`}
-            startContent={
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="size-5"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M1 4a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4Zm12 4a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM4 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm13-1a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM1.75 14.5a.75.75 0 0 0 0 1.5c4.417 0 8.693.603 12.749 1.73 1.111.309 2.251-.512 2.251-1.696v-.784a.75.75 0 0 0-1.5 0v.784a.272.272 0 0 1-.35.25A49.043 49.043 0 0 0 1.75 14.5Z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            }
-            onPress={handleFinalizeSale}
-            isLoading={isSaving}
-            isDisabled={Math.abs(restante) > 0.01 || items.length === 0}
-          >
-            {Math.abs(restante) < 0.01 || items.length === 0
-              ? "CONFIRMAR VENTA"
-              : `FALTA $${
-                  restante > 0
-                    ? restante.toLocaleString("es-AR", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                    : "AJUSTE"
-                }`}
-          </Button>
+          {isLoading ? (
+            <Skeleton className="shadow-lg mt-2 rounded-xl">
+              <Button className=" text-center">Cargando...</Button>
+            </Skeleton>
+          ) : cajaActual ? (
+            <Button
+              size="md"
+              className={`font-bold text-white shadow-lg bg-linear-to-r from-blue-500 to-[#90c472] mt-2`}
+              startContent={
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="size-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M1 4a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4Zm12 4a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM4 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm13-1a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM1.75 14.5a.75.75 0 0 0 0 1.5c4.417 0 8.693.603 12.749 1.73 1.111.309 2.251-.512 2.251-1.696v-.784a.75.75 0 0 0-1.5 0v.784a.272.272 0 0 1-.35.25A49.043 49.043 0 0 0 1.75 14.5Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              }
+              onPress={handleFinalizeSale}
+              isLoading={isSaving}
+              isDisabled={Math.abs(restante) > 0.01 || items.length === 0}
+            >
+              {Math.abs(restante) < 0.01 || items.length === 0
+                ? "CONFIRMAR VENTA"
+                : `FALTA $${
+                    restante > 0
+                      ? restante.toLocaleString("es-AR", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      : "AJUSTE"
+                  }`}
+            </Button>
+          ) : (
+            <Button
+              size="md"
+              className="font-bold text-white shadow-lg bg-yellow-500"
+              startContent={
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="size-5 mb-1"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM8.28 7.22a.75.75 0 0 0-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 1 0 1.06 1.06L10 11.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L11.06 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L10 8.94 8.28 7.22Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              }
+              onPress={() => setOpenModalAbrirCaja(true)}
+            >
+              Abrir Caja
+            </Button>
+          )}
+
           <Button
             size="md"
             className="font-bold text-white shadow-lg bg-red-300"
@@ -413,6 +591,99 @@ export default function VentaFooter({
           </Button>
         </CardBody>
       </Card>
+
+      <ModalShell
+        open={openModalAbrirCaja}
+        title="Abrir Caja"
+        onClose={() => setOpenModalAbrirCaja(false)}
+        footer={
+          <>
+            <button
+              onClick={() => setOpenModalAbrirCaja(false)}
+              className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleAbrirCaja}
+              disabled={isOpening}
+              className="rounded-lg bg-[#67afc3] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#5a9fb2] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isOpening ? "Abriendo..." : "Abrir Caja"}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Monto inicial
+          </label>
+          <input
+            type="number"
+            value={montoInicial}
+            onChange={(e) => setMontoInicial(e.target.value)}
+            placeholder="0.00"
+            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-[#67afc3] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/20"
+            aria-label="Monto inicial para abrir la caja"
+          />
+          <p className="text-xs text-slate-500">
+            Ingrese el monto inicial con el que se abrira la caja.
+          </p>
+        </div>
+      </ModalShell>
+
+      {/* Hidden Ticket Component */}
+      <div style={{ display: "none" }}>
+        <TicketImpresion ref={ticketRef} datosVenta={lastSaleData} />
+      </div>
     </section>
+  );
+}
+
+function ModalShell({
+  open,
+  title,
+  onClose,
+  size = "md",
+  children,
+  footer,
+}: {
+  open: boolean;
+  title: string;
+  onClose: () => void;
+  size?: "md" | "xl";
+  children: ReactNode;
+  footer?: ReactNode;
+}) {
+  if (!open) return null;
+
+  const sizeClass = size === "xl" ? "max-w-2xl" : "max-w-md";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <button
+        className="absolute inset-0 bg-slate-900/40"
+        onClick={onClose}
+        aria-label="Cerrar modal"
+      />
+      <div
+        className={`relative w-full ${sizeClass} rounded-2xl border border-slate-200 bg-white p-5 shadow-xl`}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50"
+            aria-label="Cerrar modal"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="mt-4">{children}</div>
+        {footer && <div className="mt-6 flex justify-end gap-2">{footer}</div>}
+      </div>
+    </div>
   );
 }

@@ -9,7 +9,9 @@ export function ConfiguracionProductos() {
     configuracion: configuracionData,
     saveConfiguracion,
     isSavingConfiguracion,
-  } = useConfiguracion();
+  } = useConfiguracion({
+    enableConfiguracion: true,
+  });
 
   const [configProductos, setConfigProductos] = useState({
     unificarRenglonesIngresarMismoProducto: true,

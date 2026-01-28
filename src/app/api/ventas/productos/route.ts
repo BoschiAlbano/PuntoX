@@ -29,7 +29,10 @@ export async function GET(req: NextRequest) {
 
       // Si es un número, intentar buscar por código también
       const codeNum = parseInt(q);
-      if (!isNaN(codeNum)) {
+      if (
+        !isNaN(codeNum) &&
+        codeNum < Number(process.env.MAX_ARTICLE_CODE || 999)
+      ) {
         where.OR.push({ Codigo: codeNum });
       }
     }
@@ -42,8 +45,6 @@ export async function GET(req: NextRequest) {
           Codigo: true,
           CodigoBarra: true,
           Descripcion: true,
-          IvaId: true,
-
           // Reglas de negocio
           DescuentaStock: true,
           PermiteStockNegativo: true,
@@ -68,6 +69,13 @@ export async function GET(req: NextRequest) {
             },
           },
 
+          Iva: {
+            select: {
+              Id: true,
+              Porcentaje: true,
+              Descripcion: true,
+            },
+          },
           // Stock especifico de sucursal
           ArticuloStock: {
             where: { SucursalId: BigInt(sucursalId) },
@@ -110,9 +118,7 @@ export async function GET(req: NextRequest) {
           PrecioPublico: Number(p.Precio?.PrecioPublico || 0),
           PrecioPublico2: Number(p.Precio?.PrecioPublico2 || 0),
         },
-
-        IvaId: Number(p.IvaId),
-
+        Iva: p.Iva,
         TipoVenta: p.TipoVenta,
       };
     });

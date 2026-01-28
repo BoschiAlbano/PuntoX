@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Select, SelectItem, addToast } from "@heroui/react";
+import React from "react";
+import { Select, SelectItem, addToast, Input } from "@heroui/react";
 
 import ProductSearch from "./ProductSearch";
 import VentaGrid from "./VentaGrid";
@@ -9,43 +9,27 @@ import VentaFooter from "./VentaFooter";
 import ClienteSearch from "./ClienteSearch";
 import { TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
 import { Producto } from "@/lib/validations/producto.schema";
-import { Cliente } from "@/lib/validations/cliente.schema";
-import { useConfiguracion } from "@/hooks/useConfiguracion";
-import { useCaja } from "@/hooks/useCaja";
-
-interface Item extends Producto {
-  cantidad: number;
-  precio: number;
-  subtotal: number;
-}
+import { useVentaStore, Item } from "@/store/ventaStore";
 
 export default function VentasScreen() {
-  const { configuracion } = useConfiguracion();
-  const { cajaActual } = useCaja();
-
-  useEffect(() => {
-    if (!cajaActual) {
-      addToast({
-        title: "Caja cerrada",
-        description: "Debe abrir la caja para realizar ventas",
-        color: "danger",
-      });
-    }
-  }, []);
-
-  // State
-  const [items, setItems] = useState<Item[]>([]);
-  const [cliente, setCliente] = useState<Partial<Cliente>>({
-    Id: 0,
-    Nombre: "Consumidor Final",
-  });
-  const [tipoComprobante, setTipoComprobante] = useState<number>(
-    TIPO_COMPROBANTE_VENTA.FACTURA_B,
-  );
-
-  // Removed tipoPago state as it is now handled in the modal
-  const [listaPrecios, setListaPrecios] = useState<1 | 2>(1);
-  const [descuentoGeneral, setDescuentoGeneral] = useState<number>(0);
+  // Store
+  const {
+    items,
+    cliente,
+    tipoComprobante,
+    listaPrecios,
+    descuentoPorcentaje,
+    addItem,
+    updateItemQuantity,
+    removeItem,
+    setCliente,
+    setTipoComprobante,
+    setListaPrecios,
+    setDescuentoPorcentaje,
+    numeroComprobanteAsociado,
+    setNumeroComprobanteAsociado,
+    clearVenta,
+  } = useVentaStore();
 
   // Business Logic Helpers
   const checkProductRules = (product: Producto | Item, newQuantity: number) => {
@@ -84,9 +68,6 @@ export default function VentasScreen() {
       const startMinutes = startH * 60 + startM;
       const endMinutes = endH * 60 + endM;
 
-      console.log(product.HoraLimiteVentaDesde, product.HoraLimiteVentaHasta);
-      console.log(currentMinutes, startMinutes, endMinutes);
-
       let isRestricted = false;
 
       // Case 1: Standard range (e.g., 14:00 to 16:00)
@@ -113,7 +94,9 @@ export default function VentasScreen() {
   // Handlers
   const handleAddItem = (producto: Producto, cantidad: number = 1) => {
     try {
-      // Use 'items' from closure (latest state) for validation
+      console.log("AddItem: ", producto);
+
+      // Use 'items' from store
       const existing = items.find((i) => i.Id === producto.Id);
       const currentQty = existing ? existing.cantidad : 0;
       const totalQty = currentQty + cantidad;
@@ -121,34 +104,8 @@ export default function VentasScreen() {
       // Validate BEFORE updating state
       checkProductRules(producto, totalQty);
 
-      setItems((prev) => {
-        const existingInPrev = prev.find((i) => i.Id === producto.Id);
-        const precioUnitario =
-          listaPrecios === 1
-            ? producto.Precio.PrecioPublico
-            : producto.Precio.PrecioPublico2;
-
-        if (existingInPrev) {
-          return prev.map((i) =>
-            i.Id === producto.Id
-              ? {
-                  ...i,
-                  cantidad: i.cantidad + cantidad,
-                  subtotal: (i.cantidad + cantidad) * i.precio,
-                }
-              : i,
-          );
-        }
-        return [
-          ...prev,
-          {
-            ...producto,
-            cantidad,
-            precio: Number(precioUnitario), // Ensure number
-            subtotal: Number(precioUnitario) * cantidad,
-          },
-        ];
-      });
+      // Call store action
+      addItem(producto, cantidad, listaPrecios);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Error desconocido";
@@ -162,21 +119,13 @@ export default function VentasScreen() {
 
   const handleUpdateQuantity = (id: number, cantidad: number) => {
     try {
-      // Find item to validate using 'items' from closure
       const item = items.find((i) => i.Id === id);
       if (!item) return;
 
       // Validate Rules
       checkProductRules(item, cantidad);
 
-      setItems((prev) =>
-        prev.map((item) => {
-          if (item.Id === id) {
-            return { ...item, cantidad, subtotal: item.precio * cantidad };
-          }
-          return item;
-        }),
-      );
+      updateItemQuantity(id, cantidad);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Error desconocido";
@@ -188,24 +137,10 @@ export default function VentasScreen() {
     }
   };
 
-  const handleRemoveItem = (id: number) => {
-    setItems((prev) => prev.filter((i) => i.Id !== id));
-  };
-
   const calculateTotal = () => {
     const subtotal = items.reduce((acc, item) => acc + item.subtotal, 0);
-    return subtotal - (descuentoGeneral || 0);
-  };
-
-  const handleLimpiar = () => {
-    setItems([]);
-    setCliente({
-      Id: 0,
-      Nombre: "Consumidor Final",
-    });
-    setTipoComprobante(TIPO_COMPROBANTE_VENTA.FACTURA_B);
-    setListaPrecios(1);
-    setDescuentoGeneral(0);
+    const discountAmount = subtotal * (descuentoPorcentaje / 100);
+    return subtotal - discountAmount;
   };
 
   return (
@@ -218,7 +153,7 @@ export default function VentasScreen() {
             <ProductSearch onProductSelect={handleAddItem} />
             <div className="flex flex-col md:flex-row gap-4 items-center w-auto">
               <ClienteSearch selected={cliente} onSelect={setCliente} />
-              <div className="flex gap-4 w-full md:w-auto">
+              <div className="flex gap-4 w-full md:w-auto items-end">
                 <Select
                   label="Comprobante"
                   size="sm"
@@ -265,6 +200,19 @@ export default function VentasScreen() {
                   </SelectItem>
                 </Select>
 
+                {tipoComprobante === TIPO_COMPROBANTE_VENTA.NOTA_CREDITO && (
+                  <Input
+                    label="Nro. Factura"
+                    size="sm"
+                    className="w-32"
+                    type="number"
+                    value={numeroComprobanteAsociado?.toString() || ""}
+                    onValueChange={(v) =>
+                      setNumeroComprobanteAsociado(v ? Number(v) : null)
+                    }
+                  />
+                )}
+
                 <Select
                   label="Lista Precios"
                   size="sm"
@@ -289,20 +237,20 @@ export default function VentasScreen() {
           <VentaGrid
             items={items}
             onUpdateQuantity={handleUpdateQuantity}
-            onRemoveItem={handleRemoveItem}
+            onRemoveItem={removeItem}
           />
         </section>
 
         {/* Footer: Totales y Acciones */}
         <VentaFooter
           subtotal={items.reduce((acc, item) => acc + item.subtotal, 0)}
-          descuento={descuentoGeneral}
-          setDescuento={setDescuentoGeneral}
+          descuento={descuentoPorcentaje}
+          setDescuento={setDescuentoPorcentaje}
           total={calculateTotal()}
           items={items}
           cliente={cliente}
           tipoComprobante={tipoComprobante}
-          handleLimpiar={handleLimpiar}
+          handleLimpiar={clearVenta}
         />
       </div>
     </div>
