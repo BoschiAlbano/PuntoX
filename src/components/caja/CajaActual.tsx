@@ -55,9 +55,11 @@ export default function CajaActual() {
     isLoading,
     isFetching,
     isOpening,
+    isClosing,
     isAddingGasto,
     isAddingConcepto,
     abrirCaja,
+    cerrarCaja,
     agregarGasto,
     agregarConceptoGasto,
     refetch,
@@ -95,6 +97,14 @@ export default function CajaActual() {
     onOpenChange: onConceptoChange,
   } = useDisclosure();
   const [nuevoConcepto, setNuevoConcepto] = useState("");
+
+  // Cerrar caja
+  const {
+    isOpen: isCerrarOpen,
+    onOpen: onCerrarOpen,
+    onOpenChange: onCerrarChange,
+  } = useDisclosure();
+  const [montoCierre, setMontoCierre] = useState("");
 
   const handleAgregarConcepto = async () => {
     if (!nuevoConcepto) return;
@@ -193,6 +203,35 @@ export default function CajaActual() {
       </div>
     );
   }
+
+  const handleCerrarCaja = async () => {
+    if (!montoCierre || Number(montoCierre) < 0) {
+      addToast({
+        title: "Error",
+        description: "Debe ingresar un monto válido",
+        color: "danger",
+      });
+      return;
+    }
+
+    try {
+      await cerrarCaja(Number(montoCierre));
+      onCerrarChange();
+      setMontoCierre("");
+      addToast({
+        title: "Caja cerrada",
+        description: "La caja se cerró exitosamente",
+        color: "success",
+      });
+    } catch (error) {
+      console.error(error);
+      addToast({
+        title: "Error",
+        description: "No se pudo cerrar la caja",
+        color: "danger",
+      });
+    }
+  };
 
   // Caja Cerrada State
   if (!isCajaAbierta || !cajaActual) {
@@ -399,6 +438,16 @@ export default function CajaActual() {
               onPress={() => refetch()}
             >
               Actualizar
+            </Button>
+
+            <Button
+              size="sm"
+              color="danger"
+              variant="flat"
+              startContent={<Lock size={16} />}
+              onPress={onCerrarOpen}
+            >
+              Cerrar Caja
             </Button>
           </div>
 
@@ -631,6 +680,81 @@ export default function CajaActual() {
                   isLoading={isAddingConcepto}
                 >
                   Guardar
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Modal Cerrar Caja */}
+      <Modal isOpen={isCerrarOpen} onOpenChange={onCerrarChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>Cierre de Caja</ModalHeader>
+              <ModalBody>
+                <div className="flex flex-col gap-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-semibold mb-2">
+                      Resumen del Día
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-gray-500">Monto Inicial:</span>
+                        <p className="font-medium">
+                          {formatMoney(cajaActual?.MontoInicial || 0)}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Total Efectivo:</span>
+                        <p className="font-medium">
+                          {formatMoney(
+                            (cajaActual?.TotalEntradaEfectivo || 0) -
+                              (cajaActual?.TotalSalidaEfectivo || 0),
+                          )}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Ganancia Total:</span>
+                        <p className="font-bold text-lg text-success">
+                          {formatMoney(cajaActual?.Ganancia || 0)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Input
+                    label="Monto de Cierre"
+                    description="Ingrese el dinero en efectivo total al finalizar el turno"
+                    placeholder="0.00"
+                    type="number"
+                    value={montoCierre}
+                    onValueChange={setMontoCierre}
+                    startContent={
+                      <div className="pointer-events-none flex items-center">
+                        <span className="text-default-400 text-small">$</span>
+                      </div>
+                    }
+                  />
+
+                  <p className="text-xs text-yellow-600 bg-yellow-50 p-3 rounded-lg">
+                    ⚠️ Verifique que el monto de cierre coincida con el efectivo
+                    físico en caja antes de continuar.
+                  </p>
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" color="danger" onPress={onClose}>
+                  Cancelar
+                </Button>
+                <Button
+                  color="danger"
+                  onPress={handleCerrarCaja}
+                  isLoading={isClosing}
+                  startContent={!isClosing && <Lock size={16} />}
+                >
+                  Cerrar Caja
                 </Button>
               </ModalFooter>
             </>
