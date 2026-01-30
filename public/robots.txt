@@ -1,0 +1,12 @@
+# Para bots de búsqueda
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /(dashboard)/
+Disallow: /admin/
+
+# Crawl delay (opcional, para evitar sobrecarga)
+Crawl-delay: 1
+
+# Sitemap
+Sitemap: https://puntox.com.ar/sitemap.xml

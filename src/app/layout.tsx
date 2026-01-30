@@ -14,8 +14,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Punto X",
-  description: "Ecoomerce platform for local businesses",
+  metadataBase: new URL("https://puntox.com.ar"),
+  title: {
+    default: "Punto X - Sistema de Gestión Empresarial",
+    template: "%s | Punto X",
+  },
+  description:
+    "Software de gestión completo para negocios. Control de inventario, ventas, facturación y CRM en una plataforma integral.",
+  applicationName: "Punto X",
+
+  // Manifest para PWA
+  manifest: "/manifest.json",
+
   icons: {
     icon: [
       { url: "/favicon-light.ico", media: "(prefers-color-scheme: light)" },
@@ -23,6 +33,13 @@ export const metadata: Metadata = {
     ],
     shortcut: ["/favicon-light.ico"],
     apple: ["/favicon-light.ico"],
+  },
+
+  // App Links
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Punto X",
   },
 };
 

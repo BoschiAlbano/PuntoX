@@ -32,7 +32,7 @@ export const LandingHero = () => {
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight tracking-tight">
             Control total de tu <br />
             <span className="text-transparent bg-clip-text bg-linear-to-r from-[#90c472] to-emerald-400">
-              SaaS y Negocio
+              Negocio
             </span>
           </h1>
 
