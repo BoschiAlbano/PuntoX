@@ -5,6 +5,7 @@ import { PermisoError } from "@/lib/requirePermiso";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 import { handleError } from "@/lib/errors/handler";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 type RolTipo = "ADMINISTRADOR" | "EMPLEADO";
 
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: "empleados:admin", // Mismo permiso que productos por coherencia
+      permission: PERMISSIONS.EMPLEADOS_ADMIN, // Mismo permiso que productos por coherencia
     });
 
     const roles = await prisma.perfiles.findMany({
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId, usuarioId } = await getAuthContext({
       req,
-      permission: "empleados:admin", // Mismo permiso que productos por coherencia
+      permission: PERMISSIONS.EMPLEADOS_ADMIN, // Mismo permiso que productos por coherencia
     });
     const json = await req.json().catch(() => null);
     const parsed = rolSchema.safeParse(json);
@@ -207,7 +208,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const { tenantId, usuarioId } = await getAuthContext({
       req,
-      permission: "empleados:admin", // Mismo permiso que productos por coherencia
+      permission: PERMISSIONS.EMPLEADOS_ADMIN, // Mismo permiso que productos por coherencia
     });
     const tenantIdBigInt = BigInt(tenantId);
 
@@ -470,7 +471,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const { tenantId, usuarioId } = await getAuthContext({
       req,
-      permission: "empleados:admin", // Mismo permiso que productos por coherencia
+      permission: PERMISSIONS.EMPLEADOS_ADMIN, // Mismo permiso que productos por coherencia
     });
     const tenantIdBigInt = BigInt(tenantId);
 

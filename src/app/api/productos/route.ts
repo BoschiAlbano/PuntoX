@@ -1,4 +1,5 @@
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import {
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId, sucursalId } = await getAuthContext({
       req,
-      permission: "productos", // Opcional: Requiere permiso de visualización
+      permission: PERMISSIONS.PRODUCTOS, // Opcional: Requiere permiso de visualización
     });
 
     const pagination = parsePaginationParams(req);
@@ -135,7 +136,7 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId, sucursalId } = await getAuthContext({
       req,
-      permission: "productos", // Permiso de escritura
+      permission: PERMISSIONS.PRODUCTOS, // Permiso de escritura
     });
 
     const body = await req.json();
@@ -282,7 +283,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const { tenantId, sucursalId } = await getAuthContext({
       req,
-      permission: "productos", // Permiso de escritura
+      permission: PERMISSIONS.PRODUCTOS, // Permiso de escritura
     });
 
     const body = await req.json();
@@ -476,7 +477,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: "productos", // Permiso de eliminación
+      permission: PERMISSIONS.PRODUCTOS, // Permiso de eliminación
     });
 
     const params = req.nextUrl.searchParams;

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 import { handleError } from "@/lib/errors/handler";
 import prisma from "@/DB/prisma";
 
@@ -10,7 +11,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: "configuracion",
+      permission: PERMISSIONS.CONFIGURACION,
     });
 
     if (!tenantId) {

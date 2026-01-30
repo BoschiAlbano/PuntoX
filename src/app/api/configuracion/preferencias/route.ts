@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 import { handleError } from "@/lib/errors/handler";
 
 const preferenciasSchema = z.object({
@@ -13,7 +14,7 @@ const preferenciasSchema = z.object({
 export async function GET(req: NextRequest) {
   const { tenantId } = await getAuthContext({
     req,
-    permission: "configuracion",
+    permission: PERMISSIONS.CONFIGURACION,
   });
   if (!tenantId) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
@@ -41,7 +42,7 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   const { tenantId } = await getAuthContext({
     req,
-    permission: "configuracion",
+    permission: PERMISSIONS.CONFIGURACION,
   });
   if (!tenantId) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });

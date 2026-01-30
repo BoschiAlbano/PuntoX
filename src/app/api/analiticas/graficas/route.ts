@@ -6,6 +6,7 @@ import {
   TIPO_PAGO,
 } from "@/lib/constants/comprobantes";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 /**
  * GET /api/analiticas/graficas
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: "analiticas", // Mismo permiso que productos por coherencia
+      permission: PERMISSIONS.ANALITICAS, // Mismo permiso que productos por coherencia
     });
     const searchParams = req.nextUrl.searchParams;
 

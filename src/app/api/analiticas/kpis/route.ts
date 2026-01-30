@@ -3,6 +3,7 @@ import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 import { TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 /**
  * GET /api/analiticas/kpis
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: "analiticas", // Mismo permiso que productos por coherencia
+      permission: PERMISSIONS.ANALITICAS, // Mismo permiso que productos por coherencia
     });
 
     const searchParams = req.nextUrl.searchParams;

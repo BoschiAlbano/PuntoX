@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 import { z } from "zod";
 import { ZodError } from "zod";
 import { handleError } from "@/lib/errors/handler";
@@ -13,7 +14,7 @@ const createConceptoGastoSchema = z.object({
 export async function GET(req: NextRequest) {
   const { tenantId } = await getAuthContext({
     req,
-    permission: "caja", // Mismo permiso que productos por coherencia
+    permission: PERMISSIONS.CAJA, // Mismo permiso que productos por coherencia
   });
 
   try {
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { tenantId } = await getAuthContext({
     req,
-    permission: "caja", // Mismo permiso que productos por coherencia
+    permission: PERMISSIONS.CAJA, // Mismo permiso que productos por coherencia
   });
 
   try {

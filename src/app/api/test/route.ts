@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 export async function GET(req: NextRequest) {
   try {
     const { tenantId, user, sucursalId } = await getAuthContext({
       req,
-      permission: "productos", // Permiso compartido
+      permission: PERMISSIONS.PRODUCTOS, // Permiso compartido
     });
 
     if (!user) {

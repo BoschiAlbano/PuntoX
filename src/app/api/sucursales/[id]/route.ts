@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 import { handleError } from "@/lib/errors/handler";
 
 // Schema de validación para actualizar sucursal
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: "empleados:admin",
+      permission: PERMISSIONS.EMPLEADOS_ADMIN,
     });
 
     const { id } = await params;
@@ -120,7 +121,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: "empleados:admin",
+      permission: PERMISSIONS.EMPLEADOS_ADMIN,
     });
 
     const { id } = await params;
@@ -221,7 +222,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: "empleados:admin",
+      permission: PERMISSIONS.EMPLEADOS_ADMIN,
     });
 
     const { id } = await params;

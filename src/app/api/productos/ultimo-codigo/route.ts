@@ -1,4 +1,5 @@
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
@@ -7,7 +8,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: "productos", // Requires products permission
+      permission: PERMISSIONS.PRODUCTOS, // Requires products permission
     });
 
     const ultimoProducto = await prisma.articulo.findFirst({

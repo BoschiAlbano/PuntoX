@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 
 export async function GET(req: NextRequest) {
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   const { tenantId } = await getAuthContext({
     req,
-    permission: "configuracion",
+    permission: PERMISSIONS.CONFIGURACION,
   });
 
   if (!tenantId) {

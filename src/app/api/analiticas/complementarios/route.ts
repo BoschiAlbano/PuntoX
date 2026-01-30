@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 /**
  * GET /api/analiticas/complementarios
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: "analiticas", // Mismo permiso que productos por coherencia
+      permission: PERMISSIONS.ANALITICAS, // Mismo permiso que productos por coherencia
     });
     const searchParams = req.nextUrl.searchParams;
     const tipo = searchParams.get("tipo") || "todos";

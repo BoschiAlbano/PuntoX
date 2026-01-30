@@ -1,17 +1,18 @@
-// import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 
 export async function GET(req: NextRequest) {
   try {
-    // const { tenantId, sucursalId } = await getAuthContext({
-    //   req,
-    //   permission: "ventas",
-    // });
+    const { tenantId, sucursalId } = await getAuthContext({
+      req,
+      permission: PERMISSIONS.VENTAS,
+    });
 
-    const tenantId = "2";
-    const sucursalId = "2";
+    // const tenantId = "2";
+    // const sucursalId = "2";
 
     const searchParams = req.nextUrl.searchParams;
     const q = searchParams.get("q")?.trim() || "";

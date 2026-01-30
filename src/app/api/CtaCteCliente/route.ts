@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 import { handleError } from "@/lib/errors/handler";
 import {
   TIPO_COMPROBANTE_VENTA,
@@ -21,7 +22,7 @@ const pagoSchema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext({ req, permission: "clientes" });
+    const { tenantId } = await getAuthContext({ req, permission: PERMISSIONS.CLIENTES });
 
     const searchParams = req.nextUrl.searchParams;
     const clienteIdStr = searchParams.get("clienteId");
@@ -189,7 +190,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext({ req, permission: "clientes" });
+    const { tenantId } = await getAuthContext({ req, permission: PERMISSIONS.CLIENTES });
     const tenantIdBigInt = BigInt(tenantId);
 
     // Get User and Service Data

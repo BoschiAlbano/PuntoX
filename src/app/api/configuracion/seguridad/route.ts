@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 import { handleError } from "@/lib/errors/handler";
 import { createError } from "@/lib/errors/types";
 import prisma from "@/DB/prisma";
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: "configuracion",
+      permission: PERMISSIONS.CONFIGURACION,
     });
 
     if (!tenantId) {
@@ -99,7 +100,7 @@ export async function PUT(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: "configuracion",
+      permission: PERMISSIONS.CONFIGURACION,
     });
 
     if (!tenantId) {

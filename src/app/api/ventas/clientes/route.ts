@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 import { handleError } from "@/lib/errors/handler";
 import {
   TIPO_COMPROBANTE_VENTA,
@@ -9,7 +10,7 @@ import {
 
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext({ req, permission: "clientes" });
+    const { tenantId } = await getAuthContext({ req, permission: PERMISSIONS.CLIENTES });
     const tenantIdBigInt = BigInt(tenantId);
 
     const searchParams = req.nextUrl.searchParams;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 /**
  * GET /api/analiticas/alertas
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: "analiticas", // Mismo permiso que productos por coherencia
+      permission: PERMISSIONS.ANALITICAS, // Mismo permiso que productos por coherencia
     });
 
     const searchParams = req.nextUrl.searchParams;
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
       const productosCriticos = todosProductos
         .filter(
           (p) =>
-            Number(p.Stock) <= Number(p.StockMinimo) || Number(p.Stock) <= 0
+            Number(p.Stock) <= Number(p.StockMinimo) || Number(p.Stock) <= 0,
         )
         .slice(0, 50)
         .sort((a, b) => Number(a.Stock) - Number(b.Stock));
@@ -153,7 +154,7 @@ export async function GET(req: NextRequest) {
         const monto = Number(mov.Movimiento.Monto);
         const fecha = mov.Movimiento.Fecha;
         const diasVencido = Math.floor(
-          (Date.now() - fecha.getTime()) / (24 * 60 * 60 * 1000)
+          (Date.now() - fecha.getTime()) / (24 * 60 * 60 * 1000),
         );
 
         if (!saldosPorCliente[clienteId]) {
@@ -278,7 +279,7 @@ export async function GET(req: NextRequest) {
       alertas.cheques = chequesProximos.map((cheque) => {
         const diasHastaVencimiento = Math.ceil(
           (cheque.FechaVencimiento.getTime() - Date.now()) /
-            (24 * 60 * 60 * 1000)
+            (24 * 60 * 60 * 1000),
         );
 
         return {

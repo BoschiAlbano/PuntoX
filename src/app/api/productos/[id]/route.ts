@@ -1,4 +1,5 @@
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
@@ -13,7 +14,7 @@ export async function GET(
 
     const { tenantId, sucursalId } = await getAuthContext({
       req,
-      permission: "productos",
+      permission: PERMISSIONS.PRODUCTOS,
     });
 
     if (!id) {
