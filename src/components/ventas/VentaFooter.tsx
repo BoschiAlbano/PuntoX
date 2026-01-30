@@ -138,6 +138,28 @@ export default function VentaFooter({
     const montoVal = parseFloat(currentMonto);
     if (isNaN(montoVal) || montoVal <= 0) return;
 
+    // Validación de Límite de Cuenta Corriente
+    if (
+      currentTipo === TIPO_PAGO.CUENTA_CORRIENTE &&
+      cliente?.Persona_Cliente?.TieneLimiteCompra
+    ) {
+      const margenDisponible = cliente.Persona_Cliente.MargenDisponible ?? 0;
+      const pagosCtaCteAcumulados = pagos
+        .filter((p) => p.tipoPago === TIPO_PAGO.CUENTA_CORRIENTE)
+        .reduce((sum, p) => sum + p.monto, 0);
+
+      const nuevoTotalCtaCte = pagosCtaCteAcumulados + montoVal;
+
+      if (nuevoTotalCtaCte > margenDisponible) {
+        addToast({
+          title: "Límite Excedido",
+          description: `El monto excede el margen disponible del cliente ($${(margenDisponible - pagosCtaCteAcumulados).toFixed(2)})`,
+          color: "danger",
+        });
+        return;
+      }
+    }
+
     addPago({ tipoPago: currentTipo, monto: montoVal });
   };
 
@@ -251,8 +273,7 @@ export default function VentaFooter({
 
     const payload = {
       tipoComprobante,
-      clienteId: cliente?.id || 0,
-      // puestoTrabajoId: 1, // HARDCODED DEFAULT
+      clienteId: cliente?.Id || 0,
       detalles: items.map((i) => ({
         articuloId: i.Id,
         codigo: i.Codigo?.toString() || "",
@@ -271,30 +292,7 @@ export default function VentaFooter({
       fecha: new Date().toISOString(),
       numeroComprobanteAsociado,
     };
-
-    // test
-    const ticketData = {
-      items: [...items], // Copy items
-      cliente: cliente,
-      subtotal: items.reduce(
-        (acc: number, item: any) => acc + item.subtotal,
-        0,
-      ),
-      descuento: subtotal * (descuento / 100),
-      total: total,
-      fecha: new Date().toISOString(),
-      numeroComprobante: "999",
-      tipoComprobante: getTipoComprobanteLabel(tipoComprobante),
-      formasPago: [...pagos],
-    };
-
-    setLastSaleData(ticketData);
-
-    handlePrint();
-    setIsSaving(false);
-
-    // fin test
-    // createSaleMutation.mutate(payload);
+    createSaleMutation.mutate(payload);
   };
 
   const getTipoLabel = (tipo: number) => {
@@ -306,13 +304,26 @@ export default function VentaFooter({
       case TIPO_PAGO.CHEQUE:
         return "Cheque";
       case TIPO_PAGO.CUENTA_CORRIENTE:
-        return "Cta. Cte.";
+        if (cliente?.Persona_Cliente?.ActivarCtaCte === true) {
+          return "Cta. Cte.";
+        }
+        return null;
       case TIPO_PAGO.TRANSFERENCIA:
         return "Transf.";
       default:
         return "Otro";
     }
   };
+
+  const paymentOptions = [
+    { key: TIPO_PAGO.EFECTIVO, label: "Efectivo" },
+    { key: TIPO_PAGO.TARJETA, label: "Tarjeta" },
+    { key: TIPO_PAGO.TRANSFERENCIA, label: "Transferencia" },
+    { key: TIPO_PAGO.CHEQUE, label: "Cheque" },
+    ...(cliente?.Persona_Cliente?.ActivarCtaCte
+      ? [{ key: TIPO_PAGO.CUENTA_CORRIENTE, label: "Cta. Corriente" }]
+      : []),
+  ];
 
   return (
     <section className="flex-none w-full md:w-[320px] lg:w-[360px] flex flex-col gap-4 h-full">
@@ -334,27 +345,11 @@ export default function VentaFooter({
               className="flex-2"
               size="sm"
             >
-              <SelectItem key={TIPO_PAGO.EFECTIVO} textValue="Efectivo">
-                Efectivo
-              </SelectItem>
-              <SelectItem key={TIPO_PAGO.TARJETA} textValue="Tarjeta">
-                Tarjeta
-              </SelectItem>
-              <SelectItem
-                key={TIPO_PAGO.TRANSFERENCIA}
-                textValue="Transferencia"
-              >
-                Transferencia
-              </SelectItem>
-              <SelectItem key={TIPO_PAGO.CHEQUE} textValue="Cheque">
-                Cheque
-              </SelectItem>
-              <SelectItem
-                key={TIPO_PAGO.CUENTA_CORRIENTE}
-                textValue="Cta. Corriente"
-              >
-                Cta. Corriente
-              </SelectItem>
+              {paymentOptions.map((option) => (
+                <SelectItem key={option.key} textValue={option.label}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </Select>
             <Input
               label="Monto"
@@ -377,6 +372,33 @@ export default function VentaFooter({
               <Plus size={20} />
             </Button>
           </div>
+
+          {/* Margen Disponible Indicator */}
+          {currentTipo === TIPO_PAGO.CUENTA_CORRIENTE &&
+            cliente?.Persona_Cliente?.ActivarCtaCte && (
+              <div
+                className={`text-xs px-1 mb-2 ${cliente?.Persona_Cliente?.TieneLimiteCompra ? (cliente.Persona_Cliente.MargenDisponible < 0 ? "text-danger" : "text-success") : "text-default-500"}`}
+              >
+                {cliente?.Persona_Cliente?.TieneLimiteCompra ? (
+                  <>
+                    Margen Disponible:{" "}
+                    <b>
+                      $
+                      {(
+                        cliente.Persona_Cliente.MargenDisponible -
+                        pagos
+                          .filter(
+                            (p) => p.tipoPago === TIPO_PAGO.CUENTA_CORRIENTE,
+                          )
+                          .reduce((acc, p) => acc + p.monto, 0)
+                      ).toFixed(2)}
+                    </b>
+                  </>
+                ) : (
+                  "Sin límite de compra"
+                )}
+              </div>
+            )}
 
           {/* List */}
           <div className="flex-1 overflow-y-auto">

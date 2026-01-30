@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { z } from "zod";
 import { ZodError } from "zod";
 import { handleError } from "@/lib/errors/handler";
@@ -10,12 +10,11 @@ const createConceptoGastoSchema = z.object({
   EstaEliminado: z.boolean().optional().default(false),
 });
 
-export async function GET() {
-  const { tenantId, error } = await getAuthUser();
-
-  if (error) {
-    return error;
-  }
+export async function GET(req: NextRequest) {
+  const { tenantId } = await getAuthContext({
+    req,
+    permission: "caja", // Mismo permiso que productos por coherencia
+  });
 
   try {
     const conceptos = await prisma.conceptoGastos.findMany({
@@ -40,19 +39,18 @@ export async function GET() {
           Id: Number(concepto.Id),
         })),
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     return handleError(error);
   }
 }
 
-export async function POST(req: Request) {
-  const { tenantId, error } = await getAuthUser();
-
-  if (error) {
-    return error;
-  }
+export async function POST(req: NextRequest) {
+  const { tenantId } = await getAuthContext({
+    req,
+    permission: "caja", // Mismo permiso que productos por coherencia
+  });
 
   try {
     const body = await req.json();
@@ -72,7 +70,7 @@ export async function POST(req: Request) {
         Id: Number(concepto.Id),
         TenantId: tenantId,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     if (error instanceof ZodError) {
@@ -84,13 +82,10 @@ export async function POST(req: Request) {
             message: issue.message,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return handleError(error);
   }
 }
-
-
-

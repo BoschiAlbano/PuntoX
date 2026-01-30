@@ -295,6 +295,24 @@ export function useCaja(options?: {
     },
   });
 
+  const agregarConceptoGastoMutation = useMutation({
+    mutationFn: async (descripcion: string) => {
+      const response = await fetch("/api/conceptos-gastos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ Descripcion: descripcion }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Error al crear concepto");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["conceptos-gastos"] });
+    },
+  });
+
   return {
     // Data
     cajaActual: cajaQuery.data,
@@ -306,6 +324,10 @@ export function useCaja(options?: {
       cajaQuery.isLoading || conceptosQuery.isLoading || resumenQuery.isLoading,
     isError:
       cajaQuery.isError || conceptosQuery.isError || resumenQuery.isError,
+    isFetching:
+      cajaQuery.isFetching ||
+      conceptosQuery.isFetching ||
+      resumenQuery.isFetching,
 
     // Helper para verificar estado
     isCajaAbierta: !!cajaQuery.data && !cajaQuery.data.FechaCierre,
@@ -314,11 +336,13 @@ export function useCaja(options?: {
     abrirCaja: abrirCajaMutation.mutateAsync,
     cerrarCaja: cerrarCajaMutation.mutateAsync,
     agregarGasto: agregarGastoMutation.mutateAsync,
+    agregarConceptoGasto: agregarConceptoGastoMutation.mutateAsync,
 
     // Loading states for actions
     isOpening: abrirCajaMutation.isPending,
     isClosing: cerrarCajaMutation.isPending,
     isAddingGasto: agregarGastoMutation.isPending,
+    isAddingConcepto: agregarConceptoGastoMutation.isPending,
 
     // Refetch
     refetch: async () => {
@@ -327,6 +351,14 @@ export function useCaja(options?: {
       if (enableConceptos) promises.push(conceptosQuery.refetch());
       if (enableResumen) promises.push(resumenQuery.refetch());
       await Promise.all(promises);
+    },
+
+    // Helper fetcher
+    fetchDetalleComprobante: async (id: number) => {
+      if (!sucursalId) return null;
+      const response = await fetch(`/api/comprobantes?id=${id}&detalle=true`);
+      if (!response.ok) throw new Error("Error fetching comprobante");
+      return response.json();
     },
   };
 }

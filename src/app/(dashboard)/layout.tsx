@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
 import { useUserStore } from "@/store/useUserStore";
 import ProtectRoute from "@/components/auth/ProtectRoute";
-import Loading from "@/components/loading/loading";
+import { LoadingPage } from "@/components/loading/loading";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/dashboard/Sidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
@@ -29,7 +29,7 @@ export default function DashboardLayout({
   }, []);
 
   if (isLoading && !isInitialized) {
-    return <Loading message="Verificando autenticación..." />;
+    return <LoadingPage message="Verificando autenticación..." />;
   }
 
   if (!branches.length && roles.some((role) => role.Tipo !== "SUPERADMIN")) {
@@ -38,34 +38,25 @@ export default function DashboardLayout({
 
   return (
     <ProtectRoute>
-      <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-purple-50/30 flex">
+      <div className="bg-linear-to-br from-slate-50 via-blue-50/30 to-purple-50/30 flex">
         <section
           onClick={() => setshow(false)}
-          className={`z-99 transition-all duration-400 ease-in-out sm:relative fixed sm:w-auto w-screen  sm:h-auto h-screen  ${
+          className={`z-99 transition-all duration-400 ease-in-out sm:relative absolute  sm:w-auto w-screen sm:h-auto h-screen  ${
             show ? `translate-x-[0%]` : `-translate-x-full`
           }`}
         >
-          {/* Sidebar */}
           <Sidebar
             isCollapsed={isSidebarCollapsed}
             onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           />
         </section>
 
-        <div className="flex-1 flex flex-col h-screen overflow-x-hidden ">
+        <div className="flex-1 main-content overflow-y-auto">
           <DashboardHeader isShow={setshow} show={show} />
-
-          <main className="flex-1  overflow-x-hidden relative ">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-              className="sm:p-6 py-4 px-0 h-full min-h-auto "
-            >
-              {children}
-              <Footer />
-            </motion.div>
+          <main className="sm:overflow-x-clip overflow-x-hidden">
+            {children}
           </main>
+          <Footer />
         </div>
       </div>
     </ProtectRoute>
@@ -74,10 +65,10 @@ export default function DashboardLayout({
 
 function Footer() {
   return (
-    <footer className="bg-white/50 backdrop-blur-sm border-t border-slate-200 py-4 px-6">
-      <div className="flex flex-col sm:flex-row items-center justify-between sm:gap-0 gap-2 text-sm text-slate-600">
+    <footer className="bg-white/50 backdrop-blur-sm  py-4 px-6">
+      <div className="flex flex-col sm:flex-row items-center justify-between sm:gap-0 gap-2 text-sm text-[#76b7c8]">
         <p className="text-center">
-          ЖИ 2024 Punto X SaaS. Todos los derechos reservados.
+          ЖИ 2026 Punto X. Todos los derechos reservados.
         </p>
         <div className="flex items-center gap-4">
           <a href="#" className="hover:text-blue-600 transition-colors">

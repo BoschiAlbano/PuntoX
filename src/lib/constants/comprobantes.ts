@@ -29,3 +29,9 @@ export const ESTADO_FACTURA = {
   CONFIRMADO: 2,
   ANULADO: 3,
 } as const;
+
+// Constantes para tipos de movimiento
+export const TIPO_MOVIMIENTO = {
+  ENTRADA: 1,
+  SALIDA: 2,
+} as const;

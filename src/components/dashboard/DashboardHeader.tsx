@@ -1,9 +1,9 @@
 "use client";
 import { motion } from "framer-motion";
 // import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
-import { Dispatch, SetStateAction, memo, useMemo } from "react";
+import { Dispatch, SetStateAction, memo, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
-import { ChevronRight, Home } from "lucide-react";
+import { ChevronRight, Home, MoonIcon, SunIcon } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
 function DashboardHeaderComponent({
   isShow,
@@ -65,12 +65,22 @@ function DashboardHeaderComponent({
 
   const displayRol = roles.map((rol) => rol.Descripcion).join(" - ");
 
-  console.log(user);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  };
+
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="bg-white/80 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-40"
+      className="sticky top-0 z-40 backdrop-blur-sm bg-white/50"
     >
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
@@ -109,6 +119,20 @@ function DashboardHeaderComponent({
 
           {/* Right Section */}
           <div className="flex items-center sm:gap-4 gap-0 sm:ml-6 ml-0">
+            {/* modo oscuro */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative p-3 rounded-xl hover:bg-slate-100 transition-colors sm:block hidden"
+              onClick={toggleDarkMode}
+            >
+              {isDarkMode ? (
+                <SunIcon className="w-6 h-6 text-slate-600" />
+              ) : (
+                <MoonIcon className="w-6 h-6 text-slate-600" />
+              )}
+            </motion.button>
+
             {/* Notifications */}
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -128,7 +152,7 @@ function DashboardHeaderComponent({
                   d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                 />
               </svg>
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-[#76b7c8] rounded-full border-2 border-white animate-pulse" />
             </motion.button>
 
             <motion.button

@@ -133,6 +133,7 @@ async function createBaseComprobante(
   numero: number,
   descuentaStock: boolean,
   sucursalId: bigint,
+  clienteId: number, // Added param
   cajaId?: bigint,
 ) {
   // Totals
@@ -197,14 +198,23 @@ async function createBaseComprobante(
         const isNotaCredito =
           data.tipoComprobante === TIPO_COMPROBANTE_VENTA.NOTA_CREDITO;
 
-        await tx.articulo.update({
-          where: { Id: art.Id },
-          data: {
+        await tx.articuloStock.upsert({
+          where: {
+            ArticuloId_SucursalId: {
+              ArticuloId: art.Id,
+              SucursalId: sucursalId,
+            },
+          },
+          update: {
             Stock: {
-              // Si es Nota de Credito, incrementamos el stock (devolución)
-              // Si es Venta normal, decrementamos
               [isNotaCredito ? "increment" : "decrement"]: detalle.cantidad,
             },
+          },
+          create: {
+            ArticuloId: art.Id,
+            SucursalId: sucursalId,
+            TenantId: tenantId,
+            Stock: isNotaCredito ? detalle.cantidad : -detalle.cantidad,
           },
         });
       }
@@ -233,14 +243,11 @@ async function createBaseComprobante(
           CantidadCuotas: formaPago.cantidadCuotas || 1,
         },
       });
-    } else if (
-      formaPago.tipoPago === TIPO_PAGO.CUENTA_CORRIENTE &&
-      formaPago.clienteId
-    ) {
+    } else if (formaPago.tipoPago === TIPO_PAGO.CUENTA_CORRIENTE) {
       await tx.formaPago_CtaCte.create({
         data: {
           Id: fp.Id,
-          ClienteId: BigInt(formaPago.clienteId),
+          ClienteId: BigInt(formaPago.clienteId || clienteId), // Use passed clienteId as fallback
         },
       });
     } else if (formaPago.tipoPago === TIPO_PAGO.CHEQUE && formaPago.chequeId) {
@@ -395,6 +402,7 @@ export async function createFacturaA(
     numero,
     descuentaStock,
     sucursalId,
+    clienteId, // passed
     cajaId,
   );
   // Update IVA
@@ -436,6 +444,7 @@ export async function createFacturaB(
     numero,
     descuentaStock,
     sucursalId,
+    clienteId, // passed
     cajaId,
   );
   await tx.comprobante.update({
@@ -475,6 +484,7 @@ export async function createFacturaC(
     numero,
     descuentaStock,
     sucursalId,
+    clienteId, // passed
     cajaId,
   );
 
@@ -508,6 +518,7 @@ export async function createPresupuesto(
     numero,
     descuentaStock,
     sucursalId,
+    clienteId, // passed
   );
   await tx.comprobante_Presupuesto.create({
     data: {
@@ -538,6 +549,7 @@ export async function createRemito(
     numero,
     descuentaStock,
     sucursalId,
+    clienteId, // passed
   );
   await tx.comprobante_Remito.create({
     data: {
@@ -602,6 +614,7 @@ export async function createNotaCredito(
     numero,
     descuentaStock,
     sucursalId,
+    clienteId, // passed
     cajaId,
   );
   await tx.comprobante.update({
@@ -640,8 +653,9 @@ export async function createCuentaCorrienteCliente(
     empleadoId,
     numero,
     false,
-    cajaId,
     sucursalId,
+    clienteId,
+    cajaId,
   );
 
   if (!movimiento) {
@@ -657,6 +671,174 @@ export async function createCuentaCorrienteCliente(
   });
 
   // Link
+  await tx.comprobante_CuentaCorriente.create({
+    data: {
+      Id: comprobante.Id,
+      ClienteId: BigInt(clienteId),
+      MovimientoCuentaCorrienteId: movCtaCte.Id,
+    },
+  });
+
+  return comprobante;
+}
+
+export async function registrarPagoCuentaCorriente(
+  tx: TransactionClient,
+  tenantId: bigint,
+  usuarioId: bigint,
+  sucursalId: bigint,
+  cajaId: bigint,
+  clienteId: number,
+  monto: number,
+  formasPago: z.infer<typeof formaPagoSchema>[],
+  numero: number,
+) {
+  // 1. Crear Comprobante
+  const fecha = new Date();
+  const comprobante = await tx.comprobante.create({
+    data: {
+      TenantId: tenantId,
+      UsuarioId: usuarioId,
+      EmpleadoId: usuarioId, // Asumo que el usuario es el empleado por ahora, o pasarlo si es distinto
+      SucursalId: sucursalId,
+      Fecha: fecha,
+      Numero: numero,
+      SubTotal: monto,
+      Descuento: 0,
+      Total: monto,
+      Iva21: 0,
+      Iva105: 0,
+      TipoComprobante: TIPO_COMPROBANTE_VENTA.CUENTA_CORRIENTE_CLIENTE,
+      EstaEliminado: false,
+    },
+  });
+
+  // 2. Crear Formas de Pago
+  for (const fp of formasPago) {
+    const formaPago = await tx.formaPago.create({
+      data: {
+        TenantId: tenantId,
+        ComprobanteId: comprobante.Id,
+        TipoPago: fp.tipoPago,
+        Monto: fp.monto,
+        EstaEliminado: false,
+      },
+    });
+
+    if (fp.tipoPago === TIPO_PAGO.TARJETA && fp.tarjetaId) {
+      await tx.formaPago_Tarjeta.create({
+        data: {
+          Id: formaPago.Id,
+          TarjetaId: BigInt(fp.tarjetaId),
+          NumeroTarjeta: fp.numeroTarjeta || "",
+          CuponPago: fp.cuponPago || "",
+          CantidadCuotas: fp.cantidadCuotas || 1,
+        },
+      });
+    } else if (fp.tipoPago === TIPO_PAGO.CHEQUE && fp.chequeId) {
+      await tx.formaPago_Cheque.create({
+        data: {
+          Id: formaPago.Id,
+          ChequeId: BigInt(fp.chequeId),
+        },
+      });
+    }
+  }
+
+  // 3. Crear Movimiento y Actualizar Caja
+  const descripcionMov = `Pago Cta Cte - Comp #${numero}`;
+
+  // Entrada de dinero (Tipo 1)
+  const movimiento = await tx.movimiento.create({
+    data: {
+      CajaId: cajaId,
+      TenantId: tenantId,
+      UsuarioId: usuarioId,
+      ComprobanteId: comprobante.Id,
+      Monto: monto, // Total del pago
+      Fecha: fecha,
+      Descripcion: descripcionMov,
+      TipoMovimiento: 1, // Entrada
+      EstaEliminado: false,
+    },
+  });
+
+  // Update Caja Totals & DetalleCaja
+  // Logic copied/adapted from createBaseComprobante for Payment Input
+  for (const fp of formasPago) {
+    if (!fp.monto || fp.monto === 0) continue;
+
+    let fieldToUpdate: string | undefined;
+
+    switch (fp.tipoPago) {
+      case TIPO_PAGO.EFECTIVO:
+        fieldToUpdate = "TotalEntradaEfectivo";
+        break;
+      case TIPO_PAGO.TARJETA:
+        fieldToUpdate = "TotalEntradaTarjeta";
+        break;
+      case TIPO_PAGO.CHEQUE:
+        fieldToUpdate = "TotalEntradaCheque";
+        break;
+      case TIPO_PAGO.CUENTA_CORRIENTE:
+        fieldToUpdate = "TotalEntradaCtaCte";
+        // Note: Accepting "CtaCte" as payment for "CtaCte Debt" is weird (paying debt with debt?),
+        // but if allowed, it increases EntradaCtaCte.
+        break;
+      case TIPO_PAGO.TRANSFERENCIA:
+        fieldToUpdate = "TotalEntradaTransf";
+        break;
+    }
+
+    if (fieldToUpdate) {
+      await tx.caja.update({
+        where: { Id: cajaId },
+        data: {
+          [fieldToUpdate]: {
+            increment: fp.monto,
+          },
+        },
+      });
+    }
+
+    // Upsert DetalleCaja
+    const detalleCajaParams = {
+      CajaId: cajaId,
+      TipoPago: fp.tipoPago,
+      TenantId: tenantId,
+    };
+
+    const existingDetalle = await tx.detalleCaja.findFirst({
+      where: {
+        ...detalleCajaParams,
+        EstaEliminado: false,
+      },
+    });
+
+    if (existingDetalle) {
+      await tx.detalleCaja.update({
+        where: { Id: existingDetalle.Id },
+        data: { Monto: { increment: fp.monto } },
+      });
+    } else {
+      await tx.detalleCaja.create({
+        data: {
+          ...detalleCajaParams,
+          Monto: fp.monto,
+          EstaEliminado: false,
+        },
+      });
+    }
+  }
+
+  // 4. Link to CtaCte
+  const movCtaCte = await tx.movimiento_CuentaCorriente.create({
+    data: {
+      Id: movimiento.Id,
+      ClienteId: BigInt(clienteId),
+    },
+  });
+
   await tx.comprobante_CuentaCorriente.create({
     data: {
       Id: comprobante.Id,

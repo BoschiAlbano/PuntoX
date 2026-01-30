@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Input, Select, SelectItem, Button, Spinner } from "@heroui/react";
+import {
+  Input,
+  Select,
+  SelectItem,
+  Button,
+  Spinner,
+  Checkbox,
+} from "@heroui/react";
 import Image from "next/image";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
 import { SectionPanel } from "./SectionPanel";
@@ -43,6 +50,7 @@ export function PerfilTab() {
     departamentoId: null as number | null,
     provinciaId: null as number | null,
     observacionPieFactura: "",
+    ShowFoto: false,
   });
 
   const [logo, setLogo] = useState<File | null>(null);
@@ -90,6 +98,7 @@ export function PerfilTab() {
         departamentoId: configuracionData.departamentoId || null,
         provinciaId: configuracionData.provinciaId || null,
         observacionPieFactura: configuracionData.observacionPieFactura || "",
+        ShowFoto: configuracionData.ShowFoto || false,
       });
 
       if (configuracionData.provinciaId) {
@@ -182,16 +191,29 @@ export function PerfilTab() {
               </div>
             )}
             <div className="flex-1">
-              <Input
-                type="file"
-                accept="image/jpeg, image/jpg, image/png"
-                variant="bordered"
-                classNames={{ inputWrapper: "bg-white border-slate-200" }}
-                onChange={handleLogoChange}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Formatos: JPG, JPEG, PNG. Máximo 5MB
-              </p>
+              <div>
+                <Input
+                  type="file"
+                  accept="image/jpeg, image/jpg, image/png"
+                  variant="bordered"
+                  classNames={{ inputWrapper: "bg-white border-slate-200" }}
+                  onChange={handleLogoChange}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Formatos: JPG, JPEG, PNG. Máximo 5MB
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Checkbox
+                  isSelected={configuracion.ShowFoto}
+                  onValueChange={(value) =>
+                    setConfiguracion({ ...configuracion, ShowFoto: value })
+                  }
+                >
+                  Mostrar foto en ticket
+                </Checkbox>
+              </div>
             </div>
           </div>
         </div>

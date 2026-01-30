@@ -21,6 +21,7 @@ import {
 } from "@heroui/react";
 import { Search, User, UserCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
 
 interface ClienteSearchProps {
   selected: any;
@@ -44,30 +45,45 @@ export default function ClienteSearch({
 }: ClienteSearchProps) {
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
   const [searchQuery, setSearchQuery] = useState("");
-  const [page, setPage] = useState(1);
   const debouncedSearch = useDebounceValue(searchQuery, 500);
 
+  // Fetch optimizado para ventas
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["clientes_ventas", debouncedSearch, page],
+    queryKey: ["clientes_ventas", debouncedSearch],
     queryFn: async ({ signal }) => {
-      const res = await fetch(
-        `/api/clientes?q=${debouncedSearch}&page=${page}&limit=5`,
-        { signal },
-      );
+      // Usamos la nueva API optimizada
+      const res = await fetch(`/api/ventas/clientes?q=${debouncedSearch}`, {
+        signal,
+      });
+      if (!res.ok) return [];
       return res.json();
     },
     enabled: isOpen,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    staleTime: 30 * 1000, // 30 segundos
-    gcTime: 5 * 60 * 1000, // 5 minutos
-    networkMode: "online",
+    refetchOnMount: true, // Siempre refrescar para traer saldo actualizado
+    staleTime: 0,
   });
 
-  const items = data?.data || [];
+  const items = data || [];
 
   const handleSelect = (client: any) => {
-    onSelect(client);
+    // Mapeamos la respuesta de la API (camelCase) al formato esperado por VentaFooter (PascalCase + estructura anidada)
+    const mappedClient = {
+      Id: client.id,
+      Nombre: client.nombre,
+      Apellido: client.apellido,
+      Dni: client.dni,
+      Mail: client.mail,
+      Direccion: client.direccion,
+      Persona_Cliente: {
+        ActivarCtaCte: client.activarCtaCte,
+        TieneLimiteCompra: client.tieneLimiteCompra,
+        MontoMaximoCtaCte: client.montoMaximoCtaCte,
+        // Agregamos datos calculados
+        SaldoActual: client.saldoActual,
+        MargenDisponible: client.margenDisponible,
+      },
+    };
+    onSelect(mappedClient);
     onClose();
     setSearchQuery("");
   };
@@ -117,17 +133,11 @@ export default function ClienteSearch({
                     aria-label="Resultados Clientes"
                     removeWrapper
                     bottomContent={
-                      data?.meta && (
-                        <div className="flex w-full justify-center">
-                          <Pagination
-                            isCompact
-                            showControls
-                            showShadow
-                            color="primary"
-                            page={page}
-                            total={data.meta.totalPages}
-                            onChange={setPage}
-                          />
+                      data?.length > 50 && (
+                        <div className="flex w-full justify-center p-2">
+                          <span className="text-tiny text-default-400">
+                            Mostrando primeros 50 resultados
+                          </span>
                         </div>
                       )
                     }
@@ -147,12 +157,10 @@ export default function ClienteSearch({
                       emptyContent="No se encontraron clientes"
                     >
                       {(item: any) => (
-                        <TableRow key={item.Id}>
-                          <TableCell>
-                            {item.Nombre + " " + item.Apellido}
-                          </TableCell>
-                          <TableCell>{item.Dni || "-"}</TableCell>
-                          <TableCell>{item.Mail || "-"}</TableCell>
+                        <TableRow key={item.id}>
+                          <TableCell>{item.nombreCompleto}</TableCell>
+                          <TableCell>{item.dni || "-"}</TableCell>
+                          <TableCell>{item.mail || "-"}</TableCell>
                           <TableCell>
                             <Button
                               size="sm"
@@ -175,11 +183,7 @@ export default function ClienteSearch({
                     variant="light"
                     onPress={() =>
                       handleSelect({
-                        Id: 0,
-                        Nombre: "Consumidor Final",
-                        Apellido: "Consumidor Final",
-                        Dni: "Consumidor Final",
-                        Mail: "Consumidor Final",
+                        ...consumidorFinalSchema,
                       })
                     }
                   >

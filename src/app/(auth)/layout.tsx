@@ -1,4 +1,4 @@
-import Loading from "@/components/loading/loading";
+import { LoadingPage } from "@/components/loading/loading";
 import { NorequireAuthServer } from "@/lib/requireSuperAdmin";
 import { Suspense } from "react";
 
@@ -9,5 +9,5 @@ export default async function Layout({
 }) {
   await NorequireAuthServer({ redirectUrl: "/ventas" });
 
-  return <Suspense fallback={<Loading />}>{children}</Suspense>;
+  return <Suspense fallback={<LoadingPage />}>{children}</Suspense>;
 }

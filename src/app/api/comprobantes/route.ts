@@ -95,6 +95,7 @@ export async function POST(req: NextRequest) {
     let clienteIdFinal = data.clienteId || 0;
 
     // Validar artículos y stock
+    // Validar artículos y stock
     const articulosIds = data.detalles.map((d) => BigInt(d.articuloId));
     const articulos = await prisma.articulo.findMany({
       where: {
@@ -104,6 +105,11 @@ export async function POST(req: NextRequest) {
       },
       include: {
         Iva: true,
+        ArticuloStock: {
+          where: {
+            SucursalId: sucursalId,
+          },
+        },
       },
     });
 
@@ -122,13 +128,14 @@ export async function POST(req: NextRequest) {
       if (!articulo) continue;
 
       if (articulo.DescuentaStock) {
-        if (
-          Number(articulo.Stock) < detalle.cantidad &&
-          !articulo.PermiteStockNegativo
-        ) {
+        const stockActual = articulo.ArticuloStock[0]?.Stock
+          ? Number(articulo.ArticuloStock[0].Stock)
+          : 0;
+
+        if (stockActual < detalle.cantidad && !articulo.PermiteStockNegativo) {
           return NextResponse.json(
             {
-              error: `Stock insuficiente para ${articulo.Descripcion}. Stock disponible: ${articulo.Stock}`,
+              error: `Stock insuficiente para ${articulo.Descripcion}. Stock disponible: ${stockActual}`,
             },
             { status: 400 },
           );
@@ -266,8 +273,17 @@ export async function POST(req: NextRequest) {
     // Transaction
     const resultado = await prisma.$transaction(async (tx) => {
       // 0. Resolver cliente
-      if (clienteIdFinal === 0) {
+      let cliente = null;
+      if (clienteIdFinal == 0) {
         clienteIdFinal = await ensureConsumerFinal(tx, tenantIdBigInt);
+      } else {
+        // verificar si existe el cliente
+        cliente = await tx.persona.findUnique({
+          where: { Id: clienteIdFinal },
+        });
+        if (!cliente) {
+          throw new Error("Cliente no encontrado");
+        }
       }
 
       switch (data.tipoComprobante) {
@@ -354,6 +370,9 @@ export async function POST(req: NextRequest) {
             cajaId,
           );
         case TIPO_COMPROBANTE_VENTA.CUENTA_CORRIENTE_CLIENTE:
+          if (!cliente) {
+            throw new Error("Cliente no encontrado");
+          }
           return createCuentaCorrienteCliente(
             tx,
             data,
@@ -383,6 +402,72 @@ export async function POST(req: NextRequest) {
       { status: 201 },
     );
   } catch (error: unknown) {
+    return handleError(error);
+  }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const { tenantId, error: authError } = await getAuthUser();
+    if (authError) return authError;
+
+    const url = new URL(req.url);
+    const id = url.searchParams.get("id");
+    const detalle = url.searchParams.get("detalle") === "true";
+
+    if (!id) {
+      return NextResponse.json({ error: "ID requerido" }, { status: 400 });
+    }
+
+    const tenantIdBigInt = BigInt(tenantId);
+
+    // Fetch comprobante with all related data
+    const comprobante = await prisma.comprobante.findUnique({
+      where: {
+        Id: BigInt(id),
+        TenantId: tenantIdBigInt,
+      },
+      include: {
+        // Include common relations if detalle is true
+        ...(detalle && {
+          DetalleComprobante: true,
+          FormaPago: true,
+          Comprobante_Factura: {
+            include: {
+              Persona_Cliente: { include: { Persona: true } },
+            },
+          },
+          Comprobante_CuentaCorriente: {
+            include: {
+              Persona_Cliente: { include: { Persona: true } },
+            },
+          },
+          // Add other relations as needed e.g. Comprobante_NotaCredito
+        }),
+      },
+    });
+
+    if (!comprobante) {
+      return NextResponse.json(
+        { error: "Comprobante no encontrado" },
+        { status: 404 },
+      );
+    }
+
+    // Resolve Cliente for convenience
+    let cliente = null;
+    if (comprobante.Comprobante_Factura) {
+      cliente = (comprobante.Comprobante_Factura as any).Persona_Cliente
+        .Persona;
+    } else if (comprobante.Comprobante_CuentaCorriente) {
+      cliente = (comprobante.Comprobante_CuentaCorriente as any).Persona_Cliente
+        .Persona;
+    }
+
+    return new NextResponse(JSON.stringify({ ...comprobante, cliente }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
     return handleError(error);
   }
 }

@@ -120,7 +120,8 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
         <div className="mb-2">
           <p>Fecha: {new Date(datosVenta.fecha).toLocaleString()}</p>
           <p>
-            Comp: {datosVenta.tipoComprobante} N° {datosVenta.numeroComprobante}
+            Comp: {datosVenta.tipoComprobante} N°{" "}
+            {datosVenta.numeroComprobante.toString().padStart(8, "0")}
           </p>
           <p>
             Cliente:{" "}

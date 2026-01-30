@@ -31,7 +31,7 @@ permisos del "adminitrador" ->
 
 
 
-ERRORES VENTAS: ❌❌❌
+ERRORES VENTAS:
 11-> AL BUSCAR UN PRODUCTO POR NOMBRE DEBERÍA MOSTRAR SUGERENCIAS DE ACUERDO A LO QUE VOY ESCRIBIENDO AL CAMBIAR DE VENTANA, NO RETIENE LA INFORMACIÓN QUE CARGUE. SOLUCIONADO ✔✔✔
 
 12-> AL CARGAR UN PRODUCTO, SI PRESIONO UNA FLECHA PARA AUMENTAR LA CANTIDAD, SE AUMENTA EN DECIMALES. SOLUCIONADO ✔✔✔
@@ -91,3 +91,7 @@ Admin:
 32->  en el futuro agreagar comprobante por defecto en ventas y compras. ❌❌❌
 
 33-> logo en configuracion. SOLUCIONADO ✔✔✔
+
+34-> Ticket y cuenta corriente en ventas. SOLUCIONADO ✔✔✔
+
+35-> Descontar stock de sucursale cuando se realiza una venta. SOLUCIONADO ✔✔✔

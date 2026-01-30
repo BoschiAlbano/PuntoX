@@ -1,6 +1,7 @@
 "use client";
 
 import ClienteCRUD from "@/components/clientes/ClienteCRUD";
+import CuentasCorrientesCRUD from "@/components/clientes/CuentasCorrientesCRUD";
 import { Tab, Tabs } from "@heroui/react";
 
 export default function ClientesPage() {
@@ -65,7 +66,7 @@ export default function ClientesPage() {
             </div>
           }
         >
-          <div>No Implementado</div>
+          <CuentasCorrientesCRUD />
         </Tab>
       </Tabs>
     </div>

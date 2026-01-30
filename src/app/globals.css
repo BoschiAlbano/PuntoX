@@ -28,17 +28,23 @@ html {
   --font-mono: var(--font-geist-mono);
 }
 
-/* @media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-} */
+}
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.main-content {
+  display: grid;
+  height: 100dvh;
+  grid-template-rows: auto 1fr auto;
 }
 
 ::-webkit-scrollbar {
@@ -125,7 +131,9 @@ body {
   border-radius: 50%;
   border: 1px solid #e0e0e0;
   background: #fff;
-  transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out;
+  transition:
+    transform 0.2s ease-in-out,
+    border-color 0.2s ease-in-out;
 }
 
 .settings-single-column {

@@ -6,6 +6,7 @@ import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 // import { actualizarPermisosEnJWT } from "@/lib/auth/updateUserPermissions";
 import { requireSuperAdminServer } from "@/lib/requireSuperAdmin";
 import { PerfilTipo, Prisma } from "../../../prisma/generated/prisma";
+import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
 // Helper para convertir cadenas vacías a undefined
 const emptyStringToUndefined = z.preprocess(
   (val) => (val === "" || val === null ? undefined : val),
@@ -232,12 +233,7 @@ export async function registerTenant(formData: FormData) {
       if (condicionIvaCF) {
         const consumidorFinal = await tx.persona.create({
           data: {
-            Nombre: "Consumidor",
-            Apellido: "Final",
-            Dni: null,
-            Direccion: "Sin dirección",
-            Telefono: null,
-            Mail: null,
+            ...consumidorFinalSchema,
             LocalidadId: localidadDefault.Id,
             EstaEliminado: false,
             TenantId: newTenant.Id,
