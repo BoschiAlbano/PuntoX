@@ -20,13 +20,13 @@ import {
   useDisclosure,
   Card,
   CardBody,
-  Spinner,
   Select,
   SelectItem,
   addToast,
 } from "@heroui/react";
 import { RefreshCcw, Plus, CreditCard, Banknote, Wallet } from "lucide-react";
 import { TIPO_PAGO } from "@/lib/constants/comprobantes";
+import { LoadingComponent } from "../loading/loading";
 
 interface Cliente {
   Id: number;
@@ -290,7 +290,9 @@ export default function CuentasCorrientesCRUD() {
           <TableBody
             items={movements}
             isLoading={isLoadingMovements}
-            loadingContent={<Spinner label="Cargando movimientos..." />}
+            loadingContent={
+              <LoadingComponent message="Cargando movimientos..." />
+            }
             emptyContent={"Sin movimientos registrados"}
           >
             {(item) => (

@@ -1,4 +1,3 @@
-import React from "react";
 import VentasScreen from "@/components/ventas/VentasScreen";
 
 export default function VentasPage() {

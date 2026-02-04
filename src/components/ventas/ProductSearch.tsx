@@ -1,33 +1,17 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import {
-  Input,
-  Button,
-  useDisclosure,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  Pagination,
-  Spinner,
-} from "@heroui/react";
+import React, { useState, useRef, useEffect } from "react";
+import { Input, Button, Spinner, Card, CardBody } from "@heroui/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Search, ScanBarcode } from "lucide-react";
-import { useProductosVentas, fetchProductosVentas } from "@/hooks/useProductos";
+import { fetchProductosVentas } from "@/hooks/useProductos";
 import { Producto } from "@/lib/validations/producto.schema";
 
-// Simple custom debounce hook if uidotdev is not available or to be safe
+// Simple custom debounce hook
 function useDebounceValue<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedValue(value);
     }, delay);
@@ -46,76 +30,147 @@ export default function ProductSearch({
   onProductSelect: (p: Producto) => void;
 }) {
   const [inputValue, setInputValue] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
-
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState<Producto[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+
+  const inputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
-  // Search state for Modal
-  const [searchQuery, setSearchQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const debouncedSearch = useDebounceValue(searchQuery, 500);
+  const debouncedSearch = useDebounceValue(inputValue, 300);
 
-  // Query for Modal List
-  // Query for Modal List
-  const { data, isLoading, isFetching } = useProductosVentas({
-    search: debouncedSearch,
-    page,
-    enabled: isOpen,
-  });
+  // Fetch suggestions when user types
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (debouncedSearch.trim().length < 2) {
+        setSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
 
-  const handleInputKeyDown = async (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && inputValue.trim()) {
       setIsSearching(true);
-      // Search by specific code/barcode directly
-      // Search by specific code/barcode directly
       try {
         const result = await queryClient.fetchQuery({
-          queryKey: ["productos-ventas", inputValue.trim(), 1],
+          queryKey: ["productos-ventas-suggestions", debouncedSearch.trim()],
           queryFn: ({ signal }) =>
             fetchProductosVentas({
               signal,
-              search: inputValue.trim(),
+              search: debouncedSearch.trim(),
               page: 1,
-              limit: 5,
+              limit: 5, // Máximo 5 sugerencias
             }),
           staleTime: 10 * 1000,
         });
 
-        console.log("api: ", result.data);
-
-        if (result.data && result.data.length === 1) {
-          const product = result.data[0];
-          onProductSelect(product);
-          setInputValue("");
-        } else if (result.data && result.data.length > 1) {
-          // Multiple matches (rare for exact code, but possible inc/ insensitive) -> Open Modal with pre-filled
-          setSearchQuery(inputValue);
-          onOpen();
+        if (result.data && result.data.length > 0) {
+          setSuggestions(result.data);
+          setShowSuggestions(true);
         } else {
-          // No match
-          // Maybe sound alert or toast
-          // For now, open modal ensuring user sees no results
-          setSearchQuery(inputValue);
-          onOpen();
+          setSuggestions([]);
+          setShowSuggestions(false);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching suggestions:", err);
+        setSuggestions([]);
+        setShowSuggestions(false);
       } finally {
         setIsSearching(false);
       }
+    };
+
+    fetchSuggestions();
+  }, [debouncedSearch, queryClient]);
+
+  // Handle keyboard navigation
+  const handleInputKeyDown = async (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex((prev) =>
+        prev < suggestions.length - 1 ? prev + 1 : prev,
+      );
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+
+      if (selectedIndex >= 0 && suggestions[selectedIndex]) {
+        // Seleccionar sugerencia resaltada
+        handleSelectProduct(suggestions[selectedIndex]);
+      } else if (inputValue.trim()) {
+        // Buscar producto exacto por código/barras
+        setIsSearching(true);
+        try {
+          const result = await queryClient.fetchQuery({
+            queryKey: ["productos-ventas-exact", inputValue.trim()],
+            queryFn: ({ signal }) =>
+              fetchProductosVentas({
+                signal,
+                search: inputValue.trim(),
+                page: 1,
+                limit: 5,
+              }),
+            staleTime: 10 * 1000,
+          });
+
+          if (result.data && result.data.length === 1) {
+            // Producto exacto encontrado
+            handleSelectProduct(result.data[0]);
+          } else if (result.data && result.data.length > 1) {
+            // Múltiples coincidencias - mostrar sugerencias
+            setSuggestions(result.data);
+            setShowSuggestions(true);
+          } else {
+            // No se encontró nada
+            setSuggestions([]);
+            setShowSuggestions(false);
+          }
+        } catch (err) {
+          console.error("Error searching product:", err);
+        } finally {
+          setIsSearching(false);
+        }
+      }
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+      setSelectedIndex(-1);
     }
   };
 
-  const handleManualSearch = () => {
-    setSearchQuery(inputValue);
-    onOpen();
+  const handleSelectProduct = (product: Producto) => {
+    onProductSelect(product);
+    setInputValue("");
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setSelectedIndex(-1);
+    inputRef.current?.focus();
   };
 
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+        setSelectedIndex(-1);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <>
-      <div className="flex gap-2 w-full">
+    <div className="relative flex gap-2 w-full">
+      <div className="flex-1 relative">
         <Input
           ref={inputRef}
           classNames={{
@@ -131,122 +186,91 @@ export default function ProductSearch({
           value={inputValue}
           onValueChange={setInputValue}
           onKeyDown={handleInputKeyDown}
+          onFocus={() => {
+            if (suggestions.length > 0) {
+              setShowSuggestions(true);
+            }
+          }}
           endContent={
-            <Button
-              isIconOnly
-              variant="light"
-              size="sm"
-              onPress={handleManualSearch}
-            >
+            <Button isIconOnly variant="light" size="sm">
               {isSearching ? (
                 <Spinner size="sm" className="text-[#67afc3]" />
               ) : (
-                <Search className="text-[#67afc3] " />
+                <Search className="text-[#67afc3]" />
               )}
             </Button>
           }
         />
-      </div>
 
-      <Modal
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        size="4xl"
-        scrollBehavior="inside"
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                Buscar Producto
-              </ModalHeader>
-              <ModalBody>
-                <Input
-                  value={searchQuery}
-                  onValueChange={setSearchQuery}
-                  placeholder="Escriba para buscar..."
-                  startContent={<Search className="w-4 h-4 text-gray-400" />}
-                  autoFocus
-                  onClear={() => setSearchQuery("")}
-                />
-
-                <div className="min-h-[300px] flex flex-col">
-                  <Table
-                    aria-label="Resultados de búsqueda"
-                    className="h-full"
-                    bottomContent={
-                      data?.meta && (
-                        <div className="flex w-full justify-center">
-                          <Pagination
-                            isCompact
-                            showControls
-                            showShadow
-                            color="primary"
-                            page={page}
-                            total={data.meta.totalPages}
-                            onChange={(page) => setPage(page)}
-                          />
-                        </div>
-                      )
-                    }
-                  >
-                    <TableHeader>
-                      <TableColumn>CODIGO</TableColumn>
-                      <TableColumn>DESCRIPCION</TableColumn>
-                      <TableColumn>STOCK</TableColumn>
-                      <TableColumn>PRECIO LISTA 1</TableColumn>
-                      <TableColumn>PRECIO LISTA 2</TableColumn>
-                      <TableColumn>ACCION</TableColumn>
-                    </TableHeader>
-                    <TableBody
-                      items={data?.data || []}
-                      loadingContent={<Spinner />}
-                      loadingState={
-                        isLoading || isFetching ? "loading" : "idle"
-                      }
-                      emptyContent={"No se encontraron productos"}
+        {/* Sugerencias debajo del input */}
+        {showSuggestions && suggestions.length > 0 && (
+          <div
+            ref={suggestionsRef}
+            className="absolute top-full left-0 right-0 mt-2 z-50 max-w-full sm:max-w-2xl"
+          >
+            <Card className="shadow-lg">
+              <CardBody className="p-0">
+                <div className="max-h-[400px] overflow-y-auto">
+                  {suggestions.map((product, index) => (
+                    <div
+                      key={product.Id}
+                      className={`
+                        p-3 cursor-pointer transition-colors border-b border-divider last:border-b-0
+                        ${
+                          index === selectedIndex
+                            ? "bg-primary/10"
+                            : "hover:bg-default-100"
+                        }
+                      `}
+                      onClick={() => handleSelectProduct(product)}
+                      onMouseEnter={() => setSelectedIndex(index)}
                     >
-                      {(item: any) => (
-                        <TableRow key={item.Id}>
-                          <TableCell>{item.Codigo}</TableCell>
-                          <TableCell className="font-bold">
-                            {item.Descripcion}
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={
-                                item.Stock <= 0 ? "text-danger" : "text-success"
-                              }
-                            >
-                              {item.Stock}
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs text-default-500 font-mono">
+                              {product.Codigo}
                             </span>
-                          </TableCell>
-                          <TableCell>${item.Precio?.PrecioPublico}</TableCell>
-                          <TableCell>${item.Precio?.PrecioPublico2}</TableCell>
-                          <TableCell>
-                            <Button
-                              size="sm"
-                              color="primary"
-                              onPress={() => {
-                                onProductSelect(item);
-                                onClose();
-                                setInputValue("");
-                                setSearchQuery("");
-                              }}
+                            <span className="text-xs text-default-400">|</span>
+                            <span className="text-xs text-default-500 truncate">
+                              {product.CodigoBarra}
+                            </span>
+                          </div>
+                          <p className="font-semibold text-sm truncate">
+                            {product.Descripcion}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`text-xs font-medium ${
+                                product.Stock <= 0
+                                  ? "text-danger"
+                                  : "text-success"
+                              }`}
                             >
-                              Seleccionar
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                              Stock: {product.Stock}
+                            </span>
+                          </div>
+                          <div className="flex gap-2 text-xs">
+                            <span className="text-default-500">
+                              L1: ${product.Precio?.PrecioPublico || 0}
+                            </span>
+                            <span className="text-default-400">|</span>
+                            <span className="text-default-500">
+                              L2: ${product.Precio?.PrecioPublico2 || 0}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </ModalBody>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
-    </>
+              </CardBody>
+            </Card>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Select, SelectItem, addToast, Input } from "@heroui/react";
 
 import ProductSearch from "./ProductSearch";

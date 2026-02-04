@@ -95,3 +95,47 @@ Admin:
 34-> Ticket y cuenta corriente en ventas. SOLUCIONADO ✔✔✔
 
 35-> Descontar stock de sucursale cuando se realiza una venta. SOLUCIONADO ✔✔✔
+
+
+
+PAGE EMPLEADOS
+A la hora de crear un empleado tengo la duda localidad(solo muestra 1 opción en todos los campos).
+si le quitas todos los permisos al administrador no puede entrar a ningún lado.
+PAGE PRODUCTOS
+Al borrar una categoria, la misma no se borra de inmediato en la ventana cuando estás cargando un producto
+
+PAGE CAJA
+con usuario Agucho, no me deja abrir una caja desde page caja.(desde page ventas si deja.) -- el error sucede porque no pide ingresar un monto.
+en detalle no muestra el usuario del movimiento 
+
+PAGE VENTA
+en el buscador aún no muestra articulos en el buscador de sugerencia.
+al genera un descuento no sale en el ticket, ni tampoco se registra el descuento en el movimiento de la caja.
+si seleccionamos como consumidor final, no tendría que registrase ningun tipo de factura. 
+como usuario cajero, no me figuran los clientes disponibles. 
+A la hora de actualizar stock, no se sincroniza la page de stock en el momento y no deja realizar venta. 
+
+PAGE CLIENTES
+En cuenta corriente no figura movimientos de las cuentas corrientes.
+PAGE CONFIGURACIÓN
+No se que paso, entre a configuración a modificar datos. Guarde cambios, luego realice una venta, y quise volver a ingresar a configuración y me refresca en ventas todo el tiempo no me deja ingresar a config.
+
+
+
+
+
+
+
+Errores:
+1 -> Tipo de venta en articulo add no se selecciona automaticamente.
+2 -> Usuario administrador no se deberia poder ELIMINAR SI EDITAR. si creo otro usuario adminitrador? se debeira poder eliminar. como diferencias el usuario original administrador del que no lo es?
+3 -> Roll de administrador no se deberia poder ELIMINAR ni EDITAR.
+4 -> Cliente consumidor final no se deberia poder ELIMINAR ni EDITAR.
+5 -> Apertura de caja porner 0 por defecto y no el placeholder.
+6 -> si al facturar el stock es "0" pero tiene permitir "stock negativo" deberia vender pero no me deja cambiar la cantidad.
+7 -> Agregar un boton para cargar un cliente desde ventas.
+8 -> Ultimo codigo de articulo ¿ Lo dejamos ? es una api que trae el ultimo codigo de articulo. 🤔
+9 -> No se puede cambiar el nombre de usuario ni la contraseña de un usuario.
+10 -> La caja se deberia abrir por usuario o por sucursal.? por el momento esta por "sucursal y empleado" por eso si la caja esta abierta por otro usuario no me deja facturar. tengo que cerrar esa caja abrir una nueva.
+11 -> si no tengo el efectivo suficiente, no me deberia dejar realizar un "gasto" por que son en efectivo. quizas deberiamos dejar elegir la forma de pago del gasto.?
+12 -> cuando realiza un pago un cliente en cuentas corrientes, vueve a buscar al cliente modal.

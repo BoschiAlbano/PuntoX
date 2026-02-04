@@ -22,7 +22,6 @@ import {
 } from "@heroui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash2, Plus, X } from "lucide-react";
-import { useReactToPrint } from "react-to-print";
 import {
   TIPO_PAGO,
   TIPO_COMPROBANTE_VENTA,
@@ -81,10 +80,36 @@ export default function VentaFooter({
   const [lastSaleData, setLastSaleData] = useState<any>(null);
   const ticketRef = React.useRef<HTMLDivElement>(null);
 
-  const handlePrint = useReactToPrint({
-    contentRef: ticketRef,
-    documentTitle: "Ticket de Venta",
-  });
+  const handlePrint = () => {
+    if (ticketRef.current) {
+      const printWindow = window.open("", "_blank");
+      if (printWindow) {
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Ticket de Venta</title>
+              <style>
+                body { margin: 0; padding: 20px; font-family: monospace; }
+                @media print {
+                  body { margin: 0; padding: 0; }
+                }
+              </style>
+            </head>
+            <body>
+              ${ticketRef.current.innerHTML}
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 250);
+      }
+    }
+  };
 
   const totalPagado = pagos.reduce((acc, p) => acc + p.monto, 0);
   const restante = total - totalPagado;
@@ -206,7 +231,7 @@ export default function VentaFooter({
 
       // Trigger print with a small delay to ensure state update
       setTimeout(() => {
-        handlePrint();
+        // handlePrint();
       }, 500);
 
       queryClient.invalidateQueries({ queryKey: ["productos"] });

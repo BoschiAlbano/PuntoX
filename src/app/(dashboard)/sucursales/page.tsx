@@ -30,6 +30,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useSucursales } from "@/hooks/useSucursales";
 import { useUserStore } from "@/store/useUserStore";
+import { LoadingComponent } from "@/components/loading/loading";
 
 type Sucursal = {
   id: number;
@@ -212,7 +213,7 @@ export default function SucursalesPage() {
       {/* Lista de sucursales */}
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
-          <Spinner size="lg" />
+          <LoadingComponent message="Cargando sucursales..." />
         </div>
       ) : sucursales.length === 0 ? (
         <Card>

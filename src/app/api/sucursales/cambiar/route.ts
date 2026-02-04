@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/auth/permissions";
 import { handleError } from "@/lib/errors/handler";
 import { verifyUserBranchAccess } from "@/lib/sucursal/verifyUserBranch";
 import prisma from "@/DB/prisma";
@@ -14,7 +13,6 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId, user } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS_ADMIN,
     });
 
     const body = await req.json();

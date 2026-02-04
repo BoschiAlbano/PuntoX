@@ -14,7 +14,6 @@ import {
   NumberInput,
   Tabs,
   Tab,
-  Spinner,
 } from "@heroui/react";
 import { Producto } from "@/lib/validations/producto.schema";
 import { GenericFormProps } from "@/components/shared/GenericCrud";
@@ -25,6 +24,7 @@ import MarcaGenericForm from "../marcas/MarcaForm";
 import RubroGenericForm from "../rubros/RubroForm";
 import UnidadMedidaGenericForm from "../unidad-medida/UnidadMedidaForm";
 import { TiposVenta } from "../../../prisma/generated/prisma";
+import { LoadingComponent } from "../loading/loading";
 
 const defaultProducto: Producto = {
   Id: 0,
@@ -338,6 +338,10 @@ export default function ProductoForm({
     setFormData({ ...formData, Precio: newPrecio });
   };
 
+  const handleExportExcel = () => {};
+
+  const handleImportExcel = () => {};
+
   return (
     <Modal
       isOpen={isOpen}
@@ -360,7 +364,7 @@ export default function ProductoForm({
         <ModalBody className="p-0 relative">
           {isLoadingFullProduct && (
             <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/50">
-              <Spinner label="Cargando detalles..." />
+              <LoadingComponent message="Cargando detalles..." />
             </div>
           )}
           <div className="px-6 py-4">
@@ -896,6 +900,30 @@ export default function ProductoForm({
                         ? "Producto Inactivo"
                         : "Producto Activo"}
                     </Switch>
+                  </div>
+                </div>
+              </Tab>
+
+              <Tab key="Excel" title="Excel">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => handleExportExcel()}
+                      >
+                        Exportar
+                      </button>
+                    </div>
+                    <div>
+                      <input type="file" accept=".xlsx" />
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => handleImportExcel()}
+                      >
+                        Importar
+                      </button>
+                    </div>
                   </div>
                 </div>
               </Tab>
