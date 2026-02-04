@@ -141,10 +141,11 @@ export type ResumenDia = {
 // Fetchers
 const fetchCajaActual = async (
   sucursalId: number | undefined,
+  usuarioId: number | undefined,
 ): Promise<Caja | null> => {
-  if (!sucursalId) return null;
+  if (!sucursalId || !usuarioId) return null;
   const response = await fetch(
-    `/api/caja?soloAbierta=true&sucursalId=${sucursalId}`,
+    `/api/caja?soloAbierta=true&sucursalId=${sucursalId}&usuarioId=${usuarioId}`,
   );
   if (!response.ok) {
     if (response.status === 401 || response.status === 403) return null;
@@ -191,15 +192,16 @@ export function useCaja(options?: {
     enableResumen = false,
   } = options || {};
 
-  const { currentBranch } = useUserStore();
+  const { currentBranch, user } = useUserStore();
   const queryClient = useQueryClient();
   const sucursalId = currentBranch?.Id ? Number(currentBranch.Id) : undefined;
+  const usuarioId = user?.Id ? Number(user.Id) : undefined;
 
   // Query Caja Actual (Abierta)
   const cajaQuery = useQuery({
-    queryKey: ["caja", "actual", sucursalId],
-    queryFn: () => fetchCajaActual(sucursalId),
-    enabled: !!sucursalId && enableCaja,
+    queryKey: ["caja", "actual", sucursalId, usuarioId],
+    queryFn: () => fetchCajaActual(sucursalId, usuarioId),
+    enabled: !!sucursalId && !!usuarioId && enableCaja,
     ...dynamicDataQueryOptions,
   });
 

@@ -229,10 +229,36 @@ export async function GET(req: NextRequest) {
 
     // Si se solicita solo la caja abierta
     if (soloAbierta) {
+      const usuarioIdParam = searchParams.get("usuarioId");
+
+      if (!usuarioIdParam) {
+        return NextResponse.json(
+          { error: "usuarioId es requerido para obtener caja abierta" },
+          { status: 400 },
+        );
+      }
+
+      // Buscar el usuario en la base de datos
+      const usuario = await prisma.usuario.findFirst({
+        where: {
+          Id: BigInt(usuarioIdParam),
+          TenantId: BigInt(tenantId),
+          EstaEliminado: false,
+        },
+      });
+
+      if (!usuario) {
+        return NextResponse.json(
+          { error: "Usuario no encontrado" },
+          { status: 404 },
+        );
+      }
+
       const caja = await prisma.caja.findFirst({
         where: {
           TenantId: BigInt(tenantId),
           SucursalId: sucursalId,
+          UsuarioAperturaId: usuario.Id,
           EstaEliminado: false,
           FechaCierre: null,
         },
@@ -641,11 +667,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Verificar si ya hay una caja abierta en esta sucursal
+    // Verificar si el usuario ya tiene una caja abierta en esta sucursal
     const cajaAbierta = await prisma.caja.findFirst({
       where: {
         TenantId: BigInt(tenantId),
         SucursalId: sucursalId,
+        UsuarioAperturaId: usuario.Id,
         EstaEliminado: false,
         FechaCierre: null,
       },
@@ -653,7 +680,7 @@ export async function POST(req: NextRequest) {
 
     if (cajaAbierta) {
       return NextResponse.json(
-        { error: "Ya existe una caja abierta en esta sucursal" },
+        { error: "Ya tienes una caja abierta en esta sucursal" },
         { status: 400 },
       );
     }
@@ -771,6 +798,7 @@ export async function PATCH(req: NextRequest) {
         where: {
           TenantId: BigInt(tenantId),
           SucursalId: sucursalId,
+          UsuarioAperturaId: usuario.Id,
           EstaEliminado: false,
           FechaCierre: null,
         },
@@ -778,7 +806,7 @@ export async function PATCH(req: NextRequest) {
 
       if (!cajaAbierta) {
         return NextResponse.json(
-          { error: "No hay una caja abierta" },
+          { error: "No tienes una caja abierta" },
           { status: 400 },
         );
       }
@@ -850,6 +878,7 @@ export async function PATCH(req: NextRequest) {
         where: {
           TenantId: BigInt(tenantId),
           SucursalId: sucursalId,
+          UsuarioAperturaId: usuario.Id,
           EstaEliminado: false,
           FechaCierre: null,
         },
@@ -857,7 +886,7 @@ export async function PATCH(req: NextRequest) {
 
       if (!cajaAbierta) {
         return NextResponse.json(
-          { error: "No hay una caja abierta en esta sucursal" },
+          { error: "No tienes una caja abierta en esta sucursal" },
           { status: 400 },
         );
       }

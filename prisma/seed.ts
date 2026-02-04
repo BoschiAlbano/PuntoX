@@ -5,6 +5,8 @@ import * as fs from "fs";
 import * as path from "path";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { PerfilTipo, Prisma } from "./generated/prisma";
+import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
+
 // Condiciones de IVA estándar de Argentina
 const condicionesIva = [
   "Responsable Inscripto",
@@ -326,12 +328,7 @@ async function seedSuperAdmin() {
       if (condicionIvaCF) {
         const consumidorFinal = await tx.persona.create({
           data: {
-            Apellido: "Final",
-            Nombre: "Consumidor",
-            Dni: null,
-            Direccion: "Sin dirección",
-            Telefono: null,
-            Mail: null,
+            ...consumidorFinalSchema,
             LocalidadId: localidadDefault.Id,
             EstaEliminado: false,
             TenantId: newTenant.Id,

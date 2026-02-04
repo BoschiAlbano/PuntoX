@@ -3,7 +3,7 @@
 import { Button, useDisclosure } from "@heroui/react";
 import { User, UserCheck } from "lucide-react";
 import ClienteSearchModal from "./ClienteSearchModal";
-
+import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
 interface ClienteSearchProps {
   selected: any;
   onSelect: (c: any) => void;
@@ -18,7 +18,7 @@ export default function ClienteSearch({
   const handleSelect = (client: any) => {
     // Mapeamos la respuesta de la API (camelCase) al formato esperado por VentaFooter (PascalCase + estructura anidada)
     const mappedClient = {
-      Id: client.id,
+      Id: client?.id || 0,
       Nombre: client.nombre,
       Apellido: client.apellido,
       Dni: client.dni,
@@ -55,7 +55,9 @@ export default function ClienteSearch({
               : selected.Nombre + " " + selected.Apellido}
           </span>
           <span className="text-tiny opacity-75">
-            {selected.Id === 0 ? "99999999" : selected.Dni || "Sin DNI"}
+            {selected.Id === 0
+              ? consumidorFinalSchema.Dni
+              : selected.Dni || "Sin DNI"}
           </span>
         </div>
       </Button>

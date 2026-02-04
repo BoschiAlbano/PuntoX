@@ -15,6 +15,7 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  Spinner,
 } from "@heroui/react";
 import { Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -47,6 +48,7 @@ export default function ClienteSearchModal({
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounceValue(searchQuery, 500);
 
+  const [items, setItems] = useState([]);
   // Fetch optimizado para ventas
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ["clientes_ventas", debouncedSearch],
@@ -56,14 +58,18 @@ export default function ClienteSearchModal({
         signal,
       });
       if (!res.ok) return [];
-      return res.json();
+      const data = await res.json();
+      setItems(data);
+      return data;
     },
     enabled: isOpen,
     refetchOnMount: true,
     staleTime: 0, // Marca los datos como obsoletos inmediatamente
+    gcTime: 0, // No mantener en caché para evitar mostrar datos previos
   });
 
-  const items = data || [];
+  // const items = data || [];
+
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="3xl">
       <ModalContent>
@@ -80,52 +86,57 @@ export default function ClienteSearchModal({
                 onClear={() => setSearchQuery("")}
               />
 
-              <div className="min-h-[250px]">
-                <Table
-                  aria-label="Resultados Clientes"
-                  removeWrapper
-                  bottomContent={
-                    items?.length > 50 && (
-                      <div className="flex w-full justify-center p-2">
-                        <span className="text-tiny text-default-400">
-                          Mostrando primeros 50 resultados
-                        </span>
-                      </div>
-                    )
-                  }
-                >
-                  <TableHeader>
-                    <TableColumn>NOMBRE</TableColumn>
-                    <TableColumn>DNI</TableColumn>
-                    <TableColumn>EMAIL</TableColumn>
-                    <TableColumn>ACCION</TableColumn>
-                  </TableHeader>
-                  <TableBody
-                    items={items}
-                    loadingContent={
-                      <LoadingComponent message="Cargando Clientes..." />
+              <div className="h-[250px]">
+                {isLoading || isFetching ? (
+                  <div className="flex items-center justify-center h-full">
+                    <LoadingComponent message="Cargando Clientes..." />
+                  </div>
+                ) : (
+                  <Table
+                    aria-label="Resultados Clientes"
+                    removeWrapper
+                    bottomContent={
+                      items?.length > 50 && (
+                        <div className="flex w-full justify-center p-2">
+                          <span className="text-tiny text-default-400">
+                            Mostrando primeros 50 resultados
+                          </span>
+                        </div>
+                      )
                     }
-                    loadingState={isLoading || isFetching ? "loading" : "idle"}
-                    emptyContent="No se encontraron clientes"
                   >
-                    {(item: any) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.nombreCompleto}</TableCell>
-                        <TableCell>{item.dni || "-"}</TableCell>
-                        <TableCell>{item.mail || "-"}</TableCell>
-                        <TableCell>
-                          <Button
-                            size="sm"
-                            color="primary"
-                            onPress={() => handleSelect(item)}
-                          >
-                            Seleccionar
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                    <TableHeader>
+                      <TableColumn>NOMBRE</TableColumn>
+                      <TableColumn>DNI</TableColumn>
+                      <TableColumn>EMAIL</TableColumn>
+                      <TableColumn>ACCION</TableColumn>
+                    </TableHeader>
+                    <TableBody
+                      items={items}
+                      loadingState={
+                        isLoading || isFetching ? "loading" : "idle"
+                      }
+                      emptyContent="No se encontraron clientes"
+                    >
+                      {(item: any) => (
+                        <TableRow key={item.id}>
+                          <TableCell>{item.nombreCompleto}</TableCell>
+                          <TableCell>{item.dni || "-"}</TableCell>
+                          <TableCell>{item.mail || "-"}</TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              color="primary"
+                              onPress={() => handleSelect(item)}
+                            >
+                              Seleccionar
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
               </div>
             </ModalBody>
             <ModalFooter>
