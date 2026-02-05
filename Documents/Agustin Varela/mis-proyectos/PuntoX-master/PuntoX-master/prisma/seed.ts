@@ -1,5 +1,5 @@
 import db from "@/DB/prisma";
-import { Iva } from "./generated/prisma";
+import { Iva } from "../prisma/generated/prisma";
 import { Decimal } from "./generated/prisma/runtime/library";
 import * as fs from "fs";
 import * as path from "path";

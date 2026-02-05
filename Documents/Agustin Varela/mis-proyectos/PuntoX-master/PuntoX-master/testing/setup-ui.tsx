@@ -1,6 +1,7 @@
 /**
  * Setup específico para tests de UI con React Testing Library
  */
+import React from "react";
 import "@testing-library/jest-dom";
 import { cleanup } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
@@ -27,7 +28,13 @@ vi.mock("next/navigation", () => ({
 
 // Mock de next/link
 vi.mock("next/link", () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => {
+  default: ({
+    children,
+    href,
+  }: {
+    children: React.ReactNode;
+    href: string;
+  }) => {
     return <a href={href}>{children}</a>;
   },
 }));

@@ -8,6 +8,7 @@ export default defineConfig({
     environment: "node",
     setupFiles: ["./src/test/setup.ts"],
     // Configuración para tests de UI (jsdom)
+    // @ts-expect-error environmentMatchGlobs is a valid option but might be missing in strict type definitions
     environmentMatchGlobs: [
       ["**/testing/components/**/*.test.{ts,tsx}", "jsdom"],
       ["**/testing/ui/**/*.test.{ts,tsx}", "jsdom"],
@@ -25,15 +26,8 @@ export default defineConfig({
       ],
     },
     // Incluir archivos de test en src y testing
-    include: [
-      "src/**/*.test.{ts,tsx}",
-      "testing/**/*.test.{ts,tsx}",
-    ],
-    exclude: [
-      "**/node_modules/**",
-      "**/dist/**",
-      "**/.next/**",
-    ],
+    include: ["src/**/*.test.{ts,tsx}", "testing/**/*.test.{ts,tsx}"],
+    exclude: ["**/node_modules/**", "**/dist/**", "**/.next/**"],
   },
   resolve: {
     alias: {
@@ -46,4 +40,3 @@ export default defineConfig({
   // Configurar para que no intente cargar PostCSS
   publicDir: false,
 });
-
