@@ -15,7 +15,7 @@ setInterval(() => {
   }
 }, 30 * 1000); // Limpiar cada 30 segundos
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const publicPaths = [
@@ -50,7 +50,7 @@ export async function middleware(req: NextRequest) {
 
   if (!supabaseUrl || !supabaseAnonKey) {
     console.error(
-      "Faltan variables de entorno de Supabase para la autenticacion."
+      "Faltan variables de entorno de Supabase para la autenticacion.",
     );
     return response;
   }
@@ -58,7 +58,7 @@ export async function middleware(req: NextRequest) {
   // Detectar cookie de sesión de Supabase dinámicamente
   const allCookies = req.cookies.getAll();
   const supabaseCookie = allCookies.find(
-    (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token")
+    (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"),
   );
 
   // Usar el valor de la cookie como key, o "no-session" si no existe.
