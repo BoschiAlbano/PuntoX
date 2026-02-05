@@ -15,6 +15,7 @@ import {
   createCuentaCorrienteCliente,
   ensureConsumerFinal,
 } from "@/lib/services/comprobantes";
+import { getNextNumeroComprobante } from "@/lib/services/contadores";
 
 // POST: Crear comprobante (venta)
 export async function POST(req: NextRequest) {
@@ -95,23 +96,31 @@ export async function POST(req: NextRequest) {
     let clienteIdFinal = data.clienteId || 0;
 
     // Validar artículos y stock
-    // Validar artículos y stock
     const articulosIds = data.detalles.map((d) => BigInt(d.articuloId));
-    const articulos = await prisma.articulo.findMany({
-      where: {
-        Id: { in: articulosIds },
-        TenantId: tenantIdBigInt,
-        EstaEliminado: false,
-      },
-      include: {
-        Iva: true,
-        ArticuloStock: {
-          where: {
-            SucursalId: sucursalId,
+
+    const [articulos, configuracion] = await Promise.all([
+      prisma.articulo.findMany({
+        where: {
+          Id: { in: articulosIds },
+          TenantId: tenantIdBigInt,
+          EstaEliminado: false,
+        },
+        include: {
+          Iva: true,
+          ArticuloStock: {
+            where: {
+              SucursalId: sucursalId,
+            },
           },
         },
-      },
-    });
+      }),
+      prisma.configuracion.findFirst({
+        where: {
+          TenantId: tenantIdBigInt,
+          EstaEliminado: false,
+        },
+      }),
+    ]);
 
     if (articulos.length !== data.detalles.length) {
       return NextResponse.json(
@@ -143,14 +152,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Obtener configuración para saber si descuenta stock
-    const configuracion = await prisma.configuracion.findFirst({
-      where: {
-        TenantId: tenantIdBigInt,
-        EstaEliminado: false,
-      },
-    });
-
     const descuentaStock =
       (data.tipoComprobante === TIPO_COMPROBANTE_VENTA.FACTURA_A &&
         configuracion?.FacturaDescuentaStock) ||
@@ -171,26 +172,6 @@ export async function POST(req: NextRequest) {
       (data.tipoComprobante === TIPO_COMPROBANTE_VENTA.NOTA_CREDITO &&
         configuracion?.FacturaDescuentaStock) ||
       false;
-
-    // Obtener próximo número de comprobante
-    const numeroResponse = await fetch(
-      `${req.nextUrl.origin}/api/contadores?tipoComprobante=${data.tipoComprobante}`,
-      {
-        headers: {
-          cookie: req.headers.get("cookie") || "",
-        },
-      },
-    );
-
-    if (!numeroResponse.ok) {
-      // Fallback or error?
-      return NextResponse.json(
-        { error: "Error al obtener número de comprobante" },
-        { status: 500 },
-      );
-    }
-
-    const { numero } = await numeroResponse.json();
 
     // Calcular totales
     const subtotal = data.detalles.reduce((sum, d) => sum + d.subtotal, 0);
@@ -288,13 +269,20 @@ export async function POST(req: NextRequest) {
 
       switch (data.tipoComprobante) {
         case TIPO_COMPROBANTE_VENTA.FACTURA_A:
+          // Obtener próximo número dentro de la transacción
+          const numeroA = await getNextNumeroComprobante(
+            tenantIdBigInt,
+            data.tipoComprobante,
+            null,
+            tx,
+          );
           return createFacturaA(
             tx,
             data,
             tenantIdBigInt,
             usuarioId,
             empleadoId,
-            numero,
+            numeroA,
             clienteIdFinal,
             iva21,
             iva105,
@@ -303,13 +291,19 @@ export async function POST(req: NextRequest) {
             cajaId,
           );
         case TIPO_COMPROBANTE_VENTA.FACTURA_B:
+          const numeroB = await getNextNumeroComprobante(
+            tenantIdBigInt,
+            data.tipoComprobante,
+            null,
+            tx,
+          );
           return createFacturaB(
             tx,
             data,
             tenantIdBigInt,
             usuarioId,
             empleadoId,
-            numero,
+            numeroB,
             clienteIdFinal,
             iva21,
             iva105,
@@ -318,50 +312,74 @@ export async function POST(req: NextRequest) {
             cajaId,
           );
         case TIPO_COMPROBANTE_VENTA.FACTURA_C:
+          const numeroC = await getNextNumeroComprobante(
+            tenantIdBigInt,
+            data.tipoComprobante,
+            null,
+            tx,
+          );
           return createFacturaC(
             tx,
             data,
             tenantIdBigInt,
             usuarioId,
             empleadoId,
-            numero,
+            numeroC,
             clienteIdFinal,
             !!descuentaStock,
             sucursalId,
             cajaId,
           );
         case TIPO_COMPROBANTE_VENTA.PRESUPUESTO:
+          const numeroP = await getNextNumeroComprobante(
+            tenantIdBigInt,
+            data.tipoComprobante,
+            null,
+            tx,
+          );
           return createPresupuesto(
             tx,
             data,
             tenantIdBigInt,
             usuarioId,
             empleadoId,
-            numero,
+            numeroP,
             clienteIdFinal,
             !!descuentaStock,
             sucursalId,
           );
         case TIPO_COMPROBANTE_VENTA.REMITO:
+          const numeroR = await getNextNumeroComprobante(
+            tenantIdBigInt,
+            data.tipoComprobante,
+            null,
+            tx,
+          );
           return createRemito(
             tx,
             data,
             tenantIdBigInt,
             usuarioId,
             empleadoId,
-            numero,
+            numeroR,
             clienteIdFinal,
             !!descuentaStock,
             sucursalId,
           );
         case TIPO_COMPROBANTE_VENTA.NOTA_CREDITO:
+          const numeroNC = await getNextNumeroComprobante(
+            tenantIdBigInt,
+            data.tipoComprobante,
+            null,
+            tx,
+          );
           return createNotaCredito(
             tx,
             data,
             tenantIdBigInt,
             usuarioId,
             empleadoId,
-            numero,
+            numeroNC,
             clienteIdFinal,
             iva21,
             iva105,
@@ -373,13 +391,21 @@ export async function POST(req: NextRequest) {
           if (!cliente) {
             throw new Error("Cliente no encontrado");
           }
+          // Nota: Cuenta Corriente Cliente usa comprobante pero ¿usa numeración?
+          // Revisando createCuentaCorrienteCliente... sí, usa numero.
+          const numeroCC = await getNextNumeroComprobante(
+            tenantIdBigInt,
+            data.tipoComprobante,
+            null,
+            tx,
+          );
           return createCuentaCorrienteCliente(
             tx,
             data,
             tenantIdBigInt,
             usuarioId,
             empleadoId,
-            numero,
+            numeroCC,
             clienteIdFinal,
             sucursalId,
             cajaId!,
