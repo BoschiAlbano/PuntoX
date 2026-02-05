@@ -1,0 +1,271 @@
+@import "tailwindcss";
+@plugin "../components/heroUi/hero.ts";
+@source '../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+
+/* @source "../../node_modules/@heroui/theme/dist*.{js,ts,jsx,tsx}"; */
+
+/* 
+  Colores:
+  --background: #ffffff;
+  --foreground: #171717;
+
+  --color-verde: #90c472;
+  --color-azul-oscuro: #182337;
+*/
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.main-content {
+  display: grid;
+  height: 100dvh;
+  grid-template-rows: auto 1fr auto;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #3b82f6, #90c472);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #2563eb, #90c472);
+}
+
+/* * {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+} */
+
+.config-action-module {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 20px;
+  gap: 12px;
+  text-align: left;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  background-color: #ffffff;
+}
+
+.config-action-module:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.config-action-module:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.config-action-module .module-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.config-action-module .module-text-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.config-action-module .module-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.config-action-module .module-summary {
+  font-size: 0.9rem;
+  color: #777;
+  margin: 0;
+}
+
+.config-action-module .module-action-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  transition:
+    transform 0.2s ease-in-out,
+    border-color 0.2s ease-in-out;
+}
+
+.settings-single-column {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings-tab-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+}
+
+.tab-pill {
+  position: relative;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  white-space: nowrap;
+}
+
+.tab-pill:hover {
+  background: #f0f4ff;
+  border-color: #dbeafe;
+}
+
+.tab-pill.active {
+  background: #e6f0ff;
+  border-color: #bfdbfe;
+  box-shadow: inset 0 -3px 0 #0099ff;
+  color: #0b152b;
+}
+
+.tab-pill-label {
+  font-size: 0.95rem;
+}
+
+.settings-content-pane {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+@media (max-width: 768px) {
+  .tab-pill {
+    flex: 0 0 auto;
+  }
+}
+
+/* tabs */
+#react-aria2110892095-_r_a_-tabpanel-productos {
+  padding: 0;
+}
+
+/* Animación fadeIn optimizada para iconos (GPU-accelerated) */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Shimmer effect para skeleton loaders (optimizado) */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+  will-change: background-position; /* Optimize animation */
+}
+
+/* Parallax ligero para hero (optimizado con GPU acceleration) */
+@keyframes parallax {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -5px, 0);
+  }
+}
+
+.parallax-bg {
+  animation: parallax 20s ease-in-out infinite;
+  transform: translateZ(0); /* Force GPU acceleration */
+  backface-visibility: hidden; /* Optimize rendering */
+}
+
+/* Scrollbar hide para tabs responsive */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Respetar preferencias de accesibilidad */
+/* Respetar preferencias de accesibilidad */
+/* @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .parallax-bg {
+    animation: none !important;
+  }
+} */
