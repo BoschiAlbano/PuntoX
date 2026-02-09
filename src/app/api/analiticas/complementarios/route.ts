@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/auth/permissions";
+import { PERMISSIONS } from "@/lib/constants/comprobantes";
 
 /**
  * GET /api/analiticas/complementarios
@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
       const totalGastos = gastos.reduce((sum, g) => sum + Number(g.Monto), 0);
       const totalGanancia = cajas.reduce(
         (sum, c) => sum + Number(c.Ganancia),
-        0
+        0,
       );
       const eficiencia =
         totalGanancia > 0

@@ -3,7 +3,7 @@ import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 import { TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/auth/permissions";
+import { PERMISSIONS } from "@/lib/constants/comprobantes";
 
 /**
  * GET /api/analiticas/kpis
@@ -36,10 +36,10 @@ export async function GET(req: NextRequest) {
 
     // Período anterior para comparación
     const diasPeriodo = Math.ceil(
-      (fechaHasta.getTime() - fechaDesde.getTime()) / (24 * 60 * 60 * 1000)
+      (fechaHasta.getTime() - fechaDesde.getTime()) / (24 * 60 * 60 * 1000),
     );
     const fechaDesdeAnterior = new Date(
-      fechaDesde.getTime() - diasPeriodo * 24 * 60 * 60 * 1000
+      fechaDesde.getTime() - diasPeriodo * 24 * 60 * 60 * 1000,
     );
     const fechaHastaAnterior = new Date(fechaDesde.getTime() - 1);
 
@@ -357,14 +357,14 @@ export async function GET(req: NextRequest) {
         _sum: {
           Cantidad: true,
         },
-      }
+      },
     );
 
     const cantidadVendidaActual = Number(
-      productosVendidosActual._sum.Cantidad || 0
+      productosVendidosActual._sum.Cantidad || 0,
     );
     const cantidadVendidaAnterior = Number(
-      productosVendidosAnterior._sum.Cantidad || 0
+      productosVendidosAnterior._sum.Cantidad || 0,
     );
     const variacionCantidad =
       cantidadVendidaAnterior > 0

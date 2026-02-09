@@ -96,7 +96,7 @@ function updatePermissions() {
       if (match) {
         const importLine = match[0];
         // Agregar import de PERMISSIONS después
-        const newImport = `${importLine}\nimport { PERMISSIONS } from "@/lib/auth/permissions";`;
+        const newImport = `${importLine}\nimport { PERMISSIONS } from "@/lib/constants/comprobantes";`;
         content = content.replace(importRegex, newImport);
       }
     }

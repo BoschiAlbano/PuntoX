@@ -39,6 +39,7 @@ interface UserState {
   refreshUserData: () => Promise<void>;
   setCurrentBranch: (branch: UserBranch) => void;
   hasPermission: (path: string) => boolean;
+  canAccessRoute: (path: string) => boolean;
   pushBranch: (branch: UserBranch) => void;
   removeBranch: (branchId: string) => void;
 }
@@ -112,8 +113,6 @@ export const useUserStore = create<UserState>()(
       hasPermission: (path: string) => {
         const { permissions, roles } = get();
 
-        console.log(path, permissions, roles);
-
         // SuperAdmin has access to everything
         if (roles.some((r) => r.Tipo === "SUPERADMIN")) return true;
 
@@ -121,6 +120,11 @@ export const useUserStore = create<UserState>()(
         if (path === "/" || path === "/dashboard") return true;
 
         return tienePermisoParaRuta(permissions, path);
+      },
+
+      canAccessRoute: (path: string) => {
+        const { hasPermission } = get();
+        return hasPermission(path);
       },
 
       pushBranch: (branch) => {

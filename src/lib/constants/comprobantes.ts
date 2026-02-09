@@ -35,3 +35,81 @@ export const TIPO_MOVIMIENTO = {
   ENTRADA: 1,
   SALIDA: 2,
 } as const;
+// Permisos
+export const PERMISSIONS = {
+  // Ventas
+  VENTAS: "ventas",
+
+  // Caja
+  CAJA: "caja",
+
+  // Productos
+  PRODUCTOS: "productos",
+
+  // Empleados
+  EMPLEADOS: "empleados",
+
+  // Clientes
+  CLIENTES: "clientes",
+
+  // Reportes
+  REPORTES: "reportes",
+
+  // Configuración
+  CONFIGURACION: "configuracion",
+
+  // Sucursales
+  SUCURSALES: "sucursales",
+
+  // Auditoría
+  AUDITORIA: "auditoria",
+
+  // Analíticas
+  ANALITICAS: "analiticas",
+} as const;
+
+export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+
+// Tipos de perfil
+export const TIPO_PERFIL = {
+  ADMINISTRADOR: "ADMINISTRADOR",
+  EMPLEADO: "EMPLEADO",
+  SUPERADMIN: "SUPERADMIN",
+} as const;
+
+export type TipoPerfil = (typeof TIPO_PERFIL)[keyof typeof TIPO_PERFIL];
+
+export const TIPO_PAGO_LABELS: Record<number, string> = {
+  [TIPO_PAGO.EFECTIVO]: "Efectivo",
+  [TIPO_PAGO.TARJETA]: "Tarjeta",
+  [TIPO_PAGO.CHEQUE]: "Cheque",
+  [TIPO_PAGO.CUENTA_CORRIENTE]: "Cuenta Corriente",
+  [TIPO_PAGO.TRANSFERENCIA]: "Transferencia",
+};
+
+export const TIPO_MOVIMIENTO_LABELS: Record<number, string> = {
+  [TIPO_MOVIMIENTO.ENTRADA]: "Entrada",
+  [TIPO_MOVIMIENTO.SALIDA]: "Salida",
+};
+
+export const TIPO_COMPROBANTE_VENTA_LABELS: Record<number, string> = {
+  [TIPO_COMPROBANTE_VENTA.FACTURA_A]: "Factura A",
+  [TIPO_COMPROBANTE_VENTA.FACTURA_B]: "Factura B",
+  [TIPO_COMPROBANTE_VENTA.FACTURA_C]: "Factura C",
+  [TIPO_COMPROBANTE_VENTA.PRESUPUESTO]: "Presupuesto",
+  [TIPO_COMPROBANTE_VENTA.REMITO]: "Remito",
+  [TIPO_COMPROBANTE_VENTA.NOTA_CREDITO]: "Nota de Crédito",
+  [TIPO_COMPROBANTE_VENTA.CUENTA_CORRIENTE_CLIENTE]: "Cuenta Corriente Cliente",
+};
+
+export const TIPO_COMPROBANTE_COMPRA_LABELS: Record<number, string> = {
+  [TIPO_COMPROBANTE_COMPRA.COMPRA]: "Compra",
+  [TIPO_COMPROBANTE_COMPRA.CTA_CORRIENTE_PROVEEDOR]:
+    "Cuenta Corriente Proveedor",
+};
+
+export const ESTADO_FACTURA_LABELS: Record<number, string> = {
+  [ESTADO_FACTURA.PENDIENTE]: "Pendiente",
+  [ESTADO_FACTURA.CONFIRMADO]: "Confirmado",
+  [ESTADO_FACTURA.ANULADO]: "Anulado",
+};

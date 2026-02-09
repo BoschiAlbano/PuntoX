@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/auth/permissions";
+import { PERMISSIONS } from "@/lib/constants/comprobantes";
 import {
   parsePaginationParams,
   createPaginationResponse,
@@ -16,7 +16,10 @@ import { Prisma } from "../../../../prisma/generated/prisma";
 // GET: Listar clientes
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext({ req, permission: PERMISSIONS.CLIENTES });
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: PERMISSIONS.CLIENTES,
+    });
 
     const pagination = parsePaginationParams(req);
     const searchParams = req.nextUrl.searchParams;
@@ -101,7 +104,10 @@ export async function GET(req: NextRequest) {
 // POST: Crear cliente
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext({ req, permission: PERMISSIONS.CLIENTES });
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: PERMISSIONS.CLIENTES,
+    });
 
     const json = await req.json().catch(() => null);
     const parsed = createClienteSchema.safeParse(json);
@@ -309,7 +315,10 @@ export async function POST(req: NextRequest) {
 // PATCH: Actualizar cliente
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext({ req, permission: PERMISSIONS.CLIENTES });
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: PERMISSIONS.CLIENTES,
+    });
 
     const body = await req.json();
 
@@ -546,7 +555,10 @@ export async function PATCH(req: NextRequest) {
 // DELETE: Eliminar cliente (soft delete)
 export async function DELETE(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext({ req, permission: PERMISSIONS.CLIENTES });
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: PERMISSIONS.CLIENTES,
+    });
 
     const searchParams = req.nextUrl.searchParams;
     const clienteId = searchParams.get("Id");

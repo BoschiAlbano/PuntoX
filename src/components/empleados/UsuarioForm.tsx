@@ -13,39 +13,9 @@ import {
   SelectItem,
 } from "@heroui/react";
 import { GenericFormProps } from "@/components/shared/GenericCrud";
-import { useQuery } from "@tanstack/react-query";
 import { Usuario } from "./UsuariosCRUD";
 import { Sucursal } from "../../../prisma/generated/prisma";
-import { useSucursales } from "@/hooks/useSucursales";
-
-// Funciones de fetch para los selects
-const fetchProvincias = async () => {
-  const res = await fetch("/api/provincias");
-  if (!res.ok) throw new Error("Error fetching provincias");
-  const data = await res.json();
-  return Array.isArray(data) ? data : [];
-};
-
-const fetchDepartamentos = async (provinciaId: number | string) => {
-  const res = await fetch(`/api/departamentos?provinciaId=${provinciaId}`);
-  if (!res.ok) throw new Error("Error fetching departamentos");
-  const data = await res.json();
-  return Array.isArray(data) ? data : [];
-};
-
-const fetchLocalidades = async (departamentoId: number | string) => {
-  const res = await fetch(`/api/localidades?departamentoId=${departamentoId}`);
-  if (!res.ok) throw new Error("Error fetching localidades");
-  const data = await res.json();
-  return Array.isArray(data) ? data : [];
-};
-
-const fetchRoles = async () => {
-  const res = await fetch("/api/roles");
-  if (!res.ok) throw new Error("Error fetching roles");
-  const data = await res.json();
-  return Array.isArray(data?.roles) ? data.roles : [];
-};
+import { useUsuario } from "@/hooks/useUsuario";
 
 interface UsuarioFormData {
   nombre: string;
@@ -90,35 +60,23 @@ export default function UsuarioForm({
   const [formData, setFormData] = useState<UsuarioFormData>(defaultFormData);
   const isEdit = !!initialData;
 
-  // Queries
-  const { data: provincias = [], isLoading: isLoadingProvincias } = useQuery({
-    queryKey: ["provincias"],
-    queryFn: fetchProvincias,
-    enabled: isOpen,
-  });
+  // Hook useUsuario para la gestión de estados y datos
+  const {
+    provincias,
+    roles,
+    sucursales,
+    isLoadingProvincias,
+    isLoadingRoles,
+    isLoadingSucursales,
+    useDepartamentos,
+    useLocalidades,
+  } = useUsuario();
 
   const { data: departamentos = [], isLoading: isLoadingDepartamentos } =
-    useQuery({
-      queryKey: ["departamentos", formData.provinciaId],
-      queryFn: () => fetchDepartamentos(formData.provinciaId!),
-      enabled: isOpen && !!formData.provinciaId,
-    });
+    useDepartamentos(formData.provinciaId);
 
-  const { data: localidades = [], isLoading: isLoadingLocalidades } = useQuery({
-    queryKey: ["localidades", formData.departamentoId],
-    queryFn: () => fetchLocalidades(formData.departamentoId!),
-    enabled: isOpen && !!formData.departamentoId,
-  });
-
-  const { data: roles = [], isLoading: isLoadingRoles } = useQuery({
-    queryKey: ["roles-select"],
-    queryFn: fetchRoles,
-    enabled: isOpen,
-    refetchOnMount: "always",
-  });
-
-  const { data: sucursales = [], isLoading: isLoadingSucursales } =
-    useSucursales();
+  const { data: localidades = [], isLoading: isLoadingLocalidades } =
+    useLocalidades(formData.departamentoId);
 
   // Initialization
   useEffect(() => {
@@ -422,18 +380,36 @@ export default function UsuarioForm({
                     }
                   }}
                   isLoading={isLoadingRoles}
-                  isDisabled={isSaving}
+                  isDisabled={
+                    isSaving || initialData?.rolTipo === "ADMINISTRADOR"
+                  }
                 >
-                  {roles.map((rol: any) => (
-                    <SelectItem
-                      key={String(rol.id || rol.Id)}
-                      textValue={
-                        rol.nombre || rol.Descripcion || rol.descripcion
-                      }
-                    >
-                      {rol.nombre || rol.Descripcion || rol.descripcion}
-                    </SelectItem>
-                  ))}
+                  {roles
+                    .filter((rol: any) => {
+                      // If we are editing an admin, show everything (it's disabled anyway, needed for display)
+                      if (initialData?.rolTipo === "ADMINISTRADOR") return true;
+
+                      // Otherwise, hide ADMINISTRADOR
+                      // Check by type or name (case insensitive)
+                      const isAdministrator =
+                        rol.tipo === "ADMINISTRADOR" ||
+                        (rol.nombre &&
+                          rol.nombre.toUpperCase() === "ADMINISTRADOR") ||
+                        (rol.Descripcion &&
+                          rol.Descripcion.toUpperCase() === "ADMINISTRADOR");
+
+                      return !isAdministrator;
+                    })
+                    .map((rol: any) => (
+                      <SelectItem
+                        key={String(rol.id || rol.Id)}
+                        textValue={
+                          rol.nombre || rol.Descripcion || rol.descripcion
+                        }
+                      >
+                        {rol.nombre || rol.Descripcion || rol.descripcion}
+                      </SelectItem>
+                    ))}
                 </Select>
                 <Select
                   label="Sucursal"

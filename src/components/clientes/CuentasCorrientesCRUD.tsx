@@ -24,36 +24,34 @@ import {
   SelectItem,
   addToast,
 } from "@heroui/react";
-import { RefreshCcw, Plus, CreditCard, Banknote, Wallet } from "lucide-react";
+import { RefreshCcw, CreditCard, Banknote, Wallet } from "lucide-react";
 import { TIPO_PAGO } from "@/lib/constants/comprobantes";
 import { LoadingComponent } from "../loading/loading";
-
-interface Cliente {
-  Id: number;
-  Nombre: string;
-  Apellido: string;
-  Dni: string;
-  Mail: string;
-  saldo?: number;
-}
-
-interface Movimiento {
-  id: number;
-  fecha: string;
-  tipo: string;
-  detalles: string;
-  debe: number;
-  haber: number;
-  saldo: number;
-}
+import { useCtaCte, ClienteCtaCte } from "@/hooks/useCtaCte";
 
 export default function CuentasCorrientesCRUD() {
+  const {
+    useBuscarClientes,
+    useMovimientosCliente,
+    registrarPago,
+    isRegistrandoPago,
+  } = useCtaCte();
+
   const [query, setQuery] = useState("");
-  const [clients, setClients] = useState<Cliente[]>([]);
-  const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
-  const [movements, setMovements] = useState<Movimiento[]>([]);
-  const [isLoadingClients, setIsLoadingClients] = useState(false);
-  const [isLoadingMovements, setIsLoadingMovements] = useState(false);
+  const {
+    data: clientsData,
+    refetch: searchClients,
+    isLoading: isLoadingClients,
+  } = useBuscarClientes(query);
+  const clients = clientsData || [];
+
+  const [selectedClient, setSelectedClient] = useState<ClienteCtaCte | null>(
+    null,
+  );
+  const { data: movementsData, isLoading: isLoadingMovements } =
+    useMovimientosCliente(selectedClient?.Id);
+  const movements = movementsData || [];
+
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   // Payment Modal State
@@ -66,43 +64,18 @@ export default function CuentasCorrientesCRUD() {
   const [paymentMethod, setPaymentMethod] = useState<string>(
     String(TIPO_PAGO.EFECTIVO),
   );
-  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
 
   const handleSearch = async () => {
     if (!query) return;
-    setIsLoadingClients(true);
-    try {
-      const res = await fetch(`/api/clientes?q=${query}`);
-      const data = await res.json();
-      // The API returns { data: [], ... } (pagination structure)
-      setClients(data.data || []);
+    const { data } = await searchClients();
+    if (data) {
       onOpen();
-    } catch (error) {
-      console.error("Error searching clients:", error);
-    } finally {
-      setIsLoadingClients(false);
     }
   };
 
-  const handleSelectClient = async (client: Cliente) => {
+  const handleSelectClient = (client: ClienteCtaCte) => {
     setSelectedClient(client);
-    // Close modal manually if needed, or it closes via selection
-    // onOpenChange(false); // Can't call boolean directly on onOpenChange usually, it expects event or value.
-    // Actually useDisclosure returns onClose if we destructured it, or simply use the controlled state if needed.
-    // Let's import onClose from useDisclosure destructuring? no, it returns isOpen, onOpen, onOpenChange (which is a setter).
-    // So onOpenChange(false) works.
     onOpenChange();
-
-    setIsLoadingMovements(true);
-    try {
-      const res = await fetch(`/api/CtaCteCliente?clienteId=${client.Id}`);
-      const data = await res.json();
-      setMovements(data.items || []);
-    } catch (error) {
-      console.error("Error fetching movements:", error);
-    } finally {
-      setIsLoadingMovements(false);
-    }
   };
 
   const formatCurrency = (value: number) => {
@@ -141,38 +114,24 @@ export default function CuentasCorrientesCRUD() {
       return;
     }
 
-    setIsSubmittingPayment(true);
     try {
-      const response = await fetch("/api/CtaCteCliente", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          clienteId: selectedClient.Id,
-          monto: montoNumber,
-          formasPago: [
-            {
-              tipoPago: Number(paymentMethod),
-              monto: montoNumber,
-            },
-          ],
-        }),
+      await registrarPago({
+        clienteId: selectedClient.Id,
+        monto: montoNumber,
+        formasPago: [
+          {
+            tipoPago: Number(paymentMethod),
+            monto: montoNumber,
+          },
+        ],
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Error al registrar el pago");
-      }
 
       addToast({
         title: "Éxito",
         description: "Pago registrado exitosamente",
         color: "success",
       });
-      onPaymentOpenChange(); // Close modal using the change handler logic (toggles)
-      // Refresh movements
-      await handleSelectClient(selectedClient);
+      onPaymentOpenChange(); // Close modal
     } catch (error: any) {
       console.error("Error registering payment:", error);
       addToast({
@@ -180,8 +139,6 @@ export default function CuentasCorrientesCRUD() {
         description: error.message || "Error al registrar el pago",
         color: "danger",
       });
-    } finally {
-      setIsSubmittingPayment(false);
     }
   };
 
@@ -453,7 +410,7 @@ export default function CuentasCorrientesCRUD() {
                 <Button
                   color="primary"
                   onPress={handleSavePayment}
-                  isLoading={isSubmittingPayment}
+                  isLoading={isRegistrandoPago}
                 >
                   Registrar Pago
                 </Button>

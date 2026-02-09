@@ -686,6 +686,7 @@ export async function registrarPagoCuentaCorriente(
   tx: TransactionClient,
   tenantId: bigint,
   usuarioId: bigint,
+  empleadoId: bigint,
   sucursalId: bigint,
   cajaId: bigint,
   clienteId: number,
@@ -695,11 +696,12 @@ export async function registrarPagoCuentaCorriente(
 ) {
   // 1. Crear Comprobante
   const fecha = new Date();
+  console.log("usuarioId", usuarioId);
   const comprobante = await tx.comprobante.create({
     data: {
       TenantId: tenantId,
       UsuarioId: usuarioId,
-      EmpleadoId: usuarioId, // Asumo que el usuario es el empleado por ahora, o pasarlo si es distinto
+      EmpleadoId: empleadoId,
       SucursalId: sucursalId,
       Fecha: fecha,
       Numero: numero,

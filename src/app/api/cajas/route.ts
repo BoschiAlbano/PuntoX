@@ -7,7 +7,7 @@ import { handleError } from "@/lib/errors/handler";
 import { verifyUserBranchAccess } from "@/lib/sucursal/verifyUserBranch";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/auth/permissions";
+import { PERMISSIONS } from "@/lib/constants/comprobantes";
 import { Prisma } from "../../../../prisma/generated/prisma";
 
 export async function GET(req: NextRequest) {

@@ -11,25 +11,19 @@ export default function ProtectRoute({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { hasPermission, isLoading, isInitialized, roles } = useUserStore();
+  const { canAccessRoute, isLoading, isInitialized } = useUserStore();
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
     if (!isInitialized) return;
 
-    // SuperAdmin bypass
-    if (roles.some((r) => r.Tipo === "SUPERADMIN")) {
-      setAuthorized(true);
-      return;
-    }
-
-    // Public or implicitly allowed routes
+    // Public or implicitly allowed routes (basic fallback, but store handles this too)
     if (pathname === "/dashboard" || pathname === "/") {
       setAuthorized(true);
       return;
     }
 
-    const isAllowed = hasPermission(pathname);
+    const isAllowed = canAccessRoute(pathname);
 
     if (!isAllowed) {
       console.warn(`Access denied to ${pathname}`);
@@ -37,7 +31,7 @@ export default function ProtectRoute({
     } else {
       setAuthorized(true);
     }
-  }, [pathname, isInitialized, hasPermission, router, roles]);
+  }, [pathname, isInitialized, canAccessRoute, router]);
 
   if (isLoading || !isInitialized) {
     return null;

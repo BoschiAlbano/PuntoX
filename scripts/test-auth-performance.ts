@@ -16,7 +16,7 @@ async function testPerformance() {
   const start1 = performance.now();
 
   try {
-    const { PERMISSIONS } = await import("../src/lib/auth/permissions");
+    const { PERMISSIONS } = await import("../src/lib/constants/comprobantes");
     const { getRequestAuthContext, setRequestAuthContext } =
       await import("../src/lib/auth/requestContext");
 
@@ -40,9 +40,8 @@ async function testPerformance() {
   const start2 = performance.now();
 
   try {
-    const { PERMISSIONS, hasPermission } =
-      await import("../src/lib/auth/permissions");
-
+    const { hasPermission } = await import("../src/lib/auth/permissions");
+    const { PERMISSIONS } = await import("../src/lib/constants/comprobantes");
     const testPerms = ["ventas", "caja", "empleados"];
     const hasVentas = hasPermission(testPerms, PERMISSIONS.VENTAS);
     const hasProductos = hasPermission(testPerms, PERMISSIONS.PRODUCTOS);

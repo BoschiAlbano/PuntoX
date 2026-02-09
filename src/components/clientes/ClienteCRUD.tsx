@@ -5,6 +5,7 @@ import ClienteForm from "./ClienteForm";
 import { Chip, Tooltip, Button } from "@heroui/react";
 import { clienteListAdapter } from "@/lib/adapters/cliente.adapter";
 import { Cliente } from "@/lib/validations/cliente.schema";
+import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
 
 export default function ClienteCRUD() {
   return (
@@ -98,12 +99,24 @@ export default function ClienteCRUD() {
           case "acciones":
             return (
               <div className="flex gap-2 w-full justify-center items-center">
-                <Tooltip content="Editar" color="warning">
+                <Tooltip
+                  content={
+                    item.Nombre === consumidorFinalSchema.Nombre ||
+                    item.Apellido === consumidorFinalSchema.Apellido
+                      ? "No se puede editar"
+                      : "Editar"
+                  }
+                  color="warning"
+                >
                   <Button
                     isIconOnly
                     size="sm"
                     variant="light"
                     color="warning"
+                    disabled={
+                      item.Nombre === consumidorFinalSchema.Nombre ||
+                      item.Apellido === consumidorFinalSchema.Apellido
+                    }
                     onPress={() => actions.onEdit(item)}
                   >
                     <svg
@@ -117,12 +130,24 @@ export default function ClienteCRUD() {
                     </svg>
                   </Button>
                 </Tooltip>
-                <Tooltip content="Eliminar" color="danger">
+                <Tooltip
+                  content={
+                    item.Nombre === consumidorFinalSchema.Nombre ||
+                    item.Apellido === consumidorFinalSchema.Apellido
+                      ? "No se puede eliminar"
+                      : "Eliminar"
+                  }
+                  color="danger"
+                >
                   <Button
                     isIconOnly
                     size="sm"
                     color="danger"
                     variant="light"
+                    disabled={
+                      item.Nombre === consumidorFinalSchema.Nombre ||
+                      item.Apellido === consumidorFinalSchema.Apellido
+                    }
                     onPress={() => actions.onDelete(item)}
                   >
                     <svg

@@ -5,7 +5,7 @@ import { PermisoError } from "@/lib/requirePermiso";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 import { handleError } from "@/lib/errors/handler";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/auth/permissions";
+import { PERMISSIONS } from "@/lib/constants/comprobantes";
 
 type RolTipo = "ADMINISTRADOR" | "EMPLEADO";
 
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS_ADMIN, // Mismo permiso que productos por coherencia
+      permission: PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
 
     const roles = await prisma.perfiles.findMany({
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
       descripcion: null as string | null,
       usuarios: rol.PerfilUsuario.length,
       permisos: rol.PerfilPermiso.filter(
-        (pp) => !pp.Permiso?.EstaEliminado
+        (pp) => !pp.Permiso?.EstaEliminado,
       ).map((pp) => pp.Permiso?.Descripcion ?? pp.Permiso?.Clave ?? ""),
     }));
 
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
     if (error instanceof PermisoError) {
       return NextResponse.json(
         { error: error.message },
-        { status: error.status }
+        { status: error.status },
       );
     }
     return handleError(error);
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId, usuarioId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS_ADMIN, // Mismo permiso que productos por coherencia
+      permission: PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
     const json = await req.json().catch(() => null);
     const parsed = rolSchema.safeParse(json);
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
       new Set([
         ...(data.permisos ?? []),
         ...(data.tipo === "ADMINISTRADOR" ? ["empleados:admin"] : []),
-      ])
+      ]),
     );
 
     const tenantIdBigInt = BigInt(tenantId);
@@ -111,14 +111,14 @@ export async function POST(req: NextRequest) {
     if (existing) {
       return NextResponse.json(
         { error: "Ya existe un rol con ese nombre" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const permisosUnicos = Array.from(
       new Set(
-        permisosSolicitados.map((p) => p.trim()).filter((p) => p.length > 0)
-      )
+        permisosSolicitados.map((p) => p.trim()).filter((p) => p.length > 0),
+      ),
     );
 
     const created = await prisma.$transaction(async (tx) => {
@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
                 TenantId: tenantIdBigInt,
               },
             });
-          })
+          }),
         );
 
         await tx.perfilPermiso.createMany({
@@ -197,7 +197,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof PermisoError) {
       return NextResponse.json(
         { error: error.message },
-        { status: error.status }
+        { status: error.status },
       );
     }
     return handleError(error);
@@ -208,7 +208,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const { tenantId, usuarioId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS_ADMIN, // Mismo permiso que productos por coherencia
+      permission: PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
     const tenantIdBigInt = BigInt(tenantId);
 
@@ -218,7 +218,7 @@ export async function PATCH(req: NextRequest) {
     if (!rolIdParam) {
       return NextResponse.json(
         { error: "ID de rol requerido" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -226,7 +226,7 @@ export async function PATCH(req: NextRequest) {
     if (!Number.isInteger(rolIdNumber) || rolIdNumber <= 0) {
       return NextResponse.json(
         { error: "ID de rol inválido" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -256,7 +256,7 @@ export async function PATCH(req: NextRequest) {
     if (!rolExistente) {
       return NextResponse.json(
         { error: "Rol no encontrado o no pertenece a este tenant" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -287,7 +287,7 @@ export async function PATCH(req: NextRequest) {
             error:
               "No se puede modificar el nombre o tipo de un rol del sistema",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
     } else {
@@ -305,7 +305,7 @@ export async function PATCH(req: NextRequest) {
         if (nombreEnUso) {
           return NextResponse.json(
             { error: "Ya existe un rol con ese nombre" },
-            { status: 400 }
+            { status: 400 },
           );
         }
       }
@@ -316,13 +316,13 @@ export async function PATCH(req: NextRequest) {
       new Set([
         ...(data.permisos ?? []),
         ...(data.tipo === "ADMINISTRADOR" ? ["empleados:admin"] : []),
-      ])
+      ]),
     );
 
     const permisosUnicos = Array.from(
       new Set(
-        permisosSolicitados.map((p) => p.trim()).filter((p) => p.length > 0)
-      )
+        permisosSolicitados.map((p) => p.trim()).filter((p) => p.length > 0),
+      ),
     );
 
     const updated = await prisma.$transaction(async (tx) => {
@@ -368,7 +368,7 @@ export async function PATCH(req: NextRequest) {
                 TenantId: tenantIdBigInt,
               },
             });
-          })
+          }),
         );
 
         await tx.perfilPermiso.createMany({
@@ -416,17 +416,17 @@ export async function PATCH(req: NextRequest) {
       descripcion: data.descripcion ?? null,
       usuarios: updated.rol.PerfilUsuario.length,
       permisos: updated.rol.PerfilPermiso.filter(
-        (pp) => !pp.Permiso?.EstaEliminado
+        (pp) => !pp.Permiso?.EstaEliminado,
       ).map((pp) => pp.Permiso?.Descripcion ?? pp.Permiso?.Clave ?? ""),
     };
 
     // Registrar auditoría EDITAR_ROL
     const permisosAnteriores = rolExistente.PerfilPermiso.filter(
-      (pp) => !pp.Permiso?.EstaEliminado
+      (pp) => !pp.Permiso?.EstaEliminado,
     ).map((pp) => pp.Permiso?.Descripcion ?? pp.Permiso?.Clave ?? "");
 
     const permisosNuevos = updated.rol.PerfilPermiso.filter(
-      (pp) => !pp.Permiso?.EstaEliminado
+      (pp) => !pp.Permiso?.EstaEliminado,
     ).map((pp) => pp.Permiso?.Descripcion ?? pp.Permiso?.Clave ?? "");
 
     await registrarAuditoria({
@@ -448,9 +448,8 @@ export async function PATCH(req: NextRequest) {
     });
 
     // Actualizar permisos en JWT de todos los usuarios con este rol
-    const { actualizarPermisosUsuariosDelRol } = await import(
-      "@/lib/auth/updateUserPermissions"
-    );
+    const { actualizarPermisosUsuariosDelRol } =
+      await import("@/lib/auth/updateUserPermissions");
     actualizarPermisosUsuariosDelRol(rolIdBigInt, tenantIdBigInt).catch(() => {
       // Error no crítico, solo loguear silenciosamente
     });
@@ -460,7 +459,7 @@ export async function PATCH(req: NextRequest) {
     if (error instanceof PermisoError) {
       return NextResponse.json(
         { error: error.message },
-        { status: error.status }
+        { status: error.status },
       );
     }
     return handleError(error);
@@ -471,7 +470,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const { tenantId, usuarioId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS_ADMIN, // Mismo permiso que productos por coherencia
+      permission: PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
     const tenantIdBigInt = BigInt(tenantId);
 
@@ -481,7 +480,7 @@ export async function DELETE(req: NextRequest) {
     if (!rolIdParam) {
       return NextResponse.json(
         { error: "ID de rol requerido" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -489,7 +488,7 @@ export async function DELETE(req: NextRequest) {
     if (!Number.isInteger(rolIdNumber) || rolIdNumber <= 0) {
       return NextResponse.json(
         { error: "ID de rol inválido" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -514,7 +513,7 @@ export async function DELETE(req: NextRequest) {
     if (!rol) {
       return NextResponse.json(
         { error: "Rol no encontrado o no pertenece a este tenant" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -524,7 +523,7 @@ export async function DELETE(req: NextRequest) {
         {
           error: `No se puede eliminar el rol porque tiene ${rol.PerfilUsuario.length} usuario(s) asignado(s). Asigna los usuarios a otro rol primero.`,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -538,7 +537,7 @@ export async function DELETE(req: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "No se puede eliminar un rol del sistema" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -575,13 +574,13 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json(
       { message: "Rol eliminado correctamente" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     if (error instanceof PermisoError) {
       return NextResponse.json(
         { error: error.message },
-        { status: error.status }
+        { status: error.status },
       );
     }
     return handleError(error);

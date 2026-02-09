@@ -7,10 +7,8 @@ import {
   CardHeader,
   Divider,
   Switch,
-  Input,
   Select,
   SelectItem,
-  Chip,
   Modal,
   ModalContent,
   ModalHeader,
@@ -19,16 +17,7 @@ import {
   Button,
   addToast,
 } from "@heroui/react";
-import {
-  Lock,
-  Shield,
-  Eye,
-  Trash2,
-  LogOut,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-} from "lucide-react";
+import { Lock, Shield } from "lucide-react";
 import { useConfiguracion, Seguridad } from "@/hooks/useConfiguracion";
 import { SectionPanel } from "./SectionPanel";
 

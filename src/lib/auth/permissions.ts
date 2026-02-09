@@ -3,47 +3,7 @@
  * Esto asegura que los permisos sean verificados en tiempo de compilación.
  */
 
-export const PERMISSIONS = {
-  // Ventas
-  VENTAS: "ventas",
-  VENTAS_ADMIN: "ventas:admin",
-
-  // Caja
-  CAJA: "caja",
-  CAJA_ADMIN: "caja:admin",
-
-  // Productos
-  PRODUCTOS: "productos",
-  PRODUCTOS_ADMIN: "productos:admin",
-
-  // Empleados
-  EMPLEADOS: "empleados",
-  EMPLEADOS_ADMIN: "empleados:admin",
-
-  // Clientes
-  CLIENTES: "clientes",
-  CLIENTES_ADMIN: "clientes:admin",
-
-  // Reportes
-  REPORTES: "reportes",
-  REPORTES_ADMIN: "reportes:admin",
-
-  // Configuración
-  CONFIGURACION: "configuracion",
-  CONFIGURACION_ADMIN: "configuracion:admin",
-
-  // Sucursales
-  SUCURSALES: "sucursales",
-  SUCURSALES_ADMIN: "sucursales:admin",
-
-  // Auditoría
-  AUDITORIA: "auditoria",
-  AUDITORIA_ADMIN: "auditoria:admin",
-
-  // Analíticas
-  ANALITICAS: "analiticas",
-  ANALITICAS_ADMIN: "analiticas:admin",
-} as const;
+import { PERMISSIONS } from "../constants/comprobantes";
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 

@@ -188,23 +188,14 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
   const { supabase } = useSupabaseAuthContext();
 
   // Use global store
-  const { permissions, roles } = useUserStore();
+  const { canAccessRoute } = useUserStore();
 
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const isSuperAdmin = useMemo(() => {
-    return roles.some((r) => r.Tipo === "SUPERADMIN");
-  }, [roles]);
-
-  const permisosKeys = permissions;
-
-  // Filtrar menuItems según permisos (SuperAdmin ve todo)
+  // Filtrar menuItems según permisos (SuperAdmin ve todo gracias a canAccessRoute)
   const menuItemsFiltrados = useMemo(() => {
-    if (isSuperAdmin) {
-      return menuItems;
-    }
-    return filtrarRutasPorPermisos(menuItems, permisosKeys);
-  }, [permisosKeys, isSuperAdmin]);
+    return menuItems.filter((item) => canAccessRoute(item.href));
+  }, [canAccessRoute]);
 
   // Prefetch todas las rutas disponibles al montar el componente para navegación instantánea
   useEffect(() => {

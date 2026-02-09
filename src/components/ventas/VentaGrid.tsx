@@ -77,7 +77,11 @@ export default function VentaGrid({
                   size="sm"
                   variant="bordered"
                   minValue={0}
-                  maxValue={parseFloat(item.Stock)}
+                  maxValue={
+                    item.DescuentaStock && !item.PermiteStockNegativo
+                      ? parseFloat(item.Stock)
+                      : 999999
+                  }
                   step={item.TipoVenta === TiposVenta.PESO ? 0.001 : 1}
                   formatOptions={{
                     minimumFractionDigits:

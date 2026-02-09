@@ -32,7 +32,7 @@ export async function proxy(req: NextRequest) {
     pathname === "/" ||
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
-    pathname.match(/\.(ico|png|jpg|jpeg|svg|gif|webp)$/) ||
+    pathname.match(/\.(ico|png|jpg|jpeg|svg|gif|webp|json)$/) ||
     publicPaths.some((p) => pathname.startsWith(p));
 
   const response = NextResponse.next({
@@ -57,15 +57,21 @@ export async function proxy(req: NextRequest) {
 
   // Detectar cookie de sesión de Supabase dinámicamente
   const allCookies = req.cookies.getAll();
-  const supabaseCookie = allCookies.find(
-    (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"),
+  // Supabase puede dividir las cookies en chunks si son muy grandes
+  // Buscamos todas las cookies que parezcan ser de autenticación de Supabase (sb-*-auth-token)
+  const supabaseCookies = allCookies.filter(
+    (c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"),
   );
 
-  // Usar el valor de la cookie como key, o "no-session" si no existe.
-  // IMPORTANTE: No incluimos 'pathname' en la key para que requests simultáneos
-  // a diferentes rutas compartan la misma validación y eviten race conditions
-  // en el refresco del token (Reuse Detection).
-  const sessionToken = supabaseCookie?.value || "no-session";
+  // Usar el valor combinado de todas las cookies encontradas como key.
+  // Si no hay cookies, usamos "no-session".
+  const sessionToken =
+    supabaseCookies.length > 0
+      ? supabaseCookies
+          .map((c) => c.value)
+          .sort()
+          .join("-")
+      : "no-session";
   const cacheKey = sessionToken;
 
   // Verificar cache primero
@@ -163,6 +169,6 @@ export async function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|.*\\.(?:ico|png|jpg|jpeg|svg|gif|webp)$|signin|signup|new-tenant).*)",
+    "/((?!api|_next/static|_next/image|.*\\.(?:ico|png|jpg|jpeg|svg|gif|webp|json)$|signin|signup|new-tenant).*)",
   ],
 };

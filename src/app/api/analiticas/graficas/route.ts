@@ -6,7 +6,7 @@ import {
   TIPO_PAGO,
 } from "@/lib/constants/comprobantes";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/auth/permissions";
+import { PERMISSIONS } from "@/lib/constants/comprobantes";
 
 /**
  * GET /api/analiticas/graficas
@@ -90,7 +90,7 @@ export async function GET(req: NextRequest) {
             key = `${fecha.getFullYear()}-W${semana}`;
           } else if (agrupacion === "mes") {
             key = `${fecha.getFullYear()}-${String(
-              fecha.getMonth() + 1
+              fecha.getMonth() + 1,
             ).padStart(2, "0")}`;
           } else {
             key = fecha.toISOString().split("T")[0];
@@ -422,7 +422,7 @@ export async function GET(req: NextRequest) {
       default:
         return NextResponse.json(
           { error: "Tipo de gráfica no válido" },
-          { status: 400 }
+          { status: 400 },
         );
     }
   } catch (error) {
@@ -433,7 +433,7 @@ export async function GET(req: NextRequest) {
 // Helper para obtener número de semana
 function getWeekNumber(date: Date): number {
   const d = new Date(
-    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
   );
   const dayNum = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);

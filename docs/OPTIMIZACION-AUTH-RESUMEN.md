@@ -156,7 +156,7 @@ invalidateBranchCache(usuarioId);
 ### Type-Safe Permissions
 
 ```typescript
-import { PERMISSIONS } from "@/lib/auth/permissions";
+import { PERMISSIONS } from "@/lib/constants/comprobantes";
 
 // ✅ Type-safe, autocomplete habilitado
 await getAuthContext({

@@ -122,7 +122,7 @@ invalidateBranchCache(usuarioId);
 #### Usar Tipos Estrictos de Permisos
 
 ```typescript
-import { PERMISSIONS } from "@/lib/auth/permissions";
+import { PERMISSIONS } from "@/lib/constants/comprobantes";
 
 // ✅ Correcto - Type-safe
 const ctx = await getAuthContext({

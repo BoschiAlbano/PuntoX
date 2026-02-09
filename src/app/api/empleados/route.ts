@@ -60,13 +60,13 @@ import { handleError } from "@/lib/errors/handler";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 import { PerfilTipo } from "../../../../prisma/generated/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/auth/permissions";
+import { PERMISSIONS } from "@/lib/constants/comprobantes";
 
 export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS_ADMIN,
+      permission: PERMISSIONS.EMPLEADOS,
     });
 
     const pagination = parsePaginationParams(req);
@@ -343,7 +343,7 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId, usuarioId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS_ADMIN, // Mismo permiso que productos por coherencia
+      permission: PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
 
     const tenantIdBigInt = BigInt(tenantId);
@@ -711,7 +711,7 @@ export async function PUT(req: NextRequest) {
   try {
     const { tenantId, usuarioId: usuarioIdAccion } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS_ADMIN, // Mismo permiso que productos por coherencia
+      permission: PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
 
     const json = await req.json().catch(() => null);
@@ -1021,7 +1021,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const { tenantId, usuarioId: usuarioIdAccion } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS_ADMIN, // Mismo permiso que productos por coherencia
+      permission: PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
 
     const json = await req.json().catch(() => null);
@@ -1096,7 +1096,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const { tenantId, usuarioId: usuarioIdAccion } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS_ADMIN, // Mismo permiso que productos por coherencia
+      permission: PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
 
     const json = await req.json().catch(() => null);

@@ -23,13 +23,6 @@ const cerrarCajaSchema = z.object({
     .min(0, "El monto de cierre debe ser mayor o igual a 0"),
 });
 
-// Schema para agregar gasto
-const agregarGastoSchema = z.object({
-  conceptoGastoId: z.number(),
-  descripcion: z.string().min(1, "La descripción es requerida"),
-  monto: z.number().min(0.01, "El monto debe ser mayor a 0"),
-});
-
 // GET: Obtener caja actual o historial
 export async function GET(req: NextRequest) {
   try {
@@ -122,6 +115,9 @@ export async function GET(req: NextRequest) {
                   Descripcion: true,
                 },
               },
+              FormaPago: {
+                where: { EstaEliminado: false },
+              },
             },
             orderBy: { Fecha: "desc" },
           },
@@ -206,6 +202,14 @@ export async function GET(req: NextRequest) {
             CajaId: Number(g.CajaId),
             ConceptoGastoId: Number(g.ConceptoGastoId),
             TenantId: Number(g.TenantId),
+            FormaPago: g.FormaPago.map((p) => ({
+              ...p,
+              Id: Number(p.Id),
+              GastoId: Number(p.GastoId),
+              TenantId: Number(p.TenantId),
+              TipoPago: Number(p.TipoPago),
+              Monto: Number(p.Monto),
+            })),
           })),
           Movimiento: caja.Movimiento.map((m) => ({
             ...m,
@@ -291,6 +295,9 @@ export async function GET(req: NextRequest) {
                   Descripcion: true,
                 },
               },
+              FormaPago: {
+                where: { EstaEliminado: false },
+              },
             },
             orderBy: { Fecha: "desc" },
           },
@@ -362,6 +369,14 @@ export async function GET(req: NextRequest) {
             CajaId: Number(g.CajaId),
             ConceptoGastoId: Number(g.ConceptoGastoId),
             TenantId: Number(g.TenantId),
+            FormaPago: g.FormaPago.map((p) => ({
+              ...p,
+              Id: Number(p.Id),
+              GastoId: Number(p.GastoId),
+              TenantId: Number(p.TenantId),
+              TipoPago: Number(p.TipoPago),
+              Monto: Number(p.Monto),
+            })),
           })),
           Movimiento: caja.Movimiento.map((m) => ({
             ...m,
@@ -870,84 +885,6 @@ export async function PATCH(req: NextRequest) {
                 ),
               }
             : null,
-        },
-      });
-    } else if (accion === "gasto") {
-      // Agregar gasto
-      const cajaAbierta = await prisma.caja.findFirst({
-        where: {
-          TenantId: BigInt(tenantId),
-          SucursalId: sucursalId,
-          UsuarioAperturaId: usuario.Id,
-          EstaEliminado: false,
-          FechaCierre: null,
-        },
-      });
-
-      if (!cajaAbierta) {
-        return NextResponse.json(
-          { error: "No tienes una caja abierta en esta sucursal" },
-          { status: 400 },
-        );
-      }
-
-      const body = await req.json();
-      const data = agregarGastoSchema.parse(body);
-
-      // Verificar que el concepto existe
-      const concepto = await prisma.conceptoGastos.findFirst({
-        where: {
-          Id: BigInt(data.conceptoGastoId),
-          TenantId: BigInt(tenantId),
-          EstaEliminado: false,
-        },
-      });
-
-      if (!concepto) {
-        return NextResponse.json(
-          { error: "Concepto de gasto no encontrado" },
-          { status: 404 },
-        );
-      }
-
-      const nuevoGasto = await prisma.gasto.create({
-        data: {
-          TenantId: BigInt(tenantId),
-          SucursalId: sucursalId,
-          CajaId: cajaAbierta.Id,
-          ConceptoGastoId: BigInt(data.conceptoGastoId),
-          Fecha: new Date(),
-          Descripcion: data.descripcion,
-          Monto: data.monto,
-          EstaEliminado: false,
-        },
-        include: {
-          ConceptoGastos: {
-            select: {
-              Id: true,
-              Descripcion: true,
-            },
-          },
-        },
-      });
-
-      // Actualizar totales de salida en efectivo
-      await prisma.caja.update({
-        where: { Id: cajaAbierta.Id },
-        data: {
-          TotalSalidaEfectivo: {
-            increment: data.monto,
-          },
-        },
-      });
-
-      return NextResponse.json({
-        gasto: {
-          ...nuevoGasto,
-          Id: Number(nuevoGasto.Id),
-          CajaId: Number(nuevoGasto.CajaId),
-          ConceptoGastoId: Number(nuevoGasto.ConceptoGastoId),
-          TenantId: Number(nuevoGasto.TenantId),
         },
       });
     }

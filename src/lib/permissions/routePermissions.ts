@@ -45,8 +45,10 @@ export const ROUTE_TO_PERMISO_KEY: Record<string, string> = {
   "/productos": "productos",
   "/analiticas": "analiticas",
   "/configuracion": "configuracion",
-  "/empleados": "empleados:admin", // El permiso real es "empleados:admin"
-  "/sucursales": "empleados:admin",
+  "/empleados": "empleados",
+  "/sucursales": "sucursales",
+  "/reportes": "reportes",
+  "/auditoria": "auditoria",
 };
 
 /**
@@ -120,8 +122,12 @@ export function filtrarRutasPorPermisos<T extends { href: string }>(
   rutas: T[],
   permisos: string[],
 ): T[] {
+  console.log("permisos", permisos);
+  console.log("rutas", rutas);
   const rutasFiltradas = rutas.filter((ruta) =>
     tienePermisoParaRuta(permisos, ruta.href),
   );
+
+  console.log("rutasFiltradas", rutasFiltradas);
   return rutasFiltradas;
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Card,
   CardBody,
@@ -10,7 +9,6 @@ import {
   Chip,
   Tooltip,
   Input,
-  Spinner,
   Modal,
   ModalContent,
   ModalHeader,
@@ -22,29 +20,17 @@ import {
   addToast,
 } from "@heroui/react";
 import { Pencil, Trash2, RefreshCw, Plus, Users } from "lucide-react";
-import { handleError } from "@/lib/auth/errorHandler";
+import {
+  PERMISSIONS,
+  TIPO_PERFIL,
+  type TipoPerfil,
+} from "@/lib/constants/comprobantes";
+import { LoadingComponent } from "../loading/loading";
+import { useRoles, Rol } from "@/hooks/useRoles";
 
-export type Rol = {
-  id: number;
-  nombre: string;
-  usuarios: number;
-  tipo: "ADMINISTRADOR" | "EMPLEADO";
-  descripcion?: string | null;
-  permisos?: string[];
-};
-
-const permisosDisponibles = [
-  "Ventas",
-  "Caja",
-  "Clientes",
-  "Productos",
-  "Analiticas",
-  "Configuracion",
-  "Empleados",
-];
+const permisosDisponibles = Object.values(PERMISSIONS);
 
 export default function RolesCRUD() {
-  const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [rolAEditar, setRolAEditar] = useState<Rol | null>(null);
@@ -53,134 +39,26 @@ export default function RolesCRUD() {
   const [nuevoRol, setNuevoRol] = useState({
     nombre: "",
     descripcion: "",
-    permisos: ["Ventas", "Caja"],
-    tipo: "EMPLEADO" as "ADMINISTRADOR" | "EMPLEADO",
+    permisos: [PERMISSIONS.VENTAS, PERMISSIONS.CAJA] as string[],
+    tipo: TIPO_PERFIL.EMPLEADO as TipoPerfil,
   });
 
   const [rolEditDraft, setRolEditDraft] = useState({
     nombre: "",
     descripcion: "",
-    tipo: "EMPLEADO" as "ADMINISTRADOR" | "EMPLEADO",
+    tipo: TIPO_PERFIL.EMPLEADO as TipoPerfil,
     permisos: [] as string[],
   });
 
-  // Query para obtener roles
+  // Usar Custom Hook
   const {
-    data: roles = [],
+    rolesData: roles = [],
     isLoading,
     refetch,
-  } = useQuery({
-    queryKey: ["roles-crud"],
-    queryFn: async () => {
-      const response = await fetch("/api/roles");
-      if (!response.ok) throw new Error("Error al cargar roles");
-      return await response.json();
-    },
-  });
-
-  // Mutation para crear rol
-  const createMutation = useMutation({
-    mutationFn: async (data: typeof nuevoRol) => {
-      const response = await fetch("/api/roles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Error al crear rol");
-      }
-      return await response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["roles-crud"] });
-      queryClient.invalidateQueries({ queryKey: ["roles-select"] });
-      addToast({
-        title: "Rol creado",
-        description: "El rol se creó exitosamente",
-        color: "success",
-      });
-      setOpenCreateModal(false);
-      setNuevoRol({
-        nombre: "",
-        descripcion: "",
-        permisos: ["Ventas", "Caja"],
-        tipo: "EMPLEADO",
-      });
-    },
-    onError: (error: Error) => {
-      handleError(error, "Error al crear rol");
-    },
-  });
-
-  // Mutation para actualizar rol
-  const updateMutation = useMutation({
-    mutationFn: async ({
-      id,
-      data,
-    }: {
-      id: number;
-      data: typeof rolEditDraft;
-    }) => {
-      const response = await fetch(`/api/roles?id=${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Error al actualizar rol");
-      }
-      return await response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["roles-crud"] });
-      queryClient.invalidateQueries({ queryKey: ["roles-select"] });
-      addToast({
-        title: "Rol actualizado",
-        description: "Los cambios se guardaron exitosamente",
-        color: "success",
-      });
-      setRolAEditar(null);
-      setRolEditDraft({
-        nombre: "",
-        descripcion: "",
-        tipo: "EMPLEADO",
-        permisos: [],
-      });
-    },
-    onError: (error: Error) => {
-      handleError(error, "Error al actualizar rol");
-    },
-  });
-
-  // Mutation para eliminar rol
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await fetch(`/api/roles?id=${id}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Error al eliminar rol");
-      }
-      return await response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["roles-crud"] });
-      queryClient.invalidateQueries({ queryKey: ["roles-select"] });
-      addToast({
-        title: "Rol eliminado",
-        description: "El rol se eliminó exitosamente",
-        color: "success",
-      });
-      setRolAEliminar(null);
-    },
-    onError: (error: Error) => {
-      handleError(error, "Error al eliminar rol");
-    },
-  });
+    createRol,
+    updateRol,
+    deleteRol,
+  } = useRoles();
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -210,7 +88,17 @@ export default function RolesCRUD() {
       return;
     }
 
-    createMutation.mutate(nuevoRol);
+    createRol.mutate(nuevoRol, {
+      onSuccess: () => {
+        setOpenCreateModal(false);
+        setNuevoRol({
+          nombre: "",
+          descripcion: "",
+          permisos: [PERMISSIONS.VENTAS, PERMISSIONS.CAJA],
+          tipo: TIPO_PERFIL.EMPLEADO,
+        });
+      },
+    });
   };
 
   const handleEditarRol = () => {
@@ -234,12 +122,29 @@ export default function RolesCRUD() {
       return;
     }
 
-    updateMutation.mutate({ id: rolAEditar.id, data: rolEditDraft });
+    updateRol.mutate(
+      { id: rolAEditar.id, data: rolEditDraft },
+      {
+        onSuccess: () => {
+          setRolAEditar(null);
+          setRolEditDraft({
+            nombre: "",
+            descripcion: "",
+            tipo: TIPO_PERFIL.EMPLEADO,
+            permisos: [],
+          });
+        },
+      },
+    );
   };
 
   const handleEliminarRol = () => {
     if (!rolAEliminar) return;
-    deleteMutation.mutate(rolAEliminar.id);
+    deleteRol.mutate(rolAEliminar.id, {
+      onSuccess: () => {
+        setRolAEliminar(null);
+      },
+    });
   };
 
   const handleEditClick = (rol: Rol) => {
@@ -252,7 +157,7 @@ export default function RolesCRUD() {
     });
   };
 
-  !isLoading && console.log(roles);
+  // !isLoading && console.log(roles); // Clean up log
 
   return (
     <div className="space-y-4">
@@ -296,11 +201,11 @@ export default function RolesCRUD() {
       {/* Grid de roles */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <Spinner size="lg" />
+          <LoadingComponent message="Cargando roles..." />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {roles?.roles.map((rol: Rol) => {
+          {roles?.roles?.map((rol: Rol) => {
             const esRolSistema =
               rol.id < 0 ||
               rol.nombre.toLowerCase() === "administrador" ||
@@ -316,18 +221,27 @@ export default function RolesCRUD() {
                     <Chip
                       size="sm"
                       color={
-                        rol.tipo === "ADMINISTRADOR" ? "primary" : "secondary"
+                        rol.tipo === TIPO_PERFIL.ADMINISTRADOR
+                          ? "primary"
+                          : "secondary"
                       }
                       variant="flat"
                     >
                       {rol.tipo}
                     </Chip>
                     <div className="flex items-center gap-1">
-                      <Tooltip content="Editar">
+                      <Tooltip
+                        content={
+                          esRolSistema
+                            ? "No se puede editar el rol de sistema"
+                            : "Editar"
+                        }
+                      >
                         <Button
                           isIconOnly
                           size="sm"
                           variant="light"
+                          isDisabled={esRolSistema}
                           onPress={() => handleEditClick(rol)}
                         >
                           <Pencil size={16} />
@@ -415,13 +329,12 @@ export default function RolesCRUD() {
                 onChange={(e) =>
                   setNuevoRol((prev) => ({
                     ...prev,
-                    tipo: e.target.value as "ADMINISTRADOR" | "EMPLEADO",
+                    tipo: e.target.value as TipoPerfil,
                   }))
                 }
                 isRequired
               >
-                <SelectItem key="ADMINISTRADOR">Administrador</SelectItem>
-                <SelectItem key="EMPLEADO">Empleado</SelectItem>
+                <SelectItem key={TIPO_PERFIL.EMPLEADO}>Empleado</SelectItem>
               </Select>
             </div>
             <Textarea
@@ -466,14 +379,14 @@ export default function RolesCRUD() {
             <Button
               variant="light"
               onPress={() => setOpenCreateModal(false)}
-              isDisabled={createMutation.isPending}
+              isDisabled={createRol.isPending}
             >
               Cancelar
             </Button>
             <Button
               color="primary"
               onPress={handleCrearRol}
-              isLoading={createMutation.isPending}
+              isLoading={createRol.isPending}
             >
               Crear rol
             </Button>
@@ -489,7 +402,7 @@ export default function RolesCRUD() {
           setRolEditDraft({
             nombre: "",
             descripcion: "",
-            tipo: "EMPLEADO",
+            tipo: TIPO_PERFIL.EMPLEADO,
             permisos: [],
           });
         }}
@@ -539,13 +452,12 @@ export default function RolesCRUD() {
                     onChange={(e) =>
                       setRolEditDraft((prev) => ({
                         ...prev,
-                        tipo: e.target.value as "ADMINISTRADOR" | "EMPLEADO",
+                        tipo: e.target.value as TipoPerfil,
                       }))
                     }
                     isDisabled={esRolSistema}
                   >
-                    <SelectItem key="ADMINISTRADOR">Administrador</SelectItem>
-                    <SelectItem key="EMPLEADO">Empleado</SelectItem>
+                    <SelectItem key={TIPO_PERFIL.EMPLEADO}>Empleado</SelectItem>
                   </Select>
                   <div className="space-y-2">
                     <p className="text-sm font-semibold text-gray-700">
@@ -587,18 +499,18 @@ export default function RolesCRUD() {
                 setRolEditDraft({
                   nombre: "",
                   descripcion: "",
-                  tipo: "EMPLEADO",
+                  tipo: TIPO_PERFIL.EMPLEADO,
                   permisos: [],
                 });
               }}
-              isDisabled={updateMutation.isPending}
+              isDisabled={updateRol.isPending}
             >
               Cancelar
             </Button>
             <Button
               color="primary"
               onPress={handleEditarRol}
-              isLoading={updateMutation.isPending}
+              isLoading={updateRol.isPending}
             >
               Guardar cambios
             </Button>
@@ -633,14 +545,14 @@ export default function RolesCRUD() {
             <Button
               variant="light"
               onPress={() => setRolAEliminar(null)}
-              isDisabled={deleteMutation.isPending}
+              isDisabled={deleteRol.isPending}
             >
               Cancelar
             </Button>
             <Button
               color="danger"
               onPress={handleEliminarRol}
-              isLoading={deleteMutation.isPending}
+              isLoading={deleteRol.isPending}
             >
               Eliminar
             </Button>

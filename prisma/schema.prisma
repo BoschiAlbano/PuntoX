@@ -701,13 +701,16 @@ model DetalleComprobante {
 /// Pagos asociados a comprobantes (monto y tipo de pago).
 model FormaPago {
   Id                BigInt             @id @default(autoincrement())
-  ComprobanteId     BigInt
+  ComprobanteId     BigInt?
+  /// Tenant dueÃ±o de esta forma de pago
+  GastoId           BigInt?
   TipoPago          Int
   Monto             Decimal            @db.Decimal(18, 2)
   EstaEliminado     Boolean
   /// Tenant dueÃ±o de esta forma de pago
   TenantId          BigInt
-  Comprobante       Comprobante        @relation(fields: [ComprobanteId], references: [Id], onUpdate: NoAction)
+  Comprobante       Comprobante?       @relation(fields: [ComprobanteId], references: [Id], onUpdate: NoAction)
+  Gasto             Gasto?             @relation(fields: [GastoId], references: [Id], onUpdate: NoAction)
   Tenant            Tenant             @relation(fields: [TenantId], references: [Id])
   FormaPago_Cheque  FormaPago_Cheque?
   FormaPago_CtaCte  FormaPago_CtaCte?
@@ -715,6 +718,7 @@ model FormaPago {
 
   @@index([TenantId])
   @@index([ComprobanteId])
+  @@index([GastoId])
 }
 
 /// AsociaciÃ³n de forma de pago con un cheque concreto.
@@ -805,6 +809,7 @@ model Gasto {
   ConceptoGastos  ConceptoGastos @relation(fields: [ConceptoGastoId], references: [Id], onUpdate: NoAction)
   Tenant          Tenant         @relation(fields: [TenantId], references: [Id])
   Sucursal        Sucursal?      @relation(fields: [SucursalId], references: [Id])
+  FormaPago       FormaPago[]
 
   @@index([TenantId])
   @@index([TenantId, SucursalId])

@@ -83,6 +83,11 @@ export type Gasto = {
     Id: number;
     Descripcion: string;
   };
+  FormaPago?: {
+    Id: number;
+    Monto: number;
+    TipoPago: number;
+  }[];
 };
 
 export type ConceptoGasto = {
@@ -156,18 +161,6 @@ const fetchCajaActual = async (
   return data.caja || null;
 };
 
-const fetchConceptosGastos = async (
-  sucursalId: number | undefined,
-): Promise<ConceptoGasto[]> => {
-  if (!sucursalId) return [];
-  const response = await fetch(
-    `/api/conceptos-gastos?sucursalId=${sucursalId}`,
-  );
-  if (!response.ok) throw new Error("Error al obtener conceptos de gastos");
-  const data = await response.json();
-  return data.conceptosGasto || [];
-};
-
 const fetchResumenDia = async (
   sucursalId: number | undefined,
 ): Promise<ResumenDia | null> => {
@@ -183,14 +176,9 @@ const fetchResumenDia = async (
 // Hook principal
 export function useCaja(options?: {
   enableCaja?: boolean;
-  enableConceptos?: boolean;
   enableResumen?: boolean;
 }) {
-  const {
-    enableCaja = false,
-    enableConceptos = false,
-    enableResumen = false,
-  } = options || {};
+  const { enableCaja = false, enableResumen = false } = options || {};
 
   const { currentBranch, user } = useUserStore();
   const queryClient = useQueryClient();
@@ -203,14 +191,6 @@ export function useCaja(options?: {
     queryFn: () => fetchCajaActual(sucursalId, usuarioId),
     enabled: !!sucursalId && !!usuarioId && enableCaja,
     ...dynamicDataQueryOptions,
-  });
-
-  // Query Conceptos de Gasto
-  const conceptosQuery = useQuery({
-    queryKey: ["conceptos-gastos", sucursalId],
-    queryFn: () => fetchConceptosGastos(sucursalId),
-    enabled: !!sucursalId && enableConceptos,
-    ...staticDataQueryOptions,
   });
 
   // Query Resumen del Día
@@ -263,73 +243,15 @@ export function useCaja(options?: {
     },
   });
 
-  const agregarGastoMutation = useMutation({
-    mutationFn: async ({
-      conceptoId,
-      descripcion,
-      monto,
-    }: {
-      conceptoId: number;
-      descripcion: string;
-      monto: number;
-    }) => {
-      if (!sucursalId) throw new Error("No hay sucursal seleccionada");
-      const response = await fetch(
-        `/api/caja?accion=gasto&sucursalId=${sucursalId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            conceptoGastoId: conceptoId,
-            descripcion,
-            monto,
-          }),
-        },
-      );
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Error al registrar el gasto");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["caja"] });
-    },
-  });
-
-  const agregarConceptoGastoMutation = useMutation({
-    mutationFn: async (descripcion: string) => {
-      const response = await fetch("/api/conceptos-gastos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ Descripcion: descripcion }),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Error al crear concepto");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["conceptos-gastos"] });
-    },
-  });
-
   return {
     // Data
     cajaActual: cajaQuery.data,
-    conceptosGasto: conceptosQuery.data || [],
     resumenDia: resumenQuery.data,
 
     // Status
-    isLoading:
-      cajaQuery.isLoading || conceptosQuery.isLoading || resumenQuery.isLoading,
-    isError:
-      cajaQuery.isError || conceptosQuery.isError || resumenQuery.isError,
-    isFetching:
-      cajaQuery.isFetching ||
-      conceptosQuery.isFetching ||
-      resumenQuery.isFetching,
+    isLoading: cajaQuery.isLoading || resumenQuery.isLoading,
+    isError: cajaQuery.isError || resumenQuery.isError,
+    isFetching: cajaQuery.isFetching || resumenQuery.isFetching,
 
     // Helper para verificar estado
     isCajaAbierta: !!cajaQuery.data && !cajaQuery.data.FechaCierre,
@@ -337,20 +259,15 @@ export function useCaja(options?: {
     // Mutations
     abrirCaja: abrirCajaMutation.mutateAsync,
     cerrarCaja: cerrarCajaMutation.mutateAsync,
-    agregarGasto: agregarGastoMutation.mutateAsync,
-    agregarConceptoGasto: agregarConceptoGastoMutation.mutateAsync,
 
     // Loading states for actions
     isOpening: abrirCajaMutation.isPending,
     isClosing: cerrarCajaMutation.isPending,
-    isAddingGasto: agregarGastoMutation.isPending,
-    isAddingConcepto: agregarConceptoGastoMutation.isPending,
 
     // Refetch
     refetch: async () => {
       const promises = [];
       if (enableCaja) promises.push(cajaQuery.refetch());
-      if (enableConceptos) promises.push(conceptosQuery.refetch());
       if (enableResumen) promises.push(resumenQuery.refetch());
       await Promise.all(promises);
     },

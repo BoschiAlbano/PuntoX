@@ -271,7 +271,6 @@ export default function ProductoForm({
   }, [nextCodeData, initialData, isOpen]);
 
   const handleSubmit = () => {
-    console.log(formData);
     onSubmit(formData);
   };
 
@@ -623,7 +622,9 @@ export default function ProductoForm({
                     <Select
                       label="Tipo de Venta"
                       placeholder="Seleccione tipo"
-                      selectedKeys={[formData.TipoVenta || TiposVenta.UNIDAD]}
+                      selectedKeys={
+                        formData.TipoVenta ? [formData.TipoVenta] : []
+                      }
                       onChange={(e) =>
                         setFormData({
                           ...formData,

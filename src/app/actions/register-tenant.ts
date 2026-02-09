@@ -7,6 +7,7 @@ import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { requireSuperAdminServer } from "@/lib/requireSuperAdmin";
 import { PerfilTipo, Prisma } from "../../../prisma/generated/prisma";
 import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
+import { PERMISSIONS } from "@/lib/constants/comprobantes";
 // Helper para convertir cadenas vacías a undefined
 const emptyStringToUndefined = z.preprocess(
   (val) => (val === "" || val === null ? undefined : val),
@@ -276,18 +277,23 @@ export async function registerTenant(formData: FormData) {
       }
 
       // Definir los permisos básicos que debe tener un administrador
-      const permisosBasicos = [
-        {
-          clave: "empleados:admin",
-          descripcion: "Administración completa de empleados",
-        },
-        { clave: "ventas", descripcion: "Acceso a ventas" },
-        { clave: "caja", descripcion: "Acceso a caja" },
-        { clave: "clientes", descripcion: "Acceso a clientes" },
-        { clave: "productos", descripcion: "Acceso a productos" },
-        { clave: "analiticas", descripcion: "Acceso a analíticas" },
-        { clave: "configuracion", descripcion: "Acceso a configuración" },
-      ];
+      // const permisosBasicos = [
+      //   {
+      //     clave: "empleados:admin",
+      //     descripcion: "Administración completa de empleados",
+      //   },
+      //   { clave: "ventas", descripcion: "Acceso a ventas" },
+      //   { clave: "caja", descripcion: "Acceso a caja" },
+      //   { clave: "clientes", descripcion: "Acceso a clientes" },
+      //   { clave: "productos", descripcion: "Acceso a productos" },
+      //   { clave: "analiticas", descripcion: "Acceso a analíticas" },
+      //   { clave: "configuracion", descripcion: "Acceso a configuración" },
+      // ];
+
+      const permisosBasicos = Object.values(PERMISSIONS).map((clave) => ({
+        clave,
+        descripcion: `Acceso a ${clave}`,
+      }));
 
       // Crear y asignar todos los permisos básicos al rol de administrador
       for (const permisoData of permisosBasicos) {

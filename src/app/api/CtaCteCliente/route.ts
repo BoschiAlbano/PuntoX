@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/auth/permissions";
+import { PERMISSIONS } from "@/lib/constants/comprobantes";
 import { handleError } from "@/lib/errors/handler";
 import {
   TIPO_COMPROBANTE_VENTA,
@@ -22,7 +22,10 @@ const pagoSchema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext({ req, permission: PERMISSIONS.CLIENTES });
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: PERMISSIONS.CLIENTES,
+    });
 
     const searchParams = req.nextUrl.searchParams;
     const clienteIdStr = searchParams.get("clienteId");
@@ -59,6 +62,7 @@ export async function GET(req: NextRequest) {
             TipoPago: TIPO_PAGO.CUENTA_CORRIENTE,
           },
         },
+        Movimiento: true, // Include Movimiento to get description
       },
     });
 
@@ -80,6 +84,9 @@ export async function GET(req: NextRequest) {
         Comprobante_CuentaCorriente: {
           ClienteId: clienteId,
         },
+      },
+      include: {
+        Movimiento: true, // Include Movimiento
       },
     });
 
@@ -105,6 +112,9 @@ export async function GET(req: NextRequest) {
       const isNotaCredito =
         f.TipoComprobante === TIPO_COMPROBANTE_VENTA.NOTA_CREDITO;
 
+      const descripcion =
+        f.Movimiento?.[0]?.Descripcion || `Comp. #${f.Numero}`;
+
       // If it's a Sale (Factura, Remito...), it's a Debit (Debe).
       // If it's a NC, it's a Credit (Haber).
       if (isNotaCredito) {
@@ -112,7 +122,7 @@ export async function GET(req: NextRequest) {
           id: Number(f.Id),
           fecha: f.Fecha,
           tipo: "Nota de Crédito",
-          detalles: `Comp. #${f.Numero}`,
+          detalles: descripcion,
           debe: 0,
           haber: montoCtaCte,
         });
@@ -131,7 +141,7 @@ export async function GET(req: NextRequest) {
           id: Number(f.Id),
           fecha: f.Fecha,
           tipo: tipoStr,
-          detalles: `Comp. #${f.Numero}`,
+          detalles: descripcion,
           debe: montoCtaCte,
           haber: 0,
         });
@@ -157,11 +167,14 @@ export async function GET(req: NextRequest) {
     // So it will NOT be in `facturas`. Good.
 
     for (const p of pagos) {
+      const descripcion =
+        p.Movimiento?.[0]?.Descripcion || `Comp. #${p.Numero}`;
+
       movimientos.push({
         id: Number(p.Id),
         fecha: p.Fecha,
         tipo: "Pago",
-        detalles: `Comp. #${p.Numero}`,
+        detalles: descripcion,
         debe: 0,
         haber: Number(p.Total),
       });
@@ -190,7 +203,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext({ req, permission: PERMISSIONS.CLIENTES });
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: PERMISSIONS.CLIENTES,
+    });
     const tenantIdBigInt = BigInt(tenantId);
 
     // Get User and Service Data
@@ -232,6 +248,16 @@ export async function POST(req: NextRequest) {
     if (!sucursalId) {
       return NextResponse.json(
         { error: "El usuario no tiene una sucursal por defecto asignada" },
+        { status: 400 },
+      );
+    }
+
+    if (!usuario.EmpleadoId) {
+      return NextResponse.json(
+        {
+          error:
+            "El usuario no tiene un empleado asociado para registrar pagos.",
+        },
         { status: 400 },
       );
     }
@@ -334,6 +360,7 @@ export async function POST(req: NextRequest) {
         tx,
         tenantIdBigInt,
         usuario.Id,
+        usuario.EmpleadoId!,
         sucursalId,
         caja.Id,
         clienteId,
