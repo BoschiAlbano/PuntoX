@@ -134,6 +134,14 @@ export function ConfiguracionBascula() {
                 <p className="text-xs text-gray-500 mt-0.5">
                   El código de barras contiene el peso en lugar del precio
                 </p>
+                <label htmlFor="codigoBascula">
+                  Peso: se tomaran 3 digitos para decimales valores: 0,001g -
+                  99,999g
+                </label>
+                <label htmlFor="codigoBascula">
+                  Precio: no tomará en cuenta los decimales valores: $1 -
+                  $99.999
+                </label>
               </div>
             </div>
             <Switch
@@ -187,6 +195,8 @@ export function ConfiguracionBascula() {
             <Input
               placeholder="Ej: 20"
               value={configBascula.codigoBascula}
+              maxLength={2}
+              minLength={2}
               onChange={(e) =>
                 setConfigBascula((prev) => ({
                   ...prev,
@@ -201,6 +211,15 @@ export function ConfiguracionBascula() {
               variant="bordered"
               classNames={{ inputWrapper: "bg-white border-slate-200" }}
             />
+            <label htmlFor="codigoBascula">
+              Ejemplo: 2000002005001 (20: prefijo, 00002: codigo, 00500:
+              peso/precio, 1: digito verificador)
+            </label>
+            <label htmlFor="codigoBascula">P P I I I I V V V V V C</label>
+            <label htmlFor="codigoBascula">
+              P P: prefijo, I I I I I: codigo, V V V V V: peso/precio, C: digito
+              verificador
+            </label>
           </div>
         </CardBody>
       </Card>

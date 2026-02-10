@@ -1,11 +1,20 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Input, Button, Spinner, Card, CardBody } from "@heroui/react";
+import {
+  Input,
+  Button,
+  Spinner,
+  Card,
+  CardBody,
+  addToast,
+} from "@heroui/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Search, ScanBarcode } from "lucide-react";
 import { fetchProductosVentas } from "@/hooks/useProductos";
 import { Producto } from "@/lib/validations/producto.schema";
+import { useConfiguracion } from "@/hooks/useConfiguracion";
+import { parseScaleBarcode } from "@/lib/utils/barcode";
 
 // Simple custom debounce hook
 function useDebounceValue<T>(value: T, delay: number): T {
@@ -27,7 +36,7 @@ function useDebounceValue<T>(value: T, delay: number): T {
 export default function ProductSearch({
   onProductSelect,
 }: {
-  onProductSelect: (p: Producto) => void;
+  onProductSelect: (p: Producto, cantidad?: number) => void;
 }) {
   const [inputValue, setInputValue] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -38,6 +47,9 @@ export default function ProductSearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+
+  // Configuración para báscula
+  const { configuracion } = useConfiguracion({ enableConfiguracion: true });
 
   const debouncedSearch = useDebounceValue(inputValue, 300);
 
@@ -100,15 +112,119 @@ export default function ProductSearch({
         // Seleccionar sugerencia resaltada
         handleSelectProduct(suggestions[selectedIndex]);
       } else if (inputValue.trim()) {
-        // Buscar producto exacto por código/barras
+        const term = inputValue.trim();
         setIsSearching(true);
+
         try {
+          // 1. Validar si es código de báscula pero está desactivada
+          if (
+            configuracion?.codigoBascula &&
+            term.length === 13 &&
+            term.startsWith(configuracion.codigoBascula) &&
+            !configuracion.activarBascula
+          ) {
+            addToast({
+              title: "Báscula desactivada",
+              description:
+                "Se detectó un código de báscula, pero la función está desactivada en la configuración.",
+              color: "warning",
+            });
+            setInputValue("");
+            setIsSearching(false);
+            return;
+          }
+
+          // 2. Intentar parsear como código de balanza
+          let scaleResult = null;
+          if (
+            configuracion?.activarBascula &&
+            configuracion.codigoBascula &&
+            term.length === 13 &&
+            term.startsWith(configuracion.codigoBascula)
+          ) {
+            scaleResult = parseScaleBarcode(term, {
+              active: true,
+              prefix: configuracion.codigoBascula,
+              isWeight: configuracion.etiquetaPorPeso ?? false,
+              priceDecimals: configuracion.precioDecimales ?? 0,
+            });
+
+            if (!scaleResult) {
+              addToast({
+                title: "Error al leer código",
+                description: "No se pudo leer el código de báscula.",
+                color: "danger",
+              });
+              setInputValue("");
+              setIsSearching(false);
+              return;
+            }
+          }
+
+          if (scaleResult) {
+            console.log("Scale Barcode Detected:", scaleResult);
+            // Buscar producto por PLU (usando el código parseado)
+            // Primero intentamos buscar en cache/remoto por el PLU
+            // NOTA: fetchProductosVentas busca por string en codigo, descripcion, etc.
+            // Si el PLU es "00123", la búsqueda debería encontrarlo.
+            const result = await queryClient.fetchQuery({
+              queryKey: ["productos-ventas-scale", scaleResult.plu],
+              queryFn: ({ signal }) =>
+                fetchProductosVentas({
+                  signal,
+                  search: scaleResult.plu,
+                  page: 1,
+                  limit: 5,
+                }),
+              staleTime: 0,
+            });
+
+            // Buscar coincidencia exacta por Codigo (Int) con el PLU
+            const pluInt = parseInt(scaleResult.plu, 10);
+            const found = result.data.find((p) => p.Codigo === pluInt);
+
+            if (found) {
+              // Validar TipoVenta: Si es balanza (peso) y el producto es por UNIDAD -> Error
+              if (found.TipoVenta === "UNIDAD") {
+                addToast({
+                  title: "Producto no pesable",
+                  description: `El producto "${found.Descripcion}" se vende por unidad. No se puede ingresar por balanza.`,
+                  color: "danger",
+                });
+                setInputValue("");
+                setIsSearching(false);
+                return;
+              }
+
+              // Calcular cantidad
+              let cantidad = 1;
+              if (scaleResult.type === "weight") {
+                cantidad = scaleResult.value;
+              } else if (
+                scaleResult.type === "price" &&
+                found.Precio?.PrecioPublico
+              ) {
+                // Si es por precio, calculamos peso = Total / PrecioUnitario
+                // Usando PrecioPublico (Lista 1) por defecto
+                const price = Number(found.Precio.PrecioPublico);
+                if (price > 0) {
+                  cantidad = Number((scaleResult.value / price).toFixed(3));
+                }
+              }
+
+              handleSelectProduct(found, cantidad);
+              setIsSearching(false);
+              return;
+            }
+          }
+
+          // 2. Búsqueda normal si no es báscula o no se encontró
           const result = await queryClient.fetchQuery({
-            queryKey: ["productos-ventas-exact", inputValue.trim()],
+            queryKey: ["productos-ventas-exact", term],
             queryFn: ({ signal }) =>
               fetchProductosVentas({
                 signal,
-                search: inputValue.trim(),
+                search: term,
                 page: 1,
                 limit: 5,
               }),
@@ -139,8 +255,8 @@ export default function ProductSearch({
     }
   };
 
-  const handleSelectProduct = (product: Producto) => {
-    onProductSelect(product);
+  const handleSelectProduct = (product: Producto, cantidad: number = 1) => {
+    onProductSelect(product, cantidad);
     setInputValue("");
     setSuggestions([]);
     setShowSuggestions(false);

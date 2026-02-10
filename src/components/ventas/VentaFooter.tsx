@@ -329,7 +329,7 @@ export default function VentaFooter({
   return (
     <section className="flex-none w-full md:w-[320px] lg:w-[360px] flex flex-col gap-4 h-full">
       {/* Payment Card */}
-      <Card className="border-default-200 bg-[#ffffff] flex-1 min-h-[350px]">
+      <Card className="bg-[#ffffff] flex-1 min-h-[350px] shadow-none border-1 border-gray-200">
         <CardHeader className="pb-4 pt-4 px-4 flex-col items-start">
           <div className="font-bold text-large absolute top-0 left-0 flex items-center gap-2 p-2">
             <div className=" h-2 w-2 rounded-full bg-[#67afc3]"></div>
@@ -477,7 +477,7 @@ export default function VentaFooter({
       </Card>
 
       {/* Totals Card */}
-      <Card className="border-t-1 border-default-200 bg-content1 dark:bg-content1 flex-none">
+      <Card className="bg-[#ffffff] flex-none shadow-none border-1 border-gray-200">
         <CardHeader className="pb-4 pt-4 px-4 flex-col items-start">
           <div className="font-bold text-large absolute top-0 left-0 flex items-center gap-2 p-2">
             <div className=" h-2 w-2 rounded-full bg-[#67afc3]"></div>

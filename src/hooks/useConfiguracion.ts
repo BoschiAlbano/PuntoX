@@ -45,6 +45,7 @@ export interface Configuracion {
   activarBascula?: boolean;
   etiquetaPorPeso?: boolean;
   codigoBascula?: string;
+  precioDecimales?: number;
   foto?: string;
   ShowFoto?: boolean;
 }
