@@ -157,11 +157,30 @@ export async function getAuthContext(
   }
 
   // 6. 🚀 Validar Permiso (Solo JWT, sin fallback a DB)
-  const permissions = (user.app_metadata?.permissions as string[]) || [];
+  let permissions = (user.app_metadata?.permissions as string[]) || [];
 
   if (permission && !isSuperAdmin) {
     if (!permissions.includes(permission)) {
-      throw new PermisoError(`Permiso denegado: ${permission}`, 403);
+      // 🚀 FALLBACK: Verificar en DB por si el token está stale (no actualizado)
+      // Esto pasa cuando se asignan permisos pero el usuario no ha relogueado
+      try {
+        const { calcularPermisosUsuario } =
+          await import("./updateUserPermissions");
+        const { permisos: dbPermissions } = await calcularPermisosUsuario(
+          user.id,
+        );
+
+        if (!dbPermissions.includes(permission)) {
+          throw new PermisoError(`Permiso denegado: ${permission}`, 403);
+        }
+        // Si tiene permiso en DB, permitimos continuar
+        // Nota: El JWT seguirá stale hasta el próximo login/refresh
+        permissions = dbPermissions;
+      } catch (error) {
+        if (error instanceof PermisoError) throw error;
+        // Si falla la verificación en DB, asumir que no tiene permiso
+        throw new PermisoError(`Permiso denegado: ${permission}`, 403);
+      }
     }
   }
 
