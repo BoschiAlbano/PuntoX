@@ -42,6 +42,8 @@ import {
   TIPO_PAGO,
   TIPO_PAGO_LABELS,
 } from "@/lib/constants/comprobantes";
+import { useReactToPrint } from "react-to-print";
+import { TicketImpresion } from "../ventas/TicketImpresion";
 
 export default function CajaActual() {
   const {
@@ -144,6 +146,14 @@ export default function CajaActual() {
   } = useDisclosure();
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [isLoadingTicket, setIsLoadingTicket] = useState(false);
+
+  // Ticket Printing logic - Moved up to avoid hook order issues
+  const ticketRef = React.useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: ticketRef,
+    documentTitle: "Ticket de Venta",
+  });
 
   const movimientos = cajaActual?.Movimiento || [];
   const gastos = cajaActual?.Gasto || [];
@@ -376,8 +386,61 @@ export default function CajaActual() {
     );
   }
 
+  const getTipoComprobanteLabel = (tipo: number) => {
+    switch (tipo) {
+      case 1:
+        return "Factura A"; // TIPO_COMPROBANTE_VENTA.FACTURA_A
+      case 2:
+        return "Factura B"; // TIPO_COMPROBANTE_VENTA.FACTURA_B
+      case 3:
+        return "Factura C"; // TIPO_COMPROBANTE_VENTA.FACTURA_C
+      case 4:
+        return "Presupuesto";
+      case 5:
+        return "Remito";
+      case 6:
+        return "Nota de Crédito";
+      default:
+        return "Comprobante";
+    }
+  };
+
+  const handlePrintTicket = () => {
+    if (!selectedTicket) return;
+    handlePrint();
+  };
+
+  // Prepare data for printing
+  const ticketData = selectedTicket
+    ? {
+        items: selectedTicket.DetalleComprobante.map((d: any) => ({
+          ...d,
+          subtotal: Number(d.SubTotal),
+          cantidad: Number(d.Cantidad),
+          Iva: { Porcentaje: Number(d.Iva) },
+        })),
+        cliente:
+          selectedTicket.cliente ||
+          selectedTicket.Comprobante_Factura?.Persona_Cliente?.Persona,
+        subtotal: Number(selectedTicket.SubTotal),
+        descuento: Number(selectedTicket.Descuento),
+        total: Number(selectedTicket.Total),
+        fecha: selectedTicket.Fecha,
+        numeroComprobante: selectedTicket.Numero,
+        tipoComprobante: getTipoComprobanteLabel(
+          selectedTicket.TipoComprobante,
+        ),
+        formasPago: selectedTicket.FormaPago.map((fp: any) => ({
+          tipoPago: fp.TipoPago,
+          monto: Number(fp.Monto),
+        })),
+      }
+    : null;
+
   return (
     <div className="flex flex-col gap-6">
+      {/* ... Entradas/Salidas/Tables code preserved ... */}
+
       {/* Entradas del dia */}
       <h1 className="text-lg font-semibold flex items-center gap-2">
         <TrendingUp size={20} className="text-green-500" />
@@ -1032,9 +1095,22 @@ export default function CajaActual() {
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">
-                Detalle del Comprobante{" "}
-                {selectedTicket ? `#${selectedTicket.Numero}` : ""}
+              <ModalHeader className="flex flex-row justify-between items-center pr-10">
+                <span className="text-xl">
+                  {selectedTicket
+                    ? `Comprobante #${selectedTicket.Numero.toString().padStart(8, "0")}`
+                    : "Detalle"}
+                </span>
+                {selectedTicket && (
+                  <Chip
+                    size="sm"
+                    color="primary"
+                    variant="flat"
+                    className="capitalize"
+                  >
+                    {getTipoComprobanteLabel(selectedTicket.TipoComprobante)}
+                  </Chip>
+                )}
               </ModalHeader>
               <ModalBody>
                 {isLoadingTicket ? (
@@ -1042,96 +1118,137 @@ export default function CajaActual() {
                     <LoadingComponent message="Cargando comprobante..." />
                   </div>
                 ) : selectedTicket ? (
-                  <div className="flex flex-col gap-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded-lg">
-                      <div>
-                        <span className="text-gray-500">Fecha:</span>
-                        <p className="font-medium">
-                          {formatDate(selectedTicket.Fecha)}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Cliente:</span>
-                        <p className="font-medium text-capitalize">
-                          {
-                            // Handle various client relation paths or generic name
-                            selectedTicket?.cliente?.Nombre
-                              ? `${selectedTicket?.cliente?.Nombre} ${selectedTicket?.cliente?.Apellido}`
-                              : "Consumidor Final"
-                          }
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Total:</span>
-                        <p className="font-bold text-lg">
-                          {formatMoney(selectedTicket.Total)}
-                        </p>
+                  <div className="flex flex-col gap-6">
+                    {/* Header Card */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Cliente Info */}
+                      <Card className="bg-gray-50 shadow-none border border-gray-200">
+                        <CardBody className="py-3 px-4 flex flex-col gap-1">
+                          <span className="text-xs text-gray-500 uppercase font-semibold">
+                            Cliente
+                          </span>
+                          <span className="font-medium text-lg">
+                            {selectedTicket?.cliente?.Nombre
+                              ? `${selectedTicket?.cliente?.Nombre} ${selectedTicket?.cliente?.Apellido || ""}`
+                              : "Consumidor Final"}
+                          </span>
+                          {selectedTicket?.cliente?.Dni && (
+                            <span className="text-sm text-gray-600">
+                              DNI/CUIT: {selectedTicket.cliente.Dni}
+                            </span>
+                          )}
+                          {selectedTicket?.cliente?.Direccion && (
+                            <span className="text-sm text-gray-400">
+                              {selectedTicket.cliente.Direccion}
+                            </span>
+                          )}
+                        </CardBody>
+                      </Card>
+
+                      {/* Info General */}
+                      <Card className="bg-gray-50 shadow-none border border-gray-200">
+                        <CardBody className="py-3 px-4 flex flex-col gap-1">
+                          <span className="text-xs text-gray-500 uppercase font-semibold">
+                            Detalles
+                          </span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">
+                              Fecha:
+                            </span>
+                            <span className="font-medium">
+                              {formatDate(selectedTicket.Fecha)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">
+                              Total:
+                            </span>
+                            <span className="font-bold text-xl text-primary">
+                              {formatMoney(selectedTicket.Total)}
+                            </span>
+                          </div>
+                        </CardBody>
+                      </Card>
+                    </div>
+
+                    {/* Items Table */}
+                    <div>
+                      <h4 className="font-semibold mb-3 flex items-center gap-2 text-gray-700">
+                        <FileText size={18} />
+                        Ítems del comprobante
+                      </h4>
+                      <div className="border border-gray-200 rounded-xl overflow-hidden">
+                        <Table
+                          aria-label="Items del comprobante"
+                          removeWrapper
+                          classNames={{
+                            th: "bg-gray-100 text-gray-600 text-xs",
+                            td: "text-sm",
+                          }}
+                        >
+                          <TableHeader>
+                            <TableColumn>CANT</TableColumn>
+                            <TableColumn>DESCRIPCIÓN</TableColumn>
+                            <TableColumn align="end">P. UNITARIO</TableColumn>
+                            <TableColumn align="end">SUBTOTAL</TableColumn>
+                          </TableHeader>
+                          <TableBody>
+                            {selectedTicket.DetalleComprobante.map(
+                              (item: any) => (
+                                <TableRow key={item.Id}>
+                                  <TableCell className="font-medium">
+                                    {item.Cantidad}
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex flex-col">
+                                      <span>{item.Descripcion}</span>
+                                      {item.Codigo && (
+                                        <span className="text-xs text-gray-400">
+                                          SKU: {item.Codigo}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    {formatMoney(item.Precio)}
+                                  </TableCell>
+                                  <TableCell className="font-semibold">
+                                    {formatMoney(item.SubTotal)}
+                                  </TableCell>
+                                </TableRow>
+                              ),
+                            )}
+                          </TableBody>
+                        </Table>
                       </div>
                     </div>
 
-                    {/* Items / Lines */}
-                    {selectedTicket.DetalleComprobante &&
-                      selectedTicket.DetalleComprobante.length > 0 && (
-                        <div>
-                          <h4 className="font-semibold mb-2">Items</h4>
-                          <Table
-                            aria-label="Items del comprobante"
-                            removeWrapper
-                            classNames={{ th: "text-xs", td: "text-xs py-1" }}
+                    {/* Pagos */}
+                    <div>
+                      <h4 className="font-semibold mb-3 flex items-center gap-2 text-gray-700">
+                        <TrendingUp size={18} />
+                        Pagos registrados
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedTicket.FormaPago.map((fp: any) => (
+                          <div
+                            key={fp.Id}
+                            className="bg-white border border-gray-200 rounded-lg px-3 py-2 flex items-center gap-3 shadow-sm"
                           >
-                            <TableHeader>
-                              <TableColumn>CANT</TableColumn>
-                              <TableColumn>DESCRIPCIÓN</TableColumn>
-                              <TableColumn align="end">UNITARIO</TableColumn>
-                              <TableColumn align="end">TOTAL</TableColumn>
-                            </TableHeader>
-                            <TableBody>
-                              {selectedTicket.DetalleComprobante.map(
-                                (item: any) => (
-                                  <TableRow key={item.Id}>
-                                    <TableCell>{item.Cantidad}</TableCell>
-                                    <TableCell>{item.Descripcion}</TableCell>
-                                    <TableCell>
-                                      {formatMoney(item.Precio)}
-                                    </TableCell>
-                                    <TableCell>
-                                      {formatMoney(item.SubTotal)}
-                                    </TableCell>
-                                  </TableRow>
-                                ),
-                              )}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      )}
-
-                    {/* Payments */}
-                    {selectedTicket.FormaPago &&
-                      selectedTicket.FormaPago.length > 0 && (
-                        <div className="mt-2">
-                          <h4 className="font-semibold mb-2">Formas de Pago</h4>
-                          <div className="flex flex-col gap-2">
-                            {selectedTicket.FormaPago.map((fp: any) => (
-                              <div
-                                key={fp.Id}
-                                className="flex justify-between items-center text-sm border-b border-dashed border-gray-200 pb-1 last:border-0"
-                              >
-                                <span className="text-gray-600">
-                                  {Object.keys(TIPO_PAGO).find(
-                                    (key) =>
-                                      TIPO_PAGO[
-                                        key as keyof typeof TIPO_PAGO
-                                      ] === fp.TipoPago,
-                                  ) || "Otro"}
-                                </span>
-                                <span className="font-medium">
-                                  {formatMoney(fp.Monto)}
-                                </span>
-                              </div>
-                            ))}
+                            <span className="text-xs font-semibold uppercase text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                              {Object.keys(TIPO_PAGO).find(
+                                (key) =>
+                                  TIPO_PAGO[key as keyof typeof TIPO_PAGO] ===
+                                  fp.TipoPago,
+                              ) || "OTRO"}
+                            </span>
+                            <span className="font-bold text-gray-800">
+                              {formatMoney(fp.Monto)}
+                            </span>
                           </div>
-                        </div>
-                      )}
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <p className="text-center text-gray-500">
@@ -1139,15 +1256,29 @@ export default function CajaActual() {
                   </p>
                 )}
               </ModalBody>
-              <ModalFooter>
-                <Button color="primary" variant="flat" onPress={onClose}>
+              <ModalFooter className="flex justify-between">
+                <Button color="danger" variant="light" onPress={onClose}>
                   Cerrar
                 </Button>
+                {selectedTicket && (
+                  <Button
+                    color="primary"
+                    startContent={<FileText size={18} />}
+                    onPress={handlePrintTicket}
+                  >
+                    Imprimir Ticket
+                  </Button>
+                )}
               </ModalFooter>
             </>
           )}
         </ModalContent>
       </Modal>
+
+      {/* Hidden Ticket Component for Printing */}
+      <div style={{ display: "none" }}>
+        <TicketImpresion ref={ticketRef} datosVenta={ticketData} />
+      </div>
     </div>
   );
 }

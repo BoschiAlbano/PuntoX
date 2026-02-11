@@ -1,21 +1,21 @@
-USUARIOS
+USUARIOS ❌❌❌ VER MAS ADELANTE
 1- Hacer mas fino el sistema de permisos.
     tener mas cuidado con los permisos.
         si el usuario no tiene permisos de configuracion, no puede traer la configuracion ni entrar a la pagina.
         lo mismo para sucursales, no puede traer sucursales ni entrar a la pagina o cambiar de sucursal.
 
-2- Acciones de usuarios. Solo se puede modificar el mismo o a otros usuarios?
+2- Acciones de usuarios. Solo se puede modificar el mismo o a otros usuarios? ✔✔✔
 
 
 VENTAS
 1- 2 + 5 + 5 + 1 = 13 digitos
-CUANDO IMPRIME PRECIO: no se usan decimales porque solo hay 5 digitos para el precio. 00500 = $500
-CUANDO IMPRIME PESO: se usan 3 decimales para los gramos. 00500 = 500g
+CUANDO IMPRIME PRECIO: no se usan decimales porque solo hay 5 digitos para el precio. 00500 = $500  $99999
+CUANDO IMPRIME PESO: se usan 3 decimales para los gramos. 00500 = 500g  - 99,999G
 
 //Ejemplo: 2000001005001 - Articulo venta por unidad
 //PP: 20
-//CCCCC: 00001
-//VVVVV: 00500
+//CCC: 00001 - 9999
+//VVVVVVV: 00500
 //D: 1
 
 //Ejemplo: 2000002005001 - Articulo venta por peso

@@ -1,10 +1,12 @@
 "use client";
 import { motion } from "framer-motion";
 // import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
-import { Dispatch, SetStateAction, memo, useMemo, useState } from "react";
+import { Dispatch, SetStateAction, memo, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Home, MoonIcon, SunIcon } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
+import { useTheme } from "@/hooks/useTheme";
+
 function DashboardHeaderComponent({
   isShow,
 }: {
@@ -15,6 +17,7 @@ function DashboardHeaderComponent({
   const pathname = usePathname();
 
   const { user, roles } = useUserStore();
+  const { isDarkMode, toggleTheme } = useTheme();
 
   // Mapeo de rutas a nombres amigables
   const routeNames: Record<string, string> = {
@@ -65,17 +68,6 @@ function DashboardHeaderComponent({
 
   const displayRol = roles.map((rol) => rol.Descripcion).join(" - ");
 
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  };
-
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
@@ -124,7 +116,7 @@ function DashboardHeaderComponent({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="relative p-3 rounded-xl hover:bg-slate-100 transition-colors sm:block hidden"
-              onClick={toggleDarkMode}
+              onClick={toggleTheme}
             >
               {isDarkMode ? (
                 <SunIcon className="w-6 h-6 text-slate-600" />

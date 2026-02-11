@@ -2,6 +2,9 @@
 @plugin "../components/heroUi/hero.ts";
 @source '../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
 
+/* Override dark variant to use class strategy */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* @source "../../node_modules/@heroui/theme/dist*.{js,ts,jsx,tsx}"; */
 
 /* 
@@ -17,6 +20,12 @@
   --foreground: #171717;
 }
 
+/* Enable dark mode variables when .dark class is present */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -30,8 +39,9 @@ html {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Fallback to system preference if no class present (optional, or keep generic default) */
+    --background: #ffffff;
+    /* --foreground: #ededed; */
   }
 }
 

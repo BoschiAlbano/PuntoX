@@ -275,9 +275,16 @@ export function useCaja(options?: {
     // Helper fetcher
     fetchDetalleComprobante: async (id: number) => {
       if (!sucursalId) return null;
-      const response = await fetch(`/api/comprobantes?id=${id}&detalle=true`);
-      if (!response.ok) throw new Error("Error fetching comprobante");
-      return response.json();
+      return queryClient.fetchQuery({
+        queryKey: ["comprobante", id, { detalle: true }],
+        queryFn: async () => {
+          const response = await fetch(
+            `/api/comprobantes?id=${id}&detalle=true`,
+          );
+          if (!response.ok) throw new Error("Error fetching comprobante");
+          return response.json();
+        },
+      });
     },
   };
 }

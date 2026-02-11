@@ -37,7 +37,7 @@ export default function DashboardLayout({
 
   return (
     <ProtectRoute>
-      <div className="bg-linear-to-br from-slate-50 via-blue-50/30 to-purple-50/30 flex">
+      <div className="bg-[#ffffff] flex">
         <section
           onClick={() => setshow(false)}
           className={`z-99 transition-all duration-400 ease-in-out sm:relative absolute  sm:w-auto w-screen sm:h-auto h-screen  ${

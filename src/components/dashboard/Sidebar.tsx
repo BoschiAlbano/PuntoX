@@ -8,6 +8,7 @@ import { filtrarRutasPorPermisos } from "@/lib/permissions/routePermissions";
 import { SucursalSelector } from "@/components/sucursal";
 import { useUserStore } from "@/store/useUserStore";
 import Image from "next/image";
+import { useTheme } from "@/hooks/useTheme";
 
 interface MenuItem {
   icon: React.ReactNode;
@@ -187,6 +188,8 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
   const router = useRouter();
   const { supabase } = useSupabaseAuthContext();
 
+  const { theme } = useTheme();
+
   // Use global store
   const { canAccessRoute } = useUserStore();
 
@@ -236,7 +239,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
       }}
     >
       <motion.aside
-        className="fixed bg-[#182337] border-r border-slate-700/50 flex flex-col h-screen"
+        className="fixed bg-white dark:bg-[#182337] border-r border-gray-200 dark:border-slate-700/50 flex flex-col h-screen"
         initial={false}
         animate={{
           width: isCollapsed ? "80px" : "280px",
@@ -247,7 +250,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
         }}
       >
         {/* Header del Sidebar */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-700/50 overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-700/50 overflow-hidden">
           <AnimatePresence mode="wait">
             {!isCollapsed && (
               <>
@@ -259,13 +262,13 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                   className="flex items-center gap-3"
                 >
                   <Image
-                    src="/XPdark.ico"
+                    src={theme === "dark" ? "/XPdark.ico" : "/XP.ico"}
                     alt="Punto X"
                     className="w-7 h-7 object-contain"
                     width={28}
                     height={28}
                   />
-                  <span className="text-white font-semibold text-lg truncate">
+                  <span className="text-slate-900 dark:text-white font-semibold text-lg truncate">
                     PuntoX
                   </span>
                 </motion.div>
@@ -274,7 +277,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
           </AnimatePresence>
           <button
             onClick={onToggle}
-            className="p-2 rounded-lg hover:bg-slate-700/50 transition-colors text-slate-400 hover:text-white"
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
           >
             <svg
               className="w-5 h-5"
@@ -308,7 +311,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="px-3 py-6 border-b border-slate-700/50  space-y-2"
+            className="px-3 py-6 border-b border-gray-200 dark:border-slate-700/50 space-y-2"
           >
             <SucursalSelector hideIfSingle={false} isCollapsed={isCollapsed} />
           </motion.div>
@@ -357,8 +360,8 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                     relative group
                     ${
                       isActive
-                        ? "bg-slate-800/80 text-white  shadow-none"
-                        : "text-slate-300 hover:text-white hover:bg-slate-700/30"
+                        ? "bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-white shadow-none"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-700/30"
                     }
                   `}
               >
@@ -374,7 +377,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                   className={`relative ${
                     isActive
                       ? "text-[#5fa7b8] animate-pulse"
-                      : " text-white animate-none"
+                      : "text-slate-500 dark:text-white animate-none"
                   }`}
                 >
                   {item.icon}
@@ -394,11 +397,13 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                       transition={{ duration: 0.2 }}
                       className="flex items-center justify-between flex-1 overflow-hidden"
                     >
-                      <span className="font-semibold whitespace-nowrap text-[15px] text-slate-100">
+                      <span
+                        className={`font-semibold whitespace-nowrap text-[15px] ${isActive ? "text-slate-900 dark:text-slate-100" : "text-slate-700 dark:text-slate-100"}`}
+                      >
                         {item.label}
                       </span>
                       {item.badge && (
-                        <span className="px-2 py-0.5 bg-blue-500/15 text-blue-100 text-xs rounded-full border border-blue-300/40">
+                        <span className="px-2 py-0.5 bg-blue-500/15 text-blue-600 dark:text-blue-100 text-xs rounded-full border border-blue-200 dark:border-blue-300/40">
                           {item.badge}
                         </span>
                       )}
@@ -423,7 +428,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
             className={`
                 w-full flex items-center gap-3 px-4 py-3 rounded-xl
                  relative group
-                text-white hover:text-red-200 hover:bg-slate-700/30
+                text-slate-600 hover:text-red-600 hover:bg-red-50 dark:text-white dark:hover:text-red-200 dark:hover:bg-slate-700/30
               `}
           >
             <div className="relative">
@@ -462,7 +467,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
         </div>
 
         {/* Footer del Sidebar */}
-        <div className="w-full p-4 border-t border-slate-700/50 flex flex-col gap-3 items-center">
+        <div className="w-full p-4 border-t border-gray-200 dark:border-slate-700/50 flex flex-col gap-3 items-center">
           <AnimatePresence mode="wait">
             {!isCollapsed ? (
               <motion.div
@@ -471,7 +476,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                 exit={{ opacity: 0 }}
                 className="w-full p-4 bg-linear-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20"
               >
-                <p className="text-xs text-slate-400 mb-2 truncate">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2 truncate">
                   Version 1.0.0
                 </p>
                 <p className="text-xs text-slate-500 truncate">
