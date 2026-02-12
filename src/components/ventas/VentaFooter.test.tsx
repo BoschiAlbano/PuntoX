@@ -4,6 +4,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import VentaFooter from "./VentaFooter";
 
@@ -73,5 +74,28 @@ describe("VentaFooter", () => {
     renderWithProviders(<VentaFooter {...defaultProps} />);
     expect(screen.getByText(/Subtotal:/i)).toBeInTheDocument();
     expect(screen.getByText(/CONFIRMAR VENTA/i)).toBeInTheDocument();
+  });
+
+  it("muestra subtotal, descuento y total correctos", () => {
+    renderWithProviders(
+      <VentaFooter
+        {...defaultProps}
+        subtotal={1000}
+        descuento={10}
+        total={900}
+      />
+    );
+    expect(screen.getByText(/1\.000,00|1000/)).toBeInTheDocument();
+    expect(screen.getByText(/\$100\.00|\$100/)).toBeInTheDocument();
+    expect(screen.getByText("$900.00")).toBeInTheDocument();
+  });
+
+  it("muestra sección de descuento y total", () => {
+    renderWithProviders(
+      <VentaFooter {...defaultProps} subtotal={100} descuento={25} total={75} />
+    );
+    expect(screen.getByText(/descuento/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Total:/i)).toBeInTheDocument();
+    expect(screen.getByDisplayValue("25")).toBeInTheDocument();
   });
 });

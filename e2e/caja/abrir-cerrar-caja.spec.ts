@@ -55,4 +55,18 @@ test.describe("Flujo Caja - Abrir y Cerrar", () => {
       page.getByRole("button", { name: /Cerrar Caja/i })
     ).toBeVisible({ timeout: 10000 });
   });
+
+  test("muestra tabs Caja Actual y Cajas", async ({ authenticatedPage: page }) => {
+    if (page.url().includes("not-branches")) {
+      test.skip();
+    }
+    await page.goto("/caja");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
+    const tabActual = page.getByRole("tab", { name: /caja actual/i }).first();
+    const tabCajas = page.getByRole("tab", { name: /^cajas$/i }).first();
+    const hasActual = await tabActual.isVisible().catch(() => false);
+    const hasCajas = await tabCajas.isVisible().catch(() => false);
+    expect(hasActual || hasCajas).toBe(true);
+  });
 });

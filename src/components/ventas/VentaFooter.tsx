@@ -507,12 +507,16 @@ export default function VentaFooter({
                   })}
                 </span>
                 <Input
+                  data-testid="descuento-input"
                   size="sm"
                   type="number"
+                  min={0}
+                  max={100}
                   value={descuento.toString()}
-                  onChange={(e) =>
-                    setDescuento(parseFloat(e.target.value) || 0)
-                  }
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value) || 0;
+                    setDescuento(Math.min(100, Math.max(0, v)));
+                  }}
                   endContent="%"
                   classNames={{
                     inputWrapper: "h-6",

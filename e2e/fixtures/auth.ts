@@ -13,7 +13,7 @@ async function loginAsUser(page: import("@playwright/test").Page) {
   await page.getByLabel(/contraseña/i).fill(E2E_PASSWORD);
   await page.getByRole("button", { name: /ingresar|iniciar sesi[oó]n/i }).click();
   // Esperar redirección post-login (default /ventas)
-  await page.waitForURL(/\/(ventas|dashboard|not-branches)/, { timeout: 15000 });
+  await page.waitForURL(/\/(ventas|dashboard|not-branches)/, { timeout: 25000 });
 }
 
 export const test = base.extend<{ authenticatedPage: import("@playwright/test").Page }>({

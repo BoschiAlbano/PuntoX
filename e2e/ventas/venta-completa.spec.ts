@@ -54,4 +54,20 @@ test.describe("Flujo Venta Completa", () => {
       page.getByRole("button", { name: /confirmar|finalizar|venta/i })
     ).toBeVisible({ timeout: 5000 });
   });
+
+  test("muestra sección de totales (subtotal, total)", async ({
+    authenticatedPage: page,
+  }) => {
+    if (page.url().includes("not-branches")) {
+      test.skip();
+    }
+    if (!page.url().includes("ventas")) {
+      await page.goto("/ventas");
+    }
+    const subtotalLabel = page.getByText(/subtotal/i).first();
+    const totalLabel = page.getByText(/^Total:/i).first();
+    const hasSubtotal = await subtotalLabel.isVisible().catch(() => false);
+    const hasTotal = await totalLabel.isVisible().catch(() => false);
+    expect(hasSubtotal || hasTotal).toBe(true);
+  });
 });

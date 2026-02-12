@@ -141,7 +141,7 @@ npm run test:e2e:ui
 
 Playwright arranca automáticamente el servidor de desarrollo (`npm run dev`) si no está corriendo.
 
-**Si los tests fallan en modo headless** (timeouts en login, `ERR_ABORTED`), usar `npm run test:e2e:ui` — la UI suele pasar porque reduce paralelismo y da más margen a la carga de la app.
+**Forma recomendada de ejecutar E2E:** Si los tests fallan en modo headless (timeouts en login, `ERR_ABORTED`, elementos no visibles), usar `npm run test:e2e:ui` — la UI suele pasar porque reduce paralelismo y da más margen a la carga de la app.
 
 **Tests con login real:** Los archivos `auth/login-*.spec.ts` usan el fixture `e2e/fixtures/auth.ts` que hace login con usuario de Supabase. Credenciales por defecto: `E2E_USER` (default: Agucho), `E2E_PASSWORD` (default: 12345678). Para CI u otro usuario, definir las variables de entorno. Ver `.env.e2e.example`.
 
