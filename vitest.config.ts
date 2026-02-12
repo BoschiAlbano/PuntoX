@@ -6,6 +6,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    // jsdom para tests de componentes React (Testing Library)
+    environmentMatchGlobs: {
+      "src/components/**/*.test.{ts,tsx}": "jsdom",
+      "src/**/*.test.tsx": "jsdom",
+    },
     setupFiles: ["./src/test/setup.ts"],
     coverage: {
       provider: "v8",
