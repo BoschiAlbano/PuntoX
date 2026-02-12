@@ -177,8 +177,8 @@ Cada ítem sigue el formato: **Módulo / flujo** → **Campo o acción** → **V
 
 ## 4. Referencias
 
-- Plan: tests de validación y documentación de hallazgos.
-- Guía de testing: [GUIA.md](GUIA.md).
+- Guía completa (comandos, cobertura, resumen ejecución): [GUIA.md](GUIA.md).
+- Plan y principios: [PLAN-TESTING.md](PLAN-TESTING.md).
 - Tests que fallan o no se ejecutan: [INFORME-FALLOS.md](INFORME-FALLOS.md).
 
 ---

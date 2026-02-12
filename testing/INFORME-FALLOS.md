@@ -10,7 +10,7 @@ Este documento lista los tests que **no se ejecutaron** o **fallaron** según el
 |-----------|----------|---------|
 | **Tests fallidos** | **0** | Todos corregidos. |
 | **Archivos de test ausentes** | **0** | permisos y empleados route.test.ts existen. |
-| **Suite** | 254 tests, 49 archivos | `npm test` pasa. |
+| **Suite** | 436 tests, 97 archivos | `npm test` pasa. |
 
 ---
 
@@ -34,7 +34,7 @@ npm test
 npx vitest run src/test/validation --reporter=verbose
 ```
 
-**Resultado esperado:** 254 tests pasando, 49 archivos.
+**Resultado esperado:** 436 tests pasando, 97 archivos.
 
 ---
 

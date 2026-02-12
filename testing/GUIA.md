@@ -61,17 +61,51 @@ npx vitest run -t "debe retornar 401"
 
 **Componente caja:** `src/components/caja/CajaActual.test.tsx` — render sin crash y texto "Abrir Caja" cuando no hay caja abierta.
 
-**Hooks:** `useRoles`, `useProductos`, `useGastos`, `useCaja`, `useDebounce`, `useSucursales`, `useConfiguracion`, `useCtaCte`, `useUsuario` — fetch con datos, mutations con mock global.
+**Hooks:** `useRoles`, `useProductos`, `useGastos`, `useCaja`, `useDebounce`, `useSucursales`, `useConfiguracion`, `useCtaCte`, `useUsuario`, `useEmpleados`, `useCajasQuery`, `useAnaliticas` — fetch con datos, mutations con mock global.
 
 **Componente ventas:** `src/components/ventas/VentaFooter.test.tsx` — render sin crash, Subtotal y CONFIRMAR VENTA. `src/components/ventas/ProductSearch.test.tsx` — render y placeholder de búsqueda.
 
-**Componentes compartidos:** `src/components/shared/GenericCrud.test.tsx` — render con input de búsqueda. `src/components/dashboard/Sidebar.test.tsx` — botones Ventas, Productos, Clientes.
+**Componentes compartidos:** `src/components/shared/GenericCrud.test.tsx` — render con input de búsqueda. `src/components/dashboard/Sidebar.test.tsx` — botones Ventas, Productos, Clientes. `src/components/sucursal/SucursalSelector.test.tsx` — render condicional según sucursales y loading.
 
-**Lib:** `src/lib/utils/debounce.test.ts`, `src/lib/services/contadores.test.ts` — utilidades y servicios.
+**Lib:** `src/lib/utils/debounce.test.ts`, `src/lib/utils/barcode.test.ts`, `src/lib/services/contadores.test.ts`, `src/lib/security/rateLimiter.test.ts`, `src/lib/security/suspiciousActivity.test.ts`, `src/lib/auth/getAuthUser.test.ts`, `src/lib/auth/updateUserPermissions.test.ts`, `src/lib/auth/generateInternalEmail.test.ts`, `src/lib/auth/requestContext.test.ts`, `src/lib/auditoria/registrarAuditoria.test.ts`, `src/lib/adapters/producto.adapter.test.ts`, `src/lib/adapters/cliente.adapter.test.ts`, `src/lib/adapters/empleado.adapter.test.ts`, `src/lib/permissions/routePermissions.test.ts` — utilidades, servicios, seguridad y adapters.
 
-**API adicionales:** `departamentos`, `localidades`, `CtaCteCliente`, `productos/[id]`, `productos/ultimo-codigo`, `auth/register`, `ventas/clientes`, `analiticas/kpis`, `analiticas/graficas`, `sucursales/[id]`, `sucursales/cambiar`, `auditoria-empleados`, `cajas`.
+**API adicionales:** `departamentos`, `localidades`, `CtaCteCliente`, `productos/[id]`, `productos/ultimo-codigo`, `auth/register`, `ventas/clientes`, `analiticas/kpis`, `analiticas/graficas`, `sucursales/[id]`, `sucursales/cambiar`, `auditoria-empleados`, `cajas`. **API criticas (Fase 1):** `empleados/cambiar-password`, `auth/get-email-by-username`, `auth/registrar-sesion`, `auth/registrar-intento-login`, `auth/sync-permissions`, `configuracion/seguridad`, `configuracion/seguridad/sesiones`, `configuracion/seguridad/dispositivos`. **API config (Fase 2):** `configuracion/fiscal`, `configuracion/preferencias`, `configuracion/notificaciones`, `configuracion/branding`, `configuracion/seguridad/estadisticas`, `configuracion/seguridad/intentos-sospechosos`, `configuracion/seguridad/auditoria`.
 
-Para tests **no encontrados** o **fallos** ver [INFORME-FALLOS.md](INFORME-FALLOS.md). Para el último resultado de ejecución, [resumen-ejecucion.md](resumen-ejecucion.md).
+Para tests **no encontrados** o **fallos** ver [INFORME-FALLOS.md](INFORME-FALLOS.md).
+
+---
+
+## Resumen de última ejecución
+
+| Métrica | Valor |
+|--------|--------|
+| **Fecha** | 2025-02-12 |
+| **Comando** | `npx vitest run` |
+| **Archivos de test** | 47 |
+| **Tests ejecutados** | 250 |
+| **Tests pasados** | 240 |
+| **Tests fallidos (esperados)** | 10 (validación; ver [INFORME-VALIDACIONES.md](INFORME-VALIDACIONES.md) e [INFORME-FALLOS.md](INFORME-FALLOS.md)) |
+
+---
+
+## Cobertura por área
+
+| Área | Total (aprox.) | Con tests | Cobertura |
+|------|-----------------|-----------|-----------|
+| **Rutas API** | 57 | 32 | ~56 % |
+| **Validación (schemas)** | 10+ módulos | 10 | Alta en lo crítico |
+| **Lib** | ~25 módulos | 11 | ~44 % |
+| **Componentes** | ~65 | 7 | ~11 % |
+| **Hooks** | 14 | 10 | ~71 % |
+| **E2E** | — | 19 tests | Landing, Signin, Guards, Login real, Clientes, Empleados, Dashboard, Analíticas, Sucursales |
+
+### Rutas API con tests (32)
+
+`marcas` (referencia), `permisos`, `empleados`, `clientes`, `auth/me`, `comprobantes`, `caja`, `roles`, `gastos`, `productos`, `ivas`, `rubros`, `unidades-medidas`, `conceptos-gastos`, `sucursales`, `contadores`, `condiciones-iva`, `configuracion`, `provincias`, `tarjetas`, `departamentos`, `localidades`, `ventas/productos`, `CtaCteCliente`, `productos/[id]`, `productos/ultimo-codigo`, `auth/register`, `ventas/clientes`, `analiticas/kpis`, `analiticas/graficas`, `sucursales/[id]`, `sucursales/cambiar`, `auditoria-empleados`, `cajas`.
+
+### Sin tests de handler (25 rutas)
+
+Incluye `configuracion` subrutas, `admin/*`, `empleados/cambiar-password`, etc.
 
 ---
 
@@ -86,6 +120,14 @@ Para tests **no encontrados** o **fallos** ver [INFORME-FALLOS.md](INFORME-FALLO
 | `guards/redirect-unauth.spec.ts` | /ventas, /dashboard, /productos, /clientes sin login redirigen a /signin |
 | `auth/login-dashboard.spec.ts` | Login real → redirección → sidebar visible |
 | `auth/login-ventas.spec.ts` | Login real → pantalla de ventas con búsqueda de productos |
+| `ventas/venta-completa.spec.ts` | Barra búsqueda, buscar producto, botón confirmar venta |
+| `caja/abrir-cerrar-caja.spec.ts` | Acceso a caja, tabs Caja Actual/Cajas, abrir caja con monto |
+| `productos/crud-producto.spec.ts` | Listado productos, abrir formulario nuevo, tabs Productos/Marcas |
+| `clientes/crud-cliente.spec.ts` | Listado clientes, formulario nuevo cliente |
+| `empleados/crud-empleado.spec.ts` | Acceso empleados, tabs Usuarios/Roles/Auditoría |
+| `dashboard/dashboard.spec.ts` | Acceso dashboard, sidebar con links |
+| `analiticas/analiticas.spec.ts` | Acceso analíticas, KPIs y gráficas |
+| `sucursales/crud-sucursal.spec.ts` | Acceso sucursales, formulario nueva sucursal |
 
 **Ejecutar tests E2E:**
 
@@ -98,6 +140,8 @@ npm run test:e2e:ui
 ```
 
 Playwright arranca automáticamente el servidor de desarrollo (`npm run dev`) si no está corriendo.
+
+**Si los tests fallan en modo headless** (timeouts en login, `ERR_ABORTED`), usar `npm run test:e2e:ui` — la UI suele pasar porque reduce paralelismo y da más margen a la carga de la app.
 
 **Tests con login real:** Los archivos `auth/login-*.spec.ts` usan el fixture `e2e/fixtures/auth.ts` que hace login con usuario de Supabase. Credenciales por defecto: `E2E_USER` (default: Agucho), `E2E_PASSWORD` (default: 12345678). Para CI u otro usuario, definir las variables de entorno. Ver `.env.e2e.example`.
 
@@ -130,7 +174,7 @@ npx vitest run src/test/validation
 
 Los hallazgos (tests que fallan hasta que se añadan las validaciones) están listados en [INFORME-VALIDACIONES.md](INFORME-VALIDACIONES.md), con módulo, campo, valor probado, comportamiento actual vs esperado y dónde corregir.
 
-Plan ejecutivo completo (cronograma, fases, E2E): [PLAN-COMPLETO-TESTING.md](PLAN-COMPLETO-TESTING.md). Principios y criterios: [PLAN-TESTING-PROYECTO.md](PLAN-TESTING-PROYECTO.md).
+Plan ejecutivo, principios, fases y criterios: [PLAN-TESTING.md](PLAN-TESTING.md).
 
 ---
 

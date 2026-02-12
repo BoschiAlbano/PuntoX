@@ -9,12 +9,11 @@
 | Archivo | Descripción |
 |--------|-------------|
 | **README.md** | Este índice. Punto de entrada único para testing. |
-| **PLAN-TESTING-PROYECTO.md** | Plan de testing ampliado a todo el proyecto: áreas, tipos de test, fases, estado (hecho/pendiente) y criterios de listo. |
-| **GUIA.md** | Guía completa: estado actual, cómo ejecutar, tests implementados, infraestructura, convenciones y plan prioritario. |
-| **resumen-ejecucion.md** | Última ejecución: qué se corrió, resultados, cobertura. |
-| **COBERTURA-ACTUAL.md** | Qué tanto del proyecto está cubierto: API, lib, componentes, hooks (porcentajes y listas). |
+| **GUIA.md** | Guía completa: estado actual, cómo ejecutar, tests implementados, **resumen de última ejecución**, **cobertura por área**, infraestructura, convenciones y plan prioritario. |
+| **PLAN-TESTING.md** | Plan unificado: principios, tipos de test, fases (API, componentes, hooks, E2E) y criterios de aceptación. |
 | **INFORME-FALLOS.md** | Tests no pasados o fallidos, causas probables y cómo solucionarlos. |
 | **INFORME-VALIDACIONES.md** | Validaciones insuficientes (ej. descuento 200%, montos sin tope): hallazgos detectados por tests de fronteras y dónde corregir. |
+| **SOLUCION-FALLOS.md** | Soluciones detalladas para los fallos documentados. |
 
 ---
 
