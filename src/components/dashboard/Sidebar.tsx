@@ -4,11 +4,9 @@ import { useState, useEffect, useMemo, memo, startTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
-import { filtrarRutasPorPermisos } from "@/lib/permissions/routePermissions";
 import { SucursalSelector } from "@/components/sucursal";
 import { useUserStore } from "@/store/useUserStore";
 import Image from "next/image";
-import { useTheme } from "@/hooks/useTheme";
 
 interface MenuItem {
   icon: React.ReactNode;
@@ -27,15 +25,34 @@ const menuItems: MenuItem[] = [
     icon: (
       <svg
         className="w-5 h-5"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fillRule="evenodd"
+          d="M9.293 2.293a1 1 0 0 1 1.414 0l7 7A1 1 0 0 1 17 11h-1v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6H3a1 1 0 0 1-.707-1.707l7-7Z"
+          clipRule="evenodd"
+        />
+      </svg>
+    ),
+    label: "Dashboard",
+    href: "/dashboard",
+  },
+  {
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
         fill="none"
-        stroke="currentColor"
         viewBox="0 0 24 24"
+        strokeWidth={2}
+        stroke="currentColor"
+        className="w-5 h-5"
       >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeWidth={2}
-          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+          d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
         />
       </svg>
     ),
@@ -188,8 +205,6 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
   const router = useRouter();
   const { supabase } = useSupabaseAuthContext();
 
-  const { theme } = useTheme();
-
   // Use global store
   const { canAccessRoute } = useUserStore();
 
@@ -239,7 +254,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
       }}
     >
       <motion.aside
-        className="fixed bg-white dark:bg-[#182337] border-r border-gray-200 dark:border-slate-700/50 flex flex-col h-screen"
+        className="fixed bg-[#182337] border-r border-slate-700/50 flex flex-col h-screen"
         initial={false}
         animate={{
           width: isCollapsed ? "80px" : "280px",
@@ -250,7 +265,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
         }}
       >
         {/* Header del Sidebar */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-700/50 overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-slate-700/50 overflow-hidden">
           <AnimatePresence mode="wait">
             {!isCollapsed && (
               <>
@@ -262,25 +277,22 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                   className="flex items-center gap-3"
                 >
                   <Image
-                    src={theme === "dark" ? "/XPdark.ico" : "/XP.ico"}
+                    src="/logo.png"
                     alt="Punto X"
-                    className="w-7 h-7 object-contain"
-                    width={28}
-                    height={28}
+                    className="object-contain"
+                    width={120}
+                    height={120}
                   />
-                  <span className="text-slate-900 dark:text-white font-semibold text-lg truncate">
-                    PuntoX
-                  </span>
                 </motion.div>
               </>
             )}
           </AnimatePresence>
           <button
             onClick={onToggle}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            className="p-2 rounded-lg hover:bg-slate-700/50 transition-colors text-slate-400 group/btn"
           >
             <svg
-              className="w-5 h-5"
+              className="w-5 h-5 group-hover/btn:text-[#5fa7b8] transition-colors"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -311,7 +323,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="px-3 py-6 border-b border-gray-200 dark:border-slate-700/50 space-y-2"
+            className="px-3 py-6 space-y-2 group cursor-pointer group-hover:text-[#5fa7b8]"
           >
             <SucursalSelector hideIfSingle={false} isCollapsed={isCollapsed} />
           </motion.div>
@@ -357,11 +369,11 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                 whileTap={{ scale: 0.98 }}
                 className={`
                     w-full h-[50px] flex items-center gap-3 px-4 py-3 rounded-xl overflow-hidden
-                    relative group
+                    relative group cursor-pointer
                     ${
                       isActive
-                        ? "bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-white shadow-none"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-700/30"
+                        ? "bg-slate-800/80 text-white shadow-none"
+                        : "text-slate-300 hover:text-white hover:bg-slate-700/30"
                     }
                   `}
               >
@@ -380,7 +392,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                       : "text-slate-500 dark:text-white animate-none"
                   }`}
                 >
-                  {item.icon}
+                  <div className=" group-hover:text-[#5fa7b8]">{item.icon}</div>
                   {item.badge && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 bg-linear-to-b from-blue-500 to-[#90c472] text-white text-xs rounded-full flex items-center justify-center">
                       {item.badge}
@@ -398,12 +410,12 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                       className="flex items-center justify-between flex-1 overflow-hidden"
                     >
                       <span
-                        className={`font-semibold whitespace-nowrap text-[15px] ${isActive ? "text-slate-900 dark:text-slate-100" : "text-slate-700 dark:text-slate-100"}`}
+                        className={`font-semibold whitespace-nowrap text-[15px] ${isActive ? "text-slate-100" : "text-slate-100"}`}
                       >
                         {item.label}
                       </span>
                       {item.badge && (
-                        <span className="px-2 py-0.5 bg-blue-500/15 text-blue-600 dark:text-blue-100 text-xs rounded-full border border-blue-200 dark:border-blue-300/40">
+                        <span className="px-2 py-0.5 bg-blue-500/15 text-blue-600 text-xs rounded-full border border-blue-200">
                           {item.badge}
                         </span>
                       )}
@@ -426,9 +438,9 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
             }}
             whileTap={{ scale: 0.98 }}
             className={`
-                w-full flex items-center gap-3 px-4 py-3 rounded-xl
+                w-full flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer
                  relative group
-                text-slate-600 hover:text-red-600 hover:bg-red-50 dark:text-white dark:hover:text-red-200 dark:hover:bg-slate-700/30
+                text-slate-300 hover:text-white hover:bg-slate-700/30
               `}
           >
             <div className="relative">
@@ -438,7 +450,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
                 viewBox="0 0 24 24"
                 strokeWidth={2}
                 stroke="currentColor"
-                className="w-5 h-5"
+                className="w-5 h-5 text-slate-500 group-hover:text-[#5fa7b8]"
               >
                 <path
                   strokeLinecap="round"
@@ -467,7 +479,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
         </div>
 
         {/* Footer del Sidebar */}
-        <div className="w-full p-4 border-t border-gray-200 dark:border-slate-700/50 flex flex-col gap-3 items-center">
+        <div className="w-full p-4 border-t border-slate-700/50 flex flex-col gap-3 items-center">
           <AnimatePresence mode="wait">
             {!isCollapsed ? (
               <motion.div

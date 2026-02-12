@@ -80,7 +80,7 @@ export default function GenericTable<T extends { Id: number | string }>({
 
   return (
     <section className="w-full h-full flex flex-col gap-4 overflow-hidden">
-      <div className="rounded-lg flex flex-col gap-4 bg-white/50 backdrop-blur-sm flex-1 w-full h-full">
+      <div className="rounded-lg flex flex-col gap-4 bg-white/50 backdrop-blur-sm flex-1 w-full h-full px-4">
         {/* Header & Search */}
         <section className="w-full flex items-center sm:justify-end justify-start gap-2 sm:px-4 px-1">
           {/* Boton nuevo con efecto lift */}
@@ -139,7 +139,7 @@ export default function GenericTable<T extends { Id: number | string }>({
         </section>
 
         {/* Table */}
-        <div className="w-full overflow-hidden overflow-x-auto flex-1 flex flex-col h-full">
+        <div className="w-full overflow-hidden overflow-x-auto flex-1 flex flex-col h-full shadow-md">
           <Table
             aria-label="Tabla de datos"
             sortDescriptor={sortDescriptor}

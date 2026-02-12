@@ -7,7 +7,7 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
-  await NorequireAuthServer({ redirectUrl: "/ventas" });
+  await NorequireAuthServer({ redirectUrl: "/dashboard" });
 
   return <Suspense fallback={<LoadingPage />}>{children}</Suspense>;
 }
