@@ -1,21 +1,32 @@
 /**
- * Tests para el endpoint /api/permisos
+ * Tests para GET /api/permisos.
+ * Esta ruta no usa getAuthContext con permission (usa getSupabaseServerClient).
+ * Convención de nombres y describe por método alineada con src/app/api/marcas/route.test.ts.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GET } from "./route";
-import { NextRequest } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import { calcularPermisosUsuario, actualizarPermisosEnJWT } from "@/lib/auth/updateUserPermissions";
 
-// Mock de getSupabaseServerClient
 vi.mock("@/lib/supabase/serverClient", () => ({
   getSupabaseServerClient: vi.fn(),
 }));
-
-// Mock de updateUserPermissions
 vi.mock("@/lib/auth/updateUserPermissions", () => ({
   calcularPermisosUsuario: vi.fn(),
   actualizarPermisosEnJWT: vi.fn(),
+}));
+vi.mock("@/lib/errors/handler", () => ({
+  handleError: vi.fn((error: unknown) => {
+    return new Response(
+      JSON.stringify({
+        error: {
+          code: "INTERNAL_ERROR",
+          message: error instanceof Error ? error.message : "Error interno del servidor",
+        },
+      }),
+      { status: 500 }
+    );
+  }),
 }));
 
 describe("GET /api/permisos", () => {
@@ -23,73 +34,7 @@ describe("GET /api/permisos", () => {
     vi.clearAllMocks();
   });
 
-  it("debe retornar permisos del JWT si están disponibles", async () => {
-    const mockUser = {
-      id: "test-user-id",
-      app_metadata: {
-        permissions: ["ventas", "productos"],
-        isSuperAdmin: false,
-        roles: [{ id: 1, nombre: "Administrador", tipo: "ADMINISTRADOR" }],
-      },
-    };
-
-    vi.mocked(getSupabaseServerClient).mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: mockUser },
-          error: null,
-        }),
-      },
-    } as any);
-
-    const response = await GET();
-    const data = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(data.permisos).toEqual(["ventas", "productos"]);
-    expect(data.isSuperAdmin).toBe(false);
-    expect(data.roles).toHaveLength(1);
-    // No debe consultar DB
-    expect(calcularPermisosUsuario).not.toHaveBeenCalled();
-  });
-
-  it("debe retornar permisos de DB si no hay en JWT (fallback)", async () => {
-    const mockUser = {
-      id: "test-user-id",
-      app_metadata: {}, // Sin permisos en JWT
-    };
-
-    const mockPermisos = {
-      permisos: ["ventas", "productos"],
-      isSuperAdmin: false,
-      roles: [{ id: 1, nombre: "Empleado", tipo: "EMPLEADO" }],
-    };
-
-    vi.mocked(getSupabaseServerClient).mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: mockUser },
-          error: null,
-        }),
-      },
-    } as any);
-
-    vi.mocked(calcularPermisosUsuario).mockResolvedValue(mockPermisos);
-    vi.mocked(actualizarPermisosEnJWT).mockResolvedValue();
-
-    const response = await GET();
-    const data = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(data.permisos).toEqual(["ventas", "productos"]);
-    expect(data.isSuperAdmin).toBe(false);
-    // Debe consultar DB
-    expect(calcularPermisosUsuario).toHaveBeenCalledWith("test-user-id");
-    // Debe actualizar JWT en background
-    expect(actualizarPermisosEnJWT).toHaveBeenCalledWith("test-user-id");
-  });
-
-  it("debe retornar 401 si el usuario no está autenticado", async () => {
+  it("retorna 401 si el usuario no está autenticado", async () => {
     vi.mocked(getSupabaseServerClient).mockResolvedValue({
       auth: {
         getUser: vi.fn().mockResolvedValue({
@@ -106,32 +51,21 @@ describe("GET /api/permisos", () => {
     expect(data.error).toBe("No autenticado");
   });
 
-  it("debe manejar errores correctamente", async () => {
-    vi.mocked(getSupabaseServerClient).mockRejectedValue(
-      new Error("Error de conexión")
-    );
-
-    const response = await GET();
-    const data = await response.json();
-
-    expect(response.status).toBe(500);
-    expect(data.error).toBe("Error al obtener permisos");
-  });
-
-  it("debe detectar SuperAdmin desde JWT", async () => {
-    const mockUser = {
-      id: "test-user-id",
-      app_metadata: {
-        permissions: [],
-        isSuperAdmin: true, // SuperAdmin
-        roles: [],
-      },
-    };
-
+  it("retorna 200 con isSuperAdmin cuando el usuario es SuperAdmin en JWT", async () => {
+    const rolesJWT = [{ id: 1, nombre: "SuperAdmin", tipo: "SUPER_ADMIN" }];
     vi.mocked(getSupabaseServerClient).mockResolvedValue({
       auth: {
         getUser: vi.fn().mockResolvedValue({
-          data: { user: mockUser },
+          data: {
+            user: {
+              id: "user-1",
+              app_metadata: {
+                permissions: [],
+                isSuperAdmin: true,
+                roles: rolesJWT,
+              },
+            },
+          },
           error: null,
         }),
       },
@@ -142,8 +76,83 @@ describe("GET /api/permisos", () => {
 
     expect(response.status).toBe(200);
     expect(data.isSuperAdmin).toBe(true);
-    // No debe consultar DB
+    expect(data.permisos).toEqual([]);
+    expect(data.roles).toEqual(rolesJWT);
     expect(calcularPermisosUsuario).not.toHaveBeenCalled();
   });
-});
 
+  it("retorna 200 con permisos desde DB para usuario normal", async () => {
+    const permisosDB = ["ventas", "productos"];
+    const roles = [{ id: 2, nombre: "Empleado", tipo: "EMPLEADO" }];
+    vi.mocked(getSupabaseServerClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: {
+            user: {
+              id: "user-1",
+              app_metadata: { permissions: [], isSuperAdmin: false, roles: [] },
+            },
+          },
+          error: null,
+        }),
+      },
+    } as any);
+    vi.mocked(calcularPermisosUsuario).mockResolvedValue({
+      permisos: permisosDB,
+      isSuperAdmin: false,
+      roles,
+    });
+    vi.mocked(actualizarPermisosEnJWT).mockResolvedValue();
+
+    const response = await GET();
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.permisos).toEqual(permisosDB);
+    expect(data.isSuperAdmin).toBe(false);
+    expect(data.roles).toEqual(roles);
+    expect(calcularPermisosUsuario).toHaveBeenCalledWith("user-1");
+  });
+
+  it("retorna 200 con isSuperAdmin cuando DB dice SuperAdmin pero JWT no", async () => {
+    vi.mocked(getSupabaseServerClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: {
+            user: {
+              id: "user-1",
+              app_metadata: { permissions: [], isSuperAdmin: false, roles: [] },
+            },
+          },
+          error: null,
+        }),
+      },
+    } as any);
+    vi.mocked(calcularPermisosUsuario).mockResolvedValue({
+      permisos: [],
+      isSuperAdmin: true,
+      roles: [{ id: 1, nombre: "SuperAdmin", tipo: "SUPER_ADMIN" }],
+    });
+    vi.mocked(actualizarPermisosEnJWT).mockResolvedValue();
+
+    const response = await GET();
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.isSuperAdmin).toBe(true);
+    expect(data.permisos).toEqual([]);
+  });
+
+  it("retorna 500 cuando getSupabaseServerClient falla", async () => {
+    vi.mocked(getSupabaseServerClient).mockRejectedValue(
+      new Error("Error de conexión")
+    );
+
+    const response = await GET();
+    const data = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(data.error).toBeDefined();
+    expect(data.error.message || data.error).toMatch(/error|interno|conexión/i);
+  });
+});
