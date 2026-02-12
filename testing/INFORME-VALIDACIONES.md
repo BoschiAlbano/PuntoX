@@ -10,7 +10,7 @@ Este documento lista **valores inválidos o en el límite** que el sistema acept
 |-----------|----------|---------|
 | **Hallazgos documentados** | 11 | Ver sección 2. |
 | **Tests de validación** | `src/test/validation/*.test.ts` | Comprobantes, caja, gastos, cliente, producto, CtaCte, roles, usuario, iva, catalogos. |
-| **Tests que fallan (esperado)** | 10 | Hasta que se añadan las validaciones; ver [Cómo usar](#3-cómo-usar-este-informe). |
+| **Tests que fallan (esperado)** | 0 | Todos los hallazgos corregidos. |
 | **Objetivo** | Detectar y documentar | No se corrigen en este informe; el equipo prioriza. |
 
 ---
@@ -21,143 +21,85 @@ Cada ítem sigue el formato: **Módulo / flujo** → **Campo o acción** → **V
 
 ---
 
-### 2.1. Ventas — Descuento en comprobante (porcentaje / monto)
+### 2.1. Ventas — Descuento en comprobante (porcentaje / monto) — Corregido
 
 | Campo | Valor |
 |-------|--------|
 | **Módulo / flujo** | Ventas — Creación de comprobante (venta). |
-| **Campo o acción** | Descuento: en UI es porcentaje (input sin límite); en API se envía como monto `descuento = subtotal * (porcentaje/100)`. |
-| **Valor(es) probados** | Porcentaje 200% (o monto de descuento mayor que el subtotal). |
-| **Comportamiento actual** | El schema Zod acepta `descuento` con solo `.nonnegative()` (sin máximo). La UI permite cualquier número. Con 200% el total pasa a negativo. |
-| **Comportamiento esperado** | Rechazar porcentaje &gt; 100% en UI; en backend rechazar `descuento` cuando sea mayor que el subtotal (o validar porcentaje 0–100 si se envía porcentaje). |
-| **Dónde corregir** | `src/lib/services/comprobantes.ts`: añadir validación (p. ej. refinamiento que exija `descuento <= subtotal` o schema de porcentaje 0–100). `src/components/ventas/VentaFooter.tsx`: input con `min={0}` y `max={100}` (y/o validación al enviar). |
-| **Prioridad** | **Alta** |
+| **Estado** | **Corregido.** El schema en `comprobantes.ts` incluye refinamiento `descuento <= subtotal`. |
 
 ---
 
-### 2.2. Caja — Monto inicial (abrir caja) sin máximo
+### 2.2. Caja — Monto inicial (abrir caja) sin máximo — Corregido
 
 | Campo | Valor |
 |-------|--------|
-| **Módulo / flujo** | Caja — Apertura de caja. |
-| **Campo o acción** | `montoInicial` en el schema de abrir caja. |
-| **Valor(es) probados** | `1e12` (monto muy alto). |
-| **Comportamiento actual** | El schema solo exige `.min(0)`. Acepta cualquier número no negativo. |
-| **Comportamiento esperado** | Rechazar montos por encima de un tope razonable (p. ej. según configuración o límite fijo). |
-| **Dónde corregir** | `src/app/api/caja/route.ts`: `abrirCajaSchema` — añadir `.max(...)` o refinamiento. |
-| **Prioridad** | **Media** |
+| **Estado** | **Corregido.** `abrirCajaSchema` tiene `.max(MONTO_CAJA_MAX)`. |
 
 ---
 
-### 2.3. Caja — Monto de cierre sin máximo
+### 2.3. Caja — Monto de cierre sin máximo — Corregido
 
 | Campo | Valor |
 |-------|--------|
-| **Módulo / flujo** | Caja — Cierre de caja. |
-| **Campo o acción** | `montoCierre` en el schema de cerrar caja. |
-| **Valor(es) probados** | `1e12`. |
-| **Comportamiento actual** | Solo `.min(0)`. Acepta cualquier monto no negativo. |
-| **Comportamiento esperado** | Rechazar montos excesivos. |
-| **Dónde corregir** | `src/app/api/caja/route.ts`: `cerrarCajaSchema` — añadir `.max(...)` o refinamiento. |
-| **Prioridad** | **Media** |
+| **Estado** | **Corregido.** `cerrarCajaSchema` tiene `.max(MONTO_CAJA_MAX)`. |
 
 ---
 
-### 2.4. Gastos — Monto de pago sin máximo
+### 2.4. Gastos — Monto de pago sin máximo — Corregido
 
 | Campo | Valor |
 |-------|--------|
-| **Módulo / flujo** | Gastos — Creación de gasto. |
-| **Campo o acción** | `pagos[].monto` en el schema de gasto. |
-| **Valor(es) probados** | `1e15`. |
-| **Comportamiento actual** | Solo `.min(0.01)`. Acepta montos arbitrariamente grandes. |
-| **Comportamiento esperado** | Rechazar montos por encima de un tope (configuración o límite). |
-| **Dónde corregir** | `src/app/api/gastos/route.ts`: `createGastoSchema` — en el objeto de pago, añadir `.max(...)` al monto. |
-| **Prioridad** | **Media** |
+| **Estado** | **Corregido.** `createGastoSchema` tiene `.max(999_999_999_999)` en pagos[].monto. |
 
 ---
 
-### 2.5. Cliente — MontoMaximoCtaCte sin máximo (crear y actualizar)
+### 2.5. Cliente — MontoMaximoCtaCte sin máximo — Corregido
 
 | Campo | Valor |
 |-------|--------|
-| **Módulo / flujo** | Clientes — Crear y actualizar cliente. |
-| **Campo o acción** | `MontoMaximoCtaCte` en create y update. |
-| **Valor(es) probados** | `1e15`. |
-| **Comportamiento actual** | Solo `.min(0)`. Acepta montos arbitrariamente grandes. |
-| **Comportamiento esperado** | Rechazar montos por encima de un tope razonable. |
-| **Dónde corregir** | `src/lib/validations/cliente.schema.ts`: añadir `.max(...)` a `MontoMaximoCtaCte`. |
-| **Prioridad** | **Media** |
+| **Estado** | **Corregido.** `cliente.schema.ts` tiene `.max(999_999_999_999)` en create y update. |
 
 ---
 
-### 2.6. Productos — Precio público negativo
+### 2.6. Productos — Precio público negativo — Corregido
 
 | Campo | Valor |
 |-------|--------|
 | **Módulo / flujo** | Productos — Crear producto. |
-| **Campo o acción** | `Precio.PrecioPublico` (y `PrecioPublico2`). |
-| **Valor(es) probados** | `-1`. |
-| **Comportamiento actual** | El schema usa `.number()` sin `.min(0)`. Acepta precios negativos. |
-| **Comportamiento esperado** | Rechazar precios negativos (p. ej. `.min(0)` o `.nonnegative()`). |
-| **Dónde corregir** | `src/lib/validations/producto.schema.ts`: en `createProductoSchema` y `updateProductoSchema`, añadir `.min(0)` a `PrecioPublico` y `PrecioPublico2`. |
-| **Prioridad** | **Alta** |
+| **Estado** | **Corregido.** `producto.schema.ts` tiene `.min(0)` en `PrecioPublico` y `PrecioPublico2` (create y update). |
 
 ---
 
-### 2.7. Cta. Cte. Cliente — Monto de pago sin máximo
+### 2.7. Cta. Cte. Cliente — Monto de pago sin máximo — Corregido
 
 | Campo | Valor |
 |-------|--------|
-| **Módulo / flujo** | Cuenta corriente cliente — Registrar pago. |
-| **Campo o acción** | `monto` en el schema de pago. |
-| **Valor(es) probados** | `1e15`. |
-| **Comportamiento actual** | Solo `.positive()`. Acepta montos arbitrariamente grandes. |
-| **Comportamiento esperado** | Rechazar montos por encima de un tope. |
-| **Dónde corregir** | `src/app/api/CtaCteCliente/route.ts`: `pagoCtaCteSchema` — añadir `.max(...)` al monto. |
-| **Prioridad** | **Media** |
+| **Estado** | **Corregido.** `pagoCtaCteSchema` tiene `.max(999_999_999_999)` en monto. |
 
 ---
 
-### 2.8. Roles — Nombre de rol sin máximo de longitud
+### 2.8. Roles — Nombre de rol sin máximo de longitud — Corregido
 
 | Campo | Valor |
 |-------|--------|
-| **Módulo / flujo** | Empleados — Crear/editar rol. |
-| **Campo o acción** | `nombre` en el schema de rol. |
-| **Valor(es) probados** | String de 50001 caracteres. |
-| **Comportamiento actual** | Solo `.min(1)`. Acepta cadenas de longitud arbitraria (riesgo de overflow en DB o DoS). |
-| **Comportamiento esperado** | Rechazar nombres por encima de un máximo (p. ej. 250 caracteres). |
-| **Dónde corregir** | `src/app/api/roles/route.ts`: `rolSchema` — añadir `.max(250)` (o el límite del campo en DB) a `nombre`. |
-| **Prioridad** | **Media** |
+| **Estado** | **Corregido.** `rolSchema` tiene `.max(250)` en nombre. |
 
 ---
 
-### 2.9. Configuración — Monto máximo retiro de caja sin tope
+### 2.9. Configuración — Monto máximo retiro de caja sin tope — Corregido
 
 | Campo | Valor |
 |-------|--------|
-| **Módulo / flujo** | Configuración — Guardar preferencias (retiro de caja). |
-| **Campo o acción** | `montoMaximoRetiroCaja`. |
-| **Valor(es) probados** | No testeado por schema (no exportado); revisión manual. |
-| **Comportamiento actual** | Solo `.min(0)`. Sin máximo. |
-| **Comportamiento esperado** | Rechazar montos excesivos. |
-| **Dónde corregir** | `src/app/api/configuracion/route.ts`: `payloadSchema` — añadir `.max(...)` a `montoMaximoRetiroCaja`. |
-| **Prioridad** | **Baja** |
+| **Estado** | **Corregido.** `payloadSchema` tiene `.max(999_999_999_999)` en montoMaximoRetiroCaja. |
 
 ---
 
-### 2.10. Usuario (empleado) — nombreUsuario sin máximo de longitud
+### 2.10. Usuario (empleado) — nombreUsuario sin máximo de longitud — Corregido
 
 | Campo | Valor |
 |-------|--------|
-| **Módulo / flujo** | Empleados — Crear/editar usuario (schema de validación). |
-| **Campo o acción** | `nombreUsuario` en createUsuarioSchema. |
-| **Valor(es) probados** | String de 501 caracteres. |
-| **Comportamiento actual** | Solo `.min(1)`. Acepta cadenas de longitud arbitraria. |
-| **Comportamiento esperado** | Rechazar nombres por encima de un máximo (p. ej. 50 o 100 según límite en DB). |
-| **Dónde corregir** | `src/lib/validations/usuario.schema.ts`: añadir `.max(50)` o `.max(100)` a `nombreUsuario`. |
-| **Prioridad** | **Media** |
+| **Estado** | **Corregido.** `createUsuarioSchema` tiene `.max(100)` en nombreUsuario. |
 
 ---
 

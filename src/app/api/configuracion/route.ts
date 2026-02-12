@@ -56,7 +56,11 @@ const payloadSchema = z.object({
   ingresoManualCajaInicial: z.boolean().optional(),
   puestoCajaSeparado: z.boolean().optional(),
   activarRetiroDeCaja: z.boolean().optional(),
-  montoMaximoRetiroCaja: z.number().min(0).optional(),
+  montoMaximoRetiroCaja: z
+    .number()
+    .min(0)
+    .max(999_999_999_999, "El monto máximo de retiro no puede exceder el límite")
+    .optional(),
   // Productos
   unificarRenglonesIngresarMismoProducto: z.boolean().optional(),
   // Báscula
