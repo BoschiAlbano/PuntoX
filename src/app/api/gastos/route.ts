@@ -7,14 +7,17 @@ import { handleError } from "@/lib/errors/handler";
 import { PERMISSIONS } from "@/lib/constants/comprobantes";
 import { TIPO_PAGO } from "@/lib/constants/comprobantes";
 
-const createGastoSchema = z.object({
+export const createGastoSchema = z.object({
   conceptoGastoId: z.number(),
   descripcion: z.string().min(1, "La descripción es requerida"),
   pagos: z
     .array(
       z.object({
         tipoPago: z.number(),
-        monto: z.number().min(0.01),
+        monto: z
+          .number()
+          .min(0.01)
+          .max(999_999_999_999, "El monto de pago no puede exceder el límite"),
       }),
     )
     .min(1, "Debe agregar al menos un pago"),

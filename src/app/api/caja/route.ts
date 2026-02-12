@@ -9,18 +9,23 @@ import {
 import { handleError } from "@/lib/errors/handler";
 import { verifyUserBranchAccess } from "@/lib/sucursal/verifyUserBranch";
 
-// Schema para abrir caja
-const abrirCajaSchema = z.object({
+/** Límite máximo razonable para montos de caja (evita overflow/DoS) */
+const MONTO_CAJA_MAX = 999_999_999_999;
+
+// Schema para abrir caja (exportado para tests de validación)
+export const abrirCajaSchema = z.object({
   montoInicial: z
     .number()
-    .min(0, "El monto inicial debe ser mayor o igual a 0"),
+    .min(0, "El monto inicial debe ser mayor o igual a 0")
+    .max(MONTO_CAJA_MAX, "El monto inicial no puede exceder el límite permitido"),
 });
 
-// Schema para cerrar caja
-const cerrarCajaSchema = z.object({
+// Schema para cerrar caja (exportado para tests de validación)
+export const cerrarCajaSchema = z.object({
   montoCierre: z
     .number()
-    .min(0, "El monto de cierre debe ser mayor o igual a 0"),
+    .min(0, "El monto de cierre debe ser mayor o igual a 0")
+    .max(MONTO_CAJA_MAX, "El monto de cierre no puede exceder el límite permitido"),
 });
 
 // GET: Obtener caja actual o historial

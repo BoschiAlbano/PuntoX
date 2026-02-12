@@ -11,7 +11,12 @@ export const createClienteSchema = z.object({
   CondicionIvaId: z.union([z.number(), z.string()]),
   ActivarCtaCte: z.boolean().optional().default(false),
   TieneLimiteCompra: z.boolean().optional().default(false),
-  MontoMaximoCtaCte: z.number().min(0).optional().default(0),
+  MontoMaximoCtaCte: z
+    .number()
+    .min(0)
+    .max(999_999_999_999, "El monto máximo de cuenta corriente no puede exceder el límite")
+    .optional()
+    .default(0),
 });
 
 // Schema para actualizar cliente
@@ -27,7 +32,11 @@ export const updateClienteSchema = z.object({
   CondicionIvaId: z.union([z.number(), z.string()]).optional(),
   ActivarCtaCte: z.boolean().optional(),
   TieneLimiteCompra: z.boolean().optional(),
-  MontoMaximoCtaCte: z.number().min(0).optional(),
+  MontoMaximoCtaCte: z
+    .number()
+    .min(0)
+    .max(999_999_999_999, "El monto máximo de cuenta corriente no puede exceder el límite")
+    .optional(),
 });
 
 export type CreateClienteInput = z.infer<typeof createClienteSchema>;

@@ -10,7 +10,10 @@ export const createUsuarioSchema = z.object({
   localidadId: z.union([z.number(), z.string()]).transform((val) => Number(val)),
   departamentoId: z.union([z.number(), z.string()]).optional().nullable().transform((val) => val ? Number(val) : null),
   provinciaId: z.union([z.number(), z.string()]).optional().nullable().transform((val) => val ? Number(val) : null),
-  nombreUsuario: z.string().min(1, "El nombre de usuario es requerido"),
+  nombreUsuario: z
+    .string()
+    .min(1, "El nombre de usuario es requerido")
+    .max(100, "El nombre de usuario no puede exceder 100 caracteres"),
   password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
   rolId: z.union([z.number(), z.string()]).optional().nullable().transform((val) => val ? Number(val) : null),
   sucursalId: z.union([z.number(), z.string()]).optional().nullable().transform((val) => val ? Number(val) : null),

@@ -35,17 +35,33 @@ export const formaPagoSchema = z.object({
   clienteId: z.number().int().positive().optional(),
 });
 
-export const createComprobanteBaseSchema = z.object({
-  tipoComprobante: z.number().int().min(1).max(7), // Updated range
-  clienteId: z.number().int().nonnegative().nullable().optional(),
-  fecha: z.string().optional(),
-  descuento: z.number().nonnegative().optional().default(0),
-  detalles: z.array(detalleComprobanteSchema).min(1),
-  formasPago: z.array(formaPagoSchema).min(1),
-  // Additional fields for specific types
-  comprobanteAsociadoId: z.number().int().positive().optional().nullable(), // For Nota de Credito
-  numeroComprobanteAsociado: z.number().int().positive().optional().nullable(), // Alternative to ID
-});
+export const createComprobanteBaseSchema = z
+  .object({
+    tipoComprobante: z.number().int().min(1).max(7), // Updated range
+    clienteId: z.number().int().nonnegative().nullable().optional(),
+    fecha: z.string().optional(),
+    descuento: z.number().nonnegative().optional().default(0),
+    detalles: z.array(detalleComprobanteSchema).min(1),
+    formasPago: z.array(formaPagoSchema).min(1),
+    // Additional fields for specific types
+    comprobanteAsociadoId: z.number().int().positive().optional().nullable(), // For Nota de Credito
+    numeroComprobanteAsociado: z.number().int().positive().optional().nullable(), // Alternative to ID
+  })
+  .refine(
+    (data) => {
+      const subtotal = data.detalles.reduce(
+        (acc, d) => acc + d.subtotal,
+        0,
+      );
+      const descuento = data.descuento ?? 0;
+      return descuento <= subtotal;
+    },
+    {
+      message:
+        "El descuento no puede ser mayor que el subtotal de los detalles",
+      path: ["descuento"],
+    },
+  );
 
 export type CreateComprobanteData = z.infer<typeof createComprobanteBaseSchema>;
 

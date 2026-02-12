@@ -59,15 +59,15 @@ export const createProductoSchema = z.object({
     PorcentajeGanancia: z
       .number({ message: "El porcentaje de ganancia debe ser un número" })
       .min(0),
-    PrecioPublico: z.number({
-      message: "El precio publico debe ser un número",
-    }),
+    PrecioPublico: z
+      .number({ message: "El precio publico debe ser un número" })
+      .min(0, "El precio público no puede ser negativo"),
     PorcentajeGanancia2: z
       .number({ message: "El porcentaje de ganancia debe ser un número" })
       .min(0),
-    PrecioPublico2: z.number({
-      message: "El precio publico debe ser un número",
-    }),
+    PrecioPublico2: z
+      .number({ message: "El precio publico debe ser un número" })
+      .min(0, "El precio público no puede ser negativo"),
   }),
 });
 
@@ -118,18 +118,16 @@ export const updateProductoSchema = z.object({
         .min(0)
         .optional(),
       PrecioPublico: z
-        .number({
-          message: "El precio publico debe ser un número",
-        })
+        .number({ message: "El precio publico debe ser un número" })
+        .min(0, "El precio público no puede ser negativo")
         .optional(),
       PorcentajeGanancia2: z
         .number({ message: "El porcentaje de ganancia debe ser un número" })
         .min(0)
         .optional(),
       PrecioPublico2: z
-        .number({
-          message: "El precio publico debe ser un número",
-        })
+        .number({ message: "El precio publico debe ser un número" })
+        .min(0, "El precio público no puede ser negativo")
         .optional(),
     })
     .optional(),

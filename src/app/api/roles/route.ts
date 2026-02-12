@@ -9,8 +9,8 @@ import { PERMISSIONS } from "@/lib/constants/comprobantes";
 
 type RolTipo = "ADMINISTRADOR" | "EMPLEADO";
 
-const rolSchema = z.object({
-  nombre: z.string().min(1),
+export const rolSchema = z.object({
+  nombre: z.string().min(1).max(250, "El nombre no puede exceder 250 caracteres"),
   descripcion: z.string().optional().nullable(),
   tipo: z.enum(["ADMINISTRADOR", "EMPLEADO"]).default("EMPLEADO"),
   permisos: z.array(z.string().min(1)).optional().default([]),

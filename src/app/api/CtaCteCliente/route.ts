@@ -14,9 +14,12 @@ import {
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import { z } from "zod";
 
-const pagoSchema = z.object({
+export const pagoCtaCteSchema = z.object({
   clienteId: z.number().int().positive(),
-  monto: z.number().positive(),
+  monto: z
+    .number()
+    .positive()
+    .max(999_999_999_999, "El monto no puede exceder el límite permitido"),
   formasPago: z.array(formaPagoSchema).min(1),
 });
 
@@ -280,7 +283,7 @@ export async function POST(req: NextRequest) {
 
     // Parse Body
     const body = await req.json();
-    const parsed = pagoSchema.safeParse(body);
+    const parsed = pagoCtaCteSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
