@@ -6,10 +6,6 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import GraficaPagos from "./GraficaPagos";
 
-vi.mock("@/hooks/useCurrency", () => ({
-  useCurrency: () => "ARS",
-}));
-
 vi.mock("@heroui/react", async () => {
   const actual = await vi.importActual("@heroui/react");
   return {

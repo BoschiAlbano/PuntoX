@@ -28,11 +28,6 @@ import {
 } from "@/lib/constants/comprobantes";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
 import { useCaja } from "@/hooks/useCaja";
-import { useCurrency } from "@/hooks/useCurrency";
-import {
-  formatCurrency,
-  getCurrencySymbol,
-} from "@/lib/utils/formatCurrency";
 import { useVentaStore } from "@/store/ventaStore";
 import { useReactToPrint } from "react-to-print";
 import { TicketImpresion } from "./TicketImpresion";
@@ -60,7 +55,6 @@ export default function VentaFooter({
 }: VentaFooterProps) {
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
-  const currency = useCurrency();
   const { configuracion } = useConfiguracion({
     enableConfiguracion: true,
   });
@@ -160,7 +154,7 @@ export default function VentaFooter({
       if (nuevoTotalCtaCte > margenDisponible) {
         addToast({
           title: "Límite Excedido",
-          description: `El monto excede el margen disponible del cliente (${formatCurrency(margenDisponible - pagosCtaCteAcumulados, currency)})`,
+          description: `El monto excede el margen disponible del cliente ($${(margenDisponible - pagosCtaCteAcumulados).toFixed(2)})`,
           color: "danger",
         });
         return;
@@ -363,11 +357,7 @@ export default function VentaFooter({
               type="number"
               value={currentMonto}
               onValueChange={setCurrentMonto}
-              startContent={
-                <span className="text-default-400 text-small">
-                  {getCurrencySymbol(currency)}
-                </span>
-              }
+              startContent="$"
               className="flex-[1.5]"
               size="sm"
               onKeyDown={(e) => {
@@ -394,15 +384,15 @@ export default function VentaFooter({
                   <>
                     Margen Disponible:{" "}
                     <b>
-                      {formatCurrency(
+                      $
+                      {(
                         cliente.Persona_Cliente.MargenDisponible -
-                          pagos
-                            .filter(
-                              (p) => p.tipoPago === TIPO_PAGO.CUENTA_CORRIENTE,
-                            )
-                            .reduce((acc, p) => acc + p.monto, 0),
-                        currency,
-                      )}
+                        pagos
+                          .filter(
+                            (p) => p.tipoPago === TIPO_PAGO.CUENTA_CORRIENTE,
+                          )
+                          .reduce((acc, p) => acc + p.monto, 0)
+                      ).toFixed(2)}
                     </b>
                   </>
                 ) : (
@@ -434,7 +424,7 @@ export default function VentaFooter({
                 {pagos.map((p, idx) => (
                   <TableRow key={idx}>
                     <TableCell>{getTipoLabel(p.tipoPago)}</TableCell>
-                    <TableCell>{formatCurrency(p.monto, currency)}</TableCell>
+                    <TableCell>${p.monto.toFixed(2)}</TableCell>
                     <TableCell>
                       <Button
                         size="sm"
@@ -461,7 +451,11 @@ export default function VentaFooter({
                 <span
                   className={`font-bold ${restante > 0.01 && "text-warning"}`}
                 >
-                  {formatCurrency(Math.max(0, restante), currency)}
+                  $
+                  {Math.max(0, restante).toLocaleString("es-AR", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </span>
               </>
             ) : (
@@ -470,7 +464,11 @@ export default function VentaFooter({
                 <span
                   className={`font-bold ${restante < 0.01 && "text-[#67afc3]"}`}
                 >
-                  {formatCurrency(Math.abs(restante), currency)}
+                  $
+                  {Math.abs(restante).toLocaleString("es-AR", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </span>
               </>
             )}
@@ -490,13 +488,23 @@ export default function VentaFooter({
           <div className="flex flex-col gap-2">
             <div className="flex justify-between text-sm text-default-500">
               <span>Subtotal:</span>
-              <span>{formatCurrency(subtotal, currency)}</span>
+              <span>
+                $
+                {subtotal.toLocaleString("es-AR", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
             </div>
             <div className="flex justify-between items-center text-sm text-default-500 gap-2">
               <span>Descuento (%):</span>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-default-400">
-                  - {formatCurrency(subtotal * (descuento / 100), currency)}
+                  - $
+                  {(subtotal * (descuento / 100)).toLocaleString("es-AR", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </span>
                 <Input
                   data-testid="descuento-input"
@@ -521,7 +529,7 @@ export default function VentaFooter({
             <Divider className="my-1" />
             <div className="flex justify-between text-xl font-bold text-[#67afc3]">
               <span>Total:</span>
-              <span>{formatCurrency(total, currency)}</span>
+              <span>${total.toFixed(2)}</span>
             </div>
           </div>
 
@@ -553,9 +561,12 @@ export default function VentaFooter({
             >
               {Math.abs(restante) < 0.01 || items.length === 0
                 ? "CONFIRMAR VENTA"
-                : `FALTA ${
+                : `FALTA $${
                     restante > 0
-                      ? formatCurrency(restante, currency)
+                      ? restante.toLocaleString("es-AR", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
                       : "AJUSTE"
                   }`}
             </Button>

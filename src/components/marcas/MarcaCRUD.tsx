@@ -10,6 +10,7 @@ export default function MarcaCRUD() {
     <GenericCrud<Marca>
       apiPath="/api/marcas"
       queryKey="marcas-generic"
+      title="Gestión de Marcas"
       searchPlaceholder="Buscar marcas..."
       FormComponent={MarcaForm}
       // Definimos las columnas

@@ -2,7 +2,6 @@
  * Tests para el componente GenericTable.
  * @vitest-environment jsdom
  */
-import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import GenericTable, { Column } from "./GenericTable";
@@ -11,20 +10,6 @@ vi.mock("@heroui/react", async () => {
   const actual = await vi.importActual("@heroui/react");
   return { ...actual, addToast: vi.fn() };
 });
-
-vi.mock("react-to-print", () => ({
-  useReactToPrint: () => vi.fn(),
-}));
-
-vi.mock("lucide-react", () => ({
-  Check: () => <span data-testid="icon-check" />,
-  Columns2: () => <span data-testid="icon-columns" />,
-  Download: () => <span data-testid="icon-download" />,
-  Menu: () => <span data-testid="icon-menu" />,
-  Printer: () => <span data-testid="icon-printer" />,
-  RefreshCcw: () => <span data-testid="icon-refresh" />,
-  Upload: () => <span data-testid="icon-upload" />,
-}));
 
 vi.mock("@/hooks/useDebounce", () => ({
   useDebounce: vi.fn((val: string) => val),
@@ -113,9 +98,10 @@ describe("GenericTable", () => {
   it("renderiza datos en la tabla", () => {
     render(<GenericTable {...defaultProps} />);
 
-    const table = screen.getByRole("grid", { name: "Tabla de datos" });
-    expect(table).toBeInTheDocument();
+    // Verificar que los datos se renderizan
+    expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getByText("Item 1")).toBeInTheDocument();
+    expect(screen.getByText("2")).toBeInTheDocument();
     expect(screen.getByText("Item 2")).toBeInTheDocument();
   });
 });

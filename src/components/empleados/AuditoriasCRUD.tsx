@@ -51,6 +51,7 @@ export default function AuditoriasCRUD() {
       };
     });
 
+    console.log("Datos Transformados:", transformData);
     return transformData;
   };
 

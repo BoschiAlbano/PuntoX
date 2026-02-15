@@ -10,6 +10,7 @@ export default function RubroCRUD() {
     <GenericCrud<Rubro>
       apiPath="/api/rubros"
       queryKey="rubros-generic"
+      title="Gestión de Rubros"
       searchPlaceholder="Buscar rubros..."
       FormComponent={RubroForm}
       // Definimos las columnas

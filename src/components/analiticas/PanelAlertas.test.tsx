@@ -7,10 +7,6 @@ import { render, screen } from "@testing-library/react";
 import PanelAlertas from "./PanelAlertas";
 import type { AlertasData } from "@/hooks/useAnaliticas";
 
-vi.mock("@/hooks/useCurrency", () => ({
-  useCurrency: () => "ARS",
-}));
-
 vi.mock("@heroui/react", async () => {
   const actual = await vi.importActual("@heroui/react");
   return {

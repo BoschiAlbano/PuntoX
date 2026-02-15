@@ -17,8 +17,6 @@ import {
 import { GenericFormProps } from "../shared/GenericCrud";
 import { useQuery } from "@tanstack/react-query";
 import { Cliente } from "@/lib/validations/cliente.schema";
-import { useCurrency } from "@/hooks/useCurrency";
-import { getCurrencyFormatOptions } from "@/lib/utils/formatCurrency";
 
 // Fetchers
 const fetchCondicionesIva = async () => {
@@ -74,7 +72,6 @@ export default function ClienteForm({
   isSaving,
 }: GenericFormProps<Cliente>) {
   const [formData, setFormData] = useState<Partial<Cliente>>(clientePorDefecto);
-  const currency = useCurrency();
 
   // Queries
   const { data: condicionesIva = [], isLoading: isLoadingCondiciones } =
@@ -343,12 +340,12 @@ export default function ClienteForm({
                     {formData.TieneLimiteCompra && (
                       <NumberInput
                         label="Monto Máximo"
-                        placeholder="0,00"
+                        placeholder="0.00"
+                        startContent="$"
                         value={formData?.MontoMaximoCtaCte || 0}
                         onValueChange={(value) =>
                           handleChange("MontoMaximoCtaCte", value)
                         }
-                        formatOptions={getCurrencyFormatOptions(currency)}
                       />
                     )}
                   </div>

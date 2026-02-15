@@ -9,8 +9,6 @@ import {
   Legend,
 } from "recharts";
 import { Card, CardBody, CardHeader } from "@heroui/react";
-import { useCurrency } from "@/hooks/useCurrency";
-import { formatCurrency } from "@/lib/utils/formatCurrency";
 
 interface GraficaPagosProps {
   datos: Array<{
@@ -23,7 +21,6 @@ interface GraficaPagosProps {
 const COLORS = ["#67afc3", "#90c472", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 export default function GraficaPagos({ datos }: GraficaPagosProps) {
-  const currency = useCurrency();
   const total = datos.reduce((sum, d) => sum + d.monto, 0);
   const datosConPorcentaje = datos
     .filter((d) => d.monto > 0)
@@ -81,7 +78,12 @@ export default function GraficaPagos({ datos }: GraficaPagosProps) {
             </Pie>
             <Tooltip
               formatter={(value: number | undefined) =>
-                value !== undefined ? formatCurrency(value, currency) : ""
+                value !== undefined
+                  ? new Intl.NumberFormat("es-AR", {
+                      style: "currency",
+                      currency: "ARS",
+                    }).format(value)
+                  : ""
               }
             />
             <Legend />

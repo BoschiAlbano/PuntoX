@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
 
     const pagination = parsePaginationParams(req);
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
+
     // Construir where clause
     const where: {
       TenantId: bigint;
@@ -37,6 +38,7 @@ export async function GET(req: NextRequest) {
       EstaEliminado: false,
     };
 
+    // Agregar búsqueda si existe
     if (search) {
       where.OR = [
         { Descripcion: { contains: search, mode: "insensitive" } },

@@ -25,8 +25,6 @@ import RubroGenericForm from "../rubros/RubroForm";
 import UnidadMedidaGenericForm from "../unidad-medida/UnidadMedidaForm";
 import { TiposVenta } from "../../../prisma/generated/prisma";
 import { LoadingComponent } from "../loading/loading";
-import { useCurrency } from "@/hooks/useCurrency";
-import { getCurrencyFormatOptions } from "@/lib/utils/formatCurrency";
 
 const defaultProducto: Producto = {
   Id: 0,
@@ -106,7 +104,6 @@ export default function ProductoForm({
   isSaving,
 }: GenericFormProps<Producto>) {
   const [formData, setFormData] = useState<Partial<Producto>>(defaultProducto);
-  const currency = useCurrency();
 
   const queryClient = useQueryClient();
   const [isMarcaModalOpen, setIsMarcaModalOpen] = useState(false);
@@ -339,6 +336,10 @@ export default function ProductoForm({
 
     setFormData({ ...formData, Precio: newPrecio });
   };
+
+  const handleExportExcel = () => {};
+
+  const handleImportExcel = () => {};
 
   return (
     <Modal
@@ -655,8 +656,8 @@ export default function ProductoForm({
                   {/* Costo Base */}
                   <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <NumberInput
-                      label="Precio Costo"
-                      placeholder="0,00"
+                      label="Precio Costo ($)"
+                      placeholder="0.00"
                       value={Number(formData.Precio?.PrecioCosto) || 0}
                       onValueChange={(value) =>
                         updatePrecio("PrecioCosto", value)
@@ -664,7 +665,6 @@ export default function ProductoForm({
                       isRequired
                       isDisabled={isSaving}
                       min={0}
-                      formatOptions={getCurrencyFormatOptions(currency)}
                     />
                   </div>
 
@@ -687,14 +687,13 @@ export default function ProductoForm({
                         isDisabled={isSaving}
                       />
                       <NumberInput
-                        label="Precio de Venta"
-                        placeholder="0,00"
+                        label="Precio de Venta ($)"
+                        placeholder="0.00"
                         value={formData?.Precio?.PrecioPublico || 0}
                         onValueChange={(value) =>
                           updatePrecio("PrecioPublico", value)
                         }
                         isDisabled={isSaving}
-                        formatOptions={getCurrencyFormatOptions(currency)}
                         classNames={{
                           input: "font-bold text-green-600",
                         }}
@@ -719,14 +718,13 @@ export default function ProductoForm({
                         isDisabled={isSaving}
                       />
                       <NumberInput
-                        label="Precio de Venta"
-                        placeholder="0,00"
+                        label="Precio de Venta ($)"
+                        placeholder="0.00"
                         value={formData?.Precio?.PrecioPublico2 || 0}
                         onValueChange={(value) =>
                           updatePrecio("PrecioPublico2", value)
                         }
                         isDisabled={isSaving}
-                        formatOptions={getCurrencyFormatOptions(currency)}
                         classNames={{
                           input: "font-bold text-blue-600",
                         }}
@@ -903,6 +901,30 @@ export default function ProductoForm({
                         ? "Producto Inactivo"
                         : "Producto Activo"}
                     </Switch>
+                  </div>
+                </div>
+              </Tab>
+
+              <Tab key="Excel" title="Excel">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => handleExportExcel()}
+                      >
+                        Exportar
+                      </button>
+                    </div>
+                    <div>
+                      <input type="file" accept=".xlsx" />
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => handleImportExcel()}
+                      >
+                        Importar
+                      </button>
+                    </div>
                   </div>
                 </div>
               </Tab>

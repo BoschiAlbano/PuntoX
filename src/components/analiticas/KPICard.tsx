@@ -2,8 +2,6 @@
 
 import { Card, CardBody } from "@heroui/react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { useCurrency } from "@/hooks/useCurrency";
-import { formatCurrency } from "@/lib/utils/formatCurrency";
 
 interface KPICardProps {
   title: string;
@@ -24,14 +22,17 @@ export default function KPICard({
   icon,
   color = "default",
 }: KPICardProps) {
-  const currency = useCurrency();
-
   const formatValue = (val: number | string): string => {
     if (typeof val === "string") return val;
-
+    
     switch (format) {
       case "currency":
-        return formatCurrency(val, currency);
+        return new Intl.NumberFormat("es-AR", {
+          style: "currency",
+          currency: "ARS",
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        }).format(val);
       case "percentage":
         return `${val.toFixed(1)}%`;
       case "number":

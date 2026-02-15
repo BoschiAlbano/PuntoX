@@ -85,9 +85,9 @@ describe("VentaFooter", () => {
         total={900}
       />
     );
-    expect(screen.getByText(/1\.000,00|1000|1[,.]?000/)).toBeInTheDocument();
-    expect(screen.getByText(/100[.,]?00|100/)).toBeInTheDocument();
-    expect(screen.getAllByText(/900[.,]?00|900/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/1\.000,00|1000/)).toBeInTheDocument();
+    expect(screen.getByText(/\$100\.00|\$100/)).toBeInTheDocument();
+    expect(screen.getByText("$900.00")).toBeInTheDocument();
   });
 
   it("muestra sección de descuento y total", () => {

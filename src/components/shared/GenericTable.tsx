@@ -8,14 +8,9 @@ import {
   Pagination,
   SortDescriptor,
   Skeleton,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
 } from "@heroui/react";
-import { useState, useEffect, useRef, Key } from "react";
-import { Check, Columns2, Download, Menu, Printer, RefreshCcw, Upload } from "lucide-react";
-import { useReactToPrint } from "react-to-print";
+import { useState, useEffect, Key } from "react";
+import { RefreshCcw } from "lucide-react";
 import { PaginationMeta } from "@/hooks/useProductos"; // Reutilizamos interface o la movemos a types compartidos
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -46,10 +41,9 @@ interface GenericTableProps<T> {
   onSortChange?: (descriptor: SortDescriptor) => void;
   onNewClick?: () => void;
   newButtonText?: string;
-  onImportClick?: () => void;
-  onExportClick?: () => void;
   onRefresh?: () => void;
   isRefreshing?: boolean;
+  totalItems?: number;
 }
 
 export default function GenericTable<T extends { Id: number | string }>({
@@ -69,25 +63,10 @@ export default function GenericTable<T extends { Id: number | string }>({
   onSortChange,
   onNewClick,
   newButtonText = "Nuevo",
-  onImportClick,
-  onExportClick,
   onRefresh,
   isRefreshing = false,
 }: GenericTableProps<T>) {
   const [searchInput, setSearchInput] = useState(search);
-  const tablePrintRef = useRef<HTMLDivElement>(null);
-
-  // Columnas visibles: ocultar "acciones" por defecto del selector (siempre visible en tabla)
-  const selectableColumns = columns.filter((c) => c.uid !== "acciones");
-  const [visibleUids, setVisibleUids] = useState<Set<string>>(() =>
-    new Set(columns.map((c) => c.uid)),
-  );
-  const visibleColumns = columns.filter((c) => visibleUids.has(c.uid));
-
-  const handlePrint = useReactToPrint({
-    contentRef: tablePrintRef,
-    documentTitle: "Listado",
-  });
 
   // Debounce de búsqueda (400ms para reducir llamadas)
   const debouncedSearch = useDebounce(searchInput, 400);
@@ -102,168 +81,65 @@ export default function GenericTable<T extends { Id: number | string }>({
   return (
     <section className="w-full h-full flex flex-col gap-4 overflow-hidden">
       <div className="rounded-lg flex flex-col gap-4 bg-white/50 backdrop-blur-sm flex-1 w-full h-full px-4">
-        {/* Barra de herramientas: Búsqueda+Filtro | Botones */}
-        <section className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 sm:px-4 px-1 py-2 rounded-lg bg-white/80 border border-gray-200/60">
-          {/* Búsqueda + Filtro - alineados a la izquierda */}
-          <div className="w-full sm:flex-initial order-1">
-            <div className="flex items-center gap-2 w-full sm:w-[280px] min-w-0">
-              <div className="flex-1 min-w-0">
-                <div className="group flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 bg-white transition-all duration-200 hover:border-[#67afc3] focus-within:border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/30">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    className="size-5 text-gray-400 flex-shrink-0"
-                    aria-hidden
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <input
-                    type="text"
-                    placeholder={searchPlaceholder}
-                    className="outline-none w-full bg-transparent text-gray-700 placeholder:text-gray-400 text-sm"
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    aria-label="Buscar en la tabla"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Header & Search */}
+        <section className="w-full flex items-center sm:justify-end justify-start gap-2 sm:px-4 px-1">
+          {/* Boton nuevo con efecto lift */}
+          {onNewClick && (
+            <button
+              onClick={onNewClick}
+              className=" px-4 h-[36px] rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 text-white cursor-pointer"
+              aria-label={newButtonText}
+            >
+              {newButtonText}
+            </button>
+          )}
 
-          {/* Acciones - a la derecha */}
-          <div className="flex items-center gap-2 flex-wrap sm:flex-shrink-0 order-2">
-            {/* Grupo: Nuevo (acción principal) */}
-            {onNewClick && (
-              <button
-                onClick={onNewClick}
-                className="px-4 h-9 rounded-lg bg-[#67afc3] hover:bg-[#5a9db0] text-white font-medium text-sm shadow-sm transition-all duration-200 hover:shadow disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label={newButtonText}
-              >
-                {newButtonText}
-              </button>
-            )}
-
-            {/* Separador visual entre Nuevo y Importar/Exportar */}
-            <div
-              className="hidden sm:block w-px h-6 bg-gray-200"
-              aria-hidden
+          {/* Search */}
+          <div className=" group flex justify-between gap-2 border-2 border-gray-300 rounded-xl p-1.5 bg-white transition-all duration-300 hover:border-[#67afc3] relative sm:w-auto w-[200px]">
+            <input
+              type="text"
+              placeholder={`${searchPlaceholder}`}
+              className="outline-none pl-2 w-full bg-transparent text-gray-700 placeholder:text-gray-400 truncate"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              aria-label="Buscar en la tabla"
             />
-
-            {/* Grupo: Más opciones, Columnas, Actualizar (mismo espaciado) */}
-            <div className="flex items-center gap-2">
-              <Dropdown>
-                <DropdownTrigger>
-                  <button
-                    type="button"
-                    className="p-2 h-9 w-9 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 hover:border-[#67afc3] text-gray-600 hover:text-[#67afc3] transition-all duration-200 flex items-center justify-center flex-shrink-0"
-                    title="Más opciones"
-                    aria-label="Más opciones (Importar, Exportar, Imprimir)"
-                  >
-                    <Menu size={18} aria-hidden="true" />
-                  </button>
-                </DropdownTrigger>
-                <DropdownMenu aria-label="Más opciones">
-                  <DropdownItem
-                    key="importar"
-                    startContent={<Upload size={16} />}
-                    onPress={onImportClick ?? (() => {})}
-                  >
-                    Importar
-                  </DropdownItem>
-                  <DropdownItem
-                    key="exportar"
-                    startContent={<Download size={16} />}
-                    onPress={onExportClick ?? (() => {})}
-                  >
-                    Exportar
-                  </DropdownItem>
-                  <DropdownItem
-                    key="imprimir"
-                    startContent={<Printer size={16} />}
-                    onPress={handlePrint}
-                  >
-                    Imprimir
-                  </DropdownItem>
-                </DropdownMenu>
-              </Dropdown>
-              {selectableColumns.length > 1 && (
-                <Dropdown closeOnSelect={false}>
-                  <DropdownTrigger>
-                    <button
-                      type="button"
-                      className="p-2 h-9 w-9 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 hover:border-[#67afc3] text-gray-600 hover:text-[#67afc3] transition-all duration-200 flex items-center justify-center flex-shrink-0"
-                      title="Columnas visibles"
-                      aria-label="Mostrar u ocultar columnas"
-                    >
-                      <Columns2 size={18} aria-hidden="true" />
-                    </button>
-                  </DropdownTrigger>
-                  <DropdownMenu
-                    aria-label="Columnas visibles"
-                    className="min-w-[200px] p-2"
-                    classNames={{ list: "p-2 gap-0.5" }}
-                  >
-                    {selectableColumns.map((col) => (
-                      <DropdownItem
-                        key={col.uid}
-                        textValue={col.name}
-                        startContent={
-                          visibleUids.has(col.uid) ? (
-                            <Check size={14} className="text-[#67afc3] flex-shrink-0" />
-                          ) : (
-                            <span className="w-3.5 inline-block" aria-hidden />
-                          )
-                        }
-                        onPress={() => {
-                          setVisibleUids((prev) => {
-                            const next = new Set(prev);
-                            if (next.has(col.uid)) {
-                              if (next.size <= 1) return prev;
-                              next.delete(col.uid);
-                            } else {
-                              next.add(col.uid);
-                            }
-                            return next;
-                          });
-                        }}
-                        className="rounded-md"
-                      >
-                        {col.name}
-                      </DropdownItem>
-                    ))}
-                  </DropdownMenu>
-                </Dropdown>
-              )}
-              {onRefresh && (
-                <button
-                  onClick={onRefresh}
-                  disabled={isRefreshing}
-                  className="p-2 h-9 w-9 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 hover:border-[#67afc3] text-gray-600 hover:text-[#67afc3] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 flex items-center justify-center"
-                  title="Actualizar datos"
-                  aria-label="Actualizar datos de la tabla"
-                >
-                  <RefreshCcw
-                    size={18}
-                    className={`transition-transform ${isRefreshing ? "animate-spin" : ""}`}
-                    aria-hidden="true"
-                  />
-                </button>
-              )}
-            </div>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="size-5 text-gray-500 transition-all duration-300 group-hover:text-[#67afc3] group-hover:scale-105 group-active:scale-95 group-focus:outline-none group-focus:ring-2 group-focus:ring-[#67afc3] group-focus:ring-offset-2"
+            >
+              <path
+                fillRule="evenodd"
+                d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z"
+                clipRule="evenodd"
+              />
+            </svg>
           </div>
+
+          {/* Botón de actualizar */}
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="p-2 rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 cursor-pointer"
+              title="Actualizar datos"
+              aria-label="Actualizar datos de la tabla"
+            >
+              <RefreshCcw
+                size={18}
+                className={`text-white transition-transform ${
+                  isRefreshing ? "animate-spin" : ""
+                }`}
+                aria-hidden="true"
+              />
+            </button>
+          )}
         </section>
 
-        {/* Table + Pagination en mismo contenedor (ref para impresión) */}
-        <div
-          ref={tablePrintRef}
-          className="w-full overflow-hidden flex-1 flex flex-col h-full shadow-md rounded-xl border border-gray-200/60 bg-white print:shadow-none print:border print:border-gray-300"
-        >
-        <div className="flex-1 min-h-0 overflow-auto overflow-x-auto">
+        {/* Table */}
+        <div className="w-full overflow-hidden overflow-x-auto flex-1 flex flex-col h-full shadow-md">
           <Table
             aria-label="Tabla de datos"
             sortDescriptor={sortDescriptor}
@@ -276,7 +152,7 @@ export default function GenericTable<T extends { Id: number | string }>({
               base: "bg-transparent h-full shadow-none rounded-xl border-none",
             }}
           >
-            <TableHeader columns={visibleColumns}>
+            <TableHeader columns={columns}>
               {(column) => (
                 <TableColumn
                   key={column.uid}
@@ -327,7 +203,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                 ) {
                   return (
                     <TableRow key={item.Id}>
-                      {visibleColumns.map((column, idx) => (
+                      {columns.map((column, idx) => (
                         <TableCell key={column.uid} className="">
                           {column.uid === "acciones" ? (
                             <div className="opacity-50 flex gap-2 w-full justify-center items-center">
@@ -380,29 +256,38 @@ export default function GenericTable<T extends { Id: number | string }>({
             </TableBody>
           </Table>
         </div>
-          {/* Pagination - agrupada con la tabla */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3 border-t border-gray-200/60 bg-gray-50/50 rounded-b-xl">
+      </div>
+
+      {/* Pagination */}
+      <div className="rounded-lg flex flex-col items-center py-2">
         {isLoading ? (
-          <div className="flex items-center gap-2">
+          <section className="relative w-full flex flex-col sm:gap-0 gap-2 items-center">
+            <div className="flex gap-2">
               <Skeleton className="rounded-medium w-9 h-9 opacity-50">
                 <div className="h-9 w-9 rounded-medium bg-default-200" />
               </Skeleton>
               <Skeleton className="rounded-medium w-9 h-9 opacity-50">
                 <div className="h-9 w-9 rounded-medium bg-default-200" />
               </Skeleton>
-              <Skeleton className="rounded-medium w-[100px] h-4 opacity-50" />
+              <Skeleton className="rounded-medium w-9 h-9 opacity-50">
+                <div className="h-9 w-9 rounded-medium bg-default-200" />
+              </Skeleton>
             </div>
-        ) : !isLoading && !isError ? (
-          <>
-            <span className="text-[#67afc3]/90 text-sm">
-              {`${data.length} de ${paginationMeta.total} registros`}
+            <span className="text-[#67afc3]/90 w-full sm:text-start text-center sm:pl-2 pl-0 text-sm sm:absolute relative bottom-0 flex flex-col sm:items-start items-center">
+              {/* {`${paginationMeta.limit} de ${paginationMeta.total} registros totales`} */}
+              <Skeleton className="rounded-medium w-[120px] h-4 opacity-50 ">
+                <div className="h-4 w-[120px] rounded-medium bg-default-200" />
+              </Skeleton>
             </span>
+          </section>
+        ) : !isLoading && !isError ? (
+          <section className="relative w-full flex flex-col sm:gap-0 gap-2 items-center">
             <Pagination
               showControls
               page={page}
               total={paginationMeta.totalPages}
               onChange={onPageChange}
-              size="md"
+              size={window.innerWidth < 640 ? "sm" : "md"}
               classNames={{
                 cursor: "bg-[#67afc3]/90 text-white shadow-none ",
                 item: "bg-transparent shadow-none cursor-pointer text-sm sm:text-md",
@@ -412,10 +297,11 @@ export default function GenericTable<T extends { Id: number | string }>({
               }}
               aria-label="Paginación de la tabla"
             />
-          </>
+            <span className="text-[#67afc3]/90 w-full sm:text-start text-center pl-2 text-sm sm:absolute relative  bottom-0">
+              {`${data.length} de ${paginationMeta.total} registros totales`}
+            </span>
+          </section>
         ) : null}
-          </div>
-        </div>
       </div>
     </section>
   );

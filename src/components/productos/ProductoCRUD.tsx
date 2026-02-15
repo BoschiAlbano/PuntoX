@@ -12,18 +12,17 @@ import {
 } from "@/components/shared/TableActions";
 import AddStockModal from "./AddStockModal";
 import { useProductos } from "@/hooks/useProductos";
-import { useCurrency } from "@/hooks/useCurrency";
-import { formatCurrency } from "@/lib/utils/formatCurrency";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
 
 export default function ProductoCRUD() {
   const { addStockMutation } = useProductos();
-  const currency = useCurrency();
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
   const [productToAddStock, setProductToAddStock] = useState<Producto | null>(
     null,
   );
+  const queryClient = useQueryClient();
 
   const handleOpenStockModal = (item: Producto) => {
     setProductToAddStock(item);
@@ -51,6 +50,7 @@ export default function ProductoCRUD() {
       <GenericCrud<Producto>
         apiPath="/api/productos"
         queryKey="productos-generic"
+        title="Gestión de Productos"
         searchPlaceholder="Buscar productos..."
         FormComponent={ProductoForm}
         transformer={(item) => productoListAdapter(item)}
@@ -96,19 +96,19 @@ export default function ProductoCRUD() {
             case "Costo":
               return (
                 <span className="font-medium text-gray-700">
-                  {formatCurrency(Number(item.Precio?.PrecioCosto ?? 0), currency)}
+                  {item.Precio.PrecioCosto}
                 </span>
               );
             case "Minorista":
               return (
                 <span className="font-medium text-gray-700">
-                  {formatCurrency(Number(item.Precio?.PrecioCosto ?? 0), currency)}
+                  {item.Precio.PrecioCosto}
                 </span>
               );
             case "Mayorista":
               return (
                 <span className="font-medium text-gray-700">
-                  {formatCurrency(Number(item.Precio?.PrecioPublico2 ?? 0), currency)}
+                  {item.Precio.PrecioPublico2}
                 </span>
               );
             case "Estado":

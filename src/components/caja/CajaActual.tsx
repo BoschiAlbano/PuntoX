@@ -37,8 +37,6 @@ import {
 import React, { useState } from "react";
 import { LoadingComponent } from "../loading/loading";
 import { handleNumberInput } from "@/lib/input/number";
-import { useCurrency } from "@/hooks/useCurrency";
-import { formatCurrency } from "@/lib/utils/formatCurrency";
 import {
   TIPO_MOVIMIENTO,
   TIPO_PAGO,
@@ -48,7 +46,6 @@ import { useReactToPrint } from "react-to-print";
 import { TicketImpresion } from "../ventas/TicketImpresion";
 
 export default function CajaActual() {
-  const currency = useCurrency();
   const {
     cajaActual,
     isLoading,
@@ -269,6 +266,12 @@ export default function CajaActual() {
     }
   };
 
+  const formatMoney = (val: number) =>
+    val.toLocaleString("es-AR", {
+      style: "currency",
+      currency: "ARS",
+    });
+
   const formatDate = (date: string) =>
     new Date(date).toLocaleString("es-AR", {
       day: "2-digit",
@@ -449,7 +452,7 @@ export default function CajaActual() {
             <div>
               <p className="text-sm text-gray-500 font-medium">Efectivo</p>
               <p className="text-2xl font-bold text-gray-800">
-                {formatCurrency(cajaActual.TotalEntradaEfectivo, currency)}
+                {formatMoney(cajaActual.TotalEntradaEfectivo)}
               </p>
             </div>
           </CardBody>
@@ -461,7 +464,7 @@ export default function CajaActual() {
                 Cuenta Corriente
               </p>
               <p className="text-2xl font-bold text-gray-800">
-                {formatCurrency(cajaActual.TotalEntradaCtaCte, currency)}
+                {formatMoney(cajaActual.TotalEntradaCtaCte)}
               </p>
             </div>
           </CardBody>
@@ -471,7 +474,7 @@ export default function CajaActual() {
             <div>
               <p className="text-sm text-gray-500 font-medium">Transferencia</p>
               <p className="text-2xl font-bold text-gray-800">
-                {formatCurrency(cajaActual.TotalEntradaTransf, currency)}
+                {formatMoney(cajaActual.TotalEntradaTransf)}
               </p>
             </div>
           </CardBody>
@@ -481,7 +484,7 @@ export default function CajaActual() {
             <div>
               <p className="text-sm text-gray-500 font-medium">Tarjeta</p>
               <p className="text-2xl font-bold text-gray-800">
-                {formatCurrency(cajaActual.TotalEntradaTarjeta, currency)}
+                {formatMoney(cajaActual.TotalEntradaTarjeta)}
               </p>
             </div>
           </CardBody>
@@ -491,7 +494,7 @@ export default function CajaActual() {
             <div>
               <p className="text-sm text-gray-500 font-medium">Cheque</p>
               <p className="text-2xl font-bold text-gray-800">
-                {formatCurrency(cajaActual.TotalEntradaCheque, currency)}
+                {formatMoney(cajaActual.TotalEntradaCheque)}
               </p>
             </div>
           </CardBody>
@@ -509,7 +512,7 @@ export default function CajaActual() {
             <div>
               <p className="text-sm text-gray-500 font-medium">Efectivo</p>
               <p className="text-2xl font-bold text-gray-800">
-                {formatCurrency(cajaActual.TotalSalidaEfectivo, currency)}
+                {formatMoney(cajaActual.TotalSalidaEfectivo)}
               </p>
             </div>
           </CardBody>
@@ -521,7 +524,7 @@ export default function CajaActual() {
                 Cuenta Corriente
               </p>
               <p className="text-2xl font-bold text-gray-800">
-                {formatCurrency(cajaActual.TotalSalidaCtaCte, currency)}
+                {formatMoney(cajaActual.TotalSalidaCtaCte)}
               </p>
             </div>
           </CardBody>
@@ -531,7 +534,7 @@ export default function CajaActual() {
             <div>
               <p className="text-sm text-gray-500 font-medium">Transferencia</p>
               <p className="text-2xl font-bold text-gray-800">
-                {formatCurrency(cajaActual.TotalSalidaTransf, currency)}
+                {formatMoney(cajaActual.TotalSalidaTransf)}
               </p>
             </div>
           </CardBody>
@@ -541,7 +544,7 @@ export default function CajaActual() {
             <div>
               <p className="text-sm text-gray-500 font-medium">Tarjeta</p>
               <p className="text-2xl font-bold text-gray-800">
-                {formatCurrency(cajaActual.TotalSalidaTarjeta, currency)}
+                {formatMoney(cajaActual.TotalSalidaTarjeta)}
               </p>
             </div>
           </CardBody>
@@ -551,7 +554,7 @@ export default function CajaActual() {
             <div>
               <p className="text-sm text-gray-500 font-medium">Cheque</p>
               <p className="text-2xl font-bold text-gray-800">
-                {formatCurrency(cajaActual.TotalSalidaCheque, currency)}
+                {formatMoney(cajaActual.TotalSalidaCheque)}
               </p>
             </div>
           </CardBody>
@@ -644,7 +647,7 @@ export default function CajaActual() {
                         {mov.TipoMovimiento === TIPO_MOVIMIENTO.ENTRADA
                           ? "+"
                           : "-"}
-                        {formatCurrency(mov.Monto, currency)}
+                        {formatMoney(mov.Monto)}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -748,7 +751,7 @@ export default function CajaActual() {
                     </div>
                   </div>
                   <span className="font-bold text-rose-600">
-                    -{formatCurrency(g.Monto, currency)}
+                    -{formatMoney(g.Monto)}
                   </span>
                 </div>
               ))
@@ -908,13 +911,12 @@ export default function CajaActual() {
                   <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                     <span className="font-semibold">Total:</span>
                     <span className="font-bold text-lg text-primary">
-                      {formatCurrency(
+                      {formatMoney(
                         nuevoGasto.pagos.reduce(
                           (acc, p) =>
                             acc + (parseFloat(p.monto.replace(",", ".")) || 0),
                           0,
                         ),
-                        currency,
                       )}
                     </span>
                   </div>
@@ -1022,23 +1024,22 @@ export default function CajaActual() {
                       <div>
                         <span className="text-gray-500">Monto Inicial:</span>
                         <p className="font-medium">
-                          {formatCurrency(cajaActual?.MontoInicial || 0, currency)}
+                          {formatMoney(cajaActual?.MontoInicial || 0)}
                         </p>
                       </div>
                       <div>
                         <span className="text-gray-500">Total Efectivo:</span>
                         <p className="font-medium">
-                          {formatCurrency(
+                          {formatMoney(
                             (cajaActual?.TotalEntradaEfectivo || 0) -
                               (cajaActual?.TotalSalidaEfectivo || 0),
-                            currency,
                           )}
                         </p>
                       </div>
                       <div>
                         <span className="text-gray-500">Ganancia Total:</span>
                         <p className="font-bold text-lg text-success">
-                          {formatCurrency(cajaActual?.Ganancia || 0, currency)}
+                          {formatMoney(cajaActual?.Ganancia || 0)}
                         </p>
                       </div>
                     </div>
@@ -1163,7 +1164,7 @@ export default function CajaActual() {
                               Total:
                             </span>
                             <span className="font-bold text-xl text-primary">
-                              {formatCurrency(selectedTicket.Total, currency)}
+                              {formatMoney(selectedTicket.Total)}
                             </span>
                           </div>
                         </CardBody>
@@ -1209,10 +1210,10 @@ export default function CajaActual() {
                                     </div>
                                   </TableCell>
                                   <TableCell>
-                                    {formatCurrency(item.Precio, currency)}
+                                    {formatMoney(item.Precio)}
                                   </TableCell>
                                   <TableCell className="font-semibold">
-                                    {formatCurrency(item.SubTotal, currency)}
+                                    {formatMoney(item.SubTotal)}
                                   </TableCell>
                                 </TableRow>
                               ),
@@ -1242,7 +1243,7 @@ export default function CajaActual() {
                               ) || "OTRO"}
                             </span>
                             <span className="font-bold text-gray-800">
-                              {formatCurrency(fp.Monto, currency)}
+                              {formatMoney(fp.Monto)}
                             </span>
                           </div>
                         ))}

@@ -3,8 +3,6 @@
 import { Card, CardBody, CardHeader, Chip, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@heroui/react";
 import { AlertTriangle, Package, DollarSign, Activity, CreditCard, Store } from "lucide-react";
 import { AlertasData } from "@/hooks/useAnaliticas";
-import { useCurrency } from "@/hooks/useCurrency";
-import { formatCurrency } from "@/lib/utils/formatCurrency";
 
 interface PanelAlertasProps {
   data: AlertasData;
@@ -12,8 +10,6 @@ interface PanelAlertasProps {
 }
 
 export default function PanelAlertas({ data, isLoading }: PanelAlertasProps) {
-  const currency = useCurrency();
-
   if (isLoading) {
     return (
       <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
@@ -219,7 +215,10 @@ export default function PanelAlertas({ data, isLoading }: PanelAlertasProps) {
                       </TableCell>
                       <TableCell>
                         <span className="font-semibold text-gray-900">
-                          {formatCurrency(cob.saldo, currency)}
+                          {new Intl.NumberFormat("es-AR", {
+                            style: "currency",
+                            currency: "ARS",
+                          }).format(cob.saldo)}
                         </span>
                       </TableCell>
                       <TableCell>

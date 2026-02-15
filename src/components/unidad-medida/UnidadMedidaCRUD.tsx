@@ -10,6 +10,7 @@ export default function UnidadMedidaCRUD() {
     <GenericCrud<UnidadMedida>
       apiPath="/api/unidades-medidas"
       queryKey="unidades-medidas-generic"
+      title="Gestión de Unidades de Medida"
       searchPlaceholder="Buscar unidades de medida..."
       FormComponent={UnidadMedidaForm}
       // Definimos las columnas

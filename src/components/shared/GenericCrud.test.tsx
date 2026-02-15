@@ -57,6 +57,7 @@ describe("GenericCrud", () => {
         columns={columns}
         renderCell={renderCell}
         FormComponent={mockForm as any}
+        title="Marcas"
       />
     );
     expect(screen.getByPlaceholderText(/buscar/i)).toBeInTheDocument();

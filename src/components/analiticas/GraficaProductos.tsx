@@ -12,11 +12,6 @@ import {
   Cell,
 } from "recharts";
 import { Card, CardBody, CardHeader } from "@heroui/react";
-import { useCurrency } from "@/hooks/useCurrency";
-import {
-  formatCurrency,
-  formatCurrencyCompact,
-} from "@/lib/utils/formatCurrency";
 
 interface GraficaProductosProps {
   datos: Array<{
@@ -37,7 +32,6 @@ const getColorByMargen = (margenPorcentaje: number): string => {
 };
 
 export default function GraficaProductos({ datos }: GraficaProductosProps) {
-  const currency = useCurrency();
   const top10 = datos.slice(0, 10);
 
   if (!datos || datos.length === 0) {
@@ -74,7 +68,13 @@ export default function GraficaProductos({ datos }: GraficaProductosProps) {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               type="number"
-              tickFormatter={(value) => formatCurrencyCompact(value, currency)}
+              tickFormatter={(value) =>
+                new Intl.NumberFormat("es-AR", {
+                  style: "currency",
+                  currency: "ARS",
+                  notation: "compact",
+                }).format(value)
+              }
             />
             <YAxis
               type="category"
@@ -86,8 +86,23 @@ export default function GraficaProductos({ datos }: GraficaProductosProps) {
               formatter={(value: number | undefined, name: string | undefined) => {
                 if (value === undefined) return ["", name || ""];
                 const nameStr = name || "";
-                if (nameStr === "monto" || nameStr === "margen") {
-                  return [formatCurrency(value, currency), nameStr === "monto" ? "Ventas" : "Margen"];
+                if (nameStr === "monto") {
+                  return [
+                    new Intl.NumberFormat("es-AR", {
+                      style: "currency",
+                      currency: "ARS",
+                    }).format(value),
+                    "Ventas",
+                  ];
+                }
+                if (nameStr === "margen") {
+                  return [
+                    new Intl.NumberFormat("es-AR", {
+                      style: "currency",
+                      currency: "ARS",
+                    }).format(value),
+                    "Margen",
+                  ];
                 }
                 return [value, nameStr];
               }}
