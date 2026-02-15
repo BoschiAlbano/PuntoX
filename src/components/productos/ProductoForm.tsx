@@ -28,6 +28,11 @@ import { LoadingComponent } from "../loading/loading";
 import { useCurrency } from "@/hooks/useCurrency";
 import { getCurrencyFormatOptions } from "@/lib/utils/formatCurrency";
 
+const inputClassNames = {
+  inputWrapper:
+    "bg-white border border-gray-300 shadow-none hover:border-gray-400 focus-within:!border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/20",
+};
+
 const defaultProducto: Producto = {
   Id: 0,
   MarcaId: 1,
@@ -350,12 +355,15 @@ export default function ProductoForm({
       scrollBehavior="inside"
       classNames={{
         backdrop: "bg-black/50 backdrop-blur-sm",
-        base: "bg-white",
+        base: "bg-white rounded-xl shadow-xl border border-gray-200/60",
+        header: "border-b border-gray-200 bg-gray-50/50",
+        body: "py-0",
+        footer: "border-t border-gray-200 bg-gray-50/50",
       }}
     >
       <ModalContent>
-        <ModalHeader className="flex flex-col gap-1 border-b border-gray-200">
-          <h3 className="text-xl font-bold">
+        <ModalHeader className="flex flex-col gap-1 py-5 px-6">
+          <h3 className="text-xl font-bold text-slate-800">
             {isEdit ? "Editar Producto" : "Nuevo Producto"}
           </h3>
         </ModalHeader>
@@ -372,14 +380,14 @@ export default function ProductoForm({
               variant="underlined"
               classNames={{
                 tabList:
-                  "gap-6 w-full relative rounded-none p-0 border-b border-divider",
-                cursor: "w-full bg-[#22d3ee]",
-                tab: "max-w-fit px-0 h-12",
-                tabContent: "group-data-[selected=true]:text-[#06b6d4]",
+                  "gap-6 w-full relative rounded-none p-0 border-b border-gray-200",
+                cursor: "w-full bg-[#67afc3]",
+                tab: "max-w-fit px-0 h-12 data-[hover=true]:text-[#67afc3]",
+                tabContent: "group-data-[selected=true]:text-[#67afc3] font-medium",
               }}
             >
               <Tab key="general" title="General">
-                <div className="space-y-4 pt-4">
+                <div className="space-y-5 pt-5">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
                       label="Código"
@@ -396,6 +404,7 @@ export default function ProductoForm({
                       }
                       isRequired
                       isDisabled={isLoadingFullProduct}
+                      classNames={inputClassNames}
                     />
                     <Input
                       label="Código de Barras"
@@ -410,6 +419,7 @@ export default function ProductoForm({
                       type="number"
                       isRequired
                       isDisabled={isSaving}
+                      classNames={inputClassNames}
                     />
                     <Input
                       label="Abreviatura"
@@ -422,6 +432,7 @@ export default function ProductoForm({
                         })
                       }
                       isDisabled={isSaving}
+                      classNames={inputClassNames}
                     />
                     <Input
                       label="Descripción"
@@ -435,6 +446,7 @@ export default function ProductoForm({
                       }
                       isRequired
                       isDisabled={isSaving}
+                      classNames={inputClassNames}
                     />
                   </div>
                   <Textarea
@@ -444,23 +456,28 @@ export default function ProductoForm({
                     onChange={(e) =>
                       setFormData({ ...formData, Detalle: e.target.value })
                     }
-                    minRows={3}
+                    minRows={2}
                     isDisabled={isSaving}
+                    classNames={{
+                      ...inputClassNames,
+                      input: "resize-none",
+                    }}
                   />
                   <Input
                     label="Ubicación"
-                    placeholder="Ubicación en almacén"
+                    placeholder="Ej: Pasillo 2, Estante B"
                     value={formData.Ubicacion || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, Ubicacion: e.target.value })
                     }
                     isDisabled={isSaving}
+                    classNames={inputClassNames}
                   />
                 </div>
               </Tab>
 
               <Tab key="categorizacion" title="Categorización">
-                <div className="space-y-4 pt-4">
+                <div className="space-y-5 pt-5">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center gap-2">
                       <Select
@@ -497,7 +514,7 @@ export default function ProductoForm({
                         color="primary"
                         variant="flat"
                         onPress={() => setIsMarcaModalOpen(true)}
-                        className="h-full"
+                        className="h-full min-w-9 bg-[#67afc3]/15 text-[#67afc3] hover:bg-[#67afc3]/25"
                       >
                         <PlusIcon />
                       </Button>
@@ -538,7 +555,7 @@ export default function ProductoForm({
                         color="primary"
                         variant="flat"
                         onPress={() => setIsRubroModalOpen(true)}
-                        className="h-full"
+                        className="h-full min-w-9 bg-[#67afc3]/15 text-[#67afc3] hover:bg-[#67afc3]/25"
                       >
                         <PlusIcon />
                       </Button>
@@ -582,7 +599,7 @@ export default function ProductoForm({
                         color="primary"
                         variant="flat"
                         onPress={() => setIsUnidadModalOpen(true)}
-                        className="h-full"
+                        className="h-full min-w-9 bg-[#67afc3]/15 text-[#67afc3] hover:bg-[#67afc3]/25"
                       >
                         <PlusIcon />
                       </Button>
@@ -651,11 +668,12 @@ export default function ProductoForm({
               </Tab>
 
               <Tab key="precios" title="Precios">
-                <div className="space-y-4 pt-4">
+                <div className="space-y-5 pt-5">
                   {/* Costo Base */}
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <div className="bg-slate-50/80 p-5 rounded-xl border border-gray-200/80 shadow-sm">
                     <NumberInput
                       label="Precio Costo"
+                      classNames={inputClassNames}
                       placeholder="0,00"
                       value={Number(formData.Precio?.PrecioCosto) || 0}
                       onValueChange={(value) =>
@@ -668,10 +686,10 @@ export default function ProductoForm({
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {/* Lista de Precios 1 */}
-                    <div className="space-y-3 p-4 border border-gray-200 rounded-lg">
-                      <h4 className="font-semibold text-gray-700">
+                    <div className="space-y-4 p-5 rounded-xl border border-gray-200/80 bg-white shadow-sm">
+                      <h4 className="font-semibold text-slate-700 text-sm uppercase tracking-wide">
                         Lista Principal
                       </h4>
                       <NumberInput
@@ -685,6 +703,7 @@ export default function ProductoForm({
                         }
                         isRequired
                         isDisabled={isSaving}
+                        classNames={inputClassNames}
                       />
                       <NumberInput
                         label="Precio de Venta"
@@ -702,8 +721,8 @@ export default function ProductoForm({
                     </div>
 
                     {/* Lista de Precios 2 */}
-                    <div className="space-y-3 p-4 border border-gray-200 rounded-lg">
-                      <h4 className="font-semibold text-gray-700">
+                    <div className="space-y-4 p-5 rounded-xl border border-gray-200/80 bg-white shadow-sm">
+                      <h4 className="font-semibold text-slate-700 text-sm uppercase tracking-wide">
                         Lista Secundaria
                       </h4>
                       <NumberInput
@@ -717,6 +736,7 @@ export default function ProductoForm({
                         }
                         isRequired
                         isDisabled={isSaving}
+                        classNames={inputClassNames}
                       />
                       <NumberInput
                         label="Precio de Venta"
@@ -737,10 +757,11 @@ export default function ProductoForm({
               </Tab>
 
               <Tab key="stock" title="Stock">
-                <div className="space-y-4 pt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-5 pt-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 rounded-xl border border-gray-200/80 bg-slate-50/50">
                     <Input
                       label="Stock Mínimo"
+                      classNames={inputClassNames}
                       placeholder="0"
                       type="number"
                       step="0.01"
@@ -755,6 +776,7 @@ export default function ProductoForm({
                     />
                     <Input
                       label="Días de Vencimiento"
+                      classNames={inputClassNames}
                       placeholder="0"
                       type="number"
                       value={formData.VencimientoDias?.toString() || ""}
@@ -768,6 +790,7 @@ export default function ProductoForm({
                     />
                     <Input
                       label="Stock Actual"
+                      classNames={inputClassNames}
                       placeholder="0"
                       type="number"
                       step="0.01"
@@ -781,7 +804,7 @@ export default function ProductoForm({
                       isDisabled={isSaving}
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 rounded-xl border border-gray-200/80 bg-white">
                     <Switch
                       isSelected={formData.DescuentaStock}
                       onValueChange={(value) =>
@@ -808,10 +831,11 @@ export default function ProductoForm({
               </Tab>
 
               <Tab key="configuracion" title="Configuración">
-                <div className="space-y-4 pt-4">
-                  <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                    Límites de Venta
-                  </h4>
+                <div className="space-y-6 pt-5">
+                  <div className="p-5 rounded-xl border border-gray-200/80 bg-slate-50/50">
+                    <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-4">
+                      Límites de Venta
+                    </h4>
                   <div className="space-y-4">
                     <div className="flex items-center gap-4">
                       <Switch
@@ -829,6 +853,7 @@ export default function ProductoForm({
                       {formData.ActivarLimiteVenta && (
                         <NumberInput
                           label="Límite"
+                          classNames={inputClassNames}
                           placeholder="0.00"
                           value={Number(formData.LimiteVenta) || Number(0)}
                           onValueChange={(value) =>
@@ -860,6 +885,7 @@ export default function ProductoForm({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                           <Input
                             label="Hora Desde"
+                            classNames={inputClassNames}
                             type="time"
                             value={formData.HoraLimiteVentaDesde || ""}
                             onChange={(e) =>
@@ -872,6 +898,7 @@ export default function ProductoForm({
                           />
                           <Input
                             label="Hora Hasta"
+                            classNames={inputClassNames}
                             type="time"
                             value={formData.HoraLimiteVentaHasta || ""}
                             onChange={(e) =>
@@ -886,9 +913,10 @@ export default function ProductoForm({
                       )}
                     </div>
                   </div>
+                  </div>
 
-                  <div className="pt-4 mt-4 border-t border-gray-200">
-                    <h4 className="text-lg font-semibold text-gray-900 border-b pb-2 mb-4">
+                  <div className="p-5 rounded-xl border border-gray-200/80 bg-white">
+                    <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-4">
                       Estado
                     </h4>
                     <Switch
@@ -909,16 +937,20 @@ export default function ProductoForm({
             </Tabs>
           </div>
         </ModalBody>
-        <ModalFooter className="border-t border-gray-200">
+        <ModalFooter className="py-4 px-6 gap-2">
           <Button
-            color="danger"
             variant="light"
             onPress={onClose}
             isDisabled={isSaving}
+            className="font-medium text-gray-600 hover:bg-gray-100"
           >
             Cancelar
           </Button>
-          <Button color="primary" onPress={handleSubmit} isLoading={isSaving}>
+          <Button
+            onPress={handleSubmit}
+            isLoading={isSaving}
+            className="bg-[#67afc3] hover:bg-[#5a9db0] text-white font-medium"
+          >
             {isEdit ? "Actualizar" : "Crear"}
           </Button>
         </ModalFooter>

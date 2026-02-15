@@ -80,10 +80,19 @@ export default function ProductoCRUD() {
                   {item.Descripcion}
                 </span>
               );
-            case "Stock":
+            case "Stock": {
+              const stock = item.Stock ?? 0;
+              const stockMinimo = item.StockMinimo ?? 0;
+              const isLowStock = stockMinimo > 0 && stock <= stockMinimo;
               return (
                 <div className="flex flex-col">
-                  <span className="font-medium text-gray-700">
+                  <span
+                    className={
+                      isLowStock
+                        ? "font-semibold text-red-600"
+                        : "font-medium text-gray-700"
+                    }
+                  >
                     {item.Stock}
                   </span>
                   {item.SucursalNombre && (
@@ -93,6 +102,7 @@ export default function ProductoCRUD() {
                   )}
                 </div>
               );
+            }
             case "Costo":
               return (
                 <span className="font-medium text-gray-700">
@@ -102,7 +112,7 @@ export default function ProductoCRUD() {
             case "Minorista":
               return (
                 <span className="font-medium text-gray-700">
-                  {formatCurrency(Number(item.Precio?.PrecioCosto ?? 0), currency)}
+                  {formatCurrency(Number(item.Precio?.PrecioPublico ?? 0), currency)}
                 </span>
               );
             case "Mayorista":

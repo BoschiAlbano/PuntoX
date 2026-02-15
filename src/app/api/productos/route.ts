@@ -57,6 +57,7 @@ export async function GET(req: NextRequest) {
         Descripcion: true,
         EstaEliminado: true,
         Stock: true, // Legacy/Global
+        StockMinimo: true,
 
         // Relacion Precio: Solo lo necesario para la tabla
         Precio: {
@@ -75,6 +76,7 @@ export async function GET(req: NextRequest) {
           take: 1,
           select: {
             Stock: true,
+            StockMinimo: true,
             Sucursal: {
               select: {
                 Nombre: true,
@@ -105,8 +107,11 @@ export async function GET(req: NextRequest) {
         Descripcion: producto.Descripcion,
         EstaEliminado: producto.EstaEliminado,
 
-        // Stock logic
+        // Stock logic (StockMinimo: sucursal o valor global)
         Stock: stockSucursal ? Number(stockSucursal.Stock) : Number(0),
+        StockMinimo: stockSucursal?.StockMinimo != null
+          ? Number(stockSucursal.StockMinimo)
+          : Number(producto.StockMinimo ?? 0),
         SucursalNombre: stockSucursal?.Sucursal.Nombre || null,
 
         // Precio
