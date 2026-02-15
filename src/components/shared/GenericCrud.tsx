@@ -51,11 +51,12 @@ interface GenericCrudProps<T> {
   FormComponent: React.ComponentType<GenericFormProps<T>>;
 
   // Opcionales
-  title?: string; // Título de la sección
   searchPlaceholder?: string;
   initialLimit?: number;
   transformer?: (data: any) => T[];
   additionalInvalidateQueryKeys?: any[];
+  onImportClick?: () => void;
+  onExportClick?: () => void;
 }
 
 export default function GenericCrud<T extends { Id: number | string }>({
@@ -68,19 +69,19 @@ export default function GenericCrud<T extends { Id: number | string }>({
   initialLimit = 10,
   transformer,
   additionalInvalidateQueryKeys,
+  onImportClick,
+  onExportClick,
 }: GenericCrudProps<T>) {
-  // Estados de UI
-  const { isOpen, onOpen, onClose } = useDisclosure(); // Modal Form
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     isOpen: isDeleteOpen,
     onOpen: onDeleteOpen,
     onClose: onDeleteClose,
-  } = useDisclosure(); // Modal Delete
+  } = useDisclosure();
 
   const [selectedItem, setSelectedItem] = useState<T | null>(null);
   const [itemToDelete, setItemToDelete] = useState<T | null>(null);
 
-  // Estados de Listado
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit] = useState(initialLimit);
@@ -242,23 +243,6 @@ export default function GenericCrud<T extends { Id: number | string }>({
 
   return (
     <div className="w-full h-full relative">
-      {/* Botón flotante para crear (opcional, o se puede integrar en la tabla) */}
-      {/* Por ahora, asumimos que la tabla tiene el botón o se pasa */}
-      {/* Vamos a poner un botón de crear flotante simple o header si se desea */}
-
-      {/* Aquí podríamos poner el botón de crear si no está en la tabla */}
-      {/* <div className="absolute top-0 right-0 z-10 p-2">
-        <Button
-          onPress={handleCreate}
-          color="primary"
-          className="mb-4 shadow-lg font-bold"
-          radius="full"
-          isIconOnly
-        >
-          +
-        </Button>
-      </div> */}
-
       <GenericTable
         data={sortedItems}
         columns={columns}
@@ -276,7 +260,8 @@ export default function GenericCrud<T extends { Id: number | string }>({
         onNewClick={handleCreate}
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing}
-        totalItems={paginationMeta.total}
+        onImportClick={onImportClick}
+        onExportClick={onExportClick}
       />
 
       {/* Modal de Formulario */}

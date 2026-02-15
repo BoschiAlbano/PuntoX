@@ -11,6 +11,11 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Card, CardBody, CardHeader } from "@heroui/react";
+import { useCurrency } from "@/hooks/useCurrency";
+import {
+  formatCurrency,
+  formatCurrencyCompact,
+} from "@/lib/utils/formatCurrency";
 
 interface GraficaIngresosProps {
   datos: Array<{
@@ -27,6 +32,7 @@ export default function GraficaIngresos({
   datos,
   mostrarSoloFacturas = false,
 }: GraficaIngresosProps) {
+  const currency = useCurrency();
   const datosFormateados = datos.map((d) => ({
     ...d,
     fecha: d.fecha.split("T")[0] || d.fecha,
@@ -70,22 +76,11 @@ export default function GraficaIngresos({
             />
             <YAxis
               tick={{ fontSize: 12 }}
-              tickFormatter={(value) =>
-                new Intl.NumberFormat("es-AR", {
-                  style: "currency",
-                  currency: "ARS",
-                  notation: "compact",
-                }).format(value)
-              }
+              tickFormatter={(value) => formatCurrencyCompact(value, currency)}
             />
             <Tooltip
               formatter={(value: number | undefined) =>
-                value !== undefined
-                  ? new Intl.NumberFormat("es-AR", {
-                      style: "currency",
-                      currency: "ARS",
-                    }).format(value)
-                  : ""
+                value !== undefined ? formatCurrency(value, currency) : ""
               }
             />
             <Legend />

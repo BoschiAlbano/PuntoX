@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import {
-  Input,
+  NumberInput,
   Button,
   Modal,
   ModalContent,
@@ -28,8 +28,11 @@ import { RefreshCcw, CreditCard, Banknote, Wallet } from "lucide-react";
 import { TIPO_PAGO } from "@/lib/constants/comprobantes";
 import { LoadingComponent } from "../loading/loading";
 import { useCtaCte, ClienteCtaCte } from "@/hooks/useCtaCte";
+import { useCurrency } from "@/hooks/useCurrency";
+import { formatCurrency, getCurrencyFormatOptions } from "@/lib/utils/formatCurrency";
 
 export default function CuentasCorrientesCRUD() {
+  const currency = useCurrency();
   const {
     useBuscarClientes,
     useMovimientosCliente,
@@ -60,7 +63,7 @@ export default function CuentasCorrientesCRUD() {
     onOpen: onPaymentOpen,
     onOpenChange: onPaymentOpenChange,
   } = useDisclosure();
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<string>(
     String(TIPO_PAGO.EFECTIVO),
   );
@@ -78,13 +81,6 @@ export default function CuentasCorrientesCRUD() {
     onOpenChange();
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: "ARS",
-    }).format(value);
-  };
-
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("es-AR", {
       day: "2-digit",
@@ -96,15 +92,15 @@ export default function CuentasCorrientesCRUD() {
   };
 
   const handleNewPago = () => {
-    setAmount("");
+    setAmount(0);
     setPaymentMethod(String(TIPO_PAGO.EFECTIVO));
     onPaymentOpen();
   };
 
   const handleSavePayment = async () => {
-    if (!selectedClient || !amount) return;
+    if (!selectedClient || amount <= 0) return;
 
-    const montoNumber = parseFloat(amount);
+    const montoNumber = amount;
     if (isNaN(montoNumber) || montoNumber <= 0) {
       addToast({
         title: "Error",
@@ -218,7 +214,7 @@ export default function CuentasCorrientesCRUD() {
                     : "text-success"
                 }`}
               >
-                {formatCurrency(movements[movements.length - 1]?.saldo || 0)}
+                {formatCurrency(movements[movements.length - 1]?.saldo || 0, currency)}
               </span>
             </div>
           </CardBody>
@@ -266,13 +262,13 @@ export default function CuentasCorrientesCRUD() {
                 </TableCell>
                 <TableCell>{item.detalles}</TableCell>
                 <TableCell className="text-danger font-medium">
-                  {item.debe > 0 ? formatCurrency(item.debe) : "-"}
+                  {item.debe > 0 ? formatCurrency(item.debe, currency) : "-"}
                 </TableCell>
                 <TableCell className="text-success font-medium">
-                  {item.haber > 0 ? formatCurrency(item.haber) : "-"}
+                  {item.haber > 0 ? formatCurrency(item.haber, currency) : "-"}
                 </TableCell>
                 <TableCell className="font-bold">
-                  {formatCurrency(item.saldo)}
+                  {formatCurrency(item.saldo, currency)}
                 </TableCell>
               </TableRow>
             )}
@@ -348,20 +344,14 @@ export default function CuentasCorrientesCRUD() {
               <ModalBody>
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Monto a pagar
-                    </label>
-                    <Input
+                    <NumberInput
                       autoFocus
-                      type="number"
-                      placeholder="0.00"
+                      label="Monto a pagar"
+                      placeholder="0,00"
                       value={amount}
-                      onValueChange={setAmount}
-                      startContent={
-                        <div className="pointer-events-none flex items-center">
-                          <span className="text-default-400 text-small">$</span>
-                        </div>
-                      }
+                      onValueChange={(v) => setAmount(v)}
+                      minValue={0}
+                      formatOptions={getCurrencyFormatOptions(currency)}
                     />
                   </div>
 

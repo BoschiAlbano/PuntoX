@@ -20,6 +20,11 @@ import {
 } from "@heroui/react";
 import { Trash2, Plus, AlertCircle, CheckCircle2 } from "lucide-react";
 import { TIPO_PAGO } from "@/lib/constants/comprobantes";
+import { useCurrency } from "@/hooks/useCurrency";
+import {
+  formatCurrency,
+  getCurrencySymbol,
+} from "@/lib/utils/formatCurrency";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -34,6 +39,7 @@ export default function PaymentModal({
   total,
   onConfirm,
 }: PaymentModalProps) {
+  const currency = useCurrency();
   const [pagos, setPagos] = useState<{ tipoPago: number; monto: number }[]>([]);
   const [currentTipo, setCurrentTipo] = useState<number>(TIPO_PAGO.EFECTIVO);
   const [currentMonto, setCurrentMonto] = useState<string>("");
@@ -143,7 +149,7 @@ export default function PaymentModal({
             <div className="flex flex-col">
               <span className="text-small text-default-500">Total a Pagar</span>
               <span className="text-2xl font-bold text-primary">
-                ${total.toFixed(2)}
+                {formatCurrency(total, currency)}
               </span>
             </div>
             <div className="flex flex-col items-end">
@@ -157,7 +163,7 @@ export default function PaymentModal({
                     : "text-success"
                 }`}
               >
-                ${Math.abs(restante).toFixed(2)}
+                {formatCurrency(Math.abs(restante), currency)}
                 {restante < -0.01 && (
                   <span className="text-xs text-default-500 block">
                     {" "}
@@ -204,7 +210,11 @@ export default function PaymentModal({
               type="number"
               value={currentMonto}
               onValueChange={setCurrentMonto}
-              startContent="$"
+              startContent={
+                <span className="text-default-400 text-small">
+                  {getCurrencySymbol(currency)}
+                </span>
+              }
               className="w-1/3"
               size="sm"
               onKeyDown={(e) => {
@@ -233,7 +243,7 @@ export default function PaymentModal({
               {pagos.map((p, idx) => (
                 <TableRow key={idx}>
                   <TableCell>{getTipoLabel(p.tipoPago)}</TableCell>
-                  <TableCell>${p.monto.toFixed(2)}</TableCell>
+                  <TableCell>{formatCurrency(p.monto, currency)}</TableCell>
                   <TableCell>
                     <Button
                       size="sm"
@@ -253,15 +263,15 @@ export default function PaymentModal({
           {/* Error / Success Message */}
           {restante > 0.01 && (
             <div className="flex items-center gap-2 text-warning text-sm mt-2">
-              <AlertCircle size={16} /> Faltan ${restante.toFixed(2)} para
+              <AlertCircle size={16} /> Faltan {formatCurrency(restante, currency)} para
               completar el pago.
             </div>
           )}
 
           {restante < -0.01 && (
             <div className="flex items-center gap-2 text-success text-sm mt-2">
-              <CheckCircle2 size={16} /> Pago excedido. Vuelto: $
-              {Math.abs(restante).toFixed(2)}
+              <CheckCircle2 size={16} /> Pago excedido. Vuelto:{" "}
+              {formatCurrency(Math.abs(restante), currency)}
               <br />
               <span className="text-xs text-default-500">
                 Nota: Ajuste el monto de efectivo para finalizar.

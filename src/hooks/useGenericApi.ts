@@ -35,7 +35,6 @@ export function useGenericApi<T extends { Id: number | string }>({
   // --- Fetch Query ---
   const fetchData = async ({ signal }: { signal: AbortSignal }) => {
     const params = new URLSearchParams();
-    // Usa "q" para búsqueda en todos los endpoints
     const searchParam = "q";
     if (search) params.append(searchParam, search);
     params.append("page", page.toString());

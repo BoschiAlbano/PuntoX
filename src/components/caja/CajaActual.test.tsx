@@ -15,6 +15,9 @@ vi.mock("@/hooks/useGastos", () => ({
 vi.mock("react-to-print", () => ({
   useReactToPrint: () => ({ contentRef: null }),
 }));
+vi.mock("@/hooks/useCurrency", () => ({
+  useCurrency: () => "ARS",
+}));
 
 import { useCaja } from "@/hooks/useCaja";
 import { useGastos } from "@/hooks/useGastos";

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useMemo, Suspense, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
@@ -49,6 +49,8 @@ import GraficaIngresos from "@/components/analiticas/GraficaIngresos";
 import GraficaPagos from "@/components/analiticas/GraficaPagos";
 import GraficaProductos from "@/components/analiticas/GraficaProductos";
 import PanelAlertas from "@/components/analiticas/PanelAlertas";
+import { useCurrency } from "@/hooks/useCurrency";
+import { formatCurrency } from "@/lib/utils/formatCurrency";
 
 // TODO: Reemplazar con datos reales del API cuando esté disponible
 // Endpoint esperado: GET /api/logs?fechaDesde=...&fechaHasta=...&usuario=...&accion=...&modulo=...&page=...&limit=...
@@ -221,6 +223,7 @@ function estadoColor(estado: string) {
 }
 
 function AnaliticasContent() {
+  const currency = useCurrency();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") || "dashboard";
   const queryClient = useQueryClient();
@@ -663,10 +666,7 @@ function AnaliticasContent() {
                             Total Gastos:
                           </span>
                           <span className="text-lg font-semibold">
-                            {new Intl.NumberFormat("es-AR", {
-                              style: "currency",
-                              currency: "ARS",
-                            }).format(complementariosData.gastos.total)}
+                            {formatCurrency(complementariosData.gastos.total, currency)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
@@ -674,10 +674,7 @@ function AnaliticasContent() {
                             Total Ganancia:
                           </span>
                           <span className="text-lg font-semibold text-green-600">
-                            {new Intl.NumberFormat("es-AR", {
-                              style: "currency",
-                              currency: "ARS",
-                            }).format(complementariosData.gastos.totalGanancia)}
+                            {formatCurrency(complementariosData.gastos.totalGanancia, currency)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
@@ -713,10 +710,7 @@ function AnaliticasContent() {
                                     {gasto.concepto}
                                   </span>
                                   <span className="font-medium">
-                                    {new Intl.NumberFormat("es-AR", {
-                                      style: "currency",
-                                      currency: "ARS",
-                                    }).format(gasto.monto)}
+                                    {formatCurrency(gasto.monto, currency)}
                                   </span>
                                 </div>
                               ))}

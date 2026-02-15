@@ -1,5 +1,7 @@
 import { useConfiguracion } from "@/hooks/useConfiguracion";
+import { useCurrency } from "@/hooks/useCurrency";
 import { TIPO_PAGO } from "@/lib/constants/comprobantes";
+import { formatCurrency } from "@/lib/utils/formatCurrency";
 import React, { forwardRef, useMemo } from "react";
 
 interface TicketProps {
@@ -18,7 +20,7 @@ interface TicketProps {
 
 export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
   ({ datosVenta }, ref) => {
-    console.log("datosVenta", datosVenta);
+    const currency = useCurrency();
     const { configuracion } = useConfiguracion({
       enableConfiguracion: true,
     });
@@ -151,7 +153,7 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
                 <td className="align-top">{item.cantidad}</td>
                 <td className="align-top pr-1">{item.Descripcion}</td>
                 <td className="text-right align-top">
-                  ${item.subtotal.toFixed(2)}
+                  {formatCurrency(item.subtotal, currency)}
                 </td>
               </tr>
             ))}
@@ -164,12 +166,12 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
         <div className="flex flex-col gap-1">
           <div className="flex justify-between">
             <span>Subtotal{calculatedData.isFacturaA ? " (Neto)" : ""}:</span>
-            <span>${calculatedData.subtotal.toFixed(2)}</span>
+            <span>{formatCurrency(calculatedData.subtotal, currency)}</span>
           </div>
           {calculatedData.descuento > 0 && (
             <div className="flex justify-between">
               <span>Descuento:</span>
-              <span>-${calculatedData.descuento.toFixed(2)}</span>
+              <span>-{formatCurrency(calculatedData.descuento, currency)}</span>
             </div>
           )}
 
@@ -181,14 +183,14 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
                 amount > 0 && (
                   <div key={rate} className="flex justify-between">
                     <span>IVA {rate}%:</span>
-                    <span>${amount.toFixed(2)}</span>
+                    <span>{formatCurrency(amount, currency)}</span>
                   </div>
                 ),
             )}
 
           <div className="flex justify-between font-bold text-sm mt-1">
             <span>TOTAL:</span>
-            <span>${datosVenta.total.toFixed(2)}</span>
+            <span>{formatCurrency(datosVenta.total, currency)}</span>
           </div>
         </div>
 
@@ -200,7 +202,7 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
           {datosVenta.formasPago.map((p: any, i: number) => (
             <div key={i} className="flex justify-between">
               <span>{getNombrePago(p.tipoPago)}</span>
-              <span>${p.monto.toFixed(2)}</span>
+              <span>{formatCurrency(p.monto, currency)}</span>
             </div>
           ))}
         </div>

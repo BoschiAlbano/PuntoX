@@ -5,6 +5,8 @@ import GenericTable, { Column } from "@/components/shared/GenericTable";
 import { useCajasQuery, CajasFilters } from "@/hooks/useCajasQuery";
 import { Caja } from "@/hooks/useCaja";
 import { Chip } from "@heroui/react";
+import { useCurrency } from "@/hooks/useCurrency";
+import { formatCurrency } from "@/lib/utils/formatCurrency";
 
 const columns: Column[] = [
   { uid: "status", name: "Estado", sortable: false, align: "center" },
@@ -14,14 +16,6 @@ const columns: Column[] = [
   { uid: "montoCierre", name: "Monto Cierre", sortable: false, align: "end" },
   { uid: "ganancia", name: "Ganancia", sortable: false, align: "end" },
 ];
-
-const formatMoney = (amount: number | null) => {
-  if (amount === null || amount === undefined) return "-";
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-  }).format(amount);
-};
 
 const formatDate = (dateStr: string | null) => {
   if (!dateStr) return "-";
@@ -35,6 +29,7 @@ const formatDate = (dateStr: string | null) => {
 };
 
 export default function Cajas() {
+  const currency = useCurrency();
   const [filters, setFilters] = useState<CajasFilters>({
     page: 1,
     limit: 10,
@@ -95,13 +90,19 @@ export default function Cajas() {
           </div>
         );
       case "montoInicial":
-        return formatMoney(item.MontoInicial);
+        return item.MontoInicial == null
+          ? "-"
+          : formatCurrency(item.MontoInicial, currency);
       case "montoCierre":
-        return formatMoney(item.MontoCierre);
+        return item.MontoCierre == null
+          ? "-"
+          : formatCurrency(item.MontoCierre, currency);
       case "ganancia":
         return (
           <span className={item.Ganancia >= 0 ? "text-success" : "text-danger"}>
-            {formatMoney(item.Ganancia)}
+            {item.Ganancia == null
+              ? "-"
+              : formatCurrency(item.Ganancia, currency)}
           </span>
         );
       default:

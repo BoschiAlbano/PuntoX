@@ -12,6 +12,8 @@ import {
   NumberInput,
 } from "@heroui/react";
 import { Trash2 } from "lucide-react";
+import { useCurrency } from "@/hooks/useCurrency";
+import { formatCurrency } from "@/lib/utils/formatCurrency";
 import { TiposVenta } from "../../../prisma/generated/prisma";
 
 interface VentaGridProps {
@@ -25,7 +27,7 @@ export default function VentaGrid({
   onUpdateQuantity,
   onRemoveItem,
 }: VentaGridProps) {
-  console.log(items);
+  const currency = useCurrency();
   return (
     <div className="flex-1 overflow-auto min-h-0 bg-content1 rounded-medium border-1 border-default-200">
       <Table
@@ -101,14 +103,13 @@ export default function VentaGrid({
                 />
               </TableCell>
               <TableCell>
-                <span className="font-mono">${item.precio.toFixed(2)}</span>
+                <span className="font-mono">
+                  {formatCurrency(item.precio, currency)}
+                </span>
               </TableCell>
               <TableCell>
                 <span className="font-mono font-bold text-[#67afc3]">
-                  $
-                  {(item.precio.toFixed(2) * item.cantidad.toFixed(2)).toFixed(
-                    2,
-                  )}
+                  {formatCurrency(item.precio * item.cantidad, currency)}
                 </span>
               </TableCell>
               <TableCell>
