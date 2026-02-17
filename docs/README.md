@@ -24,6 +24,8 @@ Bienvenido a la documentación del proyecto PuntoX.
 ### UX y Diseño
 
 - **[UX Improvements](./UX_IMPROVEMENTS.md)** - Mejoras visuales y de experiencia de usuario
+- **[Consistencia de formato páginas](./ui/consistencia-formato-paginas.md)** - Estilo estándar de contenedores, tabs y cards
+- **[Formato CRUD unificado](./ui/formato-crud.md)** - Modales, accordions y formularios (feb 2025)
   - Mejoras en headers (parallax, glow, sombras)
   - Skeleton loaders con shimmer effect
   - Micro-animaciones y transiciones

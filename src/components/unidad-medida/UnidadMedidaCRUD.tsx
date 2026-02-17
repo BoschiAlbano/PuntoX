@@ -12,7 +12,25 @@ export default function UnidadMedidaCRUD() {
       queryKey="unidades-medidas-generic"
       searchPlaceholder="Buscar unidades de medida..."
       FormComponent={UnidadMedidaForm}
-      // Definimos las columnas
+      renderRowPreview={(item) => (
+        <div className="space-y-4 text-sm">
+          <div>
+            <p className="text-slate-500 text-xs mb-0.5">Descripción</p>
+            <p className="font-medium text-slate-800">{item.Descripcion}</p>
+          </div>
+          <div>
+            <p className="text-slate-500 text-xs mb-0.5">Estado</p>
+            <span
+              className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                item.EstaEliminado ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+              }`}
+            >
+              {item.EstaEliminado ? "Inactivo" : "Activo"}
+            </span>
+          </div>
+        </div>
+      )}
+      getRowPreviewTitle={(item) => item.Descripcion || "Unidad de medida"}
       columns={[
         {
           uid: "Descripcion",

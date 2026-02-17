@@ -11,11 +11,14 @@ import {
   Input,
   Select,
   SelectItem,
+  Accordion,
+  AccordionItem,
+  Chip,
 } from "@heroui/react";
 import { GenericFormProps } from "@/components/shared/GenericCrud";
-import { Usuario } from "./UsuariosCRUD";
-import { Sucursal } from "../../../prisma/generated/prisma";
+import { Usuario, SucursalUsuario } from "./UsuariosCRUD";
 import { useUsuario } from "@/hooks/useUsuario";
+import { User, MapPin, UserCog } from "lucide-react";
 
 interface UsuarioFormData {
   nombre: string;
@@ -30,7 +33,7 @@ interface UsuarioFormData {
   nombreUsuario?: string;
   password?: string;
   rolId?: number | string | null;
-  sucursales?: Sucursal[] | null;
+  sucursales?: SucursalUsuario[] | null;
   personaId?: number | string;
 }
 
@@ -119,6 +122,54 @@ export default function UsuarioForm({
     });
   };
 
+  const inputClassNames = {
+    inputWrapper:
+      "bg-white border border-[#e5e7eb] shadow-none hover:border-[#e0e0e0] focus-within:!border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/20",
+  };
+
+  function getUsuarioSectionStatus(data: UsuarioFormData) {
+    const personal =
+      (data.nombre?.trim() ?? "").length > 0 &&
+      (data.apellido?.trim() ?? "").length > 0 &&
+      (data.direccion?.trim() ?? "").length > 0;
+    const ubicacion = !!data.localidadId;
+    const usuario = isEdit
+      ? true
+      : (data.nombreUsuario?.trim() ?? "").length > 0 &&
+        (data.password?.trim() ?? "").length >= 8;
+    return { personal, ubicacion, usuario };
+  }
+
+  const sectionStatus = getUsuarioSectionStatus(formData);
+
+  const SectionTitle = ({
+    icon: Icon,
+    label,
+    isComplete,
+  }: {
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    isComplete: boolean;
+  }) => (
+    <div className="flex items-center justify-between w-full gap-2 pr-2">
+      <div className="flex items-center gap-2 min-w-0">
+        <Icon className="w-4 h-4 text-[#67afc3] shrink-0" />
+        <span>{label}</span>
+      </div>
+      <Chip
+        size="sm"
+        variant="flat"
+        className={
+          isComplete
+            ? "bg-[#90c472]/15 text-[#90c472] border-0 shrink-0"
+            : "bg-[#f59e0b]/15 text-[#f59e0b] border-0 shrink-0"
+        }
+      >
+        {isComplete ? "Completo" : "Pendiente"}
+      </Chip>
+    </div>
+  );
+
   const handleSubmit = () => {
     // Preparar payload según si es creación o edición
     if (isEdit) {
@@ -172,31 +223,65 @@ export default function UsuarioForm({
       isOpen={isOpen}
       onClose={onClose}
       size="2xl"
+      placement="center"
+      backdrop="opaque"
+      isDismissable={!isSaving}
       scrollBehavior="inside"
       classNames={{
-        base: "max-h-[90vh]",
-        body: "py-6",
+        backdrop: "bg-black/50 backdrop-blur-sm",
+        base: "font-sans bg-white rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.08)] border border-[#e5e7eb] max-w-[820px] max-h-[90vh] overflow-hidden",
+        header:
+          "border-t-[3px] border-t-[#67afc3] border-b border-[#e5e7eb] bg-[#67afc3]/5 rounded-t-2xl",
+        body: "py-0 overflow-y-auto overflow-x-hidden",
+        footer: "border-t border-[#e5e7eb] bg-[#f8fafc] rounded-b-2xl",
+        closeButton:
+          "hover:bg-[#67afc3]/10 hover:text-[#67afc3] rounded-full p-1.5 transition-colors text-[#6b7280]",
       }}
     >
       <ModalContent>
-        <ModalHeader className="flex flex-col gap-1">
-          {isEdit ? "Editar Empleado" : "Nuevo Empleado"}
+        <ModalHeader className="flex flex-col gap-1 py-6 px-6">
+          <h3 className="text-[28px] font-bold text-[#0f172a] leading-tight">
+            {isEdit ? "Editar Empleado" : "Nuevo Empleado"}
+          </h3>
+          {!isEdit && (
+            <p className="text-sm text-[#6b7280] mt-1">
+              Completa la información del empleado
+            </p>
+          )}
         </ModalHeader>
-        <ModalBody>
-          <div className="space-y-4">
-            {/* Información Personal */}
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                Información Personal
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
+        <ModalBody className="p-0">
+          <div className="px-6 py-6">
+            <Accordion
+              aria-label="Opciones del empleado"
+              defaultSelectedKeys={["personal"]}
+              selectionMode="single"
+              variant="bordered"
+              motionProps={{
+                transition: { duration: 0.18, ease: "easeInOut" },
+              }}
+              className="gap-3 overflow-visible"
+            >
+              <AccordionItem
+                key="personal"
+                aria-label="Información Personal"
+                title={
+                  <SectionTitle
+                    icon={User}
+                    label="Información Personal"
+                    isComplete={sectionStatus.personal}
+                  />
+                }
+              >
+                <div className="space-y-5 pt-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
                   label="Nombre"
                   placeholder="Ingrese el nombre"
                   value={formData.nombre}
                   onValueChange={(value) => handleChange("nombre", value)}
                   isRequired
                   isDisabled={isSaving}
+                  classNames={inputClassNames}
                 />
                 <Input
                   label="Apellido"
@@ -205,6 +290,7 @@ export default function UsuarioForm({
                   onValueChange={(value) => handleChange("apellido", value)}
                   isRequired
                   isDisabled={isSaving}
+                  classNames={inputClassNames}
                 />
                 <Input
                   label="DNI"
@@ -213,6 +299,7 @@ export default function UsuarioForm({
                   value={formData.dni || ""}
                   onValueChange={(value) => handleChange("dni", value || null)}
                   isDisabled={isSaving}
+                  classNames={inputClassNames}
                 />
                 <Input
                   label="Teléfono"
@@ -223,6 +310,7 @@ export default function UsuarioForm({
                     handleChange("telefono", value || null)
                   }
                   isDisabled={isSaving}
+                  classNames={inputClassNames}
                 />
                 <Input
                   label="Dirección"
@@ -232,16 +320,25 @@ export default function UsuarioForm({
                   isRequired
                   isDisabled={isSaving}
                   className="md:col-span-2"
+                  classNames={inputClassNames}
                 />
-              </div>
-            </div>
+                  </div>
+                </div>
+              </AccordionItem>
 
-            {/* Ubicación */}
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                Ubicación
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <AccordionItem
+                key="ubicacion"
+                aria-label="Ubicación"
+                title={
+                  <SectionTitle
+                    icon={MapPin}
+                    label="Ubicación"
+                    isComplete={sectionStatus.ubicacion}
+                  />
+                }
+              >
+                <div className="space-y-5 pt-5">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Select
                   label="Provincia"
                   placeholder="Seleccione una provincia"
@@ -250,10 +347,9 @@ export default function UsuarioForm({
                       ? [formData.provinciaId.toString()]
                       : []
                   }
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handleChange("provinciaId", Number(e.target.value));
-                    }
+                  onSelectionChange={(keys) => {
+                    const val = Array.from(keys)[0];
+                    if (val) handleChange("provinciaId", Number(val));
                   }}
                   isLoading={isLoadingProvincias}
                   isDisabled={isSaving}
@@ -276,10 +372,9 @@ export default function UsuarioForm({
                       ? [formData.departamentoId.toString()]
                       : []
                   }
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handleChange("departamentoId", Number(e.target.value));
-                    }
+                  onSelectionChange={(keys) => {
+                    const val = Array.from(keys)[0];
+                    if (val) handleChange("departamentoId", Number(val));
                   }}
                   isLoading={isLoadingDepartamentos}
                   isDisabled={isSaving || !formData.provinciaId}
@@ -304,16 +399,15 @@ export default function UsuarioForm({
                       ? [formData.localidadId.toString()]
                       : []
                   }
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handleChange("localidadId", Number(e.target.value));
-                    }
+                  onSelectionChange={(keys) => {
+                    const val = Array.from(keys)[0];
+                    if (val) handleChange("localidadId", val);
                   }}
                   isLoading={isLoadingLocalidades}
                   isDisabled={isSaving || !formData.departamentoId}
                   isRequired
                 >
-                  {localidades.map((localidad: any) => (
+                    {localidades.map((localidad: any) => (
                     <SelectItem
                       key={String(localidad.id || localidad.Id)}
                       textValue={localidad.Descripcion || localidad.descripcion}
@@ -322,15 +416,23 @@ export default function UsuarioForm({
                     </SelectItem>
                   ))}
                 </Select>
-              </div>
-            </div>
+                  </div>
+                </div>
+              </AccordionItem>
 
-            {/* Información de Usuario */}
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                Información de Usuario
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <AccordionItem
+                key="usuario"
+                aria-label="Información de Usuario"
+                title={
+                  <SectionTitle
+                    icon={UserCog}
+                    label="Información de Usuario"
+                    isComplete={sectionStatus.usuario}
+                  />
+                }
+              >
+                <div className="space-y-5 pt-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {!isEdit && (
                   <>
                     <Input
@@ -342,6 +444,7 @@ export default function UsuarioForm({
                       }
                       isRequired
                       isDisabled={isSaving}
+                      classNames={inputClassNames}
                     />
                     <Input
                       label="Contraseña"
@@ -351,22 +454,22 @@ export default function UsuarioForm({
                       onValueChange={(value) => handleChange("password", value)}
                       isRequired
                       isDisabled={isSaving}
+                      classNames={inputClassNames}
+                    />
+                    <Input
+                      label="Email (Opcional)"
+                      placeholder="Ingrese el email (opcional)"
+                      type="email"
+                      value={formData.mail || ""}
+                      onValueChange={(value) =>
+                        handleChange("mail", value || undefined)
+                      }
+                      isDisabled={isSaving}
+                      className="md:col-span-2"
+                      description="Si no se proporciona, se generará automáticamente"
+                      classNames={inputClassNames}
                     />
                   </>
-                )}
-                {!isEdit && (
-                  <Input
-                    label="Email (Opcional)"
-                    placeholder="Ingrese el email (opcional)"
-                    type="email"
-                    value={formData.mail || ""}
-                    onValueChange={(value) =>
-                      handleChange("mail", value || undefined)
-                    }
-                    isDisabled={isSaving}
-                    className="md:col-span-2"
-                    description="Si no se proporciona, se generará automáticamente"
-                  />
                 )}
                 <Select
                   label="Rol"
@@ -374,10 +477,9 @@ export default function UsuarioForm({
                   selectedKeys={
                     formData.rolId ? [formData.rolId.toString()] : []
                   }
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handleChange("rolId", Number(e.target.value));
-                    }
+                  onSelectionChange={(keys) => {
+                    const val = Array.from(keys)[0];
+                    if (val) handleChange("rolId", Number(val));
                   }}
                   isLoading={isLoadingRoles}
                   isDisabled={
@@ -447,21 +549,22 @@ export default function UsuarioForm({
                     </SelectItem>
                   ))}
                 </Select>
-              </div>
-            </div>
+                  </div>
+                </div>
+              </AccordionItem>
+            </Accordion>
           </div>
         </ModalBody>
-        <ModalFooter>
+        <ModalFooter className="py-5 px-6 gap-3">
           <Button
-            color="danger"
             variant="light"
             onPress={onClose}
             isDisabled={isSaving}
+            className="font-medium text-[#6b7280] hover:bg-[#f1f5f9] h-11 px-5 rounded-[10px]"
           >
             Cancelar
           </Button>
           <Button
-            color="primary"
             onPress={handleSubmit}
             isLoading={isSaving}
             isDisabled={
@@ -471,6 +574,7 @@ export default function UsuarioForm({
               !formData.localidadId ||
               (!isEdit && (!formData.nombreUsuario || !formData.password))
             }
+            className="bg-[#67afc3] hover:bg-[#4a8d9e] text-white font-semibold h-11 px-6 rounded-[10px] shadow-sm hover:shadow transition-shadow focus-visible:ring-2 focus-visible:ring-[#67afc3]/40"
           >
             {isEdit ? "Actualizar" : "Crear"}
           </Button>

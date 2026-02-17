@@ -57,6 +57,14 @@ interface GenericCrudProps<T> {
   additionalInvalidateQueryKeys?: any[];
   onImportClick?: () => void;
   onExportClick?: () => void;
+  /** @deprecated Use renderRowPreview instead */
+  onRowClick?: (item: T, openEdit: () => void) => void;
+  /** Contenido del modal de vista previa al hacer click en la fila */
+  renderRowPreview?: (item: T) => React.ReactNode;
+  /** Título del modal de vista previa */
+  getRowPreviewTitle?: (item: T) => string;
+  /** Mostrar botón Editar en el preview (false para CRUDs de solo lectura) */
+  showEditInPreview?: boolean;
 }
 
 export default function GenericCrud<T extends { Id: number | string }>({
@@ -71,6 +79,10 @@ export default function GenericCrud<T extends { Id: number | string }>({
   additionalInvalidateQueryKeys,
   onImportClick,
   onExportClick,
+  onRowClick,
+  renderRowPreview,
+  getRowPreviewTitle,
+  showEditInPreview = true,
 }: GenericCrudProps<T>) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
@@ -81,6 +93,9 @@ export default function GenericCrud<T extends { Id: number | string }>({
 
   const [selectedItem, setSelectedItem] = useState<T | null>(null);
   const [itemToDelete, setItemToDelete] = useState<T | null>(null);
+  const [previewItem, setPreviewItem] = useState<T | null>(null);
+
+  const hasRowPreview = !!renderRowPreview || !!onRowClick;
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -262,6 +277,17 @@ export default function GenericCrud<T extends { Id: number | string }>({
         isRefreshing={isRefreshing}
         onImportClick={onImportClick}
         onExportClick={onExportClick}
+        onRowClick={
+          hasRowPreview
+            ? (item) => {
+                if (renderRowPreview) {
+                  setPreviewItem(item);
+                } else if (onRowClick) {
+                  onRowClick(item, () => handleEdit(item));
+                }
+              }
+            : undefined
+        }
       />
 
       {/* Modal de Formulario */}
@@ -273,6 +299,50 @@ export default function GenericCrud<T extends { Id: number | string }>({
           onSubmit={handleSave}
           isSaving={isSaving}
         />
+      )}
+
+      {/* Modal de Vista Previa (al hacer click en fila) */}
+      {renderRowPreview && previewItem && (
+        <Modal
+          isOpen={!!previewItem}
+          onClose={() => setPreviewItem(null)}
+          size="md"
+          scrollBehavior="inside"
+          classNames={{
+            backdrop: "bg-black/40",
+            base: "rounded-xl shadow-xl",
+          }}
+        >
+          <ModalContent>
+            <ModalHeader className="border-b border-gray-200">
+              {getRowPreviewTitle
+                ? getRowPreviewTitle(previewItem)
+                : "Detalle"}
+            </ModalHeader>
+            <ModalBody className="py-4">
+              {renderRowPreview(previewItem)}
+            </ModalBody>
+            <ModalFooter className="border-t border-gray-200">
+              <Button
+                variant="light"
+                onPress={() => setPreviewItem(null)}
+              >
+                Cerrar
+              </Button>
+              {showEditInPreview && (
+                <Button
+                  className="bg-[#67afc3] hover:bg-[#5a9db0] text-white"
+                  onPress={() => {
+                    handleEdit(previewItem);
+                    setPreviewItem(null);
+                  }}
+                >
+                  Editar
+                </Button>
+              )}
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       )}
 
       {/* Modal de Eliminación Genérico */}

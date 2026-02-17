@@ -50,6 +50,7 @@ interface GenericTableProps<T> {
   onExportClick?: () => void;
   onRefresh?: () => void;
   isRefreshing?: boolean;
+  onRowClick?: (item: T) => void;
 }
 
 export default function GenericTable<T extends { Id: number | string }>({
@@ -73,6 +74,7 @@ export default function GenericTable<T extends { Id: number | string }>({
   onExportClick,
   onRefresh,
   isRefreshing = false,
+  onRowClick,
 }: GenericTableProps<T>) {
   const [searchInput, setSearchInput] = useState(search);
   const tablePrintRef = useRef<HTMLDivElement>(null);
@@ -185,7 +187,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                   <DropdownItem
                     key="imprimir"
                     startContent={<Printer size={16} />}
-                    onPress={handlePrint}
+                    onPress={() => handlePrint()}
                   >
                     Imprimir
                   </DropdownItem>
@@ -365,12 +367,25 @@ export default function GenericTable<T extends { Id: number | string }>({
                 return (
                   <TableRow
                     key={item.Id}
-                    className="transition-all duration-200 hover:bg-linear-to-r hover:from-blue-50 hover:to-sky-50 cursor-pointer rounded-lg"
+                    className="transition-all duration-200 hover:bg-linear-to-r hover:from-blue-50 hover:to-sky-50 rounded-lg"
                     tabIndex={0}
                     aria-label={`Fila ${item.Id}`}
+                    onClick={onRowClick ? () => onRowClick(item) : undefined}
+                    style={
+                      onRowClick
+                        ? { cursor: "pointer" }
+                        : undefined
+                    }
                   >
                     {(columnKey) => (
-                      <TableCell className="">
+                      <TableCell
+                        className=""
+                        onClick={
+                          columnKey === "acciones"
+                            ? (e) => e.stopPropagation()
+                            : undefined
+                        }
+                      >
                         {renderCell(item, columnKey)}
                       </TableCell>
                     )}

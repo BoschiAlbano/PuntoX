@@ -4,6 +4,80 @@ Historial completo de cambios, mejoras y correcciones del proyecto.
 
 ---
 
+## Febrero 2025
+
+### Sesión: Unificación de formato CRUD y corrección de bugs
+
+**Fecha:** Febrero 2025  
+**Rama:** `Varela-features-v1`
+
+#### Formato unificado en formularios CRUD
+
+- ✅ **Estilo de modal tipo panel administrativo**
+  - Aplicado a todos los formularios: Marca, Rubro, Unidad de Medida, Cliente, Producto, Usuario
+  - Modal con bordes redondeados (`rounded-2xl`), sombra y borde `#e5e7eb`
+  - Header con acento superior 3px `#67afc3` y fondo `#67afc3/5`
+  - Footer con borde y fondo `#f8fafc`
+  - Botón cerrar con hover `#67afc3/10`
+  - Título 28px, subtexto "Completa la información..." en creación
+
+- ✅ **Inputs unificados**
+  - `inputClassNames` con borde `#e5e7eb`, focus `#67afc3` y ring suave
+  - Aplicado en MarcaForm, RubroForm, UnidadMedidaForm, ClienteForm, UsuarioForm, ProductoForm
+
+- ✅ **Botones consistentes**
+  - Cancelar: variant light, hover gris `#f1f5f9`
+  - Crear/Actualizar: fondo `#67afc3`, hover `#4a8d9e`, altura 11, bordes redondeados
+
+- ✅ **Formularios con Accordion (Cliente, Usuario, Producto)**
+  - Secciones colapsables con chips Completo/Pendiente
+  - Íconos por sección (User, MapPin, CreditCard, FileText, Tags, DollarSign, Package, Settings)
+  - Lógica de completitud en tiempo real
+  - Paleta: `#67afc3`, `#90c472`, `#f59e0b`, `#e5e7eb`, `#0f172a`
+
+- ✅ **Formularios simples (Marca, Rubro, Unidad de Medida)**
+  - Mismo estilo de modal sin accordion (contenido lineal)
+
+#### Mejoras en ProductoForm
+
+- ✅ Consolidación de imports (`addToast` en import principal)
+- ✅ Renombrado `fetchUnidadesv` → `fetchUnidadesMedida`
+- ✅ Accordion con `className` en lugar de `classNames` (compatibilidad TypeScript/HeroUI)
+
+#### API de productos
+
+- ✅ **GET /api/productos/[id]**
+  - Include ampliado: Marca, Rubro, UnidadMedida, Iva
+  - Campo `SucursalNombre` en respuesta para formulario de edición
+
+#### Correcciones de bugs
+
+- ✅ **UsuariosCRUD – EsDefault**
+  - Tipo `SucursalUsuario` creado con `{ Id, Nombre, EsDefault }`
+  - `Usuario.sucursales` tipado correctamente según respuesta de API
+  - UsuarioForm actualizado para usar `SucursalUsuario`
+
+- ✅ **GenericTable – handlePrint**
+  - `onPress={handlePrint}` → `onPress={() => handlePrint()}` para compatibilidad con `PressEvent` de HeroUI
+
+- ✅ Eliminado `console.log` en ClienteForm
+- ✅ Validación `producto.schema.ts`: `.min(1)` en MarcaId, RubroId, UnidadMedidaId, IvaId
+
+#### Archivos modificados
+
+- `src/components/marcas/MarcaForm.tsx`
+- `src/components/rubros/RubroForm.tsx`
+- `src/components/unidad-medida/UnidadMedidaForm.tsx`
+- `src/components/clientes/ClienteForm.tsx`
+- `src/components/empleados/UsuarioForm.tsx`
+- `src/components/empleados/UsuariosCRUD.tsx`
+- `src/components/productos/ProductoForm.tsx`
+- `src/components/shared/GenericTable.tsx`
+- `src/app/api/productos/[id]/route.ts`
+- `src/lib/validations/producto.schema.ts`
+
+---
+
 ## Enero 2025
 
 ### Sesión: Implementación de Login por Username y Mejoras en Configuración
@@ -484,5 +558,5 @@ Ver [ROADMAP.md](./ROADMAP.md) para plan detallado de mejoras futuras.
 
 ---
 
-**Última actualización:** Diciembre 2024
+**Última actualización:** Febrero 2025
 

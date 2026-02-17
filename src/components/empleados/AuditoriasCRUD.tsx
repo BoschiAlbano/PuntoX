@@ -61,6 +61,46 @@ export default function AuditoriasCRUD() {
       searchPlaceholder="Buscar por usuario, acción o IP..."
       initialLimit={10}
       transformer={transformer}
+      showEditInPreview={false}
+      renderRowPreview={(item) => (
+        <div className="space-y-4 text-sm">
+          <div>
+            <p className="text-slate-500 text-xs mb-0.5">Usuario</p>
+            <p className="font-medium text-slate-800">{item.usuario}</p>
+          </div>
+          <div>
+            <p className="text-slate-500 text-xs mb-0.5">Acción</p>
+            <p className="font-medium">{formatearAccion({ accion: item.accion, detalle: item.detalles ?? undefined })}</p>
+          </div>
+          {item.detalles && (
+            <div>
+              <p className="text-slate-500 text-xs mb-0.5">Detalles</p>
+              <p className="text-slate-700">{item.detalles}</p>
+            </div>
+          )}
+          <div>
+            <p className="text-slate-500 text-xs mb-0.5">Fecha</p>
+            <p className="font-medium">{new Date(item.fechaHora).toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-slate-500 text-xs mb-0.5">Estado</p>
+            <span
+              className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                item.exitoso ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+              }`}
+            >
+              {item.exitoso ? "Exitoso" : "Fallido"}
+            </span>
+          </div>
+          {item.ipAddress && (
+            <div>
+              <p className="text-slate-500 text-xs mb-0.5">IP</p>
+              <p className="font-mono text-xs">{item.ipAddress}</p>
+            </div>
+          )}
+        </div>
+      )}
+      getRowPreviewTitle={(item) => `Auditoría - ${item.usuario}`}
       columns={[
         { uid: "usuario", name: "USUARIO", sortable: true },
         { uid: "accion", name: "ACCIÓN", sortable: false },

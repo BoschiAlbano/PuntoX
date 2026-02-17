@@ -2,13 +2,23 @@ import { z } from "zod";
 import { TiposVenta } from "../../../prisma/generated/prisma";
 
 export const createProductoSchema = z.object({
-  // Relaciones (IDs) - Se esperan números
-  MarcaId: z.number().int({ message: "MarcaId debe ser un entero" }),
-  RubroId: z.number().int({ message: "RubroId debe ser un entero" }),
+  // Relaciones (IDs) - Se esperan números mayores a 0
+  MarcaId: z
+    .number()
+    .int({ message: "MarcaId debe ser un entero" })
+    .min(1, { message: "Seleccione una marca" }),
+  RubroId: z
+    .number()
+    .int({ message: "RubroId debe ser un entero" })
+    .min(1, { message: "Seleccione un rubro" }),
   UnidadMedidaId: z
     .number()
-    .int({ message: "UnidadMedidaId debe ser un entero" }),
-  IvaId: z.number().int({ message: "IvaId debe ser un entero" }),
+    .int({ message: "UnidadMedidaId debe ser un entero" })
+    .min(1, { message: "Seleccione una unidad de medida" }),
+  IvaId: z
+    .number()
+    .int({ message: "IvaId debe ser un entero" })
+    .min(1, { message: "Seleccione un IVA" }),
 
   // Identificación
   Codigo: z.number().int({ message: "El código debe ser un número entero" }),

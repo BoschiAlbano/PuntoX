@@ -28,6 +28,10 @@ export async function GET(
       },
       include: {
         Precio: true,
+        Marca: { select: { Descripcion: true } },
+        Rubro: { select: { Descripcion: true } },
+        UnidadMedida: { select: { Descripcion: true } },
+        Iva: { select: { Descripcion: true, Porcentaje: true } },
         ArticuloStock: {
           where: {
             SucursalId: BigInt(sucursalId),
@@ -103,6 +107,7 @@ export async function GET(
         : Number(producto.StockMinimo),
 
       Stock: stockSucursal ? Number(stockSucursal.Stock) : Number(0),
+      SucursalNombre: stockSucursal?.Sucursal?.Nombre ?? null,
     };
 
     return NextResponse.json(response);
