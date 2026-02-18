@@ -26,13 +26,12 @@ Bienvenido a la documentación del proyecto PuntoX.
 - **[UX Improvements](./UX_IMPROVEMENTS.md)** - Mejoras visuales y de experiencia de usuario
 - **[Consistencia de formato páginas](./ui/consistencia-formato-paginas.md)** - Estilo estándar de contenedores, tabs y cards
 - **[Formato CRUD unificado](./ui/formato-crud.md)** - Modales, accordions y formularios (feb 2025)
-  - Mejoras en headers (parallax, glow, sombras)
-  - Skeleton loaders con shimmer effect
-  - Micro-animaciones y transiciones
-  - Accesibilidad mejorada
-  - Responsive design
-  - Optimizaciones de performance
-  - Tabs mejoradas
+- **[CRUD y tablas genéricas](./ui/crud-tablas-genericas.md)** - Acciones masivas, filtros, paginación, React Query (feb 2025)
+
+### Rendimiento
+
+- **[Optimizaciones - Índice](./OPTIMIZACIONES.md)** - Punto de entrada a toda la documentación de optimizaciones
+- **[Optimizaciones de peticiones](./OPTIMIZACIONES_PETICIONES.md)** - React Query, debounce, cache
 
 ### Próximamente
 
@@ -85,4 +84,4 @@ Para contribuir al proyecto, por favor revisa la documentación específica de c
 
 ---
 
-Última actualización: Diciembre 2024
+Última actualización: Febrero 2025

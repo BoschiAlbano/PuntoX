@@ -4,7 +4,8 @@ import GenericCrud from "@/components/shared/GenericCrud";
 import ClienteForm from "./ClienteForm";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
-import { Chip, Tooltip } from "@heroui/react";
+import { Chip, Tooltip, addToast } from "@heroui/react";
+import { exportToCsv } from "@/lib/utils/exportCsv";
 import { DeleteButton, EditButton } from "@/components/shared/TableActions";
 import { clienteListAdapter } from "@/lib/adapters/cliente.adapter";
 import { Cliente } from "@/lib/validations/cliente.schema";
@@ -100,6 +101,62 @@ export default function ClienteCRUD() {
         </div>
       )}
       getRowPreviewTitle={(item) => `${item.Nombre} ${item.Apellido}`}
+      enableBulkActions
+      bulkActionsDropdown={[
+        {
+          key: "cambiar-estado",
+          label: "Cambiar estado",
+          onAction: (items) => {
+            addToast({ title: "Cambiar estado", description: `${items.length} cliente(s)` });
+          },
+        },
+        {
+          key: "editar-campos",
+          label: "Editar campos comunes",
+          onAction: (items) => {
+            addToast({ title: "Editar campos", description: `${items.length} cliente(s)` });
+          },
+        },
+        {
+          key: "exportar",
+          label: "Exportar seleccionados",
+          onAction: (items) => {
+            const data = items.map((c) => ({
+              Nombre: c.Nombre,
+              Apellido: c.Apellido,
+              Dni: c.Dni ?? "",
+              Mail: c.Mail ?? "",
+              Telefono: c.Telefono ?? "",
+              Direccion: c.Direccion ?? "",
+              Localidad: c.Localidad ?? "",
+              CondicionIva: c.CondicionIva ?? "",
+              ActivarCtaCte: c.ActivarCtaCte ? "Sí" : "No",
+              MontoMaximoCtaCte: c.MontoMaximoCtaCte ?? 0,
+            }));
+            exportToCsv(
+              data,
+              [
+                { key: "Nombre", header: "Nombre" },
+                { key: "Apellido", header: "Apellido" },
+                { key: "Dni", header: "DNI" },
+                { key: "Mail", header: "Email" },
+                { key: "Telefono", header: "Teléfono" },
+                { key: "Direccion", header: "Dirección" },
+                { key: "Localidad", header: "Localidad" },
+                { key: "CondicionIva", header: "Cond. IVA" },
+                { key: "ActivarCtaCte", header: "Cta. Cte." },
+                { key: "MontoMaximoCtaCte", header: "Límite Cta. Cte." },
+              ],
+              "clientes"
+            );
+            addToast({
+              title: "Exportado",
+              description: `${items.length} cliente${items.length !== 1 ? "s" : ""} exportado${items.length !== 1 ? "s" : ""}`,
+              color: "success",
+            });
+          },
+        },
+      ]}
       columns={[
         {
           uid: "nombreCompleto",

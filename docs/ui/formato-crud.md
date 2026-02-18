@@ -79,6 +79,10 @@ Producto, Cliente y Usuario usan `Accordion` + `AccordionItem` con:
 
 Marca, Rubro y Unidad de Medida usan el mismo modal sin accordion: contenido lineal con inputs y switch de estado.
 
+## Relacionado
+
+- **[CRUD y tablas genéricas](./crud-tablas-genericas.md)** - Acciones masivas, paginación, filtros y optimizaciones de tablas
+
 ## Archivos afectados
 
 - `src/components/marcas/MarcaForm.tsx`

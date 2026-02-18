@@ -1,13 +1,52 @@
 "use client";
 
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import GenericCrud from "@/components/shared/GenericCrud";
 import RubroForm, { Rubro } from "./RubroForm";
-import { Chip } from "@heroui/react";
+import { Chip, addToast } from "@heroui/react";
 import { DeleteButton, EditButton } from "@/components/shared/TableActions";
+import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
+import { BulkEditarCamposModal } from "@/components/shared/BulkEditarCamposModal";
+import { exportToCsv } from "@/lib/utils/exportCsv";
+
+async function bulkPatchRubros(
+  ids: (number | string)[],
+  data: { EstaEliminado?: boolean; Descripcion?: string }
+) {
+  for (const id of ids) {
+    const res = await fetch("/api/rubros", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ Id: id, ...data }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error || err?.message || "Error al actualizar");
+    }
+  }
+}
 
 export default function RubroCRUD() {
+  const queryClient = useQueryClient();
+  const [bulkEstadoModal, setBulkEstadoModal] = useState<{
+    open: boolean;
+    items: Rubro[];
+    clearSelection?: () => void;
+  }>({ open: false, items: [] });
+  const [bulkEditarModal, setBulkEditarModal] = useState<{
+    open: boolean;
+    items: Rubro[];
+    clearSelection?: () => void;
+  }>({ open: false, items: [] });
+
+  const invalidateRubros = () => {
+    queryClient.invalidateQueries({ queryKey: ["rubros-generic"] });
+  };
+
   return (
-    <GenericCrud<Rubro>
+    <>
+      <GenericCrud<Rubro>
       apiPath="/api/rubros"
       queryKey="rubros-generic"
       searchPlaceholder="Buscar rubros..."
@@ -31,6 +70,48 @@ export default function RubroCRUD() {
         </div>
       )}
       getRowPreviewTitle={(item) => item.Descripcion || "Rubro"}
+      enableBulkActions
+      bulkActionsDropdown={[
+        {
+          key: "cambiar-estado",
+          label: "Cambiar estado",
+          onAction: (items, { clearSelection }) => {
+            setBulkEstadoModal({ open: true, items, clearSelection });
+          },
+        },
+        {
+          key: "editar-campos",
+          label: "Editar campos comunes",
+          onAction: (items, { clearSelection }) => {
+            setBulkEditarModal({ open: true, items, clearSelection });
+          },
+        },
+        {
+          key: "exportar",
+          label: "Exportar seleccionados",
+          onAction: (items) => {
+            const data = items.map((r) => ({
+              Id: r.Id,
+              Descripcion: r.Descripcion ?? "",
+              Estado: r.EstaEliminado ? "Inactivo" : "Activo",
+            }));
+            exportToCsv(
+              data,
+              [
+                { key: "Id", header: "ID" },
+                { key: "Descripcion", header: "Descripción" },
+                { key: "Estado", header: "Estado" },
+              ],
+              "rubros"
+            );
+            addToast({
+              title: "Exportado",
+              description: `${items.length} rubro${items.length !== 1 ? "s" : ""} exportado${items.length !== 1 ? "s" : ""}`,
+              color: "success",
+            });
+          },
+        },
+      ]}
       columns={[
         {
           uid: "Descripcion",
@@ -80,5 +161,43 @@ export default function RubroCRUD() {
         }
       }}
     />
+
+      <BulkCambiarEstadoModal<Rubro>
+        isOpen={bulkEstadoModal.open}
+        onClose={() => setBulkEstadoModal({ open: false, items: [] })}
+        items={bulkEstadoModal.items}
+        entityLabel="rubro"
+        getCurrentEstado={(r) => !!r.EstaEliminado}
+        onConfirm={async (ids, nuevoEstado) => {
+          await bulkPatchRubros(ids, { EstaEliminado: !nuevoEstado });
+        }}
+        onSuccess={() => {
+          bulkEstadoModal.clearSelection?.();
+          invalidateRubros();
+        }}
+      />
+
+      <BulkEditarCamposModal<Rubro>
+        isOpen={bulkEditarModal.open}
+        onClose={() => setBulkEditarModal({ open: false, items: [] })}
+        items={bulkEditarModal.items}
+        entityLabel="rubro"
+        fields={[
+          {
+            key: "Descripcion",
+            label: "Descripción",
+            type: "text",
+            placeholder: "Ej: Bebidas",
+          },
+        ]}
+        onConfirm={async (ids, values) => {
+          await bulkPatchRubros(ids, values);
+        }}
+        onSuccess={() => {
+          bulkEditarModal.clearSelection?.();
+          invalidateRubros();
+        }}
+      />
+    </>
   );
 }

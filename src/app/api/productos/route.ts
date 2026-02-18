@@ -24,6 +24,9 @@ export async function GET(req: NextRequest) {
 
     const pagination = parsePaginationParams(req);
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
+    const bajoStock =
+      req.nextUrl.searchParams.get("bajoStock")?.toLowerCase() === "true";
+
     // Construir where clause
     const where: {
       TenantId: bigint;
@@ -42,6 +45,38 @@ export async function GET(req: NextRequest) {
         { Descripcion: { contains: search, mode: "insensitive" } },
         { CodigoBarra: { contains: search, mode: "insensitive" } },
       ];
+    }
+
+    // Filtro bajo stock: requiere comparar Stock <= StockMinimo en DB (usa raw)
+    let articuloIdsBajoStock: bigint[] = [];
+    if (bajoStock) {
+      const raw =
+        sucursalId && sucursalId !== 0
+          ? await prisma.$queryRaw<{ Id: bigint }[]>`
+              SELECT a."Id"
+              FROM "Articulo" a
+              LEFT JOIN "ArticuloStock" ast ON ast."ArticuloId" = a."Id" AND ast."SucursalId" = ${BigInt(sucursalId)}
+              WHERE a."TenantId" = ${BigInt(tenantId)}
+                AND a."EstaEliminado" = false
+                AND (COALESCE(ast."StockMinimo", a."StockMinimo") > 0)
+                AND (COALESCE(ast."Stock", 0)::numeric <= COALESCE(ast."StockMinimo", a."StockMinimo")::numeric)
+            `
+          : await prisma.$queryRaw<{ Id: bigint }[]>`
+              SELECT a."Id"
+              FROM "Articulo" a
+              WHERE a."TenantId" = ${BigInt(tenantId)}
+                AND a."EstaEliminado" = false
+                AND a."StockMinimo" > 0
+                AND a."Stock" <= a."StockMinimo"
+            `;
+      articuloIdsBajoStock = raw.map((r) => r.Id);
+      if (articuloIdsBajoStock.length === 0) {
+        return NextResponse.json(
+          createPaginationResponse([], 0, pagination),
+          { status: 200 },
+        );
+      }
+      (where as Record<string, unknown>).Id = { in: articuloIdsBajoStock };
     }
 
     // Obtener total para paginación

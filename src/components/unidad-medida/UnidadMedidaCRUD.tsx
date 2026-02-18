@@ -1,13 +1,52 @@
 "use client";
 
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import GenericCrud from "@/components/shared/GenericCrud";
 import UnidadMedidaForm, { UnidadMedida } from "./UnidadMedidaForm";
-import { Chip } from "@heroui/react";
+import { Chip, addToast } from "@heroui/react";
 import { DeleteButton, EditButton } from "@/components/shared/TableActions";
+import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
+import { BulkEditarCamposModal } from "@/components/shared/BulkEditarCamposModal";
+import { exportToCsv } from "@/lib/utils/exportCsv";
+
+async function bulkPatchUnidadesMedidas(
+  ids: (number | string)[],
+  data: { EstaEliminado?: boolean; Descripcion?: string }
+) {
+  for (const id of ids) {
+    const res = await fetch("/api/unidades-medidas", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ Id: id, ...data }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error || err?.message || "Error al actualizar");
+    }
+  }
+}
 
 export default function UnidadMedidaCRUD() {
+  const queryClient = useQueryClient();
+  const [bulkEstadoModal, setBulkEstadoModal] = useState<{
+    open: boolean;
+    items: UnidadMedida[];
+    clearSelection?: () => void;
+  }>({ open: false, items: [] });
+  const [bulkEditarModal, setBulkEditarModal] = useState<{
+    open: boolean;
+    items: UnidadMedida[];
+    clearSelection?: () => void;
+  }>({ open: false, items: [] });
+
+  const invalidateUnidadesMedidas = () => {
+    queryClient.invalidateQueries({ queryKey: ["unidades-medidas-generic"] });
+  };
+
   return (
-    <GenericCrud<UnidadMedida>
+    <>
+      <GenericCrud<UnidadMedida>
       apiPath="/api/unidades-medidas"
       queryKey="unidades-medidas-generic"
       searchPlaceholder="Buscar unidades de medida..."
@@ -31,6 +70,48 @@ export default function UnidadMedidaCRUD() {
         </div>
       )}
       getRowPreviewTitle={(item) => item.Descripcion || "Unidad de medida"}
+      enableBulkActions
+      bulkActionsDropdown={[
+        {
+          key: "cambiar-estado",
+          label: "Cambiar estado",
+          onAction: (items, { clearSelection }) => {
+            setBulkEstadoModal({ open: true, items, clearSelection });
+          },
+        },
+        {
+          key: "editar-campos",
+          label: "Editar campos comunes",
+          onAction: (items, { clearSelection }) => {
+            setBulkEditarModal({ open: true, items, clearSelection });
+          },
+        },
+        {
+          key: "exportar",
+          label: "Exportar seleccionados",
+          onAction: (items) => {
+            const data = items.map((u) => ({
+              Id: u.Id,
+              Descripcion: u.Descripcion ?? "",
+              Estado: u.EstaEliminado ? "Inactivo" : "Activo",
+            }));
+            exportToCsv(
+              data,
+              [
+                { key: "Id", header: "ID" },
+                { key: "Descripcion", header: "Descripción" },
+                { key: "Estado", header: "Estado" },
+              ],
+              "unidades-medida"
+            );
+            addToast({
+              title: "Exportado",
+              description: `${items.length} unidad${items.length !== 1 ? "es" : ""} exportada${items.length !== 1 ? "s" : ""}`,
+              color: "success",
+            });
+          },
+        },
+      ]}
       columns={[
         {
           uid: "Descripcion",
@@ -80,5 +161,43 @@ export default function UnidadMedidaCRUD() {
         }
       }}
     />
+
+      <BulkCambiarEstadoModal<UnidadMedida>
+        isOpen={bulkEstadoModal.open}
+        onClose={() => setBulkEstadoModal({ open: false, items: [] })}
+        items={bulkEstadoModal.items}
+        entityLabel="unidad de medida"
+        getCurrentEstado={(u) => !!u.EstaEliminado}
+        onConfirm={async (ids, nuevoEstado) => {
+          await bulkPatchUnidadesMedidas(ids, { EstaEliminado: !nuevoEstado });
+        }}
+        onSuccess={() => {
+          bulkEstadoModal.clearSelection?.();
+          invalidateUnidadesMedidas();
+        }}
+      />
+
+      <BulkEditarCamposModal<UnidadMedida>
+        isOpen={bulkEditarModal.open}
+        onClose={() => setBulkEditarModal({ open: false, items: [] })}
+        items={bulkEditarModal.items}
+        entityLabel="unidad de medida"
+        fields={[
+          {
+            key: "Descripcion",
+            label: "Descripción",
+            type: "text",
+            placeholder: "Ej: Kilogramo",
+          },
+        ]}
+        onConfirm={async (ids, values) => {
+          await bulkPatchUnidadesMedidas(ids, values);
+        }}
+        onSuccess={() => {
+          bulkEditarModal.clearSelection?.();
+          invalidateUnidadesMedidas();
+        }}
+      />
+    </>
   );
 }

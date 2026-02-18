@@ -14,7 +14,16 @@ import {
   DropdownItem,
 } from "@heroui/react";
 import { useState, useEffect, useRef, Key } from "react";
-import { Check, Columns2, Download, Menu, Printer, RefreshCcw, Upload } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Columns2,
+  Download,
+  Menu,
+  Printer,
+  RefreshCcw,
+  Upload,
+} from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import { PaginationMeta } from "@/hooks/useProductos"; // Reutilizamos interface o la movemos a types compartidos
 import { useDebounce } from "@/hooks/useDebounce";
@@ -41,6 +50,9 @@ interface GenericTableProps<T> {
   page: number;
   onPageChange: (page: number) => void;
   paginationMeta: PaginationMeta;
+  limit?: number;
+  onLimitChange?: (limit: number) => void;
+  limitOptions?: number[];
   // Sorting Props
   sortDescriptor?: SortDescriptor;
   onSortChange?: (descriptor: SortDescriptor) => void;
@@ -51,6 +63,23 @@ interface GenericTableProps<T> {
   onRefresh?: () => void;
   isRefreshing?: boolean;
   onRowClick?: (item: T) => void;
+  // Selección masiva
+  enableSelection?: boolean;
+  selectedKeys?: Set<Key>;
+  onSelectionChange?: (keys: Set<Key>) => void;
+  selectedCount?: number;
+  onBulkDelete?: () => void;
+  onClearSelection?: () => void;
+  /** Opciones del dropdown "Más acciones" (visibles solo con selección) */
+  bulkActionsDropdown?: Array<{
+    key: string;
+    label: string;
+    onClick: () => void;
+  }>;
+  /** Contenido extra al lado de la barra de búsqueda (ej: filtro Bajo stock) */
+  extraSearchContent?: React.ReactNode;
+  /** Mostrar opción "Todas" en el selector de filas */
+  showAllOption?: boolean;
 }
 
 export default function GenericTable<T extends { Id: number | string }>({
@@ -66,6 +95,10 @@ export default function GenericTable<T extends { Id: number | string }>({
   page,
   onPageChange,
   paginationMeta,
+  limit = 10,
+  onLimitChange,
+  limitOptions = [10, 30, 50, 100],
+  showAllOption = true,
   sortDescriptor,
   onSortChange,
   onNewClick,
@@ -75,6 +108,14 @@ export default function GenericTable<T extends { Id: number | string }>({
   onRefresh,
   isRefreshing = false,
   onRowClick,
+  enableSelection = false,
+  selectedKeys,
+  onSelectionChange,
+  selectedCount = 0,
+  onBulkDelete,
+  onClearSelection,
+  bulkActionsDropdown,
+  extraSearchContent,
 }: GenericTableProps<T>) {
   const [searchInput, setSearchInput] = useState(search);
   const tablePrintRef = useRef<HTMLDivElement>(null);
@@ -107,7 +148,7 @@ export default function GenericTable<T extends { Id: number | string }>({
         {/* Barra de herramientas: Búsqueda+Filtro | Botones */}
         <section className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 sm:px-4 px-1 py-2 rounded-lg bg-white/80 border border-gray-200/60">
           {/* Búsqueda + Filtro - alineados a la izquierda */}
-          <div className="w-full sm:flex-initial order-1">
+          <div className="w-full sm:flex-initial order-1 flex items-center gap-2">
             <div className="flex items-center gap-2 w-full sm:w-[280px] min-w-0">
               <div className="flex-1 min-w-0">
                 <div className="group flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 bg-white transition-all duration-200 hover:border-[#67afc3] focus-within:border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/30">
@@ -135,6 +176,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                 </div>
               </div>
             </div>
+            {extraSearchContent}
           </div>
 
           {/* Acciones - a la derecha */}
@@ -260,6 +302,60 @@ export default function GenericTable<T extends { Id: number | string }>({
           </div>
         </section>
 
+        {/* Barra de selección masiva (solo cuando hay 2+ seleccionados) */}
+        {enableSelection && selectedCount > 1 && (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 px-4 py-2 rounded-lg bg-[#67afc3]/10 border border-[#67afc3]/30 text-sm">
+            <span className="font-medium text-[#0f172a]">
+              {selectedCount} elemento{selectedCount !== 1 ? "s" : ""}{" "}
+              seleccionado{selectedCount !== 1 ? "s" : ""}
+            </span>
+            <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+              {onClearSelection && (
+                <button
+                  type="button"
+                  onClick={onClearSelection}
+                  className="px-3 py-1.5 rounded-lg text-[#67afc3] hover:bg-[#67afc3]/10 font-medium transition-colors"
+                >
+                  Deseleccionar
+                </button>
+              )}
+              {bulkActionsDropdown && bulkActionsDropdown.length > 0 && (
+                <Dropdown>
+                  <DropdownTrigger>
+                    <button
+                      type="button"
+                      className="px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-2 bg-[#67afc3] hover:bg-[#5a9db0] text-white"
+                    >
+                      Más acciones
+                      <ChevronDown size={16} />
+                    </button>
+                  </DropdownTrigger>
+                  <DropdownMenu aria-label="Acciones masivas">
+                    {bulkActionsDropdown.map((item) => (
+                      <DropdownItem
+                        key={item.key}
+                        onPress={item.onClick}
+                        textValue={item.label}
+                      >
+                        {item.label}
+                      </DropdownItem>
+                    ))}
+                  </DropdownMenu>
+                </Dropdown>
+              )}
+              {onBulkDelete && (
+                <button
+                  type="button"
+                  onClick={onBulkDelete}
+                  className="px-3 py-1.5 rounded-lg bg-red-500/90 hover:bg-red-500 text-white font-medium transition-colors"
+                >
+                  Eliminar seleccionados
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Table + Pagination en mismo contenedor (ref para impresión) */}
         <div
           ref={tablePrintRef}
@@ -270,6 +366,34 @@ export default function GenericTable<T extends { Id: number | string }>({
             aria-label="Tabla de datos"
             sortDescriptor={sortDescriptor}
             onSortChange={onSortChange}
+            selectionMode={enableSelection && !isLoading ? "multiple" : "none"}
+            {...(enableSelection &&
+              !isLoading && {
+                // HeroUI requiere Set; normalizar keys como string para evitar fallos numéricos
+                selectedKeys: new Set(
+                  Array.from(selectedKeys ?? []).map((k) => String(k)),
+                ) as any,
+                onSelectionChange: (keys: unknown) => {
+                  if (onSelectionChange) {
+                    // HeroUI pasa "all" al seleccionar todos; hay que expandirlo a las keys reales
+                    let normalized: Set<string>;
+                    if (keys === "all") {
+                      normalized = new Set(
+                        data.map((item) => String(item.Id)),
+                      );
+                    } else {
+                      const raw =
+                        keys instanceof Set
+                          ? keys
+                          : new Set((keys as Iterable<Key>) ?? []);
+                      normalized = new Set(
+                        Array.from(raw).map((k) => String(k)),
+                      );
+                    }
+                    onSelectionChange(normalized);
+                  }
+                },
+              })}
             className="bg-white rounded-lg border-none"
             classNames={{
               wrapper:
@@ -366,7 +490,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                 // Fila normal con datos
                 return (
                   <TableRow
-                    key={item.Id}
+                    key={String(item.Id)}
                     className="transition-all duration-200 hover:bg-linear-to-r hover:from-blue-50 hover:to-sky-50 rounded-lg"
                     tabIndex={0}
                     aria-label={`Fila ${item.Id}`}
@@ -412,7 +536,33 @@ export default function GenericTable<T extends { Id: number | string }>({
             <span className="text-[#67afc3]/90 text-sm">
               {`${data.length} de ${paginationMeta.total} registros`}
             </span>
-            <Pagination
+            <div className="flex items-center gap-3">
+              {onLimitChange && (
+                <label className="flex items-center gap-2 text-sm text-gray-600">
+                  <span>Filas:</span>
+                  <select
+                    value={limit}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      onLimitChange(v === "all" ? 9999 : Number(v));
+                    }}
+                    className="rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 focus:border-[#67afc3] focus:outline-none focus:ring-1 focus:ring-[#67afc3]/30"
+                    aria-label="Cantidad de filas por página"
+                  >
+                    {limitOptions.map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                    {showAllOption && (
+                      <option value={9999}>
+                        Todas
+                      </option>
+                    )}
+                  </select>
+                </label>
+              )}
+              <Pagination
               showControls
               page={page}
               total={paginationMeta.totalPages}
@@ -427,6 +577,7 @@ export default function GenericTable<T extends { Id: number | string }>({
               }}
               aria-label="Paginación de la tabla"
             />
+            </div>
           </>
         ) : null}
           </div>

@@ -6,6 +6,64 @@ Historial completo de cambios, mejoras y correcciones del proyecto.
 
 ## Febrero 2025
 
+### Sesión: Acciones masivas, filtros, paginación y optimizaciones React Query
+
+**Fecha:** Febrero 2025  
+**Rama:** `Varela-features-v1`
+
+#### Acciones masivas en tablas
+
+- ✅ **Barra de selección** visible solo con 2+ filas seleccionadas
+- ✅ **Dropdown "Más acciones"** con: Cambiar estado, Actualizar precios (productos), Editar campos comunes, Exportar seleccionados
+- ✅ **Eliminar seleccionados** siempre visible con selección
+- ✅ **Layout mobile** en 2 filas para que no se corte
+- ✅ Aplicado a: ProductoCRUD, ClienteCRUD, MarcaCRUD, RubroCRUD, UnidadMedidaCRUD, UsuariosCRUD, AuditoriasCRUD
+
+#### Filtro Bajo stock (server-side)
+
+- ✅ **API productos:** `?bajoStock=true` filtra por `Stock <= StockMinimo` en BD
+- ✅ Query raw para comparar Stock/StockMinimo (sucursal o global)
+- ✅ Botón toggle junto a búsqueda; reset de página al activar/desactivar
+
+#### Selector de filas y paginación
+
+- ✅ **Filas: 10 ▼** a la izquierda del paginador
+- ✅ Opciones: 10, 30, 50, 100, Todas
+- ✅ Al cambiar límite, página se resetea a 1
+
+#### Optimizaciones React Query
+
+- ✅ **keepPreviousData** para evitar parpadeo al cambiar página/filtros
+- ✅ **staleTime: 60s** para listados dinámicos (menos refetches)
+- ✅ **queryKey completa:** `[queryKey, { search, page, limit, extraParams }]`
+- ✅ **extraParams** en useGenericApi para filtros como `bajoStock`
+
+#### Corrección bug checkboxes
+
+- ✅ HeroUI envía `"all"` al seleccionar todos; ahora se expande a las keys reales
+- ✅ Keys normalizadas a string para evitar fallos numéricos
+
+#### Documentación
+
+- ✅ `docs/ui/crud-tablas-genericas.md` - Guía de CRUD, tablas, acciones masivas y optimizaciones
+
+#### Archivos modificados
+
+- `src/components/shared/GenericTable.tsx`
+- `src/components/shared/GenericCrud.tsx`
+- `src/hooks/useGenericApi.ts`
+- `src/lib/react-query/queryDefaults.ts`
+- `src/app/api/productos/route.ts`
+- `src/components/productos/ProductoCRUD.tsx`
+- `src/components/clientes/ClienteCRUD.tsx`
+- `src/components/marcas/MarcaCRUD.tsx`
+- `src/components/rubros/RubroCRUD.tsx`
+- `src/components/unidad-medida/UnidadMedidaCRUD.tsx`
+- `src/components/empleados/UsuariosCRUD.tsx`
+- `src/components/empleados/AuditoriasCRUD.tsx`
+
+---
+
 ### Sesión: Unificación de formato CRUD y corrección de bugs
 
 **Fecha:** Febrero 2025  

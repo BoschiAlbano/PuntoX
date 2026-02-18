@@ -1,7 +1,8 @@
 "use client";
 
 import GenericCrud from "@/components/shared/GenericCrud";
-import { Chip, Tooltip } from "@heroui/react";
+import { Chip, Tooltip, addToast } from "@heroui/react";
+import { exportToCsv } from "@/lib/utils/exportCsv";
 import {
   formatTiempoRelativo,
   formatearAccion,
@@ -62,6 +63,40 @@ export default function AuditoriasCRUD() {
       initialLimit={10}
       transformer={transformer}
       showEditInPreview={false}
+      enableBulkActions
+      bulkActionsDropdown={[
+        {
+          key: "exportar",
+          label: "Exportar seleccionados",
+          onAction: (items) => {
+            const data = items.map((a) => ({
+              usuario: a.usuario ?? "",
+              accion: a.accion ?? "",
+              detalles: a.detalles ?? "",
+              fechaHora: a.fechaHora ?? "",
+              exitoso: a.exitoso ? "Sí" : "No",
+              ipAddress: a.ipAddress ?? "",
+            }));
+            exportToCsv(
+              data,
+              [
+                { key: "usuario", header: "Usuario" },
+                { key: "accion", header: "Acción" },
+                { key: "detalles", header: "Detalles" },
+                { key: "fechaHora", header: "Fecha" },
+                { key: "exitoso", header: "Exitoso" },
+                { key: "ipAddress", header: "IP" },
+              ],
+              "auditorias"
+            );
+            addToast({
+              title: "Exportado",
+              description: `${items.length} auditoría${items.length !== 1 ? "s" : ""} exportada${items.length !== 1 ? "s" : ""}`,
+              color: "success",
+            });
+          },
+        },
+      ]}
       renderRowPreview={(item) => (
         <div className="space-y-4 text-sm">
           <div>

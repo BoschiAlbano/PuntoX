@@ -14,6 +14,8 @@ export interface GenericApiOptions<T> {
   search?: string;
   page?: number;
   limit?: number;
+  /** Parámetros extra para la query (ej: bajoStock para /api/productos) */
+  extraParams?: Record<string, string | number | boolean>;
   transformer?: (data: unknown) => T[]; // Para transformar datos si la API devuelve estructura plana
   additionalInvalidateQueryKeys?: any[];
 }
@@ -24,6 +26,7 @@ export function useGenericApi<T extends { Id: number | string }>({
   search = "",
   page = 1,
   limit = 10,
+  extraParams,
   transformer,
   additionalInvalidateQueryKeys = [],
 }: GenericApiOptions<T>) {
@@ -39,6 +42,12 @@ export function useGenericApi<T extends { Id: number | string }>({
     if (search) params.append(searchParam, search);
     params.append("page", page.toString());
     params.append("limit", limit.toString());
+    if (extraParams) {
+      Object.entries(extraParams).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== "")
+          params.append(k, String(v));
+      });
+    }
     // params.append("sucursalId", currentBranch?.Id?.toString());
     // Asegurar que el endpoint no termine en /
     const cleanEndpoint = endpoint.endsWith("/")
@@ -100,7 +109,7 @@ export function useGenericApi<T extends { Id: number | string }>({
   };
 
   const query = useQuery({
-    queryKey: [queryKey, { search, page, limit }],
+    queryKey: [queryKey, { search, page, limit, extraParams }],
     queryFn: ({ signal }) => fetchData({ signal }),
     ...dynamicDataQueryOptions, // Aplicar optimizaciones por defecto
   });

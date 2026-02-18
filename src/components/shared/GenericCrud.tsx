@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Key, useMemo } from "react";
+import { useState, Key, useMemo, useEffect } from "react";
 import {
   useDisclosure,
   addToast,
@@ -12,6 +12,7 @@ import {
   Button,
   SortDescriptor,
 } from "@heroui/react";
+import { AlertTriangle } from "lucide-react";
 import GenericTable, { Column } from "./GenericTable";
 import { useGenericApi } from "@/hooks/useGenericApi";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -65,6 +66,23 @@ interface GenericCrudProps<T> {
   getRowPreviewTitle?: (item: T) => string;
   /** Mostrar botón Editar en el preview (false para CRUDs de solo lectura) */
   showEditInPreview?: boolean;
+  /** Habilitar checkboxes y acciones masivas (eliminar seleccionados) */
+  enableBulkActions?: boolean;
+  /** Opciones del dropdown "Más acciones" (visibles solo con selección). Reciben items y clearSelection para limpiar tras éxito. */
+  bulkActionsDropdown?: Array<{
+    key: string;
+    label: string;
+    onAction: (
+      selectedItems: T[],
+      context: { clearSelection: () => void }
+    ) => void;
+  }>;
+  /** Filtro "Bajo stock": cuando se provee, se muestra el botón. Si además pasa lowStockApiParam, se filtra en el backend. */
+  lowStockFilterFn?: (item: T) => boolean;
+  /** Si true y hay lowStockFilterFn, envía bajoStock=true al API (solo aplica a endpoints que lo soporten) */
+  lowStockApiParam?: boolean;
+  /** Devuelve params extra para el API según el estado (ej: bajoStock cuando lowStockOnly) */
+  getApiExtraParams?: (state: { lowStockOnly: boolean }) => Record<string, string | number | boolean>;
 }
 
 export default function GenericCrud<T extends { Id: number | string }>({
@@ -83,6 +101,11 @@ export default function GenericCrud<T extends { Id: number | string }>({
   renderRowPreview,
   getRowPreviewTitle,
   showEditInPreview = true,
+  enableBulkActions = false,
+  bulkActionsDropdown,
+  lowStockFilterFn,
+  lowStockApiParam = false,
+  getApiExtraParams,
 }: GenericCrudProps<T>) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
@@ -94,12 +117,14 @@ export default function GenericCrud<T extends { Id: number | string }>({
   const [selectedItem, setSelectedItem] = useState<T | null>(null);
   const [itemToDelete, setItemToDelete] = useState<T | null>(null);
   const [previewItem, setPreviewItem] = useState<T | null>(null);
+  const [selectedKeys, setSelectedKeys] = useState<Set<Key>>(new Set());
+  const [lowStockOnly, setLowStockOnly] = useState(false);
 
   const hasRowPreview = !!renderRowPreview || !!onRowClick;
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [limit] = useState(initialLimit);
+  const [limit, setLimit] = useState(initialLimit);
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "Descripcion",
     direction: "ascending",
@@ -107,6 +132,11 @@ export default function GenericCrud<T extends { Id: number | string }>({
 
   // Debounce de búsqueda para evitar requests en cada keystroke
   const debouncedSearch = useDebounce(search, 400);
+
+  // Resetear página al cambiar filtro bajo stock (evita páginas vacías)
+  useEffect(() => {
+    setPage(1);
+  }, [lowStockOnly]);
 
   // Hook de Data (usa debouncedSearch en lugar de search)
   const {
@@ -123,6 +153,11 @@ export default function GenericCrud<T extends { Id: number | string }>({
     search: debouncedSearch,
     page,
     limit,
+    extraParams: getApiExtraParams
+      ? getApiExtraParams({ lowStockOnly })
+      : lowStockApiParam && lowStockOnly
+        ? { bajoStock: true }
+        : undefined,
     transformer,
     additionalInvalidateQueryKeys,
   });
@@ -139,7 +174,12 @@ export default function GenericCrud<T extends { Id: number | string }>({
   };
 
   const sortedItems = useMemo(() => {
-    return [...data].sort((a: T, b: T) => {
+    let items = [...data];
+    // Filtro client-side solo cuando NO se usa bajoStock en API (lowStockApiParam)
+    if (lowStockFilterFn && lowStockOnly && !lowStockApiParam) {
+      items = items.filter(lowStockFilterFn);
+    }
+    return items.sort((a: T, b: T) => {
       const first = a[sortDescriptor.column as keyof T] as unknown as
         | number
         | string;
@@ -158,7 +198,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
 
       return cmp;
     });
-  }, [sortDescriptor, data]);
+  }, [sortDescriptor, data, lowStockOnly, lowStockFilterFn]);
 
   const isSaving = saveMutation.isPending || deleteMutation.isPending;
 
@@ -208,6 +248,37 @@ export default function GenericCrud<T extends { Id: number | string }>({
         },
       },
     );
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedKeys.size === 0) return;
+    const isEmpleados = apiPath.includes("/empleados");
+    const itemsToDelete = sortedItems.filter((item) =>
+      selectedKeys.has(String(item.Id)),
+    );
+    if (itemsToDelete.length === 0) return;
+
+    const ids = itemsToDelete.map((item) =>
+      isEmpleados && (item as any).personaId
+        ? (item as any).personaId
+        : item.Id,
+    );
+
+    try {
+      for (const id of ids) {
+        await deleteMutation.mutateAsync(id);
+      }
+      addToast({
+        title: "Éxito",
+        description: `${ids.length} registro${ids.length !== 1 ? "s" : ""} eliminado${ids.length !== 1 ? "s" : ""} correctamente`,
+        color: "success",
+        timeout: 3000,
+      });
+      setSelectedKeys(new Set());
+    } catch (error: any) {
+      const msg = error?.error || error?.message || "Error al eliminar";
+      handleError(new Error(msg), "Error al eliminar seleccionados");
+    }
   };
 
   const handleConfirmDelete = () => {
@@ -270,6 +341,12 @@ export default function GenericCrud<T extends { Id: number | string }>({
         page={page}
         onPageChange={setPage}
         paginationMeta={paginationMeta}
+        limit={limit}
+        onLimitChange={(newLimit) => {
+          setLimit(newLimit);
+          setPage(1);
+        }}
+        limitOptions={[10, 30, 50, 100]}
         sortDescriptor={sortDescriptor}
         onSortChange={setSortDescriptor}
         onNewClick={handleCreate}
@@ -277,6 +354,46 @@ export default function GenericCrud<T extends { Id: number | string }>({
         isRefreshing={isRefreshing}
         onImportClick={onImportClick}
         onExportClick={onExportClick}
+        enableSelection={enableBulkActions}
+        selectedKeys={selectedKeys}
+        onSelectionChange={setSelectedKeys}
+        selectedCount={selectedKeys.size}
+        onBulkDelete={enableBulkActions ? handleBulkDelete : undefined}
+        onClearSelection={
+          enableBulkActions ? () => setSelectedKeys(new Set()) : undefined
+        }
+        bulkActionsDropdown={
+          enableBulkActions && bulkActionsDropdown?.length
+            ? bulkActionsDropdown.map((a) => ({
+                ...a,
+                onClick: () => {
+                  const items = sortedItems.filter((i) =>
+                    selectedKeys.has(String(i.Id)),
+                  );
+                  a.onAction(items, {
+                    clearSelection: () => setSelectedKeys(new Set()),
+                  });
+                },
+              }))
+            : undefined
+        }
+        extraSearchContent={
+          lowStockFilterFn ? (
+            <button
+              type="button"
+              onClick={() => setLowStockOnly((v) => !v)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
+                lowStockOnly
+                  ? "bg-amber-500/20 border-amber-500/50 text-amber-800"
+                  : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-[#67afc3]"
+              }`}
+              title={lowStockOnly ? "Mostrar todos" : "Solo bajo stock"}
+            >
+              <AlertTriangle size={18} />
+              Bajo stock
+            </button>
+          ) : undefined
+        }
         onRowClick={
           hasRowPreview
             ? (item) => {
@@ -308,6 +425,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
           onClose={() => setPreviewItem(null)}
           size="md"
           scrollBehavior="inside"
+          hideCloseButton
           classNames={{
             backdrop: "bg-black/40",
             base: "rounded-xl shadow-xl",

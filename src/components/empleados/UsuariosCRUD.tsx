@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import GenericCrud from "@/components/shared/GenericCrud";
-import { Chip, Button, Tooltip } from "@heroui/react";
+import { Chip, Button, Tooltip, addToast } from "@heroui/react";
+import { exportToCsv } from "@/lib/utils/exportCsv";
 import { EditButton, DeleteButton } from "../shared/TableActions";
 import UsuarioForm from "./UsuarioForm";
 import ChangePasswordModal from "./ChangePasswordModal";
@@ -66,6 +67,60 @@ export default function UsuariosCRUD() {
         searchPlaceholder="Buscar por nombre, usuario o DNI..."
         transformer={transformer}
         additionalInvalidateQueryKeys={["roles-select"]}
+        enableBulkActions
+        bulkActionsDropdown={[
+          {
+            key: "cambiar-estado",
+            label: "Cambiar estado",
+            onAction: (items) => {
+              addToast({ title: "Cambiar estado", description: `${items.length} usuario(s)` });
+            },
+          },
+          {
+            key: "editar-campos",
+            label: "Editar campos comunes",
+            onAction: (items) => {
+              addToast({ title: "Editar campos", description: `${items.length} usuario(s)` });
+            },
+          },
+          {
+            key: "exportar",
+            label: "Exportar seleccionados",
+            onAction: (items) => {
+              const data = items.map((u) => ({
+                nombreCompleto: u.nombreCompleto ?? "",
+                email: u.email ?? "",
+                username: u.username ?? "",
+                telefono: u.telefono ?? "",
+                rolNombre: u.rolNombre ?? "",
+                estado: u.estado ?? "",
+                legajo: u.legajo ?? "",
+                dni: u.dni ?? "",
+                ultimaActividad: u.ultimaActividad ?? "",
+              }));
+              exportToCsv(
+                data,
+                [
+                  { key: "nombreCompleto", header: "Nombre completo" },
+                  { key: "email", header: "Email" },
+                  { key: "username", header: "Usuario" },
+                  { key: "telefono", header: "Teléfono" },
+                  { key: "rolNombre", header: "Rol" },
+                  { key: "estado", header: "Estado" },
+                  { key: "legajo", header: "Legajo" },
+                  { key: "dni", header: "DNI" },
+                  { key: "ultimaActividad", header: "Última actividad" },
+                ],
+                "usuarios"
+              );
+              addToast({
+                title: "Exportado",
+                description: `${items.length} usuario${items.length !== 1 ? "s" : ""} exportado${items.length !== 1 ? "s" : ""}`,
+                color: "success",
+              });
+            },
+          },
+        ]}
         renderRowPreview={(item) => (
           <div className="space-y-5 text-sm">
             <div className="grid grid-cols-2 gap-4">

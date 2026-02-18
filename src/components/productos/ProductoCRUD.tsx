@@ -15,8 +15,11 @@ import { useProductos } from "@/hooks/useProductos";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
+import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
+import { BulkEditarCamposModal } from "@/components/shared/BulkEditarCamposModal";
+import { exportToCsv } from "@/lib/utils/exportCsv";
 
 function ProductoPreviewContent({ item }: { item: Producto }) {
   const currency = useCurrency();
@@ -161,13 +164,46 @@ function ProductoPreviewContent({ item }: { item: Producto }) {
   );
 }
 
+async function bulkPatchProductos(
+  ids: (number | string)[],
+  data: Record<string, unknown>
+) {
+  for (const id of ids) {
+    const res = await fetch("/api/productos", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ Id: id, ...data }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error || err?.message || "Error al actualizar");
+    }
+  }
+}
+
 export default function ProductoCRUD() {
   const currency = useCurrency();
+  const queryClient = useQueryClient();
   const { addStockMutation } = useProductos();
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
   const [productToAddStock, setProductToAddStock] = useState<Producto | null>(
     null,
   );
+  const [bulkEstadoModal, setBulkEstadoModal] = useState<{
+    open: boolean;
+    items: Producto[];
+    clearSelection?: () => void;
+  }>({ open: false, items: [] });
+  const [bulkEditarModal, setBulkEditarModal] = useState<{
+    open: boolean;
+    items: Producto[];
+    clearSelection?: () => void;
+  }>({ open: false, items: [] });
+
+  const invalidateProductos = () => {
+    queryClient.invalidateQueries({ queryKey: ["productos-generic"] });
+    queryClient.invalidateQueries({ queryKey: ["producto-detail"] });
+  };
 
   const handleOpenStockModal = (item: Producto) => {
     setProductToAddStock(item);
@@ -199,6 +235,74 @@ export default function ProductoCRUD() {
         FormComponent={ProductoForm}
         renderRowPreview={(item) => <ProductoPreviewContent item={item} />}
         getRowPreviewTitle={(item) => item.Descripcion || "Producto"}
+        showEditInPreview={false}
+        enableBulkActions
+        lowStockFilterFn={(item) => {
+          const min = item.StockMinimo ?? 0;
+          const stock = item.Stock ?? 0;
+          return min > 0 && stock <= min;
+        }}
+        lowStockApiParam
+        bulkActionsDropdown={[
+          {
+            key: "cambiar-estado",
+            label: "Cambiar estado",
+            onAction: (items, { clearSelection }) => {
+              setBulkEstadoModal({ open: true, items, clearSelection });
+            },
+          },
+          {
+            key: "actualizar-precios",
+            label: "Actualizar precios",
+            onAction: (items) => {
+              addToast({
+                title: "Actualizar precios",
+                description: `${items.length} producto${items.length !== 1 ? "s" : ""} (próximamente)`,
+                color: "primary",
+              });
+            },
+          },
+          {
+            key: "editar-campos",
+            label: "Editar campos comunes",
+            onAction: (items, { clearSelection }) => {
+              setBulkEditarModal({ open: true, items, clearSelection });
+            },
+          },
+          {
+            key: "exportar",
+            label: "Exportar seleccionados",
+            onAction: (items) => {
+              const data = items.map((p) => ({
+                CodigoBarra: p.CodigoBarra,
+                Descripcion: p.Descripcion,
+                Stock: p.Stock ?? 0,
+                StockMinimo: p.StockMinimo ?? 0,
+                Costo: p.Precio?.PrecioCosto ?? 0,
+                Minorista: p.Precio?.PrecioPublico ?? 0,
+                Mayorista: p.Precio?.PrecioPublico2 ?? 0,
+              }));
+              exportToCsv(
+                data,
+                [
+                  { key: "CodigoBarra", header: "Código" },
+                  { key: "Descripcion", header: "Descripción" },
+                  { key: "Stock", header: "Stock" },
+                  { key: "StockMinimo", header: "Stock mínimo" },
+                  { key: "Costo", header: "Costo" },
+                  { key: "Minorista", header: "Minorista" },
+                  { key: "Mayorista", header: "Mayorista" },
+                ],
+                "productos"
+              );
+              addToast({
+                title: "Exportado",
+                description: `${items.length} producto${items.length !== 1 ? "s" : ""} exportado${items.length !== 1 ? "s" : ""}`,
+                color: "success",
+              });
+            },
+          },
+        ]}
         transformer={(item) => productoListAdapter(item)}
         additionalInvalidateQueryKeys={["producto-detail"]}
         columns={[
@@ -305,6 +409,41 @@ export default function ProductoCRUD() {
         onClose={() => setIsStockModalOpen(false)}
         product={productToAddStock}
         onConfirm={handleAddStock}
+      />
+
+      <BulkCambiarEstadoModal<Producto>
+        isOpen={bulkEstadoModal.open}
+        onClose={() => setBulkEstadoModal({ open: false, items: [] })}
+        items={bulkEstadoModal.items}
+        entityLabel="producto"
+        getCurrentEstado={(p) => !!p.EstaEliminado}
+        onConfirm={async (ids, nuevoEstado) => {
+          await bulkPatchProductos(ids, {
+            EstaEliminado: !nuevoEstado,
+          });
+        }}
+        onSuccess={() => {
+          bulkEstadoModal.clearSelection?.();
+          invalidateProductos();
+        }}
+      />
+
+      <BulkEditarCamposModal<Producto>
+        isOpen={bulkEditarModal.open}
+        onClose={() => setBulkEditarModal({ open: false, items: [] })}
+        items={bulkEditarModal.items}
+        entityLabel="producto"
+        fields={[
+          { key: "Ubicacion", label: "Ubicación", type: "text", placeholder: "Ej: Estante A1" },
+          { key: "StockMinimo", label: "Stock mínimo", type: "number", placeholder: "0" },
+        ]}
+        onConfirm={async (ids, values) => {
+          await bulkPatchProductos(ids, values);
+        }}
+        onSuccess={() => {
+          bulkEditarModal.clearSelection?.();
+          invalidateProductos();
+        }}
       />
     </>
   );

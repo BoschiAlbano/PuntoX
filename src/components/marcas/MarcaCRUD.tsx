@@ -1,13 +1,52 @@
 "use client";
 
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import GenericCrud from "@/components/shared/GenericCrud";
 import MarcaForm, { Marca } from "./MarcaForm";
-import { Chip } from "@heroui/react";
+import { Chip, addToast } from "@heroui/react";
 import { DeleteButton, EditButton } from "../shared/TableActions";
+import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
+import { BulkEditarCamposModal } from "@/components/shared/BulkEditarCamposModal";
+import { exportToCsv } from "@/lib/utils/exportCsv";
+
+async function bulkPatchMarcas(
+  ids: (number | string)[],
+  data: { EstaEliminado?: boolean; Descripcion?: string }
+) {
+  for (const id of ids) {
+    const res = await fetch("/api/marcas", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ Id: id, ...data }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error || err?.message || "Error al actualizar");
+    }
+  }
+}
 
 export default function MarcaCRUD() {
+  const queryClient = useQueryClient();
+  const [bulkEstadoModal, setBulkEstadoModal] = useState<{
+    open: boolean;
+    items: Marca[];
+    clearSelection?: () => void;
+  }>({ open: false, items: [] });
+  const [bulkEditarModal, setBulkEditarModal] = useState<{
+    open: boolean;
+    items: Marca[];
+    clearSelection?: () => void;
+  }>({ open: false, items: [] });
+
+  const invalidateMarcas = () => {
+    queryClient.invalidateQueries({ queryKey: ["marcas-generic"] });
+  };
+
   return (
-    <GenericCrud<Marca>
+    <>
+      <GenericCrud<Marca>
       apiPath="/api/marcas"
       queryKey="marcas-generic"
       searchPlaceholder="Buscar marcas..."
@@ -31,6 +70,48 @@ export default function MarcaCRUD() {
         </div>
       )}
       getRowPreviewTitle={(item) => item.Descripcion || "Marca"}
+      enableBulkActions
+      bulkActionsDropdown={[
+        {
+          key: "cambiar-estado",
+          label: "Cambiar estado",
+          onAction: (items, { clearSelection }) => {
+            setBulkEstadoModal({ open: true, items, clearSelection });
+          },
+        },
+        {
+          key: "editar-campos",
+          label: "Editar campos comunes",
+          onAction: (items, { clearSelection }) => {
+            setBulkEditarModal({ open: true, items, clearSelection });
+          },
+        },
+        {
+          key: "exportar",
+          label: "Exportar seleccionados",
+          onAction: (items) => {
+            const data = items.map((m) => ({
+              Id: m.Id,
+              Descripcion: m.Descripcion ?? "",
+              Estado: m.EstaEliminado ? "Inactivo" : "Activo",
+            }));
+            exportToCsv(
+              data,
+              [
+                { key: "Id", header: "ID" },
+                { key: "Descripcion", header: "Descripción" },
+                { key: "Estado", header: "Estado" },
+              ],
+              "marcas"
+            );
+            addToast({
+              title: "Exportado",
+              description: `${items.length} marca${items.length !== 1 ? "s" : ""} exportada${items.length !== 1 ? "s" : ""}`,
+              color: "success",
+            });
+          },
+        },
+      ]}
       columns={[
         {
           uid: "Descripcion",
@@ -78,5 +159,43 @@ export default function MarcaCRUD() {
         }
       }}
     />
+
+      <BulkCambiarEstadoModal<Marca>
+        isOpen={bulkEstadoModal.open}
+        onClose={() => setBulkEstadoModal({ open: false, items: [] })}
+        items={bulkEstadoModal.items}
+        entityLabel="marca"
+        getCurrentEstado={(m) => !!m.EstaEliminado}
+        onConfirm={async (ids, nuevoEstado) => {
+          await bulkPatchMarcas(ids, { EstaEliminado: !nuevoEstado });
+        }}
+        onSuccess={() => {
+          bulkEstadoModal.clearSelection?.();
+          invalidateMarcas();
+        }}
+      />
+
+      <BulkEditarCamposModal<Marca>
+        isOpen={bulkEditarModal.open}
+        onClose={() => setBulkEditarModal({ open: false, items: [] })}
+        items={bulkEditarModal.items}
+        entityLabel="marca"
+        fields={[
+          {
+            key: "Descripcion",
+            label: "Descripción",
+            type: "text",
+            placeholder: "Ej: Marca Premium",
+          },
+        ]}
+        onConfirm={async (ids, values) => {
+          await bulkPatchMarcas(ids, values);
+        }}
+        onSuccess={() => {
+          bulkEditarModal.clearSelection?.();
+          invalidateMarcas();
+        }}
+      />
+    </>
   );
 }
