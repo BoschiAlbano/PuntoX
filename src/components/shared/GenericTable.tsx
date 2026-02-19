@@ -1,3 +1,9 @@
+/**
+ * Tabla genérica: búsqueda, paginación, ordenamiento, selección masiva.
+ * Menú "Más opciones": Exportar CSV/XLS, Imprimir.
+ * Usado por GenericCrud.
+ * @see docs/ui/crud-tablas-genericas.md
+ */
 import {
   Table,
   TableHeader,
@@ -19,20 +25,67 @@ import {
   ChevronDown,
   Columns2,
   Download,
+  FileSpreadsheet,
   Menu,
   Printer,
   RefreshCcw,
-  Upload,
 } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
-import { PaginationMeta } from "@/hooks/useProductos"; // Reutilizamos interface o la movemos a types compartidos
+import { PaginationMeta } from "@/hooks/useProductos";
 import { useDebounce } from "@/hooks/useDebounce";
+
+function getPrintPageStyle(orientation?: "portrait" | "landscape"): string {
+  const pageSize = orientation === "landscape" ? "size: A4 landscape;" : "size: A4 portrait;";
+  return `
+    @page { margin: 2cm; ${pageSize} }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .table-print-source {
+      position: static !important; left: auto !important; top: auto !important; z-index: auto !important;
+      width: 100% !important; padding: 0 !important; background: white !important;
+    }
+    .table-print-header {
+      margin-bottom: 20px; padding: 16px 20px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border-left: 4px solid #67afc3; border-radius: 4px;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .table-print-header h1 { font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 6px 0; letter-spacing: -0.02em; }
+    .table-print-header .meta { font-size: 11px; color: #64748b; font-weight: 500; }
+    .table-print-source .table-wrapper {
+      border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .table-print-source table { width: 100%; border-collapse: collapse; font-size: 10px; }
+    .table-print-source thead { display: table-header-group; }
+    .table-print-source th {
+      background: linear-gradient(180deg, #67afc3 0%, #5a9db0 100%) !important;
+      color: white !important; font-weight: 600; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em;
+      padding: 10px 12px; border: none; border-bottom: 2px solid #4a8a9a;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .table-print-source th[data-align="right"] { text-align: right; }
+    .table-print-source th[data-align="center"] { text-align: center; }
+    .table-print-source td {
+      padding: 8px 12px; border-bottom: 1px solid #e2e8f0; color: #334155;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .table-print-source td[data-align="right"] { text-align: right; }
+    .table-print-source td[data-align="center"] { text-align: center; }
+    .table-print-source tbody tr:nth-child(even) td { background: #f8fafc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .table-print-source tbody tr:nth-child(odd) td { background: #ffffff !important; }
+    .table-print-source tbody tr { break-inside: avoid; }
+    .table-print-source .print-status { filter: grayscale(1); font-weight: 500; }
+  `;
+}
 
 export interface Column {
   uid: string;
   name: string;
   sortable?: boolean;
   align?: "start" | "center" | "end";
+  /** Alineación en impresión: right para numéricas, center para Estado/badges */
+  printAlign?: "left" | "right" | "center";
 }
 
 interface GenericTableProps<T> {
@@ -58,19 +111,23 @@ interface GenericTableProps<T> {
   onSortChange?: (descriptor: SortDescriptor) => void;
   onNewClick?: () => void;
   newButtonText?: string;
-  onImportClick?: () => void;
-  onExportClick?: () => void;
+  onExportCsv?: () => void;
+  onExportXls?: () => void;
   onRefresh?: () => void;
   isRefreshing?: boolean;
   onRowClick?: (item: T) => void;
   // Selección masiva
   enableSelection?: boolean;
+  selectionMode?: "manual" | "all_matching";
   selectedKeys?: Set<Key>;
-  onSelectionChange?: (keys: Set<Key>) => void;
+  onSelectionChange?: (keys: Set<string> | "all") => void;
   selectedCount?: number;
+  totalCount?: number;
+  canScaleToAll?: boolean;
+  onScaleToAllMatching?: () => void;
   onBulkDelete?: () => void;
   onClearSelection?: () => void;
-  /** Opciones del dropdown "Más acciones" (visibles solo con selección) */
+  /** Opciones del dropdown "Acciones masivas" (visibles solo con selección) */
   bulkActionsDropdown?: Array<{
     key: string;
     label: string;
@@ -80,6 +137,12 @@ interface GenericTableProps<T> {
   extraSearchContent?: React.ReactNode;
   /** Mostrar opción "Todas" en el selector de filas */
   showAllOption?: boolean;
+  /** Configuración de impresión */
+  printConfig?: {
+    title?: string;
+    orientation?: "portrait" | "landscape";
+    filters?: string;
+  };
 }
 
 export default function GenericTable<T extends { Id: number | string }>({
@@ -103,19 +166,24 @@ export default function GenericTable<T extends { Id: number | string }>({
   onSortChange,
   onNewClick,
   newButtonText = "Nuevo",
-  onImportClick,
-  onExportClick,
+  onExportCsv,
+  onExportXls,
   onRefresh,
   isRefreshing = false,
   onRowClick,
   enableSelection = false,
+  selectionMode = "manual",
   selectedKeys,
   onSelectionChange,
   selectedCount = 0,
+  totalCount = 0,
+  canScaleToAll = false,
+  onScaleToAllMatching,
   onBulkDelete,
   onClearSelection,
   bulkActionsDropdown,
   extraSearchContent,
+  printConfig,
 }: GenericTableProps<T>) {
   const [searchInput, setSearchInput] = useState(search);
   const tablePrintRef = useRef<HTMLDivElement>(null);
@@ -126,10 +194,22 @@ export default function GenericTable<T extends { Id: number | string }>({
     new Set(columns.map((c) => c.uid)),
   );
   const visibleColumns = columns.filter((c) => visibleUids.has(c.uid));
+  const printColumns = visibleColumns.filter((c) => c.uid !== "acciones");
+
+  const NUMERIC_UIDS = new Set(["Stock", "StockMinimo", "Costo", "Minorista", "Mayorista", "CantidadProductos"]);
+  const CENTER_UIDS = new Set(["Estado"]);
+  const getPrintAlign = (uid: string, col?: Column) =>
+    col?.printAlign ?? (NUMERIC_UIDS.has(uid) ? "right" : CENTER_UIDS.has(uid) ? "center" : "left");
 
   const handlePrint = useReactToPrint({
     contentRef: tablePrintRef,
-    documentTitle: "Listado",
+    documentTitle: printConfig?.title ?? "Listado",
+    onBeforePrint: async () => {
+      const el = tablePrintRef.current;
+      const dateEl = el?.querySelector("[data-print-date]");
+      if (dateEl) dateEl.textContent = new Date().toLocaleString("es-AR");
+    },
+    pageStyle: getPrintPageStyle(printConfig?.orientation),
   });
 
   // Debounce de búsqueda (400ms para reducir llamadas)
@@ -142,21 +222,24 @@ export default function GenericTable<T extends { Id: number | string }>({
     }
   }, [debouncedSearch, search, onSearchChange]);
 
+  const ICON_SIZE = 18;
+  const ICON_STROKE = 2;
+
   return (
     <section className="w-full h-full flex flex-col gap-4 overflow-hidden">
-      <div className="rounded-lg flex flex-col gap-4 bg-white/50 backdrop-blur-sm flex-1 w-full h-full px-4">
-        {/* Barra de herramientas: Búsqueda+Filtro | Botones */}
-        <section className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 sm:px-4 px-1 py-2 rounded-lg bg-white/80 border border-gray-200/60">
-          {/* Búsqueda + Filtro - alineados a la izquierda */}
-          <div className="w-full sm:flex-initial order-1 flex items-center gap-2">
-            <div className="flex items-center gap-2 w-full sm:w-[280px] min-w-0">
+      <div className="rounded-lg flex flex-col gap-4 bg-white flex-1 w-full h-full p-4 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
+        {/* Barra de herramientas: Búsqueda+Filtro | Botones - grilla 8px */}
+        <section className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
+          {/* Búsqueda - más protagonista: ancho mayor, placeholder claro */}
+          <div className="w-full sm:flex-1 sm:min-w-0 order-1 flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full min-w-0 sm:max-w-[400px]">
               <div className="flex-1 min-w-0">
-                <div className="group flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 bg-white transition-all duration-200 hover:border-[#67afc3] focus-within:border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/30">
+                <div className="group flex items-center gap-2 border border-slate-300 rounded-lg px-4 py-2.5 bg-slate-50/50 transition-all duration-150 hover:border-[#67afc3] hover:bg-white focus-within:border-[#67afc3] focus-within:ring-2 focus-within:ring-[#67afc3]/35 focus-within:bg-white">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
-                    className="size-5 text-gray-400 flex-shrink-0"
+                    className="size-5 text-slate-500 flex-shrink-0"
                     aria-hidden
                   >
                     <path
@@ -168,7 +251,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                   <input
                     type="text"
                     placeholder={searchPlaceholder}
-                    className="outline-none w-full bg-transparent text-gray-700 placeholder:text-gray-400 text-sm"
+                    className="outline-none w-full bg-transparent text-slate-800 placeholder:text-slate-500 placeholder:font-normal text-sm"
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     aria-label="Buscar en la tabla"
@@ -179,60 +262,78 @@ export default function GenericTable<T extends { Id: number | string }>({
             {extraSearchContent}
           </div>
 
-          {/* Acciones - a la derecha */}
+          {/* Acciones - a la derecha, grilla 8px */}
           <div className="flex items-center gap-2 flex-wrap sm:flex-shrink-0 order-2">
-            {/* Grupo: Nuevo (acción principal) */}
             {onNewClick && (
               <button
                 onClick={onNewClick}
-                className="px-4 h-9 rounded-lg bg-[#67afc3] hover:bg-[#5a9db0] text-white font-medium text-sm shadow-sm transition-all duration-200 hover:shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 h-9 rounded-lg bg-[#67afc3] hover:bg-[#5a9db0] text-white font-medium text-sm shadow-sm transition-all duration-150 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label={newButtonText}
               >
                 {newButtonText}
               </button>
             )}
 
-            {/* Separador visual entre Nuevo y Importar/Exportar */}
-            <div
-              className="hidden sm:block w-px h-6 bg-gray-200"
-              aria-hidden
-            />
+            <div className="hidden sm:block w-px h-6 bg-slate-200" aria-hidden />
 
-            {/* Grupo: Más opciones, Columnas, Actualizar (mismo espaciado) */}
             <div className="flex items-center gap-2">
               <Dropdown>
                 <DropdownTrigger>
                   <button
                     type="button"
-                    className="p-2 h-9 w-9 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 hover:border-[#67afc3] text-gray-600 hover:text-[#67afc3] transition-all duration-200 flex items-center justify-center flex-shrink-0"
-                    title="Más opciones"
-                    aria-label="Más opciones (Importar, Exportar, Imprimir)"
+                    className="flex items-center gap-2 px-3 py-2 h-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[#67afc3] text-slate-700 hover:text-[#67afc3] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40 transition-all duration-150 flex-shrink-0"
+                    title="Exportar, Imprimir"
+                    aria-label="Más opciones: Exportar, Imprimir"
                   >
-                    <Menu size={18} aria-hidden="true" />
+                    <Menu size={ICON_SIZE} strokeWidth={ICON_STROKE} aria-hidden="true" />
+                    <span className="hidden md:inline text-sm font-medium">Más opciones</span>
                   </button>
                 </DropdownTrigger>
-                <DropdownMenu aria-label="Más opciones">
-                  <DropdownItem
-                    key="importar"
-                    startContent={<Upload size={16} />}
-                    onPress={onImportClick ?? (() => {})}
-                  >
-                    Importar
-                  </DropdownItem>
-                  <DropdownItem
-                    key="exportar"
-                    startContent={<Download size={16} />}
-                    onPress={onExportClick ?? (() => {})}
-                  >
-                    Exportar
-                  </DropdownItem>
-                  <DropdownItem
-                    key="imprimir"
-                    startContent={<Printer size={16} />}
-                    onPress={() => handlePrint()}
-                  >
-                    Imprimir
-                  </DropdownItem>
+                <DropdownMenu
+                  aria-label="Más opciones"
+                  classNames={{
+                    base: "min-w-[200px] p-2 rounded-lg shadow-lg border border-slate-200/80",
+                    list: "p-1 gap-0.5",
+                  }}
+                  items={[
+                    ...(onExportCsv
+                      ? [
+                          {
+                            key: "exportar-csv",
+                            label: "Exportar como CSV",
+                            onPress: onExportCsv,
+                            startContent: <Download size={16} strokeWidth={2} />,
+                          },
+                        ]
+                      : []),
+                    ...(onExportXls
+                      ? [
+                          {
+                            key: "exportar-xls",
+                            label: "Exportar como XLS",
+                            onPress: onExportXls,
+                            startContent: <FileSpreadsheet size={16} strokeWidth={2} />,
+                          },
+                        ]
+                      : []),
+                    {
+                      key: "imprimir",
+                      label: "Imprimir",
+                      onPress: () => handlePrint(),
+                      startContent: <Printer size={16} strokeWidth={2} />,
+                    },
+                  ].filter(Boolean)}
+                >
+                  {(item) => (
+                    <DropdownItem
+                      key={item.key}
+                      startContent={item.startContent}
+                      onPress={item.onPress}
+                      className="rounded-md px-3 py-2 data-[hover=true]:bg-[#67afc3]/10 data-[focus=true]:bg-[#67afc3]/10"
+                    >
+                      {item.label}
+                    </DropdownItem>
+                  )}
                 </DropdownMenu>
               </Dropdown>
               {selectableColumns.length > 1 && (
@@ -240,17 +341,19 @@ export default function GenericTable<T extends { Id: number | string }>({
                   <DropdownTrigger>
                     <button
                       type="button"
-                      className="p-2 h-9 w-9 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 hover:border-[#67afc3] text-gray-600 hover:text-[#67afc3] transition-all duration-200 flex items-center justify-center flex-shrink-0"
+                      className="p-2 h-9 w-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[#67afc3] text-slate-700 hover:text-[#67afc3] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40 transition-all duration-150 flex items-center justify-center flex-shrink-0"
                       title="Columnas visibles"
                       aria-label="Mostrar u ocultar columnas"
                     >
-                      <Columns2 size={18} aria-hidden="true" />
+                      <Columns2 size={ICON_SIZE} strokeWidth={ICON_STROKE} aria-hidden="true" />
                     </button>
                   </DropdownTrigger>
                   <DropdownMenu
                     aria-label="Columnas visibles"
-                    className="min-w-[200px] p-2"
-                    classNames={{ list: "p-2 gap-0.5" }}
+                    classNames={{
+                      base: "min-w-[200px] p-2 rounded-lg shadow-lg border border-slate-200/80",
+                      list: "p-1 gap-0.5",
+                    }}
                   >
                     {selectableColumns.map((col) => (
                       <DropdownItem
@@ -258,9 +361,9 @@ export default function GenericTable<T extends { Id: number | string }>({
                         textValue={col.name}
                         startContent={
                           visibleUids.has(col.uid) ? (
-                            <Check size={14} className="text-[#67afc3] flex-shrink-0" />
+                            <Check size={16} strokeWidth={2} className="text-[#67afc3] flex-shrink-0" />
                           ) : (
-                            <span className="w-3.5 inline-block" aria-hidden />
+                            <span className="w-4 inline-block" aria-hidden />
                           )
                         }
                         onPress={() => {
@@ -275,7 +378,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                             return next;
                           });
                         }}
-                        className="rounded-md"
+                        className="rounded-md px-3 py-2 data-[hover=true]:bg-[#67afc3]/10 data-[focus=true]:bg-[#67afc3]/10 data-[selected=true]:bg-[#67afc3]/15"
                       >
                         {col.name}
                       </DropdownItem>
@@ -287,13 +390,14 @@ export default function GenericTable<T extends { Id: number | string }>({
                 <button
                   onClick={onRefresh}
                   disabled={isRefreshing}
-                  className="p-2 h-9 w-9 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 hover:border-[#67afc3] text-gray-600 hover:text-[#67afc3] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 flex items-center justify-center"
+                  className="p-2 h-9 w-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[#67afc3] text-slate-700 hover:text-[#67afc3] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 flex items-center justify-center"
                   title="Actualizar datos"
                   aria-label="Actualizar datos de la tabla"
                 >
                   <RefreshCcw
-                    size={18}
-                    className={`transition-transform ${isRefreshing ? "animate-spin" : ""}`}
+                    size={ICON_SIZE}
+                    strokeWidth={ICON_STROKE}
+                    className={`transition-transform duration-150 ${isRefreshing ? "animate-spin" : ""}`}
                     aria-hidden="true"
                   />
                 </button>
@@ -302,21 +406,32 @@ export default function GenericTable<T extends { Id: number | string }>({
           </div>
         </section>
 
-        {/* Barra de selección masiva (solo cuando hay 2+ seleccionados) */}
-        {enableSelection && selectedCount > 1 && (
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 px-4 py-2 rounded-lg bg-[#67afc3]/10 border border-[#67afc3]/30 text-sm">
-            <span className="font-medium text-[#0f172a]">
-              {selectedCount} elemento{selectedCount !== 1 ? "s" : ""}{" "}
-              seleccionado{selectedCount !== 1 ? "s" : ""}
-            </span>
+        {enableSelection && selectedCount >= 2 && (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 rounded-xl bg-[#67afc3]/10 border border-[#67afc3]/40 text-sm">
+            <div className="flex flex-col gap-1">
+              <span className="font-medium text-slate-900">
+                {selectionMode === "manual"
+                  ? `${selectedCount} elemento${selectedCount !== 1 ? "s" : ""} seleccionado${selectedCount !== 1 ? "s" : ""}`
+                  : `${selectedCount} seleccionado${selectedCount !== 1 ? "s" : ""}${totalCount - selectedCount > 0 ? ` (${totalCount - selectedCount} excluido${totalCount - selectedCount !== 1 ? "s" : ""})` : ""}`}
+              </span>
+              {canScaleToAll && onScaleToAllMatching && (
+                <button
+                  type="button"
+                  onClick={onScaleToAllMatching}
+                  className="text-left text-[#67afc3] hover:underline font-medium text-xs"
+                >
+                  ¿Seleccionar los {totalCount} resultados?
+                </button>
+              )}
+            </div>
             <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
               {onClearSelection && (
                 <button
                   type="button"
                   onClick={onClearSelection}
-                  className="px-3 py-1.5 rounded-lg text-[#67afc3] hover:bg-[#67afc3]/10 font-medium transition-colors"
+                  className="px-3 py-2 rounded-lg text-[#67afc3] hover:bg-[#67afc3]/15 font-medium transition-colors duration-150"
                 >
-                  Deseleccionar
+                  Deseleccionar todo
                 </button>
               )}
               {bulkActionsDropdown && bulkActionsDropdown.length > 0 && (
@@ -324,18 +439,25 @@ export default function GenericTable<T extends { Id: number | string }>({
                   <DropdownTrigger>
                     <button
                       type="button"
-                      className="px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-2 bg-[#67afc3] hover:bg-[#5a9db0] text-white"
+                      className="px-3 py-2 rounded-lg font-medium transition-all duration-150 flex items-center gap-2 bg-[#67afc3] hover:bg-[#5a9db0] text-white focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40"
                     >
-                      Más acciones
-                      <ChevronDown size={16} />
+                      Acciones masivas
+                      <ChevronDown size={16} strokeWidth={2} />
                     </button>
                   </DropdownTrigger>
-                  <DropdownMenu aria-label="Acciones masivas">
+                  <DropdownMenu
+                    aria-label="Acciones masivas"
+                    classNames={{
+                      base: "min-w-[180px] p-2 rounded-lg shadow-lg border border-slate-200/80",
+                      list: "p-1 gap-0.5",
+                    }}
+                  >
                     {bulkActionsDropdown.map((item) => (
                       <DropdownItem
                         key={item.key}
                         onPress={item.onClick}
                         textValue={item.label}
+                        className="rounded-md px-3 py-2 data-[hover=true]:bg-[#67afc3]/10"
                       >
                         {item.label}
                       </DropdownItem>
@@ -347,7 +469,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                 <button
                   type="button"
                   onClick={onBulkDelete}
-                  className="px-3 py-1.5 rounded-lg bg-red-500/90 hover:bg-red-500 text-white font-medium transition-colors"
+                  className="px-3 py-2 rounded-lg bg-red-500/90 hover:bg-red-500 text-white font-medium transition-all duration-150"
                 >
                   Eliminar seleccionados
                 </button>
@@ -356,11 +478,8 @@ export default function GenericTable<T extends { Id: number | string }>({
           </div>
         )}
 
-        {/* Table + Pagination en mismo contenedor (ref para impresión) */}
-        <div
-          ref={tablePrintRef}
-          className="w-full overflow-hidden flex-1 flex flex-col h-full shadow-md rounded-xl border border-gray-200/60 bg-white print:shadow-none print:border print:border-gray-300"
-        >
+        {/* Table + Pagination - sombra sutil, bordes más contrastados */}
+        <div className="w-full overflow-hidden flex-1 flex flex-col h-full rounded-xl border border-slate-200/80 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
         <div className="flex-1 min-h-0 overflow-auto overflow-x-auto">
           <Table
             aria-label="Tabla de datos"
@@ -369,37 +488,32 @@ export default function GenericTable<T extends { Id: number | string }>({
             selectionMode={enableSelection && !isLoading ? "multiple" : "none"}
             {...(enableSelection &&
               !isLoading && {
-                // HeroUI requiere Set; normalizar keys como string para evitar fallos numéricos
                 selectedKeys: new Set(
                   Array.from(selectedKeys ?? []).map((k) => String(k)),
                 ) as any,
                 onSelectionChange: (keys: unknown) => {
                   if (onSelectionChange) {
-                    // HeroUI pasa "all" al seleccionar todos; hay que expandirlo a las keys reales
-                    let normalized: Set<string>;
                     if (keys === "all") {
-                      normalized = new Set(
-                        data.map((item) => String(item.Id)),
-                      );
+                      onSelectionChange("all");
                     } else {
                       const raw =
                         keys instanceof Set
                           ? keys
                           : new Set((keys as Iterable<Key>) ?? []);
-                      normalized = new Set(
-                        Array.from(raw).map((k) => String(k)),
+                      onSelectionChange(
+                        new Set(Array.from(raw).map((k) => String(k)))
                       );
                     }
-                    onSelectionChange(normalized);
                   }
                 },
               })}
             className="bg-white rounded-lg border-none"
             classNames={{
-              wrapper:
-                "bg-white h-full shadow-none rounded-xl border-none sm:p-4 p-1",
-              th: "bg-[#67afc3]/90 text-white transition-colors duration-200 text-[13px] font-medium hover:!text-white hover:[&_*]:!text-white group",
+              wrapper: "bg-white h-full shadow-none rounded-xl border-none sm:p-4 p-2",
+              th: "bg-[#67afc3] text-white text-[13px] font-semibold border-b border-slate-200/60",
               base: "bg-transparent h-full shadow-none rounded-xl border-none",
+              td: "border-b border-slate-200/80 text-slate-800",
+              tr: "transition-colors duration-150 data-[hover=true]:bg-slate-50 data-[selected=true]:bg-[#67afc3]/15 data-[selected=true]:[&>td]:border-[#67afc3]/20",
             }}
           >
             <TableHeader columns={visibleColumns}>
@@ -435,7 +549,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                   </div>
                 ) : (
                   <div
-                    className="text-gray-500 text-center py-8"
+                    className="text-slate-600 text-center py-8"
                     role="status"
                     aria-live="polite"
                   >
@@ -487,11 +601,11 @@ export default function GenericTable<T extends { Id: number | string }>({
                   );
                 }
 
-                // Fila normal con datos
+                // Fila normal con datos - hover/focus más visibles
                 return (
                   <TableRow
                     key={String(item.Id)}
-                    className="transition-all duration-200 hover:bg-linear-to-r hover:from-blue-50 hover:to-sky-50 rounded-lg"
+                    className="transition-colors duration-150 focus-within:bg-slate-50/80"
                     tabIndex={0}
                     aria-label={`Fila ${item.Id}`}
                     onClick={onRowClick ? () => onRowClick(item) : undefined}
@@ -519,8 +633,7 @@ export default function GenericTable<T extends { Id: number | string }>({
             </TableBody>
           </Table>
         </div>
-          {/* Pagination - agrupada con la tabla */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3 border-t border-gray-200/60 bg-gray-50/50 rounded-b-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 border-t border-slate-200/80 bg-slate-50/50 rounded-b-xl print:hidden">
         {isLoading ? (
           <div className="flex items-center gap-2">
               <Skeleton className="rounded-medium w-9 h-9 opacity-50">
@@ -533,12 +646,12 @@ export default function GenericTable<T extends { Id: number | string }>({
             </div>
         ) : !isLoading && !isError ? (
           <>
-            <span className="text-[#67afc3]/90 text-sm">
+            <span className="text-slate-700 font-medium text-sm">
               {`${data.length} de ${paginationMeta.total} registros`}
             </span>
             <div className="flex items-center gap-3">
               {onLimitChange && (
-                <label className="flex items-center gap-2 text-sm text-gray-600">
+                <label className="flex items-center gap-2 text-sm text-slate-600">
                   <span>Filas:</span>
                   <select
                     value={limit}
@@ -546,7 +659,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                       const v = e.target.value;
                       onLimitChange(v === "all" ? 9999 : Number(v));
                     }}
-                    className="rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 focus:border-[#67afc3] focus:outline-none focus:ring-1 focus:ring-[#67afc3]/30"
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-[#67afc3] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/35 transition-all duration-150"
                     aria-label="Cantidad de filas por página"
                   >
                     {limitOptions.map((n) => (
@@ -582,6 +695,67 @@ export default function GenericTable<T extends { Id: number | string }>({
         ) : null}
           </div>
         </div>
+      </div>
+
+      {/* Tabla de impresión dedicada: oculta en pantalla, visible al imprimir */}
+      <div
+        ref={tablePrintRef}
+        className="table-print-source w-[210mm] min-w-0 bg-white"
+        style={{ width: "210mm" }}
+        aria-hidden="true"
+      >
+        <div className="table-print-header">
+          <h1>{printConfig?.title ?? "Listado"}</h1>
+          <div className="meta">
+            <span data-print-date="">—</span>
+            {printConfig?.filters && ` • ${printConfig.filters}`}
+          </div>
+        </div>
+        {printColumns.length > 0 ? (
+          <>
+            <div className="table-wrapper">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  {printColumns.map((col) => (
+                    <th key={col.uid} data-align={getPrintAlign(col.uid, col)}>
+                      {col.name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {!isLoading && !isError && data.length > 0 ? (
+                  data.map((item, idx) => (
+                    <tr key={String(item.Id)}>
+                      {printColumns.map((col) => (
+                        <td
+                          key={col.uid}
+                          data-align={getPrintAlign(col.uid, col)}
+                          className={col.uid === "Estado" ? "print-status" : ""}
+                        >
+                          {renderCell(item, col.uid)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={printColumns.length}
+                      style={{ textAlign: "center", padding: "16px", color: "#64748b" }}
+                    >
+                      {isLoading ? "Cargando..." : emptyText}
+                    </td>
+                  </tr>
+            )}
+          </tbody>
+            </table>
+            </div>
+          </>
+        ) : (
+          <p style={{ color: "#64748b", fontSize: "11px" }}>Sin columnas para imprimir</p>
+        )}
       </div>
     </section>
   );

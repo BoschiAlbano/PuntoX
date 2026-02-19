@@ -125,10 +125,6 @@ export function useInactivityTimeout() {
       }
       isClosingRef.current = true;
 
-      console.log(
-        `[Inactividad] Sesión cerrada por inactividad después de ${seguridad.tiempoInactividadMinutos} minutos`
-      );
-
       // Limpiar el timeout
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);

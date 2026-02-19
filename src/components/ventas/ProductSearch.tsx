@@ -162,7 +162,6 @@ export default function ProductSearch({
           }
 
           if (scaleResult) {
-            console.log("Scale Barcode Detected:", scaleResult);
             // Buscar producto por PLU (usando el código parseado)
             // Primero intentamos buscar en cache/remoto por el PLU
             // NOTA: fetchProductosVentas busca por string en codigo, descripcion, etc.

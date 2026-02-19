@@ -5,7 +5,7 @@ import ClienteForm from "./ClienteForm";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
 import { Chip, Tooltip, addToast } from "@heroui/react";
-import { exportToCsv } from "@/lib/utils/exportCsv";
+import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
 import { DeleteButton, EditButton } from "@/components/shared/TableActions";
 import { clienteListAdapter } from "@/lib/adapters/cliente.adapter";
 import { Cliente } from "@/lib/validations/cliente.schema";
@@ -102,26 +102,53 @@ export default function ClienteCRUD() {
       )}
       getRowPreviewTitle={(item) => `${item.Nombre} ${item.Apellido}`}
       enableBulkActions
+      exportConfig={{
+        filename: "clientes",
+        columns: [
+          { key: "Nombre", header: "Nombre" },
+          { key: "Apellido", header: "Apellido" },
+          { key: "Dni", header: "DNI" },
+          { key: "Mail", header: "Email" },
+          { key: "Telefono", header: "Teléfono" },
+          { key: "Direccion", header: "Dirección" },
+          { key: "Localidad", header: "Localidad" },
+          { key: "CondicionIva", header: "Cond. IVA" },
+          { key: "ActivarCtaCte", header: "Cta. Cte." },
+          { key: "MontoMaximoCtaCte", header: "Límite Cta. Cte." },
+        ],
+        mapItem: (c) => ({
+          Nombre: c.Nombre,
+          Apellido: c.Apellido,
+          Dni: c.Dni ?? "",
+          Mail: c.Mail ?? "",
+          Telefono: c.Telefono ?? "",
+          Direccion: c.Direccion ?? "",
+          Localidad: c.Localidad ?? "",
+          CondicionIva: c.CondicionIva ?? "",
+          ActivarCtaCte: c.ActivarCtaCte ? "Sí" : "No",
+          MontoMaximoCtaCte: c.MontoMaximoCtaCte ?? 0,
+        }),
+      }}
       bulkActionsDropdown={[
         {
           key: "cambiar-estado",
           label: "Cambiar estado",
-          onAction: (items) => {
-            addToast({ title: "Cambiar estado", description: `${items.length} cliente(s)` });
+          onAction: (ctx) => {
+            addToast({ title: "Cambiar estado", description: `${ctx.totalCount} cliente(s)` });
           },
         },
         {
           key: "editar-campos",
           label: "Editar campos comunes",
-          onAction: (items) => {
-            addToast({ title: "Editar campos", description: `${items.length} cliente(s)` });
+          onAction: (ctx) => {
+            addToast({ title: "Editar campos", description: `${ctx.totalCount} cliente(s)` });
           },
         },
         {
-          key: "exportar",
-          label: "Exportar seleccionados",
-          onAction: (items) => {
-            const data = items.map((c) => ({
+          key: "exportar-csv",
+          label: "Exportar como CSV",
+          onAction: (ctx) => {
+            const data = ctx.items.map((c) => ({
               Nombre: c.Nombre,
               Apellido: c.Apellido,
               Dni: c.Dni ?? "",
@@ -133,27 +160,62 @@ export default function ClienteCRUD() {
               ActivarCtaCte: c.ActivarCtaCte ? "Sí" : "No",
               MontoMaximoCtaCte: c.MontoMaximoCtaCte ?? 0,
             }));
-            exportToCsv(
-              data,
-              [
-                { key: "Nombre", header: "Nombre" },
-                { key: "Apellido", header: "Apellido" },
-                { key: "Dni", header: "DNI" },
-                { key: "Mail", header: "Email" },
-                { key: "Telefono", header: "Teléfono" },
-                { key: "Direccion", header: "Dirección" },
-                { key: "Localidad", header: "Localidad" },
-                { key: "CondicionIva", header: "Cond. IVA" },
-                { key: "ActivarCtaCte", header: "Cta. Cte." },
-                { key: "MontoMaximoCtaCte", header: "Límite Cta. Cte." },
-              ],
-              "clientes"
-            );
+            const columns = [
+              { key: "Nombre" as const, header: "Nombre" },
+              { key: "Apellido" as const, header: "Apellido" },
+              { key: "Dni" as const, header: "DNI" },
+              { key: "Mail" as const, header: "Email" },
+              { key: "Telefono" as const, header: "Teléfono" },
+              { key: "Direccion" as const, header: "Dirección" },
+              { key: "Localidad" as const, header: "Localidad" },
+              { key: "CondicionIva" as const, header: "Cond. IVA" },
+              { key: "ActivarCtaCte" as const, header: "Cta. Cte." },
+              { key: "MontoMaximoCtaCte" as const, header: "Límite Cta. Cte." },
+            ];
+            exportToCsv(data, columns, "clientes");
             addToast({
               title: "Exportado",
-              description: `${items.length} cliente${items.length !== 1 ? "s" : ""} exportado${items.length !== 1 ? "s" : ""}`,
+              description: `${ctx.items.length} cliente${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como CSV`,
               color: "success",
             });
+            ctx.clearSelection();
+          },
+        },
+        {
+          key: "exportar-xls",
+          label: "Exportar como XLS",
+          onAction: (ctx) => {
+            const data = ctx.items.map((c) => ({
+              Nombre: c.Nombre,
+              Apellido: c.Apellido,
+              Dni: c.Dni ?? "",
+              Mail: c.Mail ?? "",
+              Telefono: c.Telefono ?? "",
+              Direccion: c.Direccion ?? "",
+              Localidad: c.Localidad ?? "",
+              CondicionIva: c.CondicionIva ?? "",
+              ActivarCtaCte: c.ActivarCtaCte ? "Sí" : "No",
+              MontoMaximoCtaCte: c.MontoMaximoCtaCte ?? 0,
+            }));
+            const columns = [
+              { key: "Nombre" as const, header: "Nombre" },
+              { key: "Apellido" as const, header: "Apellido" },
+              { key: "Dni" as const, header: "DNI" },
+              { key: "Mail" as const, header: "Email" },
+              { key: "Telefono" as const, header: "Teléfono" },
+              { key: "Direccion" as const, header: "Dirección" },
+              { key: "Localidad" as const, header: "Localidad" },
+              { key: "CondicionIva" as const, header: "Cond. IVA" },
+              { key: "ActivarCtaCte" as const, header: "Cta. Cte." },
+              { key: "MontoMaximoCtaCte" as const, header: "Límite Cta. Cte." },
+            ];
+            exportToXls(data, columns, "clientes");
+            addToast({
+              title: "Exportado",
+              description: `${ctx.items.length} cliente${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como Excel`,
+              color: "success",
+            });
+            ctx.clearSelection();
           },
         },
       ]}

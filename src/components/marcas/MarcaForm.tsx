@@ -17,6 +17,8 @@ export interface Marca {
   Id: number;
   Descripcion: string;
   EstaEliminado: boolean;
+  /** Cantidad de productos asociados (solo lectura, viene del API) */
+  CantidadProductos?: number;
 }
 
 export default function MarcaGenericForm({

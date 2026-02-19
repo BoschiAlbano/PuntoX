@@ -39,6 +39,8 @@ export const productoAdapter = (data: any): Producto => {
     },
     Stock: Number(data.Stock || 0),
     SucursalNombre: data.SucursalNombre || null,
+    Marca: data.Marca ?? null,
+    Rubro: data.Rubro ?? null,
     Iva: {
       Id: Number(data.Iva?.Id || 0),
       Porcentaje: Number(data.Iva?.Porcentaje || 0),

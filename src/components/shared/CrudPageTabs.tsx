@@ -76,7 +76,7 @@ export default function CrudPageTabs({
     <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch h-full gap-4">
       {/* Encabezado dinámico según la tab seleccionada */}
       {(headerTitle || headerIcon) && (
-        <header className="flex items-start gap-3 px-1 sm:px-0 pb-4 mb-1 border-b border-gray-200/80">
+        <header className="flex items-start gap-4 px-1 sm:px-0 pb-4 mb-1 border-b border-slate-200/80">
           {headerIcon && (
             <div
               className="flex-shrink-0 rounded-xl p-2.5 bg-[#67afc3]/15 text-[#67afc3]"
@@ -85,14 +85,14 @@ export default function CrudPageTabs({
               {headerIcon}
             </div>
           )}
-          <div className="flex flex-col gap-0.5 min-w-0">
+          <div className="flex flex-col gap-1 min-w-0">
             {headerTitle && (
-              <h1 className="text-xl font-semibold text-slate-800">
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
                 {headerTitle}
               </h1>
             )}
             {headerDescription && (
-              <p className="text-sm text-gray-500">{headerDescription}</p>
+              <p className="text-sm text-slate-500 font-normal">{headerDescription}</p>
             )}
           </div>
         </header>

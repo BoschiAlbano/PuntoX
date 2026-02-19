@@ -8,7 +8,7 @@ import { Chip, addToast } from "@heroui/react";
 import { DeleteButton, EditButton } from "@/components/shared/TableActions";
 import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
 import { BulkEditarCamposModal } from "@/components/shared/BulkEditarCamposModal";
-import { exportToCsv } from "@/lib/utils/exportCsv";
+import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
 
 async function bulkPatchRubros(
   ids: (number | string)[],
@@ -71,44 +71,78 @@ export default function RubroCRUD() {
       )}
       getRowPreviewTitle={(item) => item.Descripcion || "Rubro"}
       enableBulkActions
+      exportConfig={{
+        filename: "rubros",
+        columns: [
+          { key: "Id", header: "ID" },
+          { key: "Descripcion", header: "Descripción" },
+          { key: "Estado", header: "Estado" },
+        ],
+        mapItem: (r) => ({
+          Id: r.Id,
+          Descripcion: r.Descripcion ?? "",
+          Estado: r.EstaEliminado ? "Inactivo" : "Activo",
+        }),
+      }}
       bulkActionsDropdown={[
         {
           key: "cambiar-estado",
           label: "Cambiar estado",
-          onAction: (items, { clearSelection }) => {
-            setBulkEstadoModal({ open: true, items, clearSelection });
+          onAction: (ctx) => {
+            setBulkEstadoModal({ open: true, items: ctx.items, clearSelection: ctx.clearSelection });
           },
         },
         {
           key: "editar-campos",
           label: "Editar campos comunes",
-          onAction: (items, { clearSelection }) => {
-            setBulkEditarModal({ open: true, items, clearSelection });
+          onAction: (ctx) => {
+            setBulkEditarModal({ open: true, items: ctx.items, clearSelection: ctx.clearSelection });
           },
         },
         {
-          key: "exportar",
-          label: "Exportar seleccionados",
-          onAction: (items) => {
-            const data = items.map((r) => ({
+          key: "exportar-csv",
+          label: "Exportar como CSV",
+          onAction: (ctx) => {
+            const data = ctx.items.map((r) => ({
               Id: r.Id,
               Descripcion: r.Descripcion ?? "",
               Estado: r.EstaEliminado ? "Inactivo" : "Activo",
             }));
-            exportToCsv(
-              data,
-              [
-                { key: "Id", header: "ID" },
-                { key: "Descripcion", header: "Descripción" },
-                { key: "Estado", header: "Estado" },
-              ],
-              "rubros"
-            );
+            const columns = [
+              { key: "Id" as const, header: "ID" },
+              { key: "Descripcion" as const, header: "Descripción" },
+              { key: "Estado" as const, header: "Estado" },
+            ];
+            exportToCsv(data, columns, "rubros");
             addToast({
               title: "Exportado",
-              description: `${items.length} rubro${items.length !== 1 ? "s" : ""} exportado${items.length !== 1 ? "s" : ""}`,
+              description: `${ctx.items.length} rubro${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como CSV`,
               color: "success",
             });
+            ctx.clearSelection();
+          },
+        },
+        {
+          key: "exportar-xls",
+          label: "Exportar como XLS",
+          onAction: (ctx) => {
+            const data = ctx.items.map((r) => ({
+              Id: r.Id,
+              Descripcion: r.Descripcion ?? "",
+              Estado: r.EstaEliminado ? "Inactivo" : "Activo",
+            }));
+            const columns = [
+              { key: "Id" as const, header: "ID" },
+              { key: "Descripcion" as const, header: "Descripción" },
+              { key: "Estado" as const, header: "Estado" },
+            ];
+            exportToXls(data, columns, "rubros");
+            addToast({
+              title: "Exportado",
+              description: `${ctx.items.length} rubro${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como Excel`,
+              color: "success",
+            });
+            ctx.clearSelection();
           },
         },
       ]}

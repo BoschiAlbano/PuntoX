@@ -72,7 +72,6 @@ export const useUserStore = create<UserState>()(
           const res = await fetch("/api/auth/me");
           if (res.ok) {
             const data = await res.json();
-            // console.log(data);
             let branchToUse = data.currentBranch;
             // Client-side restoration of selected branch
             if (typeof window !== "undefined") {

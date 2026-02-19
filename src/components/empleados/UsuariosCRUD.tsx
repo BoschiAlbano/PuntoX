@@ -3,7 +3,7 @@
 import { useState } from "react";
 import GenericCrud from "@/components/shared/GenericCrud";
 import { Chip, Button, Tooltip, addToast } from "@heroui/react";
-import { exportToCsv } from "@/lib/utils/exportCsv";
+import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
 import { EditButton, DeleteButton } from "../shared/TableActions";
 import UsuarioForm from "./UsuarioForm";
 import ChangePasswordModal from "./ChangePasswordModal";
@@ -68,26 +68,51 @@ export default function UsuariosCRUD() {
         transformer={transformer}
         additionalInvalidateQueryKeys={["roles-select"]}
         enableBulkActions
+        exportConfig={{
+          filename: "usuarios",
+          columns: [
+            { key: "nombreCompleto", header: "Nombre completo" },
+            { key: "email", header: "Email" },
+            { key: "username", header: "Usuario" },
+            { key: "telefono", header: "Teléfono" },
+            { key: "rolNombre", header: "Rol" },
+            { key: "estado", header: "Estado" },
+            { key: "legajo", header: "Legajo" },
+            { key: "dni", header: "DNI" },
+            { key: "ultimaActividad", header: "Última actividad" },
+          ],
+          mapItem: (u) => ({
+            nombreCompleto: u.nombreCompleto ?? "",
+            email: u.email ?? "",
+            username: u.username ?? "",
+            telefono: u.telefono ?? "",
+            rolNombre: u.rolNombre ?? "",
+            estado: u.estado ?? "",
+            legajo: u.legajo ?? "",
+            dni: u.dni ?? "",
+            ultimaActividad: u.ultimaActividad ?? "",
+          }),
+        }}
         bulkActionsDropdown={[
           {
             key: "cambiar-estado",
             label: "Cambiar estado",
-            onAction: (items) => {
-              addToast({ title: "Cambiar estado", description: `${items.length} usuario(s)` });
+            onAction: (ctx) => {
+              addToast({ title: "Cambiar estado", description: `${ctx.totalCount} usuario(s)` });
             },
           },
           {
             key: "editar-campos",
             label: "Editar campos comunes",
-            onAction: (items) => {
-              addToast({ title: "Editar campos", description: `${items.length} usuario(s)` });
+            onAction: (ctx) => {
+              addToast({ title: "Editar campos", description: `${ctx.totalCount} usuario(s)` });
             },
           },
           {
-            key: "exportar",
-            label: "Exportar seleccionados",
-            onAction: (items) => {
-              const data = items.map((u) => ({
+            key: "exportar-csv",
+            label: "Exportar como CSV",
+            onAction: (ctx) => {
+              const data = ctx.items.map((u) => ({
                 nombreCompleto: u.nombreCompleto ?? "",
                 email: u.email ?? "",
                 username: u.username ?? "",
@@ -98,26 +123,59 @@ export default function UsuariosCRUD() {
                 dni: u.dni ?? "",
                 ultimaActividad: u.ultimaActividad ?? "",
               }));
-              exportToCsv(
-                data,
-                [
-                  { key: "nombreCompleto", header: "Nombre completo" },
-                  { key: "email", header: "Email" },
-                  { key: "username", header: "Usuario" },
-                  { key: "telefono", header: "Teléfono" },
-                  { key: "rolNombre", header: "Rol" },
-                  { key: "estado", header: "Estado" },
-                  { key: "legajo", header: "Legajo" },
-                  { key: "dni", header: "DNI" },
-                  { key: "ultimaActividad", header: "Última actividad" },
-                ],
-                "usuarios"
-              );
+              const columns = [
+                { key: "nombreCompleto" as const, header: "Nombre completo" },
+                { key: "email" as const, header: "Email" },
+                { key: "username" as const, header: "Usuario" },
+                { key: "telefono" as const, header: "Teléfono" },
+                { key: "rolNombre" as const, header: "Rol" },
+                { key: "estado" as const, header: "Estado" },
+                { key: "legajo" as const, header: "Legajo" },
+                { key: "dni" as const, header: "DNI" },
+                { key: "ultimaActividad" as const, header: "Última actividad" },
+              ];
+              exportToCsv(data, columns, "usuarios");
               addToast({
                 title: "Exportado",
-                description: `${items.length} usuario${items.length !== 1 ? "s" : ""} exportado${items.length !== 1 ? "s" : ""}`,
+                description: `${ctx.items.length} usuario${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como CSV`,
                 color: "success",
               });
+              ctx.clearSelection();
+            },
+          },
+          {
+            key: "exportar-xls",
+            label: "Exportar como XLS",
+            onAction: (ctx) => {
+              const data = ctx.items.map((u) => ({
+                nombreCompleto: u.nombreCompleto ?? "",
+                email: u.email ?? "",
+                username: u.username ?? "",
+                telefono: u.telefono ?? "",
+                rolNombre: u.rolNombre ?? "",
+                estado: u.estado ?? "",
+                legajo: u.legajo ?? "",
+                dni: u.dni ?? "",
+                ultimaActividad: u.ultimaActividad ?? "",
+              }));
+              const columns = [
+                { key: "nombreCompleto" as const, header: "Nombre completo" },
+                { key: "email" as const, header: "Email" },
+                { key: "username" as const, header: "Usuario" },
+                { key: "telefono" as const, header: "Teléfono" },
+                { key: "rolNombre" as const, header: "Rol" },
+                { key: "estado" as const, header: "Estado" },
+                { key: "legajo" as const, header: "Legajo" },
+                { key: "dni" as const, header: "DNI" },
+                { key: "ultimaActividad" as const, header: "Última actividad" },
+              ];
+              exportToXls(data, columns, "usuarios");
+              addToast({
+                title: "Exportado",
+                description: `${ctx.items.length} usuario${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como Excel`,
+                color: "success",
+              });
+              ctx.clearSelection();
             },
           },
         ]}

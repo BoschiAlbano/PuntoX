@@ -8,7 +8,7 @@ import { Chip, addToast } from "@heroui/react";
 import { DeleteButton, EditButton } from "../shared/TableActions";
 import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
 import { BulkEditarCamposModal } from "@/components/shared/BulkEditarCamposModal";
-import { exportToCsv } from "@/lib/utils/exportCsv";
+import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
 
 async function bulkPatchMarcas(
   ids: (number | string)[],
@@ -58,6 +58,12 @@ export default function MarcaCRUD() {
             <p className="font-medium text-slate-800">{item.Descripcion}</p>
           </div>
           <div>
+            <p className="text-slate-500 text-xs mb-0.5">Productos</p>
+            <p className="font-medium text-slate-800">
+              {(item.CantidadProductos ?? 0).toLocaleString()}
+            </p>
+          </div>
+          <div>
             <p className="text-slate-500 text-xs mb-0.5">Estado</p>
             <span
               className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
@@ -71,44 +77,84 @@ export default function MarcaCRUD() {
       )}
       getRowPreviewTitle={(item) => item.Descripcion || "Marca"}
       enableBulkActions
+      exportConfig={{
+        filename: "marcas",
+        columns: [
+          { key: "Id", header: "ID" },
+          { key: "Descripcion", header: "Descripción" },
+          { key: "Productos", header: "Productos" },
+          { key: "Estado", header: "Estado" },
+        ],
+        mapItem: (m) => ({
+          Id: m.Id,
+          Descripcion: m.Descripcion ?? "",
+          Productos: m.CantidadProductos ?? 0,
+          Estado: m.EstaEliminado ? "Inactivo" : "Activo",
+        }),
+      }}
       bulkActionsDropdown={[
         {
           key: "cambiar-estado",
           label: "Cambiar estado",
-          onAction: (items, { clearSelection }) => {
-            setBulkEstadoModal({ open: true, items, clearSelection });
+          onAction: (ctx) => {
+            setBulkEstadoModal({ open: true, items: ctx.items, clearSelection: ctx.clearSelection });
           },
         },
         {
           key: "editar-campos",
           label: "Editar campos comunes",
-          onAction: (items, { clearSelection }) => {
-            setBulkEditarModal({ open: true, items, clearSelection });
+          onAction: (ctx) => {
+            setBulkEditarModal({ open: true, items: ctx.items, clearSelection: ctx.clearSelection });
           },
         },
         {
-          key: "exportar",
-          label: "Exportar seleccionados",
-          onAction: (items) => {
-            const data = items.map((m) => ({
+          key: "exportar-csv",
+          label: "Exportar como CSV",
+          onAction: (ctx) => {
+            const data = ctx.items.map((m) => ({
               Id: m.Id,
               Descripcion: m.Descripcion ?? "",
+              Productos: m.CantidadProductos ?? 0,
               Estado: m.EstaEliminado ? "Inactivo" : "Activo",
             }));
-            exportToCsv(
-              data,
-              [
-                { key: "Id", header: "ID" },
-                { key: "Descripcion", header: "Descripción" },
-                { key: "Estado", header: "Estado" },
-              ],
-              "marcas"
-            );
+            const columns = [
+              { key: "Id" as const, header: "ID" },
+              { key: "Descripcion" as const, header: "Descripción" },
+              { key: "Productos" as const, header: "Productos" },
+              { key: "Estado" as const, header: "Estado" },
+            ];
+            exportToCsv(data, columns, "marcas");
             addToast({
               title: "Exportado",
-              description: `${items.length} marca${items.length !== 1 ? "s" : ""} exportada${items.length !== 1 ? "s" : ""}`,
+              description: `${ctx.items.length} marca${ctx.items.length !== 1 ? "s" : ""} exportada${ctx.items.length !== 1 ? "s" : ""} como CSV`,
               color: "success",
             });
+            ctx.clearSelection();
+          },
+        },
+        {
+          key: "exportar-xls",
+          label: "Exportar como XLS",
+          onAction: (ctx) => {
+            const data = ctx.items.map((m) => ({
+              Id: m.Id,
+              Descripcion: m.Descripcion ?? "",
+              Productos: m.CantidadProductos ?? 0,
+              Estado: m.EstaEliminado ? "Inactivo" : "Activo",
+            }));
+            const columns = [
+              { key: "Id" as const, header: "ID" },
+              { key: "Descripcion" as const, header: "Descripción" },
+              { key: "Productos" as const, header: "Productos" },
+              { key: "Estado" as const, header: "Estado" },
+            ];
+            exportToXls(data, columns, "marcas");
+            addToast({
+              title: "Exportado",
+              description: `${ctx.items.length} marca${ctx.items.length !== 1 ? "s" : ""} exportada${ctx.items.length !== 1 ? "s" : ""} como Excel`,
+              color: "success",
+            });
+            ctx.clearSelection();
           },
         },
       ]}
@@ -118,6 +164,11 @@ export default function MarcaCRUD() {
           name: "DESCRIPCIÓN",
           sortable: true,
           align: "start",
+        },
+        {
+          uid: "CantidadProductos",
+          name: "PRODUCTOS",
+          align: "center",
         },
         { uid: "Estado", name: "ESTADO" },
         { uid: "acciones", name: "ACCIONES" },
@@ -129,6 +180,12 @@ export default function MarcaCRUD() {
             return (
               <span className="font-medium text-gray-700">
                 {item.Descripcion}
+              </span>
+            );
+          case "CantidadProductos":
+            return (
+              <span className="text-gray-600 tabular-nums">
+                {(item.CantidadProductos ?? 0).toLocaleString()}
               </span>
             );
           case "Estado":

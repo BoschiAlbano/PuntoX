@@ -288,7 +288,6 @@ export default function CredentialsForm() {
           ? callbackUrl
           : "/ventas";
 
-      console.log("[CredentialsForm] Redirigiendo a:", safeCallbackUrl);
       window.location.href = safeCallbackUrl;
     } catch (err) {
       console.error("Error al iniciar sesion:", err);

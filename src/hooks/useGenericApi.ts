@@ -1,3 +1,9 @@
+/**
+ * Hook genérico para APIs CRUD paginadas.
+ * Soporta búsqueda, paginación, extraParams (ej: bajoStock) y transformer.
+ * Usado por GenericCrud.
+ * @see docs/ui/crud-tablas-genericas.md
+ */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PaginationMeta } from "./useProductos";
 import { dynamicDataQueryOptions } from "@/lib/react-query/queryDefaults";
@@ -32,9 +38,6 @@ export function useGenericApi<T extends { Id: number | string }>({
 }: GenericApiOptions<T>) {
   const queryClient = useQueryClient();
 
-  //sucursalId
-  // const { currentBranch } = useUserStore();
-
   // --- Fetch Query ---
   const fetchData = async ({ signal }: { signal: AbortSignal }) => {
     const params = new URLSearchParams();
@@ -48,8 +51,7 @@ export function useGenericApi<T extends { Id: number | string }>({
           params.append(k, String(v));
       });
     }
-    // params.append("sucursalId", currentBranch?.Id?.toString());
-    // Asegurar que el endpoint no termine en /
+
     const cleanEndpoint = endpoint.endsWith("/")
       ? endpoint.slice(0, -1)
       : endpoint;
@@ -58,11 +60,6 @@ export function useGenericApi<T extends { Id: number | string }>({
     const response = await fetch(url, { signal });
     if (!response.ok) throw new Error("Error al cargar datos");
     const json = await response.json();
-
-    // Adaptar respuesta: empleados devuelve { empleados: [...], pagination: {...} }
-    // otros endpoints devuelven { data: [...], meta: {...} }
-    // Adaptar respuesta: empleados devuelve { empleados: [...], pagination: {...} }
-    // otros endpoints devuelven { data: [...], meta: {...} }
 
     const data: T[] = transformer
       ? transformer(json.data || [])
@@ -75,35 +72,6 @@ export function useGenericApi<T extends { Id: number | string }>({
         limit: 10,
         totalPages: 0,
       };
-    // if (endpoint.includes("/empleados")) {
-    //   // Formato de empleados: { empleados: [...], pagination: {...} }
-    //   data = transformer
-    //     ? transformer(json.empleados || json.data || [])
-    //     : ((json.empleados || json.data || []) as T[]);
-    //   // Asegurar que meta tenga la estructura correcta
-    //   const pagination = json.pagination || {};
-    //   meta = {
-    //     total: pagination.total || 0,
-    //     page: pagination.page || 1,
-    //     limit: pagination.limit || limit,
-    //     totalPages:
-    //       pagination.totalPages ||
-    //       Math.ceil((pagination.total || 0) / (pagination.limit || limit)) ||
-    //       1,
-    //   };
-    // } else {
-    //   // Formato estándar
-    //   data = transformer
-    //     ? transformer(json.data || [])
-    //     : ((json.data || []) as T[]);
-    //   meta = json.meta ||
-    //     json.pagination || {
-    //       total: 0,
-    //       page: 1,
-    //       limit: 10,
-    //       totalPages: 0,
-    //     };
-    // }
 
     return { data, meta };
   };

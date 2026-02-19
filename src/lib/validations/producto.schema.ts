@@ -195,6 +195,8 @@ export interface Producto {
   Stock: number;
   EstaEliminado: boolean;
   SucursalNombre?: string | null; // Nombre de la sucursal del stock mostrado
+  Marca?: { Descripcion: string } | null;
+  Rubro?: { Descripcion: string } | null;
   Precio: {
     PorcentajeGanancia?: number;
     PorcentajeGanancia2?: number;

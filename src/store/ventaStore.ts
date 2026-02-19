@@ -56,8 +56,6 @@ export const useVentaStore = create<VentaState>()(
       pagos: [],
 
       addItem: (producto, cantidad = 1, listaPrecios) => {
-        console.log("Store: ", producto);
-
         const { items } = get();
         const existing = items.find((i) => i.Id === producto.Id);
 

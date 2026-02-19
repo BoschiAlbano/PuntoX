@@ -94,6 +94,9 @@ export async function GET(req: NextRequest) {
         Stock: true, // Legacy/Global
         StockMinimo: true,
 
+        Marca: { select: { Descripcion: true } },
+        Rubro: { select: { Descripcion: true } },
+
         // Relacion Precio: Solo lo necesario para la tabla
         Precio: {
           select: {
@@ -141,6 +144,9 @@ export async function GET(req: NextRequest) {
         CodigoBarra: producto.CodigoBarra,
         Descripcion: producto.Descripcion,
         EstaEliminado: producto.EstaEliminado,
+
+        Marca: producto.Marca ? { Descripcion: producto.Marca.Descripcion } : null,
+        Rubro: producto.Rubro ? { Descripcion: producto.Rubro.Descripcion } : null,
 
         // Stock logic (StockMinimo: sucursal o valor global)
         Stock: stockSucursal ? Number(stockSucursal.Stock) : Number(0),

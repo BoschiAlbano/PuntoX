@@ -90,7 +90,7 @@ export default function VentaFooter({
   const handlePrint = useReactToPrint({
     contentRef: ticketRef,
     documentTitle: "Ticket de Venta",
-    onAfterPrint: () => console.log("Impresión finalizada"),
+    onAfterPrint: () => {},
   });
 
   const totalPagado = pagos.reduce((acc, p) => acc + p.monto, 0);

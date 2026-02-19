@@ -1,6 +1,11 @@
 "use client";
 
-import { useState, Key, useMemo, useEffect } from "react";
+/**
+ * CRUD genérico: orquesta API, tabla, formulario, modales y acciones masivas.
+ * Usa GenericTable para la UI y useGenericApi para datos.
+ * @see docs/ui/crud-tablas-genericas.md
+ */
+import { useState, Key, useMemo, useEffect, useCallback } from "react";
 import {
   useDisclosure,
   addToast,
@@ -14,9 +19,21 @@ import {
 } from "@heroui/react";
 import { AlertTriangle } from "lucide-react";
 import GenericTable, { Column } from "./GenericTable";
+import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
 import { useGenericApi } from "@/hooks/useGenericApi";
 import { useDebounce } from "@/hooks/useDebounce";
 import { handleError } from "@/lib/auth/errorHandler";
+import { buildSelectionQuerySignature } from "@/lib/utils/selectionUtils";
+
+export type SelectionMode = "manual" | "all_matching";
+
+export interface BulkSelectionContext<T> {
+  ids: string[];
+  items: T[];
+  totalCount: number;
+  mode: SelectionMode;
+  clearSelection: () => void;
+}
 
 // Interfaz que deben cumplir los formularios pasados a este componente
 export interface GenericFormProps<T> {
@@ -56,8 +73,12 @@ interface GenericCrudProps<T> {
   initialLimit?: number;
   transformer?: (data: any) => T[];
   additionalInvalidateQueryKeys?: any[];
-  onImportClick?: () => void;
-  onExportClick?: () => void;
+  /** Configuración para exportar datos actuales (CSV/XLS) desde "Más opciones" */
+  exportConfig?: {
+    filename: string;
+    columns: { key: string; header: string }[];
+    mapItem: (item: T) => Record<string, unknown>;
+  };
   /** @deprecated Use renderRowPreview instead */
   onRowClick?: (item: T, openEdit: () => void) => void;
   /** Contenido del modal de vista previa al hacer click en la fila */
@@ -68,14 +89,11 @@ interface GenericCrudProps<T> {
   showEditInPreview?: boolean;
   /** Habilitar checkboxes y acciones masivas (eliminar seleccionados) */
   enableBulkActions?: boolean;
-  /** Opciones del dropdown "Más acciones" (visibles solo con selección). Reciben items y clearSelection para limpiar tras éxito. */
+  /** Opciones del dropdown "Acciones masivas" (visibles solo con selección). */
   bulkActionsDropdown?: Array<{
     key: string;
     label: string;
-    onAction: (
-      selectedItems: T[],
-      context: { clearSelection: () => void }
-    ) => void;
+    onAction: (context: BulkSelectionContext<T>) => void;
   }>;
   /** Filtro "Bajo stock": cuando se provee, se muestra el botón. Si además pasa lowStockApiParam, se filtra en el backend. */
   lowStockFilterFn?: (item: T) => boolean;
@@ -83,6 +101,13 @@ interface GenericCrudProps<T> {
   lowStockApiParam?: boolean;
   /** Devuelve params extra para el API según el estado (ej: bajoStock cuando lowStockOnly) */
   getApiExtraParams?: (state: { lowStockOnly: boolean }) => Record<string, string | number | boolean>;
+  /** Contenido extra en la barra de herramientas (ej: botón "Solicitar reposición") */
+  toolbarExtraContent?: React.ReactNode;
+  /** Configuración de impresión (título, orientación, filtros) */
+  printConfig?: {
+    title?: string;
+    orientation?: "portrait" | "landscape";
+  };
 }
 
 export default function GenericCrud<T extends { Id: number | string }>({
@@ -95,8 +120,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
   initialLimit = 10,
   transformer,
   additionalInvalidateQueryKeys,
-  onImportClick,
-  onExportClick,
+  exportConfig,
   onRowClick,
   renderRowPreview,
   getRowPreviewTitle,
@@ -106,6 +130,8 @@ export default function GenericCrud<T extends { Id: number | string }>({
   lowStockFilterFn,
   lowStockApiParam = false,
   getApiExtraParams,
+  toolbarExtraContent,
+  printConfig,
 }: GenericCrudProps<T>) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
@@ -113,12 +139,22 @@ export default function GenericCrud<T extends { Id: number | string }>({
     onOpen: onDeleteOpen,
     onClose: onDeleteClose,
   } = useDisclosure();
+  const {
+    isOpen: isBulkDeleteOpen,
+    onOpen: onBulkDeleteOpen,
+    onClose: onBulkDeleteClose,
+  } = useDisclosure();
 
   const [selectedItem, setSelectedItem] = useState<T | null>(null);
   const [itemToDelete, setItemToDelete] = useState<T | null>(null);
   const [previewItem, setPreviewItem] = useState<T | null>(null);
-  const [selectedKeys, setSelectedKeys] = useState<Set<Key>>(new Set());
   const [lowStockOnly, setLowStockOnly] = useState(false);
+
+  // Selección masiva cross-page
+  const [selectionMode, setSelectionMode] = useState<SelectionMode>("manual");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [excludedIds, setExcludedIds] = useState<Set<string>>(new Set());
+  const [selectionQuerySignature, setSelectionQuerySignature] = useState("");
 
   const hasRowPreview = !!renderRowPreview || !!onRowClick;
 
@@ -137,6 +173,49 @@ export default function GenericCrud<T extends { Id: number | string }>({
   useEffect(() => {
     setPage(1);
   }, [lowStockOnly]);
+
+  // Firma de filtros para invalidar selección
+  const currentSignature = useMemo(
+    () =>
+      buildSelectionQuerySignature({
+        search: debouncedSearch,
+        lowStockOnly,
+        sortColumn: String(sortDescriptor?.column ?? ""),
+        sortDirection: String(sortDescriptor?.direction ?? ""),
+        limit,
+      }),
+    [debouncedSearch, lowStockOnly, sortDescriptor, limit]
+  );
+
+  // Resetear selección cuando cambian filtros
+  useEffect(() => {
+    if (selectionQuerySignature && selectionQuerySignature !== currentSignature) {
+      const hadSelection =
+        selectedIds.size > 0 ||
+        excludedIds.size > 0 ||
+        selectionMode === "all_matching";
+      setSelectionMode("manual");
+      setSelectedIds(new Set());
+      setExcludedIds(new Set());
+      setSelectionQuerySignature(currentSignature);
+      if (hadSelection) {
+        addToast({
+          title: "Filtros cambiados",
+          description: "Se reinició la selección por cambio de filtros",
+          color: "primary",
+          timeout: 2000,
+        });
+      }
+    } else if (!selectionQuerySignature) {
+      setSelectionQuerySignature(currentSignature);
+    }
+  }, [
+    currentSignature,
+    selectionQuerySignature,
+    selectedIds.size,
+    excludedIds.size,
+    selectionMode,
+  ]);
 
   // Hook de Data (usa debouncedSearch en lugar de search)
   const {
@@ -200,6 +279,141 @@ export default function GenericCrud<T extends { Id: number | string }>({
     });
   }, [sortDescriptor, data, lowStockOnly, lowStockFilterFn]);
 
+  const pageIds = useMemo(
+    () => new Set(sortedItems.map((i) => String(i.Id))),
+    [sortedItems]
+  );
+
+  // selectedKeys para la tabla HeroUI
+  const selectedKeysForTable = useMemo(() => {
+    if (selectionMode === "manual") {
+      return new Set([...selectedIds].filter((id) => pageIds.has(id)));
+    }
+    return new Set([...pageIds].filter((id) => !excludedIds.has(id)));
+  }, [selectionMode, selectedIds, excludedIds, pageIds]);
+
+  const effectiveSelectedCount =
+    selectionMode === "manual"
+      ? selectedIds.size
+      : Math.max(0, paginationMeta.total - excludedIds.size);
+
+  const hasSelection = effectiveSelectedCount > 0;
+
+  const handleSelectionChange = useCallback(
+    (keys: Set<string> | "all") => {
+      if (selectionMode === "manual") {
+        if (keys === "all") {
+          setSelectedIds((prev) => new Set([...prev, ...pageIds]));
+        } else {
+          const otherPageIds = [...selectedIds].filter((id) => !pageIds.has(id));
+          setSelectedIds(new Set([...otherPageIds, ...keys]));
+        }
+      } else {
+        if (keys === "all") {
+          setExcludedIds((prev) => new Set([...prev].filter((id) => !pageIds.has(id))));
+        } else {
+          const newlyExcluded = [...pageIds].filter((id) => !keys.has(id));
+          setExcludedIds((prev) =>
+            new Set([
+              ...[...prev].filter((id) => !pageIds.has(id)),
+              ...newlyExcluded,
+            ])
+          );
+        }
+      }
+    },
+    [selectionMode, pageIds]
+  );
+
+  const handleScaleToAllMatching = useCallback(() => {
+    setSelectionMode("all_matching");
+    setSelectedIds(new Set());
+    setExcludedIds(new Set());
+  }, []);
+
+  const clearSelection = useCallback(() => {
+    setSelectionMode("manual");
+    setSelectedIds(new Set());
+    setExcludedIds(new Set());
+  }, []);
+
+  // Fetch todos los ítems que coinciden con los filtros (pagina para cubrir cross-page)
+  const fetchAllMatchingItems = useCallback(async (): Promise<T[]> => {
+    const extraParams = getApiExtraParams
+      ? getApiExtraParams({ lowStockOnly })
+      : lowStockApiParam && lowStockOnly
+        ? { bajoStock: true }
+        : undefined;
+    const total = paginationMeta.total;
+    const cap = Math.min(total, 2000);
+    const allItems: T[] = [];
+    let pageNum = 1;
+    const perPage = Math.min(limit, 100);
+
+    while (allItems.length < cap) {
+      const params = new URLSearchParams();
+      params.append("q", debouncedSearch);
+      params.append("page", String(pageNum));
+      params.append("limit", String(perPage));
+      if (extraParams) {
+        Object.entries(extraParams).forEach(([k, v]) => {
+          if (v !== undefined && v !== null && v !== "")
+            params.append(k, String(v));
+        });
+      }
+      const url = `${apiPath.replace(/\/$/, "")}?${params.toString()}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Error al cargar datos");
+      const json = await res.json();
+      const items: T[] = transformer ? transformer(json.data || []) : (json.data || []);
+      allItems.push(...items);
+      if (items.length < perPage) break;
+      pageNum++;
+      if (allItems.length >= cap) break;
+    }
+
+    return allItems.slice(0, cap);
+  }, [
+    apiPath,
+    debouncedSearch,
+    lowStockOnly,
+    paginationMeta.total,
+    limit,
+    getApiExtraParams,
+    lowStockApiParam,
+    transformer,
+  ]);
+
+  const getBulkSelectionContext = useCallback(
+    async (): Promise<BulkSelectionContext<T>> => {
+      const ids =
+        selectionMode === "manual"
+          ? [...selectedIds]
+          : [];
+      const allItems = await fetchAllMatchingItems();
+      const items =
+        selectionMode === "manual"
+          ? allItems.filter((i) => selectedIds.has(String(i.Id)))
+          : allItems.filter((i) => !excludedIds.has(String(i.Id)));
+      const resolvedIds = selectionMode === "manual" ? ids : items.map((i) => String(i.Id));
+      return {
+        ids: resolvedIds,
+        items,
+        totalCount: effectiveSelectedCount,
+        mode: selectionMode,
+        clearSelection,
+      };
+    },
+    [
+      selectionMode,
+      selectedIds,
+      excludedIds,
+      effectiveSelectedCount,
+      fetchAllMatchingItems,
+      clearSelection,
+    ]
+  );
+
   const isSaving = saveMutation.isPending || deleteMutation.isPending;
 
   // --- Handlers ---
@@ -251,30 +465,26 @@ export default function GenericCrud<T extends { Id: number | string }>({
   };
 
   const handleBulkDelete = async () => {
-    if (selectedKeys.size === 0) return;
-    const isEmpleados = apiPath.includes("/empleados");
-    const itemsToDelete = sortedItems.filter((item) =>
-      selectedKeys.has(String(item.Id)),
-    );
-    if (itemsToDelete.length === 0) return;
+    if (!hasSelection) return;
+    const ctx = await getBulkSelectionContext();
+    if (ctx.ids.length === 0) return;
 
-    const ids = itemsToDelete.map((item) =>
-      isEmpleados && (item as any).personaId
-        ? (item as any).personaId
-        : item.Id,
-    );
+    const isEmpleados = apiPath.includes("/empleados");
+    const idsToDelete = isEmpleados
+      ? ctx.items.map((i: any) => i.personaId ?? i.Id).filter(Boolean)
+      : ctx.ids;
 
     try {
-      for (const id of ids) {
+      for (const id of idsToDelete) {
         await deleteMutation.mutateAsync(id);
       }
       addToast({
         title: "Éxito",
-        description: `${ids.length} registro${ids.length !== 1 ? "s" : ""} eliminado${ids.length !== 1 ? "s" : ""} correctamente`,
+        description: `${idsToDelete.length} registro${idsToDelete.length !== 1 ? "s" : ""} eliminado${idsToDelete.length !== 1 ? "s" : ""} correctamente`,
         color: "success",
         timeout: 3000,
       });
-      setSelectedKeys(new Set());
+      clearSelection();
     } catch (error: any) {
       const msg = error?.error || error?.message || "Error al eliminar";
       handleError(new Error(msg), "Error al eliminar seleccionados");
@@ -352,47 +562,103 @@ export default function GenericCrud<T extends { Id: number | string }>({
         onNewClick={handleCreate}
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing}
-        onImportClick={onImportClick}
-        onExportClick={onExportClick}
-        enableSelection={enableBulkActions}
-        selectedKeys={selectedKeys}
-        onSelectionChange={setSelectedKeys}
-        selectedCount={selectedKeys.size}
-        onBulkDelete={enableBulkActions ? handleBulkDelete : undefined}
-        onClearSelection={
-          enableBulkActions ? () => setSelectedKeys(new Set()) : undefined
+        onExportCsv={
+          exportConfig
+            ? () => {
+                const rows = sortedItems.map(exportConfig.mapItem);
+                if (rows.length === 0) {
+                  addToast({
+                    title: "Sin datos",
+                    description: "No hay registros para exportar",
+                    color: "warning",
+                  });
+                  return;
+                }
+                exportToCsv(rows, exportConfig.columns, exportConfig.filename);
+                addToast({
+                  title: "Exportado",
+                  description: `${rows.length} registro${rows.length !== 1 ? "s" : ""} exportado${rows.length !== 1 ? "s" : ""} como CSV`,
+                  color: "success",
+                });
+              }
+            : undefined
         }
+        onExportXls={
+          exportConfig
+            ? () => {
+                const rows = sortedItems.map(exportConfig.mapItem);
+                if (rows.length === 0) {
+                  addToast({
+                    title: "Sin datos",
+                    description: "No hay registros para exportar",
+                    color: "warning",
+                  });
+                  return;
+                }
+                exportToXls(rows, exportConfig.columns, exportConfig.filename);
+                addToast({
+                  title: "Exportado",
+                  description: `${rows.length} registro${rows.length !== 1 ? "s" : ""} exportado${rows.length !== 1 ? "s" : ""} como Excel`,
+                  color: "success",
+                });
+              }
+            : undefined
+        }
+        enableSelection={enableBulkActions}
+        selectionMode={selectionMode}
+        selectedKeys={selectedKeysForTable}
+        onSelectionChange={handleSelectionChange}
+        selectedCount={effectiveSelectedCount}
+        totalCount={paginationMeta.total}
+        canScaleToAll={enableBulkActions && selectionMode === "manual" && selectedIds.size > 0 && paginationMeta.total > limit}
+        onScaleToAllMatching={handleScaleToAllMatching}
+        onBulkDelete={enableBulkActions ? onBulkDeleteOpen : undefined}
+        onClearSelection={enableBulkActions ? clearSelection : undefined}
         bulkActionsDropdown={
           enableBulkActions && bulkActionsDropdown?.length
             ? bulkActionsDropdown.map((a) => ({
                 ...a,
-                onClick: () => {
-                  const items = sortedItems.filter((i) =>
-                    selectedKeys.has(String(i.Id)),
-                  );
-                  a.onAction(items, {
-                    clearSelection: () => setSelectedKeys(new Set()),
-                  });
+                onClick: async () => {
+                  try {
+                    const ctx = await getBulkSelectionContext();
+                    a.onAction(ctx);
+                  } catch (err) {
+                    addToast({
+                      title: "Error",
+                      description: "No se pudo cargar la selección",
+                      color: "danger",
+                    });
+                  }
                 },
               }))
             : undefined
         }
+        printConfig={{
+          title: printConfig?.title,
+          orientation: printConfig?.orientation,
+          filters: lowStockFilterFn && lowStockOnly ? "Solo bajo stock" : undefined,
+        }}
         extraSearchContent={
-          lowStockFilterFn ? (
-            <button
-              type="button"
-              onClick={() => setLowStockOnly((v) => !v)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
-                lowStockOnly
-                  ? "bg-amber-500/20 border-amber-500/50 text-amber-800"
-                  : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-[#67afc3]"
-              }`}
-              title={lowStockOnly ? "Mostrar todos" : "Solo bajo stock"}
-            >
-              <AlertTriangle size={18} />
-              Bajo stock
-            </button>
-          ) : undefined
+          <>
+            {lowStockFilterFn ? (
+              <button
+                type="button"
+                onClick={() => setLowStockOnly((v) => !v)}
+                aria-pressed={lowStockOnly}
+                aria-label={lowStockOnly ? "Mostrar todos los productos" : "Filtrar solo productos con bajo stock"}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 border ${
+                  lowStockOnly
+                    ? "bg-amber-500/20 border-amber-500/50 text-amber-800"
+                    : "bg-white border-slate-300 text-slate-600 hover:bg-slate-50 hover:border-[#67afc3] hover:text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40"
+                }`}
+                title={lowStockOnly ? "Mostrar todos" : "Solo bajo stock"}
+              >
+                <AlertTriangle size={18} strokeWidth={2} />
+                Bajo stock
+              </button>
+            ) : null}
+            {toolbarExtraContent}
+          </>
         }
         onRowClick={
           hasRowPreview
@@ -487,6 +753,43 @@ export default function GenericCrud<T extends { Id: number | string }>({
                   isLoading={isSaving}
                 >
                   Eliminar
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Modal de confirmación eliminación masiva */}
+      <Modal isOpen={isBulkDeleteOpen} onClose={onBulkDeleteClose}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                Confirmar eliminación masiva
+              </ModalHeader>
+              <ModalBody>
+                <p>
+                  ¿Estás seguro de que deseas eliminar{" "}
+                  <strong>{effectiveSelectedCount}</strong> registro
+                  {effectiveSelectedCount !== 1 ? "s" : ""}? Esta acción no se
+                  puede deshacer.
+                </p>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Cancelar
+                </Button>
+                <Button
+                  color="danger"
+                  onPress={async () => {
+                    await handleBulkDelete();
+                    onClose();
+                  }}
+                  isLoading={isSaving}
+                >
+                  Eliminar {effectiveSelectedCount} registro
+                  {effectiveSelectedCount !== 1 ? "s" : ""}
                 </Button>
               </ModalFooter>
             </>

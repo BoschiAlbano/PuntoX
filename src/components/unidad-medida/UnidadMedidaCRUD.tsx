@@ -8,7 +8,7 @@ import { Chip, addToast } from "@heroui/react";
 import { DeleteButton, EditButton } from "@/components/shared/TableActions";
 import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
 import { BulkEditarCamposModal } from "@/components/shared/BulkEditarCamposModal";
-import { exportToCsv } from "@/lib/utils/exportCsv";
+import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
 
 async function bulkPatchUnidadesMedidas(
   ids: (number | string)[],
@@ -71,44 +71,78 @@ export default function UnidadMedidaCRUD() {
       )}
       getRowPreviewTitle={(item) => item.Descripcion || "Unidad de medida"}
       enableBulkActions
+      exportConfig={{
+        filename: "unidades-medida",
+        columns: [
+          { key: "Id", header: "ID" },
+          { key: "Descripcion", header: "Descripción" },
+          { key: "Estado", header: "Estado" },
+        ],
+        mapItem: (u) => ({
+          Id: u.Id,
+          Descripcion: u.Descripcion ?? "",
+          Estado: u.EstaEliminado ? "Inactivo" : "Activo",
+        }),
+      }}
       bulkActionsDropdown={[
         {
           key: "cambiar-estado",
           label: "Cambiar estado",
-          onAction: (items, { clearSelection }) => {
-            setBulkEstadoModal({ open: true, items, clearSelection });
+          onAction: (ctx) => {
+            setBulkEstadoModal({ open: true, items: ctx.items, clearSelection: ctx.clearSelection });
           },
         },
         {
           key: "editar-campos",
           label: "Editar campos comunes",
-          onAction: (items, { clearSelection }) => {
-            setBulkEditarModal({ open: true, items, clearSelection });
+          onAction: (ctx) => {
+            setBulkEditarModal({ open: true, items: ctx.items, clearSelection: ctx.clearSelection });
           },
         },
         {
-          key: "exportar",
-          label: "Exportar seleccionados",
-          onAction: (items) => {
-            const data = items.map((u) => ({
+          key: "exportar-csv",
+          label: "Exportar como CSV",
+          onAction: (ctx) => {
+            const data = ctx.items.map((u) => ({
               Id: u.Id,
               Descripcion: u.Descripcion ?? "",
               Estado: u.EstaEliminado ? "Inactivo" : "Activo",
             }));
-            exportToCsv(
-              data,
-              [
-                { key: "Id", header: "ID" },
-                { key: "Descripcion", header: "Descripción" },
-                { key: "Estado", header: "Estado" },
-              ],
-              "unidades-medida"
-            );
+            const columns = [
+              { key: "Id" as const, header: "ID" },
+              { key: "Descripcion" as const, header: "Descripción" },
+              { key: "Estado" as const, header: "Estado" },
+            ];
+            exportToCsv(data, columns, "unidades-medida");
             addToast({
               title: "Exportado",
-              description: `${items.length} unidad${items.length !== 1 ? "es" : ""} exportada${items.length !== 1 ? "s" : ""}`,
+              description: `${ctx.items.length} unidad${ctx.items.length !== 1 ? "es" : ""} exportada${ctx.items.length !== 1 ? "s" : ""} como CSV`,
               color: "success",
             });
+            ctx.clearSelection();
+          },
+        },
+        {
+          key: "exportar-xls",
+          label: "Exportar como XLS",
+          onAction: (ctx) => {
+            const data = ctx.items.map((u) => ({
+              Id: u.Id,
+              Descripcion: u.Descripcion ?? "",
+              Estado: u.EstaEliminado ? "Inactivo" : "Activo",
+            }));
+            const columns = [
+              { key: "Id" as const, header: "ID" },
+              { key: "Descripcion" as const, header: "Descripción" },
+              { key: "Estado" as const, header: "Estado" },
+            ];
+            exportToXls(data, columns, "unidades-medida");
+            addToast({
+              title: "Exportado",
+              description: `${ctx.items.length} unidad${ctx.items.length !== 1 ? "es" : ""} exportada${ctx.items.length !== 1 ? "s" : ""} como Excel`,
+              color: "success",
+            });
+            ctx.clearSelection();
           },
         },
       ]}

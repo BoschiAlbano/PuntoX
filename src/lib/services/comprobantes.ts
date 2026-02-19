@@ -712,7 +712,6 @@ export async function registrarPagoCuentaCorriente(
 ) {
   // 1. Crear Comprobante
   const fecha = new Date();
-  console.log("usuarioId", usuarioId);
   const comprobante = await tx.comprobante.create({
     data: {
       TenantId: tenantId,

@@ -1,86 +1,94 @@
-# 📚 Documentación del Proyecto PuntoX
+# Documentación PuntoX
 
-Bienvenido a la documentación del proyecto PuntoX.
+Índice unificado de la documentación del proyecto.
 
-## Índice de Documentación
+## Acceso rápido
 
-### Módulos Principales
-
-- **[Analíticas](./ANALITICAS.md)** - Dashboard de métricas, KPIs, gráficas y alertas
-  - Endpoints API
-  - Hooks personalizados
-  - Componentes visuales
-  - Guía de uso
-
-### Seguridad
-
-- **[CSRF Implementation](./CSRF_IMPLEMENTATION.md)** - Documentación sobre tokens CSRF
-  - ¿Qué es CSRF y por qué implementarlo?
-  - Cómo usar tokens CSRF en endpoints
-  - Ejemplos prácticos de implementación
-  - Endpoints que deberían usar CSRF
-  - Guía de mantenimiento
-
-### UX y Diseño
-
-- **[UX Improvements](./UX_IMPROVEMENTS.md)** - Mejoras visuales y de experiencia de usuario
-- **[Consistencia de formato páginas](./ui/consistencia-formato-paginas.md)** - Estilo estándar de contenedores, tabs y cards
-- **[Formato CRUD unificado](./ui/formato-crud.md)** - Modales, accordions y formularios (feb 2025)
-- **[CRUD y tablas genéricas](./ui/crud-tablas-genericas.md)** - Acciones masivas, filtros, paginación, React Query (feb 2025)
-
-### Rendimiento
-
-- **[Optimizaciones - Índice](./OPTIMIZACIONES.md)** - Punto de entrada a toda la documentación de optimizaciones
-- **[Optimizaciones de peticiones](./OPTIMIZACIONES_PETICIONES.md)** - React Query, debounce, cache
-
-### Próximamente
-
-- Configuración
-- Empleados y Permisos
-- Productos y Stock
-- Ventas y Caja
-- Clientes y Cuenta Corriente
+| Documento | Descripción |
+|-----------|-------------|
+| [Arquitectura](ARCHITECTURE.md) | Stack, modelo de datos, análisis y prioridades |
+| [Estado actual](ESTADO_ACTUAL.md) | Funcionalidades implementadas y pendientes |
+| [Roadmap](ROADMAP.md) | Prioridades y plan de mejora |
+| [CRUD y tablas genéricas](ui/crud-tablas-genericas.md) | GenericCrud, GenericTable, export CSV/XLS, acciones masivas |
+| [Formato CRUD](ui/formato-crud.md) | Modales, estilos y paleta unificada |
 
 ---
 
-## Estructura del Proyecto
+## Por categoría
+
+### Módulos de negocio
+
+| Módulo | Documento | Contenido |
+|--------|-----------|-----------|
+| Ventas | [modules/ventas.md](modules/ventas.md) | Carrito, comprobantes, formas de pago |
+| Clientes | [modules/clientes.md](modules/clientes.md) | CRUD, cuenta corriente, validaciones |
+| Empleados y roles | [modules/empleados-roles.md](modules/empleados-roles.md) | Usuarios, permisos, auditoría |
+| Configuración | [modules/configuracion.md](modules/configuracion.md) | Perfil, preferencias, branding, seguridad |
+| Autenticación | [modules/autenticacion.md](modules/autenticacion.md) | Supabase Auth, flujo de sesión |
+| Permisos | [modules/permisos.md](modules/permisos.md) | requirePermiso, roles |
+| Analíticas | [ANALITICAS.md](ANALITICAS.md) | KPIs, gráficas, alertas |
+
+### UI y UX
+
+| Documento | Descripción |
+|-----------|-------------|
+| [ui/crud-tablas-genericas.md](ui/crud-tablas-genericas.md) | Tablas genéricas, export CSV/XLS, selección masiva |
+| [ui/formato-crud.md](ui/formato-crud.md) | Estilo de modales y formularios |
+| [ui/consistencia-formato-paginas.md](ui/consistencia-formato-paginas.md) | Contenedores, tabs, cards |
+| [UX_IMPROVEMENTS.md](UX_IMPROVEMENTS.md) | Mejoras visuales y de experiencia |
+
+### Técnico
+
+| Documento | Descripción |
+|-----------|-------------|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Análisis completo del proyecto |
+| [SECURITY.md](SECURITY.md) | Seguridad, validaciones, buenas prácticas |
+| [TESTING.md](TESTING.md) | Tests, cobertura, convenciones |
+| [OPTIMIZACIONES.md](OPTIMIZACIONES.md) | Índice de optimizaciones |
+| [OPTIMIZACIONES_PETICIONES.md](OPTIMIZACIONES_PETICIONES.md) | React Query, debounce, cache |
+| [CSRF_IMPLEMENTATION.md](CSRF_IMPLEMENTATION.md) | Tokens CSRF |
+
+### Funcionalidades específicas
+
+| Documento | Descripción |
+|-----------|-------------|
+| [NOTA-TECNICA-SELECCION-MASIVA-CROSS-PAGE.md](NOTA-TECNICA-SELECCION-MASIVA-CROSS-PAGE.md) | Selección masiva entre páginas |
+| [productos/stock-por-sucursal.md](productos/stock-por-sucursal.md) | Stock por sucursal |
+| [multi-sucursal/README.md](multi-sucursal/README.md) | Multi-sucursal |
+| [auth/logout-handling.md](auth/logout-handling.md) | Manejo de cierre de sesión |
+
+---
+
+## Estructura del proyecto
 
 ```
 PuntoX/
-├── docs/                    # Documentación
+├── docs/                    # Esta documentación
 ├── src/
-│   ├── app/                # Rutas y páginas (Next.js App Router)
-│   ├── components/         # Componentes React reutilizables
-│   ├── hooks/              # Hooks personalizados
-│   ├── lib/                # Utilidades y helpers
-│   └── scripts/            # Scripts de utilidad
-└── prisma/                 # Schema y migraciones de base de datos
+│   ├── app/
+│   │   ├── (auth)/          # Rutas de autenticación
+│   │   ├── (dashboard)/     # Rutas del dashboard
+│   │   ├── api/             # API Routes
+│   │   └── actions/        # Server Actions
+│   ├── components/          # Componentes React
+│   │   ├── shared/          # GenericCrud, GenericTable
+│   │   └── [modulos]/       # Por dominio
+│   ├── hooks/               # useGenericApi, useProductos, etc.
+│   └── lib/                 # Auth, validaciones, utilidades
+├── prisma/
+│   ├── schema.prisma
+│   └── migrations/
+└── testing/                 # Guías de testing
 ```
 
 ---
 
-## Guías Rápidas
+## Guía rápida para nuevos desarrolladores
 
-### Inicio Rápido
-
-1. Instalar dependencias: `npm install`
-2. Configurar variables de entorno (`.env`)
-3. Ejecutar migraciones: `npm run prisma:migrate`
-4. Iniciar servidor: `npm run dev`
-
-### Scripts Disponibles
-
-- `npm run dev` - Servidor de desarrollo
-- `npm run build` - Build de producción
-- `npm run lint` - Linter
-- `npm run prisma:generate` - Generar Prisma Client
-- `npm run prisma:migrate` - Ejecutar migraciones
-
----
-
-## Contribuir
-
-Para contribuir al proyecto, por favor revisa la documentación específica de cada módulo antes de hacer cambios.
+1. Leer [ARCHITECTURE.md](ARCHITECTURE.md) para el panorama general.
+2. Revisar [ui/crud-tablas-genericas.md](ui/crud-tablas-genericas.md) para entender el patrón CRUD.
+3. Consultar el módulo correspondiente en [modules/](modules/).
+4. Para agentes IA: ver [AGENTS.md](../AGENTS.md) en la raíz del proyecto.
 
 ---
 

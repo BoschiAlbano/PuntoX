@@ -18,12 +18,13 @@ vi.mock("react-to-print", () => ({
 
 vi.mock("lucide-react", () => ({
   Check: () => <span data-testid="icon-check" />,
+  ChevronDown: () => <span data-testid="icon-chevron-down" />,
   Columns2: () => <span data-testid="icon-columns" />,
   Download: () => <span data-testid="icon-download" />,
+  FileSpreadsheet: () => <span data-testid="icon-file-spreadsheet" />,
   Menu: () => <span data-testid="icon-menu" />,
   Printer: () => <span data-testid="icon-printer" />,
   RefreshCcw: () => <span data-testid="icon-refresh" />,
-  Upload: () => <span data-testid="icon-upload" />,
 }));
 
 vi.mock("@/hooks/useDebounce", () => ({

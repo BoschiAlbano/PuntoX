@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import GenericCrud from "@/components/shared/GenericCrud";
 import ProductoForm from "./ProductoForm";
 import { Producto } from "@/lib/validations/producto.schema";
@@ -14,12 +15,13 @@ import AddStockModal from "./AddStockModal";
 import { useProductos } from "@/hooks/useProductos";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
 import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
 import { BulkEditarCamposModal } from "@/components/shared/BulkEditarCamposModal";
-import { exportToCsv } from "@/lib/utils/exportCsv";
+import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
+import { ShoppingCart, Copy, Check } from "lucide-react";
 
 function ProductoPreviewContent({ item }: { item: Producto }) {
   const currency = useCurrency();
@@ -181,6 +183,51 @@ async function bulkPatchProductos(
   }
 }
 
+function CopyableCode({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = useCallback(async () => {
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      addToast({
+        title: "Copiado",
+        description: "Código copiado al portapapeles",
+        color: "success",
+        timeout: 1500,
+      });
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      addToast({
+        title: "Error",
+        description: "No se pudo copiar",
+        color: "danger",
+      });
+    }
+  }, [value]);
+
+  if (!value) return <span className="text-slate-500">—</span>;
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        handleCopy();
+      }}
+      className="inline-flex items-center gap-2 px-2 py-1 rounded-md text-slate-700 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40 transition-all duration-150 group"
+      title="Clic para copiar"
+    >
+      <span className="font-mono text-sm">{value}</span>
+      {copied ? (
+        <Check size={14} strokeWidth={2} className="text-green-600 flex-shrink-0" />
+      ) : (
+        <Copy size={14} strokeWidth={2} className="text-slate-400 opacity-0 group-hover:opacity-100 flex-shrink-0 transition-opacity duration-150" />
+      )}
+    </button>
+  );
+}
+
 export default function ProductoCRUD() {
   const currency = useCurrency();
   const queryClient = useQueryClient();
@@ -231,33 +278,50 @@ export default function ProductoCRUD() {
       <GenericCrud<Producto>
         apiPath="/api/productos"
         queryKey="productos-generic"
-        searchPlaceholder="Buscar productos..."
+        searchPlaceholder="Buscar por nombre, código o barras..."
         FormComponent={ProductoForm}
         renderRowPreview={(item) => <ProductoPreviewContent item={item} />}
         getRowPreviewTitle={(item) => item.Descripcion || "Producto"}
         showEditInPreview={false}
         enableBulkActions
+        toolbarExtraContent={
+          <Link
+            href="/compras"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-slate-300 bg-white text-slate-700 hover:bg-[#67afc3]/10 hover:border-[#67afc3] hover:text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40 transition-all duration-150"
+          >
+            <ShoppingCart size={18} strokeWidth={2} />
+            Solicitar reposición
+          </Link>
+        }
         lowStockFilterFn={(item) => {
           const min = item.StockMinimo ?? 0;
           const stock = item.Stock ?? 0;
           return min > 0 && stock <= min;
         }}
         lowStockApiParam
+        printConfig={{
+          title: "Listado de Productos",
+          orientation: "landscape",
+        }}
         bulkActionsDropdown={[
           {
             key: "cambiar-estado",
             label: "Cambiar estado",
-            onAction: (items, { clearSelection }) => {
-              setBulkEstadoModal({ open: true, items, clearSelection });
+            onAction: (ctx) => {
+              setBulkEstadoModal({
+                open: true,
+                items: ctx.items,
+                clearSelection: ctx.clearSelection,
+              });
             },
           },
           {
             key: "actualizar-precios",
             label: "Actualizar precios",
-            onAction: (items) => {
+            onAction: (ctx) => {
               addToast({
                 title: "Actualizar precios",
-                description: `${items.length} producto${items.length !== 1 ? "s" : ""} (próximamente)`,
+                description: `${ctx.totalCount} producto${ctx.totalCount !== 1 ? "s" : ""} (próximamente)`,
                 color: "primary",
               });
             },
@@ -265,46 +329,112 @@ export default function ProductoCRUD() {
           {
             key: "editar-campos",
             label: "Editar campos comunes",
-            onAction: (items, { clearSelection }) => {
-              setBulkEditarModal({ open: true, items, clearSelection });
+            onAction: (ctx) => {
+              setBulkEditarModal({
+                open: true,
+                items: ctx.items,
+                clearSelection: ctx.clearSelection,
+              });
             },
           },
           {
-            key: "exportar",
-            label: "Exportar seleccionados",
-            onAction: (items) => {
-              const data = items.map((p) => ({
+            key: "exportar-csv",
+            label: "Exportar como CSV",
+            onAction: (ctx) => {
+              const data = ctx.items.map((p) => ({
                 CodigoBarra: p.CodigoBarra,
                 Descripcion: p.Descripcion,
+                Marca: p.Marca?.Descripcion ?? "",
+                Rubro: p.Rubro?.Descripcion ?? "",
                 Stock: p.Stock ?? 0,
                 StockMinimo: p.StockMinimo ?? 0,
                 Costo: p.Precio?.PrecioCosto ?? 0,
                 Minorista: p.Precio?.PrecioPublico ?? 0,
                 Mayorista: p.Precio?.PrecioPublico2 ?? 0,
               }));
-              exportToCsv(
-                data,
-                [
-                  { key: "CodigoBarra", header: "Código" },
-                  { key: "Descripcion", header: "Descripción" },
-                  { key: "Stock", header: "Stock" },
-                  { key: "StockMinimo", header: "Stock mínimo" },
-                  { key: "Costo", header: "Costo" },
-                  { key: "Minorista", header: "Minorista" },
-                  { key: "Mayorista", header: "Mayorista" },
-                ],
-                "productos"
-              );
+              const columns = [
+                { key: "CodigoBarra" as const, header: "Código" },
+                { key: "Descripcion" as const, header: "Descripción" },
+                { key: "Marca" as const, header: "Marca" },
+                { key: "Rubro" as const, header: "Rubro" },
+                { key: "Stock" as const, header: "Stock" },
+                { key: "StockMinimo" as const, header: "Stock mínimo" },
+                { key: "Costo" as const, header: "Costo" },
+                { key: "Minorista" as const, header: "Minorista" },
+                { key: "Mayorista" as const, header: "Mayorista" },
+              ];
+              exportToCsv(data, columns, "productos");
               addToast({
                 title: "Exportado",
-                description: `${items.length} producto${items.length !== 1 ? "s" : ""} exportado${items.length !== 1 ? "s" : ""}`,
+                description: `${ctx.items.length} producto${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como CSV`,
                 color: "success",
               });
+              ctx.clearSelection();
+            },
+          },
+          {
+            key: "exportar-xls",
+            label: "Exportar como XLS",
+            onAction: (ctx) => {
+              const data = ctx.items.map((p) => ({
+                CodigoBarra: p.CodigoBarra,
+                Descripcion: p.Descripcion,
+                Marca: p.Marca?.Descripcion ?? "",
+                Rubro: p.Rubro?.Descripcion ?? "",
+                Stock: p.Stock ?? 0,
+                StockMinimo: p.StockMinimo ?? 0,
+                Costo: p.Precio?.PrecioCosto ?? 0,
+                Minorista: p.Precio?.PrecioPublico ?? 0,
+                Mayorista: p.Precio?.PrecioPublico2 ?? 0,
+              }));
+              const columns = [
+                { key: "CodigoBarra" as const, header: "Código" },
+                { key: "Descripcion" as const, header: "Descripción" },
+                { key: "Marca" as const, header: "Marca" },
+                { key: "Rubro" as const, header: "Rubro" },
+                { key: "Stock" as const, header: "Stock" },
+                { key: "StockMinimo" as const, header: "Stock mínimo" },
+                { key: "Costo" as const, header: "Costo" },
+                { key: "Minorista" as const, header: "Minorista" },
+                { key: "Mayorista" as const, header: "Mayorista" },
+              ];
+              exportToXls(data, columns, "productos");
+              addToast({
+                title: "Exportado",
+                description: `${ctx.items.length} producto${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como Excel`,
+                color: "success",
+              });
+              ctx.clearSelection();
             },
           },
         ]}
         transformer={(item) => productoListAdapter(item)}
         additionalInvalidateQueryKeys={["producto-detail"]}
+        exportConfig={{
+          filename: "productos",
+          columns: [
+            { key: "CodigoBarra", header: "Código" },
+            { key: "Descripcion", header: "Descripción" },
+            { key: "Marca", header: "Marca" },
+            { key: "Rubro", header: "Rubro" },
+            { key: "Stock", header: "Stock" },
+            { key: "StockMinimo", header: "Stock mínimo" },
+            { key: "Costo", header: "Costo" },
+            { key: "Minorista", header: "Minorista" },
+            { key: "Mayorista", header: "Mayorista" },
+          ],
+          mapItem: (p) => ({
+            CodigoBarra: p.CodigoBarra,
+            Descripcion: p.Descripcion,
+            Marca: p.Marca?.Descripcion ?? "",
+            Rubro: p.Rubro?.Descripcion ?? "",
+            Stock: p.Stock ?? 0,
+            StockMinimo: p.StockMinimo ?? 0,
+            Costo: p.Precio?.PrecioCosto ?? 0,
+            Minorista: p.Precio?.PrecioPublico ?? 0,
+            Mayorista: p.Precio?.PrecioPublico2 ?? 0,
+          }),
+        }}
         columns={[
           { uid: "Codigo", name: "CODIGO", sortable: false },
           {
@@ -313,6 +443,8 @@ export default function ProductoCRUD() {
             sortable: true,
             align: "start",
           },
+          { uid: "Marca", name: "MARCA", align: "start" },
+          { uid: "Rubro", name: "RUBRO", align: "start" },
           { uid: "Stock", name: "STOCK", sortable: true },
           { uid: "Costo", name: "COSTO", sortable: true },
           { uid: "Minorista", name: "MINORISTA", sortable: true },
@@ -323,11 +455,27 @@ export default function ProductoCRUD() {
         renderCell={(item, columnKey, actions) => {
           switch (columnKey) {
             case "Codigo":
-              return item.CodigoBarra;
+              return (
+                <CopyableCode
+                  value={item.CodigoBarra || item.Codigo?.toString() || ""}
+                />
+              );
             case "Descripcion":
               return (
                 <span className="font-medium text-gray-700">
                   {item.Descripcion}
+                </span>
+              );
+            case "Marca":
+              return (
+                <span className="text-gray-600">
+                  {item.Marca?.Descripcion ?? "—"}
+                </span>
+              );
+            case "Rubro":
+              return (
+                <span className="text-gray-600">
+                  {item.Rubro?.Descripcion ?? "—"}
                 </span>
               );
             case "Stock": {
@@ -399,7 +547,7 @@ export default function ProductoCRUD() {
                 </div>
               );
             default:
-              break;
+              return null;
           }
         }}
       ></GenericCrud>
