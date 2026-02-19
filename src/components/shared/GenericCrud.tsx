@@ -259,13 +259,21 @@ export default function GenericCrud<T extends { Id: number | string }>({
     if (lowStockFilterFn && lowStockOnly && !lowStockApiParam) {
       items = items.filter(lowStockFilterFn);
     }
+    const key = sortDescriptor.column as string;
+
+    const getVal = (obj: T): number | string => {
+      const v = (obj as Record<string, unknown>)[key];
+      if (v == null) return "";
+      // Soporta objetos con Descripcion (ej. Marca, Rubro)
+      if (typeof v === "object" && v !== null && "Descripcion" in v) {
+        return String((v as { Descripcion?: string }).Descripcion ?? "");
+      }
+      return String(v);
+    };
+
     return items.sort((a: T, b: T) => {
-      const first = a[sortDescriptor.column as keyof T] as unknown as
-        | number
-        | string;
-      const second = b[sortDescriptor.column as keyof T] as unknown as
-        | number
-        | string;
+      const first = getVal(a);
+      const second = getVal(b);
       const cmp =
         (parseInt(first as string) || first) <
         (parseInt(second as string) || second)
