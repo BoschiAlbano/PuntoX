@@ -5,6 +5,7 @@
  * @see docs/ui/crud-tablas-genericas.md
  */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { PaginationMeta } from "./useProductos";
 import { dynamicDataQueryOptions } from "@/lib/react-query/queryDefaults";
 
@@ -26,6 +27,37 @@ export interface GenericApiOptions<T> {
   additionalInvalidateQueryKeys?: any[];
 }
 
+async function fetchWithParams<T>(opts: {
+  endpoint: string;
+  search: string;
+  page: number;
+  limit: number;
+  extraParams?: Record<string, string | number | boolean>;
+  transformer?: (data: unknown) => T[];
+  signal?: AbortSignal;
+}) {
+  const { endpoint, search, page, limit, extraParams, transformer, signal } = opts;
+  const params = new URLSearchParams();
+  if (search) params.append("q", search);
+  params.append("page", String(page));
+  params.append("limit", String(limit));
+  if (extraParams) {
+    Object.entries(extraParams).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== "") params.append(k, String(v));
+    });
+  }
+  const cleanEndpoint = endpoint.endsWith("/") ? endpoint.slice(0, -1) : endpoint;
+  const url = `${cleanEndpoint}?${params.toString()}`;
+  const response = await fetch(url, { signal });
+  if (!response.ok) throw new Error("Error al cargar datos");
+  const json = await response.json();
+  const data: T[] = transformer
+    ? transformer(json.data || [])
+    : ((json.data || []) as T[]);
+  const meta = json.meta || json.pagination || { total: 0, page: 1, limit: 10, totalPages: 0 };
+  return { data, meta };
+}
+
 export function useGenericApi<T extends { Id: number | string }>({
   endpoint,
   queryKey,
@@ -38,49 +70,46 @@ export function useGenericApi<T extends { Id: number | string }>({
 }: GenericApiOptions<T>) {
   const queryClient = useQueryClient();
 
-  // --- Fetch Query ---
-  const fetchData = async ({ signal }: { signal: AbortSignal }) => {
-    const params = new URLSearchParams();
-    const searchParam = "q";
-    if (search) params.append(searchParam, search);
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
-    if (extraParams) {
-      Object.entries(extraParams).forEach(([k, v]) => {
-        if (v !== undefined && v !== null && v !== "")
-          params.append(k, String(v));
-      });
-    }
-
-    const cleanEndpoint = endpoint.endsWith("/")
-      ? endpoint.slice(0, -1)
-      : endpoint;
-    const url = `${cleanEndpoint}?${params.toString()}`;
-
-    const response = await fetch(url, { signal });
-    if (!response.ok) throw new Error("Error al cargar datos");
-    const json = await response.json();
-
-    const data: T[] = transformer
-      ? transformer(json.data || [])
-      : ((json.data || []) as T[]);
-
-    const meta = json.meta ||
-      json.pagination || {
-        total: 0,
-        page: 1,
-        limit: 10,
-        totalPages: 0,
-      };
-
-    return { data, meta };
-  };
-
   const query = useQuery({
     queryKey: [queryKey, { search, page, limit, extraParams }],
-    queryFn: ({ signal }) => fetchData({ signal }),
-    ...dynamicDataQueryOptions, // Aplicar optimizaciones por defecto
+    queryFn: ({ signal }) =>
+      fetchWithParams<T>({
+        endpoint,
+        search,
+        page,
+        limit,
+        extraParams,
+        transformer,
+        signal,
+      }),
+    ...dynamicDataQueryOptions,
   });
+
+  /** Prefetch con params alternativos (ej. bajoStock=true) para que el clic sea instantáneo */
+  const prefetchWithParams = useCallback(
+    (overrides: { search?: string; page?: number; extraParams?: Record<string, string | number | boolean> }) => {
+      const k = [queryKey, {
+        search: overrides.search ?? search,
+        page: overrides.page ?? page,
+        limit,
+        extraParams: overrides.extraParams ?? extraParams,
+      }];
+      return queryClient.prefetchQuery({
+        queryKey: k,
+        queryFn: ({ signal }) =>
+          fetchWithParams<T>({
+            endpoint,
+            search: overrides.search ?? search,
+            page: overrides.page ?? page,
+            limit,
+            extraParams: overrides.extraParams ?? extraParams,
+            transformer,
+            signal,
+          }),
+      });
+    },
+    [queryKey, queryClient, search, page, limit, extraParams, transformer, endpoint]
+  );
 
   // --- Mutations ---
 
@@ -166,6 +195,7 @@ export function useGenericApi<T extends { Id: number | string }>({
 
   return {
     data: query.data?.data || [],
+    prefetchWithParams,
     paginationMeta: query.data?.meta || {
       total: 0,
       page: 1,

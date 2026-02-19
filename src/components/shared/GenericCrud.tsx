@@ -226,6 +226,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
     saveMutation,
     deleteMutation,
     refetch,
+    prefetchWithParams,
   } = useGenericApi<T>({
     endpoint: apiPath,
     queryKey,
@@ -644,6 +645,11 @@ export default function GenericCrud<T extends { Id: number | string }>({
               <button
                 type="button"
                 onClick={() => setLowStockOnly((v) => !v)}
+                onMouseEnter={() => {
+                  if (!lowStockOnly && lowStockApiParam && prefetchWithParams) {
+                    prefetchWithParams({ page: 1, extraParams: { bajoStock: true } });
+                  }
+                }}
                 aria-pressed={lowStockOnly}
                 aria-label={lowStockOnly ? "Mostrar todos los productos" : "Filtrar solo productos con bajo stock"}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 border ${

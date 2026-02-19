@@ -79,8 +79,10 @@ export async function GET(req: NextRequest) {
       (where as Record<string, unknown>).Id = { in: articuloIdsBajoStock };
     }
 
-    // Obtener total para paginación
-    const total = await prisma.articulo.count({ where });
+    // Total: con bajoStock ya tenemos el count (ids.length), evitamos un round-trip extra
+    const total = bajoStock
+      ? articuloIdsBajoStock.length
+      : await prisma.articulo.count({ where });
 
     // Obtener productos paginados
     const productos = await prisma.articulo.findMany({
