@@ -51,6 +51,36 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
+/* Scrollbar para el sidebar */
+#Scroll {
+  overflow-y: auto;
+}
+#Scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+#Scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+#Scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #3b82f6, #90c472);
+  border-radius: 4px;
+}
+
+#Scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #2563eb, #90c472);
+}
+
+@media (max-width: 768px) {
+  #Scroll::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+  }
+}
+
 .main-content {
   display: grid;
   height: 100dvh;

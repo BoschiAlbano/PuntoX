@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import { Card, CardBody, CardHeader } from "@heroui/react";
 
-interface GraficaProductosProps {
+export interface GraficaProductosProps {
   datos: Array<{
     id: number;
     nombre: string;
@@ -44,7 +44,9 @@ export default function GraficaProductos({ datos }: GraficaProductosProps) {
         </CardHeader>
         <CardBody>
           <div className="flex items-center justify-center h-[400px] text-gray-500">
-            <p>No hay datos de productos vendidos para el período seleccionado</p>
+            <p>
+              No hay datos de productos vendidos para el período seleccionado
+            </p>
           </div>
         </CardBody>
       </Card>
@@ -83,7 +85,10 @@ export default function GraficaProductos({ datos }: GraficaProductosProps) {
               tick={{ fontSize: 11 }}
             />
             <Tooltip
-              formatter={(value: number | undefined, name: string | undefined) => {
+              formatter={(
+                value: number | undefined,
+                name: string | undefined,
+              ) => {
                 if (value === undefined) return ["", name || ""];
                 const nameStr = name || "";
                 if (nameStr === "monto") {
@@ -122,4 +127,3 @@ export default function GraficaProductos({ datos }: GraficaProductosProps) {
     </Card>
   );
 }
-

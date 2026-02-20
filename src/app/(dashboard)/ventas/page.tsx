@@ -1,8 +1,9 @@
+"use client";
 import VentasScreen from "@/components/ventas/VentasScreen";
 
 export default function VentasPage() {
   return (
-    <div className="h-full w-full p-2 md:p-4">
+    <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch h-full ">
       <VentasScreen />
     </div>
   );

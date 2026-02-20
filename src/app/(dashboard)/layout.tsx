@@ -37,21 +37,23 @@ export default function DashboardLayout({
 
   return (
     <ProtectRoute>
-      <div className="bg-[#ffffff] flex">
+      <div className="flex bg-[#ffff]">
         <section
           onClick={() => setshow(false)}
           className={`z-99 transition-all duration-400 ease-in-out sm:relative absolute  sm:w-auto w-screen sm:h-auto h-screen  ${
             show ? `translate-x-[0%]` : `-translate-x-full`
           }`}
         >
-          <Sidebar
-            isCollapsed={isSidebarCollapsed}
-            onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          />
+          <Sidebar isCollapsed={isSidebarCollapsed} />
         </section>
 
         <div className="flex-1 main-content overflow-y-auto">
-          <DashboardHeader isShow={setshow} show={show} />
+          <DashboardHeader
+            isShow={setshow}
+            show={show}
+            isCollapsed={isSidebarCollapsed}
+            onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          />
           <main className="sm:overflow-x-clip overflow-x-hidden">
             {children}
           </main>
@@ -64,7 +66,7 @@ export default function DashboardLayout({
 
 function Footer() {
   return (
-    <footer className="bg-white/50 backdrop-blur-sm  py-4 px-6">
+    <footer className="backdrop-blur-sm  py-4 px-6">
       <div className="flex flex-col sm:flex-row items-center justify-between sm:gap-0 gap-2 text-sm text-[#76b7c8]">
         <p className="text-center">
           ЖИ 2026 Punto X. Todos los derechos reservados.

@@ -5,12 +5,17 @@ import { Dispatch, SetStateAction, memo, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
+import Link from "next/link";
 
 function DashboardHeaderComponent({
   isShow,
+  isCollapsed,
+  onToggle,
 }: {
   isShow: Dispatch<SetStateAction<boolean>>;
   show: boolean;
+  isCollapsed: boolean;
+  onToggle: () => void;
 }) {
   // const { user } = useSupabaseAuthContext();
   const pathname = usePathname();
@@ -70,7 +75,7 @@ function DashboardHeaderComponent({
     <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="sticky top-0 z-40 backdrop-blur-sm bg-white/50"
+      className="sticky top-0 z-40 backdrop-blur-sm"
     >
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
@@ -80,6 +85,34 @@ function DashboardHeaderComponent({
             aria-label="Breadcrumb"
           >
             <ol className="flex items-center gap-2">
+              <button
+                onClick={onToggle}
+                className="sm:block hidden p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 group/btn"
+              >
+                <svg
+                  className="w-5 h-5 group-hover/btn:text-[#5fa7b8] transition-colors"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  {isCollapsed ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 5l7 7-7 7M5 5l7 7-7 7"
+                    />
+                  ) : (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                    />
+                  )}
+                </svg>
+              </button>
+
               {breadcrumbs.map((crumb, index) => (
                 <li key={crumb.path} className="flex items-center gap-2">
                   {index > 0 && (
@@ -91,7 +124,12 @@ function DashboardHeaderComponent({
                       className="flex items-center gap-1.5"
                     >
                       <Home className="h-4 w-4 text-slate-500" />
-                      <span className="text-slate-600 font-medium">Inicio</span>
+                      <Link
+                        href="/dashboard"
+                        className="text-slate-600 font-medium"
+                      >
+                        Inicio
+                      </Link>
                     </motion.div>
                   ) : index === breadcrumbs.length - 1 ? (
                     <span className="text-slate-900 font-semibold">

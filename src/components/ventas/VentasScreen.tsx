@@ -1,6 +1,14 @@
 "use client";
 
-import { Select, SelectItem, addToast, Input } from "@heroui/react";
+import {
+  Select,
+  SelectItem,
+  addToast,
+  Input,
+  RadioGroup,
+  Radio,
+} from "@heroui/react";
+import { motion } from "framer-motion";
 
 import ProductSearch from "./ProductSearch";
 import VentaGrid from "./VentaGrid";
@@ -9,6 +17,7 @@ import ClienteSearch from "./ClienteSearch";
 import { TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
 import { Producto } from "@/lib/validations/producto.schema";
 import { useVentaStore, Item } from "@/store/ventaStore";
+import { ShoppingCart } from "lucide-react";
 
 export default function VentasScreen() {
   // Store
@@ -143,115 +152,176 @@ export default function VentasScreen() {
   };
 
   return (
-    <div className="flex flex-col h-full gap-4 p-2">
-      {/* Header: Client & Config */}
-
-      <div className="flex-1 flex flex-row justify-between gap-4 min-h-0">
-        <section className=" flex flex-col flex-1 gap-4">
-          <section className="flex-none flex flex-col md:flex-row gap-4 items-center justify-between w-full">
-            <ProductSearch onProductSelect={handleAddItem} />
-            <div className="flex flex-col md:flex-row gap-4 items-center w-auto">
-              <ClienteSearch selected={cliente} onSelect={setCliente} />
-              <div className="flex gap-4 w-full md:w-auto items-end">
-                <Select
-                  label="Comprobante"
-                  size="sm"
-                  className="w-40"
-                  selectedKeys={[tipoComprobante.toString()]}
-                  value={tipoComprobante.toString()}
-                  onChange={(e) => setTipoComprobante(Number(e.target.value))}
-                >
-                  <SelectItem
-                    key={TIPO_COMPROBANTE_VENTA.FACTURA_A}
-                    textValue={"Factura A"}
+    <div className="flex flex-col h-full gap-4 p-2 w-full">
+      <section className=" w-full flex flex-col flex-1 gap-4">
+        {/* Grilla de items y footer */}
+        <section className="flex-1 flex flex-col sm:flex-row gap-4 w-full">
+          <div className="flex flex-col gap-2 w-full">
+            <div className="flex flex-row gap-4">
+              {/* Buscador de productos */}
+              <ProductSearch onProductSelect={handleAddItem} />
+              {/* Selector de lista de precios */}
+              <div className="flex flex-col gap-1">
+                <div className="relative flex gap-0 p-1 rounded-lg h-12 items-center shadow-sm bg-white">
+                  {/* Buttons */}
+                  <button
+                    onClick={() => setListaPrecios(1)}
+                    className="relative flex-1 h-10 px-4 rounded-lg font-medium text-sm transition-colors z-10 cursor-pointer "
                   >
-                    Factura A
-                  </SelectItem>
-                  <SelectItem
-                    key={TIPO_COMPROBANTE_VENTA.FACTURA_B}
-                    textValue={"Factura B"}
+                    {listaPrecios === 1 && (
+                      <motion.div
+                        layoutId="activeTab"
+                        className="absolute inset-0 bg-[#7dbbcc] rounded-lg"
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 30,
+                        }}
+                      />
+                    )}
+                    <span
+                      className={`relative z-10 ${
+                        listaPrecios === 1 ? "text-white" : "text-slate-700"
+                      }`}
+                    >
+                      Minorista
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setListaPrecios(2)}
+                    className="relative flex-1 h-10 px-4 rounded-lg font-medium text-sm transition-colors z-10 cursor-pointer"
                   >
-                    Factura B
-                  </SelectItem>
-                  <SelectItem
-                    key={TIPO_COMPROBANTE_VENTA.FACTURA_C}
-                    textValue={"Factura C"}
-                  >
-                    Factura C
-                  </SelectItem>
-                  <SelectItem
-                    key={TIPO_COMPROBANTE_VENTA.PRESUPUESTO}
-                    textValue={"Presupuesto"}
-                  >
-                    Presupuesto
-                  </SelectItem>
-                  <SelectItem
-                    key={TIPO_COMPROBANTE_VENTA.REMITO}
-                    textValue={"Remito"}
-                  >
-                    Remito
-                  </SelectItem>
-                  <SelectItem
-                    key={TIPO_COMPROBANTE_VENTA.NOTA_CREDITO}
-                    textValue={"Nota de Credito"}
-                  >
-                    Nota de Credito
-                  </SelectItem>
-                </Select>
-
-                {tipoComprobante === TIPO_COMPROBANTE_VENTA.NOTA_CREDITO && (
-                  <Input
-                    label="Nro. Factura"
-                    size="sm"
-                    className="w-32"
-                    type="number"
-                    value={numeroComprobanteAsociado?.toString() || ""}
-                    onValueChange={(v) =>
-                      setNumeroComprobanteAsociado(v ? Number(v) : null)
-                    }
-                  />
-                )}
-
-                <Select
-                  label="Lista Precios"
-                  size="sm"
-                  className="w-40"
-                  selectedKeys={[listaPrecios.toString()]}
-                  onChange={(e) =>
-                    setListaPrecios(Number(e.target.value) as 1 | 2)
-                  }
-                >
-                  <SelectItem key="1" textValue="L1: General">
-                    L1: General
-                  </SelectItem>
-                  <SelectItem key="2" textValue="L2: Mayorista">
-                    L2: Mayorista
-                  </SelectItem>
-                </Select>
+                    {listaPrecios === 2 && (
+                      <motion.div
+                        layoutId="activeTab"
+                        className="absolute inset-0 bg-[#7dbbcc] rounded-lg"
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 30,
+                        }}
+                      />
+                    )}
+                    <span
+                      className={`relative z-10 ${
+                        listaPrecios === 2 ? "text-white" : "text-slate-700"
+                      }`}
+                    >
+                      Mayorista
+                    </span>
+                  </button>
+                </div>
               </div>
             </div>
-          </section>
 
-          {/* Grilla de items */}
-          <VentaGrid
-            items={items}
-            onUpdateQuantity={handleUpdateQuantity}
-            onRemoveItem={removeItem}
-          />
+            {/* Grilla de items */}
+            <VentaGrid
+              items={items}
+              onUpdateQuantity={handleUpdateQuantity}
+              onRemoveItem={removeItem}
+            />
+          </div>
+
+          <div className="flex flex-col gap-2 h-full">
+            <div className=" flex flex-row gap-2 items-center text-center justify-center">
+              {/* Clientes */}
+              <ClienteSearch selected={cliente} onSelect={setCliente} />
+              {/* Comprobantes */}
+              <ComprobanteSelector
+                tipoComprobante={tipoComprobante}
+                setTipoComprobante={setTipoComprobante}
+                numeroComprobanteAsociado={numeroComprobanteAsociado}
+                setNumeroComprobanteAsociado={setNumeroComprobanteAsociado}
+              />
+            </div>
+
+            <VentaFooter
+              subtotal={items.reduce((acc, item) => acc + item.subtotal, 0)}
+              descuento={descuentoPorcentaje}
+              setDescuento={setDescuentoPorcentaje}
+              total={calculateTotal()}
+              items={items}
+              cliente={cliente}
+              tipoComprobante={tipoComprobante}
+              handleLimpiar={clearVenta}
+            />
+          </div>
         </section>
+      </section>
+    </div>
+  );
+}
 
-        {/* Footer: Totales y Acciones */}
-        <VentaFooter
-          subtotal={items.reduce((acc, item) => acc + item.subtotal, 0)}
-          descuento={descuentoPorcentaje}
-          setDescuento={setDescuentoPorcentaje}
-          total={calculateTotal()}
-          items={items}
-          cliente={cliente}
-          tipoComprobante={tipoComprobante}
-          handleLimpiar={clearVenta}
+function ComprobanteSelector({
+  tipoComprobante,
+  setTipoComprobante,
+  numeroComprobanteAsociado,
+  setNumeroComprobanteAsociado,
+}: {
+  tipoComprobante: number;
+  setTipoComprobante: (tipoComprobante: number) => void;
+  numeroComprobanteAsociado: number | null;
+  setNumeroComprobanteAsociado: (
+    numeroComprobanteAsociado: number | null,
+  ) => void;
+}) {
+  return (
+    <div className="flex gap-4 w-full  items-end rounded-lg shadow-sm">
+      <Select
+        label="Comprobante"
+        size="sm"
+        className="w-50"
+        selectedKeys={[tipoComprobante.toString()]}
+        value={tipoComprobante.toString()}
+        onChange={(e) => setTipoComprobante(Number(e.target.value))}
+      >
+        <SelectItem
+          key={TIPO_COMPROBANTE_VENTA.FACTURA_A}
+          textValue={"Factura A"}
+        >
+          Factura A
+        </SelectItem>
+        <SelectItem
+          key={TIPO_COMPROBANTE_VENTA.FACTURA_B}
+          textValue={"Factura B"}
+        >
+          Factura B
+        </SelectItem>
+        <SelectItem
+          key={TIPO_COMPROBANTE_VENTA.FACTURA_C}
+          textValue={"Factura C"}
+        >
+          Factura C
+        </SelectItem>
+        <SelectItem
+          key={TIPO_COMPROBANTE_VENTA.PRESUPUESTO}
+          textValue={"Presupuesto"}
+        >
+          Presupuesto
+        </SelectItem>
+        <SelectItem key={TIPO_COMPROBANTE_VENTA.REMITO} textValue={"Remito"}>
+          Remito
+        </SelectItem>
+        <SelectItem
+          key={TIPO_COMPROBANTE_VENTA.NOTA_CREDITO}
+          textValue={"Nota de Credito"}
+        >
+          Nota de Credito
+        </SelectItem>
+      </Select>
+
+      {tipoComprobante === TIPO_COMPROBANTE_VENTA.NOTA_CREDITO && (
+        <Input
+          label="Nro. Factura"
+          size="sm"
+          className="w-32"
+          type="number"
+          value={numeroComprobanteAsociado?.toString() || ""}
+          onValueChange={(v) =>
+            setNumeroComprobanteAsociado(v ? Number(v) : null)
+          }
         />
-      </div>
+      )}
     </div>
   );
 }

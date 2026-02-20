@@ -17,7 +17,6 @@ interface MenuItem {
 
 interface SidebarProps {
   isCollapsed: boolean;
-  onToggle: () => void;
 }
 
 const menuItems: MenuItem[] = [
@@ -200,7 +199,7 @@ const menuItems: MenuItem[] = [
   },
 ];
 
-function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
+function SidebarComponent({ isCollapsed }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { supabase } = useSupabaseAuthContext();
@@ -265,55 +264,44 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
         }}
       >
         {/* Header del Sidebar */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-700/50 overflow-hidden">
+        <div className="w-full flex items-center justify-center p-6 border-b border-slate-700/50 overflow-hidden">
           <AnimatePresence mode="wait">
-            {!isCollapsed && (
-              <>
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.4 }}
-                  className="flex items-center gap-3"
-                >
-                  <Image
-                    src="/logo.png"
-                    alt="Punto X"
-                    className="object-contain"
-                    width={120}
-                    height={120}
-                  />
-                </motion.div>
-              </>
+            {!isCollapsed ? (
+              <motion.div
+                key="logo-expanded"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.3 }}
+                className="flex items-center gap-3 h-[40px]"
+              >
+                <Image
+                  src="/logo.png"
+                  alt="Punto X"
+                  className="object-contain"
+                  width={120}
+                  height={120}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="logo-collapsed"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.3 }}
+                className="flex items-center justify-center h-[40px]"
+              >
+                <Image
+                  src="/puntoxSmall.png"
+                  alt="Punto X"
+                  className="object-contain"
+                  width={40}
+                  height={40}
+                />
+              </motion.div>
             )}
           </AnimatePresence>
-          <button
-            onClick={onToggle}
-            className="p-2 rounded-lg hover:bg-slate-700/50 transition-colors text-slate-400 group/btn"
-          >
-            <svg
-              className="w-5 h-5 group-hover/btn:text-[#5fa7b8] transition-colors"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              {isCollapsed ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 5l7 7-7 7M5 5l7 7-7 7"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-                />
-              )}
-            </svg>
-          </button>
         </div>
 
         {/* Selector de Sucursal */}
@@ -330,7 +318,7 @@ function SidebarComponent({ isCollapsed, onToggle }: SidebarProps) {
         </AnimatePresence>
 
         {/* Menu Items */}
-        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
+        <nav id="Scroll" className="flex-1 px-3  space-y-1">
           {menuItemsFiltrados.map((item) => {
             const isActive = pathname === item.href;
             const handleClick = (e: React.MouseEvent) => {

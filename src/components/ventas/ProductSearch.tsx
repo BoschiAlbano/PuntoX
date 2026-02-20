@@ -285,52 +285,51 @@ export default function ProductSearch({
   }, []);
 
   return (
-    <div className="relative flex gap-2 w-full">
-      <div className="flex-1 relative">
-        <Input
-          ref={inputRef}
-          classNames={{
-            base: "max-w-full sm:max-w-2xl h-12",
-            mainWrapper: "h-full",
-            input: "text-small",
-            inputWrapper:
-              "h-full font-normal text-default-500 bg-default-400/20 dark:bg-default-500/20",
-          }}
-          placeholder="Escanear (Código / Barras) o Buscar..."
-          size="lg"
-          startContent={<ScanBarcode className="text-[#67afc3]" />}
-          value={inputValue}
-          onValueChange={setInputValue}
-          onKeyDown={handleInputKeyDown}
-          onFocus={() => {
-            if (suggestions.length > 0) {
-              setShowSuggestions(true);
-            }
-          }}
-          endContent={
-            <Button isIconOnly variant="light" size="sm">
-              {isSearching ? (
-                <Spinner size="sm" className="text-[#67afc3]" />
-              ) : (
-                <Search className="text-[#67afc3]" />
-              )}
-            </Button>
+    <div className="flex-1 relative shadow-sm rounded-lg bg-white">
+      <Input
+        ref={inputRef}
+        classNames={{
+          base: "max-w-full sm:max-w-2xl h-12",
+          mainWrapper: "h-full ",
+          input: "text-small",
+          inputWrapper:
+            "h-full font-normal text-default-500 bg-white outline-none hover:bg-white focus-within:bg-white data-[hover=true]:bg-white rounded-lg",
+        }}
+        placeholder="Escanear (Código / Barras) o Buscar..."
+        size="sm"
+        startContent={<ScanBarcode className="text-[#67afc3]" />}
+        value={inputValue}
+        onValueChange={setInputValue}
+        onKeyDown={handleInputKeyDown}
+        onFocus={() => {
+          if (suggestions.length > 0) {
+            setShowSuggestions(true);
           }
-        />
+        }}
+        endContent={
+          <Button isIconOnly variant="light" size="sm">
+            {isSearching ? (
+              <Spinner size="sm" className="text-[#67afc3]" />
+            ) : (
+              <Search className="text-[#67afc3]" />
+            )}
+          </Button>
+        }
+      />
 
-        {/* Sugerencias debajo del input */}
-        {showSuggestions && suggestions.length > 0 && (
-          <div
-            ref={suggestionsRef}
-            className="absolute top-full left-0 right-0 mt-2 z-50 max-w-full sm:max-w-2xl"
-          >
-            <Card className="shadow-lg">
-              <CardBody className="p-0">
-                <div className="max-h-[400px] overflow-y-auto">
-                  {suggestions.map((product, index) => (
-                    <div
-                      key={product.Id}
-                      className={`
+      {/* Sugerencias debajo del input */}
+      {showSuggestions && suggestions.length > 0 && (
+        <div
+          ref={suggestionsRef}
+          className="absolute top-full left-0 right-0 mt-2 z-50 max-w-full sm:max-w-2xl"
+        >
+          <Card className="shadow-lg">
+            <CardBody className="p-0">
+              <div className="max-h-[400px] overflow-y-auto">
+                {suggestions.map((product, index) => (
+                  <div
+                    key={product.Id}
+                    className={`
                         p-3 cursor-pointer transition-colors border-b border-divider last:border-b-0
                         ${
                           index === selectedIndex
@@ -338,55 +337,54 @@ export default function ProductSearch({
                             : "hover:bg-default-100"
                         }
                       `}
-                      onClick={() => handleSelectProduct(product)}
-                      onMouseEnter={() => setSelectedIndex(index)}
-                    >
-                      <div className="flex justify-between items-start gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs text-default-500 font-mono">
-                              {product.Codigo}
-                            </span>
-                            <span className="text-xs text-default-400">|</span>
-                            <span className="text-xs text-default-500 truncate">
-                              {product.CodigoBarra}
-                            </span>
-                          </div>
-                          <p className="font-semibold text-sm truncate">
-                            {product.Descripcion}
-                          </p>
+                    onClick={() => handleSelectProduct(product)}
+                    onMouseEnter={() => setSelectedIndex(index)}
+                  >
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs text-default-500 font-mono">
+                            {product.Codigo}
+                          </span>
+                          <span className="text-xs text-default-400">|</span>
+                          <span className="text-xs text-default-500 truncate">
+                            {product.CodigoBarra}
+                          </span>
                         </div>
-                        <div className="flex flex-col items-end gap-1 shrink-0">
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`text-xs font-medium ${
-                                product.Stock <= 0
-                                  ? "text-danger"
-                                  : "text-success"
-                              }`}
-                            >
-                              Stock: {product.Stock}
-                            </span>
-                          </div>
-                          <div className="flex gap-2 text-xs">
-                            <span className="text-default-500">
-                              L1: ${product.Precio?.PrecioPublico || 0}
-                            </span>
-                            <span className="text-default-400">|</span>
-                            <span className="text-default-500">
-                              L2: ${product.Precio?.PrecioPublico2 || 0}
-                            </span>
-                          </div>
+                        <p className="font-semibold text-sm truncate">
+                          {product.Descripcion}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-xs font-medium ${
+                              product.Stock <= 0
+                                ? "text-danger"
+                                : "text-success"
+                            }`}
+                          >
+                            Stock: {product.Stock}
+                          </span>
+                        </div>
+                        <div className="flex gap-2 text-xs">
+                          <span className="text-default-500">
+                            L1: ${product.Precio?.PrecioPublico || 0}
+                          </span>
+                          <span className="text-default-400">|</span>
+                          <span className="text-default-500">
+                            L2: ${product.Precio?.PrecioPublico2 || 0}
+                          </span>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-        )}
-      </div>
+                  </div>
+                ))}
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

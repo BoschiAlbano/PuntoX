@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, ReactNode } from "react";
+import React, { useState, useEffect, ReactNode, useMemo } from "react";
 import {
   Card,
   CardBody,
@@ -138,6 +138,15 @@ export default function VentaFooter({
   const handleAddPayment = () => {
     const montoVal = parseFloat(currentMonto);
     if (isNaN(montoVal) || montoVal <= 0) return;
+
+    if (pagos.some((p) => p.tipoPago === currentTipo)) {
+      addToast({
+        title: "Error",
+        description: "Este método de pago ya ha sido agregado.",
+        color: "warning",
+      });
+      return;
+    }
 
     // Validación de Límite de Cuenta Corriente
     if (
@@ -316,20 +325,33 @@ export default function VentaFooter({
     }
   };
 
-  const paymentOptions = [
-    { key: TIPO_PAGO.EFECTIVO, label: "Efectivo" },
-    { key: TIPO_PAGO.TARJETA, label: "Tarjeta" },
-    { key: TIPO_PAGO.TRANSFERENCIA, label: "Transferencia" },
-    { key: TIPO_PAGO.CHEQUE, label: "Cheque" },
-    ...(cliente?.Persona_Cliente?.ActivarCtaCte
-      ? [{ key: TIPO_PAGO.CUENTA_CORRIENTE, label: "Cta. Corriente" }]
-      : []),
-  ];
+  const paymentOptions = useMemo(
+    () =>
+      [
+        { key: TIPO_PAGO.EFECTIVO, label: "Efectivo" },
+        { key: TIPO_PAGO.TARJETA, label: "Tarjeta" },
+        { key: TIPO_PAGO.TRANSFERENCIA, label: "Transferencia" },
+        { key: TIPO_PAGO.CHEQUE, label: "Cheque" },
+        ...(cliente?.Persona_Cliente?.ActivarCtaCte
+          ? [{ key: TIPO_PAGO.CUENTA_CORRIENTE, label: "Cta. Corriente" }]
+          : []),
+      ].filter((option) => !pagos.some((p) => p.tipoPago === option.key)),
+    [cliente, pagos],
+  );
+
+  useEffect(() => {
+    if (
+      paymentOptions.length > 0 &&
+      !paymentOptions.find((op) => op.key === currentTipo)
+    ) {
+      setCurrentTipo(paymentOptions[0].key);
+    }
+  }, [paymentOptions, currentTipo]);
 
   return (
-    <section className="flex-none w-full md:w-[320px] lg:w-[360px] flex flex-col gap-4 h-full">
+    <section className="flex-1  flex flex-col gap-4 w-[390px]">
       {/* Payment Card */}
-      <Card className="bg-[#ffffff] flex-1 min-h-[350px] shadow-none border-1 border-gray-200">
+      <Card className="bg-[#ffffff] flex-1 rounded-lg shadow-sm ">
         <CardHeader className="pb-4 pt-4 px-4 flex-col items-start">
           <div className="font-bold text-large absolute top-0 left-0 flex items-center gap-2 p-2">
             <div className=" h-2 w-2 rounded-full bg-[#67afc3]"></div>
@@ -420,7 +442,7 @@ export default function VentaFooter({
                   ACCIÓN
                 </TableColumn>
               </TableHeader>
-              <TableBody emptyContent="Sin pagos.">
+              <TableBody>
                 {pagos.map((p, idx) => (
                   <TableRow key={idx}>
                     <TableCell>{getTipoLabel(p.tipoPago)}</TableCell>
@@ -477,7 +499,7 @@ export default function VentaFooter({
       </Card>
 
       {/* Totals Card */}
-      <Card className="bg-[#ffffff] flex-none shadow-none border-1 border-gray-200">
+      <Card className="bg-[#ffffff] flex-none rounded-lg shadow-sm ">
         <CardHeader className="pb-4 pt-4 px-4 flex-col items-start">
           <div className="font-bold text-large absolute top-0 left-0 flex items-center gap-2 p-2">
             <div className=" h-2 w-2 rounded-full bg-[#67afc3]"></div>
