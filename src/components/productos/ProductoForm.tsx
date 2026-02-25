@@ -33,8 +33,6 @@ import RubroGenericForm from "../rubros/RubroForm";
 import UnidadMedidaGenericForm from "../unidad-medida/UnidadMedidaForm";
 import { TiposVenta } from "../../../prisma/generated/prisma";
 import { LoadingComponent } from "../loading/loading";
-import { useCurrency } from "@/hooks/useCurrency";
-import { getCurrencyFormatOptions } from "@/lib/utils/formatCurrency";
 
 const inputClassNames = {
   inputWrapper:

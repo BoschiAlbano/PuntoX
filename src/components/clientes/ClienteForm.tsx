@@ -98,7 +98,7 @@ export default function ClienteForm({
   isSaving,
 }: GenericFormProps<Cliente>) {
   const [formData, setFormData] = useState<Partial<Cliente>>(clientePorDefecto);
-
+  const currency = useCurrency();
   // Queries
   const { data: condicionesIva = [], isLoading: isLoadingCondiciones } =
     useQuery({
