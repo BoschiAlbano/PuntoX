@@ -285,15 +285,15 @@ export default function ProductSearch({
   }, []);
 
   return (
-    <div className="flex-1 relative shadow-sm rounded-lg bg-white">
+    <div className="flex-1 relative rounded-lg border-none">
       <Input
         ref={inputRef}
         classNames={{
-          base: "max-w-full sm:max-w-2xl h-12",
-          mainWrapper: "h-full ",
-          input: "text-small",
+          base: "max-w-full sm:max-w-2xl h-12 border-none",
+          mainWrapper: "h-full border-none",
+          input: "text-small border-none",
           inputWrapper:
-            "h-full font-normal text-default-500 bg-white outline-none hover:bg-white focus-within:bg-white data-[hover=true]:bg-white rounded-lg",
+            "h-full font-normal text-default-500 bg-white outline-none hover:bg-white focus-within:bg-white data-[hover=true]:bg-white rounded-lg border-none shadow-none",
         }}
         placeholder="Escanear (Código / Barras) o Buscar..."
         size="sm"
@@ -323,7 +323,7 @@ export default function ProductSearch({
           ref={suggestionsRef}
           className="absolute top-full left-0 right-0 mt-2 z-50 max-w-full sm:max-w-2xl"
         >
-          <Card className="shadow-lg">
+          <Card className="shadow-sm">
             <CardBody className="p-0">
               <div className="max-h-[400px] overflow-y-auto">
                 {suggestions.map((product, index) => (

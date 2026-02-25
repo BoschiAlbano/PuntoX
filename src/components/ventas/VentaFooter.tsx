@@ -2,26 +2,23 @@
 
 import React, { useState, useEffect, ReactNode, useMemo } from "react";
 import {
-  Card,
-  CardBody,
   Button,
   Input,
-  Divider,
   Select,
   SelectItem,
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  CardHeader,
   addToast,
-  CardFooter,
   Skeleton,
 } from "@heroui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Trash2, Plus, X } from "lucide-react";
+import {
+  Trash2,
+  Plus,
+  X,
+  Wallet,
+  CreditCard,
+  Banknote,
+  ArrowRightLeft,
+} from "lucide-react";
 import {
   TIPO_PAGO,
   TIPO_COMPROBANTE_VENTA,
@@ -227,6 +224,7 @@ export default function VentaFooter({
       addToast({
         title: "Error",
         description: err.message,
+        color: "danger",
       });
       setIsSaving(false);
     },
@@ -325,6 +323,23 @@ export default function VentaFooter({
     }
   };
 
+  const getTipoIcon = (tipo: number) => {
+    switch (tipo) {
+      case TIPO_PAGO.EFECTIVO:
+        return <Banknote size={16} className="text-emerald-500" />;
+      case TIPO_PAGO.TARJETA:
+        return <CreditCard size={16} className="text-blue-500" />;
+      case TIPO_PAGO.TRANSFERENCIA:
+        return <ArrowRightLeft size={16} className="text-purple-500" />;
+      case TIPO_PAGO.CHEQUE:
+        return <Wallet size={16} className="text-orange-500" />;
+      case TIPO_PAGO.CUENTA_CORRIENTE:
+        return <Wallet size={16} className="text-slate-500" />;
+      default:
+        return <Wallet size={16} className="text-slate-500" />;
+    }
+  };
+
   const paymentOptions = useMemo(
     () =>
       [
@@ -349,24 +364,54 @@ export default function VentaFooter({
   }, [paymentOptions, currentTipo]);
 
   return (
-    <section className="flex-1  flex flex-col gap-4 w-[390px]">
-      {/* Payment Card */}
-      <Card className="bg-[#ffffff] flex-1 rounded-lg shadow-sm ">
-        <CardHeader className="pb-4 pt-4 px-4 flex-col items-start">
-          <div className="font-bold text-large absolute top-0 left-0 flex items-center gap-2 p-2">
-            <div className=" h-2 w-2 rounded-full bg-[#67afc3]"></div>
-            <p className="text-xs text-default-500">Formas de Pago</p>
-          </div>
-        </CardHeader>
-        <CardBody className="overflow-hidden">
-          {/* Inputs */}
-          <div className="flex gap-2 items-end mb-4">
+    <section className="flex-1 flex flex-col gap-4 overflow-hidden">
+      {/* Payment Methods Section */}
+      <div className="flex-1 bg-white rounded-2xl border border-slate-100 flex flex-col overflow-hidden">
+        <div className="p-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center shrink-0">
+          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            Formas de Pago
+          </h3>
+          {/* Margen Disponible Indicator */}
+          {currentTipo === TIPO_PAGO.CUENTA_CORRIENTE &&
+            cliente?.Persona_Cliente?.ActivarCtaCte && (
+              <div
+                className={`text-xs px-2 py-0.5 rounded-full bg-white border border-slate-200 ${cliente?.Persona_Cliente?.TieneLimiteCompra ? (cliente.Persona_Cliente.MargenDisponible < 0 ? "text-danger border-danger/20 bg-danger/5" : "text-emerald-600 border-emerald-200 bg-emerald-50") : "text-slate-500"}`}
+              >
+                {cliente?.Persona_Cliente?.TieneLimiteCompra ? (
+                  <>
+                    Margen:{" "}
+                    <b>
+                      $
+                      {(
+                        cliente.Persona_Cliente.MargenDisponible -
+                        pagos
+                          .filter(
+                            (p) => p.tipoPago === TIPO_PAGO.CUENTA_CORRIENTE,
+                          )
+                          .reduce((acc, p) => acc + p.monto, 0)
+                      ).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                    </b>
+                  </>
+                ) : (
+                  "Sin límite"
+                )}
+              </div>
+            )}
+        </div>
+
+        <div className="p-3 flex flex-col gap-3 flex-1 overflow-hidden">
+          {/* Payment Input Group */}
+          <div className="flex gap-2 items-end shrink-0">
             <Select
               label="Método"
               selectedKeys={[currentTipo.toString()]}
               onChange={(e) => setCurrentTipo(Number(e.target.value))}
               className="flex-2"
               size="sm"
+              variant="bordered"
+              classNames={{
+                trigger: "border-slate-200 shadow-none rounded-xl",
+              }}
             >
               {paymentOptions.map((option) => (
                 <SelectItem key={option.key} textValue={option.label}>
@@ -379,9 +424,13 @@ export default function VentaFooter({
               type="number"
               value={currentMonto}
               onValueChange={setCurrentMonto}
-              startContent="$"
+              startContent={<span className="text-slate-400 text-sm">$</span>}
               className="flex-[1.5]"
               size="sm"
+              variant="bordered"
+              classNames={{
+                inputWrapper: "border-slate-200 shadow-none rounded-xl",
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAddPayment();
               }}
@@ -390,147 +439,112 @@ export default function VentaFooter({
               isIconOnly
               size="lg"
               onPress={handleAddPayment}
-              className="mb-0.5 bg-[#67afc3] text-white"
+              className="mb-0.5 bg-slate-800 text-white rounded-xl"
             >
               <Plus size={20} />
             </Button>
           </div>
 
-          {/* Margen Disponible Indicator */}
-          {currentTipo === TIPO_PAGO.CUENTA_CORRIENTE &&
-            cliente?.Persona_Cliente?.ActivarCtaCte && (
-              <div
-                className={`text-xs px-1 mb-2 ${cliente?.Persona_Cliente?.TieneLimiteCompra ? (cliente.Persona_Cliente.MargenDisponible < 0 ? "text-danger" : "text-success") : "text-default-500"}`}
-              >
-                {cliente?.Persona_Cliente?.TieneLimiteCompra ? (
-                  <>
-                    Margen Disponible:{" "}
-                    <b>
-                      $
-                      {(
-                        cliente.Persona_Cliente.MargenDisponible -
-                        pagos
-                          .filter(
-                            (p) => p.tipoPago === TIPO_PAGO.CUENTA_CORRIENTE,
-                          )
-                          .reduce((acc, p) => acc + p.monto, 0)
-                      ).toFixed(2)}
-                    </b>
-                  </>
-                ) : (
-                  "Sin límite de compra"
-                )}
+          {/* Payment List */}
+          <div className="flex-1 overflow-y-auto min-h-0 space-y-1 pr-1 custom-scrollbar">
+            {pagos.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-2 min-h-[100px]">
+                <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center">
+                  <span className="text-xl">$</span>
+                </div>
+                <span className="text-xs">Agrega un pago</span>
               </div>
+            ) : (
+              pagos.map((p, idx) => (
+                <div
+                  key={idx}
+                  className="group flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                      {getTipoIcon(p.tipoPago)}
+                    </div>
+                    <span className="text-sm font-medium text-slate-700">
+                      {getTipoLabel(p.tipoPago)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-slate-800">
+                      $
+                      {p.monto.toLocaleString("es-AR", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                    <button
+                      onClick={() => handleRemovePayment(idx)}
+                      className="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-400 transition-opacity p-1"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))
             )}
-
-          {/* List */}
-          <div className="flex-1 overflow-y-auto">
-            <Table
-              aria-label="Pagos"
-              removeWrapper
-              classNames={{
-                th: "bg-transparent h-8 text-tiny ",
-                td: "py-1 text-small",
-                tr: "hover:bg-default-100",
-              }}
-              isCompact
-            >
-              <TableHeader>
-                <TableColumn>MÉTODO</TableColumn>
-                <TableColumn align="end">MONTO</TableColumn>
-                <TableColumn align="end" width={40}>
-                  ACCIÓN
-                </TableColumn>
-              </TableHeader>
-              <TableBody>
-                {pagos.map((p, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell>{getTipoLabel(p.tipoPago)}</TableCell>
-                    <TableCell>${p.monto.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        isIconOnly
-                        color="danger"
-                        variant="light"
-                        onPress={() => handleRemovePayment(idx)}
-                        className="h-6 w-6 min-w-4"
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
           </div>
-        </CardBody>
-        <CardFooter>
-          <div className="flex justify-between w-full mt-2 p-2 rounded-lg">
+
+          {/* Remaining / Change Display */}
+          <div className="mt-auto pt-3 border-t border-slate-100 flex justify-between items-end shrink-0">
             {restante > 0.01 ? (
               <>
-                <span className="text-small text-default-500">Restante:</span>
-                <span
-                  className={`font-bold ${restante > 0.01 && "text-warning"}`}
-                >
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+                  Restante
+                </span>
+                <span className="text-lg font-bold text-slate-700">
                   $
                   {Math.max(0, restante).toLocaleString("es-AR", {
                     minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
                   })}
                 </span>
               </>
             ) : (
               <>
-                <span className="text-small text-default-500">Vuelto:</span>
-                <span
-                  className={`font-bold ${restante < 0.01 && "text-[#67afc3]"}`}
-                >
+                <span className="text-xs font-semibold text-emerald-500 uppercase tracking-widest">
+                  Vuelto
+                </span>
+                <span className="text-lg font-bold text-emerald-600">
                   $
                   {Math.abs(restante).toLocaleString("es-AR", {
                     minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
                   })}
                 </span>
               </>
             )}
           </div>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
 
-      {/* Totals Card */}
-      <Card className="bg-[#ffffff] flex-none rounded-lg shadow-sm ">
-        <CardHeader className="pb-4 pt-4 px-4 flex-col items-start">
-          <div className="font-bold text-large absolute top-0 left-0 flex items-center gap-2 p-2">
-            <div className=" h-2 w-2 rounded-full bg-[#67afc3]"></div>
-            <p className="text-xs text-default-500">Totales</p>
+      {/* Totals & Actions Card */}
+      <div className="bg-white rounded-2xl border border-slate-100 p-4 shrink-0 flex flex-col gap-4 relative z-10">
+        <div className="flex flex-col gap-1">
+          <div className="flex justify-between text-sm text-slate-500">
+            <span>Subtotal</span>
+            <span>
+              $
+              {subtotal.toLocaleString("es-AR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
           </div>
-        </CardHeader>
-        <CardBody className="flex flex-col gap-3">
-          <div className="flex flex-col gap-2">
-            <div className="flex justify-between text-sm text-default-500">
-              <span>Subtotal:</span>
-              <span>
-                $
-                {subtotal.toLocaleString("es-AR", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </span>
-            </div>
-            <div className="flex justify-between items-center text-sm text-default-500 gap-2">
-              <span>Descuento (%):</span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-default-400">
+          <div className="flex justify-between items-center text-sm text-slate-500 h-6">
+            <span>Descuento</span>
+            <div className="flex items-center gap-2">
+              {descuento > 0 && subtotal > 0 && (
+                <span className="text-xs text-red-400">
                   - $
                   {(subtotal * (descuento / 100)).toLocaleString("es-AR", {
                     minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
                   })}
                 </span>
-                <Input
+              )}
+              <div className="flex items-center bg-slate-50 rounded-lg px-2 border border-slate-100 w-16">
+                <input
                   data-testid="descuento-input"
-                  size="sm"
                   type="number"
                   min={0}
                   max={100}
@@ -539,107 +553,61 @@ export default function VentaFooter({
                     const v = parseFloat(e.target.value) || 0;
                     setDescuento(Math.min(100, Math.max(0, v)));
                   }}
-                  endContent="%"
-                  classNames={{
-                    inputWrapper: "h-6",
-                    input: "text-right",
-                  }}
-                  className="w-20"
+                  className="w-full text-right bg-transparent text-xs font-medium focus:outline-none py-1"
                 />
+                <span className="text-xs text-slate-400 ml-1">%</span>
               </div>
-            </div>
-            <Divider className="my-1" />
-            <div className="flex justify-between text-xl font-bold text-[#67afc3]">
-              <span>Total:</span>
-              <span>${total.toFixed(2)}</span>
             </div>
           </div>
 
+          <div className="my-2 h-px bg-slate-100 w-full"></div>
+
+          <div className="flex justify-between items-baseline">
+            <span className="text-lg text-slate-800 font-semibold">Total</span>
+            <span className="text-3xl font-extrabold text-slate-900 tracking-tight">
+              ${total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex gap-2 mt-2">
+          <Button
+            variant="flat"
+            color="danger"
+            className="w-12 h-12 min-w-12 rounded-xl"
+            isIconOnly
+            onPress={handleLimpiar}
+            isDisabled={isSaving || items.length === 0}
+          >
+            <Trash2 size={20} />
+          </Button>
+
           {isLoading ? (
-            <Skeleton className="shadow-lg mt-2 rounded-xl">
-              <Button className=" text-center">Cargando...</Button>
-            </Skeleton>
+            <Skeleton className="flex-1 rounded-xl h-12" />
           ) : cajaActual ? (
             <Button
-              size="md"
-              className={`font-bold text-white shadow-lg bg-linear-to-r from-blue-500 to-[#90c472] mt-2`}
-              startContent={
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M1 4a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4Zm12 4a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM4 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm13-1a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM1.75 14.5a.75.75 0 0 0 0 1.5c4.417 0 8.693.603 12.749 1.73 1.111.309 2.251-.512 2.251-1.696v-.784a.75.75 0 0 0-1.5 0v.784a.272.272 0 0 1-.35.25A49.043 49.043 0 0 0 1.75 14.5Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              }
+              size="lg"
+              className="flex-1 bg-slate-900 text-white font-bold rounded-xl hover:bg-black transition-all active:scale-[0.98]"
               onPress={handleFinalizeSale}
               isLoading={isSaving}
               isDisabled={Math.abs(restante) > 0.01 || items.length === 0}
             >
               {Math.abs(restante) < 0.01 || items.length === 0
                 ? "CONFIRMAR VENTA"
-                : `FALTA $${
-                    restante > 0
-                      ? restante.toLocaleString("es-AR", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })
-                      : "AJUSTE"
-                  }`}
+                : "COMPLETAR PAGO"}
             </Button>
           ) : (
             <Button
-              size="md"
-              className="font-bold text-white shadow-lg bg-yellow-500"
-              startContent={
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5 mb-1"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM8.28 7.22a.75.75 0 0 0-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 1 0 1.06 1.06L10 11.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L11.06 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L10 8.94 8.28 7.22Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              }
+              size="lg"
+              color="warning"
+              className="flex-1 font-bold text-white rounded-xl"
               onPress={() => setOpenModalAbrirCaja(true)}
             >
-              Abrir Caja
+              ABRIR CAJA
             </Button>
           )}
-
-          <Button
-            size="md"
-            className="font-bold text-white shadow-lg bg-red-300"
-            startContent={
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="size-5 mb-1"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            }
-            onPress={handleLimpiar}
-            isLoading={isSaving}
-          >
-            Cancelar
-          </Button>
-        </CardBody>
-      </Card>
+        </div>
+      </div>
 
       <ModalShell
         open={openModalAbrirCaja}
@@ -656,7 +624,7 @@ export default function VentaFooter({
             <button
               onClick={handleAbrirCaja}
               disabled={isOpening}
-              className="rounded-lg bg-[#67afc3] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#5a9fb2] disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isOpening ? "Abriendo..." : "Abrir Caja"}
             </button>
@@ -672,7 +640,7 @@ export default function VentaFooter({
             value={montoInicial}
             onChange={(e) => setMontoInicial(e.target.value)}
             placeholder="0.00"
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-[#67afc3] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/20"
+            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500/20"
             aria-label="Monto inicial para abrir la caja"
           />
           <p className="text-xs text-slate-500">
@@ -711,27 +679,31 @@ function ModalShell({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <button
-        className="absolute inset-0 bg-slate-900/40"
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
         onClick={onClose}
         aria-label="Cerrar modal"
       />
       <div
-        className={`relative w-full ${sizeClass} rounded-2xl border border-slate-200 bg-white p-5 shadow-xl`}
+        className={`relative w-full ${sizeClass} rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl transform transition-all`}
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-start justify-between gap-4">
-          <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
           <button
             onClick={onClose}
-            className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50"
+            className="rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
             aria-label="Cerrar modal"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="mt-4">{children}</div>
-        {footer && <div className="mt-6 flex justify-end gap-2">{footer}</div>}
+        <div className="mt-2">{children}</div>
+        {footer && (
+          <div className="mt-6 flex justify-end gap-3 pt-3 border-t border-slate-100">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

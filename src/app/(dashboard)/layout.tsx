@@ -37,7 +37,7 @@ export default function DashboardLayout({
 
   return (
     <ProtectRoute>
-      <div className="flex bg-[#ffff]">
+      <div className="flex bg-[#f8fafc]">
         <section
           onClick={() => setshow(false)}
           className={`z-99 transition-all duration-400 ease-in-out sm:relative absolute  sm:w-auto w-screen sm:h-auto h-screen  ${

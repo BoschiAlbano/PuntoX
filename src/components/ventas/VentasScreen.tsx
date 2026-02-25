@@ -152,81 +152,88 @@ export default function VentasScreen() {
   };
 
   return (
-    <div className="flex flex-col h-full gap-4 p-2 w-full">
-      <section className=" w-full flex flex-col flex-1 gap-4">
-        {/* Grilla de items y footer */}
-        <section className="flex-1 flex flex-col sm:flex-row gap-4 w-full">
-          <div className="flex flex-col gap-2 w-full">
-            <div className="flex flex-row gap-4">
-              {/* Buscador de productos */}
+    <div className="h-full w-full bg-slate-50/50 p-4 overflow-hidden flex flex-col gap-4">
+      <div className="flex flex-1 gap-4 overflow-hidden">
+        {/* LEFT PANEL: PRODUCT SEARCH & GRID */}
+        <div className="flex-1 flex flex-col gap-4 overflow-hidden rounded-2xl">
+          {/* Toolbar Card */}
+          <div className="bg-white p-3 rounded-2xl border border-slate-100 flex gap-4 items-center shrink-0">
+            {/* Buscador de productos - Flex grow to take available space */}
+            <div className="flex-1">
               <ProductSearch onProductSelect={handleAddItem} />
-              {/* Selector de lista de precios */}
-              <div className="flex flex-col gap-1">
-                <div className="relative flex gap-0 p-1 rounded-lg h-12 items-center shadow-sm bg-white">
-                  {/* Buttons */}
-                  <button
-                    onClick={() => setListaPrecios(1)}
-                    className="relative flex-1 h-10 px-4 rounded-lg font-medium text-sm transition-colors z-10 cursor-pointer "
-                  >
-                    {listaPrecios === 1 && (
-                      <motion.div
-                        layoutId="activeTab"
-                        className="absolute inset-0 bg-[#7dbbcc] rounded-lg"
-                        transition={{
-                          type: "spring",
-                          stiffness: 300,
-                          damping: 30,
-                        }}
-                      />
-                    )}
-                    <span
-                      className={`relative z-10 ${
-                        listaPrecios === 1 ? "text-white" : "text-slate-700"
-                      }`}
-                    >
-                      Minorista
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setListaPrecios(2)}
-                    className="relative flex-1 h-10 px-4 rounded-lg font-medium text-sm transition-colors z-10 cursor-pointer"
-                  >
-                    {listaPrecios === 2 && (
-                      <motion.div
-                        layoutId="activeTab"
-                        className="absolute inset-0 bg-[#7dbbcc] rounded-lg"
-                        transition={{
-                          type: "spring",
-                          stiffness: 300,
-                          damping: 30,
-                        }}
-                      />
-                    )}
-                    <span
-                      className={`relative z-10 ${
-                        listaPrecios === 2 ? "text-white" : "text-slate-700"
-                      }`}
-                    >
-                      Mayorista
-                    </span>
-                  </button>
-                </div>
-              </div>
             </div>
 
-            {/* Grilla de items */}
-            <VentaGrid
-              items={items}
-              onUpdateQuantity={handleUpdateQuantity}
-              onRemoveItem={removeItem}
-            />
+            <div className="h-8 w-px bg-slate-200 mx-2"></div>
+
+            {/* Selector de lista de precios - Compact pill design */}
+            <div className="flex bg-slate-100 p-1 rounded-xl h-10 items-center relative">
+              <button
+                onClick={() => setListaPrecios(1)}
+                className={`relative px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 z-10 ${
+                  listaPrecios === 1
+                    ? "text-white"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                Minorista
+                {listaPrecios === 1 && (
+                  <motion.div
+                    layoutId="priceListTab"
+                    className="absolute inset-0 bg-slate-800 rounded-lg -z-10 shadow-sm"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+              </button>
+              <button
+                onClick={() => setListaPrecios(2)}
+                className={`relative px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 z-10 ${
+                  listaPrecios === 2
+                    ? "text-white"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                Mayorista
+                {listaPrecios === 2 && (
+                  <motion.div
+                    layoutId="priceListTab"
+                    className="absolute inset-0 bg-slate-800 rounded-lg -z-10 shadow-sm"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+              </button>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-2 h-full">
-            <div className=" flex flex-row gap-2 items-center text-center justify-center">
-              {/* Clientes */}
+          {/* Grilla de items */}
+          <VentaGrid
+            items={items}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveItem={removeItem}
+          />
+        </div>
+
+        {/* RIGHT PANEL: CLIENT & FOOTER */}
+        <div className="w-[400px] flex flex-col gap-4 shrink-0 h-full overflow-hidden">
+          {/* Cliente Card */}
+          <div className="bg-white rounded-2xl border border-slate-100 flex flex-col shrink-0 overflow-hidden">
+            <div className="p-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center shrink-0">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Cliente
+              </h3>
+            </div>
+            <div className="p-3">
               <ClienteSearch selected={cliente} onSelect={setCliente} />
-              {/* Comprobantes */}
+            </div>
+          </div>
+
+          {/* Comprobante Card */}
+          <div className="bg-white rounded-2xl border border-slate-100 flex flex-col shrink-0 overflow-hidden">
+            <div className="p-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center shrink-0">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Comprobante
+              </h3>
+            </div>
+            <div className="p-3">
               <ComprobanteSelector
                 tipoComprobante={tipoComprobante}
                 setTipoComprobante={setTipoComprobante}
@@ -234,7 +241,10 @@ export default function VentasScreen() {
                 setNumeroComprobanteAsociado={setNumeroComprobanteAsociado}
               />
             </div>
+          </div>
 
+          {/* Footer / Totals Section */}
+          <div className="flex-1 min-h-0 flex flex-col">
             <VentaFooter
               subtotal={items.reduce((acc, item) => acc + item.subtotal, 0)}
               descuento={descuentoPorcentaje}
@@ -246,8 +256,8 @@ export default function VentasScreen() {
               handleLimpiar={clearVenta}
             />
           </div>
-        </section>
-      </section>
+        </div>
+      </div>
     </div>
   );
 }
@@ -266,14 +276,19 @@ function ComprobanteSelector({
   ) => void;
 }) {
   return (
-    <div className="flex gap-4 w-full  items-end rounded-lg shadow-sm">
+    <div className="flex gap-4 w-full items-end rounded-lg">
       <Select
         label="Comprobante"
         size="sm"
-        className="w-50"
+        className="w-full"
         selectedKeys={[tipoComprobante.toString()]}
         value={tipoComprobante.toString()}
         onChange={(e) => setTipoComprobante(Number(e.target.value))}
+        classNames={{
+          trigger:
+            "h-10 min-h-10 rounded-lg shadow-none border border-slate-200 data-[hover=true]:border-slate-300",
+          value: "text-small",
+        }}
       >
         <SelectItem
           key={TIPO_COMPROBANTE_VENTA.FACTURA_A}
@@ -320,6 +335,10 @@ function ComprobanteSelector({
           onValueChange={(v) =>
             setNumeroComprobanteAsociado(v ? Number(v) : null)
           }
+          classNames={{
+            inputWrapper:
+              "h-10 min-h-10 rounded-lg shadow-none border border-slate-200 group-data-[focus=true]:border-blue-400",
+          }}
         />
       )}
     </div>

@@ -25,53 +25,66 @@ export default function VentaGrid({
   onRemoveItem,
 }: VentaGridProps) {
   return (
-    <div className="flex-1 overflow-auto min-h-0 bg-content1 shadow-sm rounded-lg">
-      <Table aria-label="Detalle de venta" removeWrapper className="h-full p-4">
+    <div className="flex-1 overflow-hidden bg-white rounded-2xl border border-slate-100 flex flex-col justify-start">
+      <Table
+        aria-label="Detalle de venta"
+        removeWrapper
+        classNames={{
+          base: "h-full flex flex-col overflow-hidden",
+          table: "min-h-0",
+          thead: "sticky top-0 z-20 shrink-0",
+          th: "bg-slate-50 text-slate-500 font-semibold text-xs tracking-wider border-b border-slate-100 h-10 first:rounded-l-none last:rounded-r-none",
+          tr: "hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-none h-fit",
+          td: "py-3 first:pl-4 last:pr-4",
+          emptyWrapper: "h-full w-full block",
+        }}
+        className="h-full overflow-auto scrollbar-hide"
+      >
         <TableHeader>
-          <TableColumn className="bg-[#7dbbcc] text-white" width={100}>
+          <TableColumn className="" width={100} align="center">
             CODIGO
           </TableColumn>
-          <TableColumn className="bg-[#7dbbcc] text-white">
-            DESCRIPCION
-          </TableColumn>
-          <TableColumn
-            className="bg-[#7dbbcc] text-white"
-            width={100}
-            align="center"
-          >
+          <TableColumn className="">DESCRIPCION</TableColumn>
+          <TableColumn className="" width={140} align="center">
             CANTIDAD
           </TableColumn>
-          <TableColumn
-            className="bg-[#7dbbcc] text-white"
-            width={100}
-            align="center"
-          >
-            PRECIO UNIT.
+          <TableColumn className="" width={120} align="center">
+            PRECIO
           </TableColumn>
-          <TableColumn
-            className="bg-[#7dbbcc] text-white"
-            width={100}
-            align="center"
-          >
+          <TableColumn className="" width={120} align="center">
             SUBTOTAL
           </TableColumn>
-          <TableColumn
-            className="bg-[#7dbbcc] text-white"
-            width={50}
-            align="center"
-          >
-            ACCIONES
+          <TableColumn className="" width={60} align="center">
+            <span className="sr-only">ACCIONES</span>
           </TableColumn>
         </TableHeader>
-        <TableBody emptyContent={"Escanea o busca productos para comenzar."}>
+        <TableBody
+          emptyContent={
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-400 pointer-events-none">
+              <div className="p-4 bg-slate-50 rounded-full mb-2">
+                <Plus size={24} className="text-slate-300" />
+              </div>
+              <p className="text-sm font-medium">
+                No hay productos en la venta
+              </p>
+              <p className="text-xs">
+                Escanea un código de barras o busca un producto
+              </p>
+            </div>
+          }
+        >
           {items.map((item) => (
-            <TableRow key={item.Id} className="hover:bg-[#7dbbcc50]">
-              <TableCell>{item.Codigo.toString().padStart(6, "0")}</TableCell>
+            <TableRow key={item.Id}>
+              <TableCell className="text-xs font-mono text-slate-400">
+                {item.Codigo.toString().padStart(6, "0")}
+              </TableCell>
               <TableCell>
-                <div className="flex flex-col">
-                  <span className="font-semibold">{item.Descripcion}</span>
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium text-slate-700 text-sm">
+                    {item.Descripcion}
+                  </span>
                   {item.CodigoBarra && (
-                    <span className="text-xs text-default-400">
+                    <span className="text-[10px] text-slate-400 font-mono tracking-wide">
                       {item.CodigoBarra}
                     </span>
                   )}
@@ -88,14 +101,19 @@ export default function VentaGrid({
                 />
               </TableCell>
               <TableCell>
-                <span className="font-mono">${item.precio.toFixed(2)}</span>
+                <span className="font-medium text-slate-600 text-sm">
+                  $
+                  {item.precio.toLocaleString("es-AR", {
+                    minimumFractionDigits: 2,
+                  })}
+                </span>
               </TableCell>
               <TableCell>
-                <span className="font-mono font-bold text-[#67afc3]">
+                <span className="font-bold text-slate-800 text-sm">
                   $
-                  {(item.precio.toFixed(2) * item.cantidad.toFixed(2)).toFixed(
-                    2,
-                  )}
+                  {(item.precio * item.cantidad).toLocaleString("es-AR", {
+                    minimumFractionDigits: 2,
+                  })}
                 </span>
               </TableCell>
               <TableCell>
@@ -104,9 +122,10 @@ export default function VentaGrid({
                   color="danger"
                   variant="light"
                   size="sm"
+                  className="text-slate-400 hover:text-red-500 hover:bg-red-50"
                   onPress={() => onRemoveItem(item.Id)}
                 >
-                  <Trash2 size={18} />
+                  <Trash2 size={16} />
                 </Button>
               </TableCell>
             </TableRow>
@@ -199,26 +218,28 @@ function QuantitySelector({
   };
 
   return (
-    <div className="flex items-center gap-1 justify-center rounded-2xl">
-      <div className="flex flex-row items-center h-8 w-fit overflow-hidden gap-1">
+    <div className="flex items-center justify-center">
+      <div className="flex flex-row items-center border border-slate-200 rounded-lg p-0.5 bg-white shadow-sm h-8">
         <button
           onClick={handleMinus}
-          className="w-7 h-7 flex items-center justify-center text-white transition-colors active:bg-[#5a99ab] hover:bg-[#6cb6ca] rounded-full bg-[#7dbbcc]"
+          className="w-7 h-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
         >
           <Minus size={14} strokeWidth={2.5} />
         </button>
+        <div className="h-4 w-px bg-slate-200 mx-0"></div>
         <input
           type="number"
-          className="w-20 h-full text-center text-sm font-bold focus:ring-0 p-0 outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none  text-slate-700 border border-[#7dbbcc] shadow-sm rounded-2xl"
+          className="w-14 h-full text-center text-xs font-semibold focus:ring-0 p-0 outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none text-slate-700 placeholder:text-slate-300 bg-transparent border-none"
           value={localValue}
           onChange={handleInputChange}
           step={tipoVenta === TiposVenta.PESO ? "0.001" : "1"}
           min={0}
           placeholder="0"
         />
+        <div className="h-4 w-px bg-slate-200 mx-0"></div>
         <button
           onClick={handlePlus}
-          className="w-7 h-7 flex items-center justify-center text-white transition-colors active:bg-[#5a99ab] hover:bg-[#6cb6ca] rounded-full bg-[#7dbbcc]"
+          className="w-7 h-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
         >
           <Plus size={14} strokeWidth={2.5} />
         </button>
