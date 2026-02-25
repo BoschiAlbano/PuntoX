@@ -294,6 +294,23 @@ body {
   display: none;
 }
 
+/* Tabla de impresión: oculta en pantalla, visible al imprimir */
+.table-print-source {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  z-index: -1;
+}
+
+@media print {
+  .table-print-source {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    z-index: auto !important;
+  }
+}
+
 /* Respetar preferencias de accesibilidad */
 /* Respetar preferencias de accesibilidad */
 /* @media (prefers-reduced-motion: reduce) {

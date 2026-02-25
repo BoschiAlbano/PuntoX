@@ -37,17 +37,25 @@ export async function GET(req: NextRequest) {
 
     // 2. Si no hay límite, devolver todo
     if (!limitParam) {
-      const marcas = await prisma.marca.findMany({
+      const marcasRaw = await prisma.marca.findMany({
         where,
         select: {
           Id: true,
           Descripcion: true,
           EstaEliminado: true,
+          _count: { select: { Articulo: true } },
         },
         orderBy: {
           Descripcion: "asc",
         },
       });
+
+      const marcas = marcasRaw.map((m) => ({
+        Id: Number(m.Id),
+        Descripcion: m.Descripcion,
+        EstaEliminado: m.EstaEliminado,
+        CantidadProductos: m._count.Articulo,
+      }));
 
       return NextResponse.json(
         {
@@ -68,12 +76,13 @@ export async function GET(req: NextRequest) {
     // 3. Paginación normal
     const pagination = parsePaginationParams(req);
 
-    const marcas = await prisma.marca.findMany({
+    const marcasRaw = await prisma.marca.findMany({
       where,
       select: {
         Id: true,
         Descripcion: true,
         EstaEliminado: true,
+        _count: { select: { Articulo: true } },
       },
       orderBy: {
         Descripcion: "asc",
@@ -81,6 +90,13 @@ export async function GET(req: NextRequest) {
       skip: pagination.skip,
       take: pagination.limit,
     });
+
+    const marcas = marcasRaw.map((m) => ({
+      Id: Number(m.Id),
+      Descripcion: m.Descripcion,
+      EstaEliminado: m.EstaEliminado,
+      CantidadProductos: m._count.Articulo,
+    }));
 
     // 4. Formatear Respuesta
     const response = createPaginationResponse(marcas, total, pagination);

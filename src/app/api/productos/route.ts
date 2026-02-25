@@ -24,6 +24,8 @@ export async function GET(req: NextRequest) {
 
     const pagination = parsePaginationParams(req);
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
+    const bajoStock =
+      req.nextUrl.searchParams.get("bajoStock")?.toLowerCase() === "true";
 
     // Construir where clause
     const where: {
@@ -46,8 +48,41 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    // Obtener total para paginación
-    const total = await prisma.articulo.count({ where });
+    // Filtro bajo stock: requiere comparar Stock <= StockMinimo en DB (usa raw)
+    let articuloIdsBajoStock: bigint[] = [];
+    if (bajoStock) {
+      const raw =
+        sucursalId && sucursalId !== 0
+          ? await prisma.$queryRaw<{ Id: bigint }[]>`
+              SELECT a."Id"
+              FROM "Articulo" a
+              LEFT JOIN "ArticuloStock" ast ON ast."ArticuloId" = a."Id" AND ast."SucursalId" = ${BigInt(sucursalId)}
+              WHERE a."TenantId" = ${BigInt(tenantId)}
+                AND a."EstaEliminado" = false
+                AND (COALESCE(ast."StockMinimo", a."StockMinimo") > 0)
+                AND (COALESCE(ast."Stock", 0)::numeric <= COALESCE(ast."StockMinimo", a."StockMinimo")::numeric)
+            `
+          : await prisma.$queryRaw<{ Id: bigint }[]>`
+              SELECT a."Id"
+              FROM "Articulo" a
+              WHERE a."TenantId" = ${BigInt(tenantId)}
+                AND a."EstaEliminado" = false
+                AND a."StockMinimo" > 0
+                AND a."Stock" <= a."StockMinimo"
+            `;
+      articuloIdsBajoStock = raw.map((r) => r.Id);
+      if (articuloIdsBajoStock.length === 0) {
+        return NextResponse.json(createPaginationResponse([], 0, pagination), {
+          status: 200,
+        });
+      }
+      (where as Record<string, unknown>).Id = { in: articuloIdsBajoStock };
+    }
+
+    // Total: con bajoStock ya tenemos el count (ids.length), evitamos un round-trip extra
+    const total = bajoStock
+      ? articuloIdsBajoStock.length
+      : await prisma.articulo.count({ where });
 
     // Obtener productos paginados
     const productos = await prisma.articulo.findMany({
@@ -59,6 +94,10 @@ export async function GET(req: NextRequest) {
         Descripcion: true,
         EstaEliminado: true,
         Stock: true, // Legacy/Global
+        StockMinimo: true,
+
+        Marca: { select: { Descripcion: true } },
+        Rubro: { select: { Descripcion: true } },
 
         // Relacion Precio: Solo lo necesario para la tabla
         Precio: {
@@ -77,6 +116,7 @@ export async function GET(req: NextRequest) {
           take: 1,
           select: {
             Stock: true,
+            StockMinimo: true,
             Sucursal: {
               select: {
                 Nombre: true,
@@ -107,8 +147,19 @@ export async function GET(req: NextRequest) {
         Descripcion: producto.Descripcion,
         EstaEliminado: producto.EstaEliminado,
 
-        // Stock logic
+        Marca: producto.Marca
+          ? { Descripcion: producto.Marca.Descripcion }
+          : null,
+        Rubro: producto.Rubro
+          ? { Descripcion: producto.Rubro.Descripcion }
+          : null,
+
+        // Stock logic (StockMinimo: sucursal o valor global)
         Stock: stockSucursal ? Number(stockSucursal.Stock) : Number(0),
+        StockMinimo:
+          stockSucursal?.StockMinimo != null
+            ? Number(stockSucursal.StockMinimo)
+            : Number(producto.StockMinimo ?? 0),
         SucursalNombre: stockSucursal?.Sucursal.Nombre || null,
 
         // Precio

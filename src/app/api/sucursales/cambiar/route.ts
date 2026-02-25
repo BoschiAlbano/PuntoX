@@ -61,7 +61,6 @@ export async function POST(req: NextRequest) {
       success: true,
     });
   } catch (error) {
-    console.log(error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.issues[0]?.message || "Datos inválidos" },

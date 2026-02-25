@@ -116,7 +116,6 @@ export async function GET(req: NextRequest) {
         },
       },
     });
-    console.log("ventasCtaCte", ventasCtaCte);
     // 2. Créditos (Pagos/Cobranzas)
     const pagosCtaCte = await prisma.comprobante.findMany({
       where: {
@@ -136,7 +135,6 @@ export async function GET(req: NextRequest) {
         },
       },
     });
-    console.log("pagosCtaCte", pagosCtaCte);
     // 3. Créditos (Notas de Crédito a Cta Cte)
     const notasCreditoCtaCte = await prisma.formaPago.findMany({
       where: {
@@ -160,7 +158,6 @@ export async function GET(req: NextRequest) {
         },
       },
     });
-    console.log("notasCreditoCtaCte", notasCreditoCtaCte);
     // Procesar datos en memoria
     const saldosMap = new Map<string, number>();
 
@@ -173,18 +170,6 @@ export async function GET(req: NextRequest) {
       if (!cId)
         cId = v.Comprobante?.Comprobante_Presupuesto?.ClienteId?.toString();
       if (!cId) cId = v.Comprobante?.Comprobante_Remito?.ClienteId?.toString();
-
-      console.log(
-        "Resolviendo ID:",
-        "Monto:",
-        v.Monto,
-        "FP_CtaCte:",
-        v.FormaPago_CtaCte?.ClienteId,
-        "Fac:",
-        v.Comprobante?.Comprobante_Factura?.ClienteId,
-        "Res:",
-        cId,
-      );
 
       if (cId) {
         const current = saldosMap.get(cId) || 0;

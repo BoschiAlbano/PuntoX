@@ -46,11 +46,6 @@ export async function GET(req: NextRequest) {
 
     const sucursalIdParam = req.nextUrl.searchParams.get("sucursalId");
 
-    console.log(
-      "sucursalIdParam **************************************",
-      sucursalIdParam,
-    );
-
     let sucursalId: bigint | null = null;
     let sucursalNombre: string | null = null;
 

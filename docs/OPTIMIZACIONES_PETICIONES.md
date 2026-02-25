@@ -174,17 +174,18 @@ const preferenciasVentaQuery = useQuery({
 
 ---
 
-### 4. Optimización de useGenericApi
+### 4. Optimización de useGenericApi (actualizado Feb 2025)
 
-**Configuración aplicada:**
+**Configuración aplicada** (ver `src/lib/react-query/queryDefaults.ts`):
 
 ```typescript
+// dynamicDataQueryOptions
 const query = useQuery({
-  queryKey: [queryKey, { search, page, limit }],
+  queryKey: [queryKey, { search, page, limit, extraParams }],
   queryFn: ({ signal }) => fetchData({ signal }),
-  refetchOnMount: false, // Agregado
-  refetchOnWindowFocus: false, // Agregado
-  staleTime: 30 * 1000, // Agregado - 30 segundos
+  ...dynamicDataQueryOptions,
+  // Incluye: refetchOnMount: false, refetchOnWindowFocus: false,
+  // staleTime: 60 * 1000 (1 min), placeholderData: keepPreviousData
 });
 ```
 
@@ -210,7 +211,7 @@ Tiempo en milisegundos que los datos se consideran "frescos". Durante este tiemp
 **Valores recomendados:**
 - **Datos estáticos** (provincias, departamentos, localidades): `30 * 60 * 1000` (30 minutos)
 - **Datos que cambian poco** (roles, permisos, configuración): `5 * 60 * 1000` (5 minutos)
-- **Datos que cambian moderadamente** (empleados, productos, clientes): `30 * 1000` (30 segundos)
+- **Datos que cambian moderadamente** (empleados, productos, clientes, listados): `60 * 1000` (1 minuto, ver dynamicDataQueryOptions)
 - **Datos que cambian frecuentemente** (auditorías, sesiones): `10 * 1000` (10 segundos)
 
 #### `refetchOnMount`
@@ -225,6 +226,9 @@ Controla si la query se refetcha cuando la ventana recupera el foco.
 
 - `false`: No refetch al cambiar de ventana (recomendado para la mayoría de casos)
 - `true`: Refetch cuando la ventana recupera el foco
+
+#### `placeholderData: keepPreviousData`
+Mantiene los datos de la página/filtro anterior visibles mientras se cargan los nuevos. Evita parpadeo y pantallas en blanco al cambiar de página. Configurado en `defaultQueryOptions` y aplicado a todos los listados vía `dynamicDataQueryOptions`.
 
 #### `enabled`
 Controla si la query se ejecuta.
@@ -241,7 +245,7 @@ Controla si la query se ejecuta.
 |--------------|-----------|----------------|---------------------|---------|
 | **Estáticos** | 30 min | false | false | Provincias, Departamentos, Localidades |
 | **Poco frecuente** | 5 min | false | false | Roles, Permisos, Configuración, Tenant |
-| **Moderado** | 30 seg | false | false | Empleados, Productos, Clientes |
+| **Moderado** | 60 seg (listados) | false | false | Empleados, Productos, Clientes (via dynamicDataQueryOptions) |
 | **Frecuente** | 10 seg | false | false | Auditorías, Sesiones Activas |
 | **Tiempo real** | 0 | true | true | Notificaciones en tiempo real (si se implementa) |
 
@@ -474,7 +478,8 @@ Sin embargo, esto no es recomendado ya que aumentará significativamente el núm
 
 ---
 
-**Última actualización**: Enero 2025  
+**Última actualización**: Febrero 2025  
+**Ver también**: [CRUD y tablas genéricas](./ui/crud-tablas-genericas.md) para queryKey, extraParams y keepPreviousData  
 **Mantenido por**: Equipo de Desarrollo  
 **Revisión recomendada**: Trimestral o cuando se agreguen nuevas queries
 

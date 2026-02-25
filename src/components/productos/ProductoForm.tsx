@@ -12,26 +12,66 @@ import {
   Select,
   SelectItem,
   NumberInput,
-  Tabs,
-  Tab,
+  Accordion,
+  AccordionItem,
+  Chip,
+  addToast,
 } from "@heroui/react";
 import { Producto } from "@/lib/validations/producto.schema";
 import { GenericFormProps } from "@/components/shared/GenericCrud";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { addToast } from "@heroui/react";
-import { PlusIcon } from "lucide-react";
+import {
+  PlusIcon,
+  FileText,
+  Tags,
+  DollarSign,
+  Package,
+  Settings,
+} from "lucide-react";
 import MarcaGenericForm from "../marcas/MarcaForm";
 import RubroGenericForm from "../rubros/RubroForm";
 import UnidadMedidaGenericForm from "../unidad-medida/UnidadMedidaForm";
 import { TiposVenta } from "../../../prisma/generated/prisma";
 import { LoadingComponent } from "../loading/loading";
+import { useCurrency } from "@/hooks/useCurrency";
+import { getCurrencyFormatOptions } from "@/lib/utils/formatCurrency";
+
+const inputClassNames = {
+  inputWrapper:
+    "bg-white border border-[#e5e7eb] shadow-none hover:border-[#e0e0e0] focus-within:!border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/20",
+};
+
+// Detecta si los campos obligatorios (*) de cada sección están completos.
+// Los chips pasan a "Completo" en tiempo real cuando el usuario carga la info.
+function getSectionStatus(formData: Partial<Producto>) {
+  const general =
+    (formData.Codigo ?? 0) > 0 &&
+    (formData.CodigoBarra?.trim() ?? "").length > 0 &&
+    (formData.Descripcion?.trim() ?? "").length > 0;
+  const categorizacion =
+    (formData.MarcaId ?? 0) > 0 &&
+    (formData.RubroId ?? 0) > 0 &&
+    (formData.UnidadMedidaId ?? 0) > 0 &&
+    (formData.IvaId ?? 0) > 0;
+  const precios =
+    (formData.Precio?.PrecioPublico ?? 0) > 0 ||
+    (formData.Precio?.PrecioPublico2 ?? 0) > 0;
+  const stock = (formData.Stock ?? 0) > 0;
+  return {
+    general,
+    categorizacion,
+    precios,
+    stock,
+    configuracion: true,
+  };
+}
 
 const defaultProducto: Producto = {
   Id: 0,
-  MarcaId: 1,
-  RubroId: 1,
-  UnidadMedidaId: 1,
-  IvaId: 1,
+  MarcaId: 0,
+  RubroId: 0,
+  UnidadMedidaId: 0,
+  IvaId: 0,
   PrecioId: 0,
   Codigo: 0,
   CodigoBarra: "",
@@ -75,7 +115,7 @@ const fetchRubros = async () => {
   return data.data;
 };
 
-const fetchUnidadesv = async () => {
+const fetchUnidadesMedida = async () => {
   const res = await fetch("/api/unidades-medidas");
   if (!res.ok) throw new Error("Error fetching unidades");
   const data = await res.json();
@@ -223,7 +263,7 @@ export default function ProductoForm({
   });
   const { data: unidades = [], isLoading: isLoadingUnidades } = useQuery({
     queryKey: ["unidades-medidas-generic"],
-    queryFn: fetchUnidadesv,
+    queryFn: fetchUnidadesMedida,
   });
   const { data: ivas = [], isLoading: isLoadingIvas } = useQuery({
     queryKey: ["ivas-generic"],
@@ -275,66 +315,97 @@ export default function ProductoForm({
   };
 
   const isEdit = !!initialData;
+  const sectionStatus = getSectionStatus(formData);
+
+  const SectionTitle = ({
+    icon: Icon,
+    label,
+    isComplete,
+  }: {
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    isComplete: boolean;
+  }) => (
+    <div className="flex items-center justify-between w-full gap-2 pr-2">
+      <div className="flex items-center gap-2 min-w-0">
+        <Icon className="w-4 h-4 text-[#67afc3] shrink-0" />
+        <span>{label}</span>
+      </div>
+      <Chip
+        size="sm"
+        variant="flat"
+        className={
+          isComplete
+            ? "bg-[#90c472]/15 text-[#90c472] border-0 shrink-0"
+            : "bg-[#f59e0b]/15 text-[#f59e0b] border-0 shrink-0"
+        }
+      >
+        {isComplete ? "Completo" : "Pendiente"}
+      </Chip>
+    </div>
+  );
 
   const updatePrecio = (field: string, value: number) => {
-    const currentPrecio = formData.Precio || { ...defaultProducto.Precio };
-    const newPrecio = { ...currentPrecio, [field]: value };
-    const costo =
-      field === "PrecioCosto" ? value : currentPrecio.PrecioCosto || 0;
+    setFormData((prev) => {
+      const currentPrecio = prev.Precio || { ...defaultProducto.Precio };
+      const newPrecio = { ...currentPrecio, [field]: value };
+      const costo =
+        field === "PrecioCosto" ? value : currentPrecio.PrecioCosto || 0;
 
-    // Cálculo para Precio 1 (Principal)
-    if (field === "PrecioCosto" || field === "PorcentajeGanancia") {
-      const ganancia =
-        field === "PorcentajeGanancia"
-          ? value
-          : currentPrecio.PorcentajeGanancia || 0;
-      newPrecio.PrecioPublico = parseFloat(
-        (costo * (1 + ganancia / 100)).toFixed(2),
-      );
-    }
-
-    // Cálculo Inverso para Precio 1: Si cambio Precio Publico, actualizo Porcentaje Ganancia
-    if (field === "PrecioPublico") {
-      if (costo > 0) {
-        newPrecio.PorcentajeGanancia = parseFloat(
-          ((value / costo - 1) * 100).toFixed(2),
+      // Cálculo para Precio 1 (Principal)
+      if (field === "PrecioCosto" || field === "PorcentajeGanancia") {
+        const ganancia =
+          field === "PorcentajeGanancia"
+            ? value
+            : currentPrecio.PorcentajeGanancia || 0;
+        newPrecio.PrecioPublico = parseFloat(
+          (costo * (1 + ganancia / 100)).toFixed(2),
         );
       }
-    }
 
-    // Cálculo para Precio 2 (Alternativo)
-    if (field === "PrecioCosto" || field === "PorcentajeGanancia2") {
-      const ganancia2 =
-        field === "PorcentajeGanancia2"
-          ? value
-          : currentPrecio.PorcentajeGanancia2 || 0;
-      newPrecio.PrecioPublico2 = parseFloat(
-        (costo * (1 + ganancia2 / 100)).toFixed(2),
-      );
-    }
+      // Cálculo Inverso para Precio 1: Si cambio Precio Publico, actualizo Porcentaje Ganancia
+      if (field === "PrecioPublico") {
+        if (costo > 0) {
+          newPrecio.PorcentajeGanancia = parseFloat(
+            ((value / costo - 1) * 100).toFixed(2),
+          );
+        }
+      }
 
-    // Cálculo Inverso para Precio 2: Si cambio Precio Publico 2, actualizo Porcentaje Ganancia 2
-    if (field === "PrecioPublico2") {
-      if (costo > 0) {
-        newPrecio.PorcentajeGanancia2 = parseFloat(
-          ((value / costo - 1) * 100).toFixed(2),
+      // Cálculo para Precio 2 (Alternativo)
+      if (field === "PrecioCosto" || field === "PorcentajeGanancia2") {
+        const ganancia2 =
+          field === "PorcentajeGanancia2"
+            ? value
+            : currentPrecio.PorcentajeGanancia2 || 0;
+        newPrecio.PrecioPublico2 = parseFloat(
+          (costo * (1 + ganancia2 / 100)).toFixed(2),
         );
       }
-    }
 
-    // Si cambió el costo, recalculamos ambos precios públicos usando los porcentajes actuales
-    if (field === "PrecioCosto") {
-      const ganancia1 = currentPrecio.PorcentajeGanancia || 0;
-      const ganancia2 = currentPrecio.PorcentajeGanancia2 || 0;
-      newPrecio.PrecioPublico = parseFloat(
-        (value * (1 + ganancia1 / 100)).toFixed(2),
-      );
-      newPrecio.PrecioPublico2 = parseFloat(
-        (value * (1 + ganancia2 / 100)).toFixed(2),
-      );
-    }
+      // Cálculo Inverso para Precio 2: Si cambio Precio Publico 2, actualizo Porcentaje Ganancia 2
+      if (field === "PrecioPublico2") {
+        if (costo > 0) {
+          newPrecio.PorcentajeGanancia2 = parseFloat(
+            ((value / costo - 1) * 100).toFixed(2),
+          );
+        }
+      }
 
-    setFormData({ ...formData, Precio: newPrecio });
+      // Si cambió el costo, recalculamos ambos precios públicos usando los porcentajes actuales
+      if (field === "PrecioCosto") {
+        const ganancia1 = currentPrecio.PorcentajeGanancia || 0;
+        const ganancia2 = currentPrecio.PorcentajeGanancia2 || 0;
+        newPrecio.PrecioPublico = parseFloat(
+          (value * (1 + ganancia1 / 100)).toFixed(2),
+        );
+        newPrecio.PrecioPublico2 = parseFloat(
+          (value * (1 + ganancia2 / 100)).toFixed(2),
+        );
+      }
+
+      return { ...prev, Precio: newPrecio };
+    });
   };
 
   const handleExportExcel = () => {};
@@ -346,19 +417,31 @@ export default function ProductoForm({
       isOpen={isOpen}
       onClose={onClose}
       size="2xl"
+      placement="center"
       backdrop="opaque"
       isDismissable={!isSaving}
       scrollBehavior="inside"
       classNames={{
         backdrop: "bg-black/50 backdrop-blur-sm",
-        base: "bg-white",
+        base: "font-sans bg-white rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.08)] border border-[#e5e7eb] max-w-[820px] max-h-[90vh] overflow-hidden",
+        header:
+          "border-t-[3px] border-t-[#67afc3] border-b border-[#e5e7eb] bg-[#67afc3]/5 rounded-t-2xl",
+        body: "py-0 overflow-y-auto overflow-x-hidden",
+        footer: "border-t border-[#e5e7eb] bg-[#f8fafc] rounded-b-2xl",
+        closeButton:
+          "hover:bg-[#67afc3]/10 hover:text-[#67afc3] rounded-full p-1.5 transition-colors text-[#6b7280]",
       }}
     >
       <ModalContent>
-        <ModalHeader className="flex flex-col gap-1 border-b border-gray-200">
-          <h3 className="text-xl font-bold">
+        <ModalHeader className="flex flex-col gap-1 py-6 px-6">
+          <h3 className="text-[28px] font-bold text-[#0f172a] leading-tight">
             {isEdit ? "Editar Producto" : "Nuevo Producto"}
           </h3>
+          {!isEdit && (
+            <p className="text-sm text-[#6b7280] mt-1">
+              Completa la información del producto
+            </p>
+          )}
         </ModalHeader>
         <ModalBody className="p-0 relative">
           {isLoadingFullProduct && (
@@ -366,21 +449,29 @@ export default function ProductoForm({
               <LoadingComponent message="Cargando detalles..." />
             </div>
           )}
-          <div className="px-6 py-4">
-            <Tabs
+          <div className="px-6 py-6">
+            <Accordion
               aria-label="Opciones del producto"
-              color="primary"
-              variant="underlined"
-              classNames={{
-                tabList:
-                  "gap-6 w-full relative rounded-none p-0 border-b border-divider",
-                cursor: "w-full bg-[#22d3ee]",
-                tab: "max-w-fit px-0 h-12",
-                tabContent: "group-data-[selected=true]:text-[#06b6d4]",
+              defaultSelectedKeys={["general"]}
+              selectionMode="single"
+              variant="bordered"
+              motionProps={{
+                transition: { duration: 0.18, ease: "easeInOut" },
               }}
+              className="gap-3 overflow-visible"
             >
-              <Tab key="general" title="General">
-                <div className="space-y-4 pt-4">
+              <AccordionItem
+                key="general"
+                aria-label="Información general"
+                title={
+                  <SectionTitle
+                    icon={FileText}
+                    label="Información general"
+                    isComplete={sectionStatus.general}
+                  />
+                }
+              >
+                <div className="space-y-5 pt-5">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
                       label="Código"
@@ -397,6 +488,7 @@ export default function ProductoForm({
                       }
                       isRequired
                       isDisabled={isLoadingFullProduct}
+                      classNames={inputClassNames}
                     />
                     <Input
                       label="Código de Barras"
@@ -411,6 +503,7 @@ export default function ProductoForm({
                       type="number"
                       isRequired
                       isDisabled={isSaving}
+                      classNames={inputClassNames}
                     />
                     <Input
                       label="Abreviatura"
@@ -423,6 +516,7 @@ export default function ProductoForm({
                         })
                       }
                       isDisabled={isSaving}
+                      classNames={inputClassNames}
                     />
                     <Input
                       label="Descripción"
@@ -436,6 +530,7 @@ export default function ProductoForm({
                       }
                       isRequired
                       isDisabled={isSaving}
+                      classNames={inputClassNames}
                     />
                   </div>
                   <Textarea
@@ -445,23 +540,38 @@ export default function ProductoForm({
                     onChange={(e) =>
                       setFormData({ ...formData, Detalle: e.target.value })
                     }
-                    minRows={3}
+                    minRows={2}
                     isDisabled={isSaving}
+                    classNames={{
+                      ...inputClassNames,
+                      input: "resize-none",
+                    }}
                   />
                   <Input
                     label="Ubicación"
-                    placeholder="Ubicación en almacén"
+                    placeholder="Ej: Pasillo 2, Estante B"
                     value={formData.Ubicacion || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, Ubicacion: e.target.value })
                     }
                     isDisabled={isSaving}
+                    classNames={inputClassNames}
                   />
                 </div>
-              </Tab>
+              </AccordionItem>
 
-              <Tab key="categorizacion" title="Categorización">
-                <div className="space-y-4 pt-4">
+              <AccordionItem
+                key="categorizacion"
+                aria-label="Categorización"
+                title={
+                  <SectionTitle
+                    icon={Tags}
+                    label="Categorización"
+                    isComplete={sectionStatus.categorizacion}
+                  />
+                }
+              >
+                <div className="space-y-5 pt-5">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center gap-2">
                       <Select
@@ -498,7 +608,7 @@ export default function ProductoForm({
                         color="primary"
                         variant="flat"
                         onPress={() => setIsMarcaModalOpen(true)}
-                        className="h-full"
+                        className="h-full min-w-9 bg-[#67afc3]/15 text-[#67afc3] hover:bg-[#67afc3]/25"
                       >
                         <PlusIcon />
                       </Button>
@@ -539,7 +649,7 @@ export default function ProductoForm({
                         color="primary"
                         variant="flat"
                         onPress={() => setIsRubroModalOpen(true)}
-                        className="h-full"
+                        className="h-full min-w-9 bg-[#67afc3]/15 text-[#67afc3] hover:bg-[#67afc3]/25"
                       >
                         <PlusIcon />
                       </Button>
@@ -583,7 +693,7 @@ export default function ProductoForm({
                         color="primary"
                         variant="flat"
                         onPress={() => setIsUnidadModalOpen(true)}
-                        className="h-full"
+                        className="h-full min-w-9 bg-[#67afc3]/15 text-[#67afc3] hover:bg-[#67afc3]/25"
                       >
                         <PlusIcon />
                       </Button>
@@ -649,15 +759,26 @@ export default function ProductoForm({
                     </Select>
                   </div>
                 </div>
-              </Tab>
+              </AccordionItem>
 
-              <Tab key="precios" title="Precios">
-                <div className="space-y-4 pt-4">
+              <AccordionItem
+                key="precios"
+                aria-label="Precios"
+                title={
+                  <SectionTitle
+                    icon={DollarSign}
+                    label="Precios"
+                    isComplete={sectionStatus.precios}
+                  />
+                }
+              >
+                <div className="space-y-5 pt-5">
                   {/* Costo Base */}
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <div className="bg-[#f1f5f9] p-5 rounded-xl border border-[#e5e7eb] shadow-sm">
                     <NumberInput
-                      label="Precio Costo ($)"
-                      placeholder="0.00"
+                      label="Precio Costo"
+                      classNames={inputClassNames}
+                      placeholder="0,00"
                       value={Number(formData.Precio?.PrecioCosto) || 0}
                       onValueChange={(value) =>
                         updatePrecio("PrecioCosto", value)
@@ -668,10 +789,10 @@ export default function ProductoForm({
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {/* Lista de Precios 1 */}
-                    <div className="space-y-3 p-4 border border-gray-200 rounded-lg">
-                      <h4 className="font-semibold text-gray-700">
+                    <div className="space-y-4 p-5 rounded-xl border border-[#e5e7eb] bg-white shadow-sm">
+                      <h4 className="font-semibold text-[#0f172a] text-sm uppercase tracking-wide">
                         Lista Principal
                       </h4>
                       <NumberInput
@@ -685,6 +806,7 @@ export default function ProductoForm({
                         }
                         isRequired
                         isDisabled={isSaving}
+                        classNames={inputClassNames}
                       />
                       <NumberInput
                         label="Precio de Venta ($)"
@@ -701,8 +823,8 @@ export default function ProductoForm({
                     </div>
 
                     {/* Lista de Precios 2 */}
-                    <div className="space-y-3 p-4 border border-gray-200 rounded-lg">
-                      <h4 className="font-semibold text-gray-700">
+                    <div className="space-y-4 p-5 rounded-xl border border-[#e5e7eb] bg-white shadow-sm">
+                      <h4 className="font-semibold text-[#0f172a] text-sm uppercase tracking-wide">
                         Lista Secundaria
                       </h4>
                       <NumberInput
@@ -716,6 +838,7 @@ export default function ProductoForm({
                         }
                         isRequired
                         isDisabled={isSaving}
+                        classNames={inputClassNames}
                       />
                       <NumberInput
                         label="Precio de Venta ($)"
@@ -732,13 +855,24 @@ export default function ProductoForm({
                     </div>
                   </div>
                 </div>
-              </Tab>
+              </AccordionItem>
 
-              <Tab key="stock" title="Stock">
-                <div className="space-y-4 pt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <AccordionItem
+                key="stock"
+                aria-label="Stock"
+                title={
+                  <SectionTitle
+                    icon={Package}
+                    label="Stock"
+                    isComplete={sectionStatus.stock}
+                  />
+                }
+              >
+                <div className="space-y-5 pt-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 rounded-xl border border-[#e5e7eb] bg-[#f8fafc]">
                     <Input
                       label="Stock Mínimo"
+                      classNames={inputClassNames}
                       placeholder="0"
                       type="number"
                       step="0.01"
@@ -753,6 +887,7 @@ export default function ProductoForm({
                     />
                     <Input
                       label="Días de Vencimiento"
+                      classNames={inputClassNames}
                       placeholder="0"
                       type="number"
                       value={formData.VencimientoDias?.toString() || ""}
@@ -766,6 +901,7 @@ export default function ProductoForm({
                     />
                     <Input
                       label="Stock Actual"
+                      classNames={inputClassNames}
                       placeholder="0"
                       type="number"
                       step="0.01"
@@ -779,7 +915,7 @@ export default function ProductoForm({
                       isDisabled={isSaving}
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 rounded-xl border border-[#e5e7eb] bg-white">
                     <Switch
                       isSelected={formData.DescuentaStock}
                       onValueChange={(value) =>
@@ -803,90 +939,105 @@ export default function ProductoForm({
                     </Switch>
                   </div>
                 </div>
-              </Tab>
+              </AccordionItem>
 
-              <Tab key="configuracion" title="Configuración">
-                <div className="space-y-4 pt-4">
-                  <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                    Límites de Venta
-                  </h4>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <Switch
-                        isSelected={formData.ActivarLimiteVenta}
-                        onValueChange={(value) =>
-                          setFormData({
-                            ...formData,
-                            ActivarLimiteVenta: value,
-                          })
-                        }
-                        isDisabled={isSaving}
-                      >
-                        Activar Límite de Venta
-                      </Switch>
-                      {formData.ActivarLimiteVenta && (
-                        <NumberInput
-                          label="Límite"
-                          placeholder="0.00"
-                          value={Number(formData.LimiteVenta) || Number(0)}
+              <AccordionItem
+                key="configuracion"
+                aria-label="Configuración"
+                title={
+                  <SectionTitle
+                    icon={Settings}
+                    label="Configuración"
+                    isComplete={sectionStatus.configuracion}
+                  />
+                }
+              >
+                <div className="space-y-6 pt-5">
+                  <div className="p-5 rounded-xl border border-[#e5e7eb] bg-[#f8fafc]">
+                    <h4 className="text-sm font-semibold text-[#0f172a] uppercase tracking-wide mb-4">
+                      Límites de Venta
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-4">
+                        <Switch
+                          isSelected={formData.ActivarLimiteVenta}
                           onValueChange={(value) =>
                             setFormData({
                               ...formData,
-                              LimiteVenta: Number(value),
+                              ActivarLimiteVenta: value,
                             })
                           }
-                          className="max-w-xs"
                           isDisabled={isSaving}
-                        />
-                      )}
-                    </div>
+                        >
+                          Activar Límite de Venta
+                        </Switch>
+                        {formData.ActivarLimiteVenta && (
+                          <NumberInput
+                            label="Límite"
+                            classNames={inputClassNames}
+                            placeholder="0.00"
+                            value={Number(formData.LimiteVenta) || Number(0)}
+                            onValueChange={(value) =>
+                              setFormData({
+                                ...formData,
+                                LimiteVenta: Number(value),
+                              })
+                            }
+                            className="max-w-xs"
+                            isDisabled={isSaving}
+                          />
+                        )}
+                      </div>
 
-                    <div className="space-y-2">
-                      <Switch
-                        isSelected={formData.ActivarHoraVenta}
-                        onValueChange={(value) =>
-                          setFormData({
-                            ...formData,
-                            ActivarHoraVenta: value,
-                          })
-                        }
-                        isDisabled={isSaving}
-                      >
-                        Activar Horario de Venta
-                      </Switch>
-                      {formData.ActivarHoraVenta && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                          <Input
-                            label="Hora Desde"
-                            type="time"
-                            value={formData.HoraLimiteVentaDesde || ""}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                HoraLimiteVentaDesde: e.target.value,
-                              })
-                            }
-                            isDisabled={isSaving}
-                          />
-                          <Input
-                            label="Hora Hasta"
-                            type="time"
-                            value={formData.HoraLimiteVentaHasta || ""}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                HoraLimiteVentaHasta: e.target.value,
-                              })
-                            }
-                            isDisabled={isSaving}
-                          />
-                        </div>
-                      )}
+                      <div className="space-y-2">
+                        <Switch
+                          isSelected={formData.ActivarHoraVenta}
+                          onValueChange={(value) =>
+                            setFormData({
+                              ...formData,
+                              ActivarHoraVenta: value,
+                            })
+                          }
+                          isDisabled={isSaving}
+                        >
+                          Activar Horario de Venta
+                        </Switch>
+                        {formData.ActivarHoraVenta && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                            <Input
+                              label="Hora Desde"
+                              classNames={inputClassNames}
+                              type="time"
+                              value={formData.HoraLimiteVentaDesde || ""}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  HoraLimiteVentaDesde: e.target.value,
+                                })
+                              }
+                              isDisabled={isSaving}
+                            />
+                            <Input
+                              label="Hora Hasta"
+                              classNames={inputClassNames}
+                              type="time"
+                              value={formData.HoraLimiteVentaHasta || ""}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  HoraLimiteVentaHasta: e.target.value,
+                                })
+                              }
+                              isDisabled={isSaving}
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="pt-4 mt-4 border-t border-gray-200">
-                    <h4 className="text-lg font-semibold text-gray-900 border-b pb-2 mb-4">
+                  <div className="p-5 rounded-xl border border-[#e5e7eb] bg-white">
+                    <h4 className="text-sm font-semibold text-[#0f172a] uppercase tracking-wide mb-4">
                       Estado
                     </h4>
                     <Switch
@@ -903,45 +1054,25 @@ export default function ProductoForm({
                     </Switch>
                   </div>
                 </div>
-              </Tab>
-
-              <Tab key="Excel" title="Excel">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div>
-                      <button
-                        className="btn btn-primary"
-                        onClick={() => handleExportExcel()}
-                      >
-                        Exportar
-                      </button>
-                    </div>
-                    <div>
-                      <input type="file" accept=".xlsx" />
-                      <button
-                        className="btn btn-primary"
-                        onClick={() => handleImportExcel()}
-                      >
-                        Importar
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </Tab>
-            </Tabs>
+              </AccordionItem>
+            </Accordion>
           </div>
         </ModalBody>
-        <ModalFooter className="border-t border-gray-200">
+        <ModalFooter className="py-5 px-6 gap-3 border-t border-[#e5e7eb]">
           <Button
-            color="danger"
             variant="light"
             onPress={onClose}
             isDisabled={isSaving}
+            className="font-medium text-[#6b7280] hover:bg-[#f1f5f9] h-11 px-5 rounded-[10px]"
           >
             Cancelar
           </Button>
-          <Button color="primary" onPress={handleSubmit} isLoading={isSaving}>
-            {isEdit ? "Actualizar" : "Crear"}
+          <Button
+            onPress={handleSubmit}
+            isLoading={isSaving}
+            className="bg-[#67afc3] hover:bg-[#4a8d9e] text-white font-semibold h-11 px-6 rounded-[10px] shadow-sm hover:shadow transition-shadow focus-visible:ring-2 focus-visible:ring-[#67afc3]/40"
+          >
+            {isEdit ? "Actualizar" : "Crear producto"}
           </Button>
         </ModalFooter>
       </ModalContent>

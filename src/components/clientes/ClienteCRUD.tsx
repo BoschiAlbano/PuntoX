@@ -2,7 +2,11 @@
 
 import GenericCrud from "@/components/shared/GenericCrud";
 import ClienteForm from "./ClienteForm";
-import { Chip, Tooltip, Button } from "@heroui/react";
+import { useCurrency } from "@/hooks/useCurrency";
+import { formatCurrency } from "@/lib/utils/formatCurrency";
+import { Chip, Tooltip, addToast } from "@heroui/react";
+import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
+import { DeleteButton, EditButton } from "@/components/shared/TableActions";
 import { clienteListAdapter } from "@/lib/adapters/cliente.adapter";
 import { Cliente } from "@/lib/validations/cliente.schema";
 import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
@@ -17,6 +21,211 @@ export default function ClienteCRUD() {
       FormComponent={ClienteForm}
       transformer={(item) => clienteListAdapter(item)}
       additionalInvalidateQueryKeys={["cliente"]}
+      renderRowPreview={(item) => (
+        <div className="space-y-5 text-sm">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-slate-500 text-xs mb-0.5">Cliente</p>
+              <p className="font-semibold text-slate-800">
+                {item.Nombre} {item.Apellido}
+              </p>
+              {item.Dni && (
+                <p className="text-slate-500 text-xs mt-1">DNI: {item.Dni}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-slate-500 text-xs mb-0.5">Condición IVA</p>
+              <span
+                className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                  item.CondicionIva
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                }`}
+              >
+                {item.CondicionIva || "N/A"}
+              </span>
+            </div>
+          </div>
+          <div>
+            <p className="text-slate-500 text-xs mb-0.5">Ubicación</p>
+            <p className="font-medium">{item.Direccion || "—"}</p>
+            {(item.Localidad || item.Departamento || item.Provincia) && (
+              <p className="text-slate-500 text-xs mt-0.5">
+                {[item.Localidad, item.Departamento, item.Provincia]
+                  .filter(Boolean)
+                  .join(" → ")}
+              </p>
+            )}
+          </div>
+          <div>
+            <p className="text-slate-500 text-xs mb-0.5">Contacto</p>
+            <div className="space-y-1">
+              {item.Mail && (
+                <p className="text-slate-700">
+                  <span className="text-slate-400">✉️</span> {item.Mail}
+                </p>
+              )}
+              {item.Telefono && (
+                <p className="text-slate-700">
+                  <span className="text-slate-400">📞</span> {item.Telefono}
+                </p>
+              )}
+              {!item.Mail && !item.Telefono && (
+                <p className="text-slate-400">Sin datos de contacto</p>
+              )}
+            </div>
+          </div>
+          <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
+            <p className="text-slate-500 text-xs mb-0.5">Cuenta Corriente</p>
+            {item.ActivarCtaCte ? (
+              <div>
+                <span className="text-green-700 font-medium">Activa</span>
+                {item.TieneLimiteCompra && (
+                  <p className="text-slate-600 text-xs mt-1">
+                    Límite de compra:{" "}
+                    {formatCurrency(
+                      Number(item.MontoMaximoCtaCte ?? 0),
+                      currency,
+                    )}
+                  </p>
+                )}
+                {!item.TieneLimiteCompra && (
+                  <p className="text-slate-500 text-xs mt-1">
+                    Sin límite configurado
+                  </p>
+                )}
+              </div>
+            ) : (
+              <span className="text-slate-500">No activa</span>
+            )}
+          </div>
+        </div>
+      )}
+      getRowPreviewTitle={(item) => `${item.Nombre} ${item.Apellido}`}
+      enableBulkActions
+      exportConfig={{
+        filename: "clientes",
+        columns: [
+          { key: "Nombre", header: "Nombre" },
+          { key: "Apellido", header: "Apellido" },
+          { key: "Dni", header: "DNI" },
+          { key: "Mail", header: "Email" },
+          { key: "Telefono", header: "Teléfono" },
+          { key: "Direccion", header: "Dirección" },
+          { key: "Localidad", header: "Localidad" },
+          { key: "CondicionIva", header: "Cond. IVA" },
+          { key: "ActivarCtaCte", header: "Cta. Cte." },
+          { key: "MontoMaximoCtaCte", header: "Límite Cta. Cte." },
+        ],
+        mapItem: (c) => ({
+          Nombre: c.Nombre,
+          Apellido: c.Apellido,
+          Dni: c.Dni ?? "",
+          Mail: c.Mail ?? "",
+          Telefono: c.Telefono ?? "",
+          Direccion: c.Direccion ?? "",
+          Localidad: c.Localidad ?? "",
+          CondicionIva: c.CondicionIva ?? "",
+          ActivarCtaCte: c.ActivarCtaCte ? "Sí" : "No",
+          MontoMaximoCtaCte: c.MontoMaximoCtaCte ?? 0,
+        }),
+      }}
+      bulkActionsDropdown={[
+        {
+          key: "cambiar-estado",
+          label: "Cambiar estado",
+          onAction: (ctx) => {
+            addToast({
+              title: "Cambiar estado",
+              description: `${ctx.totalCount} cliente(s)`,
+            });
+          },
+        },
+        {
+          key: "editar-campos",
+          label: "Editar campos comunes",
+          onAction: (ctx) => {
+            addToast({
+              title: "Editar campos",
+              description: `${ctx.totalCount} cliente(s)`,
+            });
+          },
+        },
+        {
+          key: "exportar-csv",
+          label: "Exportar como CSV",
+          onAction: (ctx) => {
+            const data = ctx.items.map((c) => ({
+              Nombre: c.Nombre,
+              Apellido: c.Apellido,
+              Dni: c.Dni ?? "",
+              Mail: c.Mail ?? "",
+              Telefono: c.Telefono ?? "",
+              Direccion: c.Direccion ?? "",
+              Localidad: c.Localidad ?? "",
+              CondicionIva: c.CondicionIva ?? "",
+              ActivarCtaCte: c.ActivarCtaCte ? "Sí" : "No",
+              MontoMaximoCtaCte: c.MontoMaximoCtaCte ?? 0,
+            }));
+            const columns = [
+              { key: "Nombre" as const, header: "Nombre" },
+              { key: "Apellido" as const, header: "Apellido" },
+              { key: "Dni" as const, header: "DNI" },
+              { key: "Mail" as const, header: "Email" },
+              { key: "Telefono" as const, header: "Teléfono" },
+              { key: "Direccion" as const, header: "Dirección" },
+              { key: "Localidad" as const, header: "Localidad" },
+              { key: "CondicionIva" as const, header: "Cond. IVA" },
+              { key: "ActivarCtaCte" as const, header: "Cta. Cte." },
+              { key: "MontoMaximoCtaCte" as const, header: "Límite Cta. Cte." },
+            ];
+            exportToCsv(data, columns, "clientes");
+            addToast({
+              title: "Exportado",
+              description: `${ctx.items.length} cliente${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como CSV`,
+              color: "success",
+            });
+            ctx.clearSelection();
+          },
+        },
+        {
+          key: "exportar-xls",
+          label: "Exportar como XLS",
+          onAction: (ctx) => {
+            const data = ctx.items.map((c) => ({
+              Nombre: c.Nombre,
+              Apellido: c.Apellido,
+              Dni: c.Dni ?? "",
+              Mail: c.Mail ?? "",
+              Telefono: c.Telefono ?? "",
+              Direccion: c.Direccion ?? "",
+              Localidad: c.Localidad ?? "",
+              CondicionIva: c.CondicionIva ?? "",
+              ActivarCtaCte: c.ActivarCtaCte ? "Sí" : "No",
+              MontoMaximoCtaCte: c.MontoMaximoCtaCte ?? 0,
+            }));
+            const columns = [
+              { key: "Nombre" as const, header: "Nombre" },
+              { key: "Apellido" as const, header: "Apellido" },
+              { key: "Dni" as const, header: "DNI" },
+              { key: "Mail" as const, header: "Email" },
+              { key: "Telefono" as const, header: "Teléfono" },
+              { key: "Direccion" as const, header: "Dirección" },
+              { key: "Localidad" as const, header: "Localidad" },
+              { key: "CondicionIva" as const, header: "Cond. IVA" },
+              { key: "ActivarCtaCte" as const, header: "Cta. Cte." },
+              { key: "MontoMaximoCtaCte" as const, header: "Límite Cta. Cte." },
+            ];
+            exportToXls(data, columns, "clientes");
+            addToast({
+              title: "Exportado",
+              description: `${ctx.items.length} cliente${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como Excel`,
+              color: "success",
+            });
+            ctx.clearSelection();
+          },
+        },
+      ]}
       columns={[
         {
           uid: "nombreCompleto",

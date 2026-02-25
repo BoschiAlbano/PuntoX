@@ -157,8 +157,6 @@ export default function RolesCRUD() {
     });
   };
 
-  // !isLoading && console.log(roles); // Clean up log
-
   return (
     <div className="space-y-4">
       {/* Header con botones de acción */}

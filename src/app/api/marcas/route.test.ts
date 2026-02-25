@@ -3,11 +3,11 @@
  *
  * Este archivo es la ESTRUCTURA DE REFERENCIA para el resto de tests de API del proyecto:
  * - getAuthContext con permission (PERMISSIONS.PRODUCTOS / equivalente)
- * - Mocks: getAuthContext, prisma, handleError (PermisoError → 403), parsePaginationParams, createPaginationResponse
+ * - Mocks: getAuthContext, prisma, handleError (PermisoError ��� 403), parsePaginationParams, createPaginationResponse
  * - GET: 403 sin permiso, 200 con { data, pagination }
- * - POST: 403, 400 body inválido ({ error: "Datos inválidos", details }), 201 con recurso creado
- * - PATCH: 403, 400 body inválido, 201 con recurso actualizado
- * - DELETE: 403, 400 id inválido, 404 no encontrado, 200 { success: true, Id }
+ * - POST: 403, 400 body inv?lido ({ error: "Datos inv?lidos", details }), 201 con recurso creado
+ * - PATCH: 403, 400 body inv?lido, 201 con recurso actualizado
+ * - DELETE: 403, 400 id inv?lido, 404 no encontrado, 200 { success: true, Id }
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
@@ -75,7 +75,12 @@ describe("GET /api/marcas", () => {
     });
     vi.mocked(prisma.marca.count).mockResolvedValue(1);
     vi.mocked(prisma.marca.findMany).mockResolvedValue([
-      { Id: 1, Descripcion: "Marca A", EstaEliminado: false },
+      {
+        Id: 1,
+        Descripcion: "Marca A",
+        EstaEliminado: false,
+        _count: { Articulo: 5 },
+      },
     ] as any);
     const req = new NextRequest("http://localhost:3000/api/marcas?limit=20");
     const res = await GET(req);
@@ -84,6 +89,7 @@ describe("GET /api/marcas", () => {
     expect(data.data).toBeDefined();
     expect(data.pagination).toBeDefined();
     expect(Array.isArray(data.data)).toBe(true);
+    expect(data.data[0].CantidadProductos).toBe(5);
   });
 });
 
@@ -102,7 +108,7 @@ describe("POST /api/marcas", () => {
     expect(data.error).toBeDefined();
   });
 
-  it("retorna 400 con error y details cuando el body es inválido", async () => {
+  it("retorna 400 con error y details cuando el body es inv?lido", async () => {
     vi.mocked(getAuthContext).mockResolvedValue({
       tenantId: 1,
       usuarioId: 1,
@@ -118,12 +124,12 @@ describe("POST /api/marcas", () => {
     const res = await POST(req);
     const data = await res.json();
     expect(res.status).toBe(400);
-    expect(data.error).toBe("Datos inválidos");
+    expect(data.error).toBe("Datos inv?lidos");
     expect(data.details).toBeDefined();
     expect(Array.isArray(data.details)).toBe(true);
   });
 
-  it("retorna 201 con la marca creada cuando el body es válido", async () => {
+  it("retorna 201 con la marca creada cuando el body es v?lido", async () => {
     vi.mocked(getAuthContext).mockResolvedValue({
       tenantId: 1,
       usuarioId: 1,
@@ -165,7 +171,7 @@ describe("PATCH /api/marcas", () => {
     expect(data.error).toBeDefined();
   });
 
-  it("retorna 400 con error y details cuando el body es inválido", async () => {
+  it("retorna 400 con error y details cuando el body es inv?lido", async () => {
     vi.mocked(getAuthContext).mockResolvedValue({
       tenantId: 1,
       usuarioId: 1,
@@ -181,11 +187,11 @@ describe("PATCH /api/marcas", () => {
     const res = await PATCH(req);
     const data = await res.json();
     expect(res.status).toBe(400);
-    expect(data.error).toBe("Datos inválidos");
+    expect(data.error).toBe("Datos inv?lidos");
     expect(data.details).toBeDefined();
   });
 
-  it("retorna 201 con la marca actualizada cuando el body es válido", async () => {
+  it("retorna 201 con la marca actualizada cuando el body es v?lido", async () => {
     vi.mocked(getAuthContext).mockResolvedValue({
       tenantId: 1,
       usuarioId: 1,
@@ -226,7 +232,7 @@ describe("DELETE /api/marcas", () => {
     expect(data.error).toBeDefined();
   });
 
-  it("retorna 400 cuando el id es inválido", async () => {
+  it("retorna 400 cuando el id es inv?lido", async () => {
     vi.mocked(getAuthContext).mockResolvedValue({
       tenantId: 1,
       usuarioId: 1,

@@ -4,6 +4,138 @@ Historial completo de cambios, mejoras y correcciones del proyecto.
 
 ---
 
+## Febrero 2025
+
+### Sesión: Acciones masivas, filtros, paginación y optimizaciones React Query
+
+**Fecha:** Febrero 2025  
+**Rama:** `Varela-features-v1`
+
+#### Acciones masivas en tablas
+
+- ✅ **Barra de selección** visible solo con 2+ filas seleccionadas
+- ✅ **Dropdown "Más acciones"** con: Cambiar estado, Actualizar precios (productos), Editar campos comunes, Exportar seleccionados
+- ✅ **Eliminar seleccionados** siempre visible con selección
+- ✅ **Layout mobile** en 2 filas para que no se corte
+- ✅ Aplicado a: ProductoCRUD, ClienteCRUD, MarcaCRUD, RubroCRUD, UnidadMedidaCRUD, UsuariosCRUD, AuditoriasCRUD
+
+#### Filtro Bajo stock (server-side)
+
+- ✅ **API productos:** `?bajoStock=true` filtra por `Stock <= StockMinimo` en BD
+- ✅ Query raw para comparar Stock/StockMinimo (sucursal o global)
+- ✅ Botón toggle junto a búsqueda; reset de página al activar/desactivar
+
+#### Selector de filas y paginación
+
+- ✅ **Filas: 10 ▼** a la izquierda del paginador
+- ✅ Opciones: 10, 30, 50, 100, Todas
+- ✅ Al cambiar límite, página se resetea a 1
+
+#### Optimizaciones React Query
+
+- ✅ **keepPreviousData** para evitar parpadeo al cambiar página/filtros
+- ✅ **staleTime: 60s** para listados dinámicos (menos refetches)
+- ✅ **queryKey completa:** `[queryKey, { search, page, limit, extraParams }]`
+- ✅ **extraParams** en useGenericApi para filtros como `bajoStock`
+
+#### Corrección bug checkboxes
+
+- ✅ HeroUI envía `"all"` al seleccionar todos; ahora se expande a las keys reales
+- ✅ Keys normalizadas a string para evitar fallos numéricos
+
+#### Documentación
+
+- ✅ `docs/ui/crud-tablas-genericas.md` - Guía de CRUD, tablas, acciones masivas y optimizaciones
+
+#### Archivos modificados
+
+- `src/components/shared/GenericTable.tsx`
+- `src/components/shared/GenericCrud.tsx`
+- `src/hooks/useGenericApi.ts`
+- `src/lib/react-query/queryDefaults.ts`
+- `src/app/api/productos/route.ts`
+- `src/components/productos/ProductoCRUD.tsx`
+- `src/components/clientes/ClienteCRUD.tsx`
+- `src/components/marcas/MarcaCRUD.tsx`
+- `src/components/rubros/RubroCRUD.tsx`
+- `src/components/unidad-medida/UnidadMedidaCRUD.tsx`
+- `src/components/empleados/UsuariosCRUD.tsx`
+- `src/components/empleados/AuditoriasCRUD.tsx`
+
+---
+
+### Sesión: Unificación de formato CRUD y corrección de bugs
+
+**Fecha:** Febrero 2025  
+**Rama:** `Varela-features-v1`
+
+#### Formato unificado en formularios CRUD
+
+- ✅ **Estilo de modal tipo panel administrativo**
+  - Aplicado a todos los formularios: Marca, Rubro, Unidad de Medida, Cliente, Producto, Usuario
+  - Modal con bordes redondeados (`rounded-2xl`), sombra y borde `#e5e7eb`
+  - Header con acento superior 3px `#67afc3` y fondo `#67afc3/5`
+  - Footer con borde y fondo `#f8fafc`
+  - Botón cerrar con hover `#67afc3/10`
+  - Título 28px, subtexto "Completa la información..." en creación
+
+- ✅ **Inputs unificados**
+  - `inputClassNames` con borde `#e5e7eb`, focus `#67afc3` y ring suave
+  - Aplicado en MarcaForm, RubroForm, UnidadMedidaForm, ClienteForm, UsuarioForm, ProductoForm
+
+- ✅ **Botones consistentes**
+  - Cancelar: variant light, hover gris `#f1f5f9`
+  - Crear/Actualizar: fondo `#67afc3`, hover `#4a8d9e`, altura 11, bordes redondeados
+
+- ✅ **Formularios con Accordion (Cliente, Usuario, Producto)**
+  - Secciones colapsables con chips Completo/Pendiente
+  - Íconos por sección (User, MapPin, CreditCard, FileText, Tags, DollarSign, Package, Settings)
+  - Lógica de completitud en tiempo real
+  - Paleta: `#67afc3`, `#90c472`, `#f59e0b`, `#e5e7eb`, `#0f172a`
+
+- ✅ **Formularios simples (Marca, Rubro, Unidad de Medida)**
+  - Mismo estilo de modal sin accordion (contenido lineal)
+
+#### Mejoras en ProductoForm
+
+- ✅ Consolidación de imports (`addToast` en import principal)
+- ✅ Renombrado `fetchUnidadesv` → `fetchUnidadesMedida`
+- ✅ Accordion con `className` en lugar de `classNames` (compatibilidad TypeScript/HeroUI)
+
+#### API de productos
+
+- ✅ **GET /api/productos/[id]**
+  - Include ampliado: Marca, Rubro, UnidadMedida, Iva
+  - Campo `SucursalNombre` en respuesta para formulario de edición
+
+#### Correcciones de bugs
+
+- ✅ **UsuariosCRUD – EsDefault**
+  - Tipo `SucursalUsuario` creado con `{ Id, Nombre, EsDefault }`
+  - `Usuario.sucursales` tipado correctamente según respuesta de API
+  - UsuarioForm actualizado para usar `SucursalUsuario`
+
+- ✅ **GenericTable – handlePrint**
+  - `onPress={handlePrint}` → `onPress={() => handlePrint()}` para compatibilidad con `PressEvent` de HeroUI
+
+- ✅ Eliminado `console.log` en ClienteForm
+- ✅ Validación `producto.schema.ts`: `.min(1)` en MarcaId, RubroId, UnidadMedidaId, IvaId
+
+#### Archivos modificados
+
+- `src/components/marcas/MarcaForm.tsx`
+- `src/components/rubros/RubroForm.tsx`
+- `src/components/unidad-medida/UnidadMedidaForm.tsx`
+- `src/components/clientes/ClienteForm.tsx`
+- `src/components/empleados/UsuarioForm.tsx`
+- `src/components/empleados/UsuariosCRUD.tsx`
+- `src/components/productos/ProductoForm.tsx`
+- `src/components/shared/GenericTable.tsx`
+- `src/app/api/productos/[id]/route.ts`
+- `src/lib/validations/producto.schema.ts`
+
+---
+
 ## Enero 2025
 
 ### Sesión: Implementación de Login por Username y Mejoras en Configuración
@@ -484,5 +616,5 @@ Ver [ROADMAP.md](./ROADMAP.md) para plan detallado de mejoras futuras.
 
 ---
 
-**Última actualización:** Diciembre 2024
+**Última actualización:** Febrero 2025
 

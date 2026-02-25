@@ -11,6 +11,21 @@ vi.mock("@heroui/react", async () => {
   return { ...actual, addToast: vi.fn() };
 });
 
+vi.mock("react-to-print", () => ({
+  useReactToPrint: () => vi.fn(),
+}));
+
+vi.mock("lucide-react", () => ({
+  Check: () => <span data-testid="icon-check" />,
+  ChevronDown: () => <span data-testid="icon-chevron-down" />,
+  Columns2: () => <span data-testid="icon-columns" />,
+  Download: () => <span data-testid="icon-download" />,
+  FileSpreadsheet: () => <span data-testid="icon-file-spreadsheet" />,
+  Menu: () => <span data-testid="icon-menu" />,
+  Printer: () => <span data-testid="icon-printer" />,
+  RefreshCcw: () => <span data-testid="icon-refresh" />,
+}));
+
 vi.mock("@/hooks/useDebounce", () => ({
   useDebounce: vi.fn((val: string) => val),
 }));
@@ -30,7 +45,10 @@ describe("GenericTable", () => {
     { Id: 2, name: "Item 2" },
   ];
 
-  const mockRenderCell = (item: typeof mockData[0], columnKey: string | number) => {
+  const mockRenderCell = (
+    item: (typeof mockData)[0],
+    columnKey: string | number,
+  ) => {
     if (columnKey === "id") return item.Id;
     if (columnKey === "name") return item.name;
     return null;
@@ -76,13 +94,7 @@ describe("GenericTable", () => {
 
   it("muestra texto vacío cuando no hay datos", () => {
     const emptyText = "No hay registros disponibles";
-    render(
-      <GenericTable
-        {...defaultProps}
-        data={[]}
-        emptyText={emptyText}
-      />
-    );
+    render(<GenericTable {...defaultProps} data={[]} emptyText={emptyText} />);
 
     expect(screen.getByText(emptyText)).toBeInTheDocument();
   });

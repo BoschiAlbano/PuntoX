@@ -332,13 +332,6 @@ export async function registerTenant(formData: FormData) {
                 TenantId: newTenant.Id,
               },
             });
-            console.log(
-              `Permiso "${permisoData.clave}" creado y asignado al perfil Administrador`,
-            );
-          } else {
-            console.log(
-              `Permiso "${permisoData.clave}" ya estaba asignado al perfil Administrador`,
-            );
           }
         } catch (error) {
           console.error(`Error creando permiso "${permisoData.clave}":`, error);

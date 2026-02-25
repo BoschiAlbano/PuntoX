@@ -2,14 +2,21 @@
 
 import { useState } from "react";
 import GenericCrud from "@/components/shared/GenericCrud";
-import { addToast, Chip, Button, Tooltip } from "@heroui/react";
+import { Chip, Button, Tooltip, addToast } from "@heroui/react";
+import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
 import { EditButton, DeleteButton } from "../shared/TableActions";
 import UsuarioForm from "./UsuarioForm";
 import ChangePasswordModal from "./ChangePasswordModal";
 import { PerfilTipo } from "../../../prisma/generated/prisma";
-import { Sucursal } from "../../../prisma/generated/prisma";
 import { useUserStore } from "@/store/useUserStore";
 import { TIPO_PERFIL } from "@/lib/constants/comprobantes";
+
+/** Sucursal tal como viene de la API de empleados (incluye EsDefault de UsuarioSucursal) */
+export type SucursalUsuario = {
+  Id: number;
+  Nombre: string;
+  EsDefault?: boolean;
+};
 
 export type Usuario = {
   Id: number;
@@ -30,7 +37,7 @@ export type Usuario = {
   rolId: number | null;
   rolNombre: string | null;
   rolTipo?: PerfilTipo;
-  sucursales?: Sucursal[];
+  sucursales?: SucursalUsuario[];
   estado: "Activo" | "Invitado" | "Suspendido";
   legajo: string | null;
   dni: string | null;
@@ -60,6 +67,207 @@ export default function UsuariosCRUD() {
         searchPlaceholder="Buscar por nombre, usuario o DNI..."
         transformer={transformer}
         additionalInvalidateQueryKeys={["roles-select"]}
+        enableBulkActions
+        exportConfig={{
+          filename: "usuarios",
+          columns: [
+            { key: "nombreCompleto", header: "Nombre completo" },
+            { key: "email", header: "Email" },
+            { key: "username", header: "Usuario" },
+            { key: "telefono", header: "Teléfono" },
+            { key: "rolNombre", header: "Rol" },
+            { key: "estado", header: "Estado" },
+            { key: "legajo", header: "Legajo" },
+            { key: "dni", header: "DNI" },
+            { key: "ultimaActividad", header: "Última actividad" },
+          ],
+          mapItem: (u) => ({
+            nombreCompleto: u.nombreCompleto ?? "",
+            email: u.email ?? "",
+            username: u.username ?? "",
+            telefono: u.telefono ?? "",
+            rolNombre: u.rolNombre ?? "",
+            estado: u.estado ?? "",
+            legajo: u.legajo ?? "",
+            dni: u.dni ?? "",
+            ultimaActividad: u.ultimaActividad ?? "",
+          }),
+        }}
+        bulkActionsDropdown={[
+          {
+            key: "cambiar-estado",
+            label: "Cambiar estado",
+            onAction: (ctx) => {
+              addToast({ title: "Cambiar estado", description: `${ctx.totalCount} usuario(s)` });
+            },
+          },
+          {
+            key: "editar-campos",
+            label: "Editar campos comunes",
+            onAction: (ctx) => {
+              addToast({ title: "Editar campos", description: `${ctx.totalCount} usuario(s)` });
+            },
+          },
+          {
+            key: "exportar-csv",
+            label: "Exportar como CSV",
+            onAction: (ctx) => {
+              const data = ctx.items.map((u) => ({
+                nombreCompleto: u.nombreCompleto ?? "",
+                email: u.email ?? "",
+                username: u.username ?? "",
+                telefono: u.telefono ?? "",
+                rolNombre: u.rolNombre ?? "",
+                estado: u.estado ?? "",
+                legajo: u.legajo ?? "",
+                dni: u.dni ?? "",
+                ultimaActividad: u.ultimaActividad ?? "",
+              }));
+              const columns = [
+                { key: "nombreCompleto" as const, header: "Nombre completo" },
+                { key: "email" as const, header: "Email" },
+                { key: "username" as const, header: "Usuario" },
+                { key: "telefono" as const, header: "Teléfono" },
+                { key: "rolNombre" as const, header: "Rol" },
+                { key: "estado" as const, header: "Estado" },
+                { key: "legajo" as const, header: "Legajo" },
+                { key: "dni" as const, header: "DNI" },
+                { key: "ultimaActividad" as const, header: "Última actividad" },
+              ];
+              exportToCsv(data, columns, "usuarios");
+              addToast({
+                title: "Exportado",
+                description: `${ctx.items.length} usuario${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como CSV`,
+                color: "success",
+              });
+              ctx.clearSelection();
+            },
+          },
+          {
+            key: "exportar-xls",
+            label: "Exportar como XLS",
+            onAction: (ctx) => {
+              const data = ctx.items.map((u) => ({
+                nombreCompleto: u.nombreCompleto ?? "",
+                email: u.email ?? "",
+                username: u.username ?? "",
+                telefono: u.telefono ?? "",
+                rolNombre: u.rolNombre ?? "",
+                estado: u.estado ?? "",
+                legajo: u.legajo ?? "",
+                dni: u.dni ?? "",
+                ultimaActividad: u.ultimaActividad ?? "",
+              }));
+              const columns = [
+                { key: "nombreCompleto" as const, header: "Nombre completo" },
+                { key: "email" as const, header: "Email" },
+                { key: "username" as const, header: "Usuario" },
+                { key: "telefono" as const, header: "Teléfono" },
+                { key: "rolNombre" as const, header: "Rol" },
+                { key: "estado" as const, header: "Estado" },
+                { key: "legajo" as const, header: "Legajo" },
+                { key: "dni" as const, header: "DNI" },
+                { key: "ultimaActividad" as const, header: "Última actividad" },
+              ];
+              exportToXls(data, columns, "usuarios");
+              addToast({
+                title: "Exportado",
+                description: `${ctx.items.length} usuario${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como Excel`,
+                color: "success",
+              });
+              ctx.clearSelection();
+            },
+          },
+        ]}
+        renderRowPreview={(item) => (
+          <div className="space-y-5 text-sm">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-slate-500 text-xs mb-0.5">Nombre completo</p>
+                <p className="font-semibold text-slate-800">{item.nombreCompleto}</p>
+                {item.legajo && (
+                  <p className="text-slate-500 text-xs mt-1">Legajo: {item.legajo}</p>
+                )}
+                {item.dni && (
+                  <p className="text-slate-500 text-xs">DNI: {item.dni}</p>
+                )}
+              </div>
+              <div>
+                <p className="text-slate-500 text-xs mb-0.5">Estado</p>
+                <span
+                  className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                    item.estado === "Activo"
+                      ? "bg-green-100 text-green-700"
+                      : item.estado === "Invitado"
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {item.estado}
+                </span>
+              </div>
+            </div>
+            <div>
+              <p className="text-slate-500 text-xs mb-0.5">Acceso</p>
+              <div className="space-y-1">
+                <p className="font-mono text-sm">
+                  Usuario: {item.username || "—"}
+                </p>
+                <p className="text-slate-600">
+                  Email: {item.email || "—"}
+                </p>
+              </div>
+            </div>
+            <div>
+              <p className="text-slate-500 text-xs mb-0.5">Rol</p>
+              <span
+                className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                  item.rolTipo === "ADMINISTRADOR" ? "bg-primary-100 text-primary-700" : "bg-slate-100 text-slate-700"
+                }`}
+              >
+                {item.rolNombre || "Sin rol"}
+              </span>
+            </div>
+            {item.sucursales && item.sucursales.length > 0 && (
+              <div>
+                <p className="text-slate-500 text-xs mb-0.5">Sucursales asignadas</p>
+                <div className="flex flex-wrap gap-1">
+                  {item.sucursales.map((s) => (
+                    <span
+                      key={s.Id}
+                      className="inline-block px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-700"
+                    >
+                      {s.Nombre}
+                      {s.EsDefault && " (default)"}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div>
+              <p className="text-slate-500 text-xs mb-0.5">Ubicación</p>
+              <p className="font-medium">{item.localidad || "Pendiente"}</p>
+              {item.direccion && (
+                <p className="text-slate-500 text-xs mt-0.5">{item.direccion}</p>
+              )}
+            </div>
+            <div className="flex gap-6">
+              {item.telefono && (
+                <div>
+                  <p className="text-slate-500 text-xs mb-0.5">Teléfono</p>
+                  <p className="font-medium">{item.telefono}</p>
+                </div>
+              )}
+              {item.ultimaActividad && (
+                <div>
+                  <p className="text-slate-500 text-xs mb-0.5">Última actividad</p>
+                  <p className="text-slate-600 text-xs">{item.ultimaActividad}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        getRowPreviewTitle={(item) => item.nombreCompleto || "Usuario"}
         columns={[
           {
             uid: "nombreCompleto",

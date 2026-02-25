@@ -199,8 +199,6 @@ export async function POST(req: NextRequest) {
       EstaEliminado: false,
     };
 
-    console.log(dataPersona);
-
     // Crear Persona + Persona_Cliente en transacción y retornar datos completos
     const clienteCompleto = await prisma.$transaction(async (tx) => {
       // Crear Persona

@@ -102,8 +102,6 @@ export default function VentasScreen() {
   // Handlers
   const handleAddItem = (producto: Producto, cantidad: number = 1) => {
     try {
-      console.log("AddItem: ", producto);
-
       // Use 'items' from store
       const existing = items.find((i) => i.Id === producto.Id);
       const currentQty = existing ? existing.cantidad : 0;

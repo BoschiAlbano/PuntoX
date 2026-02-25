@@ -1,7 +1,8 @@
 "use client";
 
 import GenericCrud from "@/components/shared/GenericCrud";
-import { Chip, Tooltip } from "@heroui/react";
+import { Chip, Tooltip, addToast } from "@heroui/react";
+import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
 import {
   formatTiempoRelativo,
   formatearAccion,
@@ -62,6 +63,126 @@ export default function AuditoriasCRUD() {
       searchPlaceholder="Buscar por usuario, acción o IP..."
       initialLimit={10}
       transformer={transformer}
+      showEditInPreview={false}
+      enableBulkActions
+      exportConfig={{
+        filename: "auditorias",
+        columns: [
+          { key: "usuario", header: "Usuario" },
+          { key: "accion", header: "Acción" },
+          { key: "detalles", header: "Detalles" },
+          { key: "fechaHora", header: "Fecha" },
+          { key: "exitoso", header: "Exitoso" },
+          { key: "ipAddress", header: "IP" },
+        ],
+        mapItem: (a) => ({
+          usuario: a.usuario ?? "",
+          accion: a.accion ?? "",
+          detalles: a.detalles ?? "",
+          fechaHora: a.fechaHora ?? "",
+          exitoso: a.exitoso ? "Sí" : "No",
+          ipAddress: a.ipAddress ?? "",
+        }),
+      }}
+      bulkActionsDropdown={[
+        {
+          key: "exportar-csv",
+          label: "Exportar como CSV",
+          onAction: (ctx) => {
+            const data = ctx.items.map((a) => ({
+              usuario: a.usuario ?? "",
+              accion: a.accion ?? "",
+              detalles: a.detalles ?? "",
+              fechaHora: a.fechaHora ?? "",
+              exitoso: a.exitoso ? "Sí" : "No",
+              ipAddress: a.ipAddress ?? "",
+            }));
+            const columns = [
+              { key: "usuario" as const, header: "Usuario" },
+              { key: "accion" as const, header: "Acción" },
+              { key: "detalles" as const, header: "Detalles" },
+              { key: "fechaHora" as const, header: "Fecha" },
+              { key: "exitoso" as const, header: "Exitoso" },
+              { key: "ipAddress" as const, header: "IP" },
+            ];
+            exportToCsv(data, columns, "auditorias");
+            addToast({
+              title: "Exportado",
+              description: `${ctx.items.length} auditoría${ctx.items.length !== 1 ? "s" : ""} exportada${ctx.items.length !== 1 ? "s" : ""} como CSV`,
+              color: "success",
+            });
+            ctx.clearSelection();
+          },
+        },
+        {
+          key: "exportar-xls",
+          label: "Exportar como XLS",
+          onAction: (ctx) => {
+            const data = ctx.items.map((a) => ({
+              usuario: a.usuario ?? "",
+              accion: a.accion ?? "",
+              detalles: a.detalles ?? "",
+              fechaHora: a.fechaHora ?? "",
+              exitoso: a.exitoso ? "Sí" : "No",
+              ipAddress: a.ipAddress ?? "",
+            }));
+            const columns = [
+              { key: "usuario" as const, header: "Usuario" },
+              { key: "accion" as const, header: "Acción" },
+              { key: "detalles" as const, header: "Detalles" },
+              { key: "fechaHora" as const, header: "Fecha" },
+              { key: "exitoso" as const, header: "Exitoso" },
+              { key: "ipAddress" as const, header: "IP" },
+            ];
+            exportToXls(data, columns, "auditorias");
+            addToast({
+              title: "Exportado",
+              description: `${ctx.items.length} auditoría${ctx.items.length !== 1 ? "s" : ""} exportada${ctx.items.length !== 1 ? "s" : ""} como Excel`,
+              color: "success",
+            });
+            ctx.clearSelection();
+          },
+        },
+      ]}
+      renderRowPreview={(item) => (
+        <div className="space-y-4 text-sm">
+          <div>
+            <p className="text-slate-500 text-xs mb-0.5">Usuario</p>
+            <p className="font-medium text-slate-800">{item.usuario}</p>
+          </div>
+          <div>
+            <p className="text-slate-500 text-xs mb-0.5">Acción</p>
+            <p className="font-medium">{formatearAccion({ accion: item.accion, detalle: item.detalles ?? undefined })}</p>
+          </div>
+          {item.detalles && (
+            <div>
+              <p className="text-slate-500 text-xs mb-0.5">Detalles</p>
+              <p className="text-slate-700">{item.detalles}</p>
+            </div>
+          )}
+          <div>
+            <p className="text-slate-500 text-xs mb-0.5">Fecha</p>
+            <p className="font-medium">{new Date(item.fechaHora).toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-slate-500 text-xs mb-0.5">Estado</p>
+            <span
+              className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                item.exitoso ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+              }`}
+            >
+              {item.exitoso ? "Exitoso" : "Fallido"}
+            </span>
+          </div>
+          {item.ipAddress && (
+            <div>
+              <p className="text-slate-500 text-xs mb-0.5">IP</p>
+              <p className="font-mono text-xs">{item.ipAddress}</p>
+            </div>
+          )}
+        </div>
+      )}
+      getRowPreviewTitle={(item) => `Auditoría - ${item.usuario}`}
       columns={[
         { uid: "usuario", name: "USUARIO", sortable: true },
         { uid: "accion", name: "ACCIÓN", sortable: false },

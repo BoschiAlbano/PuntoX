@@ -304,7 +304,6 @@ export function useProductos({
       });
 
       if (!response.ok) {
-        console.log(response);
         const errorData = await response.json();
         throw errorData;
       }

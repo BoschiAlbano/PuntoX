@@ -1,4 +1,7 @@
-import { UseQueryOptions } from "@tanstack/react-query";
+import {
+  UseQueryOptions,
+  keepPreviousData,
+} from "@tanstack/react-query";
 
 /**
  * Configuración por defecto optimizada para queries
@@ -8,14 +11,14 @@ export const defaultQueryOptions = {
   // No refetch innecesarios
   refetchOnMount: false,
   refetchOnWindowFocus: false,
-  
+
   // Retry optimizado
   retry: 1,
   retryOnMount: false,
-  
-  // Mantener datos anteriores visibles mientras cargan nuevos (mejor UX)
-  placeholderData: (previousData: any) => previousData,
-  
+
+  // Mantener datos anteriores visibles al cambiar página/filtros (evita parpadeo)
+  placeholderData: keepPreviousData,
+
   // Network mode
   networkMode: "online" as const,
 } satisfies Partial<UseQueryOptions<any, any, any, any>>;
@@ -30,11 +33,12 @@ export const staticDataQueryOptions = {
 } satisfies Partial<UseQueryOptions<any, any, any, any>>;
 
 /**
- * Configuración para queries de datos dinámicos (listas, búsquedas)
+ * Configuración para queries de datos dinámicos (listados, búsquedas, paginación)
+ * queryKey completa + staleTime + keepPreviousData = UX óptima
  */
 export const dynamicDataQueryOptions = {
   ...defaultQueryOptions,
-  staleTime: 30 * 1000, // 30 segundos
+  staleTime: 60 * 1000, // 1 minuto - menos refetches al cambiar página
   gcTime: 5 * 60 * 1000, // 5 minutos
 } satisfies Partial<UseQueryOptions<any, any, any, any>>;
 
