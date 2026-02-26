@@ -25,7 +25,7 @@ export default function VentaGrid({
   onRemoveItem,
 }: VentaGridProps) {
   return (
-    <div className="flex-1 overflow-hidden bg-white rounded-2xl border border-slate-100 flex flex-col justify-start">
+    <div className="flex-1 overflow-hidden bg-white py-3 rounded-2xl border border-slate-100 flex flex-col justify-start shadow-sm min-h-[200px]">
       <Table
         aria-label="Detalle de venta"
         removeWrapper
@@ -33,7 +33,7 @@ export default function VentaGrid({
           base: "h-full flex flex-col overflow-hidden",
           table: "min-h-0",
           thead: "sticky top-0 z-20 shrink-0",
-          th: "bg-slate-50 text-slate-500 font-semibold text-xs tracking-wider border-b border-slate-100 h-10 first:rounded-l-none last:rounded-r-none",
+          th: "bg-white text-slate-500 font-semibold text-xs tracking-wider border-b border-slate-100 h-10 first:rounded-l-none last:rounded-r-none",
           tr: "hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-none h-fit",
           td: "py-3 first:pl-4 last:pr-4",
           emptyWrapper: "h-full w-full block",
@@ -41,7 +41,11 @@ export default function VentaGrid({
         className="h-full overflow-auto scrollbar-hide"
       >
         <TableHeader>
-          <TableColumn className="" width={100} align="center">
+          <TableColumn
+            className="hidden sm:table-cell"
+            width={100}
+            align="center"
+          >
             CODIGO
           </TableColumn>
           <TableColumn className="">DESCRIPCION</TableColumn>
@@ -51,7 +55,11 @@ export default function VentaGrid({
           <TableColumn className="" width={120} align="center">
             PRECIO
           </TableColumn>
-          <TableColumn className="" width={120} align="center">
+          <TableColumn
+            className="hidden sm:table-cell"
+            width={120}
+            align="center"
+          >
             SUBTOTAL
           </TableColumn>
           <TableColumn className="" width={60} align="center">
@@ -75,7 +83,7 @@ export default function VentaGrid({
         >
           {items.map((item) => (
             <TableRow key={item.Id}>
-              <TableCell className="text-xs font-mono text-slate-400">
+              <TableCell className="text-xs font-mono text-slate-400 hidden sm:table-cell">
                 {item.Codigo.toString().padStart(6, "0")}
               </TableCell>
               <TableCell>
@@ -108,7 +116,7 @@ export default function VentaGrid({
                   })}
                 </span>
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden sm:table-cell">
                 <span className="font-bold text-slate-800 text-sm">
                   $
                   {(item.precio * item.cantidad).toLocaleString("es-AR", {
@@ -219,7 +227,7 @@ function QuantitySelector({
 
   return (
     <div className="flex items-center justify-center">
-      <div className="flex flex-row items-center border border-slate-200 rounded-lg p-0.5 bg-white shadow-sm h-8">
+      <div className="flex flex-row items-center border border-slate-200 rounded-lg p-2 bg-white  h-9">
         <button
           onClick={handleMinus}
           className="w-7 h-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"

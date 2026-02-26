@@ -57,7 +57,7 @@ export default function StatCard({
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay }}
-      className={`${colors.bg} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 cursor-pointer`}
+      className={`${colors.bg} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 cursor-pointer w-full`}
     >
       <div className="flex items-start justify-between mb-4">
         <div>

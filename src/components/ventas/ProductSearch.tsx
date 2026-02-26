@@ -15,6 +15,7 @@ import { fetchProductosVentas } from "@/hooks/useProductos";
 import { Producto } from "@/lib/validations/producto.schema";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
 import { parseScaleBarcode } from "@/lib/utils/barcode";
+import { LoadingComponent } from "../loading/loading";
 
 // Simple custom debounce hook
 function useDebounceValue<T>(value: T, delay: number): T {
@@ -284,11 +285,11 @@ export default function ProductSearch({
   }, []);
 
   return (
-    <div className="flex-1 relative rounded-lg border-none">
+    <div className="flex-1 rounded-lg border-none">
       <Input
         ref={inputRef}
         classNames={{
-          base: "max-w-full sm:max-w-2xl h-12 border-none",
+          base: "w-full h-12 border-none",
           mainWrapper: "h-full border-none",
           input: "text-small border-none",
           inputWrapper:
@@ -296,7 +297,7 @@ export default function ProductSearch({
         }}
         placeholder="Escanear (Código / Barras) o Buscar..."
         size="sm"
-        startContent={<ScanBarcode className="text-[#67afc3]" />}
+        // startContent={<ScanBarcode className="text-[#182337]" />}
         value={inputValue}
         onValueChange={setInputValue}
         onKeyDown={handleInputKeyDown}
@@ -305,10 +306,10 @@ export default function ProductSearch({
             setShowSuggestions(true);
           }
         }}
-        endContent={
+        startContent={
           <Button isIconOnly variant="light" size="sm">
             {isSearching ? (
-              <Spinner size="sm" className="text-[#67afc3]" />
+              <Spinner size="sm" className="text-[#67afc3]" color="current" />
             ) : (
               <Search className="text-[#67afc3]" />
             )}
@@ -320,68 +321,80 @@ export default function ProductSearch({
       {showSuggestions && suggestions.length > 0 && (
         <div
           ref={suggestionsRef}
-          className="absolute top-full left-0 right-0 mt-2 z-50 max-w-full sm:max-w-2xl"
+          className="absolute top-full left-3 right-3 mt-1 z-50"
         >
-          <Card className="shadow-sm">
-            <CardBody className="p-0">
-              <div className="max-h-[400px] overflow-y-auto">
-                {suggestions.map((product, index) => (
+          <div className="bg-white rounded-xl shadow-lg shadow-slate-200/60 overflow-hidden border border-slate-100">
+            <div className="max-h-[350px] overflow-y-auto">
+              {suggestions.map((product, index) => (
+                <div
+                  key={product.Id}
+                  className={`
+                    px-4 py-3 cursor-pointer transition-all duration-150 border-b border-slate-100 last:border-b-0 flex items-center gap-3
+                    ${
+                      index === selectedIndex
+                        ? "bg-slate-50"
+                        : "hover:bg-slate-50/60"
+                    }
+                  `}
+                  onClick={() => handleSelectProduct(product)}
+                  onMouseEnter={() => setSelectedIndex(index)}
+                >
+                  {/* Indicador lateral de selección */}
                   <div
-                    key={product.Id}
-                    className={`
-                        p-3 cursor-pointer transition-colors border-b border-divider last:border-b-0
-                        ${
-                          index === selectedIndex
-                            ? "bg-primary/10"
-                            : "hover:bg-default-100"
-                        }
-                      `}
-                    onClick={() => handleSelectProduct(product)}
-                    onMouseEnter={() => setSelectedIndex(index)}
-                  >
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs text-default-500 font-mono">
-                            {product.Codigo}
-                          </span>
-                          <span className="text-xs text-default-400">|</span>
-                          <span className="text-xs text-default-500 truncate">
+                    className={`w-0.5 self-stretch rounded-full transition-colors ${
+                      index === selectedIndex
+                        ? "bg-[#67afc3]"
+                        : "bg-transparent"
+                    }`}
+                  />
+
+                  {/* Info del producto */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-slate-800 truncate">
+                      {product.Descripcion}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[11px] text-slate-400 font-mono">
+                        Cód: {product.Codigo}
+                      </span>
+                      {product.CodigoBarra && (
+                        <>
+                          <span className="text-[10px] text-slate-300">•</span>
+                          <span className="text-[11px] text-slate-400 font-mono truncate">
                             {product.CodigoBarra}
                           </span>
-                        </div>
-                        <p className="font-semibold text-sm truncate">
-                          {product.Descripcion}
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-end gap-1 shrink-0">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`text-xs font-medium ${
-                              product.Stock <= 0
-                                ? "text-danger"
-                                : "text-success"
-                            }`}
-                          >
-                            Stock: {product.Stock}
-                          </span>
-                        </div>
-                        <div className="flex gap-2 text-xs">
-                          <span className="text-default-500">
-                            L1: ${product.Precio?.PrecioPublico || 0}
-                          </span>
-                          <span className="text-default-400">|</span>
-                          <span className="text-default-500">
-                            L2: ${product.Precio?.PrecioPublico2 || 0}
-                          </span>
-                        </div>
-                      </div>
+                        </>
+                      )}
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardBody>
-          </Card>
+
+                  {/* Datos de precio y stock */}
+                  <div className="flex items-center gap-3 shrink-0">
+                    {/* Precios */}
+                    <div className="flex flex-col items-end gap-0.5">
+                      <span className="text-xs text-slate-800 font-semibold">
+                        ${product.Precio?.PrecioPublico || 0}
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        L2: ${product.Precio?.PrecioPublico2 || 0}
+                      </span>
+                    </div>
+
+                    {/* Badge de stock */}
+                    <span
+                      className={`text-[11px] font-medium px-2 py-0.5 rounded-md ${
+                        product.Stock <= 0
+                          ? "bg-red-50 text-red-500"
+                          : "bg-emerald-50 text-emerald-600"
+                      }`}
+                    >
+                      {product.Stock}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

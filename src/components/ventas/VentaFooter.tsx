@@ -364,13 +364,10 @@ export default function VentaFooter({
   }, [paymentOptions, currentTipo]);
 
   return (
-    <section className="flex-1 flex flex-col gap-4 overflow-hidden">
+    <section className="flex-1 flex flex-col gap-4">
       {/* Payment Methods Section */}
-      <div className="flex-1 bg-white rounded-2xl border border-slate-100 flex flex-col overflow-hidden">
-        <div className="p-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center shrink-0">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Formas de Pago
-          </h3>
+      <div className="flex-1 bg-white rounded-2xl border border-slate-100 flex flex-col shadow-sm">
+        <div className="px-3 pt-2 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center shrink-0">
           {/* Margen Disponible Indicator */}
           {currentTipo === TIPO_PAGO.CUENTA_CORRIENTE &&
             cliente?.Persona_Cliente?.ActivarCtaCte && (
@@ -399,7 +396,7 @@ export default function VentaFooter({
             )}
         </div>
 
-        <div className="p-3 flex flex-col gap-3 flex-1 overflow-hidden">
+        <div className="p-3 flex flex-col gap-3 flex-1">
           {/* Payment Input Group */}
           <div className="flex gap-2 items-end shrink-0">
             <Select
@@ -408,9 +405,9 @@ export default function VentaFooter({
               onChange={(e) => setCurrentTipo(Number(e.target.value))}
               className="flex-2"
               size="sm"
-              variant="bordered"
+              variant="flat"
               classNames={{
-                trigger: "border-slate-200 shadow-none rounded-xl",
+                trigger: "shadow-none rounded-xl bg-slate-50",
               }}
             >
               {paymentOptions.map((option) => (
@@ -427,9 +424,9 @@ export default function VentaFooter({
               startContent={<span className="text-slate-400 text-sm">$</span>}
               className="flex-[1.5]"
               size="sm"
-              variant="bordered"
+              variant="flat"
               classNames={{
-                inputWrapper: "border-slate-200 shadow-none rounded-xl",
+                inputWrapper: "shadow-none rounded-xl bg-slate-50",
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAddPayment();
@@ -439,7 +436,7 @@ export default function VentaFooter({
               isIconOnly
               size="lg"
               onPress={handleAddPayment}
-              className="mb-0.5 bg-slate-800 text-white rounded-xl"
+              className="mb-0.5 bg-[#67afc3] text-white rounded-xl"
             >
               <Plus size={20} />
             </Button>
@@ -519,7 +516,7 @@ export default function VentaFooter({
       </div>
 
       {/* Totals & Actions Card */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-4 shrink-0 flex flex-col gap-4 relative z-10">
+      <div className="bg-white rounded-2xl border border-slate-100 p-4 shrink-0 flex flex-col gap-4 relative z-10 shadow-sm">
         <div className="flex flex-col gap-1">
           <div className="flex justify-between text-sm text-slate-500">
             <span>Subtotal</span>
@@ -542,7 +539,7 @@ export default function VentaFooter({
                   })}
                 </span>
               )}
-              <div className="flex items-center bg-slate-50 rounded-lg px-2 border border-slate-100 w-16">
+              <div className="flex items-center rounded-lg w-16">
                 <input
                   data-testid="descuento-input"
                   type="number"
@@ -573,8 +570,7 @@ export default function VentaFooter({
         <div className="flex gap-2 mt-2">
           <Button
             variant="flat"
-            color="danger"
-            className="w-12 h-12 min-w-12 rounded-xl"
+            className="w-12 h-12 min-w-12 rounded-xl bg-white text-gray-400 hover:text-red-600 hover:bg-red-200"
             isIconOnly
             onPress={handleLimpiar}
             isDisabled={isSaving || items.length === 0}
@@ -587,7 +583,7 @@ export default function VentaFooter({
           ) : cajaActual ? (
             <Button
               size="lg"
-              className="flex-1 bg-slate-900 text-white font-bold rounded-xl hover:bg-black transition-all active:scale-[0.98]"
+              className="flex-1 bg-[#182337] text-white font-bold rounded-xl transition-all active:scale-[0.98]"
               onPress={handleFinalizeSale}
               isLoading={isSaving}
               isDisabled={Math.abs(restante) > 0.01 || items.length === 0}
