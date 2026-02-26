@@ -4,14 +4,19 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 import { createError } from "@/lib/errors/types";
+import { getArticuloFoto } from "@/lib/services/productos";
 
+/**
+ * GET /api/productos/[id]
+ * - Sin query: devuelve el producto completo en JSON (para formulario/edición)
+ * - Con ?foto=1: devuelve la imagen del producto (JPEG/PNG)
+ */
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
-
     const { tenantId, sucursalId } = await getAuthContext({
       req,
       permission: PERMISSIONS.PRODUCTOS,
@@ -19,6 +24,18 @@ export async function GET(
 
     if (!id) {
       throw createError.validation("ID requerido");
+    }
+
+    const fotoParam = req.nextUrl.searchParams.get("foto");
+    if (fotoParam === "1" || fotoParam?.toLowerCase() === "true") {
+      const { buffer, contentType } = await getArticuloFoto(tenantId, id);
+      return new NextResponse(new Uint8Array(buffer), {
+        status: 200,
+        headers: {
+          "Content-Type": contentType,
+          "Cache-Control": "private, max-age=3600",
+        },
+      });
     }
 
     const producto = await prisma.articulo.findFirst({
@@ -109,6 +126,8 @@ export async function GET(
       Stock: stockSucursal ? Number(stockSucursal.Stock) : Number(0),
       SucursalNombre: stockSucursal?.Sucursal?.Nombre ?? null,
     };
+
+    delete (response as Record<string, unknown>).Foto;
 
     return NextResponse.json(response);
   } catch (error) {

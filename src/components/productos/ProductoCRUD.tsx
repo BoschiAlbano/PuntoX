@@ -22,6 +22,7 @@ import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoMod
 import { BulkEditarCamposModal } from "@/components/shared/BulkEditarCamposModal";
 import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
 import { ShoppingCart, Copy, Check } from "lucide-react";
+import { ProductoCard } from "./ProductoCard";
 
 function ProductoPreviewContent({ item }: { item: Producto }) {
   const currency = useCurrency();
@@ -259,6 +260,7 @@ export default function ProductoCRUD() {
     items: Producto[];
     clearSelection?: () => void;
   }>({ open: false, items: [] });
+  const [viewMode, setViewMode] = useState<"table" | "cards">("table");
 
   const invalidateProductos = () => {
     queryClient.invalidateQueries({ queryKey: ["productos-generic"] });
@@ -297,6 +299,17 @@ export default function ProductoCRUD() {
         getRowPreviewTitle={(item) => item.Descripcion || "Producto"}
         showEditInPreview={false}
         enableBulkActions
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        renderCard={(item, actions) => (
+          <ProductoCard
+            item={item}
+            onEdit={actions.onEdit}
+            onDelete={actions.onDelete}
+            onOpenStockModal={handleOpenStockModal}
+            onClick={actions.onPreview}
+          />
+        )}
         toolbarExtraContent={
           <Link
             href="/compras"
@@ -459,9 +472,24 @@ export default function ProductoCRUD() {
           { uid: "Marca", name: "MARCA", sortable: true, align: "start" },
           { uid: "Rubro", name: "RUBRO", sortable: true, align: "start" },
           { uid: "Stock", name: "STOCK", sortable: true },
-          { uid: "Costo", name: "COSTO", sortable: true },
-          { uid: "Minorista", name: "MINORISTA", sortable: true },
-          { uid: "Mayorista", name: "MAYORISTA", sortable: true },
+          {
+            uid: "Costo",
+            name: "COSTO",
+            sortable: true,
+            sortKey: "Precio.PrecioCosto",
+          },
+          {
+            uid: "Minorista",
+            name: "MINORISTA",
+            sortable: true,
+            sortKey: "Precio.PrecioPublico",
+          },
+          {
+            uid: "Mayorista",
+            name: "MAYORISTA",
+            sortable: true,
+            sortKey: "Precio.PrecioPublico2",
+          },
           { uid: "Estado", name: "ESTADO" },
           { uid: "acciones", name: "ACCIONES" },
         ]}
@@ -495,8 +523,11 @@ export default function ProductoCRUD() {
               const stock = item.Stock ?? 0;
               const stockMinimo = item.StockMinimo ?? 0;
               const isLowStock = stockMinimo > 0 && stock <= stockMinimo;
+              // Barra visual: stock vs ref (stockMinimo*2 o 10 si no hay mínimo)
+              const ref = stockMinimo > 0 ? Math.max(stockMinimo * 2, 10) : 10;
+              const pct = Math.min(100, Math.round((stock / ref) * 100));
               return (
-                <div className="flex flex-col">
+                <div className="flex flex-col gap-1 min-w-[64px]">
                   <span
                     className={
                       isLowStock
@@ -506,6 +537,20 @@ export default function ProductoCRUD() {
                   >
                     {item.Stock}
                   </span>
+                  <div
+                    className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden"
+                    role="progressbar"
+                    aria-valuenow={stock}
+                    aria-valuemin={0}
+                    aria-valuemax={ref}
+                  >
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ease-out ${
+                        isLowStock ? "bg-red-500" : "bg-[#67afc3]"
+                      }`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
                   {item.SucursalNombre && (
                     <span className="text-xs text-gray-500 mt-0.5">
                       {item.SucursalNombre}

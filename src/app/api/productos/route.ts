@@ -99,12 +99,13 @@ export async function GET(req: NextRequest) {
         Marca: { select: { Descripcion: true } },
         Rubro: { select: { Descripcion: true } },
 
-        // Relacion Precio: Solo lo necesario para la tabla
+        // Relación Precio: incluye FechaActualizacion para cache-busting de foto
         Precio: {
           select: {
             PrecioCosto: true,
             PrecioPublico: true,
             PrecioPublico2: true,
+            FechaActualizacion: true,
           },
         },
 
@@ -161,6 +162,7 @@ export async function GET(req: NextRequest) {
             ? Number(stockSucursal.StockMinimo)
             : Number(producto.StockMinimo ?? 0),
         SucursalNombre: stockSucursal?.Sucursal.Nombre || null,
+        FechaActualizacion: producto.Precio?.FechaActualizacion?.toISOString() ?? undefined,
 
         // Precio
         Precio: {
@@ -243,7 +245,17 @@ export async function POST(req: NextRequest) {
               Id: validarProducto.IvaId,
             },
           },
-          Foto: fotoDefault(),
+          Foto: (() => {
+            const b64 = validarProducto.Foto;
+            if (typeof b64 === "string" && b64.length > 0) {
+              try {
+                return Buffer.from(b64, "base64");
+              } catch {
+                return fotoDefault();
+              }
+            }
+            return fotoDefault();
+          })(),
           Precio: {
             connect: {
               Id: nuevoPrecio.Id,
@@ -430,6 +442,16 @@ export async function PATCH(req: NextRequest) {
       if (validarProducto.Precio?.PorcentajeGanancia !== undefined) {
         articuloData.PorcentajeGanancia =
           validarProducto.Precio.PorcentajeGanancia;
+      }
+
+      // Foto (base64)
+      const b64 = validarProducto.Foto;
+      if (typeof b64 === "string" && b64.length > 0) {
+        try {
+          articuloData.Foto = Buffer.from(b64, "base64");
+        } catch {
+          // Ignorar si la conversión falla
+        }
       }
 
       // Relationships

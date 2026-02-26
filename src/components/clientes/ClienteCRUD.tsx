@@ -12,7 +12,6 @@ import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema"
 
 export default function ClienteCRUD() {
   const currency = useCurrency();
-
   return (
     <GenericCrud<Cliente>
       apiPath="/api/clientes"

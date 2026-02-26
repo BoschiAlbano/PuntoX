@@ -39,6 +39,7 @@ export const productoAdapter = (data: any): Producto => {
     },
     Stock: Number(data.Stock || 0),
     SucursalNombre: data.SucursalNombre || null,
+    FechaActualizacion: data.FechaActualizacion || undefined,
     Marca: data.Marca ?? null,
     Rubro: data.Rubro ?? null,
     Iva: {

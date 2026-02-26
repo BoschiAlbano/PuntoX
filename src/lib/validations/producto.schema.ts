@@ -195,6 +195,7 @@ export interface Producto {
   Stock: number;
   EstaEliminado: boolean;
   SucursalNombre?: string | null; // Nombre de la sucursal del stock mostrado
+  FechaActualizacion?: string; // ISO string para cache-busting de foto
   Marca?: { Descripcion: string } | null;
   Rubro?: { Descripcion: string } | null;
   Precio: {
