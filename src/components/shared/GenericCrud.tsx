@@ -50,6 +50,8 @@ export interface CrudActions<T> {
   onEdit: (item: T) => void;
   onDelete: (item: T) => void;
   onCreate: () => void;
+  /** Abre el preview (cuando hay renderRowPreview) */
+  onPreview?: (item: T) => void;
 }
 
 interface GenericCrudProps<T> {
@@ -111,6 +113,10 @@ interface GenericCrudProps<T> {
     title?: string;
     orientation?: "portrait" | "landscape";
   };
+  /** Vista cards: viewMode, onViewModeChange, renderCard (recibe item y actions) */
+  viewMode?: "table" | "cards";
+  onViewModeChange?: (mode: "table" | "cards") => void;
+  renderCard?: (item: T, actions: CrudActions<T>) => React.ReactNode;
 }
 
 export default function GenericCrud<T extends { Id: number | string }>({
@@ -135,6 +141,9 @@ export default function GenericCrud<T extends { Id: number | string }>({
   getApiExtraParams,
   toolbarExtraContent,
   printConfig,
+  viewMode = "table",
+  onViewModeChange,
+  renderCard,
 }: GenericCrudProps<T>) {
   // Estados de UI
   const { isOpen, onOpen, onClose } = useDisclosure(); // Modal Form
@@ -171,7 +180,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
   });
 
   // Debounce de búsqueda para evitar requests en cada keystroke
-  const debouncedSearch = useDebounce(search, 400);
+  const debouncedSearch = useDebounce(search, 300);
 
   // Resetear página al cambiar filtro bajo stock (evita páginas vacías)
   useEffect(() => {
@@ -266,12 +275,19 @@ export default function GenericCrud<T extends { Id: number | string }>({
     if (lowStockFilterFn && lowStockOnly && !lowStockApiParam) {
       items = items.filter(lowStockFilterFn);
     }
-    const key = sortDescriptor.column as string;
+    const col = columns.find((c) => c.uid === sortDescriptor.column);
+    const sortPath = col?.sortKey ?? (sortDescriptor.column as string);
 
     const getVal = (obj: T): number | string => {
-      const v = (obj as Record<string, unknown>)[key];
+      const v = sortPath.includes(".")
+        ? sortPath
+            .split(".")
+            .reduce(
+              (o: unknown, k) => (o as Record<string, unknown>)?.[k],
+              obj as unknown
+            )
+        : (obj as Record<string, unknown>)[sortPath];
       if (v == null) return "";
-      // Soporta objetos con Descripcion (ej. Marca, Rubro)
       if (typeof v === "object" && v !== null && "Descripcion" in v) {
         return String((v as { Descripcion?: string }).Descripcion ?? "");
       }
@@ -293,7 +309,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
 
       return cmp;
     });
-  }, [sortDescriptor, data, lowStockOnly, lowStockFilterFn]);
+  }, [sortDescriptor, data, lowStockOnly, lowStockFilterFn, columns]);
 
   const pageIds = useMemo(
     () => new Set(sortedItems.map((i) => String(i.Id))),
@@ -545,11 +561,12 @@ export default function GenericCrud<T extends { Id: number | string }>({
     });
   };
 
-  // Acciones que pasamos al renderCell
+  // Acciones que pasamos al renderCell y renderCard
   const actions: CrudActions<T> = {
     onEdit: handleEdit,
     onDelete: handleDeleteClick,
     onCreate: handleCreate,
+    onPreview: hasRowPreview ? (item) => setPreviewItem(item) : undefined,
   };
 
   // Wrapper para renderCell que inyecta las acciones
@@ -725,6 +742,14 @@ export default function GenericCrud<T extends { Id: number | string }>({
                 }
               }
             : undefined
+        }
+        onRowKeyDown={(item, key) => {
+          if (key === "Enter") handleEdit(item);
+        }}
+        viewMode={viewMode}
+        onViewModeChange={onViewModeChange}
+        renderCards={
+          renderCard ? (item) => renderCard(item, actions) : undefined
         }
       />
 

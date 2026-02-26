@@ -6,6 +6,7 @@ import { NextRequest } from "next/server";
 import { GET } from "./route";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import prisma from "@/DB/prisma";
+import { getArticuloFoto } from "@/lib/services/productos";
 import { PermisoError } from "@/lib/requirePermiso";
 import { createError } from "@/lib/errors/types";
 
@@ -18,6 +19,9 @@ vi.mock("@/DB/prisma", () => ({
       findFirst: vi.fn(),
     },
   },
+}));
+vi.mock("@/lib/services/productos", () => ({
+  getArticuloFoto: vi.fn(),
 }));
 vi.mock("@/lib/errors/handler", () => ({
   handleError: vi.fn((err: unknown) => {
@@ -106,5 +110,27 @@ describe("GET /api/productos/[id]", () => {
     expect(res.status).toBe(200);
     expect(data.Id).toBe(1);
     expect(data.Descripcion).toBe("Producto Test");
+  });
+
+  it("retorna imagen cuando ?foto=1", async () => {
+    vi.mocked(getAuthContext).mockResolvedValue({
+      tenantId: 1,
+      usuarioId: 1,
+      user: {} as any,
+      sucursalId: 1,
+      isSuperAdmin: false,
+      permissions: ["productos"],
+    });
+    const jpegBuffer = Buffer.from([0xff, 0xd8, 0x00, 0x01]); // magic bytes JPEG
+    vi.mocked(getArticuloFoto).mockResolvedValue({
+      buffer: jpegBuffer,
+      contentType: "image/jpeg",
+    });
+    const req = new NextRequest("http://localhost:3000/api/productos/1?foto=1");
+    const res = await GET(req, { params: Promise.resolve({ id: "1" }) });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toBe("image/jpeg");
+    const body = await res.arrayBuffer();
+    expect(body.byteLength).toBe(4);
   });
 });

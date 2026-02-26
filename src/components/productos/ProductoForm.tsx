@@ -28,6 +28,7 @@ import {
   Package,
   Settings,
 } from "lucide-react";
+import { ImageUploadField } from "@/components/shared/ImageUploadField";
 import MarcaGenericForm from "../marcas/MarcaForm";
 import RubroGenericForm from "../rubros/RubroForm";
 import UnidadMedidaGenericForm from "../unidad-medida/UnidadMedidaForm";
@@ -147,6 +148,8 @@ export default function ProductoForm({
   const [isMarcaModalOpen, setIsMarcaModalOpen] = useState(false);
   const [isRubroModalOpen, setIsRubroModalOpen] = useState(false);
   const [isUnidadModalOpen, setIsUnidadModalOpen] = useState(false);
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const [fotoPreview, setFotoPreview] = useState<string>("");
 
   const createMarcaMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -289,14 +292,14 @@ export default function ProductoForm({
 
   useEffect(() => {
     if (fullProduct) {
-      // Si tenemos datos completos, los usamos
       setFormData(fullProduct);
     } else if (initialData) {
-      // Si solo tenemos datos parciales (de la tabla), los usamos mientras carga
       setFormData(initialData);
     } else {
       setFormData(defaultProducto);
     }
+    setFotoFile(null);
+    setFotoPreview("");
   }, [initialData, fullProduct, isOpen]);
 
   useEffect(() => {
@@ -309,7 +312,11 @@ export default function ProductoForm({
   }, [nextCodeData, initialData, isOpen]);
 
   const handleSubmit = () => {
-    onSubmit(formData);
+    const dataToSubmit = { ...formData };
+    if (fotoPreview) {
+      dataToSubmit.Foto = fotoPreview;
+    }
+    onSubmit(dataToSubmit);
   };
 
   const isEdit = !!initialData;
@@ -555,6 +562,21 @@ export default function ProductoForm({
                     isDisabled={isSaving}
                     classNames={inputClassNames}
                   />
+                  <div className="md:col-span-2">
+                    <ImageUploadField
+                      existingImageUrl={
+                        initialData?.Id
+                          ? `/api/productos/${initialData.Id}?foto=1`
+                          : null
+                      }
+                      previewUrl={fotoPreview}
+                      onChange={(file, base64) => {
+                        setFotoFile(file);
+                        setFotoPreview(base64);
+                      }}
+                      disabled={isSaving}
+                    />
+                  </div>
                 </div>
               </AccordionItem>
 

@@ -19,20 +19,21 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/react";
-import { useState, useEffect, useRef, Key } from "react";
+import { useState, useRef, Key } from "react";
 import {
   Check,
   ChevronDown,
   Columns2,
   Download,
   FileSpreadsheet,
+  LayoutGrid,
   Menu,
   Printer,
   RefreshCcw,
+  Table as TableIcon,
 } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import { PaginationMeta } from "@/hooks/useProductos";
-import { useDebounce } from "@/hooks/useDebounce";
 
 function getPrintPageStyle(orientation?: "portrait" | "landscape"): string {
   const pageSize =
@@ -84,6 +85,8 @@ export interface Column {
   uid: string;
   name: string;
   sortable?: boolean;
+  /** Ruta anidada para ordenar (ej: "Precio.PrecioCosto") */
+  sortKey?: string;
   align?: "start" | "center" | "end";
   /** Alineación en impresión: right para numéricas, center para Estado/badges */
   printAlign?: "left" | "right" | "center";
@@ -117,6 +120,8 @@ interface GenericTableProps<T> {
   onRefresh?: () => void;
   isRefreshing?: boolean;
   onRowClick?: (item: T) => void;
+  /** Enter en la fila: abre edición (ej: handleEdit). Escape cierra modales (manejado por HeroUI) */
+  onRowKeyDown?: (item: T, key: string) => void;
   // Selección masiva
   enableSelection?: boolean;
   selectionMode?: "manual" | "all_matching";
@@ -144,6 +149,10 @@ interface GenericTableProps<T> {
     orientation?: "portrait" | "landscape";
     filters?: string;
   };
+  /** Modo cards: cuando se provee renderCards, se muestra toggle tabla/cards */
+  viewMode?: "table" | "cards";
+  onViewModeChange?: (mode: "table" | "cards") => void;
+  renderCards?: (item: T) => React.ReactNode;
 }
 
 export default function GenericTable<T extends { Id: number | string }>({
@@ -172,6 +181,7 @@ export default function GenericTable<T extends { Id: number | string }>({
   onRefresh,
   isRefreshing = false,
   onRowClick,
+  onRowKeyDown,
   enableSelection = false,
   selectionMode = "manual",
   selectedKeys,
@@ -185,8 +195,10 @@ export default function GenericTable<T extends { Id: number | string }>({
   bulkActionsDropdown,
   extraSearchContent,
   printConfig,
+  viewMode = "table",
+  onViewModeChange,
+  renderCards,
 }: GenericTableProps<T>) {
-  const [searchInput, setSearchInput] = useState(search);
   const tablePrintRef = useRef<HTMLDivElement>(null);
 
   // Columnas visibles: ocultar "acciones" por defecto del selector (siempre visible en tabla)
@@ -225,16 +237,6 @@ export default function GenericTable<T extends { Id: number | string }>({
     pageStyle: getPrintPageStyle(printConfig?.orientation),
   });
 
-  // Debounce de búsqueda (400ms para reducir llamadas)
-  const debouncedSearch = useDebounce(searchInput, 400);
-
-  // Actualizar búsqueda cuando el valor debounced cambia
-  useEffect(() => {
-    if (debouncedSearch !== search) {
-      onSearchChange(debouncedSearch);
-    }
-  }, [debouncedSearch, search, onSearchChange]);
-
   const ICON_SIZE = 18;
   const ICON_STROKE = 2;
 
@@ -265,8 +267,8 @@ export default function GenericTable<T extends { Id: number | string }>({
                     type="text"
                     placeholder={searchPlaceholder}
                     className="outline-none w-full bg-transparent text-slate-800 placeholder:text-slate-500 placeholder:font-normal text-sm"
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
+                    value={search}
+                    onChange={(e) => onSearchChange(e.target.value)}
                     aria-label="Buscar en la tabla"
                   />
                 </div>
@@ -420,6 +422,36 @@ export default function GenericTable<T extends { Id: number | string }>({
                   </DropdownMenu>
                 </Dropdown>
               )}
+              {renderCards && onViewModeChange && (
+                <div className="flex rounded-lg border border-slate-300 overflow-hidden flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => onViewModeChange("table")}
+                    className={`p-2 h-9 w-9 flex items-center justify-center transition-colors ${
+                      viewMode === "table"
+                        ? "bg-[#67afc3] text-white"
+                        : "bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                    title="Vista tabla"
+                    aria-label="Ver como tabla"
+                  >
+                    <TableIcon size={ICON_SIZE} strokeWidth={ICON_STROKE} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onViewModeChange("cards")}
+                    className={`p-2 h-9 w-9 flex items-center justify-center transition-colors ${
+                      viewMode === "cards"
+                        ? "bg-[#67afc3] text-white"
+                        : "bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                    title="Vista cards"
+                    aria-label="Ver como tarjetas"
+                  >
+                    <LayoutGrid size={ICON_SIZE} strokeWidth={ICON_STROKE} />
+                  </button>
+                </div>
+              )}
               {onRefresh && (
                 <button
                   onClick={onRefresh}
@@ -512,16 +544,37 @@ export default function GenericTable<T extends { Id: number | string }>({
           </div>
         )}
 
-        {/* Table + Pagination - sombra sutil, bordes más contrastados */}
+        {/* Table/Cards + Pagination */}
         <div className="w-full overflow-hidden flex-1 flex flex-col h-full rounded-xl border border-slate-200/80 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
           <div className="flex-1 min-h-0 overflow-auto overflow-x-auto">
+            {viewMode === "cards" && renderCards ? (
+              isLoading ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="aspect-square rounded-xl bg-slate-200 animate-pulse" />
+                  ))}
+                </div>
+              ) : isError ? (
+                <div className="text-danger flex justify-center py-12" role="alert">
+                  Error al cargar datos
+                </div>
+              ) : data.length === 0 ? (
+                <div className="text-slate-600 text-center py-12" role="status">
+                  {emptyText}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
+                  {data.map((item) => (
+                    <div key={String(item.Id)}>{renderCards(item)}</div>
+                  ))}
+                </div>
+              )
+            ) : (
             <Table
               aria-label="Tabla de datos"
               sortDescriptor={sortDescriptor}
               onSortChange={onSortChange}
-              selectionMode={
-                enableSelection && !isLoading ? "multiple" : "none"
-              }
+              selectionMode={enableSelection && !isLoading ? "multiple" : "none"}
               {...(enableSelection &&
                 !isLoading && {
                   selectedKeys: new Set(
@@ -545,29 +598,28 @@ export default function GenericTable<T extends { Id: number | string }>({
                 })}
               className="bg-white rounded-lg border-none"
               classNames={{
-                wrapper:
-                  "bg-white h-full shadow-none rounded-xl border-none sm:p-4 p-2",
+                wrapper: "bg-white h-full shadow-none rounded-xl border-none sm:p-4 p-2",
                 th: "bg-[#67afc3] text-white text-[13px] font-semibold border-b border-slate-200/60",
                 base: "bg-transparent h-full shadow-none rounded-xl border-none",
                 td: "border-b border-slate-200/80 text-slate-800",
-                tr: "transition-colors duration-150 data-[hover=true]:bg-slate-50 data-[selected=true]:bg-[#67afc3]/15 data-[selected=true]:[&>td]:border-[#67afc3]/20",
+                tr: "group transition-all duration-200 data-[hover=true]:bg-slate-50 data-[hover=true]:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] data-[hover=true]:relative data-[hover=true]:z-10 data-[selected=true]:bg-[#67afc3]/15 data-[selected=true]:[&>td]:border-[#67afc3]/20",
               }}
             >
-              <TableHeader columns={columns}>
-                {(column) => (
-                  <TableColumn
-                    key={column.uid}
-                    align={column.align || "center"}
-                    allowsSorting={column.sortable}
-                    aria-label={`Columna ${column.name}, ${
-                      column.sortable ? "ordenable" : "no ordenable"
-                    }`}
-                  >
-                    {column.name}
-                  </TableColumn>
-                )}
-              </TableHeader>
-              <TableBody
+            <TableHeader columns={visibleColumns}>
+              {(column) => (
+                <TableColumn
+                  key={column.uid}
+                  align={column.align || "center"}
+                  allowsSorting={column.sortable}
+                  aria-label={`Columna ${column.name}, ${
+                    column.sortable ? "ordenable" : "no ordenable"
+                  }`}
+                >
+                  {column.name}
+                </TableColumn>
+              )}
+            </TableHeader>
+            <TableBody
                 items={
                   isLoading
                     ? Array.from({ length: 5 }).map(
@@ -646,7 +698,17 @@ export default function GenericTable<T extends { Id: number | string }>({
                       tabIndex={0}
                       aria-label={`Fila ${item.Id}`}
                       onClick={onRowClick ? () => onRowClick(item) : undefined}
-                      style={onRowClick ? { cursor: "pointer" } : undefined}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && onRowKeyDown) {
+                          e.preventDefault();
+                          onRowKeyDown(item, "Enter");
+                        }
+                      }}
+                      style={
+                        onRowClick || onRowKeyDown
+                          ? { cursor: "pointer" }
+                          : undefined
+                      }
                     >
                       {(columnKey) => (
                         <TableCell
@@ -665,6 +727,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                 }}
               </TableBody>
             </Table>
+            )}
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 border-t border-slate-200/80 bg-slate-50/50 rounded-b-xl print:hidden">
             {isLoading ? (
@@ -727,7 +790,6 @@ export default function GenericTable<T extends { Id: number | string }>({
                       prev: "cursor-pointer",
                       wrapper: "gap-1",
                     }}
-                    aria-label="Paginación de la tabla"
                   />
                 </div>
               </>

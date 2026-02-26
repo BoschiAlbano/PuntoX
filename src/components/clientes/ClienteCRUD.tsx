@@ -4,7 +4,7 @@ import GenericCrud from "@/components/shared/GenericCrud";
 import ClienteForm from "./ClienteForm";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
-import { Chip, Tooltip, addToast } from "@heroui/react";
+import { Button, Chip, Tooltip, addToast } from "@heroui/react";
 import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
 import { DeleteButton, EditButton } from "@/components/shared/TableActions";
 import { clienteListAdapter } from "@/lib/adapters/cliente.adapter";
@@ -12,6 +12,7 @@ import { Cliente } from "@/lib/validations/cliente.schema";
 import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
 
 export default function ClienteCRUD() {
+  const currency = useCurrency();
   return (
     <GenericCrud<Cliente>
       apiPath="/api/clientes"

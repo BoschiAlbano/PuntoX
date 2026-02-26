@@ -11,9 +11,6 @@ export async function GET(req: NextRequest) {
       permission: PERMISSIONS.VENTAS,
     });
 
-    // const tenantId = "2";
-    // const sucursalId = "2";
-
     const searchParams = req.nextUrl.searchParams;
     const q = searchParams.get("q")?.trim() || "";
     const limit = Number(searchParams.get("limit")) || 20;

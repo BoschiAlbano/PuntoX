@@ -47,12 +47,12 @@ export default function MarcaCRUD() {
   return (
     <>
       <GenericCrud<Marca>
-      apiPath="/api/marcas"
-      queryKey="marcas-generic"
-      title="Gestión de Marcas"
-      searchPlaceholder="Buscar marcas..."
-      FormComponent={MarcaForm}
-      renderRowPreview={(item) => (
+        apiPath="/api/marcas"
+        queryKey="marcas-generic"
+        title="Gestión de Marcas"
+        searchPlaceholder="Buscar marcas..."
+        FormComponent={MarcaForm}
+        renderRowPreview={(item) => (
         <div className="space-y-4 text-sm">
           <div>
             <p className="text-slate-500 text-xs mb-0.5">Descripción</p>
@@ -76,24 +76,24 @@ export default function MarcaCRUD() {
           </div>
         </div>
       )}
-      getRowPreviewTitle={(item) => item.Descripcion || "Marca"}
-      enableBulkActions
-      exportConfig={{
-        filename: "marcas",
-        columns: [
-          { key: "Id", header: "ID" },
-          { key: "Descripcion", header: "Descripción" },
-          { key: "Productos", header: "Productos" },
-          { key: "Estado", header: "Estado" },
-        ],
-        mapItem: (m) => ({
-          Id: m.Id,
-          Descripcion: m.Descripcion ?? "",
-          Productos: m.CantidadProductos ?? 0,
-          Estado: m.EstaEliminado ? "Inactivo" : "Activo",
-        }),
-      }}
-      bulkActionsDropdown={[
+        getRowPreviewTitle={(item) => item.Descripcion || "Marca"}
+        enableBulkActions
+        exportConfig={{
+          filename: "marcas",
+          columns: [
+            { key: "Id", header: "ID" },
+            { key: "Descripcion", header: "Descripción" },
+            { key: "Productos", header: "Productos" },
+            { key: "Estado", header: "Estado" },
+          ],
+          mapItem: (m) => ({
+            Id: m.Id,
+            Descripcion: m.Descripcion ?? "",
+            Productos: m.CantidadProductos ?? 0,
+            Estado: m.EstaEliminado ? "Inactivo" : "Activo",
+          }),
+        }}
+        bulkActionsDropdown={[
         {
           key: "cambiar-estado",
           label: "Cambiar estado",
@@ -158,8 +158,8 @@ export default function MarcaCRUD() {
             ctx.clearSelection();
           },
         },
-      ]}
-      columns={[
+        ]}
+        columns={[
         {
           uid: "Descripcion",
           name: "DESCRIPCIÓN",
@@ -173,9 +173,8 @@ export default function MarcaCRUD() {
         },
         { uid: "Estado", name: "ESTADO" },
         { uid: "acciones", name: "ACCIONES" },
-      ]}
-      // Función para renderizar celdas personalizadas
-      renderCell={(item, columnKey, actions) => {
+        ]}
+        renderCell={(item, columnKey, actions) => {
         switch (columnKey) {
           case "Descripcion":
             return (
