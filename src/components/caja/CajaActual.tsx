@@ -27,14 +27,18 @@ import {
   FileText,
   Lock,
   Plus,
-  RefreshCcw,
   TrendingDown,
   TrendingUp,
   Unlock,
   Pencil,
   Trash2,
+  DollarSign,
+  Banknote,
+  CreditCard,
+  ArrowRightLeft,
+  Wallet,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { LoadingComponent } from "../loading/loading";
 import { handleNumberInput } from "@/lib/input/number";
 import {
@@ -44,6 +48,37 @@ import {
 } from "@/lib/constants/comprobantes";
 import { useReactToPrint } from "react-to-print";
 import { TicketImpresion } from "../ventas/TicketImpresion";
+import StatCard from "../dashboard/StatCard";
+import GenericTable, { Column } from "@/components/shared/GenericTable";
+
+const movimientosColumns: Column[] = [
+  { uid: "fecha", name: "Fecha", sortable: false },
+  { uid: "descripcion", name: "Descripción", sortable: false },
+  { uid: "tipo", name: "Tipo", sortable: false, align: "center" },
+  {
+    uid: "monto",
+    name: "Monto",
+    sortable: false,
+    align: "end",
+    printAlign: "right",
+  },
+  { uid: "acciones", name: "Acciones", sortable: false, align: "center" },
+];
+
+const gastosColumns: Column[] = [
+  { uid: "descripcion", name: "Descripción", sortable: false },
+  { uid: "concepto", name: "Concepto", sortable: false },
+  { uid: "formaPago", name: "Forma de Pago", sortable: false },
+  { uid: "fecha", name: "Fecha", sortable: false },
+  {
+    uid: "monto",
+    name: "Monto",
+    sortable: false,
+    align: "end",
+    printAlign: "right",
+  },
+  { uid: "acciones", name: "Acciones", sortable: false, align: "center" },
+];
 
 export default function CajaActual() {
   const {
@@ -158,6 +193,69 @@ export default function CajaActual() {
   const movimientos = cajaActual?.Movimiento || [];
   const gastos = cajaActual?.Gasto || [];
 
+  // Movimientos: búsqueda y paginación local
+  const [movSearch, setMovSearch] = useState("");
+  const [movPage, setMovPage] = useState(1);
+  const MOV_LIMIT = 10;
+
+  const filteredMovimientos = useMemo(() => {
+    if (!movSearch.trim()) return movimientos;
+    const q = movSearch.toLowerCase();
+    return movimientos.filter(
+      (m: any) =>
+        m.Descripcion?.toLowerCase().includes(q) ||
+        m.Comprobante?.Numero?.toString().includes(q),
+    );
+  }, [movimientos, movSearch]);
+
+  const paginatedMovimientos = useMemo(() => {
+    const start = (movPage - 1) * MOV_LIMIT;
+    return filteredMovimientos.slice(start, start + MOV_LIMIT);
+  }, [filteredMovimientos, movPage]);
+
+  const movPaginationMeta = useMemo(
+    () => ({
+      total: filteredMovimientos.length,
+      page: movPage,
+      limit: MOV_LIMIT,
+      totalPages: Math.max(
+        1,
+        Math.ceil(filteredMovimientos.length / MOV_LIMIT),
+      ),
+    }),
+    [filteredMovimientos.length, movPage],
+  );
+
+  // Gastos: búsqueda y paginación local
+  const [gastoSearch, setGastoSearch] = useState("");
+  const [gastoPage, setGastoPage] = useState(1);
+  const GASTO_LIMIT = 10;
+
+  const filteredGastos = useMemo(() => {
+    if (!gastoSearch.trim()) return gastos;
+    const q = gastoSearch.toLowerCase();
+    return gastos.filter(
+      (g: any) =>
+        g.Descripcion?.toLowerCase().includes(q) ||
+        g.ConceptoGastos?.Descripcion?.toLowerCase().includes(q),
+    );
+  }, [gastos, gastoSearch]);
+
+  const paginatedGastos = useMemo(() => {
+    const start = (gastoPage - 1) * GASTO_LIMIT;
+    return filteredGastos.slice(start, start + GASTO_LIMIT);
+  }, [filteredGastos, gastoPage]);
+
+  const gastoPaginationMeta = useMemo(
+    () => ({
+      total: filteredGastos.length,
+      page: gastoPage,
+      limit: GASTO_LIMIT,
+      totalPages: Math.max(1, Math.ceil(filteredGastos.length / GASTO_LIMIT)),
+    }),
+    [filteredGastos.length, gastoPage],
+  );
+
   const handleAbrirCaja = async () => {
     const monto = parseFloat(montoInicial.replace(",", "."));
     if (!montoInicial || isNaN(monto) || monto < 0) return;
@@ -265,6 +363,133 @@ export default function CajaActual() {
       setIsLoadingTicket(false);
     }
   };
+
+  const renderMovCell = useCallback(
+    (mov: any, columnKey: React.Key) => {
+      switch (columnKey) {
+        case "fecha":
+          return formatDate(mov.Fecha);
+        case "descripcion":
+          return (
+            <div className="flex flex-col">
+              <span className="text-sm font-medium">{mov.Descripcion}</span>
+              {mov.Comprobante && (
+                <span className="text-xs text-gray-400">
+                  Comp. #{mov.Comprobante.Numero}
+                </span>
+              )}
+            </div>
+          );
+        case "tipo":
+          return (
+            <Chip
+              size="sm"
+              variant="flat"
+              color={
+                mov.TipoMovimiento === TIPO_MOVIMIENTO.ENTRADA
+                  ? "success"
+                  : "danger"
+              }
+            >
+              {mov.TipoMovimiento === TIPO_MOVIMIENTO.ENTRADA
+                ? "Entrada"
+                : "Salida"}
+            </Chip>
+          );
+        case "monto":
+          return (
+            <span
+              className={`font-semibold ${mov.TipoMovimiento === TIPO_MOVIMIENTO.ENTRADA ? "text-success" : "text-danger"}`}
+            >
+              {mov.TipoMovimiento === TIPO_MOVIMIENTO.ENTRADA ? "+" : "-"}
+              {formatMoney(mov.Monto)}
+            </span>
+          );
+        case "acciones":
+          return mov.ComprobanteId ? (
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              onPress={() => handleViewTicket(mov.ComprobanteId)}
+            >
+              <Eye size={18} className="text-gray-500" />
+            </Button>
+          ) : (
+            <span className="text-gray-300">-</span>
+          );
+        default:
+          return null;
+      }
+    },
+    [handleViewTicket],
+  );
+
+  const renderGastoCell = useCallback(
+    (gasto: any, columnKey: React.Key) => {
+      switch (columnKey) {
+        case "descripcion":
+          return (
+            <span className="text-sm font-medium text-gray-800">
+              {gasto.Descripcion}
+            </span>
+          );
+        case "concepto":
+          return (
+            <Chip size="sm" variant="flat" color="danger" className="text-xs">
+              {gasto.ConceptoGastos?.Descripcion || "Gasto"}
+            </Chip>
+          );
+        case "formaPago":
+          return (
+            <div className="flex flex-wrap gap-1">
+              {gasto.FormaPago?.map((p: any) => (
+                <Chip key={p.Id} size="sm" variant="flat" className="text-xs">
+                  {TIPO_PAGO_LABELS[p.TipoPago]}
+                </Chip>
+              ))}
+            </div>
+          );
+        case "fecha":
+          return formatDate(gasto.Fecha);
+        case "monto":
+          return (
+            <span className="font-semibold text-danger">
+              -{formatMoney(gasto.Monto)}
+            </span>
+          );
+        case "acciones":
+          return (
+            <div className="flex gap-1 justify-center">
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                color="warning"
+                onPress={() => prepareEditGasto(gasto)}
+              >
+                <Pencil size={16} />
+              </Button>
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                color="danger"
+                onPress={() => {
+                  setGastoToDelete(gasto.Id);
+                  onDeleteOpen();
+                }}
+              >
+                <Trash2 size={16} />
+              </Button>
+            </div>
+          );
+        default:
+          return null;
+      }
+    },
+    [prepareEditGasto],
+  );
 
   const formatMoney = (val: number) =>
     val.toLocaleString("es-AR", {
@@ -446,59 +671,61 @@ export default function CajaActual() {
         <TrendingUp size={20} className="text-green-500" />
         Entradas del dia
       </h1>
-      <div className="flex flex-row gap-4">
-        <Card className="bg-primary-50 border-none shadow-sm w-full">
-          <CardBody className="flex flex-row items-center gap-4">
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Efectivo</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {formatMoney(cajaActual.TotalEntradaEfectivo)}
-              </p>
-            </div>
-          </CardBody>
-        </Card>
-        <Card className="bg-primary-50 border-none shadow-sm w-full">
-          <CardBody className="flex flex-row items-center gap-4">
-            <div>
-              <p className="text-sm text-gray-500 font-medium">
-                Cuenta Corriente
-              </p>
-              <p className="text-2xl font-bold text-gray-800">
-                {formatMoney(cajaActual.TotalEntradaCtaCte)}
-              </p>
-            </div>
-          </CardBody>
-        </Card>
-        <Card className="bg-primary-50 border-none shadow-sm w-full">
-          <CardBody className="flex flex-row items-center gap-4">
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Transferencia</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {formatMoney(cajaActual.TotalEntradaTransf)}
-              </p>
-            </div>
-          </CardBody>
-        </Card>
-        <Card className="bg-primary-50 border-none shadow-sm w-full">
-          <CardBody className="flex flex-row items-center gap-4">
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Tarjeta</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {formatMoney(cajaActual.TotalEntradaTarjeta)}
-              </p>
-            </div>
-          </CardBody>
-        </Card>
-        <Card className="bg-primary-50 border-none shadow-sm w-full">
-          <CardBody className="flex flex-row items-center gap-4">
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Cheque</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {formatMoney(cajaActual.TotalEntradaCheque)}
-              </p>
-            </div>
-          </CardBody>
-        </Card>
+      <div className="flex flex-row sm:flex-nowrap flex-wrap gap-4">
+        <StatCard
+          title="Efectivo"
+          value={formatMoney(cajaActual.TotalEntradaEfectivo)}
+          subtitle="Entradas del dia"
+          icon={Banknote}
+          colorScheme="white"
+          iconColor="#14c187"
+          delay={0.1}
+          progressPercent={75}
+        />
+
+        <StatCard
+          title="Tarjeta"
+          value={formatMoney(cajaActual.TotalEntradaTarjeta)}
+          subtitle="Entradas del dia"
+          icon={CreditCard}
+          colorScheme="white"
+          iconColor="#2b7fff"
+          delay={0.1}
+          progressPercent={75}
+        />
+
+        <StatCard
+          title="Transferencia"
+          value={formatMoney(cajaActual.TotalEntradaTransf)}
+          subtitle="Entradas del dia"
+          icon={ArrowRightLeft}
+          colorScheme="white"
+          iconColor="#ad46ff"
+          delay={0.1}
+          progressPercent={75}
+        />
+
+        <StatCard
+          title="Cheque"
+          value={formatMoney(cajaActual.TotalEntradaCheque)}
+          subtitle="Entradas del dia"
+          icon={Wallet}
+          colorScheme="white"
+          iconColor="#7dbbcc"
+          delay={0.1}
+          progressPercent={75}
+        />
+
+        <StatCard
+          title="Cuenta Corriente"
+          value={formatMoney(cajaActual.TotalEntradaCtaCte)}
+          subtitle="Entradas del dia"
+          icon={Wallet}
+          colorScheme="white"
+          iconColor="#ff6900"
+          delay={0.1}
+          progressPercent={75}
+        />
       </div>
 
       {/* Salidas del dia */}
@@ -506,259 +733,123 @@ export default function CajaActual() {
         <TrendingDown size={20} className="text-red-500" />
         Salidas del dia
       </h1>
-      <div className="flex flex-row gap-4">
-        <Card className="bg-primary-50 border-none shadow-sm w-full">
-          <CardBody className="flex flex-row items-center gap-4">
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Efectivo</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {formatMoney(cajaActual.TotalSalidaEfectivo)}
-              </p>
-            </div>
-          </CardBody>
-        </Card>
-        <Card className="bg-primary-50 border-none shadow-sm w-full">
-          <CardBody className="flex flex-row items-center gap-4">
-            <div>
-              <p className="text-sm text-gray-500 font-medium">
-                Cuenta Corriente
-              </p>
-              <p className="text-2xl font-bold text-gray-800">
-                {formatMoney(cajaActual.TotalSalidaCtaCte)}
-              </p>
-            </div>
-          </CardBody>
-        </Card>
-        <Card className="bg-primary-50 border-none shadow-sm w-full">
-          <CardBody className="flex flex-row items-center gap-4">
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Transferencia</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {formatMoney(cajaActual.TotalSalidaTransf)}
-              </p>
-            </div>
-          </CardBody>
-        </Card>
-        <Card className="bg-primary-50 border-none shadow-sm w-full">
-          <CardBody className="flex flex-row items-center gap-4">
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Tarjeta</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {formatMoney(cajaActual.TotalSalidaTarjeta)}
-              </p>
-            </div>
-          </CardBody>
-        </Card>
-        <Card className="bg-primary-50 border-none shadow-sm w-full">
-          <CardBody className="flex flex-row items-center gap-4">
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Cheque</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {formatMoney(cajaActual.TotalSalidaCheque)}
-              </p>
-            </div>
-          </CardBody>
-        </Card>
+      <div className="flex flex-row gap-4 sm:flex-nowrap flex-wrap">
+        <StatCard
+          title="Efectivo"
+          value={formatMoney(cajaActual.TotalSalidaEfectivo)}
+          subtitle="Salidas del dia"
+          icon={Banknote}
+          colorScheme="white"
+          iconColor="#14c187"
+          delay={0.1}
+          progressPercent={75}
+        />
+
+        <StatCard
+          title="Tarjeta"
+          value={formatMoney(cajaActual.TotalSalidaTarjeta)}
+          subtitle="Salidas del dia"
+          icon={CreditCard}
+          colorScheme="white"
+          iconColor="#2b7fff"
+          delay={0.1}
+          progressPercent={75}
+        />
+
+        <StatCard
+          title="Transferencia"
+          value={formatMoney(cajaActual.TotalSalidaTransf)}
+          subtitle="Salidas del dia"
+          icon={ArrowRightLeft}
+          colorScheme="white"
+          iconColor="#ad46ff"
+          delay={0.1}
+          progressPercent={75}
+        />
+
+        <StatCard
+          title="Cheque"
+          value={formatMoney(cajaActual.TotalSalidaCheque)}
+          subtitle="Salidas del dia"
+          icon={Wallet}
+          colorScheme="white"
+          iconColor="#7dbbcc"
+          delay={0.1}
+          progressPercent={75}
+        />
+
+        <StatCard
+          title="Cuenta Corriente"
+          value={formatMoney(cajaActual.TotalSalidaCtaCte)}
+          subtitle="Salidas del dia"
+          icon={Wallet}
+          colorScheme="white"
+          iconColor="#ff6900"
+          delay={0.1}
+          progressPercent={75}
+        />
       </div>
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Movements Table Section */}
-        <div className="flex-1 flex flex-col gap-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <FileText size={20} />
-              Movimientos
-            </h3>
-            <Button
-              size="sm"
-              variant="flat"
-              startContent={
-                <RefreshCcw
-                  size={16}
-                  className={isFetching ? "animate-spin" : ""}
-                />
-              }
-              onPress={() => refetch()}
-            >
-              Actualizar
-            </Button>
 
-            <Button
-              size="sm"
-              color="danger"
-              variant="flat"
-              startContent={<Lock size={16} />}
-              onPress={onCerrarOpen}
-            >
-              Cerrar Caja
-            </Button>
-          </div>
+      {/* Movements Table Section */}
+      <GenericTable
+        data={paginatedMovimientos}
+        columns={movimientosColumns}
+        isLoading={false}
+        isError={false}
+        search={movSearch}
+        onSearchChange={(val) => {
+          setMovSearch(val);
+          setMovPage(1);
+        }}
+        searchPlaceholder="Buscar movimiento..."
+        page={movPage}
+        onPageChange={setMovPage}
+        paginationMeta={movPaginationMeta}
+        isRefreshing={isFetching}
+        onRefresh={refetch}
+        renderCell={renderMovCell}
+        emptyText="No hay movimientos registrados."
+        printConfig={{ title: "Movimientos de Caja" }}
+        extraSearchContent={
+          <Button
+            size="sm"
+            color="danger"
+            variant="flat"
+            startContent={<Lock size={16} />}
+            onPress={onCerrarOpen}
+          >
+            Cerrar Caja
+          </Button>
+        }
+      />
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <Table
-              aria-label="Movimientos de caja"
-              removeWrapper
-              classNames={{
-                th: "bg-gray-50 text-gray-500 font-medium",
-                td: "py-3",
-              }}
-            >
-              <TableHeader>
-                <TableColumn>FECHA</TableColumn>
-                <TableColumn>DESCRIPCIÓN</TableColumn>
-                <TableColumn>TIPO</TableColumn>
-                <TableColumn align="end">MONTO</TableColumn>
-                <TableColumn align="center">ACCIONES</TableColumn>
-              </TableHeader>
-              <TableBody emptyContent="No hay movimientos registrados.">
-                {movimientos.map((mov) => (
-                  <TableRow key={mov.Id}>
-                    <TableCell>{formatDate(mov.Fecha)}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">
-                          {mov.Descripcion}
-                        </span>
-                        {mov.Comprobante && (
-                          <span className="text-xs text-gray-400">
-                            Comp. #{mov.Comprobante.Numero}
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        size="sm"
-                        variant="flat"
-                        color={
-                          mov.TipoMovimiento === TIPO_MOVIMIENTO.ENTRADA
-                            ? "success"
-                            : "danger"
-                        }
-                      >
-                        {mov.TipoMovimiento === TIPO_MOVIMIENTO.ENTRADA
-                          ? "Entrada"
-                          : "Salida"}
-                      </Chip>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`font-semibold ${mov.TipoMovimiento === TIPO_MOVIMIENTO.ENTRADA ? "text-success" : "text-danger"}`}
-                      >
-                        {mov.TipoMovimiento === TIPO_MOVIMIENTO.ENTRADA
-                          ? "+"
-                          : "-"}
-                        {formatMoney(mov.Monto)}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {mov.ComprobanteId ? (
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          variant="light"
-                          onPress={() => handleViewTicket(mov.ComprobanteId)}
-                        >
-                          <Eye size={18} className="text-gray-500" />
-                        </Button>
-                      ) : (
-                        <span className="text-gray-300">-</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-
-        {/* Expenses Side Section */}
-        <div className="w-full lg:w-[350px] flex flex-col gap-4">
-          <div className="flex justify-between items-center ">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <TrendingUp size={20} className="text-rose-500" />
-              Gastos
-            </h3>
-            <Button
-              size="sm"
-              color="danger"
-              variant="flat"
-              startContent={<Plus size={16} />}
-              onPress={() => {
-                setEditingGastoId(null);
-                setNuevoGasto({ conceptoId: "", descripcion: "", pagos: [] });
-                onGastoOpen();
-              }}
-            >
-              Nuevo
-            </Button>
-          </div>
-
-          <div className="flex flex-col gap-3 h-full">
-            {gastos.length === 0 ? (
-              <div className="p-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200 text-gray-400 h-full">
-                <p className="text-sm">No hay gastos registrados</p>
-              </div>
-            ) : (
-              gastos.map((g) => (
-                <div
-                  key={g.Id}
-                  className="p-3 bg-red-50/50 border border-red-100 rounded-xl flex justify-between items-center group relative"
-                >
-                  <div className="absolute right-2 top-2 hidden group-hover:flex gap-1 bg-white/80 p-1 rounded-lg backdrop-blur-sm shadow-sm transition-all z-10">
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      color="warning"
-                      onPress={() => prepareEditGasto(g)}
-                    >
-                      <Pencil size={14} />
-                    </Button>
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      color="danger"
-                      onPress={() => {
-                        setGastoToDelete(g.Id);
-                        onDeleteOpen();
-                      }}
-                    >
-                      <Trash2 size={14} />
-                    </Button>
-                  </div>
-                  <div>
-                    <div>
-                      <p className="font-medium text-gray-800">
-                        {g.Descripcion}
-                      </p>
-                      {g.FormaPago?.map((p) => (
-                        <span
-                          key={p.Id}
-                          className="text-xs px-2 mr-2 bg-gray-200 rounded-xl text-black"
-                        >
-                          {TIPO_PAGO_LABELS[p.TipoPago]}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex gap-2 items-center mt-1">
-                      <span className="text-xs text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full">
-                        {g.ConceptoGastos?.Descripcion || "Gasto"}
-                      </span>
-                      <span className="text-xs text-gray-400">
-                        {formatDate(g.Fecha)}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="font-bold text-rose-600">
-                    -{formatMoney(g.Monto)}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Gastos Table Section */}
+      <GenericTable
+        data={paginatedGastos}
+        columns={gastosColumns}
+        isLoading={false}
+        isError={false}
+        search={gastoSearch}
+        onSearchChange={(val) => {
+          setGastoSearch(val);
+          setGastoPage(1);
+        }}
+        searchPlaceholder="Buscar gasto..."
+        page={gastoPage}
+        onPageChange={setGastoPage}
+        paginationMeta={gastoPaginationMeta}
+        isRefreshing={isFetching}
+        onRefresh={refetch}
+        renderCell={renderGastoCell}
+        emptyText="No hay gastos registrados."
+        printConfig={{ title: "Gastos de Caja" }}
+        onNewClick={() => {
+          setEditingGastoId(null);
+          setNuevoGasto({ conceptoId: "", descripcion: "", pagos: [] });
+          onGastoOpen();
+        }}
+        newButtonText="Nuevo Gasto"
+      />
 
       {/* Modal Nuevo Gasto */}
       <Modal isOpen={isGastoOpen} onOpenChange={onGastoChange} size="2xl">

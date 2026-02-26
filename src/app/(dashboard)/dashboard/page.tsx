@@ -82,7 +82,7 @@ export default function DashboardPage() {
   const { user, currentBranch } = useUserStore();
 
   return (
-    <div className="sm:pb-0 pb-10 max-w-7xl mx-auto sm:py-8 px-2 sm:px-6 flex flex-col items-stretch  h-auto">
+    <div className="max-w-7xl mx-auto py-2 sm:py-8 px-2 sm:px-6 flex flex-col items-stretch h-full">
       {/* Header */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
@@ -160,7 +160,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Graficos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 ">
         {/* Productos mas vendidos del dia */}
         <TopProductosChart
           datos={MOCK_TOP_PRODUCTS}
