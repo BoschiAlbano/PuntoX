@@ -3,12 +3,50 @@
 import ClienteCRUD from "@/components/clientes/ClienteCRUD";
 import CuentasCorrientesCRUD from "@/components/clientes/CuentasCorrientesCRUD";
 import { Tab, Tabs } from "@heroui/react";
+import { CrudHeader } from "@/components/shared/CrudHeader";
+import { useState } from "react";
 
 export default function ClientesPage() {
+  const [selected, setSelected] = useState<"clientes" | "cuentas-corrientes">(
+    "clientes",
+  );
+
+  const headerConfig: Record<
+    "clientes" | "cuentas-corrientes",
+    { title: string; description: string; eyebrowLabel: string; iconSrc?: string }
+  > = {
+    clientes: {
+      title: "Clientes",
+      description:
+        "Administra la información de tus clientes, sus datos de contacto y condiciones de cuenta corriente.",
+      eyebrowLabel: "Catálogo",
+      iconSrc: "/clientes-placeholder.svg",
+    },
+    "cuentas-corrientes": {
+      title: "Cuentas Corrientes",
+      description:
+        "Consulta los movimientos y registra pagos en las cuentas corrientes de tus clientes.",
+      eyebrowLabel: "Finanzas",
+      iconSrc: "/cta-cte-placeholder.svg",
+    },
+  };
+
+  const currentHeader = headerConfig[selected];
+
   return (
     <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center h-full">
+      <CrudHeader
+        title={currentHeader.title}
+        description={currentHeader.description}
+        eyebrowLabel={currentHeader.eyebrowLabel}
+        iconSrc={currentHeader.iconSrc}
+      />
       <Tabs
         aria-label="Options"
+        selectedKey={selected}
+        onSelectionChange={(key) =>
+          setSelected(key as "clientes" | "cuentas-corrientes")
+        }
         className="relative"
         classNames={{
           tabList:

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { Tabs, Tab } from "@heroui/react";
@@ -7,20 +7,62 @@ import { VentasTab } from "@/components/configuracion/VentasTab";
 import { NotificacionesTab } from "@/components/configuracion/NotificacionesTab";
 import { SeguridadTab } from "@/components/configuracion/SeguridadTab";
 import { FiscalTab } from "@/components/configuracion/FiscalTab";
+import { CrudHeader } from "@/components/shared/CrudHeader";
 
 export default function ConfiguracionPage() {
   const [activeTab, setActiveTab] = useState("perfil");
 
+  const headerConfig: Record<
+    string,
+    { title: string; description: string; eyebrowLabel: string; iconSrc?: string }
+  > = {
+    perfil: {
+      title: "Configuración",
+      description:
+        "Administra los datos de tu negocio y la configuración general del sistema.",
+      eyebrowLabel: "Ajustes",
+      iconSrc: "/config-perfil-placeholder.svg",
+    },
+    ventas: {
+      title: "Preferencias de Venta",
+      description:
+        "Definí cómo se comportan los comprobantes, precios y reglas de venta.",
+      eyebrowLabel: "Ajustes",
+      iconSrc: "/config-ventas-placeholder.svg",
+    },
+    notificaciones: {
+      title: "Notificaciones",
+      description:
+        "Configura qué avisos recibir y cómo se notifican los eventos importantes.",
+      eyebrowLabel: "Ajustes",
+      iconSrc: "/config-notificaciones-placeholder.svg",
+    },
+    seguridad: {
+      title: "Seguridad y Acceso",
+      description:
+        "Gestioná las políticas de seguridad, acceso y protección de cuentas.",
+      eyebrowLabel: "Seguridad",
+      iconSrc: "/config-seguridad-placeholder.svg",
+    },
+    fiscal: {
+      title: "Facturación y Región",
+      description:
+        "Configurá los datos fiscales, tipos de comprobante y parámetros impositivos.",
+      eyebrowLabel: "Fiscal",
+      iconSrc: "/config-fiscal-placeholder.svg",
+    },
+  };
+
+  const currentHeader = headerConfig[activeTab] ?? headerConfig.perfil;
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Configuración</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Administre la configuración general de su negocio y preferencias del
-          sistema
-        </p>
-      </div>
+      <CrudHeader
+        title={currentHeader.title}
+        description={currentHeader.description}
+        eyebrowLabel={currentHeader.eyebrowLabel}
+        iconSrc={currentHeader.iconSrc}
+      />
 
       <Tabs
         aria-label="Configuración"

@@ -1,17 +1,53 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 import { Tabs, Tab } from "@heroui/react";
 import UsuariosCRUD from "@/components/empleados/UsuariosCRUD";
 import RolesCRUD from "@/components/empleados/RolesCRUD";
 import AuditoriasCRUD from "@/components/empleados/AuditoriasCRUD";
+import { CrudHeader } from "@/components/shared/CrudHeader";
 
 export default function EmpleadosPage() {
   const [selected, setSelected] = useState<"usuarios" | "roles" | "auditoria">(
     "usuarios",
   );
 
+  const headerConfig: Record<
+    "usuarios" | "roles" | "auditoria",
+    { title: string; description: string; eyebrowLabel: string; iconSrc?: string }
+  > = {
+    usuarios: {
+      title: "Empleados",
+      description:
+        "Gestioná los usuarios del sistema, sus roles, accesos y datos de contacto.",
+      eyebrowLabel: "Equipo",
+      iconSrc: "/empleados-usuarios-placeholder.svg",
+    },
+    roles: {
+      title: "Roles y Permisos",
+      description:
+        "Definí roles y permisos para controlar qué puede hacer cada usuario dentro del sistema.",
+      eyebrowLabel: "Seguridad",
+      iconSrc: "/empleados-roles-placeholder.svg",
+    },
+    auditoria: {
+      title: "Auditoría de Actividad",
+      description:
+        "Revisa el historial de acciones realizadas por los usuarios para tener trazabilidad y seguridad.",
+      eyebrowLabel: "Auditoría",
+      iconSrc: "/empleados-auditoria-placeholder.svg",
+    },
+  };
+
+  const currentHeader = headerConfig[selected];
+
   return (
     <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch h-full">
+      <CrudHeader
+        title={currentHeader.title}
+        description={currentHeader.description}
+        eyebrowLabel={currentHeader.eyebrowLabel}
+        iconSrc={currentHeader.iconSrc}
+      />
       <Tabs
         aria-label="Opciones de empleados"
         selectedKey={selected}

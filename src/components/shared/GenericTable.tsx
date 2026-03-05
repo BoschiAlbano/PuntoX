@@ -729,7 +729,7 @@ export default function GenericTable<T extends { Id: number | string }>({
             </Table>
             )}
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 border-t border-slate-200/80 bg-slate-50/50 rounded-b-xl print:hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-t border-slate-200/80 bg-slate-50/50 rounded-b-xl print:hidden">
             {isLoading ? (
               <section className="relative w-full flex flex-col sm:gap-0 gap-2 items-center">
                 <div className="flex gap-2">
@@ -751,12 +751,33 @@ export default function GenericTable<T extends { Id: number | string }>({
                 </span>
               </section>
             ) : !isLoading && !isError ? (
-              <>
-                <span className="text-slate-700 font-medium text-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-3">
+                {/* Conteo de registros - alineado a la izquierda */}
+                <span className="text-slate-700 font-medium text-sm min-w-[160px]">
                   {`${data.length} de ${paginationMeta.total} registros`}
                 </span>
-                <div className="flex items-center gap-3">
-                  {onLimitChange && (
+
+                {/* Paginación centrada */}
+                <div className="flex-1 flex justify-center">
+                  <Pagination
+                    showControls
+                    page={page}
+                    total={paginationMeta.totalPages}
+                    onChange={onPageChange}
+                    size={window.innerWidth < 640 ? "sm" : "md"}
+                    classNames={{
+                      cursor: "bg-[#67afc3]/90 text-white shadow-none ",
+                      item: "bg-transparent shadow-none cursor-pointer text-sm sm:text-md",
+                      next: "cursor-pointer",
+                      prev: "cursor-pointer",
+                      wrapper: "gap-1",
+                    }}
+                  />
+                </div>
+
+                {/* Selector de filas por página - alineado a la derecha */}
+                {onLimitChange && (
+                  <div className="flex justify-end min-w-[140px]">
                     <label className="flex items-center gap-2 text-sm text-slate-600">
                       <span>Filas:</span>
                       <select
@@ -776,23 +797,9 @@ export default function GenericTable<T extends { Id: number | string }>({
                         {showAllOption && <option value={9999}>Todas</option>}
                       </select>
                     </label>
-                  )}
-                  <Pagination
-                    showControls
-                    page={page}
-                    total={paginationMeta.totalPages}
-                    onChange={onPageChange}
-                    size={window.innerWidth < 640 ? "sm" : "md"}
-                    classNames={{
-                      cursor: "bg-[#67afc3]/90 text-white shadow-none ",
-                      item: "bg-transparent shadow-none cursor-pointer text-sm sm:text-md",
-                      next: "cursor-pointer",
-                      prev: "cursor-pointer",
-                      wrapper: "gap-1",
-                    }}
-                  />
-                </div>
-              </>
+                  </div>
+                )}
+              </div>
             ) : null}
           </div>
         </div>

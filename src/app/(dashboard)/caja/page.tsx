@@ -3,12 +3,50 @@
 import CajaActual from "@/components/caja/CajaActual";
 import Cajas from "@/components/caja/Cajas";
 import { Tab, Tabs } from "@heroui/react";
+import { CrudHeader } from "@/components/shared/CrudHeader";
+import { useState } from "react";
 
 export default function CajaPage() {
+  const [selected, setSelected] = useState<"caja-actual" | "cajas">(
+    "caja-actual",
+  );
+
+  const headerConfig: Record<
+    "caja-actual" | "cajas",
+    { title: string; description: string; eyebrowLabel: string; iconSrc?: string }
+  > = {
+    "caja-actual": {
+      title: "Caja Actual",
+      description:
+        "Controlá los movimientos y saldos de la caja que está abierta en este momento.",
+      eyebrowLabel: "Caja",
+      iconSrc: "/caja-actual-placeholder.svg",
+    },
+    cajas: {
+      title: "Historial de Cajas",
+      description:
+        "Revisa el historial de cajas, arqueos y cierres para tener trazabilidad de tu dinero.",
+      eyebrowLabel: "Caja",
+      iconSrc: "/caja-historial-placeholder.svg",
+    },
+  };
+
+  const currentHeader = headerConfig[selected];
+
   return (
     <div className="max-w-7xl mx-auto py-2 sm:py-8 px-2 sm:px-6 flex flex-col items-stretch h-full">
+      <CrudHeader
+        title={currentHeader.title}
+        description={currentHeader.description}
+        eyebrowLabel={currentHeader.eyebrowLabel}
+        iconSrc={currentHeader.iconSrc}
+      />
       <Tabs
         aria-label="Options"
+        selectedKey={selected}
+        onSelectionChange={(key) =>
+          setSelected(key as "caja-actual" | "cajas")
+        }
         className="relative"
         classNames={{
           tabList:

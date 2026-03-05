@@ -6,14 +6,57 @@ import RubroCRUD from "@/components/rubros/RubroCRUD";
 import UnidadMedidaCRUD from "@/components/unidad-medida/UnidadMedidaCRUD";
 import MarcaCRUD from "@/components/marcas/MarcaCRUD";
 import { useState } from "react";
+import { CrudHeader } from "@/components/shared/CrudHeader";
 
 export default function ProductosPage() {
   const [selected, setSelected] = useState<
     "productos" | "marcas" | "rubros" | "unidades"
   >("productos");
 
+  const headerConfig: Record<
+    "productos" | "marcas" | "rubros" | "unidades",
+    { title: string; description: string; eyebrowLabel: string; iconSrc?: string }
+  > = {
+    productos: {
+      title: "Productos",
+      description:
+        "Administra el catálogo de productos, controlá sus precios y mantené el stock actualizado en cada sucursal.",
+      eyebrowLabel: "Catálogo",
+      iconSrc: "/producto-placeholder.svg",
+    },
+    marcas: {
+      title: "Marcas",
+      description:
+        "Gestioná las marcas asociadas a tus productos para mantener un catálogo ordenado y fácil de filtrar.",
+      eyebrowLabel: "Catálogo",
+      iconSrc: "/marca-placeholder.svg",
+    },
+    rubros: {
+      title: "Rubros",
+      description:
+        "Definí los rubros y categorías que te ayudan a agrupar y encontrar rápidamente tus productos.",
+      eyebrowLabel: "Catálogo",
+      iconSrc: "/rubro-placeholder.svg",
+    },
+    unidades: {
+      title: "Unidades de Medida",
+      description:
+        "Configurá las unidades de medida que usás para vender, comprar y controlar el stock de tus productos.",
+      eyebrowLabel: "Configuración",
+      iconSrc: "/unidad-placeholder.svg",
+    },
+  };
+
+  const currentHeader = headerConfig[selected];
+
   return (
     <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch h-full ">
+      <CrudHeader
+        title={currentHeader.title}
+        description={currentHeader.description}
+        iconSrc={currentHeader.iconSrc}
+        eyebrowLabel={currentHeader.eyebrowLabel}
+      />
       <Tabs
         aria-label="Options"
         selectedKey={selected}
