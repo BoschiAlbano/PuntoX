@@ -323,20 +323,20 @@ export default function VentaFooter({
     }
   };
 
-  const getTipoIcon = (tipo: number) => {
+  const getTipoIcon = (tipo: number, size: number = 16) => {
     switch (tipo) {
       case TIPO_PAGO.EFECTIVO:
-        return <Banknote size={16} className="text-emerald-500" />;
+        return <Banknote size={size} className="text-emerald-500" />;
       case TIPO_PAGO.TARJETA:
-        return <CreditCard size={16} className="text-blue-500" />;
+        return <CreditCard size={size} className="text-blue-500" />;
       case TIPO_PAGO.TRANSFERENCIA:
-        return <ArrowRightLeft size={16} className="text-purple-500" />;
+        return <ArrowRightLeft size={size} className="text-purple-500" />;
       case TIPO_PAGO.CHEQUE:
-        return <Wallet size={16} className="text-orange-500" />;
+        return <Wallet size={size} className="text-orange-500" />;
       case TIPO_PAGO.CUENTA_CORRIENTE:
-        return <Wallet size={16} className="text-slate-500" />;
+        return <Wallet size={size} className="text-slate-500" />;
       default:
-        return <Wallet size={16} className="text-slate-500" />;
+        return <Wallet size={size} className="text-slate-500" />;
     }
   };
 
@@ -364,10 +364,10 @@ export default function VentaFooter({
   }, [paymentOptions, currentTipo]);
 
   return (
-    <section className="flex-1 flex flex-col gap-4">
+    <section className="flex-1 flex flex-col gap-2">
       {/* Payment Methods Section */}
-      <div className="flex-1 rounded-2xl border border-slate-100 flex flex-col shadow-sm">
-        <div className="px-3 pt-2 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center shrink-0">
+      <div className="flex-1 rounded-xl border border-slate-100 flex flex-col shadow-sm">
+        <div className="px-2 pt-1 pb-1 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center shrink-0 min-h-[28px]">
           {/* Margen Disponible Indicator */}
           {currentTipo === TIPO_PAGO.CUENTA_CORRIENTE &&
             cliente?.Persona_Cliente?.ActivarCtaCte && (
@@ -396,22 +396,23 @@ export default function VentaFooter({
             )}
         </div>
 
-        <div className="p-3 flex flex-col gap-3 flex-1">
+        <div className="p-2 flex flex-col gap-2 flex-1">
           {/* Payment Input Group */}
           <div className="flex gap-2 items-end shrink-0">
             <Select
               label="Método"
               selectedKeys={[currentTipo.toString()]}
               onChange={(e) => setCurrentTipo(Number(e.target.value))}
-              className="flex-2"
+              className="flex-2 max-w-[120px]"
               size="sm"
               variant="flat"
               classNames={{
-                trigger: "shadow-sm rounded-xl bg-transparent",
+                trigger: "shadow-sm rounded-lg bg-transparent h-10 min-h-10",
+                label: "text-xs",
               }}
             >
               {paymentOptions.map((option) => (
-                <SelectItem key={option.key} textValue={option.label}>
+                <SelectItem key={option.key} textValue={option.label} className="text-xs">
                   {option.label}
                 </SelectItem>
               ))}
@@ -421,12 +422,14 @@ export default function VentaFooter({
               type="number"
               value={currentMonto}
               onValueChange={setCurrentMonto}
-              startContent={<span className="text-slate-400 text-sm">$</span>}
+              startContent={<span className="text-slate-400 text-xs">$</span>}
               className="flex-[1.5]"
               size="sm"
               variant="flat"
               classNames={{
-                inputWrapper: "shadow-sm rounded-xl bg-transparent",
+                inputWrapper: "shadow-sm rounded-lg bg-transparent h-10 min-h-10",
+                label: "text-xs",
+                input: "text-xs",
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAddPayment();
@@ -434,39 +437,39 @@ export default function VentaFooter({
             />
             <Button
               isIconOnly
-              size="lg"
+              size="sm"
               onPress={handleAddPayment}
-              className="mb-0.5 bg-[#67afc3] text-white rounded-xl"
+              className="h-10 w-10 min-w-10 bg-[#67afc3] text-white rounded-lg"
             >
-              <Plus size={20} />
+              <Plus size={18} />
             </Button>
           </div>
 
           {/* Payment List */}
           <div className="flex-1 overflow-y-auto min-h-0 space-y-1 pr-1 custom-scrollbar">
             {pagos.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-2 min-h-[100px]">
-                <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center">
-                  <span className="text-xl">$</span>
+              <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-1 min-h-[60px]">
+                <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center">
+                  <span className="text-sm">$</span>
                 </div>
-                <span className="text-xs">Agrega un pago</span>
+                <span className="text-[10px]">Agrega un pago</span>
               </div>
             ) : (
               pagos.map((p, idx) => (
                 <div
                   key={idx}
-                  className="group flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all"
+                  className="group flex justify-between items-center px-2 py-1.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                      {getTipoIcon(p.tipoPago)}
+                    <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
+                      {getTipoIcon(p.tipoPago, 12)}
                     </div>
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-xs font-medium text-slate-700">
                       {getTipoLabel(p.tipoPago)}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-slate-800">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-800">
                       $
                       {p.monto.toLocaleString("es-AR", {
                         minimumFractionDigits: 2,
@@ -474,9 +477,9 @@ export default function VentaFooter({
                     </span>
                     <button
                       onClick={() => handleRemovePayment(idx)}
-                      className="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-400 transition-opacity p-1"
+                      className="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-400 transition-opacity p-0.5"
                     >
-                      <X size={14} />
+                      <X size={12} />
                     </button>
                   </div>
                 </div>
@@ -485,13 +488,13 @@ export default function VentaFooter({
           </div>
 
           {/* Remaining / Change Display */}
-          <div className="mt-auto pt-3 border-t border-slate-100 flex justify-between items-end shrink-0">
+          <div className="mt-auto pt-2 border-t border-slate-100 flex justify-between items-end shrink-0">
             {restante > 0.01 ? (
               <>
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
                   Restante
                 </span>
-                <span className="text-lg font-bold text-slate-700">
+                <span className="text-sm font-bold text-slate-700">
                   $
                   {Math.max(0, restante).toLocaleString("es-AR", {
                     minimumFractionDigits: 2,
@@ -500,10 +503,10 @@ export default function VentaFooter({
               </>
             ) : (
               <>
-                <span className="text-xs font-semibold text-emerald-500 uppercase tracking-widest">
+                <span className="text-[10px] font-semibold text-emerald-500 uppercase tracking-widest">
                   Vuelto
                 </span>
-                <span className="text-lg font-bold text-emerald-600">
+                <span className="text-sm font-bold text-emerald-600">
                   $
                   {Math.abs(restante).toLocaleString("es-AR", {
                     minimumFractionDigits: 2,
@@ -516,9 +519,9 @@ export default function VentaFooter({
       </div>
 
       {/* Totals & Actions Card */}
-      <div className=" rounded-2xl border border-slate-100 p-4 shrink-0 flex flex-col gap-4 relative z-10 shadow-sm">
-        <div className="flex flex-col gap-1">
-          <div className="flex justify-between text-sm text-slate-500">
+      <div className="rounded-xl border border-slate-100 p-3 shrink-0 flex flex-col gap-2 relative z-10 shadow-sm">
+        <div className="flex flex-col gap-0.5">
+          <div className="flex justify-between text-xs text-slate-500">
             <span>Subtotal</span>
             <span>
               $
@@ -528,18 +531,18 @@ export default function VentaFooter({
               })}
             </span>
           </div>
-          <div className="flex justify-between items-center text-sm text-slate-500 h-6">
+          <div className="flex justify-between items-center text-xs text-slate-500 h-5">
             <span>Descuento</span>
             <div className="flex items-center gap-2">
               {descuento > 0 && subtotal > 0 && (
-                <span className="text-xs text-red-400">
+                <span className="text-[10px] text-red-400">
                   - $
                   {(subtotal * (descuento / 100)).toLocaleString("es-AR", {
                     minimumFractionDigits: 2,
                   })}
                 </span>
               )}
-              <div className="flex items-center rounded-lg w-16">
+              <div className="flex items-center rounded-lg w-12">
                 <input
                   data-testid="descuento-input"
                   type="number"
@@ -559,31 +562,31 @@ export default function VentaFooter({
 
           <div className="my-2 h-px bg-slate-100 w-full"></div>
 
-          <div className="flex justify-between items-baseline">
-            <span className="text-lg text-slate-800 font-semibold">Total</span>
-            <span className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          <div className="flex justify-between items-baseline mt-1">
+            <span className="text-sm text-slate-800 font-semibold">Total</span>
+            <span className="text-xl font-extrabold text-slate-900 tracking-tight">
               ${total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
             </span>
           </div>
         </div>
 
-        <div className="flex gap-2 mt-2">
+        <div className="flex gap-2">
           <Button
             variant="flat"
-            className="w-12 h-12 min-w-12 rounded-xl bg-white text-gray-400 hover:text-red-600 hover:bg-red-200"
+            className="w-10 h-10 min-w-10 rounded-lg bg-white text-gray-400 hover:text-red-600 hover:bg-red-200"
             isIconOnly
             onPress={handleLimpiar}
             isDisabled={isSaving || items.length === 0}
           >
-            <Trash2 size={20} />
+            <Trash2 size={18} />
           </Button>
 
           {isLoading ? (
-            <Skeleton className="flex-1 rounded-xl h-12" />
+            <Skeleton className="flex-1 rounded-lg h-10" />
           ) : cajaActual ? (
             <Button
-              size="lg"
-              className="flex-1 bg-[#182337] text-white font-bold rounded-xl transition-all active:scale-[0.98]"
+              size="sm"
+              className="flex-1 h-10 bg-[#182337] text-white font-bold rounded-lg transition-all active:scale-[0.98] text-xs"
               onPress={handleFinalizeSale}
               isLoading={isSaving}
               isDisabled={Math.abs(restante) > 0.01 || items.length === 0}
@@ -594,9 +597,9 @@ export default function VentaFooter({
             </Button>
           ) : (
             <Button
-              size="lg"
+              size="sm"
               color="warning"
-              className="flex-1 font-bold text-white rounded-xl"
+              className="flex-1 h-10 font-bold text-white rounded-lg text-xs"
               onPress={() => setOpenModalAbrirCaja(true)}
             >
               ABRIR CAJA

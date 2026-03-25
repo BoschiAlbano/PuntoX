@@ -25,7 +25,7 @@ export default function VentaGrid({
   onRemoveItem,
 }: VentaGridProps) {
   return (
-    <div className="flex-1 overflow-hidden  py-3 rounded-2xl border border-slate-100 flex flex-col justify-start shadow-sm min-h-[200px]">
+    <div className="flex-1 overflow-hidden py-1.5 rounded-xl border border-slate-100 flex flex-col justify-start shadow-sm min-h-[150px]">
       <Table
         aria-label="Detalle de venta"
         removeWrapper
@@ -33,9 +33,9 @@ export default function VentaGrid({
           base: "h-full flex flex-col overflow-hidden",
           table: "min-h-0",
           thead: "sticky top-0 z-20 shrink-0",
-          th: "bg-transparent text-slate-500 font-semibold text-xs tracking-wider border-b border-slate-100 h-10 first:rounded-l-none last:rounded-r-none",
+          th: "bg-transparent text-slate-500 font-semibold text-[10px] tracking-wider border-b border-slate-100 h-8 px-2 py-0 first:rounded-l-none last:rounded-r-none",
           tr: "hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-none h-fit",
-          td: "py-3 first:pl-4 last:pr-4",
+          td: "py-1.5 px-2",
           emptyWrapper: "h-full w-full block",
         }}
         className="h-full overflow-auto scrollbar-hide"
@@ -43,26 +43,26 @@ export default function VentaGrid({
         <TableHeader>
           <TableColumn
             className="hidden sm:table-cell"
-            width={100}
+            width={120}
             align="center"
           >
-            CODIGO
+            CÓDIGO
           </TableColumn>
-          <TableColumn className="">DESCRIPCION</TableColumn>
-          <TableColumn className="" width={140} align="center">
+          <TableColumn className="">DESCRIPCIÓN</TableColumn>
+          <TableColumn className="" width={120} align="center">
             CANTIDAD
           </TableColumn>
-          <TableColumn className="" width={120} align="center">
+          <TableColumn className="" width={90} align="center">
             PRECIO
           </TableColumn>
           <TableColumn
             className="hidden sm:table-cell"
-            width={120}
+            width={90}
             align="center"
           >
             SUBTOTAL
           </TableColumn>
-          <TableColumn className="" width={60} align="center">
+          <TableColumn className="" width={40} align="center">
             <span className="sr-only">ACCIONES</span>
           </TableColumn>
         </TableHeader>
@@ -83,16 +83,16 @@ export default function VentaGrid({
         >
           {items.map((item) => (
             <TableRow key={item.Id}>
-              <TableCell className="text-xs font-mono text-slate-400 hidden sm:table-cell">
+              <TableCell className="text-[10px] font-mono text-slate-400 hidden sm:table-cell">
                 {item.Codigo.toString().padStart(6, "0")}
               </TableCell>
               <TableCell>
                 <div className="flex flex-col gap-0.5">
-                  <span className="font-medium text-slate-700 text-sm">
+                  <span className="font-medium text-slate-700 text-xs leading-tight">
                     {item.Descripcion}
                   </span>
                   {item.CodigoBarra && (
-                    <span className="text-[10px] text-slate-400 font-mono tracking-wide">
+                    <span className="text-[9px] text-slate-400 font-mono tracking-wide leading-none">
                       {item.CodigoBarra}
                     </span>
                   )}
@@ -109,7 +109,7 @@ export default function VentaGrid({
                 />
               </TableCell>
               <TableCell>
-                <span className="font-medium text-slate-600 text-sm">
+                <span className="font-medium text-slate-600 text-xs">
                   $
                   {item.precio.toLocaleString("es-AR", {
                     minimumFractionDigits: 2,
@@ -117,7 +117,7 @@ export default function VentaGrid({
                 </span>
               </TableCell>
               <TableCell className="hidden sm:table-cell">
-                <span className="font-bold text-slate-800 text-sm">
+                <span className="font-bold text-slate-800 text-xs">
                   $
                   {(item.precio * item.cantidad).toLocaleString("es-AR", {
                     minimumFractionDigits: 2,
@@ -130,10 +130,10 @@ export default function VentaGrid({
                   color="danger"
                   variant="light"
                   size="sm"
-                  className="text-slate-400 hover:text-red-500 hover:bg-red-50"
+                  className="text-slate-400 hover:text-red-500 hover:bg-red-50 min-w-8 w-8 h-8"
                   onPress={() => onRemoveItem(item.Id)}
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={14} />
                 </Button>
               </TableCell>
             </TableRow>
@@ -227,29 +227,29 @@ function QuantitySelector({
 
   return (
     <div className="flex items-center justify-center">
-      <div className="flex flex-row items-center border border-slate-200 rounded-lg p-2 bg-white  h-9">
+      <div className="flex flex-row items-center border border-slate-200 rounded-md p-1 bg-white h-7">
         <button
           onClick={handleMinus}
-          className="w-7 h-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+          className="w-6 h-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
         >
-          <Minus size={14} strokeWidth={2.5} />
+          <Minus size={12} strokeWidth={2.5} />
         </button>
-        <div className="h-4 w-px bg-slate-200 mx-0"></div>
+        <div className="h-3 w-px bg-slate-200 mx-0.5"></div>
         <input
           type="number"
-          className="w-14 h-full text-center text-xs font-semibold focus:ring-0 p-0 outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none text-slate-700 placeholder:text-slate-300 bg-transparent border-none"
+          className="w-10 h-full text-center text-[11px] font-semibold focus:ring-0 p-0 outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none text-slate-700 placeholder:text-slate-300 bg-transparent border-none"
           value={localValue}
           onChange={handleInputChange}
           step={tipoVenta === TiposVenta.PESO ? "0.001" : "1"}
           min={0}
           placeholder="0"
         />
-        <div className="h-4 w-px bg-slate-200 mx-0"></div>
+        <div className="h-3 w-px bg-slate-200 mx-0.5"></div>
         <button
           onClick={handlePlus}
-          className="w-7 h-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+          className="w-6 h-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
         >
-          <Plus size={14} strokeWidth={2.5} />
+          <Plus size={12} strokeWidth={2.5} />
         </button>
       </div>
     </div>

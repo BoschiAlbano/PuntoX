@@ -48,27 +48,27 @@ export default function ClienteSearch({
     <div className="w-full">
       <button
         onClick={onOpen}
-        className="w-full rounded-xl p-4 flex items-center gap-3 transition-colors cursor-pointer"
+        className="w-full rounded-xl p-2.5 flex items-center gap-3 transition-colors cursor-pointer"
       >
         {/* Ícono con fondo teal */}
-        <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
           {selected.Id === 0 ? (
-            <User size={20} className="text-gray-500" />
+            <User size={18} className="text-gray-500" />
           ) : (
-            <UserCheck size={20} className="text-gray-500" />
+            <UserCheck size={18} className="text-gray-500" />
           )}
         </div>
 
         {/* Info */}
         <div className="flex flex-col items-start flex-1 min-w-0">
-          <span className="text-gray-500 font-semibold text-sm truncate w-full text-left">
+          <span className="text-gray-500 font-semibold text-xs truncate w-full text-left leading-tight">
             {displayName}
           </span>
-          <span className="text-gray-500 text-xs">{displayDni}</span>
+          <span className="text-gray-500 text-[10px] leading-tight">{displayDni}</span>
         </div>
 
         {/* Chevron */}
-        <ChevronDown size={18} className="text-gray-500 shrink-0 mr-2" />
+        <ChevronDown size={16} className="text-gray-500 shrink-0 mr-1" />
       </button>
 
       <ClienteSearchModal

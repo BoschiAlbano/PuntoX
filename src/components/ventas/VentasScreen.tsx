@@ -134,18 +134,18 @@ export default function VentasScreen() {
   };
 
   return (
-    <div className="h-full w-full flex flex-col gap-4">
-      <div className="flex flex-col lg:flex-row flex-1 gap-4 overflow-auto lg:overflow-hidden">
+    <div className="h-full w-full flex flex-col gap-2">
+      <div className="flex flex-col lg:flex-row flex-1 gap-2 overflow-auto lg:overflow-hidden">
         {/* LEFT PANEL: PRODUCT SEARCH & GRID */}
-        <div className="flex-1 flex flex-col gap-4 lg:overflow-hidden rounded-2xl p-2">
+        <div className="flex-1 flex flex-col gap-2 lg:overflow-hidden rounded-xl p-1 lg:p-2">
           {/* Toolbar Card */}
-          <div className=" p-3 rounded-2xl border border-slate-100 flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center shrink-0 relative shadow-sm">
+          <div className="p-2 rounded-xl border border-slate-100 flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center shrink-0 relative shadow-sm">
             {/* Buscador de productos */}
             <div className="flex-1">
               <ProductSearch onProductSelect={handleAddItem} />
             </div>
 
-            <div className="hidden sm:block h-8 w-px bg-slate-200 mx-2"></div>
+            <div className="hidden sm:block h-6 w-px bg-slate-200 mx-2"></div>
 
             {/* Selector de lista de precios */}
             <PriceListSelector
@@ -163,19 +163,19 @@ export default function VentasScreen() {
         </div>
 
         {/* RIGHT PANEL: CLIENT & FOOTER */}
-        <div className="w-full lg:w-[400px] flex flex-col gap-4 shrink-0 lg:h-full lg:overflow-hidden p-2">
+        <div className="w-full lg:w-[320px] xl:w-[350px] flex flex-col gap-2 shrink-0 lg:h-full lg:overflow-hidden p-1 lg:p-2">
           {/* Cliente y Comprobante en fila en mobile */}
-          <div className="flex flex-col sm:flex-row lg:flex-col gap-4">
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-2">
             {/* Cliente Card */}
-            <div className="rounded-2xl border border-slate-100 flex flex-col shrink-0 overflow-hidden w-full shadow-sm">
+            <div className="rounded-xl border border-slate-100 flex flex-col shrink-0 overflow-hidden w-full shadow-sm">
               <div className="p-0">
                 <ClienteSearch selected={cliente} onSelect={setCliente} />
               </div>
             </div>
 
             {/* Comprobante Card */}
-            <div className="rounded-2xl border border-slate-100 flex flex-col shrink-0 overflow-hidden w-full shadow-sm">
-              <div className="p-3">
+            <div className="rounded-xl border border-slate-100 flex flex-col shrink-0 overflow-hidden w-full shadow-sm">
+              <div className="p-2">
                 <ComprobanteSelector
                   tipoComprobante={tipoComprobante}
                   setTipoComprobante={setTipoComprobante}

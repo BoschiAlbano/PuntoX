@@ -14,15 +14,15 @@ function LoadingSpinner({ message }: { message?: string }) {
     >
       <div className="relative w-24 h-24 mb-6 flex items-center justify-center">
         {/* Glow de fondo */}
-        <div className="absolute inset-0 bg-[#67afc3]/20 rounded-full blur-xl animate-pulse" />
-        
+        <div className="absolute inset-0  rounded-full blur-xl animate-pulse" />
+
         {/* Anillo giratorio principal */}
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
           className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-[#67afc3] border-r-[#2dd4bf]"
         />
-        
+
         {/* Anillo giratorio secundario (inverso) */}
         <motion.div
           animate={{ rotate: -360 }}
@@ -31,7 +31,7 @@ function LoadingSpinner({ message }: { message?: string }) {
         />
 
         {/* Contenedor central Glassmorphism */}
-        <div className="absolute inset-4 rounded-full bg-white/60 backdrop-blur-md border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-4 rounded-full border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex items-center justify-center overflow-hidden">
           <Image
             src="/icon.ico"
             alt="Punto X"
@@ -41,7 +41,7 @@ function LoadingSpinner({ message }: { message?: string }) {
           />
         </div>
       </div>
-      
+
       {message && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -49,9 +49,7 @@ function LoadingSpinner({ message }: { message?: string }) {
           transition={{ delay: 0.2 }}
           className="flex flex-col items-center gap-3"
         >
-          <p className="text-slate-600 font-medium tracking-wide">
-            {message}
-          </p>
+          <p className="text-slate-600 font-medium tracking-wide">{message}</p>
           {/* Puntos de carga animados */}
           <div className="flex gap-1.5">
             <motion.div

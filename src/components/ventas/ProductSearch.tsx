@@ -285,15 +285,15 @@ export default function ProductSearch({
   }, []);
 
   return (
-    <div className="flex-1 rounded-lg border-none">
+    <div className="flex-1 rounded-lg border-none h-10">
       <Input
         ref={inputRef}
         classNames={{
-          base: "w-full h-12 border-none",
+          base: "w-full h-10 border-none",
           mainWrapper: "h-full border-none",
-          input: "text-small border-none",
+          input: "text-xs border-none",
           inputWrapper:
-            "h-full font-normal text-default-500 bg-transparent outline-none hover:bg-white focus-within:bg-white data-[hover=true]:bg-white rounded-lg border-none shadow-none",
+            "h-10 min-h-[40px] font-normal text-default-500 bg-transparent outline-none hover:bg-white focus-within:bg-white data-[hover=true]:bg-white rounded-lg border-none shadow-none",
         }}
         placeholder="Escanear (Código / Barras) o Buscar..."
         size="sm"
@@ -329,7 +329,7 @@ export default function ProductSearch({
                 <div
                   key={product.Id}
                   className={`
-                    px-4 py-3 cursor-pointer transition-all duration-150 border-b border-slate-100 last:border-b-0 flex items-center gap-3
+                    px-3 py-2 cursor-pointer transition-all duration-150 border-b border-slate-100 last:border-b-0 flex items-center gap-2
                     ${
                       index === selectedIndex
                         ? "bg-slate-50"
