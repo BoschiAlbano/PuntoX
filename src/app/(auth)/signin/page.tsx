@@ -1,45 +1,54 @@
 import CredentialsForm from "@/components/auth/CredentialsForm";
 import { Info } from "lucide-react";
-import Image from "next/image";
+import { PuntoXLogo } from "@/components/ui/PuntoXLogo";
 
 export default function SignIn() {
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-8">
-        {/* Header simple (solo credenciales, sin Google) */}
-        <div className="text-center">
-          <div className="mx-auto h-20 w-20 bg-linear-to-r from-blue-500 to-[#90c472] rounded-full flex items-center justify-center mb-4 shadow-md">
-            <Image
-              src="/XPdark.ico"
-              alt="Punto X"
-              width={48}
-              height={48}
-              className="object-contain"
-              priority
-            />
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Efectos de fondo decorativos */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Gradiente radial principal */}
+        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-[#67afc3]/15 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-[#0284c7]/10 rounded-full blur-[120px]" />
+        {/* Líneas decorativas sutiles */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-32 bg-linear-to-b from-transparent via-[#67afc3]/20 to-transparent" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-32 bg-linear-to-t from-transparent via-[#67afc3]/20 to-transparent" />
+      </div>
+
+      <div className="relative z-10 max-w-[420px] w-full space-y-6">
+        {/* Header con logo */}
+        <div className="text-center flex flex-col items-center">
+          <div className="mb-6 relative">
+            {/* Glow detrás del logo */}
+            <div className="absolute inset-0 bg-[#67afc3]/20 rounded-2xl blur-xl scale-125" />
+            <PuntoXLogo className="relative w-20 h-20 border border-slate-200/60 rounded-2xl p-2.5 bg-white/80 backdrop-blur-sm shadow-lg shadow-slate-300/50" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Bienvenido</h2>
-          <p className="text-sm text-gray-500">Inicia sesion en tu cuenta</p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-1.5 tracking-tight">
+            Bienvenido
+          </h1>
+          <p className="text-sm text-slate-500">
+            Iniciá sesión en tu cuenta de Punto X
+          </p>
         </div>
 
-        {/* Formulario de credenciales (único método de acceso) */}
-        <div className="bg-white rounded-lg shadow-xl border border-gray-100 p-8">
+        {/* Card del formulario */}
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 p-8 shadow-xl shadow-slate-200/50">
           <CredentialsForm />
         </div>
 
-        {/* Registro deshabilitado: alerta suave */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
-          <Info className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
-          <p className="text-sm text-blue-800">
+        {/* Alerta de invitación */}
+        <div className="bg-white/60 backdrop-blur-sm border border-slate-200 rounded-xl p-4 flex items-start gap-3">
+          <Info className="h-4 w-4 text-[#67afc3] mt-0.5 shrink-0" />
+          <p className="text-xs text-slate-500 leading-relaxed">
             El acceso es solo por invitación. Contactá a un administrador para
             obtener acceso.
           </p>
         </div>
 
-        {/* Additional Info */}
-        <div className="text-center text-xs text-gray-500">
+        {/* Footer */}
+        <div className="text-center text-[11px] text-slate-400">
           <p>
-            Al continuar, aceptas nuestros terminos de servicio y politica de
+            Al continuar, aceptás nuestros términos de servicio y política de
             privacidad
           </p>
         </div>

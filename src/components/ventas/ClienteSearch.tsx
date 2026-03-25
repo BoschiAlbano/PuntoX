@@ -48,7 +48,7 @@ export default function ClienteSearch({
     <div className="w-full">
       <button
         onClick={onOpen}
-        className="w-full bg-white rounded-xl p-4 flex items-center gap-3 transition-colors cursor-pointer"
+        className="w-full rounded-xl p-4 flex items-center gap-3 transition-colors cursor-pointer"
       >
         {/* Ícono con fondo teal */}
         <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0">

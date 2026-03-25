@@ -29,14 +29,14 @@ const testimonials = [
 
 export const LandingTestimonials = () => {
   return (
-    <section id="testimonials" className="py-24 bg-[#0f1623] text-white">
+    <section id="testimonials" className="py-24 bg-slate-50 text-slate-900">
       <div className="container mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Lo que dicen nuestros{" "}
-            <span className="text-[#90c472]">clientes</span>
+            <span className="text-[#67afc3]">clientes</span>
           </h2>
-          <p className="text-gray-400">
+          <p className="text-slate-500">
             Descubre por qué cientos de negocios eligen Punto X para gestionar
             su crecimiento día a día.
           </p>
@@ -50,10 +50,9 @@ export const LandingTestimonials = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
-              whileHover={{ y: -5 }}
-              className="p-8 rounded-2xl bg-[#182337] border border-white/5 relative group hover:border-[#90c472]/30 transition-all"
+              className="p-8 rounded-2xl bg-white border border-slate-200 relative group hover:border-[#67afc3]/40 transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#67afc3]/10"
             >
-              <div className="absolute top-6 right-8 text-[#90c472]/10 group-hover:text-[#90c472]/20 transition-colors">
+              <div className="absolute top-6 right-8 text-[#67afc3]/10 group-hover:text-[#67afc3]/20 transition-colors">
                 <Quote className="w-12 h-12" />
               </div>
 
@@ -61,24 +60,24 @@ export const LandingTestimonials = () => {
                 {[...Array(testimonial.rating)].map((_, i) => (
                   <Star
                     key={i}
-                    className="w-5 h-5 fill-[#90c472] text-[#90c472]"
+                    className="w-5 h-5 fill-[#67afc3] text-[#67afc3]"
                   />
                 ))}
               </div>
 
-              <blockquote className="text-gray-300 mb-6 relative z-10 text-lg leading-relaxed">
+              <blockquote className="text-slate-600 mb-6 relative z-10 text-lg leading-relaxed">
                 {testimonial.content}
               </blockquote>
 
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#90c472] to-[#6a9e50] flex items-center justify-center text-[#182337] font-bold text-lg">
+                <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#67afc3] to-[#5fa7b8] flex items-center justify-center text-white font-bold text-lg">
                   {testimonial.name.charAt(0)}
                 </div>
                 <div>
-                  <h4 className="font-semibold text-white">
+                  <h4 className="font-semibold text-slate-900">
                     {testimonial.name}
                   </h4>
-                  <p className="text-[#90c472] text-sm">{testimonial.role}</p>
+                  <p className="text-[#67afc3] text-sm">{testimonial.role}</p>
                 </div>
               </div>
             </motion.div>

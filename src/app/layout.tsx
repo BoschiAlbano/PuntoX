@@ -27,12 +27,9 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 
   icons: {
-    icon: [
-      { url: "/favicon-light.ico", media: "(prefers-color-scheme: light)" },
-      { url: "/favicon-dark.ico", media: "(prefers-color-scheme: dark)" },
-    ],
-    shortcut: ["/favicon-light.ico"],
-    apple: ["/favicon-light.ico"],
+    icon: "/icon.ico",
+    shortcut: "/icon.ico",
+    apple: "/icon.ico",
   },
 
   // App Links

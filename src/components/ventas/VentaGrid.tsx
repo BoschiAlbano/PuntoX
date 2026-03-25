@@ -25,7 +25,7 @@ export default function VentaGrid({
   onRemoveItem,
 }: VentaGridProps) {
   return (
-    <div className="flex-1 overflow-hidden bg-white py-3 rounded-2xl border border-slate-100 flex flex-col justify-start shadow-sm min-h-[200px]">
+    <div className="flex-1 overflow-hidden  py-3 rounded-2xl border border-slate-100 flex flex-col justify-start shadow-sm min-h-[200px]">
       <Table
         aria-label="Detalle de venta"
         removeWrapper
@@ -33,7 +33,7 @@ export default function VentaGrid({
           base: "h-full flex flex-col overflow-hidden",
           table: "min-h-0",
           thead: "sticky top-0 z-20 shrink-0",
-          th: "bg-white text-slate-500 font-semibold text-xs tracking-wider border-b border-slate-100 h-10 first:rounded-l-none last:rounded-r-none",
+          th: "bg-transparent text-slate-500 font-semibold text-xs tracking-wider border-b border-slate-100 h-10 first:rounded-l-none last:rounded-r-none",
           tr: "hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-none h-fit",
           td: "py-3 first:pl-4 last:pr-4",
           emptyWrapper: "h-full w-full block",

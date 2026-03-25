@@ -293,7 +293,7 @@ export default function ProductSearch({
           mainWrapper: "h-full border-none",
           input: "text-small border-none",
           inputWrapper:
-            "h-full font-normal text-default-500 bg-white outline-none hover:bg-white focus-within:bg-white data-[hover=true]:bg-white rounded-lg border-none shadow-none",
+            "h-full font-normal text-default-500 bg-transparent outline-none hover:bg-white focus-within:bg-white data-[hover=true]:bg-white rounded-lg border-none shadow-none",
         }}
         placeholder="Escanear (Código / Barras) o Buscar..."
         size="sm"

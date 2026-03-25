@@ -1,7 +1,14 @@
 "use client";
 import { motion } from "framer-motion";
 // import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
-import { Dispatch, SetStateAction, memo, useMemo } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  memo,
+  useMemo,
+  useState,
+  useEffect,
+} from "react";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
@@ -71,11 +78,27 @@ function DashboardHeaderComponent({
 
   const displayRol = roles.map((rol) => rol.Descripcion).join(" - ");
 
+  // const [scrolled, setScrolled] = useState(false);
+
+  // useEffect(() => {
+  //   const scrollContainer = document.getElementById("main-scroll-container");
+  //   if (!scrollContainer) return;
+
+  //   const handleScroll = () => {
+  //     setScrolled(scrollContainer.scrollTop > 10);
+  //   };
+
+  //   scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
+  //   handleScroll();
+
+  //   return () => scrollContainer.removeEventListener("scroll", handleScroll);
+  // }, []);
+
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="sticky top-0 z-40 backdrop-blur-sm"
+      className={`absolute top-0 z-40 transition-all duration-300 w-full`}
     >
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
@@ -113,7 +136,7 @@ function DashboardHeaderComponent({
                 </svg>
               </button>
 
-              {breadcrumbs.map((crumb, index) => (
+              {/* {breadcrumbs.map((crumb, index) => (
                 <li key={crumb.path} className="flex items-center gap-2">
                   {index > 0 && (
                     <ChevronRight className="h-4 w-4 text-slate-400" />
@@ -141,7 +164,7 @@ function DashboardHeaderComponent({
                     </span>
                   )}
                 </li>
-              ))}
+              ))} */}
             </ol>
           </nav>
 

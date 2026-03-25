@@ -30,14 +30,14 @@ export async function GET(req: NextRequest) {
     // Construir where clause
     const where: {
       TenantId: bigint;
-      EstaEliminado: boolean;
+      // EstaEliminado: boolean;
       OR?: Array<{
         Descripcion?: { contains: string; mode: "insensitive" };
         CodigoBarra?: { contains: string; mode: "insensitive" };
       }>;
     } = {
       TenantId: BigInt(tenantId),
-      EstaEliminado: false,
+      // EstaEliminado: false,
     };
 
     // Agregar búsqueda si existe
@@ -162,7 +162,8 @@ export async function GET(req: NextRequest) {
             ? Number(stockSucursal.StockMinimo)
             : Number(producto.StockMinimo ?? 0),
         SucursalNombre: stockSucursal?.Sucursal.Nombre || null,
-        FechaActualizacion: producto.Precio?.FechaActualizacion?.toISOString() ?? undefined,
+        FechaActualizacion:
+          producto.Precio?.FechaActualizacion?.toISOString() ?? undefined,
 
         // Precio
         Precio: {
@@ -359,7 +360,7 @@ export async function PATCH(req: NextRequest) {
       where: {
         Id: BigInt(validarProducto.Id),
         TenantId: tenantIdBigInt,
-        EstaEliminado: false,
+        // EstaEliminado: false,
       },
       include: {
         Precio: true,
@@ -556,10 +557,30 @@ export async function DELETE(req: NextRequest) {
     const params = req.nextUrl.searchParams;
     const Id = params.get("Id");
 
-    const articulo = await prisma.articulo.delete({
+    // Obtener estado actual del artículo
+    const articuloActual = await prisma.articulo.findUnique({
       where: {
         Id: Number(Id),
         TenantId: BigInt(tenantId),
+      },
+      select: { EstaEliminado: true },
+    });
+
+    if (!articuloActual) {
+      return NextResponse.json(
+        { error: "Artículo no encontrado" },
+        { status: 404 },
+      );
+    }
+
+    // Toggle: invertir el estado
+    const articulo = await prisma.articulo.update({
+      where: {
+        Id: Number(Id),
+        TenantId: BigInt(tenantId),
+      },
+      data: {
+        EstaEliminado: !articuloActual.EstaEliminado,
       },
     });
 

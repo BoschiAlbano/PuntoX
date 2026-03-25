@@ -69,7 +69,7 @@ export default function CredentialsForm() {
   const searchParams = useSearchParams();
 
   // Obtener callbackUrl de los parámetros de búsqueda
-  const callbackUrl = searchParams.get("callbackUrl") || "/ventas";
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
   // Rate limiting básico: resetear después de 5 minutos
   useEffect(() => {
@@ -87,7 +87,7 @@ export default function CredentialsForm() {
           setIsRateLimited(true);
           const remainingTime = Math.ceil((fiveMinutes - timeDiff) / 1000 / 60);
           setError(
-            `Demasiados intentos fallidos. Intenta de nuevo en ${remainingTime} minutos.`
+            `Demasiados intentos fallidos. Intenta de nuevo en ${remainingTime} minutos.`,
           );
         }
       } else {
@@ -123,7 +123,7 @@ export default function CredentialsForm() {
     // Verificar rate limiting
     if (isRateLimited) {
       setError(
-        "Demasiados intentos fallidos. Por favor espera unos minutos antes de intentar de nuevo."
+        "Demasiados intentos fallidos. Por favor espera unos minutos antes de intentar de nuevo.",
       );
       return;
     }
@@ -266,7 +266,7 @@ export default function CredentialsForm() {
             tenantId: tenantId || null,
           }),
         }).catch((err) =>
-          console.warn("Error al registrar intento exitoso:", err)
+          console.warn("Error al registrar intento exitoso:", err),
         );
 
         // Registrar sesión activa (en background, no bloqueamos)
@@ -286,7 +286,7 @@ export default function CredentialsForm() {
       const safeCallbackUrl =
         callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
           ? callbackUrl
-          : "/ventas";
+          : "/dashboard";
 
       window.location.href = safeCallbackUrl;
     } catch (err) {
@@ -299,73 +299,72 @@ export default function CredentialsForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div>
         <label
           htmlFor="username"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-slate-700 mb-1.5"
         >
           Nombre de usuario
         </label>
         <div className="relative">
-          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
           <input
             id="username"
             type="text"
             value={username}
             onChange={handleUsernameChange}
             onBlur={() => {
-              // Validar al perder el foco también
               if (username && username.trim().length < 2) {
                 setUsernameError(
-                  "El nombre de usuario debe tener al menos 2 caracteres"
+                  "El nombre de usuario debe tener al menos 2 caracteres",
                 );
               }
             }}
             required
             disabled={isLoading}
-            className={`w-full pl-10 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+            className={`w-full pl-10 pr-3 py-3 border rounded-xl bg-slate-50/60 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#67afc3]/50 focus:border-[#67afc3]/50 transition-all ${
               usernameError
-                ? "border-red-300 bg-red-50"
-                : "border-gray-300 bg-white"
+                ? "border-red-300 bg-red-50/50"
+                : "border-slate-200"
             } ${isLoading ? "opacity-60 cursor-not-allowed" : ""}`}
             placeholder="juan"
             autoComplete="username"
           />
         </div>
         {usernameError && (
-          <p className="mt-1 text-sm text-red-600">{usernameError}</p>
+          <p className="mt-1.5 text-sm text-red-400">{usernameError}</p>
         )}
       </div>
 
       <div>
         <label
           htmlFor="password"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-slate-700 mb-1.5"
         >
           Contraseña
         </label>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
           <input
             id="password"
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
-              setError(""); // Limpiar error al escribir
+              setError("");
             }}
             required
             disabled={isLoading}
-            className={`w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+            className={`w-full pl-10 pr-10 py-3 border border-slate-200 rounded-xl bg-slate-50/60 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#67afc3]/50 focus:border-[#67afc3]/50 transition-all ${
               isLoading ? "opacity-60 cursor-not-allowed" : ""
             }`}
-            placeholder="********"
+            placeholder="••••••••"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
             tabIndex={-1}
           >
             {showPassword ? (
@@ -378,7 +377,7 @@ export default function CredentialsForm() {
       </div>
 
       {error && (
-        <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200">
+        <div className="text-red-700 text-sm bg-red-50 p-3 rounded-xl border border-red-200">
           {error}
         </div>
       )}
@@ -389,11 +388,11 @@ export default function CredentialsForm() {
           type="checkbox"
           checked={recordarDispositivo}
           onChange={(e) => setRecordarDispositivo(e.target.checked)}
-          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          className="w-4 h-4 bg-white border-slate-300 rounded text-[#67afc3] focus:ring-[#67afc3]/50 focus:ring-offset-0"
         />
         <label
           htmlFor="recordar-dispositivo"
-          className="ml-2 text-sm text-gray-700 cursor-pointer"
+          className="ml-2 text-sm text-slate-500 cursor-pointer hover:text-slate-700 transition-colors"
         >
           Recordar este dispositivo
         </label>
@@ -402,10 +401,10 @@ export default function CredentialsForm() {
       <button
         type="submit"
         disabled={isLoading || !!usernameError}
-        className={`w-full bg-linear-to-r from-blue-500 to-[#90c472] text-white py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 font-medium shadow-sm ${
+        className={`w-full bg-linear-to-r from-[#0284c7] to-[#2dd4bf] text-white py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#67afc3]/50 focus:ring-offset-2 focus:ring-offset-white transition-all duration-200 font-semibold shadow-lg shadow-[#0284c7]/20 ${
           isLoading || usernameError
             ? "opacity-60 cursor-not-allowed"
-            : "hover:from-blue-600 hover:to-[#7fb362] hover:shadow-md active:shadow-lg"
+            : "hover:shadow-xl hover:shadow-[#0284c7]/30 hover:brightness-110 active:scale-[0.98]"
         }`}
       >
         {isLoading ? (
@@ -433,7 +432,7 @@ export default function CredentialsForm() {
             Iniciando sesión...
           </span>
         ) : (
-          "Iniciar sesion"
+          "Iniciar sesión"
         )}
       </button>
     </form>

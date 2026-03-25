@@ -134,12 +134,12 @@ export default function VentasScreen() {
   };
 
   return (
-    <div className="h-full w-full bg-slate-50/50 flex flex-col gap-4">
+    <div className="h-full w-full flex flex-col gap-4">
       <div className="flex flex-col lg:flex-row flex-1 gap-4 overflow-auto lg:overflow-hidden">
         {/* LEFT PANEL: PRODUCT SEARCH & GRID */}
         <div className="flex-1 flex flex-col gap-4 lg:overflow-hidden rounded-2xl p-2">
           {/* Toolbar Card */}
-          <div className="bg-white p-3 rounded-2xl border border-slate-100 flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center shrink-0 relative shadow-sm">
+          <div className=" p-3 rounded-2xl border border-slate-100 flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center shrink-0 relative shadow-sm">
             {/* Buscador de productos */}
             <div className="flex-1">
               <ProductSearch onProductSelect={handleAddItem} />
@@ -174,7 +174,7 @@ export default function VentasScreen() {
             </div>
 
             {/* Comprobante Card */}
-            <div className="bg-white rounded-2xl border border-slate-100 flex flex-col shrink-0 overflow-hidden w-full shadow-sm">
+            <div className="rounded-2xl border border-slate-100 flex flex-col shrink-0 overflow-hidden w-full shadow-sm">
               <div className="p-3">
                 <ComprobanteSelector
                   tipoComprobante={tipoComprobante}

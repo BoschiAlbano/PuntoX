@@ -29,7 +29,7 @@ export default function ComprobanteSelector({
         onChange={(e) => setTipoComprobante(Number(e.target.value))}
         classNames={{
           trigger:
-            "h-12 min-h-12 rounded-lg shadow-none bg-white text-black hover:bg-white",
+            "h-12 min-h-12 rounded-lg shadow-none bg-transparent text-black hover:bg-white",
         }}
       >
         <SelectItem

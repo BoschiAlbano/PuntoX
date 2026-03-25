@@ -366,13 +366,13 @@ export default function VentaFooter({
   return (
     <section className="flex-1 flex flex-col gap-4">
       {/* Payment Methods Section */}
-      <div className="flex-1 bg-white rounded-2xl border border-slate-100 flex flex-col shadow-sm">
+      <div className="flex-1 rounded-2xl border border-slate-100 flex flex-col shadow-sm">
         <div className="px-3 pt-2 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center shrink-0">
           {/* Margen Disponible Indicator */}
           {currentTipo === TIPO_PAGO.CUENTA_CORRIENTE &&
             cliente?.Persona_Cliente?.ActivarCtaCte && (
               <div
-                className={`text-xs px-2 py-0.5 rounded-full bg-white border border-slate-200 ${cliente?.Persona_Cliente?.TieneLimiteCompra ? (cliente.Persona_Cliente.MargenDisponible < 0 ? "text-danger border-danger/20 bg-danger/5" : "text-emerald-600 border-emerald-200 bg-emerald-50") : "text-slate-500"}`}
+                className={`text-xs px-2 py-0.5 rounded-full border border-slate-200 ${cliente?.Persona_Cliente?.TieneLimiteCompra ? (cliente.Persona_Cliente.MargenDisponible < 0 ? "text-danger border-danger/20 bg-danger/5" : "text-emerald-600 border-emerald-200 bg-emerald-50") : "text-slate-500"}`}
               >
                 {cliente?.Persona_Cliente?.TieneLimiteCompra ? (
                   <>
@@ -407,7 +407,7 @@ export default function VentaFooter({
               size="sm"
               variant="flat"
               classNames={{
-                trigger: "shadow-none rounded-xl bg-slate-50",
+                trigger: "shadow-sm rounded-xl bg-transparent",
               }}
             >
               {paymentOptions.map((option) => (
@@ -426,7 +426,7 @@ export default function VentaFooter({
               size="sm"
               variant="flat"
               classNames={{
-                inputWrapper: "shadow-none rounded-xl bg-slate-50",
+                inputWrapper: "shadow-sm rounded-xl bg-transparent",
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAddPayment();
@@ -516,7 +516,7 @@ export default function VentaFooter({
       </div>
 
       {/* Totals & Actions Card */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-4 shrink-0 flex flex-col gap-4 relative z-10 shadow-sm">
+      <div className=" rounded-2xl border border-slate-100 p-4 shrink-0 flex flex-col gap-4 relative z-10 shadow-sm">
         <div className="flex flex-col gap-1">
           <div className="flex justify-between text-sm text-slate-500">
             <span>Subtotal</span>

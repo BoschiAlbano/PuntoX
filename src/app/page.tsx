@@ -141,7 +141,7 @@ export default function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
       />
 
-      <main className="min-h-screen bg-[#182337] text-white selection:bg-[#90c472] selection:text-[#182337] overflow-x-hidden">
+      <main className="min-h-screen bg-white text-slate-900 selection:bg-[#67afc3] selection:text-white overflow-x-hidden">
         <LandingNavbar />
         <LandingHero />
         <LandingFeatures />
