@@ -52,7 +52,7 @@ import PanelAlertas from "@/components/analiticas/PanelAlertas";
 
 // TODO: Reemplazar con datos reales del API cuando esté disponible
 // Endpoint esperado: GET /api/logs?fechaDesde=...&fechaHasta=...&usuario=...&accion=...&modulo=...&page=...&limit=...
-
+//asd
 const mockLogs = [
   {
     id: 1,
