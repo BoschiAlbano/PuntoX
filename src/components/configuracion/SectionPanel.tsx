@@ -1,11 +1,12 @@
-import { Card, CardBody, Divider } from "@heroui/react";
+import { ReactNode } from "react";
 
 interface SectionPanelProps {
   id: string;
   title: string;
   description: string;
   summary: string;
-  children: React.ReactNode;
+  children: ReactNode;
+  icon?: ReactNode;
 }
 
 export function SectionPanel({
@@ -14,23 +15,33 @@ export function SectionPanel({
   description,
   summary,
   children,
+  icon,
 }: SectionPanelProps) {
   return (
-    <Card
-      className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm"
+    <div
       id={id}
+      className="bg-white/90 backdrop-blur-xl border border-slate-100 rounded-[20px] shadow-sm overflow-hidden"
     >
-      <CardBody className="p-6 space-y-4">
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
-          <p className="text-sm text-gray-600">{description}</p>
-          <p className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200/50">
-            {summary}
-          </p>
-          <Divider className="my-2" />
+      {/* Panel header */}
+      <div className="px-6 py-5 border-b border-slate-100/60 bg-slate-50/50 flex items-start gap-4">
+        {icon && (
+          <div className="p-2.5 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 text-[#67afc3] shrink-0 mt-0.5">
+            {icon}
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base font-bold text-slate-800 tracking-tight">{title}</h3>
+          <p className="text-sm text-slate-500 mt-0.5 leading-relaxed">{description}</p>
+          {summary && (
+            <p className="mt-2 text-[11px] text-slate-400 bg-slate-100/80 px-3 py-1.5 rounded-lg border border-slate-100 font-medium w-fit">
+              {summary}
+            </p>
+          )}
         </div>
-        <div className="space-y-4">{children}</div>
-      </CardBody>
-    </Card>
+      </div>
+
+      {/* Panel content */}
+      <div className="px-6 py-5 space-y-4">{children}</div>
+    </div>
   );
 }

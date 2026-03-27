@@ -2,11 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
-  Card,
-  CardBody,
-  CardHeader,
-  Divider,
-  Switch,
+  Button,
   Select,
   SelectItem,
   Modal,
@@ -14,53 +10,57 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  Button,
   addToast,
 } from "@heroui/react";
-import { Lock, Shield } from "lucide-react";
+import {
+  ShieldCheck,
+  Lock,
+  Clock,
+  Smartphone,
+  RefreshCw,
+  MonitorX,
+  Save,
+  LogOut,
+  Shield,
+  AlertTriangle,
+} from "lucide-react";
 import { useConfiguracion, Seguridad } from "@/hooks/useConfiguracion";
-import { SectionPanel } from "./SectionPanel";
+import { VentasSection, ToggleRow } from "./ventas/VentasPrimitives";
 
-// Interfaces
 interface SesionActiva {
   id: number;
   usuarioId: number;
   usuarioNombre: string;
   ipAddress: string | null;
-  userAgent: string | null;
   dispositivo: string | null;
-  ubicacion: string | null;
   fechaInicio: string;
-  fechaUltimaActividad: string;
-  esConfiable: boolean;
 }
 
 interface DispositivoConfiable {
   id: number;
   usuarioId: number;
-  usuarioNombre: string;
   nombreDispositivo: string;
-  userAgent: string | null;
   ipAddress: string | null;
   fechaRegistro: string;
   fechaUltimoUso: string;
 }
 
-interface AlertaSeguridad {
-  tipo: "critico" | "advertencia" | "info";
-  titulo: string;
-  descripcion: string;
-  ips?: string[];
-}
+const selectCls = {
+  trigger:
+    "h-9 border-slate-200 bg-white hover:border-[#67afc3]/60 data-[focus=true]:border-[#67afc3] rounded-xl text-sm",
+};
+
+const formatFecha = (fecha: string) => {
+  try { return new Date(fecha).toLocaleString("es-AR"); }
+  catch { return fecha; }
+};
 
 export function SeguridadTab() {
   const {
     seguridad: seguridadData,
     saveSeguridad,
     isSavingSeguridad,
-  } = useConfiguracion({
-    enableSeguridad: true,
-  });
+  } = useConfiguracion({ enableSeguridad: true });
 
   const [seguridad, setSeguridad] = useState<Seguridad>({
     dobleFactor: false,
@@ -72,426 +72,236 @@ export function SeguridadTab() {
     recordarSesion30Dias: true,
   });
 
-  // Local state for fetched data
   const [sesionesActivas, setSesionesActivas] = useState<SesionActiva[]>([]);
-  const [dispositivosConfiable, setDispositivosConfiable] = useState<
-    DispositivoConfiable[]
-  >([]);
-  const [estadisticasSeguridad, setEstadisticasSeguridad] = useState({
+  const [dispositivos, setDispositivos] = useState<DispositivoConfiable[]>([]);
+  const [estadisticas, setEstadisticas] = useState({
     sesionesActivas: 0,
     dispositivosActivos: 0,
-    ultimaActividad: null as string | null,
     intentosFallidos7Dias: 0,
-    intentosExitosos7Dias: 0,
   });
-  const [intentosSospechosos, setIntentosSospechosos] = useState<{
-    sospechosos: Array<{
-      ipAddress: string;
-      intentos24Horas: number;
-      ultimoIntento: string;
-      esCritico: boolean;
-    }>;
-    alertas: AlertaSeguridad[];
-    ultimosIntentos: Array<{
-      id: number;
-      fecha: string;
-      ipAddress: string | null;
-      usuarioNombre: string | null;
-      usuarioId: number | null;
-    }>;
-    estadisticas: {
-      ipsUnicasUltimaHora: number;
-      intentosFallidos24Horas: number;
-    };
-  } | null>(null);
-
-  // Loading states
-  const [isLoadingSesiones, setIsLoadingSesiones] = useState(false);
-  const [isLoadingDispositivos, setIsLoadingDispositivos] = useState(false);
-  const [isLoadingIntentosSospechosos, setIsLoadingIntentosSospechosos] =
-    useState(false);
-
-  // Modal State
-  const [modalDetalle, setModalDetalle] = useState<
-    | "sesiones"
-    | "dispositivos"
-    | "ultimoAcceso"
-    | "intentosFallidos"
-    | "intentosExitosos"
-    | null
-  >(null);
+  const [modalDetalle, setModalDetalle] = useState<"sesiones" | "dispositivos" | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (seguridadData) {
-      setSeguridad(seguridadData);
-    }
+    if (seguridadData) setSeguridad(seguridadData);
   }, [seguridadData]);
 
-  // Load data on mount
-  useEffect(() => {
-    loadSesionesActivas();
-    loadDispositivosConfiable();
-    loadEstadisticasSeguridad();
-    loadIntentosSospechosos();
-  }, []);
+  useEffect(() => { recargarDatos(); }, []);
 
-  const handleSave = async () => {
-    await saveSeguridad(seguridad);
+  const recargarDatos = async () => {
+    setIsLoading(true);
+    try {
+      const [sesRes, dispRes, estRes] = await Promise.all([
+        fetch("/api/configuracion/seguridad/sesiones"),
+        fetch("/api/configuracion/seguridad/dispositivos"),
+        fetch("/api/configuracion/seguridad/estadisticas"),
+      ]);
+      if (sesRes.ok) setSesionesActivas((await sesRes.json()).sesiones || []);
+      if (dispRes.ok) setDispositivos((await dispRes.json()).dispositivos || []);
+      if (estRes.ok) {
+        const d = await estRes.json();
+        setEstadisticas(d.estadisticas || { sesionesActivas: 0, dispositivosActivos: 0, intentosFallidos7Dias: 0 });
+      }
+    } catch (e) { console.error(e); }
+    finally { setIsLoading(false); }
+  };
+
+  const cerrarSesion = async (id: number) => {
+    try {
+      const res = await fetch(`/api/configuracion/seguridad/sesiones?id=${id}`, { method: "DELETE" });
+      if (res.ok) { addToast({ title: "Sesión cerrada", color: "success" }); recargarDatos(); }
+    } catch { addToast({ title: "Error al cerrar sesión", color: "danger" }); }
+  };
+
+  const revocarDispositivo = async (id: number) => {
+    try {
+      const res = await fetch(`/api/configuracion/seguridad/dispositivos?id=${id}`, { method: "DELETE" });
+      if (res.ok) { addToast({ title: "Dispositivo revocado", color: "success" }); recargarDatos(); }
+    } catch { addToast({ title: "Error al revocar dispositivo", color: "danger" }); }
   };
 
   const hasChanges = seguridadData
     ? JSON.stringify(seguridad) !== JSON.stringify(seguridadData)
     : false;
 
-  // Fetch functions (copied from page.tsx)
-  const loadSesionesActivas = async () => {
-    try {
-      setIsLoadingSesiones(true);
-      const response = await fetch("/api/configuracion/seguridad/sesiones");
-      if (response.ok) {
-        const data = await response.json();
-        setSesionesActivas(data.sesiones || []);
-      }
-    } catch (error) {
-      console.error("Error cargando sesiones", error);
-    } finally {
-      setIsLoadingSesiones(false);
-    }
-  };
-
-  const loadDispositivosConfiable = async () => {
-    try {
-      setIsLoadingDispositivos(true);
-      const response = await fetch("/api/configuracion/seguridad/dispositivos");
-      if (response.ok) {
-        const data = await response.json();
-        setDispositivosConfiable(data.dispositivos || []);
-      }
-    } catch (error) {
-      console.error("Error cargando dispositivos", error);
-    } finally {
-      setIsLoadingDispositivos(false);
-    }
-  };
-
-  const loadEstadisticasSeguridad = async () => {
-    try {
-      const response = await fetch("/api/configuracion/seguridad/estadisticas");
-      if (response.ok) {
-        const data = await response.json();
-        setEstadisticasSeguridad(
-          data.estadisticas || {
-            sesionesActivas: 0,
-            dispositivosActivos: 0,
-            ultimaActividad: null,
-            intentosFallidos7Dias: 0,
-            intentosExitosos7Dias: 0,
-          },
-        );
-      }
-    } catch (error) {
-      console.error("Error cargando estadisticas", error);
-    }
-  };
-
-  const loadIntentosSospechosos = async () => {
-    try {
-      setIsLoadingIntentosSospechosos(true);
-      const response = await fetch(
-        "/api/configuracion/seguridad/intentos-sospechosos",
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setIntentosSospechosos(data);
-      }
-    } catch (error) {
-      console.error("Error intententos sospechosos", error);
-    } finally {
-      setIsLoadingIntentosSospechosos(false);
-    }
-  };
-
-  const cerrarSesion = async (sesionId: number) => {
-    try {
-      const response = await fetch(
-        `/api/configuracion/seguridad/sesiones?id=${sesionId}`,
-        {
-          method: "DELETE",
-        },
-      );
-      if (response.ok) {
-        addToast({ title: "Sesión cerrada", color: "success" });
-        loadSesionesActivas();
-        loadEstadisticasSeguridad();
-      }
-    } catch (error) {
-      console.error(error);
-      addToast({ title: "Error al cerrar sesión", color: "danger" });
-    }
-  };
-
-  const revocarDispositivo = async (dispositivoId: number) => {
-    try {
-      const response = await fetch(
-        `/api/configuracion/seguridad/dispositivos?id=${dispositivoId}`,
-        {
-          method: "DELETE",
-        },
-      );
-      if (response.ok) {
-        addToast({ title: "Dispositivo eliminado", color: "success" });
-        loadDispositivosConfiable();
-        loadEstadisticasSeguridad();
-      }
-    } catch (error) {
-      console.error(error);
-      addToast({ title: "Error al eliminar dispositivo", color: "danger" });
-    }
-  };
-
-  const formatFecha = (fecha: string) => {
-    try {
-      return new Date(fecha).toLocaleString();
-    } catch {
-      return fecha;
-    }
-  };
+  const statCards = [
+    { label: "Sesiones activas", value: estadisticas.sesionesActivas, icon: Shield, modal: "sesiones" as const },
+    { label: "Dispositivos confiables", value: estadisticas.dispositivosActivos, icon: Smartphone, modal: "dispositivos" as const },
+    { label: "Intentos fallidos (7d)", value: estadisticas.intentosFallidos7Dias, icon: AlertTriangle, modal: null },
+  ];
 
   return (
-    <SectionPanel
-      id="seguridad"
-      title="Seguridad y acceso"
-      description="Gestione los parámetros de seguridad de su cuenta"
-      summary="Controle accesos, dispositivos y registros de actividad"
-    >
-      <div className="space-y-6">
-        {/* Configuración de Seguridad */}
-        <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-          <CardHeader className="flex items-center gap-3 pb-3">
-            <div className="p-2 rounded-lg bg-blue-100">
-              <Lock size={20} className="text-blue-600" />
-            </div>
-            <div>
-              <h4 className="text-base font-semibold text-slate-900">
-                Acceso y autenticación
-              </h4>
-              <p className="text-xs text-gray-500">
-                Configura cómo los usuarios acceden al sistema
-              </p>
-            </div>
-          </CardHeader>
-          <Divider />
-          <CardBody className="space-y-4 pt-4">
-            <div className="flex items-center justify-between py-2">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-700">
-                  Habilitar doble factor (2FA)
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Requiere que todos los usuarios configuren autenticación de
-                  dos factores
-                </p>
-              </div>
-              <Switch
-                size="sm"
-                isSelected={seguridad.dobleFactor}
-                onValueChange={(val) =>
-                  setSeguridad({ ...seguridad, dobleFactor: val })
-                }
-              />
-            </div>
-
-            <Divider />
-            <div className="flex items-center justify-between py-2">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-700">
-                  Expirar sesiones después de 30 días
-                </p>
-              </div>
-              <Switch
-                size="sm"
-                isSelected={seguridad.expirarSesiones30Dias}
-                onValueChange={(val) =>
-                  setSeguridad({ ...seguridad, expirarSesiones30Dias: val })
-                }
-              />
-            </div>
-
-            <Divider />
-            <div className="flex items-center justify-between py-2">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-700">
-                  Bloquear cuenta tras intentos fallidos
-                </p>
-              </div>
-              <Select
-                size="sm"
-                selectedKeys={[seguridad.bloquearTrasIntentos]}
-                onSelectionChange={(keys) =>
-                  setSeguridad({
-                    ...seguridad,
-                    bloquearTrasIntentos: Array.from(keys)[0] as any,
-                  })
-                }
-                className="min-w-[140px]"
-                aria-label="Bloquear tras intentos"
-              >
-                <SelectItem key="nunca">Nunca</SelectItem>
-                <SelectItem key="5">5 intentos</SelectItem>
-                <SelectItem key="10">10 intentos</SelectItem>
-              </Select>
-            </div>
-          </CardBody>
-        </Card>
-
-        {/* Estado de Seguridad (Cards) */}
-        <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-          <CardHeader className="flex items-center justify-between pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-100">
-                <Shield size={20} className="text-green-600" />
-              </div>
-              <div>
-                <h4 className="text-base font-semibold text-slate-900">
-                  Estado de seguridad
-                </h4>
-                <p className="text-xs text-gray-500">
-                  Información sobre sesiones y dispositivos activos
-                </p>
-              </div>
-            </div>
-            <Button
-              size="sm"
-              onPress={() => {
-                loadSesionesActivas();
-                loadDispositivosConfiable();
-                loadEstadisticasSeguridad();
-              }}
-            >
-              Actualizar
-            </Button>
-          </CardHeader>
-          <Divider />
-          <CardBody className="pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div
-                className="p-4 rounded-lg bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100"
-                onClick={() => setModalDetalle("sesiones")}
-              >
-                <p className="text-xs text-gray-500">Sesiones activas</p>
-                <p className="text-2xl font-semibold text-slate-900">
-                  {estadisticasSeguridad.sesionesActivas}
-                </p>
-              </div>
-              <div
-                className="p-4 rounded-lg bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100"
-                onClick={() => setModalDetalle("dispositivos")}
-              >
-                <p className="text-xs text-gray-500">Dispositivos confiables</p>
-                <p className="text-2xl font-semibold text-slate-900">
-                  {estadisticasSeguridad.dispositivosActivos}
-                </p>
-              </div>
-              <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100">
-                <p className="text-xs text-gray-500">Intentos fallidos (7d)</p>
-                <p className="text-2xl font-semibold text-red-900">
-                  {estadisticasSeguridad.intentosFallidos7Dias}
-                </p>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
+    <div className="space-y-5 pt-4 pb-6">
+      <VentasSection title="Acceso y autenticación" icon={Lock}>
+        <ToggleRow
+          icon={ShieldCheck}
+          title="Doble factor de autenticación (2FA)"
+          description="Todos los usuarios deberán verificar su identidad con un segundo método al iniciar sesión"
+          isSelected={seguridad.dobleFactor}
+          onValueChange={(v) => setSeguridad({ ...seguridad, dobleFactor: v })}
+        />
+        <ToggleRow
+          icon={Clock}
+          title="Expirar sesiones después de 30 días"
+          description="Las sesiones de usuario se cerrarán automáticamente al superar los 30 días de inactividad"
+          isSelected={seguridad.expirarSesiones30Dias}
+          onValueChange={(v) => setSeguridad({ ...seguridad, expirarSesiones30Dias: v })}
+        />
+        <ToggleRow
+          icon={MonitorX}
+          title="Bloquear cuenta tras intentos fallidos"
+          description="Protege las cuentas contra ataques de fuerza bruta"
+        >
+          <Select
+            size="sm"
+            variant="bordered"
+            classNames={selectCls}
+            selectedKeys={[seguridad.bloquearTrasIntentos]}
+            onSelectionChange={(keys) =>
+              setSeguridad({ ...seguridad, bloquearTrasIntentos: Array.from(keys)[0] as any })
+            }
+            className="max-w-[200px]"
+            aria-label="Bloquear tras intentos"
+          >
+            <SelectItem key="nunca">Nunca bloquear</SelectItem>
+            <SelectItem key="5">5 intentos</SelectItem>
+            <SelectItem key="10">10 intentos</SelectItem>
+          </Select>
+        </ToggleRow>
 
         {hasChanges && (
-          <div className="flex justify-end mt-4">
+          <div className="flex justify-end pt-2">
             <Button
-              color="primary"
-              onPress={handleSave}
+              onPress={() => saveSeguridad(seguridad)}
               isLoading={isSavingSeguridad}
+              className="bg-linear-to-r from-[#67afc3] to-[#2dd4bf] text-white font-bold px-6 h-10 shadow-md shadow-[#67afc3]/20 rounded-xl gap-2"
+              startContent={!isSavingSeguridad && <Save size={15} />}
             >
-              Guardar Seguridad
+              Guardar seguridad
             </Button>
           </div>
         )}
+      </VentasSection>
 
-        {/* Modals for Details */}
-        <Modal
-          isOpen={!!modalDetalle}
-          onClose={() => setModalDetalle(null)}
-          size="3xl"
-        >
-          <ModalContent>
-            {(onClose) => (
-              <>
-                <ModalHeader>
-                  {modalDetalle === "sesiones" && "Sesiones Activas"}
-                  {modalDetalle === "dispositivos" && "Dispositivos Confiables"}
-                </ModalHeader>
-                <ModalBody>
-                  {modalDetalle === "sesiones" && (
-                    <div className="space-y-4">
-                      {sesionesActivas.map((sesion) => (
-                        <div
-                          key={sesion.id}
-                          className="flex justify-between items-center p-3 border rounded-lg"
-                        >
-                          <div>
-                            <p className="font-medium">
-                              {sesion.dispositivo || "Dispositivo desconocido"}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {sesion.ipAddress} -{" "}
-                              {formatFecha(sesion.fechaInicio)}
-                            </p>
-                          </div>
-                          <Button
-                            color="danger"
-                            size="sm"
-                            variant="flat"
-                            onPress={() => cerrarSesion(sesion.id)}
-                          >
-                            Cerrar
-                          </Button>
+      {/* Estado de seguridad */}
+      <VentasSection title="Estado de seguridad" icon={Shield}>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {statCards.map(({ label, value, icon: Icon, modal }) => (
+            <button
+              key={label}
+              onClick={() => modal && setModalDetalle(modal)}
+              className={`text-left p-4 rounded-2xl bg-linear-to-br from-[#67afc3]/8 to-[#2dd4bf]/8 border border-[#67afc3]/15 transition-all hover:shadow-sm ${modal ? "cursor-pointer hover:scale-[1.01] hover:border-[#67afc3]/30" : "cursor-default"}`}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Icon size={14} strokeWidth={2.5} className="text-[#67afc3]" />
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</span>
+              </div>
+              <p className="text-3xl font-extrabold text-[#67afc3] leading-none">{value}</p>
+              {modal && <p className="text-[10px] text-slate-400 mt-2 font-medium">Clic para ver detalles →</p>}
+            </button>
+          ))}
+        </div>
+        <div className="flex justify-end pt-1">
+          <Button
+            size="sm"
+            variant="flat"
+            onPress={recargarDatos}
+            isLoading={isLoading}
+            className="text-slate-500 text-xs font-bold gap-1.5 rounded-xl"
+            startContent={!isLoading && <RefreshCw size={13} />}
+          >
+            Actualizar datos
+          </Button>
+        </div>
+      </VentasSection>
+
+      {/* Modal */}
+      <Modal
+        isOpen={!!modalDetalle}
+        onClose={() => setModalDetalle(null)}
+        size="lg"
+        backdrop="opaque"
+        classNames={{
+          backdrop: "bg-slate-900/40 backdrop-blur-md",
+          base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60",
+          header: "border-b border-slate-100/60 pb-4 pt-6 px-6",
+          body: "py-4 px-6",
+          footer: "border-t border-slate-100/60 py-4 px-6",
+          closeButton: "hover:bg-slate-100 text-slate-400 mt-2 mr-2",
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 text-[#67afc3]">
+                  {modalDetalle === "sesiones" ? <Shield size={18} /> : <Smartphone size={18} />}
+                </div>
+                <span className="text-lg font-extrabold text-slate-800">
+                  {modalDetalle === "sesiones" ? "Sesiones activas" : "Dispositivos confiables"}
+                </span>
+              </ModalHeader>
+              <ModalBody>
+                <div className="space-y-3">
+                  {modalDetalle === "sesiones" && (sesionesActivas.length === 0 ? (
+                    <p className="text-sm text-slate-400 text-center py-8">Sin sesiones activas registradas.</p>
+                  ) : sesionesActivas.map((s) => (
+                    <div key={s.id} className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20">
+                          <Shield size={14} className="text-[#67afc3]" />
                         </div>
-                      ))}
-                    </div>
-                  )}
-                  {modalDetalle === "dispositivos" && (
-                    <div className="space-y-4">
-                      {dispositivosConfiable.map((disp) => (
-                        <div
-                          key={disp.id}
-                          className="flex justify-between items-center p-3 border rounded-lg"
-                        >
-                          <div>
-                            <p className="font-medium">
-                              {disp.nombreDispositivo}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              Registrado: {formatFecha(disp.fechaRegistro)}
-                            </p>
-                          </div>
-                          <Button
-                            color="danger"
-                            size="sm"
-                            variant="flat"
-                            onPress={() => revocarDispositivo(disp.id)}
-                          >
-                            Revocar
-                          </Button>
+                        <div>
+                          <p className="text-sm font-bold text-slate-700">{s.dispositivo || "Dispositivo desconocido"}</p>
+                          <p className="text-xs text-slate-400">{s.ipAddress} · {formatFecha(s.fechaInicio)}</p>
                         </div>
-                      ))}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="flat"
+                        onPress={() => cerrarSesion(s.id)}
+                        className="text-rose-500 bg-rose-50 border border-rose-100 font-bold text-xs rounded-xl gap-1"
+                        startContent={<LogOut size={12} />}
+                      >
+                        Cerrar
+                      </Button>
                     </div>
-                  )}
-                </ModalBody>
-                <ModalFooter>
-                  <Button onPress={onClose}>Cerrar</Button>
-                </ModalFooter>
-              </>
-            )}
-          </ModalContent>
-        </Modal>
-      </div>
-    </SectionPanel>
+                  )))}
+                  {modalDetalle === "dispositivos" && (dispositivos.length === 0 ? (
+                    <p className="text-sm text-slate-400 text-center py-8">Sin dispositivos confiables registrados.</p>
+                  ) : dispositivos.map((d) => (
+                    <div key={d.id} className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20">
+                          <Smartphone size={14} className="text-[#67afc3]" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-700">{d.nombreDispositivo}</p>
+                          <p className="text-xs text-slate-400">Registrado: {formatFecha(d.fechaRegistro)}</p>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="flat"
+                        onPress={() => revocarDispositivo(d.id)}
+                        className="text-rose-500 bg-rose-50 border border-rose-100 font-bold text-xs rounded-xl gap-1"
+                        startContent={<MonitorX size={12} />}
+                      >
+                        Revocar
+                      </Button>
+                    </div>
+                  )))}
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose} className="font-bold text-slate-500 rounded-xl">
+                  Cerrar
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+    </div>
   );
 }

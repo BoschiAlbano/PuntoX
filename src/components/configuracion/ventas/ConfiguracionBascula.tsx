@@ -1,17 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardBody, Switch, Button, Input } from "@heroui/react";
+import { Button, Input } from "@heroui/react";
+import { Scale, Tag, Hash, Save, Info } from "lucide-react";
 import { useConfiguracion, Configuracion } from "@/hooks/useConfiguracion";
+import { VentasSection, ToggleRow } from "./VentasPrimitives";
+
+const inputCls = {
+  label: "text-slate-500 font-bold uppercase text-[10px] tracking-widest",
+  inputWrapper:
+    "h-10 border-slate-200 bg-white hover:border-[#67afc3]/60 focus-within:!border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/20 transition-all rounded-xl",
+  input: "text-sm text-slate-700 font-medium",
+};
 
 export function ConfiguracionBascula() {
   const {
     configuracion: configuracionData,
     saveConfiguracion,
     isSavingConfiguracion,
-  } = useConfiguracion({
-    enableConfiguracion: true,
-  });
+  } = useConfiguracion({ enableConfiguracion: true });
 
   const [configBascula, setConfigBascula] = useState({
     activarBascula: false,
@@ -34,207 +41,91 @@ export function ConfiguracionBascula() {
     await saveConfiguracion({
       ...configuracionData,
       ...configBascula,
-    });
+    } as Partial<Configuracion>);
   };
 
   const hasChanges = configuracionData
-    ? configBascula.activarBascula !==
-        (configuracionData.activarBascula ?? false) ||
-      configBascula.etiquetaPorPeso !==
-        (configuracionData.etiquetaPorPeso ?? false) ||
+    ? configBascula.activarBascula !== (configuracionData.activarBascula ?? false) ||
+      configBascula.etiquetaPorPeso !== (configuracionData.etiquetaPorPeso ?? false) ||
       configBascula.codigoBascula !== (configuracionData.codigoBascula ?? "")
     : false;
 
+  const disabled = isSavingConfiguracion || !configuracionData;
+
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 mb-2">
-        <div className="p-1.5 bg-indigo-100 rounded-lg">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="size-4 text-indigo-600"
-          >
-            <path d="M2 3a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H2Z" />
-            <path
-              fillRule="evenodd"
-              d="M2 7.5h16l-.811 7.71A2 2 0 0 1 15.189 17H4.811A2 2 0 0 1 2.81 15.21L2 7.5Zm5.22 1.97a.75.75 0 0 1 1.06 0l2.25 2.25a.75.75 0 0 1 0 1.06l-2.25 2.25a.75.75 0 1 1-1.06-1.06l1.72-1.72-1.72-1.72a.75.75 0 0 1 0-1.06Zm6.28 0a.75.75 0 0 0-1.06 0l-2.25 2.25a.75.75 0 0 0 0 1.06l2.25 2.25a.75.75 0 1 0 1.06-1.06l-1.72-1.72 1.72-1.72a.75.75 0 0 0 0-1.06Z"
-              clipRule="evenodd"
-            />
-          </svg>
+    <VentasSection title="Báscula / Balanza" icon={Scale}>
+      <ToggleRow
+        icon={Scale}
+        title="Activar báscula"
+        description="Habilita la lectura de códigos de barras generados por balanzas electrónicas"
+        isSelected={configBascula.activarBascula}
+        onValueChange={(v) => setConfigBascula((p) => ({ ...p, activarBascula: v }))}
+        isDisabled={disabled}
+      />
+
+      <ToggleRow
+        icon={Tag}
+        title="Etiqueta por peso"
+        description="El código de barras codifica el peso del producto (en lugar del precio)"
+        isSelected={configBascula.etiquetaPorPeso}
+        onValueChange={(v) => setConfigBascula((p) => ({ ...p, etiquetaPorPeso: v }))}
+        isDisabled={!configBascula.activarBascula || disabled}
+      >
+        <div className="text-[10px] text-slate-400 space-y-0.5 leading-relaxed">
+          <p>• Peso: se usarán 3 dígitos decimales (0,001g – 99,999g)</p>
+          <p>• Precio: sin decimales ($1 – $99.999)</p>
         </div>
-        <h3 className="text-lg font-semibold text-slate-900">Báscula</h3>
-      </div>
-      <p className="text-sm text-gray-600 mb-4">
-        Configuración para integración con balanzas y productos pesables
-      </p>
+      </ToggleRow>
 
-      {/* Activar Bascula */}
-      <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-        <CardBody className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-1">
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5 text-indigo-600"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 2a1 1 0 0 1 1 1v1.323l3.954 1.582 1.599-.8a1 1 0 0 1 .894 1.79l-1.233.616 1.738 5.42a1 1 0 0 1-.285 1.05A7 7 0 1 1 10 3v1a1 1 0 0 1-1-1V2ZM4.178 7.455l3.491-1.745.33.935-3.49 1.745-.33-.935Zm6.333 1.259 3.49 1.745-.331.935-3.49-1.745.33-.935Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h4 className="text-sm font-semibold text-slate-900">
-                  Activar báscula
-                </h4>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Habilita la lectura de códigos de barra generados por balanzas
-                </p>
-              </div>
+      {configBascula.activarBascula && (
+        <div className="px-5 py-4 rounded-2xl bg-slate-50/60 border border-slate-100 space-y-3">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 shrink-0 mt-0.5">
+              <Hash size={15} strokeWidth={2.5} className="text-[#67afc3]" />
             </div>
-            <Switch
-              isSelected={configBascula.activarBascula}
-              onValueChange={(value) =>
-                setConfigBascula((prev) => ({ ...prev, activarBascula: value }))
-              }
-              isDisabled={isSavingConfiguracion || !configuracionData}
-            />
-          </div>
-        </CardBody>
-      </Card>
-
-      {/* Etiqueta por peso */}
-      <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-        <CardBody className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-1">
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5 text-indigo-600"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M5.5 3A2.5 2.5 0 0 0 3 5.5v2.879a2.5 2.5 0 0 0 .732 1.767l6.5 6.5a2.5 2.5 0 0 0 3.536 0l2.878-2.878a2.5 2.5 0 0 0 0-3.536l-6.5-6.5A2.5 2.5 0 0 0 8.38 3H5.5ZM6 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h4 className="text-sm font-semibold text-slate-900">
-                  Etiqueta por peso
-                </h4>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  El código de barras contiene el peso en lugar del precio
-                </p>
-                <label htmlFor="codigoBascula">
-                  Peso: se tomaran 3 digitos para decimales valores: 0,001g -
-                  99,999g
-                </label>
-                <label htmlFor="codigoBascula">
-                  Precio: no tomará en cuenta los decimales valores: $1 -
-                  $99.999
-                </label>
-              </div>
+            <div>
+              <p className="text-sm font-bold text-slate-700">Prefijo de código de báscula</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Identifica qué códigos de barras provienen de la balanza (Ej: <span className="font-mono font-bold">20</span>)
+              </p>
             </div>
-            <Switch
-              isSelected={configBascula.etiquetaPorPeso}
-              onValueChange={(value) =>
-                setConfigBascula((prev) => ({
-                  ...prev,
-                  etiquetaPorPeso: value,
-                }))
-              }
-              isDisabled={
-                !configBascula.activarBascula ||
-                isSavingConfiguracion ||
-                !configuracionData
-              }
-            />
           </div>
-        </CardBody>
-      </Card>
-
-      {/* Codigo de Bascula */}
-      <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-        <CardBody className="p-4">
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5 text-indigo-600"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M3 4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4Zm2 2V5h1v1H5ZM3 13a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3Zm2 2v-1h1v1H5ZM13 3a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1h-3Zm1 2v1h1V5h-1Z"
-                    clipRule="evenodd"
-                  />
-                  <path d="M11 4a1 1 0 1 0-2 0v1h2V4ZM10 7a1 1 0 0 1 1 1v2h2v-1a1 1 0 1 1 2 0v2h-1a1 1 0 1 1-2 0v-2h-2v1a1 1 0 1 1-2 0v-2h1a1 1 0 0 1 1-1ZM9 14a1 1 0 0 0-1 1v2h2v-2a1 1 0 0 0-1-1ZM13 13a1 1 0 1 0 0 2h3a1 1 0 1 0 0-2h-3Z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h4 className="text-sm font-semibold text-slate-900">
-                  Código de inicio de báscula
-                </h4>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Prefijo utilizado por la balanza para identificar productos
-                  pesables (Ej: 20)
-                </p>
-              </div>
-            </div>
-            <Input
-              placeholder="Ej: 20"
-              value={configBascula.codigoBascula}
-              maxLength={2}
-              minLength={2}
-              onChange={(e) =>
-                setConfigBascula((prev) => ({
-                  ...prev,
-                  codigoBascula: e.target.value,
-                }))
-              }
-              isDisabled={
-                !configBascula.activarBascula ||
-                isSavingConfiguracion ||
-                !configuracionData
-              }
-              variant="bordered"
-              classNames={{ inputWrapper: "bg-white border-slate-200" }}
-            />
-            <label htmlFor="codigoBascula">
-              Ejemplo: 2000002005001 (20: prefijo, 00002: codigo, 00500:
-              peso/precio, 1: digito verificador)
-            </label>
-            <label htmlFor="codigoBascula">P P I I I I V V V V V C</label>
-            <label htmlFor="codigoBascula">
-              P P: prefijo, I I I I I: codigo, V V V V V: peso/precio, C: digito
-              verificador
-            </label>
+          <Input
+            label="Prefijo (2 dígitos)"
+            labelPlacement="outside"
+            placeholder="20"
+            variant="bordered"
+            classNames={inputCls}
+            maxLength={2}
+            value={configBascula.codigoBascula}
+            onChange={(e) => setConfigBascula((p) => ({ ...p, codigoBascula: e.target.value }))}
+            isDisabled={!configBascula.activarBascula || disabled}
+            className="max-w-[160px]"
+            startContent={<Hash size={14} className="text-slate-400 shrink-0" />}
+          />
+          <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-[#67afc3]/5 border border-[#67afc3]/15">
+            <Info size={13} className="text-[#67afc3] shrink-0 mt-0.5" />
+            <p className="text-[10px] text-[#67afc3] font-medium leading-relaxed">
+              Ejemplo: <span className="font-mono font-bold">2000002005001</span>
+              <br />
+              <span className="font-mono">PP·IIIII·VVVVV·C</span> — PP: prefijo · IIIII: código · VVVVV: peso/precio · C: verificador
+            </p>
           </div>
-        </CardBody>
-      </Card>
+        </div>
+      )}
 
       {hasChanges && (
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-end pt-2">
           <Button
-            color="primary"
             onPress={handleSave}
             isLoading={isSavingConfiguracion}
+            className="bg-linear-to-r from-[#67afc3] to-[#2dd4bf] text-white font-bold px-6 h-10 shadow-md shadow-[#67afc3]/20 rounded-xl gap-2"
+            startContent={!isSavingConfiguracion && <Save size={15} />}
           >
-            Guardar Báscula
+            Guardar báscula
           </Button>
         </div>
       )}
-    </div>
+    </VentasSection>
   );
 }
