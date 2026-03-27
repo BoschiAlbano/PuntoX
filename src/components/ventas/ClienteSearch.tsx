@@ -64,7 +64,9 @@ export default function ClienteSearch({
           <span className="text-gray-500 font-semibold text-xs truncate w-full text-left leading-tight">
             {displayName}
           </span>
-          <span className="text-gray-500 text-[10px] leading-tight">{displayDni}</span>
+          <span className="text-gray-500 text-[10px] leading-tight">
+            {displayDni}
+          </span>
         </div>
 
         {/* Chevron */}

@@ -57,39 +57,59 @@ export default function KPICard({
   };
 
   const colorClasses = {
-    primary: "border-l-blue-500",
-    success: "border-l-green-500",
-    warning: "border-l-yellow-500",
-    danger: "border-l-red-500",
-    default: "border-l-gray-500",
+    primary: "border-l-indigo-400 bg-linear-to-br from-indigo-50/20 to-white",
+    success: "border-l-emerald-400 bg-linear-to-br from-emerald-50/20 to-white",
+    warning: "border-l-amber-400 bg-linear-to-br from-amber-50/20 to-white",
+    danger: "border-l-red-400 bg-linear-to-br from-red-50/20 to-white",
+    default: "border-l-[#67afc3] bg-linear-to-br from-[#67afc3]/5 to-white",
   };
 
   return (
     <Card
-      className={`rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm border-l-4 ${colorClasses[color]}`}
+      className={`rounded-2xl border border-slate-100 shadow-sm backdrop-blur-2xl hover:shadow-md transition-shadow group ${colorClasses[color]}`}
     >
-      <CardBody className="p-4">
+      <CardBody className="p-5">
         <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <p className="text-sm text-gray-600 mb-1">{title}</p>
-            <p className="text-2xl font-bold text-gray-900">{formatValue(value)}</p>
+          <div className="flex-1 w-full truncate">
+            <p className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              {title}
+            </p>
+            <p className="text-2xl font-bold text-slate-800 truncate tracking-tight">
+              {formatValue(value)}
+            </p>
             {variation !== undefined && variation !== null && (
-              <div className="flex items-center gap-1 mt-2">
-                {getVariationIcon()}
-                <span className={`text-xs font-medium ${getVariationColor()}`}>
+              <div className="flex items-center gap-1.5 mt-3">
+                <span
+                  className={`flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md tracking-wider ${
+                    variation > 0
+                      ? "bg-emerald-50 text-emerald-600"
+                      : variation < 0
+                      ? "bg-red-50 text-red-600"
+                      : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  {getVariationIcon()}
                   {variation > 0 ? "+" : ""}
                   {variation.toFixed(1)}%
                 </span>
                 {previousValue !== undefined && (
-                  <span className="text-xs text-gray-500 ml-1">
-                    vs período anterior
+                  <span className="text-[10px] text-slate-400 uppercase font-medium tracking-wide">
+                    vs ant.
                   </span>
                 )}
               </div>
             )}
           </div>
           {icon && (
-            <div className="ml-4 text-gray-400">{icon}</div>
+            <div className={`p-2.5 rounded-xl border shrink-0 transition-transform group-hover:scale-105 shadow-sm ${
+              color === "primary" ? "bg-indigo-50 border-indigo-100 text-indigo-500" :
+              color === "success" ? "bg-emerald-50 border-emerald-100 text-emerald-500" :
+              color === "warning" ? "bg-amber-50 border-amber-100 text-amber-500" :
+              color === "danger" ? "bg-red-50 border-red-100 text-red-500" :
+              "bg-[#67afc3]/10 border-[#67afc3]/20 text-[#67afc3]"
+            }`}>
+              {icon}
+            </div>
           )}
         </div>
       </CardBody>

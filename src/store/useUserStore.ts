@@ -42,6 +42,7 @@ interface UserState {
   canAccessRoute: (path: string) => boolean;
   pushBranch: (branch: UserBranch) => void;
   removeBranch: (branchId: string) => void;
+  updateBranch: (branch: UserBranch) => void;
 }
 
 export const useUserStore = create<UserState>()(
@@ -142,6 +143,20 @@ export const useUserStore = create<UserState>()(
         }
         const { branches } = get();
         set({ branches: branches.filter((b) => b.Id != branchId) });
+      },
+
+      updateBranch: (branch) => {
+        const { branches, currentBranch } = get();
+        const updatedBranches = branches.map((b) => 
+          b.Id == branch.Id ? { ...b, ...branch } : b
+        );
+        
+        let newCurrent = currentBranch;
+        if (currentBranch.Id == branch.Id) {
+          newCurrent = { ...currentBranch, ...branch };
+        }
+        
+        set({ branches: updatedBranches, currentBranch: newCurrent });
       },
     }),
     { name: "UserStore" },

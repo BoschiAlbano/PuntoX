@@ -1,39 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Button,
-  Card,
-  CardBody,
-  CardHeader,
-  Input,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Switch,
-  Chip,
-  Spinner,
-  addToast,
-} from "@heroui/react";
+import GenericCrud from "@/components/shared/GenericCrud";
+import { Chip, Tooltip, addToast, Button } from "@heroui/react";
 import {
   Building2,
   MapPin,
   Phone,
-  Plus,
   Users,
-  Edit,
-  Trash2,
   Star,
+  Calendar,
+  CheckCircle2,
+  AlertCircle,
+  MoreVertical,
 } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useSucursales } from "@/hooks/useSucursales";
 import { useUserStore } from "@/store/useUserStore";
-import { LoadingComponent } from "@/components/loading/loading";
+import { useQueryClient } from "@tanstack/react-query";
+import SucursalForm from "@/components/sucursales/SucursalForm";
+import { motion } from "framer-motion";
 
-type Sucursal = {
-  id: number;
+export interface Sucursal {
+  Id: number;
   nombre: string;
   direccion: string | null;
   telefono: string | null;
@@ -41,374 +28,273 @@ type Sucursal = {
   estaActiva: boolean;
   fechaCreacion: string;
   cantidadUsuarios: number;
-};
+}
 
 export default function SucursalesPage() {
-  const queryClient = useQueryClient();
-  const { data: sucursales = [], isLoading } = useSucursales();
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [editingSucursal, setEditingSucursal] = useState<Sucursal | null>(null);
-
   const userStore = useUserStore();
-  // Form state
-  const [formData, setFormData] = useState({
-    nombre: "",
-    direccion: "",
-    telefono: "",
-    esPrincipal: false,
-  });
+  const queryClient = useQueryClient();
 
-  // Abrir modal para crear
-  const handleNuevaSucursal = () => {
-    setEditingSucursal(null);
-    setFormData({
-      nombre: "",
-      direccion: "",
-      telefono: "",
-      esPrincipal: false,
-    });
-    setIsModalOpen(true);
-  };
-
-  // Abrir modal para editar
-  const handleEditarSucursal = (sucursal: Sucursal) => {
-    setEditingSucursal(sucursal);
-    setFormData({
-      nombre: sucursal.nombre,
-      direccion: sucursal.direccion || "",
-      telefono: sucursal.telefono || "",
-      esPrincipal: sucursal.esPrincipal,
-    });
-    setIsModalOpen(true);
-  };
-
-  // Guardar sucursal
-  const handleGuardar = async () => {
-    if (!formData.nombre.trim()) {
+  const handleEliminarPost = async (sucursal: Sucursal) => {
+    // Si era la sucursal actual, informar o limpiar?
+    if (userStore.currentBranch.Id === sucursal.Id.toString()) {
       addToast({
-        title: "Sucursal",
-        description: "El nombre es requerido",
-      });
-      return;
-    }
-
-    try {
-      setIsSaving(true);
-      const url = editingSucursal
-        ? `/api/sucursales/${editingSucursal.id}`
-        : "/api/sucursales";
-      const method = editingSucursal ? "PATCH" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (res.ok) {
-        setIsModalOpen(false);
-        await queryClient.invalidateQueries({ queryKey: ["sucursales"] });
-        const data = await res.json();
-        userStore.pushBranch({
-          Id: data?.sucursal?.id || "",
-          Nombre: data?.sucursal?.nombre || "",
-          EsPrincipal: data?.sucursal?.esPrincipal || false,
-          esDefault: false,
-        });
-      } else {
-        // const data = await res.json();
-        // alert(data.error || "Error al guardar");
-        addToast({
-          title: "Sucursal",
-          description: "Error al guardar",
-        });
-      }
-    } catch (error) {
-      addToast({
-        title: "Sucursal",
-        description: "Error al guardar",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // Eliminar sucursal
-  const handleEliminar = async (sucursal: Sucursal) => {
-    if (userStore.currentBranch.Id == sucursal.id.toString()) {
-      addToast({
-        title: "Sucursal",
-        description: "No se puede eliminar la sucursal actual",
-      });
-      return;
-    }
-
-    try {
-      addToast({
-        title: "Sucursal",
-        description: "Cargando...",
-        promise: fetch(`/api/sucursales/${sucursal.id}`, {
-          method: "DELETE",
-        }).then((res) => {
-          if (res.ok) {
-            userStore.removeBranch(sucursal.id.toString());
-            queryClient.invalidateQueries({ queryKey: ["sucursales"] });
-          } else {
-            addToast({
-              title: "Sucursal",
-              description: "Error al eliminar",
-            });
-          }
-        }),
-        shouldShowTimeoutProgress: true,
-        timeout: 500,
-      });
-      // const res = await fetch(`/api/sucursales/${sucursal.id}`, {
-      //   method: "DELETE",
-      // });
-
-      // if (res.ok) {
-      //   userStore.removeBranch(sucursal.id.toString());
-      //   await queryClient.invalidateQueries({ queryKey: ["sucursales"] });
-      // } else {
-      //   // const data = await res.json();
-      //   // alert(data.error || "Error al eliminar");
-      //   addToast({
-      //     title: "Sucursal",
-      //     description: "Error al eliminar",
-      //   });
-      // }
-    } catch (error) {
-      addToast({
-        title: "Sucursal",
-        description: "Error al eliminar",
+        title: "Sucursal Eliminada",
+        description:
+          "Has eliminado la sucursal que tenías activa. Se recomienda recargar.",
+        color: "warning",
       });
     }
+    userStore.removeBranch(sucursal.Id.toString());
   };
 
   return (
-    <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch h-auto  min-h-full">
-      {/* Header */}
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-            <Building2 className="h-7 w-7 text-[#67afc3]" />
+    <div className="max-w-[1400px] mx-auto py-4 sm:py-6 px-3 sm:px-6 flex flex-col items-stretch h-full relative space-y-4 sm:space-y-6">
+      {/* Premium Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="flex flex-col gap-2 px-1 sm:px-0"
+      >
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100/50 border border-slate-200/50 backdrop-blur-md text-[#67afc3] text-xs font-semibold w-fit shadow-sm">
+          <Building2 className="w-4 h-4" />
+          <span>Gestión de Sedes</span>
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          Nuestras{" "}
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-[#67afc3] to-[#2dd4bf]">
             Sucursales
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Gestiona las sucursales de tu comercio
-          </p>
-        </div>
-        <Button
-          color="primary"
-          startContent={<Plus className="h-4 w-4" />}
-          onPress={handleNuevaSucursal}
-        >
-          Nueva Sucursal
-        </Button>
-      </div>
+          </span>
+        </h1>
+        <p className="mt-2 text-slate-500 font-medium max-w-2xl text-sm sm:text-base leading-relaxed">
+          Administra tus puntos de venta, configura sedes principales y
+          monitorea la actividad de tus locales.
+        </p>
+      </motion.div>
 
-      {/* Lista de sucursales */}
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <LoadingComponent message="Cargando sucursales..." />
-        </div>
-      ) : sucursales.length === 0 ? (
-        <Card>
-          <CardBody className="text-center py-12">
-            <Building2 className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-500">No hay sucursales registradas</p>
-            <Button
-              color="primary"
-              variant="flat"
-              size="sm"
-              className="mt-4"
-              startContent={<Plus className="h-4 w-4" />}
-              onPress={handleNuevaSucursal}
-            >
-              Crear Primera Sucursal
-            </Button>
-          </CardBody>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sucursales.map((sucursal) => (
-            <Card
-              key={sucursal.id}
-              className="hover:shadow-lg transition-shadow"
-            >
-              <CardHeader className="flex justify-between items-start pb-2">
-                <div className="flex items-start gap-2 flex-1">
-                  <Building2 className="h-5 w-5 text-[#67afc3] mt-1 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-slate-800 truncate">
-                        {sucursal.nombre}
-                      </h3>
-                      {sucursal.esPrincipal && (
-                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 shrink-0" />
-                      )}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="p-6 h-full flex flex-col"
+      >
+        <GenericCrud<Sucursal>
+          apiPath="/api/sucursales"
+          queryKey="sucursales"
+          searchPlaceholder="Buscar por nombre o dirección..."
+          initialLimit={10}
+          enableBulkActions={false}
+          columns={[
+            { uid: "nombre", name: "SUCURSAL", sortable: true },
+            { uid: "usuarios", name: "USUARIOS", sortable: false },
+            { uid: "contacto", name: "CONTACTO", sortable: false },
+            { uid: "estado", name: "ESTADO", sortable: false },
+            { uid: "acciones", name: "ACCIONES", sortable: false },
+          ]}
+          renderCell={(item, columnKey) => {
+            switch (columnKey) {
+              case "nombre":
+                return (
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`p-2.5 rounded-2xl bg-linear-to-br ${item.esPrincipal ? "from-amber-400 to-orange-400 shadow-amber-200" : "from-[#67afc3] to-[#2dd4bf] shadow-sky-100"} text-white shadow-lg shrink-0`}
+                    >
+                      <Building2 size={18} />
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Chip
-                        size="sm"
-                        variant="flat"
-                        color={sucursal.estaActiva ? "success" : "default"}
-                      >
-                        {sucursal.estaActiva ? "Activa" : "Inactiva"}
-                      </Chip>
-                      {sucursal.esPrincipal && (
-                        <Chip size="sm" variant="flat" color="warning">
-                          Principal
-                        </Chip>
-                      )}
+                    <div className="flex flex-col">
+                      <span className="font-bold text-slate-700 text-sm flex items-center gap-1.5">
+                        {item.nombre}
+                        {item.esPrincipal && (
+                          <Star
+                            size={12}
+                            fill="currentColor"
+                            className="text-amber-500"
+                          />
+                        )}
+                      </span>
+                      <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+                        <Calendar size={10} />
+                        Creada el{" "}
+                        {new Date(item.fechaCreacion).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
+                );
+              case "usuarios":
+                return (
+                  <div className="flex items-center gap-2">
+                    <div className="flex -space-x-2">
+                      {[...Array(Math.min(item.cantidadUsuarios, 3))].map(
+                        (_, i) => (
+                          <div
+                            key={i}
+                            className="w-6 h-6 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500"
+                          >
+                            {i + 1}
+                          </div>
+                        ),
+                      )}
+                    </div>
+                    <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
+                      {item.cantidadUsuarios}{" "}
+                      {item.cantidadUsuarios === 1 ? "usuario" : "usuarios"}
+                    </span>
+                  </div>
+                );
+              case "contacto":
+                return (
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-1.5 text-slate-500">
+                      <MapPin size={12} className="shrink-0" />
+                      <span className="text-xs font-medium truncate max-w-[200px]">
+                        {item.direccion || "Sin dirección"}
+                      </span>
+                    </div>
+                    {item.telefono && (
+                      <div className="flex items-center gap-1.5 text-slate-400">
+                        <Phone size={12} className="shrink-0" />
+                        <span className="text-[11px] font-medium">
+                          {item.telefono}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              case "estado":
+                return (
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase transition-all ${
+                        item.estaActiva
+                          ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                          : "bg-slate-50 text-slate-400 border border-slate-100"
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${item.estaActiva ? "bg-emerald-500" : "bg-slate-300"}`}
+                      ></span>
+                      {item.estaActiva ? "Operativa" : "Inactiva"}
+                    </span>
+                    {item.esPrincipal && (
+                      <span className="bg-amber-50 text-amber-600 border border-amber-100 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide">
+                        Principal
+                      </span>
+                    )}
+                  </div>
+                );
+              default:
+                return null;
+            }
+          }}
+          renderRowPreview={(item) => (
+            <div className="space-y-6 text-sm">
+              <div className="p-5 rounded-3xl bg-linear-to-br from-slate-50 to-white border border-slate-100 shadow-sm flex items-center gap-5">
+                <div
+                  className={`w-14 h-14 rounded-2xl bg-linear-to-br ${item.esPrincipal ? "from-amber-400 to-orange-400" : "from-[#67afc3] to-[#2dd4bf]"} text-white flex items-center justify-center shadow-lg shrink-0 transform -rotate-3`}
+                >
+                  <Building2 size={28} />
                 </div>
-              </CardHeader>
-              <CardBody className="pt-2">
-                <div className="space-y-2 text-sm">
-                  {sucursal.direccion && (
-                    <div className="flex items-start gap-2 text-slate-600">
-                      <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                      <span className="flex-1">{sucursal.direccion}</span>
-                    </div>
-                  )}
-                  {sucursal.telefono && (
-                    <div className="flex items-center gap-2 text-slate-600">
-                      <Phone className="h-4 w-4 shrink-0" />
-                      <span>{sucursal.telefono}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 text-slate-600">
-                    <Users className="h-4 w-4 shrink-0" />
-                    <span>
-                      {sucursal.cantidadUsuarios}{" "}
-                      {sucursal.cantidadUsuarios === 1 ? "usuario" : "usuarios"}
+                <div>
+                  <h4 className="font-extrabold text-slate-800 text-lg leading-tight flex items-center gap-2">
+                    {item.nombre}
+                    {item.esPrincipal && (
+                      <Star
+                        size={16}
+                        fill="currentColor"
+                        className="text-amber-500"
+                      />
+                    )}
+                  </h4>
+                  <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-0.5">
+                    {item.estaActiva
+                      ? "Punto de Venta Activo"
+                      : "Sede Fuera de Operación"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl bg-slate-50/50 border border-slate-100 flex flex-col gap-1 transition-all hover:bg-white hover:shadow-sm">
+                  <p className="text-slate-400 font-bold text-[10px] uppercase tracking-wider mb-1">
+                    Dirección Física
+                  </p>
+                  <div className="flex items-start gap-2">
+                    <MapPin size={16} className="text-[#67afc3] shrink-0" />
+                    <span className="font-semibold text-slate-700 wrap-break-word leading-tight">
+                      {item.direccion || "No especificada"}
                     </span>
                   </div>
                 </div>
-
-                <div className="flex gap-2 mt-4 pt-4 border-t">
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    color="primary"
-                    startContent={<Edit className="h-3 w-3" />}
-                    onPress={() => handleEditarSucursal(sucursal)}
-                    className="flex-1"
-                  >
-                    Editar
-                  </Button>
-                  {!sucursal.esPrincipal && (
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      color="danger"
-                      startContent={<Trash2 className="h-3 w-3" />}
-                      onPress={() =>
-                        addToast({
-                          title: "Sucursal",
-                          description:
-                            "¿Eliminar sucursal " + sucursal.nombre + "?",
-                          endContent: (
-                            <Button
-                              size="sm"
-                              variant="flat"
-                              onPress={() => handleEliminar(sucursal)}
-                            >
-                              Aceptar
-                            </Button>
-                          ),
-                        })
-                      }
-                      className="flex-1"
-                    >
-                      Eliminar
-                    </Button>
-                  )}
-                </div>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Modal Crear/Editar */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        size="lg"
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader>
-                {editingSucursal ? "Editar Sucursal" : "Nueva Sucursal"}
-              </ModalHeader>
-              <ModalBody>
-                <div className="space-y-4">
-                  <Input
-                    label="Nombre"
-                    placeholder="Ej: Casa Central, Sucursal Norte"
-                    value={formData.nombre}
-                    onChange={(e) =>
-                      setFormData({ ...formData, nombre: e.target.value })
-                    }
-                    isRequired
-                  />
-                  <Input
-                    label="Dirección"
-                    placeholder="Dirección completa"
-                    value={formData.direccion}
-                    onChange={(e) =>
-                      setFormData({ ...formData, direccion: e.target.value })
-                    }
-                  />
-                  <Input
-                    label="Teléfono"
-                    placeholder="Número de contacto"
-                    value={formData.telefono}
-                    onChange={(e) =>
-                      setFormData({ ...formData, telefono: e.target.value })
-                    }
-                  />
-                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-slate-800">
-                        Sucursal Principal
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        Solo una sucursal puede ser principal
-                      </p>
-                    </div>
-                    <Switch
-                      isSelected={formData.esPrincipal}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, esPrincipal: value })
-                      }
-                    />
+                <div className="p-4 rounded-2xl bg-slate-50/50 border border-slate-100 flex flex-col gap-1 transition-all hover:bg-white hover:shadow-sm">
+                  <p className="text-slate-400 font-bold text-[10px] uppercase tracking-wider mb-1">
+                    Teléfono Interno
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Phone size={16} className="text-[#67afc3] shrink-0" />
+                    <span className="font-semibold text-slate-700">
+                      {item.telefono || "No registrado"}
+                    </span>
                   </div>
                 </div>
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="flat" onPress={onClose}>
-                  Cancelar
-                </Button>
-                <Button
-                  color="primary"
-                  onPress={handleGuardar}
-                  isLoading={isSaving}
-                >
-                  {editingSucursal ? "Actualizar" : "Crear"}
-                </Button>
-              </ModalFooter>
-            </>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50/50 border border-slate-100 transition-all hover:bg-white hover:shadow-sm">
+                <div className="flex justify-between items-center mb-3 text-slate-800">
+                  <div className="flex items-center gap-2">
+                    <Users size={16} className="text-[#67afc3]" />
+                    <span className="font-bold text-sm">Equipo de Trabajo</span>
+                  </div>
+                  <span className="bg-[#67afc3]/10 text-[#67afc3] px-2.5 py-1 rounded-md text-[11px] font-bold">
+                    {item.cantidadUsuarios} INTEGRANTES
+                  </span>
+                </div>
+                <div className="bg-white/80 rounded-xl p-3 border border-slate-50">
+                  <p className="text-xs text-slate-500 italic flex items-center gap-1.5">
+                    <AlertCircle size={14} />
+                    Los usuarios se gestionan desde la pestaña de Empleados.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center p-4 rounded-2xl bg-slate-900 text-white shadow-xl shadow-slate-200 overflow-hidden relative group">
+                <div className="absolute right-0 top-0 w-32 h-32 bg-[#67afc3]/20 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-[#67afc3]/40 transition-all" />
+                <div className="relative z-10 flex flex-col">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Estado Maestro
+                  </span>
+                  <span className="text-sm font-bold mt-1 leading-none">
+                    Configuración Prioritaria
+                  </span>
+                </div>
+                {item.esPrincipal ? (
+                  <Chip
+                    startContent={<CheckCircle2 size={12} />}
+                    size="sm"
+                    className="bg-amber-400/20 text-amber-400 border border-amber-400/30"
+                  >
+                    NODO PRINCIPAL
+                  </Chip>
+                ) : (
+                  <span className="text-[10px] font-bold text-slate-500">
+                    SEDE SECUNDARIA
+                  </span>
+                )}
+              </div>
+            </div>
           )}
-        </ModalContent>
-      </Modal>
+          getRowPreviewTitle={(item) => `Perfil de Sede: ${item.nombre}`}
+          FormComponent={({ isOpen, onClose, initialData }) => (
+            <SucursalForm
+              isOpen={isOpen}
+              onClose={onClose}
+              sucursal={initialData as any}
+              onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ["sucursales"] });
+              }}
+            />
+          )}
+        />
+      </motion.div>
     </div>
   );
 }

@@ -469,7 +469,7 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                       <div className="space-y-1">
                         {section.items.map((item) => {
                           const isActive = pathname === item.href;
-                          
+
                           // Manejador extra para responsive
                           const handleNavigationTrigger = () => {
                             if (window.innerWidth < 768 && onClose) {
@@ -478,9 +478,9 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                           };
 
                           return (
-                            <Link 
-                              key={item.href} 
-                              href={item.href} 
+                            <Link
+                              key={item.href}
+                              href={item.href}
                               onClick={handleNavigationTrigger}
                               className="block"
                             >

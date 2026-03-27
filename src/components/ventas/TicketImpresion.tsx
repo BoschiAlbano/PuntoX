@@ -13,17 +13,67 @@ interface TicketProps {
     numeroComprobante: string;
     tipoComprobante: string;
     formasPago: any[];
+    pie: string;
   } | null;
 }
 
+// ════════════════════════════════════════════════════════════════════════
+//  Helpers de texto — réplica del TicketPrinter de C#
+//  48mm imprimibles → ~28 caracteres por línea con Arial 11px
+// ════════════════════════════════════════════════════════════════════════
+const MAX = 36;
+
+const truncate = (t: string, max = MAX) =>
+  !t ? "" : t.length > max ? t.substring(0, max) : t;
+
+const addLine = (t = "") => truncate(t, MAX);
+
+const addCenter = (t: string) => {
+  const s = truncate(t, MAX);
+  const pad = Math.max(0, Math.floor((MAX - s.length) / 2));
+  return " ".repeat(pad) + s;
+};
+
+const addExtremes = (left: string, right: string) => {
+  const l = truncate(left, MAX - right.length - 1);
+  const r = truncate(right, MAX - l.length - 1);
+  const spaces = Math.max(1, MAX - l.length - r.length);
+  return l + " ".repeat(spaces) + r;
+};
+
+const addSeparator = () => "*".repeat(MAX);
+
+const fmt = (n: number) => `$${n.toFixed(2)}`;
+
+const fmtCant = (n: number) =>
+  n === Math.trunc(n) ? n.toFixed(0) : n.toFixed(3);
+
+// Word-wrap: corta por palabras completas, nunca a la mitad de una
+const wrapWords = (text: string, max = 25): string[] => {
+  const words = text.split(" ");
+  const lines: string[] = [];
+  let current = "";
+  for (const word of words) {
+    if (current.length === 0) {
+      // Palabra más larga que MAX → partirla por fuerza
+      current = word.length > max ? word.substring(0, max) : word;
+    } else if (current.length + 1 + word.length <= max) {
+      current += " " + word;
+    } else {
+      lines.push(current);
+      current = word.length > max ? word.substring(0, max) : word;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+};
+
 export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
   ({ datosVenta }, ref) => {
-    console.log("datosVenta", datosVenta);
     const { configuracion } = useConfiguracion({
       enableConfiguracion: true,
     });
 
-    // Helper function to get payment method name
     const getNombrePago = (tipo: number) => {
       const entry = Object.entries(TIPO_PAGO).find(
         ([, value]) => value === tipo,
@@ -46,7 +96,6 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
         };
       }
 
-      // Logic for Factura A
       let netSubtotal = 0;
       const ivaMap: Record<number, number> = {};
 
@@ -54,27 +103,18 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
         const ivaRate = Number(item.Iva?.Porcentaje || 0);
         const div = 1 + ivaRate / 100;
         const net = item.subtotal / div;
-
         netSubtotal += net;
-
-        // Calculate IVA for this item
         const iva = item.subtotal - net;
         ivaMap[ivaRate] = (ivaMap[ivaRate] || 0) + iva;
-
-        return {
-          ...item,
-          subtotal: net,
-        };
+        return { ...item, subtotal: net };
       });
 
-      // Apply discount to Net Subtotal and IVA
       const discountRate =
         datosVenta.subtotal > 0
           ? datosVenta.descuento / datosVenta.subtotal
           : 0;
       const netDiscount = netSubtotal * discountRate;
 
-      // Adjust IVA values by discount
       const finalIvaMap: Record<number, number> = {};
       Object.entries(ivaMap).forEach(([rate, amount]) => {
         finalIvaMap[Number(rate)] = amount * (1 - discountRate);
@@ -89,129 +129,187 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
       };
     }, [datosVenta]);
 
+    // ══════════════════════════════════════════════════════════════════
+    //  Construir líneas del ticket (igual que StringBuilder en C#)
+    // ══════════════════════════════════════════════════════════════════
+    const ticketLines = useMemo(() => {
+      if (!datosVenta || !calculatedData) return [];
+
+      const lines: string[] = [];
+      const push = (l: string) => lines.push(l);
+
+      // ── Encabezado empresa ─────────────────────────────────────────
+      push(
+        addCenter(
+          (
+            configuracion?.nombreFantasia ||
+            configuracion?.razonSocial ||
+            ""
+          ).toUpperCase(),
+        ),
+      );
+      push(addLine());
+      push(addSeparator());
+
+      if (configuracion?.direccion)
+        push(addLine(`Dire: ${configuracion.direccion}`));
+      if (configuracion?.cuit) push(addLine(`Cuit: ${configuracion.cuit}`));
+      if (configuracion?.telefono)
+        push(addLine(`Tel: ${configuracion.telefono}`));
+
+      push(addSeparator());
+
+      // ── Datos del comprobante ──────────────────────────────────────
+      push(addLine(`Fecha: ${new Date(datosVenta.fecha).toLocaleString()}`));
+      push(
+        addLine(
+          `Comp: ${datosVenta.tipoComprobante} N° ${datosVenta.numeroComprobante.toString().padStart(8, "0")}`,
+        ),
+      );
+      const clienteNombre = datosVenta.cliente?.Nombre
+        ? `${datosVenta.cliente.Nombre} ${datosVenta.cliente.Apellido || ""}`
+        : "Consumidor Final";
+      push(addLine(`Cliente: ${clienteNombre}`));
+      if (datosVenta.cliente?.Cuit) {
+        push(addLine(`CUIT/DNI: ${datosVenta.cliente.Cuit}`));
+      }
+
+      push(addSeparator());
+
+      // ── Cabecera artículos ─────────────────────────────────────────
+      push(addLine("Art.  Cant. P/U  Sub.T"));
+      push(addSeparator());
+
+      // ── Artículos (formato apilado como en C#) ─────────────────────
+      calculatedData.items.forEach((item: any) => {
+        const precioUnit =
+          item.cantidad > 0 ? item.subtotal / item.cantidad : item.subtotal;
+
+        // Línea(s) de descripción con word-wrap
+        const descLines = wrapWords(item.Descripcion || "");
+        descLines.forEach((l) => push(l));
+
+        // Línea: cant X $precio = $subtotal
+        push(
+          addLine(
+            `${fmtCant(item.cantidad)} X ${fmt(precioUnit)} = ${fmt(item.subtotal)}`,
+          ),
+        );
+        push(addLine());
+      });
+
+      push(addSeparator());
+
+      // ── Totales ────────────────────────────────────────────────────
+      push(
+        addExtremes(
+          `Sub.T${calculatedData.isFacturaA ? " (Neto)" : ""}:`,
+          fmt(calculatedData.subtotal),
+        ),
+      );
+
+      if (calculatedData.descuento > 0) {
+        push(addExtremes("Descuento:", `-${fmt(calculatedData.descuento)}`));
+      }
+
+      // IVA Factura A
+      if (calculatedData.isFacturaA && calculatedData.ivaBreakdown) {
+        Object.entries(calculatedData.ivaBreakdown).forEach(
+          ([rate, amount]) => {
+            if (amount > 0) {
+              push(addExtremes(`IVA ${rate}%:`, fmt(amount)));
+            }
+          },
+        );
+      }
+
+      push(addSeparator());
+      push(addExtremes("TOTAL:", fmt(datosVenta.total)));
+      push(addSeparator());
+
+      // ── Formas de pago ─────────────────────────────────────────────
+      push(addLine("Pagos"));
+      datosVenta.formasPago.forEach((p: any) => {
+        push(
+          addCenter(
+            (() => {
+              const s = getNombrePago(p.tipoPago).toLowerCase();
+              return s.charAt(0).toUpperCase() + s.slice(1);
+            })() +
+              ": " +
+              fmt(p.monto),
+          ),
+        );
+      });
+
+      push(addSeparator());
+
+      // ── Pie ────────────────────────────────────────────────────────
+      push(addLine());
+      wrapWords(datosVenta.pie).forEach((l) => push(addCenter(l)));
+      push(addLine());
+      push(addCenter("PuntoX Software"));
+      push(addCenter("www.puntox.com.ar"));
+
+      push(addLine());
+
+      return lines;
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [datosVenta, calculatedData, configuracion]);
+
     if (!datosVenta || !calculatedData) return null;
 
     return (
       <div
         ref={ref}
-        className="p-2 font-mono text-xs text-black bg-white"
-        style={{ width: "80mm", margin: "0 auto" }}
+        style={{
+          width: "220px",
+          maxWidth: "220px",
+          margin: "0 auto",
+          padding: "0",
+          background: "#fff",
+          overflow: "hidden",
+          boxSizing: "border-box",
+        }}
       >
-        {/* Logo */}
-        <section className="flex justify-center items-center">
-          {configuracion?.ShowFoto && configuracion?.foto && (
-            <img src={configuracion.foto} alt="Logo" className=" w-1/3" />
-          )}
-        </section>
-
-        {/* Header */}
-        <div className="text-center mb-2">
-          <h2 className="font-bold text-sm uppercase">
-            {configuracion?.nombreFantasia || configuracion?.razonSocial}
-          </h2>
-          <p>{configuracion?.direccion}</p>
-          <p>CUIT: {configuracion?.cuit}</p>
-          <p>Tel: {configuracion?.telefono}</p>
-        </div>
-
-        <div className="border-b border-black border-dashed my-2" />
-
-        {/* Info Comprobante */}
-        <div className="mb-2">
-          <p>Fecha: {new Date(datosVenta.fecha).toLocaleString()}</p>
-          <p>
-            Comp: {datosVenta.tipoComprobante} N°{" "}
-            {datosVenta.numeroComprobante.toString().padStart(8, "0")}
-          </p>
-          <p>
-            Cliente:{" "}
-            {datosVenta.cliente?.Nombre
-              ? `${datosVenta.cliente.Nombre} ${datosVenta.cliente.Apellido || ""}`
-              : "Consumidor Final"}
-          </p>
-          {datosVenta.cliente?.Cuit && (
-            <p>CUIT/DNI: {datosVenta.cliente.Cuit}</p>
-          )}
-        </div>
-
-        <div className="border-b border-black border-dashed my-2" />
-
-        {/* Items */}
-        <table className="w-full mb-2">
-          <thead>
-            <tr className="text-left">
-              <th className="w-8">Cant</th>
-              <th>Desc</th>
-              <th className="text-right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {calculatedData.items.map((item: any, i: number) => (
-              <tr key={i}>
-                <td className="align-top">{item.cantidad}</td>
-                <td className="align-top pr-1">{item.Descripcion}</td>
-                <td className="text-right align-top">
-                  ${item.subtotal.toFixed(2)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <div className="border-b border-black border-dashed my-2" />
-
-        {/* Totals */}
-        <div className="flex flex-col gap-1">
-          <div className="flex justify-between">
-            <span>Subtotal{calculatedData.isFacturaA ? " (Neto)" : ""}:</span>
-            <span>${calculatedData.subtotal.toFixed(2)}</span>
+        {/* Logo centrado */}
+        {configuracion?.ShowFoto && configuracion?.foto && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "75%",
+              // marginBottom: "4px",
+            }}
+          >
+            <img
+              src={configuracion.foto}
+              alt="Logo"
+              style={{
+                maxWidth: "90px",
+                height: "auto",
+                objectFit: "contain",
+              }}
+            />
           </div>
-          {calculatedData.descuento > 0 && (
-            <div className="flex justify-between">
-              <span>Descuento:</span>
-              <span>-${calculatedData.descuento.toFixed(2)}</span>
-            </div>
-          )}
+        )}
 
-          {/* IVA Breakdown for Factura A */}
-          {calculatedData.isFacturaA &&
-            calculatedData.ivaBreakdown &&
-            Object.entries(calculatedData.ivaBreakdown).map(
-              ([rate, amount]) =>
-                amount > 0 && (
-                  <div key={rate} className="flex justify-between">
-                    <span>IVA {rate}%:</span>
-                    <span>${amount.toFixed(2)}</span>
-                  </div>
-                ),
-            )}
-
-          <div className="flex justify-between font-bold text-sm mt-1">
-            <span>TOTAL:</span>
-            <span>${datosVenta.total.toFixed(2)}</span>
-          </div>
-        </div>
-
-        <div className="border-b border-black border-dashed my-2" />
-
-        {/* Formas de Pago */}
-        <div className="mb-2">
-          <p className="font-bold mb-1">Formas de Pago:</p>
-          {datosVenta.formasPago.map((p: any, i: number) => (
-            <div key={i} className="flex justify-between">
-              <span>{getNombrePago(p.tipoPago)}</span>
-              <span>${p.monto.toFixed(2)}</span>
-            </div>
-          ))}
-        </div>
-
-        <div className="border-b border-black border-dashed my-2" />
-
-        {/* Footer */}
-        <div className="text-center text-[10px] mt-4">
-          <p>¡Gracias por su compra!</p>
-          <p className="mt-1">PuntoX Software</p>
-        </div>
+        {/* Contenido del ticket renderizado como <pre> */}
+        <pre
+          style={{
+            fontFamily: "Arial",
+            fontSize: "12px",
+            lineHeight: "1.3",
+            margin: 0,
+            padding: "0",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-all",
+            color: "#000",
+          }}
+        >
+          {ticketLines.join("\n")}
+        </pre>
       </div>
     );
   },

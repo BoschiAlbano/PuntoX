@@ -135,7 +135,7 @@ export function PerfilTab() {
 
   const handleSave = async () => {
     try {
-      await Promise.all([
+      const [, , brandingResult] = await Promise.all([
         saveTenantMutation(tenant),
         saveConfiguracionMutation(configuracion),
         logo
@@ -145,8 +145,15 @@ export function PerfilTab() {
               color: brandingData?.color || "",
               logo,
             })
-          : Promise.resolve(),
+          : Promise.resolve(null),
       ]);
+
+      // Actualizar el preview con la URL real devuelta por el servidor
+      if (brandingResult && brandingResult.logoPreview) {
+        setLogoPreview(brandingResult.logoPreview);
+        setLogoPreviewOriginal(brandingResult.logoPreview);
+      }
+
       setLogo(null);
     } catch (error) {
       console.error("Error saving profile", error);

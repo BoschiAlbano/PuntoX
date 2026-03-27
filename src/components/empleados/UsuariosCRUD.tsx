@@ -180,90 +180,103 @@ export default function UsuariosCRUD() {
           },
         ]}
         renderRowPreview={(item) => (
-          <div className="space-y-5 text-sm">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-slate-500 text-xs mb-0.5">Nombre completo</p>
-                <p className="font-semibold text-slate-800">{item.nombreCompleto}</p>
-                {item.legajo && (
-                  <p className="text-slate-500 text-xs mt-1">Legajo: {item.legajo}</p>
-                )}
-                {item.dni && (
-                  <p className="text-slate-500 text-xs">DNI: {item.dni}</p>
-                )}
+          <div className="space-y-6 text-sm">
+            <div className="p-4 rounded-xl bg-linear-to-br from-slate-50 to-white border border-slate-100 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#67afc3] to-[#2dd4bf] text-white flex items-center justify-center font-bold text-lg shadow-sm shrink-0">
+                {item.nombre?.charAt(0).toUpperCase()}
+                {item.apellido?.charAt(0).toUpperCase()}
               </div>
               <div>
-                <p className="text-slate-500 text-xs mb-0.5">Estado</p>
+                <p className="font-bold text-slate-800 text-base">{item.nombreCompleto}</p>
+                {item.legajo && (
+                  <p className="text-slate-500 font-medium text-xs mt-0.5">Legajo: {item.legajo}</p>
+                )}
+                {item.dni && (
+                  <p className="text-slate-500 font-medium text-xs">DNI: {item.dni}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Estado</p>
                 <span
-                  className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                  className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase ${
                     item.estado === "Activo"
-                      ? "bg-green-100 text-green-700"
+                      ? "bg-emerald-50 text-emerald-600"
                       : item.estado === "Invitado"
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-red-100 text-red-700"
+                        ? "bg-amber-50 text-amber-600"
+                        : "bg-red-50 text-red-500"
                   }`}
                 >
                   {item.estado}
                 </span>
               </div>
-            </div>
-            <div>
-              <p className="text-slate-500 text-xs mb-0.5">Acceso</p>
-              <div className="space-y-1">
-                <p className="font-mono text-sm">
-                  Usuario: {item.username || "—"}
-                </p>
-                <p className="text-slate-600">
-                  Email: {item.email || "—"}
-                </p>
+              <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Rol Asignado</p>
+                <span
+                  className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase ${
+                    item.rolTipo === "ADMINISTRADOR" 
+                      ? "bg-[#67afc3]/10 text-[#67afc3]" 
+                      : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  {item.rolNombre || "Sin rol"}
+                </span>
               </div>
             </div>
-            <div>
-              <p className="text-slate-500 text-xs mb-0.5">Rol</p>
-              <span
-                className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                  item.rolTipo === "ADMINISTRADOR" ? "bg-primary-100 text-primary-700" : "bg-slate-100 text-slate-700"
-                }`}
-              >
-                {item.rolNombre || "Sin rol"}
-              </span>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Acceso</p>
+                <div className="space-y-1.5">
+                  <p className="text-slate-700 text-xs font-mono font-medium truncate">
+                    @ {item.username || "—"}
+                  </p>
+                  <p className="text-slate-700 text-xs font-medium truncate flex items-center gap-1">
+                    <span className="text-slate-400 text-[10px]">✉️</span> {item.email || "—"}
+                  </p>
+                </div>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Ubicación</p>
+                <p className="font-medium text-slate-700 text-xs truncate">{item.localidad || "Pendiente"}</p>
+                {item.direccion && (
+                  <p className="text-slate-500 text-[10px] mt-0.5 truncate">{item.direccion}</p>
+                )}
+              </div>
             </div>
-            {item.sucursales && item.sucursales.length > 0 && (
-              <div>
-                <p className="text-slate-500 text-xs mb-0.5">Sucursales asignadas</p>
-                <div className="flex flex-wrap gap-1">
+
+            {(item.sucursales && item.sucursales.length > 0) ? (
+              <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Sucursales asignadas</p>
+                <div className="flex flex-wrap gap-1.5 mt-1">
                   {item.sucursales.map((s) => (
                     <span
                       key={s.Id}
-                      className="inline-block px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-700"
+                      className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+                        s.EsDefault 
+                          ? "bg-[#67afc3]/10 text-[#67afc3] border-[#67afc3]/20" 
+                          : "bg-white text-slate-500 border-slate-200"
+                      }`}
                     >
                       {s.Nombre}
-                      {s.EsDefault && " (default)"}
+                      {s.EsDefault && " (Predeterminada)"}
                     </span>
                   ))}
                 </div>
               </div>
-            )}
-            <div>
-              <p className="text-slate-500 text-xs mb-0.5">Ubicación</p>
-              <p className="font-medium">{item.localidad || "Pendiente"}</p>
-              {item.direccion && (
-                <p className="text-slate-500 text-xs mt-0.5">{item.direccion}</p>
-              )}
-            </div>
-            <div className="flex gap-6">
-              {item.telefono && (
-                <div>
-                  <p className="text-slate-500 text-xs mb-0.5">Teléfono</p>
-                  <p className="font-medium">{item.telefono}</p>
-                </div>
-              )}
-              {item.ultimaActividad && (
-                <div>
-                  <p className="text-slate-500 text-xs mb-0.5">Última actividad</p>
-                  <p className="text-slate-600 text-xs">{item.ultimaActividad}</p>
-                </div>
-              )}
+            ) : null}
+
+            <div className="flex gap-4 p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+              <div className="flex-1">
+                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-0.5">Teléfono</p>
+                <p className="font-medium text-slate-700 text-xs">{item.telefono || "—"}</p>
+              </div>
+              <div className="flex-1">
+                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-0.5">Última actividad</p>
+                <p className="text-slate-600 text-xs">{item.ultimaActividad || "—"}</p>
+              </div>
             </div>
           </div>
         )}
@@ -287,47 +300,59 @@ export default function UsuariosCRUD() {
           switch (columnKey) {
             case "nombreCompleto":
               return (
-                <span className="font-medium text-gray-700">
-                  {item.nombreCompleto}
-                </span>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-linear-to-br from-[#67afc3] to-[#2dd4bf] text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+                    {item.nombre?.charAt(0).toUpperCase()}
+                    {item.apellido?.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="font-semibold text-slate-800">
+                    {item.nombreCompleto}
+                  </span>
+                </div>
               );
             case "username":
               return (
-                <span className="text-gray-600 text-sm font-mono">
+                <span className="text-slate-500 text-xs font-mono font-medium bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
                   {item.username || item.email || "-"}
                 </span>
               );
             case "rolNombre":
-              const rolColor =
-                item.rolTipo === "ADMINISTRADOR" ? "primary" : "secondary";
               return (
-                <Chip size="sm" color={rolColor} variant="flat">
+                <span
+                  className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase ${
+                    item.rolTipo === "ADMINISTRADOR" 
+                      ? "bg-[#67afc3]/10 text-[#67afc3]" 
+                      : "bg-slate-100 text-slate-600"
+                  }`}
+                >
                   {item.rolNombre || "Sin rol"}
-                </Chip>
+                </span>
               );
             case "legajo":
               return (
-                <span className="text-gray-600 text-sm">
+                <span className="text-slate-500 text-xs font-medium">
                   {item.legajo || "-"}
                 </span>
               );
             case "localidad":
               return (
-                <span className="text-gray-600 text-sm">
+                <span className="text-slate-600 text-xs font-medium truncate max-w-[120px] inline-block">
                   {item.localidad || "Pendiente"}
                 </span>
               );
             case "estado":
-              const estadoColor =
+              const estadoStyle =
                 item.estado === "Activo"
-                  ? "success"
+                  ? "bg-emerald-50 text-emerald-600"
                   : item.estado === "Invitado"
-                    ? "warning"
-                    : "danger";
+                    ? "bg-amber-50 text-amber-600"
+                    : "bg-red-50 text-red-500";
               return (
-                <Chip size="sm" color={estadoColor} variant="flat">
+                <span
+                  className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase ${estadoStyle}`}
+                >
                   {item.estado}
-                </Chip>
+                </span>
               );
             case "acciones":
               const isCurrentUser = Number(item.Id) === Number(user?.Id);

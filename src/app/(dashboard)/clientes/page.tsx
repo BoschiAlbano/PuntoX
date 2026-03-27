@@ -1,12 +1,43 @@
 "use client";
 
+import { motion } from "framer-motion";
+import { Users } from "lucide-react";
 import ClienteCRUD from "@/components/clientes/ClienteCRUD";
 import CuentasCorrientesCRUD from "@/components/clientes/CuentasCorrientesCRUD";
 import { Tab, Tabs } from "@heroui/react";
 
 export default function ClientesPage() {
   return (
-    <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch justify-center h-full">
+    <div className="max-w-[1400px] mx-auto py-4 sm:py-6 px-3 sm:px-6 flex flex-col items-stretch h-full relative space-y-4 sm:space-y-6">
+      {/* Premium Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="flex flex-col gap-2 px-1 sm:px-0"
+      >
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100/50 border border-slate-200/50 backdrop-blur-md text-[#67afc3] text-xs font-semibold w-fit shadow-sm">
+          <Users className="w-3.5 h-3.5" />
+          Módulo de Clientes
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          Gestión de{" "}
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-[#67afc3] to-[#2dd4bf]">
+            Clientes
+          </span>
+        </h1>
+        <p className="text-slate-500 text-sm max-w-2xl leading-relaxed">
+          Administra la información de tus clientes, lleva el registro de sus compras
+          y controla las cuentas corrientes en un solo lugar.
+        </p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
+        className="flex-1 overflow-hidden relative flex flex-col"
+      >
       <Tabs
         aria-label="Options"
         className="relative"
@@ -69,6 +100,7 @@ export default function ClientesPage() {
           <CuentasCorrientesCRUD />
         </Tab>
       </Tabs>
+      </motion.div>
     </div>
   );
 }

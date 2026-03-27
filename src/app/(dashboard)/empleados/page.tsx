@@ -1,6 +1,8 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 import { Tabs, Tab } from "@heroui/react";
+import { motion } from "framer-motion";
+import { ShieldCheck } from "lucide-react";
 import UsuariosCRUD from "@/components/empleados/UsuariosCRUD";
 import RolesCRUD from "@/components/empleados/RolesCRUD";
 import AuditoriasCRUD from "@/components/empleados/AuditoriasCRUD";
@@ -11,7 +13,36 @@ export default function EmpleadosPage() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch h-full">
+    <div className="max-w-[1400px] mx-auto py-4 sm:py-6 px-3 sm:px-6 flex flex-col items-stretch h-full relative space-y-4 sm:space-y-6">
+      {/* Premium Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="flex flex-col gap-2 px-1 sm:px-0"
+      >
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100/50 border border-slate-200/50 backdrop-blur-md text-[#67afc3] text-xs font-semibold w-fit shadow-sm">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          Módulo de Staff y Seguridad
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          Gestión de{" "}
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-[#67afc3] to-[#2dd4bf]">
+            Empleados
+          </span>
+        </h1>
+        <p className="text-slate-500 text-sm max-w-2xl leading-relaxed">
+          Administra las cuentas de usuario de tu personal, asigna roles de seguridad, 
+          y monitorea la auditoría de accesos.
+        </p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
+        className="flex-1 overflow-hidden relative flex flex-col"
+      >
       <Tabs
         aria-label="Opciones de empleados"
         selectedKey={selected}
@@ -100,6 +131,7 @@ export default function EmpleadosPage() {
           <AuditoriasCRUD />
         </Tab>
       </Tabs>
+      </motion.div>
     </div>
   );
 }

@@ -160,26 +160,26 @@ export default function RolesCRUD() {
   return (
     <div className="space-y-4">
       {/* Header con botones de acción */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Roles</h2>
-          <p className="text-sm text-gray-600">
-            Gestiona los roles y permisos del sistema
+          <h2 className="text-xl font-bold text-slate-800 tracking-tight">Roles del Sistema</h2>
+          <p className="text-sm text-slate-500">
+            Gestiona los niveles de acceso y permisos del personal.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           {/* Botón de actualizar */}
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="p-2 rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 cursor-pointer"
+            className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-[#67afc3]/40 transition-all shadow-sm group disabled:opacity-50"
             title="Actualizar"
             aria-label="Actualizar datos"
           >
             <RefreshCw
               size={18}
-              className={`text-white transition-transform ${
-                isRefreshing ? "animate-spin" : ""
+              className={`text-slate-500 group-hover:text-[#67afc3] transition-colors ${
+                isRefreshing ? "animate-spin text-[#67afc3]" : ""
               }`}
               aria-hidden="true"
             />
@@ -187,7 +187,7 @@ export default function RolesCRUD() {
           {/* Botón nuevo con efecto lift */}
           <button
             onClick={() => setOpenCreateModal(true)}
-            className="px-4 h-[36px] rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 text-white cursor-pointer flex items-center gap-2"
+            className="flex-1 sm:flex-none px-4 h-11 rounded-xl bg-[#67afc3] hover:bg-[#5a9db0] transition-colors disabled:opacity-50 hover:shadow shadow-sm disabled:shadow-none text-white font-semibold cursor-pointer flex items-center justify-center gap-2"
             aria-label="Nuevo Rol"
           >
             <Plus size={18} />
@@ -213,20 +213,18 @@ export default function RolesCRUD() {
             const puedeEliminar = !esRolSistema && !tieneUsuarios;
 
             return (
-              <Card key={rol.id} className="border border-gray-200">
-                <CardHeader className="flex flex-col items-start gap-2 pb-2">
+              <Card key={rol.id} className="bg-linear-to-br from-slate-50 to-white border border-slate-100 shadow-sm rounded-2xl hover:shadow-md transition-shadow group">
+                <CardHeader className="flex flex-col items-start gap-2 pt-5 px-5">
                   <div className="flex items-center justify-between w-full">
-                    <Chip
-                      size="sm"
-                      color={
+                    <span
+                      className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase ${
                         rol.tipo === TIPO_PERFIL.ADMINISTRADOR
-                          ? "primary"
-                          : "secondary"
-                      }
-                      variant="flat"
+                          ? "bg-[#67afc3]/15 text-[#67afc3]"
+                          : "bg-slate-100 text-slate-500"
+                      }`}
                     >
                       {rol.tipo}
-                    </Chip>
+                    </span>
                     <div className="flex items-center gap-1">
                       <Tooltip
                         content={
@@ -267,26 +265,26 @@ export default function RolesCRUD() {
                       </Tooltip>
                     </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-bold text-slate-800 tracking-tight">
                     {rol.nombre}
                   </h3>
                 </CardHeader>
-                <CardBody className="pt-0">
-                  <p className="text-sm text-gray-600 mb-3">
-                    {rol.descripcion || "Sin descripción"}
+                <CardBody className="pt-0 px-5 pb-5">
+                  <p className="text-sm text-slate-500 mb-4 line-clamp-2 min-h-[40px]">
+                    {rol.descripcion || "Sin descripción proporcionada para este rol."}
                   </p>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Users size={16} />
+                  <div className="flex items-center gap-2 text-xs font-medium text-slate-500 bg-white border border-slate-100 px-3 py-1.5 rounded-lg w-fit mb-4">
+                    <Users size={14} className="text-[#67afc3]" />
                     <span>
                       {rol.usuarios} usuario{rol.usuarios !== 1 ? "s" : ""}
                     </span>
                   </div>
                   {rol.permisos && rol.permisos.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1.5 border-t border-slate-100 pt-3">
                       {rol.permisos.map((permiso) => (
-                        <Chip key={permiso} size="sm" variant="flat">
+                        <span key={permiso} className="inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold bg-white border border-slate-200 text-slate-500">
                           {permiso}
-                        </Chip>
+                        </span>
                       ))}
                     </div>
                   )}
@@ -301,14 +299,30 @@ export default function RolesCRUD() {
       <Modal
         isOpen={openCreateModal}
         onClose={() => setOpenCreateModal(false)}
-        size="lg"
+        size="xl"
+        placement="center"
+        classNames={{
+          backdrop: "bg-slate-900/40 backdrop-blur-md",
+          base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 max-w-xl",
+          header: "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8 bg-transparent",
+          body: "py-6 px-6 sm:px-8 overflow-y-auto overflow-x-hidden",
+          footer: "border-t border-slate-100/60 py-4 px-6 sm:px-8 bg-transparent",
+          closeButton: "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
+        }}
       >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
-            <h3 className="text-xl font-semibold">Crear nuevo rol</h3>
-            <p className="text-sm text-gray-500 font-normal">
-              Define permisos base. Luego podrás afinarlos en cada usuario.
-            </p>
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 shadow-sm">
+                <Plus className="w-5 h-5 text-[#67afc3]" />
+              </div>
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">Crear Nuevo Rol</h2>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                  Define permisos base. Luego podrás afinarlos en cada usuario.
+                </p>
+              </div>
+            </div>
           </ModalHeader>
           <ModalBody className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -347,17 +361,14 @@ export default function RolesCRUD() {
               }
             />
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-gray-700">Permisos</p>
+              <p className="text-sm font-semibold text-slate-700">Permisos de Acceso</p>
               <div className="flex flex-wrap gap-2">
                 {permisosDisponibles.map((permiso) => {
                   const activo = nuevoRol.permisos.includes(permiso);
                   return (
-                    <Button
+                    <button
                       key={permiso}
-                      size="sm"
-                      variant={activo ? "solid" : "bordered"}
-                      color={activo ? "primary" : "default"}
-                      onPress={() =>
+                      onClick={() =>
                         setNuevoRol((prev) => ({
                           ...prev,
                           permisos: activo
@@ -365,26 +376,32 @@ export default function RolesCRUD() {
                             : [...prev.permisos, permiso],
                         }))
                       }
+                      className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all border ${
+                        activo
+                          ? "bg-[#67afc3]/10 text-[#67afc3] border-[#67afc3]/30 shadow-sm"
+                          : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                      }`}
                     >
                       {permiso}
-                    </Button>
+                    </button>
                   );
                 })}
               </div>
             </div>
           </ModalBody>
-          <ModalFooter>
+          <ModalFooter className="gap-3">
             <Button
               variant="light"
               onPress={() => setOpenCreateModal(false)}
               isDisabled={createRol.isPending}
+              className="font-medium text-[#6b7280] hover:bg-[#f1f5f9] h-11 px-5 rounded-[10px]"
             >
               Cancelar
             </Button>
             <Button
-              color="primary"
               onPress={handleCrearRol}
               isLoading={createRol.isPending}
+              className="bg-[#67afc3] hover:bg-[#4a8d9e] text-white font-semibold h-11 px-6 rounded-[10px] shadow-sm hover:shadow transition-shadow"
             >
               Crear rol
             </Button>
@@ -404,14 +421,30 @@ export default function RolesCRUD() {
             permisos: [],
           });
         }}
-        size="lg"
+        size="xl"
+        placement="center"
+        classNames={{
+          backdrop: "bg-slate-900/40 backdrop-blur-md",
+          base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 max-w-xl",
+          header: "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8 bg-transparent",
+          body: "py-6 px-6 sm:px-8 overflow-y-auto overflow-x-hidden",
+          footer: "border-t border-slate-100/60 py-4 px-6 sm:px-8 bg-transparent",
+          closeButton: "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
+        }}
       >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
-            <h3 className="text-xl font-semibold">Editar rol</h3>
-            <p className="text-sm text-gray-500">
-              Modifica los permisos y configuración del rol.
-            </p>
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 shadow-sm">
+                <Pencil className="w-5 h-5 text-[#67afc3]" />
+              </div>
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">Editar Rol</h2>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                  Modifica los permisos y configuración del rol.
+                </p>
+              </div>
+            </div>
           </ModalHeader>
           <ModalBody className="space-y-4">
             {(() => {
@@ -458,19 +491,16 @@ export default function RolesCRUD() {
                     <SelectItem key={TIPO_PERFIL.EMPLEADO}>Empleado</SelectItem>
                   </Select>
                   <div className="space-y-2">
-                    <p className="text-sm font-semibold text-gray-700">
+                    <p className="text-sm font-semibold text-slate-700">
                       Permisos
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {permisosDisponibles.map((permiso) => {
                         const activo = rolEditDraft.permisos.includes(permiso);
                         return (
-                          <Button
+                          <button
                             key={permiso}
-                            size="sm"
-                            variant={activo ? "solid" : "bordered"}
-                            color={activo ? "primary" : "default"}
-                            onPress={() =>
+                            onClick={() =>
                               setRolEditDraft((prev) => ({
                                 ...prev,
                                 permisos: activo
@@ -478,9 +508,14 @@ export default function RolesCRUD() {
                                   : [...prev.permisos, permiso],
                               }))
                             }
+                            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all border ${
+                              activo
+                                ? "bg-[#67afc3]/10 text-[#67afc3] border-[#67afc3]/30 shadow-sm"
+                                : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                            }`}
                           >
                             {permiso}
-                          </Button>
+                          </button>
                         );
                       })}
                     </div>
@@ -502,13 +537,14 @@ export default function RolesCRUD() {
                 });
               }}
               isDisabled={updateRol.isPending}
+              className="font-medium text-[#6b7280] hover:bg-[#f1f5f9] h-11 px-5 rounded-[10px]"
             >
               Cancelar
             </Button>
             <Button
-              color="primary"
               onPress={handleEditarRol}
               isLoading={updateRol.isPending}
+              className="bg-[#67afc3] hover:bg-[#4a8d9e] text-white font-semibold h-11 px-6 rounded-[10px] shadow-sm hover:shadow transition-shadow"
             >
               Guardar cambios
             </Button>
@@ -521,15 +557,26 @@ export default function RolesCRUD() {
         isOpen={!!rolAEliminar}
         onClose={() => setRolAEliminar(null)}
         size="md"
+        placement="center"
+        classNames={{
+          backdrop: "bg-slate-900/40 backdrop-blur-md",
+          base: "bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60",
+          header: "border-b border-slate-100/60 pb-3",
+          footer: "border-t border-slate-100/60 pt-3",
+        }}
       >
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">
-            <h3 className="text-xl font-semibold">Eliminar rol</h3>
-            <p className="text-sm text-gray-500">
-              Esta acción no se puede deshacer
-            </p>
+          <ModalHeader className="flex flex-col gap-1 py-5 px-6">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="p-2 rounded-xl bg-red-100 shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold tracking-tight">Eliminar Rol</h3>
+              </div>
+            </div>
           </ModalHeader>
-          <ModalBody>
+          <ModalBody className="px-6 py-2">
             <p className="text-sm text-gray-700">
               ¿Estás seguro de que deseas eliminar el rol{" "}
               <span className="font-semibold text-slate-900">
@@ -539,11 +586,12 @@ export default function RolesCRUD() {
               permisos asociados.
             </p>
           </ModalBody>
-          <ModalFooter>
+          <ModalFooter className="px-6 py-4">
             <Button
               variant="light"
               onPress={() => setRolAEliminar(null)}
               isDisabled={deleteRol.isPending}
+              className="font-medium text-slate-500 h-11"
             >
               Cancelar
             </Button>
@@ -551,8 +599,9 @@ export default function RolesCRUD() {
               color="danger"
               onPress={handleEliminarRol}
               isLoading={deleteRol.isPending}
+              className="font-semibold h-11 shadow-sm"
             >
-              Eliminar
+              Sí, eliminar
             </Button>
           </ModalFooter>
         </ModalContent>

@@ -82,6 +82,22 @@ export default function VentaFooter({
     contentRef: ticketRef,
     documentTitle: "Ticket de Venta",
     onAfterPrint: () => {},
+    pageStyle: `
+      @page {
+        size: 58mm auto;
+        margin: 0;
+      }
+      @media print {
+        body {
+          margin: 0;
+          padding: 0;
+        }
+        * {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+      }
+    `,
   });
 
   const totalPagado = pagos.reduce((acc, p) => acc + p.monto, 0);
@@ -202,6 +218,7 @@ export default function VentaFooter({
         numeroComprobante: data.comprobante.numero,
         tipoComprobante: getTipoComprobanteLabel(tipoComprobante),
         formasPago: [...pagos],
+        pie: configuracion?.observacionPieFactura,
       };
 
       setLastSaleData(ticketData);
@@ -367,7 +384,7 @@ export default function VentaFooter({
     <section className="flex-1 flex flex-col gap-2">
       {/* Payment Methods Section */}
       <div className="flex-1 rounded-xl border border-slate-100 flex flex-col shadow-sm">
-        <div className="px-2 pt-1 pb-1 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center shrink-0 min-h-[28px]">
+        <div className="px-2 pt-1 pb-1 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center shrink-0 ">
           {/* Margen Disponible Indicator */}
           {currentTipo === TIPO_PAGO.CUENTA_CORRIENTE &&
             cliente?.Persona_Cliente?.ActivarCtaCte && (
@@ -412,7 +429,11 @@ export default function VentaFooter({
               }}
             >
               {paymentOptions.map((option) => (
-                <SelectItem key={option.key} textValue={option.label} className="text-xs">
+                <SelectItem
+                  key={option.key}
+                  textValue={option.label}
+                  className="text-xs"
+                >
                   {option.label}
                 </SelectItem>
               ))}
@@ -427,7 +448,8 @@ export default function VentaFooter({
               size="sm"
               variant="flat"
               classNames={{
-                inputWrapper: "shadow-sm rounded-lg bg-transparent h-10 min-h-10",
+                inputWrapper:
+                  "shadow-sm rounded-lg bg-transparent h-10 min-h-10",
                 label: "text-xs",
                 input: "text-xs",
               }}

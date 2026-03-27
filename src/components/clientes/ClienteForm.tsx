@@ -214,17 +214,19 @@ export default function ClienteForm({
     isComplete: boolean;
   }) => (
     <div className="flex items-center justify-between w-full gap-2 pr-2">
-      <div className="flex items-center gap-2 min-w-0">
-        <Icon className="w-4 h-4 text-[#67afc3] shrink-0" />
-        <span>{label}</span>
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="p-2 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 shadow-sm shrink-0">
+          <Icon className="w-4 h-4 text-[#67afc3]" />
+        </div>
+        <span className="font-semibold text-slate-800 tracking-tight">{label}</span>
       </div>
       <Chip
         size="sm"
         variant="flat"
         className={
           isComplete
-            ? "bg-[#90c472]/15 text-[#90c472] border-0 shrink-0"
-            : "bg-[#f59e0b]/15 text-[#f59e0b] border-0 shrink-0"
+            ? "bg-emerald-50 text-emerald-600 font-bold uppercase tracking-wider text-[10px] border-0 shrink-0"
+            : "bg-warning-50 text-warning-600 font-bold uppercase tracking-wider text-[10px] border-0 shrink-0"
         }
       >
         {isComplete ? "Completo" : "Pendiente"}
@@ -242,38 +244,45 @@ export default function ClienteForm({
       isDismissable={!isSaving}
       scrollBehavior="inside"
       classNames={{
-        backdrop: "bg-black/50 backdrop-blur-sm",
-        base: "font-sans bg-white rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.08)] border border-[#e5e7eb] max-w-[820px] max-h-[90vh] overflow-hidden",
-        header:
-          "border-t-[3px] border-t-[#67afc3] border-b border-[#e5e7eb] bg-[#67afc3]/5 rounded-t-2xl",
-        body: "py-0 overflow-y-auto overflow-x-hidden",
-        footer: "border-t border-[#e5e7eb] bg-[#f8fafc] rounded-b-2xl",
-        closeButton:
-          "hover:bg-[#67afc3]/10 hover:text-[#67afc3] rounded-full p-1.5 transition-colors text-[#6b7280]",
+        backdrop: "bg-slate-900/40 backdrop-blur-md",
+        base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 max-w-[820px] max-h-[90vh] overflow-hidden",
+        header: "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8 bg-transparent",
+        body: "py-0 px-4 sm:px-8 overflow-y-auto overflow-x-hidden",
+        footer: "border-t border-slate-100/60 py-4 px-4 sm:px-8 bg-transparent",
+        closeButton: "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
       }}
     >
       <ModalContent>
-        <ModalHeader className="flex flex-col gap-1 py-6 px-6">
-          <h3 className="text-[28px] font-bold text-[#0f172a] leading-tight">
-            {isEdit ? "Editar Cliente" : "Nuevo Cliente"}
-          </h3>
-          {!isEdit && (
-            <p className="text-sm text-[#6b7280] mt-1">
-              Completa la información del cliente
-            </p>
-          )}
+        <ModalHeader className="flex flex-col gap-1">
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 shadow-sm">
+              <User className="w-5 h-5 text-[#67afc3]" />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">
+                {isEdit ? "Editar Cliente" : "Nuevo Cliente"}
+              </h2>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                {isEdit ? "Modifica los datos del cliente seleccionado" : "Completa la información del cliente"}
+              </p>
+            </div>
+          </div>
         </ModalHeader>
         <ModalBody className="p-0">
-          <div className="px-6 py-6">
+          <div className="py-6">
             <Accordion
               aria-label="Opciones del cliente"
               defaultSelectedKeys={["datos"]}
               selectionMode="single"
               variant="bordered"
+              itemClasses={{
+                base: "border-slate-200 shadow-sm bg-white hover:bg-slate-50/50 transition-colors rounded-xl",
+                titleWrapper: "py-3",
+              }}
               motionProps={{
                 transition: { duration: 0.18, ease: "easeInOut" },
               }}
-              className="gap-3 overflow-visible"
+              className="gap-3 overflow-visible px-1"
             >
               <AccordionItem
                 key="datos"

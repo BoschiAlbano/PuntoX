@@ -87,7 +87,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({
       sucursal: {
-        id: Number(sucursal.Id),
+        Id: Number(sucursal.Id),
         nombre: sucursal.Nombre,
         direccion: sucursal.Direccion,
         telefono: sucursal.Telefono,
@@ -195,7 +195,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({
       sucursal: {
-        id: Number(sucursalActualizada.Id),
+        Id: Number(sucursalActualizada.Id),
         nombre: sucursalActualizada.Nombre,
         direccion: sucursalActualizada.Direccion,
         telefono: sucursalActualizada.Telefono,

@@ -828,7 +828,11 @@ export function useConfiguracion(options?: {
   const saveBrandingMutation = useMutation({
     mutationFn: saveBranding,
     onSuccess: (data) => {
+      // Actualizar cache de branding con la respuesta del servidor
       queryClient.setQueryData(["branding"], data);
+      // Invalidar configuracion porque el campo "foto" también vive ahí
+      // y el ticket lo consume desde useConfiguracion({ enableConfiguracion })
+      queryClient.invalidateQueries({ queryKey: ["configuracion"] });
       if (silentCount === 0) {
         addToast({
           title: "Branding actualizado",

@@ -50,6 +50,7 @@ import { useReactToPrint } from "react-to-print";
 import { TicketImpresion } from "../ventas/TicketImpresion";
 import StatCard from "../dashboard/StatCard";
 import GenericTable, { Column } from "@/components/shared/GenericTable";
+import { useConfiguracion } from "@/hooks/useConfiguracion";
 
 const movimientosColumns: Column[] = [
   { uid: "fecha", name: "Fecha", sortable: false },
@@ -108,6 +109,10 @@ export default function CajaActual() {
     isDeletingGasto,
     isAddingConcepto,
   } = useGastos({ enableConceptos: true });
+
+  const { configuracion } = useConfiguracion({
+    enableConfiguracion: true,
+  });
 
   const [montoInicial, setMontoInicial] = useState("0,00");
   const {
@@ -659,6 +664,7 @@ export default function CajaActual() {
           tipoPago: fp.TipoPago,
           monto: Number(fp.Monto),
         })),
+        pie: configuracion?.observacionPieFactura || "",
       }
     : null;
 

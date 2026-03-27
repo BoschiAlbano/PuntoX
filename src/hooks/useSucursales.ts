@@ -15,7 +15,7 @@ export const fetchSucursales = async (): Promise<Sucursal[]> => {
   const res = await fetch("/api/sucursales");
   if (!res.ok) throw new Error("Error fetching sucursales");
   const data = await res.json();
-  return Array.isArray(data?.sucursales) ? data.sucursales : [];
+  return Array.isArray(data?.data) ? data.data : (Array.isArray(data?.sucursales) ? data.sucursales : []);
 };
 
 export function useSucursales() {

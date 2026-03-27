@@ -145,41 +145,59 @@ export default function AuditoriasCRUD() {
         },
       ]}
       renderRowPreview={(item) => (
-        <div className="space-y-4 text-sm">
-          <div>
-            <p className="text-slate-500 text-xs mb-0.5">Usuario</p>
-            <p className="font-medium text-slate-800">{item.usuario}</p>
+        <div className="space-y-6 text-sm">
+          <div className="p-4 rounded-xl bg-linear-to-br from-slate-50 to-white border border-slate-100 shadow-sm flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#67afc3] to-[#2dd4bf] text-white flex items-center justify-center font-bold text-lg shadow-sm shrink-0 uppercase">
+              {item.usuario?.charAt(0) || "-"}
+            </div>
+            <div>
+              <p className="font-bold text-slate-800 text-base">{item.usuario}</p>
+              <p className="text-slate-500 font-medium text-xs mt-0.5 font-mono">
+                {item.ipAddress || "Autenticado sin IP"}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-slate-500 text-xs mb-0.5">Acción</p>
-            <p className="font-medium">{formatearAccion({ accion: item.accion, detalle: item.detalles ?? undefined })}</p>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Acción</p>
+              <span className="font-semibold text-slate-700">
+                {formatearAccion({ accion: item.accion, detalle: item.detalles ?? undefined })}
+              </span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Resultado</p>
+              <span
+                className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase ${
+                  item.exitoso ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
+                }`}
+              >
+                {item.exitoso ? "Exitoso" : "Fallido"}
+              </span>
+            </div>
           </div>
+
           {item.detalles && (
-            <div>
-              <p className="text-slate-500 text-xs mb-0.5">Detalles</p>
-              <p className="text-slate-700">{item.detalles}</p>
+            <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1.5">Detalles Adicionales</p>
+              <p className="text-slate-600 font-mono text-xs break-all">{item.detalles}</p>
             </div>
           )}
-          <div>
-            <p className="text-slate-500 text-xs mb-0.5">Fecha</p>
-            <p className="font-medium">{new Date(item.fechaHora).toLocaleString()}</p>
-          </div>
-          <div>
-            <p className="text-slate-500 text-xs mb-0.5">Estado</p>
-            <span
-              className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                item.exitoso ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-              }`}
-            >
-              {item.exitoso ? "Exitoso" : "Fallido"}
-            </span>
-          </div>
-          {item.ipAddress && (
-            <div>
-              <p className="text-slate-500 text-xs mb-0.5">IP</p>
-              <p className="font-mono text-xs">{item.ipAddress}</p>
+
+          <div className="flex gap-4 p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+            <div className="flex-1">
+              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-0.5">Fecha y Hora</p>
+              <p className="font-medium text-slate-700 text-xs">
+                {new Date(item.fechaHora).toLocaleString()}
+              </p>
             </div>
-          )}
+            {item.motivoFallo && (
+              <div className="flex-1">
+                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-0.5">Motivo del fallo</p>
+                <p className="text-red-600 font-medium text-xs">{item.motivoFallo}</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
       getRowPreviewTitle={(item) => `Auditoría - ${item.usuario}`}
@@ -195,57 +213,66 @@ export default function AuditoriasCRUD() {
         switch (columnKey) {
           case "usuario":
             return (
-              <span className="font-medium text-gray-700">{item.usuario}</span>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#67afc3] to-[#2dd4bf] text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0 uppercase">
+                  {item.usuario?.charAt(0) || "-"}
+                </div>
+                <span className="font-semibold text-slate-800">
+                  {item.usuario}
+                </span>
+              </div>
             );
           case "accion": {
             const accionMapeada = mapearAccion(item.accion);
             const severidad = mapearSeveridad(item.accion);
+            const estiloSeveridad =
+              severidad === "danger"
+                ? "bg-red-50 text-red-600 border border-red-100"
+                : severidad === "warning"
+                ? "bg-amber-50 text-amber-600 border border-amber-100"
+                : "bg-slate-50 text-slate-600 border border-slate-200";
 
             return (
-              <Chip
-                size="sm"
-                color={
-                  severidad === "danger"
-                    ? "danger"
-                    : severidad === "warning"
-                    ? "warning"
-                    : "default"
-                }
-                variant="flat"
+              <span
+                className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase shadow-sm ${estiloSeveridad}`}
               >
-                {formatearAccion({
-                  accion: accionMapeada.categoria,
-                })}
-              </Chip>
+                {formatearAccion({ accion: accionMapeada.categoria })}
+              </span>
             );
           }
           case "detalles":
             return (
-              <span className="text-sm text-gray-600">
+              <span className="text-xs text-slate-500 font-medium truncate max-w-[150px] inline-block">
                 {item.detalles || "-"}
               </span>
             );
           case "fechaHora":
             return (
-              <Tooltip content={new Date(item.fechaHora).toLocaleString()}>
-                <span className="text-sm text-gray-600">
+              <Tooltip
+                content={new Date(item.fechaHora).toLocaleString()}
+                classNames={{ base: "bg-slate-800 text-white text-xs" }}
+              >
+                <span className="text-xs text-slate-500 font-medium bg-slate-50 px-2 py-1.5 rounded-md cursor-help border border-slate-100">
                   {formatTiempoRelativo(item.fechaHora)}
                 </span>
               </Tooltip>
             );
           case "exitoso":
             return (
-              <Chip
-                size="sm"
-                color={item.exitoso ? "success" : "danger"}
-                variant="dot"
+              <span
+                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase ${
+                  item.exitoso
+                    ? "bg-emerald-50 text-emerald-600"
+                    : "bg-red-50 text-red-600"
+                }`}
               >
+                <span className={`w-1.5 h-1.5 rounded-full ${item.exitoso ? "bg-emerald-500" : "bg-red-500"}`}></span>
                 {item.exitoso ? "Exitoso" : "Fallido"}
-              </Chip>
+              </span>
             );
           case "ipAddress":
             return (
-              <span className="text-xs text-gray-500 font-mono">
+              <span className="text-[11px] text-slate-400 font-mono font-medium">
                 {item.ipAddress || "-"}
               </span>
             );

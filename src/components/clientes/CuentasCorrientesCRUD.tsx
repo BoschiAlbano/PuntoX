@@ -24,7 +24,7 @@ import {
   SelectItem,
   addToast,
 } from "@heroui/react";
-import { RefreshCcw, CreditCard, Banknote, Wallet } from "lucide-react";
+import { RefreshCcw, CreditCard, Banknote, Wallet, Search } from "lucide-react";
 import { TIPO_PAGO } from "@/lib/constants/comprobantes";
 import { LoadingComponent } from "../loading/loading";
 import { useCtaCte, ClienteCtaCte } from "@/hooks/useCtaCte";
@@ -156,66 +156,72 @@ export default function CuentasCorrientesCRUD() {
         </button>
 
         {/* Search */}
-        <div className=" group flex justify-between items-center gap-2 border-2 border-gray-300 rounded-xl p-1.5 bg-white transition-all duration-300 hover:border-[#67afc3] relative sm:w-auto w-[200px] h-[40px] overflow-hidden">
+        <div className="group flex justify-between items-center gap-2 border border-slate-200 focus-within:border-[#67afc3]/40! rounded-xl p-1.5 bg-white transition-all shadow-sm hover:shadow relative sm:w-[300px] w-full h-11 overflow-hidden">
+          <Search className="w-4 h-4 text-slate-400 ml-2 group-focus-within:text-[#67afc3] transition-colors" />
           <input
-            placeholder={`Nombre, apellido o DNI`}
-            className="outline-none pl-2 w-full bg-transparent text-gray-700 placeholder:text-gray-400 truncate"
+            placeholder="Buscar por nombre, DNI..."
+            className="flex-1 outline-none min-w-0 bg-transparent text-sm font-medium text-slate-700 placeholder:text-slate-400 placeholder:font-normal"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             aria-label="Buscar en la tabla"
           />
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="size-5 text-gray-500 transition-all duration-300 group-hover:text-[#67afc3] group-hover:scale-105 group-active:scale-95 group-focus:outline-none group-focus:ring-2 group-focus:ring-[#67afc3] group-focus:ring-offset-2"
-          >
-            <path
-              fillRule="evenodd"
-              d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z"
-              clipRule="evenodd"
-            />
-          </svg>
         </div>
 
-        {/* Botón de actualizar */}
-        <button
-          className="p-2 rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 cursor-pointer w-[36px] h-[36px] aspect-square"
-          title="Actualizar datos"
-          aria-label="Actualizar datos de la tabla"
-          onClick={handleSearch}
-        >
-          <RefreshCcw
-            size={18}
-            className={`text-white transition-transform ${
-              isLoadingClients ? "animate-spin" : ""
-            }`}
-            aria-hidden="true"
-          />
-        </button>
+        {/* Botones */}
+        <div className="flex gap-2">
+          <button
+            className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-[#67afc3]/40 transition-all shadow-sm group disabled:opacity-50"
+            title="Actualizar datos"
+            aria-label="Actualizar datos de la tabla"
+            onClick={handleSearch}
+            disabled={isLoadingClients}
+          >
+            <RefreshCcw
+              size={18}
+              strokeWidth={2.5}
+              className={`text-slate-500 group-hover:text-[#67afc3] transition-colors ${
+                isLoadingClients ? "animate-spin text-[#67afc3]" : ""
+              }`}
+              aria-hidden="true"
+            />
+          </button>
+          
+          <button
+            onClick={handleNewPago}
+            className="px-4 h-11 rounded-xl bg-[#67afc3] hover:bg-[#5a9db0] transition-colors disabled:opacity-50 hover:shadow shadow-sm disabled:shadow-none text-white font-semibold cursor-pointer shrink-0"
+            aria-label="Nuevo Pago"
+            disabled={!selectedClient}
+          >
+            Nuevo Pago
+          </button>
+        </div>
       </section>
 
       {selectedClient && (
-        <Card>
-          <CardBody className="flex flex-row justify-between items-center gap-4">
-            <User
-              name={`${selectedClient.Nombre} ${selectedClient.Apellido}`}
-              description={`DNI: ${selectedClient.Dni || "N/A"}`}
-              avatarProps={{
-                src: "",
-                name:
-                  (selectedClient.Nombre?.[0] || "") +
-                  (selectedClient.Apellido?.[0] || ""),
-              }}
-            />
-            <div className="flex flex-col items-end">
-              <span className="text-sm text-gray-500">Saldo Actual</span>
+        <Card className="bg-linear-to-r from-slate-50 to-white border border-slate-100 shadow-sm rounded-2xl mx-1 sm:mx-4">
+          <CardBody className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-4 px-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#67afc3] to-[#2dd4bf] text-white flex items-center justify-center font-bold text-lg shadow-sm shrink-0">
+                {selectedClient.Nombre?.[0] || ""}
+                {selectedClient.Apellido?.[0] || ""}
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-800">
+                  {selectedClient.Nombre} {selectedClient.Apellido}
+                </h3>
+                <p className="text-sm font-medium text-slate-500">
+                  DNI: {selectedClient.Dni || "N/A"}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col items-start sm:items-end bg-white border border-slate-100 rounded-xl px-4 py-2 w-full sm:w-auto">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Saldo Actual</span>
               <span
                 className={`text-xl font-bold ${
                   (movements[movements.length - 1]?.saldo || 0) > 0
-                    ? "text-danger"
-                    : "text-success"
+                    ? "text-red-500"
+                    : "text-emerald-500"
                 }`}
               >
                 {formatCurrency(movements[movements.length - 1]?.saldo || 0)}
@@ -225,15 +231,16 @@ export default function CuentasCorrientesCRUD() {
         </Card>
       )}
 
-      <div className="flex-1 overflow-auto rounded-xl shadow-sm bg-white">
+      <div className="flex-1 overflow-auto rounded-2xl border border-slate-100 shadow-sm bg-white mx-1 sm:mx-4 mb-4">
         <Table
           aria-label="Tabla de cuenta corriente"
           className="bg-white rounded-lg border-none"
           classNames={{
             wrapper:
-              "bg-white h-full shadow-none rounded-xl border-none sm:p-4 p-1",
-            th: "bg-[#67afc3]/90 text-white transition-colors duration-200 text-[13px] font-medium hover:!text-white hover:[&_*]:!text-white group",
-            base: "bg-transparent h-full shadow-none rounded-xl border-none",
+              "bg-white h-full shadow-none rounded-2xl border-none sm:p-4 p-2",
+            th: "bg-slate-50 border-b border-slate-100 text-slate-400 text-[11px] font-bold uppercase tracking-wider h-11",
+            base: "bg-transparent h-full shadow-none",
+            td: "py-3.5 text-sm font-medium text-slate-600 border-b border-slate-50 last:border-none",
           }}
         >
           <TableHeader>
@@ -258,8 +265,11 @@ export default function CuentasCorrientesCRUD() {
                 <TableCell>
                   <Chip
                     size="sm"
-                    variant="flat"
-                    color={item.debe > 0 ? "warning" : "success"}
+                    className={
+                      item.debe > 0
+                        ? "bg-amber-100/50 text-amber-600 font-bold"
+                        : "bg-emerald-100/50 text-emerald-600 font-bold"
+                    }
                   >
                     {item.tipo}
                   </Chip>
@@ -301,21 +311,22 @@ export default function CuentasCorrientesCRUD() {
                           onClose();
                         }}
                       >
-                        <User
-                          name={`${client.Nombre} ${client.Apellido}`}
-                          description={
-                            <div className="flex gap-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#67afc3] to-[#2dd4bf] text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
+                            {client.Nombre?.[0] || ""}
+                            {client.Apellido?.[0] || ""}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm text-slate-800 tracking-tight">
+                              {client.Nombre} {client.Apellido}
+                            </p>
+                            <div className="flex gap-2 text-xs font-medium text-slate-500">
                               <span>DNI: {client.Dni || "N/A"}</span>
                               {client.Mail && <span>• {client.Mail}</span>}
                             </div>
-                          }
-                          avatarProps={{
-                            name:
-                              (client.Nombre?.[0] || "") +
-                              (client.Apellido?.[0] || ""),
-                          }}
-                        />
-                        <Button size="sm" color="primary" variant="flat">
+                          </div>
+                        </div>
+                        <Button size="sm" className="bg-slate-100 text-slate-600 font-semibold group-hover:bg-[#67afc3] group-hover:text-white transition-all shadow-sm">
                           Seleccionar
                         </Button>
                       </div>
@@ -338,12 +349,32 @@ export default function CuentasCorrientesCRUD() {
         isOpen={isPaymentOpen}
         onOpenChange={onPaymentOpenChange}
         placement="center"
+        classNames={{
+          backdrop: "bg-slate-900/40 backdrop-blur-md",
+          base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 max-w-md",
+          header: "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8",
+          body: "py-6 px-6 sm:px-8",
+          footer: "border-t border-slate-100/60 py-4 px-6 sm:px-8",
+          closeButton: "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
+        }}
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">
-                Registrar Nuevo Pago
+               <ModalHeader className="flex flex-col gap-1">
+                <div className="flex items-center gap-4">
+                  <div className="p-2.5 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 shadow-sm">
+                    <Banknote className="w-5 h-5 text-[#67afc3]" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">
+                      Registrar Pago
+                    </h2>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">
+                      Ingresa el monto a cobrar
+                    </p>
+                  </div>
+                </div>
               </ModalHeader>
               <ModalBody>
                 <div className="flex flex-col gap-4">
@@ -404,13 +435,13 @@ export default function CuentasCorrientesCRUD() {
                 </div>
               </ModalBody>
               <ModalFooter>
-                <Button color="danger" variant="flat" onPress={onClose}>
+                <Button variant="light" onPress={onClose} className="font-medium text-slate-500 hover:bg-slate-100 h-11 px-5 rounded-[10px]">
                   Cancelar
                 </Button>
                 <Button
-                  color="primary"
                   onPress={handleSavePayment}
                   isLoading={isRegistrandoPago}
+                  className="bg-[#67afc3] hover:bg-[#5a9db0] text-white font-semibold h-11 px-6 rounded-[10px] shadow-sm hover:shadow transition-all"
                 >
                   Registrar Pago
                 </Button>

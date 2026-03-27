@@ -16,6 +16,10 @@ import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { PERMISSIONS } from "@/lib/constants/comprobantes";
+import {
+  parsePaginationParams,
+  createPaginationResponse,
+} from "@/lib/pagination";
 
 import { handleError } from "@/lib/errors/handler";
 
@@ -38,13 +42,15 @@ export async function GET(req: NextRequest) {
       permission: PERMISSIONS.EMPLEADOS,
     });
 
-    // Obtener parámetros de búsqueda
+    // Obtener parámetros de búsqueda y paginación
     const searchParams = req.nextUrl.searchParams;
+    const pagination = parsePaginationParams(req);
+    const busqueda = searchParams.get("q")?.trim() || "";
     const soloActivas = searchParams.get("soloActivas") !== "false";
     const incluirEliminadas = searchParams.get("incluirEliminadas") === "true";
 
     // Construir filtro
-    const where: Record<string, unknown> = {
+    const where: any = {
       TenantId: BigInt(tenantId),
     };
 
@@ -56,9 +62,20 @@ export async function GET(req: NextRequest) {
       where.EstaActiva = true;
     }
 
+    if (busqueda) {
+      where.OR = [
+        { Nombre: { contains: busqueda, mode: "insensitive" } },
+        { Direccion: { contains: busqueda, mode: "insensitive" } },
+      ];
+    }
+
+    const total = await prisma.sucursal.count({ where });
+
     // Obtener sucursales
     const sucursales = await prisma.sucursal.findMany({
       where,
+      skip: pagination.skip,
+      take: pagination.limit,
       orderBy: [{ EsPrincipal: "desc" }, { Nombre: "asc" }],
       select: {
         Id: true,
@@ -76,18 +93,24 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      sucursales: sucursales.map((s) => ({
-        id: Number(s.Id),
-        nombre: s.Nombre,
-        direccion: s.Direccion,
-        telefono: s.Telefono,
-        esPrincipal: s.EsPrincipal,
-        estaActiva: s.EstaActiva,
-        fechaCreacion: s.FechaCreacion,
-        cantidadUsuarios: s._count.UsuariosSucursales,
-      })),
-    });
+    const mappedSucursales = sucursales.map((s) => ({
+      Id: Number(s.Id),
+      nombre: s.Nombre,
+      direccion: s.Direccion,
+      telefono: s.Telefono,
+      esPrincipal: s.EsPrincipal,
+      estaActiva: s.EstaActiva,
+      fechaCreacion: s.FechaCreacion,
+      cantidadUsuarios: s._count.UsuariosSucursales,
+    }));
+
+    const paginatedResponse = createPaginationResponse(
+      mappedSucursales,
+      total,
+      pagination
+    );
+
+    return NextResponse.json(paginatedResponse);
   } catch (error) {
     return handleError(error);
   }
@@ -160,7 +183,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         sucursal: {
-          id: Number(nuevaSucursal.Id),
+          Id: Number(nuevaSucursal.Id),
           nombre: nuevaSucursal.Nombre,
           direccion: nuevaSucursal.Direccion,
           telefono: nuevaSucursal.Telefono,
@@ -171,12 +194,68 @@ export async function POST(req: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    return handleError(error);
+  }
+}
+
+/**
+ * DELETE /api/sucursales?Id=[id]
+ * Elimina (soft delete) una sucursal
+ */
+export async function DELETE(req: NextRequest) {
+  try {
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: PERMISSIONS.EMPLEADOS,
+    });
+
+    const searchParams = req.nextUrl.searchParams;
+    const sucursalIdParam = searchParams.get("Id") || searchParams.get("id");
+
+    if (!sucursalIdParam) {
       return NextResponse.json(
-        { error: error.issues[0]?.message || "Datos inválidos" },
-        { status: 400 },
+        { error: "ID de sucursal requerido" },
+        { status: 400 }
       );
     }
+
+    const sucursalId = BigInt(sucursalIdParam);
+
+    // Verificar que la sucursal existe
+    const sucursal = await prisma.sucursal.findFirst({
+      where: {
+        Id: sucursalId,
+        TenantId: BigInt(tenantId),
+        EstaEliminado: false,
+      },
+    });
+
+    if (!sucursal) {
+      return NextResponse.json(
+        { error: "Sucursal no encontrada" },
+        { status: 404 }
+      );
+    }
+
+    // No permitir eliminar la sucursal principal
+    if (sucursal.EsPrincipal) {
+      return NextResponse.json(
+        { error: "No se puede eliminar la sucursal principal" },
+        { status: 400 }
+      );
+    }
+
+    // Soft delete
+    await prisma.sucursal.update({
+      where: { Id: sucursalId },
+      data: {
+        EstaEliminado: true,
+        EstaActiva: false,
+      },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
     return handleError(error);
   }
 }

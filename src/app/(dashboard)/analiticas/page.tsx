@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useMemo, Suspense, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
@@ -37,7 +37,9 @@ import {
   ShoppingCart,
   Store,
   RefreshCw,
+  LineChart,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import {
   useKPIs,
   useGraficas,
@@ -354,28 +356,51 @@ function AnaliticasContent() {
   const totalPages = Math.ceil(logsFiltrados.length / rowsPerPage);
 
   return (
-    <div className="max-w-7xl mx-auto sm:py-8 px-0 sm:px-6 flex flex-col items-stretch  h-auto">
-      <Tabs
-        aria-label="Analíticas"
-        selectedKey={initialTab}
-        onSelectionChange={(key) => {
-          // Actualizar URL sin recargar
-          const url = new URL(window.location.href);
-          url.searchParams.set("tab", key as string);
-          window.history.pushState({}, "", url);
-        }}
-        className="relative"
-        classNames={{
-          tabList:
-            "bg-white backdrop-blur-sm rounded-lg shadow-none border-gray-200/50 p-1 overflow-x-auto scrollbar-hide",
-          tab: "m-[5px] p-[20px] data-[selected=true]:bg-[#67afc3]/90 data-[selected=true]:text-white data-[selected=true]:shadow-none transition-all duration-300 data-[hover=true]:bg-gray-100/50 data-[hover=true]:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#67afc3] focus-visible:ring-offset-2 text-[16px] cursor-pointer transform hover:scale-105 active:scale-95",
-          tabContent:
-            "group-data-[selected=true]:text-white font-medium transition-colors duration-200",
-          cursor: "bg-[#67afc3]/90",
-          panel: "h-full",
-        }}
+    <div className="max-w-7xl mx-auto w-full flex flex-col h-full bg-slate-50/50 min-h-screen">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full bg-white border-b border-slate-200/60 px-6 py-8 sm:py-10 shadow-sm relative overflow-hidden shrink-0"
       >
-        <Tab
+        <div className="absolute inset-0 bg-linear-to-r from-[#67afc3]/5 to-transparent pointer-events-none" />
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#67afc3]/10 text-[#67afc3] text-xs font-bold uppercase tracking-wider mb-4 border border-[#67afc3]/20 shadow-[0_0_15px_rgba(103,175,195,0.15)]">
+            <LineChart className="w-4 h-4" />
+            <span>Reportes e Inteligencia de Negocio</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-800 tracking-tight leading-tight">
+            Dashboard <span className="text-transparent bg-clip-text bg-linear-to-r from-[#67afc3] to-[#2dd4bf]">Analítico</span>
+          </h1>
+          <p className="mt-2 text-slate-500 font-medium max-w-2xl text-sm sm:text-base leading-relaxed">
+            Visualiza métricas en tiempo real, monitorea la actividad del sistema y toma decisiones basadas en datos.
+          </p>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="p-6 h-full flex flex-col"
+      >
+        <Tabs
+          aria-label="Analíticas"
+          selectedKey={initialTab}
+          onSelectionChange={(key) => {
+            const url = new URL(window.location.href);
+            url.searchParams.set("tab", key as string);
+            window.history.pushState({}, "", url);
+          }}
+          className="relative"
+          classNames={{
+            tabList: "bg-white/60 backdrop-blur-md rounded-2xl shadow-sm border border-slate-200/50 p-1.5 overflow-x-auto scrollbar-hide w-fit",
+            tab: "m-[2px] px-6 py-2.5 h-auto data-[selected=true]:bg-white data-[selected=true]:text-[#67afc3] data-[selected=true]:shadow-sm transition-all duration-300 data-[hover=true]:bg-slate-50 focus:outline-none text-[15px] font-semibold cursor-pointer text-slate-500",
+            tabContent: "group-data-[selected=true]:text-[#67afc3] transition-colors duration-200",
+            cursor: "bg-white shadow-[0_2px_4px_rgba(0,0,0,0.05)] rounded-xl border border-slate-100",
+            panel: "pt-6 h-full",
+          }}
+        >
+          <Tab
           key="dashboard"
           title={
             <div className="flex items-center space-x-2">
@@ -481,6 +506,9 @@ function AnaliticasContent() {
                       setAgrupacion(e.target.value as "dia" | "semana" | "mes")
                     }
                     className="w-full md:min-w-[140px]"
+                    classNames={{
+                      trigger: "bg-slate-50 border-slate-200 hover:bg-slate-100/50 shadow-none",
+                    }}
                   >
                     <SelectItem key="dia">Por Día</SelectItem>
                     <SelectItem key="semana">Por Semana</SelectItem>
@@ -603,9 +631,9 @@ function AnaliticasContent() {
             {/* Gráficas */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {ingresosLoading ? (
-                <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-                  <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
-                    <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+                <Card className="bg-white/90 backdrop-blur-xl shadow-sm border border-slate-100 rounded-[20px]">
+                  <CardHeader className="pb-3 border-b border-slate-100/60 bg-slate-50/50">
+                    <div className="h-6 bg-slate-200 rounded w-1/3 animate-pulse"></div>
                   </CardHeader>
                   <CardBody className="p-6">
                     <div className="h-[300px] bg-gray-100 rounded animate-pulse"></div>
@@ -616,9 +644,9 @@ function AnaliticasContent() {
               ) : null}
 
               {pagosLoading ? (
-                <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-                  <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
-                    <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+                <Card className="bg-white/90 backdrop-blur-xl shadow-sm border border-slate-100 rounded-[20px]">
+                  <CardHeader className="pb-3 border-b border-slate-100/60 bg-slate-50/50">
+                    <div className="h-6 bg-slate-200 rounded w-1/3 animate-pulse"></div>
                   </CardHeader>
                   <CardBody className="p-6">
                     <div className="h-[300px] bg-gray-100 rounded animate-pulse"></div>
@@ -630,9 +658,9 @@ function AnaliticasContent() {
             </div>
 
             {productosLoading ? (
-              <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-                <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
-                  <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+              <Card className="bg-white/90 backdrop-blur-xl shadow-sm border border-slate-100 rounded-[20px]">
+                <CardHeader className="pb-3 border-b border-slate-100/60 bg-slate-50/50">
+                  <div className="h-6 bg-slate-200 rounded w-1/3 animate-pulse"></div>
                 </CardHeader>
                 <CardBody className="p-6">
                   <div className="h-[400px] bg-gray-100 rounded animate-pulse"></div>
@@ -803,48 +831,46 @@ function AnaliticasContent() {
             {/* Header de la sección con botón de refresh */}
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h3 className="text-xl font-bold text-slate-800 tracking-tight">
                   Logs de Actividad
-                </h2>
-                <p className="text-sm text-gray-600">
+                </h3>
+                <p className="text-sm text-slate-500">
                   Registro completo de acciones y eventos del sistema
                 </p>
               </div>
               <button
                 onClick={() => {
-                  // Refrescar logs (cuando esté conectado al API)
                   setPage(1);
                 }}
-                className="p-2 rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 cursor-pointer"
+                className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-[#67afc3]/40 transition-all shadow-sm group disabled:opacity-50"
                 title="Actualizar logs"
-                aria-label="Actualizar logs de actividad"
               >
                 <RefreshCw
                   size={18}
-                  className="text-white transition-transform"
+                  className="text-slate-500 group-hover:text-[#67afc3] transition-colors"
                   aria-hidden="true"
                 />
               </button>
             </div>
 
-            <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-              <CardHeader className="flex flex-col gap-4 pb-3 border-b border-slate-200/70 bg-slate-50/70">
+            <Card className="bg-white/90 backdrop-blur-xl shadow-sm border border-slate-100 rounded-[20px]">
+              <CardHeader className="flex flex-col gap-4 pb-4 border-b border-slate-100/60 bg-slate-50/50">
                 <div className="flex items-center justify-between w-full">
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">
+                    <h3 className="text-lg font-bold text-slate-800 tracking-tight">
                       Filtros de búsqueda
                     </h3>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 font-medium">
                       {logsFiltrados.length} registros encontrados
                     </p>
                   </div>
                 </div>
                 <div className="flex flex-col md:flex-row gap-3 w-full">
-                  <div className="group flex items-center gap-2 border-2 border-gray-300 rounded-xl p-1.5 bg-white transition-all duration-300 hover:border-[#67afc3] relative w-full md:max-w-xs">
+                  <div className="group flex items-center gap-2 border border-slate-200 rounded-xl p-1.5 bg-white transition-all duration-300 focus-within:border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/20 relative w-full md:max-w-xs shadow-sm shadow-slate-100">
                     <input
                       type="text"
                       placeholder="Buscar por usuario..."
-                      className="outline-none px-2 bg-transparent text-gray-700 placeholder:text-gray-400 w-full"
+                      className="outline-none px-2 bg-transparent text-slate-700 placeholder:text-slate-400 w-full text-sm font-medium"
                       value={filtros.usuario}
                       onChange={(e) =>
                         setFiltros((prev) => ({
@@ -937,9 +963,10 @@ function AnaliticasContent() {
                   <Table
                     aria-label="Tabla de logs"
                     classNames={{
-                      wrapper: "bg-white rounded-lg border-none",
-                      th: "bg-[#67afc3]/90 text-white transition-colors duration-200 text-[13px] font-medium hover:!text-white hover:[&_*]:!text-white",
-                      base: "bg-transparent shadow-none rounded-lg border-none",
+                      wrapper: "bg-transparent p-0 border-none shadow-none",
+                      th: "bg-[#67afc3]/5 text-slate-500 font-bold uppercase tracking-wider text-[11px] py-4",
+                      base: "min-w-full",
+                      td: "py-3 px-4 border-b border-slate-100",
                     }}
                   >
                     <TableHeader>
@@ -1026,7 +1053,8 @@ function AnaliticasContent() {
             </Card>
           </div>
         </Tab>
-      </Tabs>
+        </Tabs>
+      </motion.div>
     </div>
   );
 }
