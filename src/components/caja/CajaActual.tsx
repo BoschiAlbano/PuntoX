@@ -37,6 +37,9 @@ import {
   CreditCard,
   ArrowRightLeft,
   Wallet,
+  Coins,
+  CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import React, { useState, useCallback, useMemo } from "react";
 import { LoadingComponent } from "../loading/loading";
@@ -797,6 +800,12 @@ export default function CajaActual() {
       </div>
 
       {/* Movements Table Section */}
+      <div className="flex flex-col gap-2">
+        <h1 className="text-lg font-semibold flex items-center gap-2">
+          <TrendingUp size={20} className="text-[#69b0c3]" />
+          Movimientos
+        </h1>
+      </div>
       <GenericTable
         data={paginatedMovimientos}
         columns={movimientosColumns}
@@ -819,10 +828,9 @@ export default function CajaActual() {
         extraSearchContent={
           <Button
             size="sm"
-            color="danger"
-            variant="flat"
-            startContent={<Lock size={16} />}
             onPress={onCerrarOpen}
+            className="bg-[#69b0c3] text-white border border-[#69b0c3] font-bold px-4 h-9 rounded-xl gap-2 hover:bg-[#69b0c3]/80 hover:border-[#69b0c3] transition-all"
+            startContent={<Lock size={15} strokeWidth={2.5} />}
           >
             Cerrar Caja
           </Button>
@@ -830,6 +838,12 @@ export default function CajaActual() {
       />
 
       {/* Gastos Table Section */}
+      <div className="flex flex-col gap-2">
+        <h1 className="text-lg font-semibold flex items-center gap-2">
+          <TrendingDown size={20} className="text-[#69b0c3]" />
+          Gastos
+        </h1>
+      </div>
       <GenericTable
         data={paginatedGastos}
         columns={gastosColumns}
@@ -1106,81 +1120,149 @@ export default function CajaActual() {
       </Modal>
 
       {/* Modal Cerrar Caja */}
-      <Modal isOpen={isCerrarOpen} onOpenChange={onCerrarChange}>
+      <Modal
+        isOpen={isCerrarOpen}
+        onOpenChange={onCerrarChange}
+        backdrop="opaque"
+        classNames={{
+          backdrop: "bg-slate-900/40 backdrop-blur-md",
+          base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 max-w-md",
+          header: "border-b border-slate-100/60 pb-4 pt-6 px-6",
+          body: "py-5 px-6",
+          footer: "border-t border-slate-100/60 py-4 px-6",
+          closeButton: "hover:bg-slate-100 text-slate-400 mt-2 mr-2",
+        }}
+      >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader>Cierre de Caja</ModalHeader>
+              {/* ─── Header ──────────────────────────────────────────── */}
+              <ModalHeader className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-linear-to-br from-rose-50 to-rose-100 border border-rose-200 text-rose-500">
+                  <Lock size={18} strokeWidth={2.5} />
+                </div>
+                <div>
+                  <span className="text-lg font-extrabold text-slate-800 leading-none">Cierre de Caja</span>
+                  <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+                    {new Date().toLocaleDateString("es-AR", { weekday: "long", day: "2-digit", month: "long" })}
+                  </p>
+                </div>
+              </ModalHeader>
+
+              {/* ─── Body ────────────────────────────────────────────── */}
               <ModalBody>
-                <div className="flex flex-col gap-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="text-sm font-semibold mb-2">
-                      Resumen del Día
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <span className="text-gray-500">Monto Inicial:</span>
-                        <p className="font-medium">
+                <div className="space-y-4">
+
+                  {/* Métricas del día */}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {/* Monto Inicial */}
+                    <div className="flex items-center gap-3 p-3.5 bg-slate-50 border border-slate-100 rounded-2xl">
+                      <div className="p-2 rounded-xl bg-slate-100 text-slate-500 shrink-0">
+                        <Coins size={15} strokeWidth={2} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">Apertura</p>
+                        <p className="text-sm font-extrabold text-slate-700 truncate">
                           {formatMoney(cajaActual?.MontoInicial || 0)}
                         </p>
                       </div>
-                      <div>
-                        <span className="text-gray-500">Total Efectivo:</span>
-                        <p className="font-medium">
+                    </div>
+
+                    {/* Efectivo Neto */}
+                    <div className="flex items-center gap-3 p-3.5 bg-[#67afc3]/5 border border-[#67afc3]/15 rounded-2xl">
+                      <div className="p-2 rounded-xl bg-[#67afc3]/15 text-[#67afc3] shrink-0">
+                        <Banknote size={15} strokeWidth={2} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">Efect. neto</p>
+                        <p className="text-sm font-extrabold text-[#67afc3] truncate">
                           {formatMoney(
                             (cajaActual?.TotalEntradaEfectivo || 0) -
                               (cajaActual?.TotalSalidaEfectivo || 0),
                           )}
                         </p>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Ganancia destacada */}
+                  <div className="relative overflow-hidden rounded-2xl p-4 bg-linear-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/20">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
+                    <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full translate-y-6 -translate-x-6" />
+                    <div className="relative z-10 flex items-center justify-between">
                       <div>
-                        <span className="text-gray-500">Ganancia Total:</span>
-                        <p className="font-bold text-lg text-success">
+                        <p className="text-[9px] font-bold text-emerald-100 uppercase tracking-widest">Ganancia del día</p>
+                        <p className="text-3xl font-black text-white leading-tight mt-0.5">
                           {formatMoney(cajaActual?.Ganancia || 0)}
                         </p>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-white/20">
+                        <CheckCircle2 size={24} className="text-white" strokeWidth={2} />
                       </div>
                     </div>
                   </div>
 
-                  <Input
-                    label="Monto de Cierre"
-                    description="Ingrese el dinero en efectivo total al finalizar el turno"
-                    placeholder="0.00"
-                    type="text"
-                    value={montoCierre}
-                    onValueChange={(val) =>
-                      handleNumberInput(val, setMontoCierre)
-                    }
-                    startContent={
-                      <div className="pointer-events-none flex items-center">
-                        <span className="text-default-400 text-small">$</span>
-                      </div>
-                    }
-                  />
+                  {/* Input dinero físico */}
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-0.5">Conteo de caja</p>
+                    <Input
+                      label="Dinero físico en el cajón"
+                      placeholder="0,00"
+                      variant="bordered"
+                      value={montoCierre}
+                      onValueChange={(val) =>
+                        handleNumberInput(val, setMontoCierre)
+                      }
+                      classNames={{
+                        label:
+                          "text-slate-500 font-bold uppercase text-[10px] tracking-widest",
+                        inputWrapper:
+                          "h-13 border-slate-200 bg-slate-50/50 hover:border-[#67afc3]/60 focus-within:!border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/20 transition-all rounded-xl",
+                        input: "text-xl text-slate-700 font-black",
+                      }}
+                      startContent={
+                        <div className="p-1.5 rounded-lg bg-slate-100 text-slate-500 mr-1 shrink-0">
+                          <DollarSign size={15} />
+                        </div>
+                      }
+                    />
+                  </div>
 
-                  <p className="text-xs text-yellow-600 bg-yellow-50 p-3 rounded-lg">
-                    ⚠️ Verifique que el monto de cierre coincida con el efectivo
-                    físico en caja antes de continuar.
-                  </p>
+                  {/* Advertencia */}
+                  <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-100">
+                    <AlertTriangle size={14} className="text-amber-500 mt-0.5 shrink-0" strokeWidth={2.5} />
+                    <p className="text-xs text-amber-700 leading-relaxed font-medium">
+                      Contá el dinero físico en el cajón antes de confirmar. El sistema registrará cualquier diferencia.
+                    </p>
+                  </div>
                 </div>
               </ModalBody>
+
+              {/* ─── Footer ──────────────────────────────────────────── */}
               <ModalFooter>
-                <Button variant="light" color="danger" onPress={onClose}>
+                <Button
+                  variant="light"
+                  className="font-bold text-slate-500"
+                  onPress={onClose}
+                >
                   Cancelar
                 </Button>
                 <Button
-                  color="danger"
                   onPress={handleCerrarCaja}
                   isLoading={isClosing}
-                  startContent={!isClosing && <Lock size={16} />}
+                  className="bg-linear-to-r from-rose-500 to-rose-600 text-white font-bold px-6 rounded-xl shadow-md shadow-rose-500/20"
+                  startContent={
+                    !isClosing && <Lock size={15} strokeWidth={2.5} />
+                  }
                 >
-                  Cerrar Caja
+                  Confirmar Cierre
                 </Button>
               </ModalFooter>
             </>
           )}
         </ModalContent>
       </Modal>
+
 
       {/* Ticket Detail Modal */}
       <Modal
