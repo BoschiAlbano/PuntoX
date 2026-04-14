@@ -15,6 +15,7 @@ import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { SucursalSelector } from "@/components/sucursal";
 import { useUserStore } from "@/store/useUserStore";
 import { PuntoXLogo } from "@/components/ui/PuntoXLogo";
+import { Tooltip } from "@heroui/react";
 
 interface MenuItem {
   icon: React.ReactNode;
@@ -93,8 +94,27 @@ const menuSections: MenuSection[] = [
             />
           </svg>
         ),
-        label: "Caja",
+        label: "Caja Actual",
         href: "/caja",
+      },
+      {
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="w-5 h-5"
+          >
+            <path
+              fillRule="evenodd"
+              d="M2 3.5A1.5 1.5 0 0 1 3.5 2h9A1.5 1.5 0 0 1 14 3.5v11.75A2.75 2.75 0 0 0 16.75 18h-12A2.75 2.75 0 0 1 2 15.25V3.5Zm3.75 7a.75.75 0 0 0 0 1.5h4.5a.75.75 0 0 0 0-1.5h-4.5Zm0 3a.75.75 0 0 0 0 1.5h4.5a.75.75 0 0 0 0-1.5h-4.5ZM5 5.75A.75.75 0 0 1 5.75 5h4.5a.75.75 0 0 1 .75.75v2.5a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 5 8.25v-2.5Z"
+              clipRule="evenodd"
+            />
+            <path d="M16.5 6.5h-1v8.75a1.25 1.25 0 1 0 2.5 0V8a1.5 1.5 0 0 0-1.5-1.5Z" />
+          </svg>
+        ),
+        label: "Historial de Cajas",
+        href: "/caja/historial",
       },
     ],
   },
@@ -139,6 +159,65 @@ const menuSections: MenuSection[] = [
         label: "Compras",
         href: "/compras",
       },
+      {
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="w-5 h-5"
+          >
+            <path
+              fillRule="evenodd"
+              d="M4.5 2A2.5 2.5 0 0 0 2 4.5v3.879a2.5 2.5 0 0 0 .732 1.767l7.5 7.5a2.5 2.5 0 0 0 3.536 0l3.878-3.878a2.5 2.5 0 0 0 0-3.536l-7.5-7.5A2.5 2.5 0 0 0 8.38 2H4.5ZM5 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+              clipRule="evenodd"
+            />
+          </svg>
+        ),
+        label: "Marcas",
+        href: "/productos/marcas",
+      },
+      {
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="w-5 h-5"
+          >
+            <path
+              fillRule="evenodd"
+              d="M15.988 3.012A2.25 2.25 0 0 1 18 5.25v6.5A2.25 2.25 0 0 1 15.75 14H13.5V7A2.5 2.5 0 0 0 11 4.5H8.128a2.252 2.252 0 0 1 1.884-1.488A2.25 2.25 0 0 1 12.25 1h1.5a2.25 2.25 0 0 1 2.238 2.012ZM11.5 3.25a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 .75.75v.25h-3v-.25Z"
+              clipRule="evenodd"
+            />
+            <path
+              fillRule="evenodd"
+              d="M2 7a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7Zm2 3.25a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75Zm0 3.5a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75Z"
+              clipRule="evenodd"
+            />
+          </svg>
+        ),
+        label: "Rubros",
+        href: "/productos/rubros",
+      },
+      {
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="w-5 h-5"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10 2a.75.75 0 0 1 .75.75v.258a33.186 33.186 0 0 1 6.668.83.75.75 0 0 1-.336 1.461 31.28 31.28 0 0 0-1.103-.232l1.702 7.545a.75.75 0 0 1-.387.832A4.981 4.981 0 0 1 15 14c-.825 0-1.606-.2-2.294-.556a.75.75 0 0 1-.387-.832l1.77-7.849a31.743 31.743 0 0 0-3.339-.254v11.505a20.01 20.01 0 0 1 3.78.501.75.75 0 1 1-.339 1.462A18.558 18.558 0 0 0 10 17.5c-1.442 0-2.845.165-4.191.477a.75.75 0 0 1-.338-1.462 20.01 20.01 0 0 1 3.779-.501V4.509c-1.129.026-2.243.112-3.34.254l1.771 7.85a.75.75 0 0 1-.387.83A4.98 4.98 0 0 1 5 14a4.98 4.98 0 0 1-2.294-.556.75.75 0 0 1-.387-.832L4.02 5.067c-.37.07-.738.148-1.103.232a.75.75 0 0 1-.336-1.462 32.845 32.845 0 0 1 6.668-.829V2.75A.75.75 0 0 1 10 2ZM5 7.543 3.92 12.33a3.499 3.499 0 0 0 2.16 0L5 7.543Zm10 0-1.08 4.787a3.498 3.498 0 0 0 2.16 0L15 7.543Z"
+              clipRule="evenodd"
+            />
+          </svg>
+        ),
+        label: "Unidades de Medida",
+        href: "/productos/unidades",
+      },
     ],
   },
   {
@@ -166,6 +245,29 @@ const menuSections: MenuSection[] = [
       {
         icon: (
           <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="w-5 h-5"
+          >
+            <path
+              fillRule="evenodd"
+              d="M15.988 3.012A2.25 2.25 0 0 1 18 5.25v6.5A2.25 2.25 0 0 1 15.75 14H13.5V7A2.5 2.5 0 0 0 11 4.5H8.128a2.252 2.252 0 0 1 1.884-1.488A2.25 2.25 0 0 1 12.25 1h1.5a2.25 2.25 0 0 1 2.238 2.012ZM11.5 3.25a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 .75.75v.25h-3v-.25Z"
+              clipRule="evenodd"
+            />
+            <path
+              fillRule="evenodd"
+              d="M2 7a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7Zm2 3.25a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75Zm0 3.5a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75Z"
+              clipRule="evenodd"
+            />
+          </svg>
+        ),
+        label: "Cuentas Corrientes",
+        href: "/clientes/cuentas-corrientes",
+      },
+      {
+        icon: (
+          <svg
             className="w-5 h-5"
             fill="none"
             stroke="currentColor"
@@ -181,6 +283,42 @@ const menuSections: MenuSection[] = [
         ),
         label: "Empleados",
         href: "/empleados",
+      },
+      {
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="w-5 h-5"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10 1a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 1ZM5.05 3.05a.75.75 0 0 1 1.06 0l1.062 1.06A.75.75 0 1 1 6.11 5.173L5.05 4.11a.75.75 0 0 1 0-1.06Zm9.9 0a.75.75 0 0 1 0 1.06l-1.06 1.062a.75.75 0 0 1-1.062-1.061l1.061-1.06a.75.75 0 0 1 1.06 0ZM3 8a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5A.75.75 0 0 1 3 8Zm11 0a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5A.75.75 0 0 1 14 8Zm-6.828 2.828a.75.75 0 0 1 0 1.061L6.11 12.95a.75.75 0 0 1-1.06-1.06l1.06-1.06a.75.75 0 0 1 1.06 0Zm3.594-3.317a.75.75 0 0 0-1.37.364l-.492 6.861a.75.75 0 0 0 1.204.65l1.043-.799.985 3.678a.75.75 0 0 0 1.45-.388l-.978-3.646 1.292.204a.75.75 0 0 0 .74-1.16l-3.874-5.764Z"
+              clipRule="evenodd"
+            />
+          </svg>
+        ),
+        label: "Roles",
+        href: "/empleados/roles",
+      },
+      {
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="w-5 h-5"
+          >
+            <path
+              fillRule="evenodd"
+              d="M4.5 2A1.5 1.5 0 0 0 3 3.5v13A1.5 1.5 0 0 0 4.5 18h11a1.5 1.5 0 0 0 1.5-1.5V7.621a1.5 1.5 0 0 0-.44-1.06l-4.12-4.122A1.5 1.5 0 0 0 11.378 2H4.5Zm2.25 8.5a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Zm0 3a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Z"
+              clipRule="evenodd"
+            />
+          </svg>
+        ),
+        label: "Auditoría",
+        href: "/empleados/auditoria",
       },
     ],
   },
@@ -205,6 +343,25 @@ const menuSections: MenuSection[] = [
         ),
         label: "Analíticas",
         href: "/analiticas",
+      },
+      {
+        icon: (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+        ),
+        label: "Logs de Actividad",
+        href: "/analiticas/logs",
       },
     ],
   },
@@ -252,8 +409,84 @@ const menuSections: MenuSection[] = [
             />
           </svg>
         ),
-        label: "Configuración",
+        label: "Perfil del Negocio",
         href: "/configuracion",
+      },
+      {
+        icon: (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+            />
+          </svg>
+        ),
+        label: "Preferencias de Venta",
+        href: "/configuracion/ventas",
+      },
+      {
+        icon: (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+            />
+          </svg>
+        ),
+        label: "Notificaciones",
+        href: "/configuracion/notificaciones",
+      },
+      {
+        icon: (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+            />
+          </svg>
+        ),
+        label: "Seguridad y Acceso",
+        href: "/configuracion/seguridad",
+      },
+      {
+        icon: (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+        ),
+        label: "Facturación y Región",
+        href: "/configuracion/fiscal",
       },
     ],
   },
@@ -262,12 +495,9 @@ const menuSections: MenuSection[] = [
 function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { supabase } = useSupabaseAuthContext();
 
   // Use global store
   const { canAccessRoute } = useUserStore();
-
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Solo una sección abierta a la vez (acordeón). Por defecto "Principal".
   const [openSection, setOpenSection] = useState<string | null>("Principal");
@@ -305,22 +535,6 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
       });
     });
   }, [menuSectionsFiltradas, router]);
-
-  const queryClient = useQueryClient();
-
-  const handleLogout = async () => {
-    try {
-      setIsLoggingOut(true);
-      queryClient.cancelQueries();
-      queryClient.clear();
-      await supabase.auth.signOut();
-      router.push("/signin");
-    } catch (error) {
-      console.error("Error during sign out:", error);
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
 
   return (
     <motion.section
@@ -484,74 +698,78 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                               onClick={handleNavigationTrigger}
                               className="block"
                             >
-                              <motion.div
-                                whileHover={{
-                                  x: isCollapsed ? 0 : 2,
-                                  scale: isCollapsed ? 1 : 1.01,
+                              <Tooltip
+                                content={item.label}
+                                placement="right"
+                                isDisabled={!isCollapsed}
+                                offset={20}
+                                classNames={{
+                                  content:
+                                    "bg-[#1f2d47] text-white font-semibold text-xs border border-slate-700/50 shadow-lg",
                                 }}
-                                whileTap={{ scale: 0.98 }}
-                                className={`
-                                    w-full h-[50px] flex items-center gap-3 px-4 py-3 rounded-xl overflow-hidden
-                                    relative group cursor-pointer
-                                    ${
-                                      isActive
-                                        ? "bg-slate-800/80 text-white shadow-none"
-                                        : "text-slate-300 hover:text-white hover:bg-slate-700/30"
-                                    }
-                                  `}
                               >
-                                {isActive && (
-                                  <motion.div
-                                    layoutId="activeIndicator"
-                                    className="absolute top-1 left-1 w-[5px] h-[5px] rounded-full bg-[#5fa7b8] animate-pulse"
-                                    transition={{
-                                      type: "spring",
-                                      stiffness: 300,
-                                      damping: 30,
-                                    }}
-                                  />
-                                )}
-
-                                <div
-                                  className={`relative ${
-                                    isActive
-                                      ? "text-[#5fa7b8] animate-pulse"
-                                      : "text-slate-500 dark:text-white animate-none"
-                                  }`}
+                                <motion.div
+                                  whileHover={{
+                                    x: isCollapsed ? 0 : 2,
+                                    scale: isCollapsed ? 1 : 1.01,
+                                  }}
+                                  whileTap={{ scale: 0.98 }}
+                                  className={`
+                                      w-full h-[50px] flex items-center gap-3 px-4 py-3 rounded-xl overflow-hidden
+                                      relative group cursor-pointer
+                                      ${
+                                        isActive
+                                          ? "bg-slate-800/80 text-white shadow-none"
+                                          : "text-slate-300 hover:text-white hover:bg-slate-700/30"
+                                      }
+                                    `}
                                 >
-                                  <div className=" group-hover:text-[#5fa7b8]">
-                                    {item.icon}
-                                  </div>
-                                  {item.badge && (
-                                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-linear-to-b from-blue-500 to-[#90c472] text-white text-xs rounded-full flex items-center justify-center">
-                                      {item.badge}
-                                    </span>
-                                  )}
-                                </div>
-
-                                <AnimatePresence mode="wait">
-                                  {!isCollapsed && (
+                                  {isActive && (
                                     <motion.div
-                                      initial={{ opacity: 0, width: 0 }}
-                                      animate={{ opacity: 1, width: "auto" }}
-                                      exit={{ opacity: 0, width: 0 }}
-                                      transition={{ duration: 0.2 }}
-                                      className="flex items-center justify-between flex-1 overflow-hidden"
-                                    >
-                                      <span
-                                        className={`font-semibold whitespace-nowrap text-[15px] ${isActive ? "text-slate-100" : "text-slate-100"}`}
-                                      >
-                                        {item.label}
-                                      </span>
-                                      {item.badge && (
-                                        <span className="px-2 py-0.5 bg-blue-500/15 text-blue-600 text-xs rounded-full border border-blue-200">
-                                          {item.badge}
-                                        </span>
-                                      )}
-                                    </motion.div>
+                                      layoutId="activeIndicator"
+                                      className="absolute top-1 left-1 w-[5px] h-[5px] rounded-full bg-[#5fa7b8] animate-pulse"
+                                      transition={{
+                                        type: "spring",
+                                        stiffness: 300,
+                                        damping: 30,
+                                      }}
+                                    />
                                   )}
-                                </AnimatePresence>
-                              </motion.div>
+
+                                  <div
+                                    className={`relative ${
+                                      isActive
+                                        ? "text-[#5fa7b8] animate-pulse"
+                                        : "text-slate-500 dark:text-white animate-none"
+                                    }`}
+                                  >
+                                    <div className=" group-hover:text-[#5fa7b8]">
+                                      {item.icon}
+                                    </div>
+                                    {item.badge && (
+                                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-linear-to-b from-blue-500 to-[#90c472] text-white text-xs rounded-full flex items-center justify-center">
+                                        {item.badge}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <AnimatePresence mode="wait">
+                                    {!isCollapsed && (
+                                      <motion.div
+                                        initial={{ opacity: 0, width: 0 }}
+                                        animate={{ opacity: 1, width: "auto" }}
+                                        exit={{ opacity: 0, width: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="whitespace-nowrap flex-1"
+                                      >
+                                        <span className="text-[13px] font-semibold tracking-wide relative z-10">
+                                          {item.label}
+                                        </span>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </motion.div>
+                              </Tooltip>
                             </Link>
                           );
                         })}
@@ -563,57 +781,6 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
             );
           })}
         </nav>
-
-        {/* Botón Cerrar Sesión (fijo abajo) */}
-        <div className="px-3 pb-2">
-          <motion.button
-            onClick={() => handleLogout()}
-            disabled={isLoggingOut}
-            whileHover={{
-              x: isCollapsed ? 0 : 2,
-              scale: isCollapsed ? 1 : 1.01,
-            }}
-            whileTap={{ scale: 0.98 }}
-            className={`
-                w-full flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer
-                 relative group
-                text-slate-300 hover:text-white hover:bg-slate-700/30
-              `}
-          >
-            <div className="relative">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-5 h-5 text-slate-500 group-hover:text-[#5fa7b8]"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
-                />
-              </svg>
-            </div>
-
-            <AnimatePresence mode="wait">
-              {!isCollapsed && (
-                <motion.div
-                  initial={{ opacity: 0, width: 0 }}
-                  animate={{ opacity: 1, width: "auto" }}
-                  exit={{ opacity: 0, width: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center justify-between flex-1 overflow-hidden"
-                >
-                  <span className="font-medium whitespace-nowrap text-[15px]">
-                    Cerrar Sesión
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.button>
-        </div>
 
         {/* Footer del Sidebar */}
         <div className="w-full p-4 border-t border-slate-700/50 flex flex-col gap-3 items-center">
@@ -639,7 +806,9 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                 exit={{ opacity: 0 }}
                 className="flex justify-center"
               >
-                <div className="w-2  rounded-full bg-green-500 animate-pulse" />
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                  V 1.0.0
+                </p>
               </motion.div>
             )}
           </AnimatePresence>

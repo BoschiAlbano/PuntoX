@@ -41,53 +41,55 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    const total = await prisma.persona.count({ where });
-
-    const clientes = await prisma.persona.findMany({
-      where,
-      skip: pagination.skip,
-      take: pagination.limit,
-      select: {
-        Id: true,
-        Nombre: true,
-        Apellido: true,
-        Dni: true,
-        Direccion: true,
-        Telefono: true,
-        Mail: true,
-        LocalidadId: true,
-        Localidad: {
-          select: {
-            Id: true,
-            Descripcion: true,
-            Departamento: {
-              select: {
-                Id: true,
-                Descripcion: true,
-                Provincia: { select: { Id: true, Descripcion: true } },
+    // 🔥 OPTIMIZATION: Run count and findMany concurrently
+    const [total, clientes] = await Promise.all([
+      prisma.persona.count({ where }),
+      prisma.persona.findMany({
+        where,
+        skip: pagination.skip,
+        take: pagination.limit,
+        select: {
+          Id: true,
+          Nombre: true,
+          Apellido: true,
+          Dni: true,
+          Direccion: true,
+          Telefono: true,
+          Mail: true,
+          LocalidadId: true,
+          Localidad: {
+            select: {
+              Id: true,
+              Descripcion: true,
+              Departamento: {
+                select: {
+                  Id: true,
+                  Descripcion: true,
+                  Provincia: { select: { Id: true, Descripcion: true } },
+                },
+              },
+            },
+          },
+          Persona_Cliente: {
+            select: {
+              CondicionIvaId: true,
+              ActivarCtaCte: true,
+              TieneLimiteCompra: true,
+              MontoMaximoCtaCte: true,
+              CondicionIva: {
+                select: {
+                  Id: true,
+                  Descripcion: true,
+                },
               },
             },
           },
         },
-        Persona_Cliente: {
-          select: {
-            CondicionIvaId: true,
-            ActivarCtaCte: true,
-            TieneLimiteCompra: true,
-            MontoMaximoCtaCte: true,
-            CondicionIva: {
-              select: {
-                Id: true,
-                Descripcion: true,
-              },
-            },
-          },
+        orderBy: {
+          Apellido: "asc",
         },
-      },
-      orderBy: {
-        Apellido: "asc",
-      },
-    });
+      }),
+    ]);
 
     const paginatedResponse = createPaginationResponse(
       clientes,

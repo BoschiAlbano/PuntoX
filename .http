@@ -1,0 +1,33 @@
+### ------------------------------------------------------------------
+### SIMULAR UNA ALERTA (Notificaciones)
+### Importante: Dado que el endpoint cuenta con validación de seguridad
+### (getCurrentUser()), es posible que esta petición arroje 401 (Unauthorized)
+### si no le pasas tu Cookie o Token de sesión actual.
+### Para que funcione 100%, puedes copiar el valor de "Cookie" de cualquier 
+### request exitoso usando las herramientas de desarrollador (F12) en Chrome
+### y pegarlo debajo de Content-Type.
+### ------------------------------------------------------------------
+
+POST http://localhost:3000/api/notificaciones
+Content-Type: application/json
+Cookie: sb-axuadjuavytmxvgfqzyj-auth-token.0=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SW01cVRsQnhTWEZEYUVwelJtNUpRWEFpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDJGNGRXRmthblZoZG5sMGJYaDJaMlp4ZW5scUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSmhabVF4WXpFeU55MHlZamN4TFRRMU5ETXRZVEExWkMxak1qaGlaREl5TlRObU9UY2lMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpjMk1URTBNREkyTENKcFlYUWlPakUzTnpZeE1UQTBNallzSW1WdFlXbHNJam9pWW05elkyaHBMbUZzWW1GdWJ5NXFiM05sUUdkdFlXbHNMbU52YlNJc0luQm9iMjVsSWpvaUlpd2lZWEJ3WDIxbGRHRmtZWFJoSWpwN0ltbHpVM1Z3WlhKQlpHMXBiaUk2Wm1Gc2MyVXNJbkJsY20xcGMzTnBiMjV6SWpwYkltVnRjR3hsWVdSdmN6cGhaRzFwYmlJc0luWmxiblJoY3lJc0ltTmhhbUVpTENKamJHbGxiblJsY3lJc0luQnliMlIxWTNSdmN5SXNJbUZ1WVd4cGRHbGpZWE1pTENKamIyNW1hV2QxY21GamFXOXVJbDBzSW5CbGNtMXBjM05wYjI1elZtVnljMmx2YmlJNk1UYzNNREUxTlRReU9EWXpPQ3dpY0hKdmRtbGtaWElpT2lKbGJXRnBiQ0lzSW5CeWIzWnBaR1Z5Y3lJNld5SmxiV0ZwYkNKZExDSnliMnhsY3lJNlczc2lhV1FpT2pJc0ltNXZiV0p5WlNJNklrRmtiV2x1YVhOMGNtRmtiM0lpTENKMGFYQnZJam9pUVVSTlNVNUpVMVJTUVVSUFVpSjlYU3dpZEdWdVlXNTBTV1FpT2lJeUluMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1Y5TENKeWIyeGxJam9pWVhWMGFHVnVkR2xqWVhSbFpDSXNJbUZoYkNJNkltRmhiREVpTENKaGJYSWlPbHQ3SW0xbGRHaHZaQ0k2SW5CaGMzTjNiM0prSWl3aWRHbHRaWE4wWVcxd0lqb3hOemMyTVRFd05ESTJmVjBzSW5ObGMzTnBiMjVmYVdRaU9pSXdPVGN5TVdVNU1pMWtPVGxpTFRRek5qUXRPRE5tTkMweU1tTmxOMk5qT0dReVpEQWlMQ0pwYzE5aGJtOXVlVzF2ZFhNaU9tWmhiSE5sZlEuWGcxN1pzcVJsVl9WOW5fd21TWjR5T01VRWotMDFlVzRfZ2V4VGRLRThydyIsInRva2VuX3R5cGUiOiJiZWFyZXIiLCJleHBpcmVzX2luIjozNjAwLCJleHBpcmVzX2F0IjoxNzc2MTE0MDI2LCJyZWZyZXNoX3Rva2VuIjoicmx5dDZoeHZ4dDRkIiwidXNlciI6eyJpZCI6ImFmZDFjMTI3LTJiNzEtNDU0My1hMDVkLWMyOGJkMjI1M2Y5NyIsImF1ZCI6ImF1dGhlbnRpY2F0ZWQiLCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImVtYWlsIjoiYm9zY2hpLmFsYmFuby5qb3NlQGdtYWlsLmNvbSIsImVtYWlsX2NvbmZpcm1lZF9hdCI6IjIwMjYtMDItMDNUMjE6MTI6MzEuNzEwOTJaIiwicGhvbmUiOiIiLCJjb25maXJtZWRfYXQiOiIyMDI2LTAyLTAzVDIxOjEyOjMxLjcxMDkyWiIsImxhc3Rfc2lnbl9pbl9hdCI6IjIwMjYtMDQtMTNUMjA6MDA6MjYuNTQ1OTI0MDgzWiIsImFwcF9tZXRhZGF0YSI6eyJpc1N1cGVyQWRtaW4iOmZhbHNlLCJwZXJtaXNzaW9ucyI6WyJlbXBsZWFkb3M6YWRtaW4iLCJ2ZW50YXMiLCJjYWphIiwiY2xpZW50ZXMiLCJwcm9kdWN0b3MiLCJhbmFsaXRpY2FzIiwiY29uZmlndXJhY2lvbiJdLCJwZXJtaXNzaW9uc1ZlcnNpb24iOjE3NzAxNTU0Mjg2MzgsInByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXSwicm9sZXMiOlt7ImlkIjoyLCJub21icmUiOiJBZG1pbmlzdHJhZG9yIiwidGlwbyI6IkFETUlOSVNUUkFET1IifV0sInRlbmFudElkIjoiMiJ9LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsX3ZlcmlmaWVkIjp0cnVlfSwiaWRlbnRpdGllcyI6W3siaWRlbnRpdHlfaWQiOiIzYTJkNzBhMy0yZGM3LTQ1YTktYTg0NC03ODJkZTdjZGY4ODIiLCJpZCI6ImFmZDFjMTI3LTJiNzEtNDU0My1hMDVkLWMyOGJkMjI1M2Y5NyIsInVzZXJfaWQiOiJhZmQxYzEyNy0yYjcxLTQ1NDMtYTA1ZC1jMjhiZDIyNTNmOTciLCJpZGVudGl0eV9kYXRhIjp7ImVtYWlsIjoiYm9zY2hpLmFsYmFuby5qb3NlQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJzdWIiOiJhZmQxYzEyNy0yYjcxLTQ1NDMtYTA1ZC1jMjhiZDIyNTNmOTcifSwicHJvdmlkZXIiOiJlbWFpbCIsImxhc3Rfc2lnbl9pbl9hdCI6IjIwMjYtMDItMDNUMjE6MTI6MzEuNzA4NDgxWiIsImNyZWF0ZWRfYXQiOiIyMDI2LTAyLTAzVDIxOjEyOjMxLjcwODU0WiIsInVwZGF0ZWRfYXQiOiIyMDI2LTAyLTAzVDIxOjEyOjMxLjcwODU0WiIsImVtYWlsIjoiYm9zY2hpLmFsYmFuby5qb3NlQGdtYWlsLmNvbSJ9XSwiY3JlYXRlZF9hdCI6IjIwMjYtMDItMDNUMjE6MTI6MzEuNjk4MTQ1WiIsInVwZGF0ZWRfYXQiOiIyMDI2LTA0LTEzVDIwOjAwO; sb-axuadjuavytmxvgfqzyj-auth-token.1=jI2LjU4MzMzWiIsImlzX2Fub255bW91cyI6ZmFsc2V9LCJ3ZWFrX3Bhc3N3b3JkIjpudWxsfQ
+
+{
+  "Tipo": "WARNING",
+  "Titulo": "Stock Crítico Mínimo",
+  "Mensaje": "El artículo 'Coca-Cola 2.25L' está por agotarse. Quedan 2 unidades.",
+  "EntidadTipo": "ARTICULO_STOCK",
+  "EntidadId": "123",
+  "AccionUrl": "/productos"
+}
+
+###
+
+### ------------------------------------------------------------------
+### LISTAR NOTIFICACIONES
+### ------------------------------------------------------------------
+
+GET http://localhost:3000/api/notificaciones?limit=10
+# Cookie: pegar_tu_cookie_aqui_para_autorizacion
+
+###

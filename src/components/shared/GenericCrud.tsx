@@ -24,6 +24,7 @@ import { useGenericApi } from "@/hooks/useGenericApi";
 import { useDebounce } from "@/hooks/useDebounce";
 import { handleError } from "@/lib/auth/errorHandler";
 import { buildSelectionQuerySignature } from "@/lib/utils/selectionUtils";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 export type SelectionMode = "manual" | "all_matching";
 
@@ -163,6 +164,11 @@ export default function GenericCrud<T extends { Id: number | string }>({
   const [previewItem, setPreviewItem] = useState<T | null>(null);
   const [lowStockOnly, setLowStockOnly] = useState(false);
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const editId = searchParams?.get("editId");
+
   // Selección masiva cross-page
   const [selectionMode, setSelectionMode] = useState<SelectionMode>("manual");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -260,6 +266,27 @@ export default function GenericCrud<T extends { Id: number | string }>({
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Auto-open edit modal if editId is present in URL
+  useEffect(() => {
+    if (editId && data && data.length > 0) {
+      const itemToEdit = data.find(
+        (i: T) => String(i.Id) === editId || String((i as any).id) === editId,
+      );
+      if (itemToEdit && !isOpen) {
+        setSelectedItem(itemToEdit);
+        onOpen();
+
+        // Remove editId from URL to prevent reopening on future reloads
+        if (searchParams) {
+          const newParams = new URLSearchParams(searchParams.toString());
+          newParams.delete("editId");
+          const newUrl = `${pathname}${newParams.toString() ? `?${newParams.toString()}` : ""}`;
+          router.replace(newUrl, { scroll: false });
+        }
+      }
+    }
+  }, [editId, data, isOpen, onOpen, router, pathname, searchParams]);
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
@@ -284,7 +311,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
             .split(".")
             .reduce(
               (o: unknown, k) => (o as Record<string, unknown>)?.[k],
-              obj as unknown
+              obj as unknown,
             )
         : (obj as Record<string, unknown>)[sortPath];
       if (v == null) return "";
@@ -337,10 +364,11 @@ export default function GenericCrud<T extends { Id: number | string }>({
         if (keys === "all") {
           setSelectedIds((prev) => new Set([...prev, ...pageIds]));
         } else {
-          const otherPageIds = [...selectedIds].filter(
-            (id) => !pageIds.has(id),
-          );
-          setSelectedIds(new Set([...otherPageIds, ...keys]));
+          // Usar setSelectedIds con función para leer siempre el estado más reciente
+          setSelectedIds((prev) => {
+            const otherPageIds = [...prev].filter((id) => !pageIds.has(id));
+            return new Set([...otherPageIds, ...keys]);
+          });
         }
       } else {
         if (keys === "all") {
@@ -718,7 +746,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
                     ? "Mostrar todos los productos"
                     : "Filtrar solo productos con bajo stock"
                 }
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 border ${
+                className={`flex items-center justify-center gap-2 px-3 h-10 sm:h-9 w-full sm:w-auto rounded-lg text-sm font-medium transition-all duration-150 border whitespace-nowrap ${
                   lowStockOnly
                     ? "bg-amber-500/20 border-amber-500/50 text-amber-800"
                     : "bg-white border-slate-300 text-slate-600 hover:bg-slate-50 hover:border-[#67afc3] hover:text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40"

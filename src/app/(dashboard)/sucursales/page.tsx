@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import GenericCrud from "@/components/shared/GenericCrud";
-import { Chip, Tooltip, addToast, Button } from "@heroui/react";
+import { Chip, addToast } from "@heroui/react";
 import {
   Building2,
   MapPin,
@@ -12,12 +11,12 @@ import {
   Calendar,
   CheckCircle2,
   AlertCircle,
-  MoreVertical,
 } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
 import { useQueryClient } from "@tanstack/react-query";
 import SucursalForm from "@/components/sucursales/SucursalForm";
 import { motion } from "framer-motion";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 
 export interface Sucursal {
   Id: number;
@@ -49,28 +48,11 @@ export default function SucursalesPage() {
 
   return (
     <div className="max-w-[1400px] mx-auto py-4 sm:py-6 px-3 sm:px-6 flex flex-col items-stretch h-full relative space-y-4 sm:space-y-6">
-      {/* Premium Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-        className="flex flex-col gap-2 px-1 sm:px-0"
-      >
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100/50 border border-slate-200/50 backdrop-blur-md text-[#67afc3] text-xs font-semibold w-fit shadow-sm">
-          <Building2 className="w-4 h-4" />
-          <span>Gestión de Sedes</span>
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-          Nuestras{" "}
-          <span className="text-transparent bg-clip-text bg-linear-to-r from-[#67afc3] to-[#2dd4bf]">
-            Sucursales
-          </span>
-        </h1>
-        <p className="mt-2 text-slate-500 font-medium max-w-2xl text-sm sm:text-base leading-relaxed">
-          Administra tus puntos de venta, configura sedes principales y
-          monitorea la actividad de tus locales.
-        </p>
-      </motion.div>
+      <PageHeader
+        title="Gestión de"
+        accentTitle="Sucursales"
+        description="Aquí puedes observar un panorama rápido del rendimiento actual."
+      />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}

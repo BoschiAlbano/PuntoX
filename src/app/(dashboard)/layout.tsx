@@ -52,10 +52,6 @@ export default function DashboardLayout({
 
         {/* Background Gradients & Grid Pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#f8fafc_2px,transparent_1px),linear-gradient(to_bottom,#f8fafc_2px,transparent_1px)] bg-size-[4rem_4rem] z-0 pointer-events-none" />
-        {/* <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none z-0">
-          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#67afc3]/15 rounded-full blur-[100px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px]" />
-        </div> */}
 
         {/* Main Application Area */}
         <div
@@ -68,9 +64,7 @@ export default function DashboardLayout({
             isCollapsed={isSidebarCollapsed}
             onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           />
-          <main className="flex-1 flex flex-col z-10 w-full pt-10">
-            {children}
-          </main>
+          <main className="flex-1 flex flex-col z-10 w-full ">{children}</main>
           <Footer />
         </div>
       </div>
@@ -81,18 +75,18 @@ export default function DashboardLayout({
 function Footer() {
   return (
     <footer className="backdrop-blur-sm  py-4 px-6">
-      <div className="flex flex-col sm:flex-row items-center justify-between sm:gap-0 gap-2 text-sm text-[#76b7c8]">
+      <div className="flex flex-col sm:flex-row items-center justify-between sm:gap-0 gap-2 text-sm text-[#182337]">
         <p className="text-center">
           ЖИ 2026 Punto X. Todos los derechos reservados.
         </p>
         <div className="flex items-center gap-4">
-          <a href="#" className="hover:text-blue-600 transition-colors">
+          <a href="#" className="hover:text-[#76b7c8] transition-colors">
             Terminos
           </a>
-          <a href="#" className="hover:text-blue-600 transition-colors">
+          <a href="#" className="hover:text-[#76b7c8] transition-colors">
             Privacidad
           </a>
-          <a href="#" className="hover:text-blue-600 transition-colors">
+          <a href="#" className="hover:text-[#76b7c8] transition-colors">
             Soporte
           </a>
         </div>

@@ -1,0 +1,278 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import {
+  Input,
+  Button,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  Spinner,
+} from "@heroui/react";
+import { Search, Package } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchProductosVentas } from "@/hooks/useProductos";
+import { Producto } from "@/lib/validations/producto.schema";
+import { LoadingComponent } from "../loading/loading";
+
+// Hook para debounce
+function useDebounceValue<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
+
+interface ProductSearchModalProps {
+  isOpen: boolean;
+  onOpenChange: () => void;
+  initialSearch: string;
+  handleSelect: (product: Producto, cantidad?: number) => void;
+}
+
+export default function ProductSearchModal({
+  isOpen,
+  onOpenChange,
+  initialSearch,
+  handleSelect,
+}: ProductSearchModalProps) {
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const debouncedSearch = useDebounceValue(searchQuery, 300);
+
+  // Sincronizar el initialSearch cuando se abre el modal
+  useEffect(() => {
+    if (isOpen) {
+      setSearchQuery(initialSearch);
+    }
+  }, [isOpen, initialSearch]);
+
+  const { data: queryResult, isLoading, isFetching } = useQuery({
+    queryKey: ["productos_ventas_modal", debouncedSearch],
+    queryFn: async ({ signal }) => {
+      if (!debouncedSearch.trim()) return { data: [], meta: { total: 0 } };
+      return fetchProductosVentas({
+        signal,
+        search: debouncedSearch.trim(),
+        page: 1,
+        limit: 50,
+      });
+    },
+    enabled: isOpen && debouncedSearch.trim().length > 0,
+    staleTime: 10 * 1000,
+  });
+
+  const items = queryResult?.data || [];
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      size="4xl"
+      backdrop="blur"
+      classNames={{
+        base: "bg-white/95 backdrop-blur-3xl shadow-2xl border border-white/60 rounded-[24px]",
+        header: "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8",
+        body: "py-6 px-4 sm:px-8",
+        footer: "border-t border-slate-100/60 py-4 px-4 sm:px-8",
+        closeButton: "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
+      }}
+      motionProps={{
+        variants: {
+          enter: {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            transition: { duration: 0.3, ease: "easeOut" },
+          },
+          exit: {
+            y: -20,
+            opacity: 0,
+            scale: 0.95,
+            transition: { duration: 0.2, ease: "easeIn" },
+          },
+        },
+      }}
+    >
+      <ModalContent>
+        {(onClose) => (
+          <>
+            <ModalHeader className="flex flex-col gap-1">
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 shadow-sm">
+                  <Package className="w-5 h-5 text-[#67afc3]" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">
+                    Buscador de Productos
+                  </h2>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    Selecciona un producto para agregarlo a la venta actual
+                  </p>
+                </div>
+              </div>
+            </ModalHeader>
+            <ModalBody>
+              {/* Buscador */}
+              <Input
+                placeholder="Buscar por Nombre, Código..."
+                startContent={<Search className="text-slate-400 mr-2" size={18} />}
+                value={searchQuery}
+                onValueChange={setSearchQuery}
+                onClear={() => setSearchQuery("")}
+                autoFocus
+                classNames={{
+                  inputWrapper:
+                    "bg-slate-50 hover:bg-slate-100 focus-within:!bg-white border-2 border-transparent focus-within:!border-[#67afc3]/40 transition-all shadow-sm rounded-xl h-14",
+                  input: "text-slate-700 font-medium text-[15px]",
+                  clearButton: "text-slate-400",
+                }}
+              />
+
+              {/* Contenedor de la Tabla */}
+              <div className="h-[350px] border border-slate-100 rounded-2xl overflow-hidden bg-white shadow-sm relative flex flex-col mt-2">
+                {isLoading || isFetching ? (
+                  <div className="flex-1 flex flex-col items-center justify-center h-full bg-slate-50/50">
+                    <LoadingComponent message="Buscando productos..." />
+                  </div>
+                ) : (
+                  <Table
+                    aria-label="Resultados Productos"
+                    removeWrapper
+                    selectionMode="single"
+                    onRowAction={(key) => {
+                      const selectedItem = items.find((item: Producto) => item.Id == key);
+                      if (selectedItem) {
+                        handleSelect(selectedItem);
+                        onClose();
+                      }
+                    }}
+                    classNames={{
+                      base: "h-full flex flex-col overflow-auto scrollbar-hide",
+                      table: "min-h-0",
+                      thead: "sticky top-0 z-20 shrink-0",
+                      th: "bg-slate-50/90 backdrop-blur-md text-slate-400 font-bold text-xs tracking-wider border-b border-slate-100 h-11 first:rounded-l-none last:rounded-r-none uppercase",
+                      tr: "hover:bg-[#67afc3]/5 transition-colors border-b border-slate-50 last:border-none cursor-pointer group",
+                      td: "py-3.5 text-sm text-slate-600 font-medium",
+                      emptyWrapper: "h-full w-full block",
+                    }}
+                    bottomContent={
+                      items?.length > 40 && (
+                        <div className="flex w-full justify-center p-3 border-t border-slate-100 bg-slate-50/50">
+                          <span className="text-xs font-semibold text-slate-400">
+                            Mostrando los primeros resultados. Afina tu búsqueda.
+                          </span>
+                        </div>
+                      )
+                    }
+                  >
+                    <TableHeader>
+                      <TableColumn>PRODUCTO</TableColumn>
+                      <TableColumn>CÓDIGOS</TableColumn>
+                      <TableColumn align="end">PRECIO ($)</TableColumn>
+                      <TableColumn align="center">STOCK</TableColumn>
+                      <TableColumn align="center">ACCIÓN</TableColumn>
+                    </TableHeader>
+                    <TableBody
+                      items={items}
+                      loadingState={isLoading || isFetching ? "loading" : "idle"}
+                      emptyContent={
+                        <div className="flex flex-col items-center justify-center p-8 text-slate-400 gap-3">
+                          <div className="p-3 bg-slate-50 rounded-full">
+                            <Search className="w-6 h-6 text-slate-300" />
+                          </div>
+                          <p className="text-sm font-medium">
+                            {searchQuery.length < 2
+                              ? "Ingresa al menos 2 caracteres para buscar"
+                              : "No se encontraron productos coincidentes"}
+                          </p>
+                        </div>
+                      }
+                    >
+                      {(item: Producto) => (
+                        <TableRow key={item.Id}>
+                          <TableCell>
+                            <span className="group-hover:text-[#67afc3] transition-colors font-semibold truncate max-w-[250px] inline-block">
+                              {item.Descripcion}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="text-slate-600 text-[11px] font-mono">
+                                Cód: {item.Codigo}
+                              </span>
+                              {item.CodigoBarra && (
+                                <span className="text-slate-400 text-[10px] font-mono">
+                                  CB: {item.CodigoBarra}
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col items-end">
+                              <span className="text-slate-800 font-semibold text-sm">
+                                ${item.Precio?.PrecioPublico || 0}
+                              </span>
+                              <span className="text-[11px] text-slate-400">
+                                L2: ${item.Precio?.PrecioPublico2 || 0}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex justify-center">
+                              <span
+                                className={`text-[12px] font-bold px-2 py-1 rounded-md ${
+                                  item.Stock <= 0
+                                    ? "bg-red-50 text-red-600"
+                                    : "bg-emerald-50 text-emerald-600"
+                                }`}
+                              >
+                                {item.Stock}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              className="bg-slate-100 text-slate-600 font-semibold group-hover:bg-[#67afc3] group-hover:text-white transition-all shadow-sm w-full"
+                              onPress={() => {
+                                handleSelect(item);
+                                onClose();
+                              }}
+                            >
+                              Agregar
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                className="text-slate-500 font-medium hover:bg-slate-100"
+                variant="light"
+                onPress={onClose}
+              >
+                Cerrar
+              </Button>
+            </ModalFooter>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
+  );
+}

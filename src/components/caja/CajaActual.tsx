@@ -556,20 +556,24 @@ export default function CajaActual() {
   // Caja Cerrada State
   if (!isCajaAbierta || !cajaActual) {
     return (
-      <div className="flex flex-col items-center justify-center gap-6 h-full min-h-[500px] text-gray-500">
-        <Lock className="w-16 h-16 text-gray-300" />
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-700">
+      <div className="flex flex-col items-center justify-center gap-6 h-full min-h-[400px] sm:min-h-[500px] text-gray-500 px-4">
+        <div className="p-6 rounded-full bg-gray-50 border border-gray-200">
+          <Lock className="w-10 h-10 sm:w-16 sm:h-16 text-gray-300" />
+        </div>
+        <div className="text-center max-w-xs">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-700">
             La caja está cerrada
           </h2>
-          <p className="text-sm">
-            Debes abrir la caja para comenzar a registrar operaciones.
+          <p className="text-sm mt-1">
+            Debés abrir la caja para comenzar a registrar operaciones.
           </p>
         </div>
         <Button
           color="primary"
+          size="lg"
           endContent={<Unlock className="w-4 h-4" />}
           onPress={onAbrirOpen}
+          className="font-semibold"
         >
           Abrir Caja
         </Button>
@@ -672,139 +676,119 @@ export default function CajaActual() {
     : null;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 pb-4">
       {/* ... Entradas/Salidas/Tables code preserved ... */}
 
       {/* Entradas del dia */}
-      <h1 className="text-lg font-semibold flex items-center gap-2">
-        <TrendingUp size={20} className="text-green-500" />
-        Entradas del dia
-      </h1>
-      <div className="flex flex-row sm:flex-nowrap flex-wrap gap-4">
+      <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+        <TrendingUp size={18} className="text-green-500" />
+        Entradas del día
+      </h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <StatCard
           title="Efectivo"
           value={formatMoney(cajaActual.TotalEntradaEfectivo)}
-          subtitle="Entradas del dia"
+          subtitle="Entradas del día"
           icon={Banknote}
           colorScheme="white"
-          iconColor="#14c187"
           delay={0.1}
-          progressPercent={75}
         />
 
         <StatCard
           title="Tarjeta"
           value={formatMoney(cajaActual.TotalEntradaTarjeta)}
-          subtitle="Entradas del dia"
+          subtitle="Entradas del día"
           icon={CreditCard}
           colorScheme="white"
-          iconColor="#2b7fff"
           delay={0.1}
-          progressPercent={75}
         />
 
         <StatCard
           title="Transferencia"
           value={formatMoney(cajaActual.TotalEntradaTransf)}
-          subtitle="Entradas del dia"
+          subtitle="Entradas del día"
           icon={ArrowRightLeft}
           colorScheme="white"
-          iconColor="#ad46ff"
           delay={0.1}
-          progressPercent={75}
         />
 
         <StatCard
           title="Cheque"
           value={formatMoney(cajaActual.TotalEntradaCheque)}
-          subtitle="Entradas del dia"
+          subtitle="Entradas del día"
           icon={Wallet}
           colorScheme="white"
-          iconColor="#7dbbcc"
           delay={0.1}
-          progressPercent={75}
         />
 
         <StatCard
-          title="Cuenta Corriente"
+          title="Cta. Corriente"
           value={formatMoney(cajaActual.TotalEntradaCtaCte)}
-          subtitle="Entradas del dia"
+          subtitle="Entradas del día"
           icon={Wallet}
           colorScheme="white"
-          iconColor="#ff6900"
           delay={0.1}
-          progressPercent={75}
         />
       </div>
 
       {/* Salidas del dia */}
-      <h1 className="text-lg font-semibold flex items-center gap-2">
-        <TrendingDown size={20} className="text-red-500" />
-        Salidas del dia
-      </h1>
-      <div className="flex flex-row gap-4 sm:flex-nowrap flex-wrap">
+      <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+        <TrendingDown size={18} className="text-red-500" />
+        Salidas del día
+      </h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <StatCard
           title="Efectivo"
           value={formatMoney(cajaActual.TotalSalidaEfectivo)}
-          subtitle="Salidas del dia"
+          subtitle="Salidas del día"
           icon={Banknote}
           colorScheme="white"
-          iconColor="#14c187"
           delay={0.1}
-          progressPercent={75}
         />
 
         <StatCard
           title="Tarjeta"
           value={formatMoney(cajaActual.TotalSalidaTarjeta)}
-          subtitle="Salidas del dia"
+          subtitle="Salidas del día"
           icon={CreditCard}
           colorScheme="white"
-          iconColor="#2b7fff"
           delay={0.1}
-          progressPercent={75}
         />
 
         <StatCard
           title="Transferencia"
           value={formatMoney(cajaActual.TotalSalidaTransf)}
-          subtitle="Salidas del dia"
+          subtitle="Salidas del día"
           icon={ArrowRightLeft}
           colorScheme="white"
-          iconColor="#ad46ff"
           delay={0.1}
-          progressPercent={75}
         />
 
         <StatCard
           title="Cheque"
           value={formatMoney(cajaActual.TotalSalidaCheque)}
-          subtitle="Salidas del dia"
+          subtitle="Salidas del día"
           icon={Wallet}
           colorScheme="white"
-          iconColor="#7dbbcc"
           delay={0.1}
-          progressPercent={75}
         />
 
         <StatCard
-          title="Cuenta Corriente"
+          title="Cta. Corriente"
           value={formatMoney(cajaActual.TotalSalidaCtaCte)}
-          subtitle="Salidas del dia"
+          subtitle="Salidas del día"
           icon={Wallet}
           colorScheme="white"
-          iconColor="#ff6900"
           delay={0.1}
-          progressPercent={75}
         />
       </div>
 
       {/* Movements Table Section */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-lg font-semibold flex items-center gap-2">
-          <TrendingUp size={20} className="text-[#69b0c3]" />
+        <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+          <TrendingUp size={18} className="text-[#69b0c3]" />
           Movimientos
-        </h1>
+        </h2>
       </div>
       <GenericTable
         data={paginatedMovimientos}
@@ -839,10 +823,10 @@ export default function CajaActual() {
 
       {/* Gastos Table Section */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-lg font-semibold flex items-center gap-2">
-          <TrendingDown size={20} className="text-[#69b0c3]" />
+        <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+          <TrendingDown size={18} className="text-[#69b0c3]" />
           Gastos
-        </h1>
+        </h2>
       </div>
       <GenericTable
         data={paginatedGastos}
@@ -1142,9 +1126,15 @@ export default function CajaActual() {
                   <Lock size={18} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <span className="text-lg font-extrabold text-slate-800 leading-none">Cierre de Caja</span>
+                  <span className="text-lg font-extrabold text-slate-800 leading-none">
+                    Cierre de Caja
+                  </span>
                   <p className="text-[10px] text-slate-400 font-medium mt-0.5">
-                    {new Date().toLocaleDateString("es-AR", { weekday: "long", day: "2-digit", month: "long" })}
+                    {new Date().toLocaleDateString("es-AR", {
+                      weekday: "long",
+                      day: "2-digit",
+                      month: "long",
+                    })}
                   </p>
                 </div>
               </ModalHeader>
@@ -1152,7 +1142,6 @@ export default function CajaActual() {
               {/* ─── Body ────────────────────────────────────────────── */}
               <ModalBody>
                 <div className="space-y-4">
-
                   {/* Métricas del día */}
                   <div className="grid grid-cols-2 gap-2.5">
                     {/* Monto Inicial */}
@@ -1161,7 +1150,9 @@ export default function CajaActual() {
                         <Coins size={15} strokeWidth={2} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">Apertura</p>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">
+                          Apertura
+                        </p>
                         <p className="text-sm font-extrabold text-slate-700 truncate">
                           {formatMoney(cajaActual?.MontoInicial || 0)}
                         </p>
@@ -1174,7 +1165,9 @@ export default function CajaActual() {
                         <Banknote size={15} strokeWidth={2} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">Efect. neto</p>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">
+                          Efect. neto
+                        </p>
                         <p className="text-sm font-extrabold text-[#67afc3] truncate">
                           {formatMoney(
                             (cajaActual?.TotalEntradaEfectivo || 0) -
@@ -1191,20 +1184,28 @@ export default function CajaActual() {
                     <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full translate-y-6 -translate-x-6" />
                     <div className="relative z-10 flex items-center justify-between">
                       <div>
-                        <p className="text-[9px] font-bold text-emerald-100 uppercase tracking-widest">Ganancia del día</p>
+                        <p className="text-[9px] font-bold text-emerald-100 uppercase tracking-widest">
+                          Ganancia del día
+                        </p>
                         <p className="text-3xl font-black text-white leading-tight mt-0.5">
                           {formatMoney(cajaActual?.Ganancia || 0)}
                         </p>
                       </div>
                       <div className="p-3 rounded-2xl bg-white/20">
-                        <CheckCircle2 size={24} className="text-white" strokeWidth={2} />
+                        <CheckCircle2
+                          size={24}
+                          className="text-white"
+                          strokeWidth={2}
+                        />
                       </div>
                     </div>
                   </div>
 
                   {/* Input dinero físico */}
                   <div className="space-y-1.5">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-0.5">Conteo de caja</p>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-0.5">
+                      Conteo de caja
+                    </p>
                     <Input
                       label="Dinero físico en el cajón"
                       placeholder="0,00"
@@ -1230,9 +1231,14 @@ export default function CajaActual() {
 
                   {/* Advertencia */}
                   <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-100">
-                    <AlertTriangle size={14} className="text-amber-500 mt-0.5 shrink-0" strokeWidth={2.5} />
+                    <AlertTriangle
+                      size={14}
+                      className="text-amber-500 mt-0.5 shrink-0"
+                      strokeWidth={2.5}
+                    />
                     <p className="text-xs text-amber-700 leading-relaxed font-medium">
-                      Contá el dinero físico en el cajón antes de confirmar. El sistema registrará cualquier diferencia.
+                      Contá el dinero físico en el cajón antes de confirmar. El
+                      sistema registrará cualquier diferencia.
                     </p>
                   </div>
                 </div>
@@ -1262,7 +1268,6 @@ export default function CajaActual() {
           )}
         </ModalContent>
       </Modal>
-
 
       {/* Ticket Detail Modal */}
       <Modal

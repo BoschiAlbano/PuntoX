@@ -63,6 +63,7 @@ model Tenant {
   Unidades              UnidadMedida[]
   Usuarios              Usuario[]
   UsuariosSucursales    UsuarioSucursal[]
+  Notificaciones        Notificacion[]
 
   @@index([PlanId])
 }
@@ -71,35 +72,35 @@ model Tenant {
 /// Cada tenant puede tener mÃºltiples sucursales.
 /// Una sucursal debe ser marcada como "Principal" (EsPrincipal=true).
 model Sucursal {
-  Id                  BigInt              @id @default(autoincrement())
-  TenantId            BigInt
+  Id                 BigInt              @id @default(autoincrement())
+  TenantId           BigInt
   /// Nombre identificador de la sucursal (ej: "Casa Central", "Sucursal Norte")
-  Nombre              String              @db.VarChar(250)
+  Nombre             String              @db.VarChar(250)
   /// DirecciÃ³n fÃ­sica de la sucursal (opcional)
-  Direccion           String?             @db.VarChar(400)
+  Direccion          String?             @db.VarChar(400)
   /// TelÃ©fono de contacto de la sucursal
-  Telefono            String?             @db.VarChar(25)
+  Telefono           String?             @db.VarChar(25)
   /// Indica si es la sucursal principal/casa central del tenant
   /// Solo una sucursal por tenant puede tener EsPrincipal=true
-  EsPrincipal         Boolean             @default(false)
+  EsPrincipal        Boolean             @default(false)
   /// Indica si la sucursal estÃ¡ activa para operaciones
-  EstaActiva          Boolean             @default(true)
-  EstaEliminado       Boolean             @default(false)
-  FechaCreacion       DateTime            @default(now())
-  FechaActualizacion  DateTime            @updatedAt
+  EstaActiva         Boolean             @default(true)
+  EstaEliminado      Boolean             @default(false)
+  FechaCreacion      DateTime            @default(now())
+  FechaActualizacion DateTime            @updatedAt
   // Relaciones
-  Tenant              Tenant              @relation(fields: [TenantId], references: [Id])
-  ArticulosStock      ArticuloStock[]
-  AuditoriaEmpleados  AuditoriaEmpleado[]
-  BajaArticulos       BajaArticulo[]
-  Cajas               Caja[]
-  Cheques             Cheque[]
-  Comprobantes        Comprobante[]
-  Contadores          Contador[]
-  DepositosCheques    DepositoCheques[]
-  Gastos              Gasto[]
-  Movimientos         Movimiento[]
-  UsuariosSucursales  UsuarioSucursal[]
+  Tenant             Tenant              @relation(fields: [TenantId], references: [Id])
+  ArticulosStock     ArticuloStock[]
+  AuditoriaEmpleados AuditoriaEmpleado[]
+  BajaArticulos      BajaArticulo[]
+  Cajas              Caja[]
+  Cheques            Cheque[]
+  Comprobantes       Comprobante[]
+  Contadores         Contador[]
+  DepositosCheques   DepositoCheques[]
+  Gastos             Gasto[]
+  Movimientos        Movimiento[]
+  UsuariosSucursales UsuarioSucursal[]
 
   // Ãndices y constraints
   @@unique([TenantId, Nombre]) // No puede haber dos sucursales con el mismo nombre en un tenant
@@ -111,15 +112,15 @@ model Sucursal {
 /// RelaciÃ³n muchos a muchos entre Usuario y Sucursal.
 /// Permite que un usuario pueda trabajar en mÃºltiples sucursales.
 model UsuarioSucursal {
-  UsuarioId   BigInt
-  SucursalId  BigInt
-  TenantId    BigInt
+  UsuarioId       BigInt
+  SucursalId      BigInt
+  TenantId        BigInt
   /// Indica si es la sucursal por defecto del usuario
-  EsDefault   Boolean   @default(false)
+  EsDefault       Boolean  @default(false)
   FechaAsignacion DateTime @default(now())
-  Usuario     Usuario   @relation(fields: [UsuarioId], references: [Id], onDelete: Cascade)
-  Sucursal    Sucursal  @relation(fields: [SucursalId], references: [Id], onDelete: Cascade)
-  Tenant      Tenant    @relation(fields: [TenantId], references: [Id])
+  Usuario         Usuario  @relation(fields: [UsuarioId], references: [Id], onDelete: Cascade)
+  Sucursal        Sucursal @relation(fields: [SucursalId], references: [Id], onDelete: Cascade)
+  Tenant          Tenant   @relation(fields: [TenantId], references: [Id])
 
   @@id([UsuarioId, SucursalId])
   @@index([TenantId])
@@ -130,20 +131,20 @@ model UsuarioSucursal {
 /// Stock de artÃ­culos por sucursal.
 /// Permite manejar inventario independiente por cada local.
 model ArticuloStock {
-  Id            BigInt    @id @default(autoincrement())
-  ArticuloId    BigInt
-  SucursalId    BigInt
-  TenantId      BigInt
+  Id                 BigInt   @id @default(autoincrement())
+  ArticuloId         BigInt
+  SucursalId         BigInt
+  TenantId           BigInt
   /// Cantidad actual en stock
-  Stock         Decimal   @default(0) @db.Decimal(18, 2)
+  Stock              Decimal  @default(0) @db.Decimal(18, 2)
   /// Stock mÃ­nimo para alertas (hereda de Articulo si es null)
-  StockMinimo   Decimal?  @db.Decimal(18, 2)
+  StockMinimo        Decimal? @db.Decimal(18, 2)
   /// UbicaciÃ³n fÃ­sica dentro de la sucursal
-  Ubicacion     String?   @db.VarChar(200)
+  Ubicacion          String?  @db.VarChar(200)
   FechaActualizacion DateTime @updatedAt
-  Articulo      Articulo  @relation(fields: [ArticuloId], references: [Id], onDelete: Cascade)
-  Sucursal      Sucursal  @relation(fields: [SucursalId], references: [Id], onDelete: Cascade)
-  Tenant        Tenant    @relation(fields: [TenantId], references: [Id])
+  Articulo           Articulo @relation(fields: [ArticuloId], references: [Id], onDelete: Cascade)
+  Sucursal           Sucursal @relation(fields: [SucursalId], references: [Id], onDelete: Cascade)
+  Tenant             Tenant   @relation(fields: [TenantId], references: [Id])
 
   @@unique([ArticuloId, SucursalId]) // Un artÃ­culo solo tiene un registro de stock por sucursal
   @@index([TenantId])
@@ -1083,6 +1084,7 @@ model Usuario {
   SesionesActivas                      SesionActiva[]
   Sucursales                           UsuarioSucursal[]
   TokensCsrf                           TokenCsrf[]
+  Notificaciones                       Notificacion[]
   Persona_Empleado                     Persona_Empleado       @relation(fields: [EmpleadoId], references: [Id], onUpdate: NoAction)
   Tenant                               Tenant                 @relation(fields: [TenantId], references: [Id])
 
@@ -1335,4 +1337,27 @@ enum PerfilTipo {
 enum TiposVenta {
   UNIDAD
   PESO
+}
+
+/// Sistema de Notificaciones
+model Notificacion {
+  Id        BigInt   @id @default(autoincrement())
+  TenantId  BigInt
+  UsuarioId BigInt?
+  Tipo      String   @db.VarChar(50) // INFO, WARNING, ERROR, SUCCESS
+  Titulo    String   @db.VarChar(200)
+  Mensaje   String   @db.VarChar(500)
+  Leida     Boolean  @default(false)
+  AccionUrl String?  @db.VarChar(500)
+  Fecha     DateTime @default(now())
+
+  // Para evitar repeticiones (ej. STOCK_BAJO, ARTICULO, 123)
+  EntidadTipo String? @db.VarChar(100)
+  EntidadId   String? @db.VarChar(100)
+
+  Tenant  Tenant   @relation(fields: [TenantId], references: [Id])
+  Usuario Usuario? @relation(fields: [UsuarioId], references: [Id])
+
+  @@index([TenantId, UsuarioId, Leida])
+  @@index([EntidadTipo, EntidadId, Leida])
 }

@@ -8,6 +8,11 @@ import {
   SelectItem,
   addToast,
   Skeleton,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
 } from "@heroui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -18,6 +23,7 @@ import {
   CreditCard,
   Banknote,
   ArrowRightLeft,
+  AlertTriangle,
 } from "lucide-react";
 import {
   TIPO_PAGO,
@@ -70,6 +76,7 @@ export default function VentaFooter({
   const [currentMonto, setCurrentMonto] = useState<string>("");
 
   const [openModalAbrirCaja, setOpenModalAbrirCaja] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
   const [isOpening, setIsOpening] = useState(false);
   const [montoInicial, setMontoInicial] = useState<string>("0");
@@ -383,48 +390,59 @@ export default function VentaFooter({
   return (
     <section className="flex-1 flex flex-col gap-2">
       {/* Payment Methods Section */}
-      <div className="flex-1 rounded-xl border border-slate-100 flex flex-col shadow-sm">
-        <div className="px-2 pt-1 pb-1 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center shrink-0 ">
-          {/* Margen Disponible Indicator */}
-          {currentTipo === TIPO_PAGO.CUENTA_CORRIENTE &&
-            cliente?.Persona_Cliente?.ActivarCtaCte && (
+      <div className="bg-white flex-1 rounded-xl border border-slate-100 flex flex-col shadow-sm overflow-hidden">
+        {/* Header con margen de cta cte */}
+        {currentTipo === TIPO_PAGO.CUENTA_CORRIENTE &&
+          cliente?.Persona_Cliente?.ActivarCtaCte && (
+            <div className="px-3 py-1.5 border-b border-slate-100 bg-slate-50/50 flex items-center shrink-0">
               <div
-                className={`text-xs px-2 py-0.5 rounded-full border border-slate-200 ${cliente?.Persona_Cliente?.TieneLimiteCompra ? (cliente.Persona_Cliente.MargenDisponible < 0 ? "text-danger border-danger/20 bg-danger/5" : "text-emerald-600 border-emerald-200 bg-emerald-50") : "text-slate-500"}`}
+                className={`text-xs px-2 py-0.5 rounded-full border ${
+                  cliente?.Persona_Cliente?.TieneLimiteCompra
+                    ? cliente.Persona_Cliente.MargenDisponible < 0
+                      ? "text-red-600 border-red-200 bg-red-50"
+                      : "text-emerald-600 border-emerald-200 bg-emerald-50"
+                    : "text-slate-500 border-slate-200 bg-slate-50"
+                }`}
               >
                 {cliente?.Persona_Cliente?.TieneLimiteCompra ? (
                   <>
-                    Margen:{" "}
+                    Margen disponible:{" "}
                     <b>
                       $
-                      {(
-                        cliente.Persona_Cliente.MargenDisponible -
-                        pagos
-                          .filter(
-                            (p) => p.tipoPago === TIPO_PAGO.CUENTA_CORRIENTE,
-                          )
-                          .reduce((acc, p) => acc + p.monto, 0)
-                      ).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                      {
+                        (
+                          cliente.Persona_Cliente.MargenDisponible -
+                          pagos
+                            .filter((p) => p.tipoPago === TIPO_PAGO.CUENTA_CORRIENTE)
+                            .reduce((acc, p) => acc + p.monto, 0)
+                        ).toLocaleString("es-AR", { minimumFractionDigits: 2 })
+                      }
                     </b>
                   </>
                 ) : (
-                  "Sin límite"
+                  "Sin límite de compra"
                 )}
               </div>
-            )}
-        </div>
+            </div>
+          )}
 
-        <div className="p-2 flex flex-col gap-2 flex-1">
+        <div className="p-3 flex flex-col gap-3 flex-1">
+          {/* Título sección */}
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
+            Formas de pago
+          </p>
+
           {/* Payment Input Group */}
           <div className="flex gap-2 items-end shrink-0">
             <Select
               label="Método"
               selectedKeys={[currentTipo.toString()]}
               onChange={(e) => setCurrentTipo(Number(e.target.value))}
-              className="flex-2 max-w-[120px]"
+              className="flex-[1.2]"
               size="sm"
               variant="flat"
               classNames={{
-                trigger: "shadow-sm rounded-lg bg-transparent h-10 min-h-10",
+                trigger: "rounded-lg bg-slate-50 h-10 min-h-10 border border-slate-200",
                 label: "text-xs",
               }}
             >
@@ -448,8 +466,7 @@ export default function VentaFooter({
               size="sm"
               variant="flat"
               classNames={{
-                inputWrapper:
-                  "shadow-sm rounded-lg bg-transparent h-10 min-h-10",
+                inputWrapper: "rounded-lg bg-slate-50 h-10 min-h-10 border border-slate-200",
                 label: "text-xs",
                 input: "text-xs",
               }}
@@ -457,51 +474,48 @@ export default function VentaFooter({
                 if (e.key === "Enter") handleAddPayment();
               }}
             />
-            <Button
-              isIconOnly
-              size="sm"
-              onPress={handleAddPayment}
-              className="h-10 w-10 min-w-10 bg-[#67afc3] text-white rounded-lg"
+            <button
+              onClick={handleAddPayment}
+              aria-label="Agregar pago"
+              className="h-10 w-10 min-w-10 bg-[#67afc3] hover:bg-[#5a9eb1] active:scale-95 text-white rounded-lg flex items-center justify-center transition-all shrink-0"
             >
               <Plus size={18} />
-            </Button>
+            </button>
           </div>
 
           {/* Payment List */}
-          <div className="flex-1 overflow-y-auto min-h-0 space-y-1 pr-1 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto min-h-0 space-y-1 scrollbar-hide">
             {pagos.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-1 min-h-[60px]">
-                <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center">
-                  <span className="text-sm">$</span>
+              <div className="flex flex-col items-center justify-center text-slate-300 gap-1.5 py-4 min-h-[56px]">
+                <div className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center">
+                  <Wallet size={16} className="text-slate-300" />
                 </div>
-                <span className="text-[10px]">Agrega un pago</span>
+                <span className="text-[10px] font-medium">Sin pagos agregados</span>
               </div>
             ) : (
               pagos.map((p, idx) => (
                 <div
                   key={idx}
-                  className="group flex justify-between items-center px-2 py-1.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all"
+                  className="flex justify-between items-center px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-all"
                 >
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
-                      {getTipoIcon(p.tipoPago, 12)}
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0">
+                      {getTipoIcon(p.tipoPago, 13)}
                     </div>
-                    <span className="text-xs font-medium text-slate-700">
+                    <span className="text-xs font-semibold text-slate-700">
                       {getTipoLabel(p.tipoPago)}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-800">
-                      $
-                      {p.monto.toLocaleString("es-AR", {
-                        minimumFractionDigits: 2,
-                      })}
+                    <span className="text-sm font-bold text-slate-800">
+                      ${p.monto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
                     </span>
                     <button
                       onClick={() => handleRemovePayment(idx)}
-                      className="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-400 transition-opacity p-0.5"
+                      aria-label={`Eliminar pago ${getTipoLabel(p.tipoPago)}`}
+                      className="min-w-[28px] h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors"
                     >
-                      <X size={12} />
+                      <X size={13} />
                     </button>
                   </div>
                 </div>
@@ -509,18 +523,15 @@ export default function VentaFooter({
             )}
           </div>
 
-          {/* Remaining / Change Display */}
-          <div className="mt-auto pt-2 border-t border-slate-100 flex justify-between items-end shrink-0">
+          {/* Restante / Vuelto */}
+          <div className="pt-2.5 border-t border-slate-100 flex justify-between items-center shrink-0">
             {restante > 0.01 ? (
               <>
                 <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
                   Restante
                 </span>
-                <span className="text-sm font-bold text-slate-700">
-                  $
-                  {Math.max(0, restante).toLocaleString("es-AR", {
-                    minimumFractionDigits: 2,
-                  })}
+                <span className="text-base font-bold text-slate-700">
+                  ${Math.max(0, restante).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
                 </span>
               </>
             ) : (
@@ -528,11 +539,8 @@ export default function VentaFooter({
                 <span className="text-[10px] font-semibold text-emerald-500 uppercase tracking-widest">
                   Vuelto
                 </span>
-                <span className="text-sm font-bold text-emerald-600">
-                  $
-                  {Math.abs(restante).toLocaleString("es-AR", {
-                    minimumFractionDigits: 2,
-                  })}
+                <span className="text-base font-bold text-emerald-600">
+                  ${Math.abs(restante).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
                 </span>
               </>
             )}
@@ -541,30 +549,25 @@ export default function VentaFooter({
       </div>
 
       {/* Totals & Actions Card */}
-      <div className="rounded-xl border border-slate-100 p-3 shrink-0 flex flex-col gap-2 relative z-10 shadow-sm">
-        <div className="flex flex-col gap-0.5">
-          <div className="flex justify-between text-xs text-slate-500">
-            <span>Subtotal</span>
+      <div className="bg-white rounded-xl border border-slate-100 p-3 shrink-0 flex flex-col gap-3 relative z-10 shadow-sm">
+        {/* Subtotal + Descuento */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex justify-between items-center text-xs text-slate-500">
+            <span className="font-medium">Subtotal</span>
             <span>
-              $
-              {subtotal.toLocaleString("es-AR", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              ${subtotal.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
-          <div className="flex justify-between items-center text-xs text-slate-500 h-5">
-            <span>Descuento</span>
+
+          <div className="flex justify-between items-center text-xs text-slate-500">
+            <span className="font-medium">Descuento</span>
             <div className="flex items-center gap-2">
               {descuento > 0 && subtotal > 0 && (
-                <span className="text-[10px] text-red-400">
-                  - $
-                  {(subtotal * (descuento / 100)).toLocaleString("es-AR", {
-                    minimumFractionDigits: 2,
-                  })}
+                <span className="text-[10px] text-red-400 font-medium">
+                  − ${(subtotal * (descuento / 100)).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
                 </span>
               )}
-              <div className="flex items-center rounded-lg w-12">
+              <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
                 <input
                   data-testid="descuento-input"
                   type="number"
@@ -575,60 +578,118 @@ export default function VentaFooter({
                     const v = parseFloat(e.target.value) || 0;
                     setDescuento(Math.min(100, Math.max(0, v)));
                   }}
-                  className="w-full text-right bg-transparent text-xs font-medium focus:outline-none py-1"
+                  className="w-10 text-right bg-transparent text-xs font-semibold focus:outline-none py-1 pl-2"
                 />
-                <span className="text-xs text-slate-400 ml-1">%</span>
+                <span className="text-xs text-slate-400 pr-1.5">%</span>
               </div>
             </div>
           </div>
 
-          <div className="my-2 h-px bg-slate-100 w-full"></div>
+          <div className="h-px bg-slate-100 w-full" />
 
-          <div className="flex justify-between items-baseline mt-1">
-            <span className="text-sm text-slate-800 font-semibold">Total</span>
-            <span className="text-xl font-extrabold text-slate-900 tracking-tight">
+          {/* Total destacado */}
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-bold text-slate-800">Total</span>
+            <span className="text-2xl font-extrabold text-slate-900 tracking-tight">
               ${total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
             </span>
           </div>
         </div>
 
+        {/* Action buttons */}
         <div className="flex gap-2">
           <Button
             variant="flat"
-            className="w-10 h-10 min-w-10 rounded-lg bg-white text-gray-400 hover:text-red-600 hover:bg-red-200"
+            aria-label="Limpiar venta"
+            className="w-11 h-11 min-w-11 rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 border border-slate-200 transition-colors"
             isIconOnly
-            onPress={handleLimpiar}
+            onPress={() => setIsCancelModalOpen(true)}
             isDisabled={isSaving || items.length === 0}
           >
-            <Trash2 size={18} />
+            <Trash2 size={17} />
           </Button>
 
           {isLoading ? (
-            <Skeleton className="flex-1 rounded-lg h-10" />
+            <Skeleton className="flex-1 rounded-xl h-11" />
           ) : cajaActual ? (
             <Button
               size="sm"
-              className="flex-1 h-10 bg-[#182337] text-white font-bold rounded-lg transition-all active:scale-[0.98] text-xs"
+              className="flex-1 h-11 bg-[#182337] hover:bg-[#0f1929] text-white font-bold rounded-xl transition-all active:scale-[0.98] text-sm tracking-wide shadow-sm"
               onPress={handleFinalizeSale}
               isLoading={isSaving}
               isDisabled={Math.abs(restante) > 0.01 || items.length === 0}
             >
-              {Math.abs(restante) < 0.01 || items.length === 0
-                ? "CONFIRMAR VENTA"
-                : "COMPLETAR PAGO"}
+              {Math.abs(restante) < 0.01 && items.length > 0
+                ? "Confirmar venta"
+                : "Completar pago"}
             </Button>
           ) : (
             <Button
               size="sm"
               color="warning"
-              className="flex-1 h-10 font-bold text-white rounded-lg text-xs"
+              className="flex-1 h-11 font-bold text-white rounded-xl text-sm tracking-wide"
               onPress={() => setOpenModalAbrirCaja(true)}
             >
-              ABRIR CAJA
+              Abrir Caja
             </Button>
           )}
         </div>
       </div>
+
+      <Modal
+        isOpen={isCancelModalOpen}
+        onOpenChange={setIsCancelModalOpen}
+        size="md"
+        backdrop="blur"
+        classNames={{
+          base: "bg-white/95 backdrop-blur-3xl shadow-2xl border border-white/60 rounded-[24px]",
+          header: "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8",
+          body: "py-6 px-4 sm:px-8 text-center",
+          footer: "border-t border-slate-100/60 py-4 px-4 sm:px-8",
+          closeButton: "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col items-center gap-1">
+                <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-2 shadow-sm border border-red-100">
+                  <AlertTriangle className="w-7 h-7 text-red-500" />
+                </div>
+                <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">
+                  Cancelar Venta
+                </h2>
+              </ModalHeader>
+              <ModalBody>
+                <p className="text-sm font-medium text-slate-500">
+                  ¿Estás seguro de que deseas cancelar la venta actual?
+                </p>
+                <p className="text-xs text-slate-400 mt-1">
+                  Se eliminarán todos los productos agregados y pagos ingresados. Esta acción no se puede deshacer.
+                </p>
+              </ModalBody>
+              <ModalFooter className="flex w-full justify-between gap-2">
+                <Button
+                  className="flex-1 text-slate-500 font-medium hover:bg-slate-100"
+                  variant="light"
+                  onPress={onClose}
+                >
+                  Volver
+                </Button>
+                <Button
+                  className="flex-1 bg-red-500 text-white font-semibold shadow-md shadow-red-500/20"
+                  onPress={() => {
+                    handleLimpiar();
+                    onClose();
+                  }}
+                >
+                  Sí, Cancelar
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
 
       <ModalShell
         open={openModalAbrirCaja}

@@ -226,16 +226,12 @@ function CopyableCode({ value }: { value: string }) {
     >
       <span className="font-mono text-sm">{value}</span>
       {copied ? (
-        <Check
-          size={14}
-          strokeWidth={2}
-          className="text-green-600 flex-shrink-0"
-        />
+        <Check size={14} strokeWidth={2} className="text-green-600 shrink-0" />
       ) : (
         <Copy
           size={14}
           strokeWidth={2}
-          className="text-slate-400 opacity-0 group-hover:opacity-100 flex-shrink-0 transition-opacity duration-150"
+          className="text-slate-400 opacity-0 group-hover:opacity-100 shrink-0 transition-opacity duration-150"
         />
       )}
     </button>

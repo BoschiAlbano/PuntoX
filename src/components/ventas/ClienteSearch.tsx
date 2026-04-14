@@ -1,7 +1,7 @@
 "use client";
 
 import { useDisclosure } from "@heroui/react";
-import { User, UserCheck, ChevronRight, ChevronDown } from "lucide-react";
+import { User, UserCheck, ChevronDown } from "lucide-react";
 import ClienteSearchModal from "./ClienteSearchModal";
 import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
 
@@ -36,41 +36,60 @@ export default function ClienteSearch({
     onClose();
   };
 
-  const displayName =
-    selected.Id === 0
-      ? "Consumidor Final"
-      : `${selected.Nombre} ${selected.Apellido}`;
+  const isConsumidorFinal = selected.Id === 0;
 
-  const displayDni =
-    selected.Id === 0 ? consumidorFinalSchema.Dni : selected.Dni || "Sin DNI";
+  const displayName = isConsumidorFinal
+    ? "Consumidor Final"
+    : `${selected.Nombre} ${selected.Apellido}`;
+
+  const displayDni = isConsumidorFinal
+    ? consumidorFinalSchema.Dni
+    : selected.Dni || "Sin DNI";
 
   return (
     <div className="w-full">
       <button
         onClick={onOpen}
-        className="w-full rounded-xl p-2.5 flex items-center gap-3 transition-colors cursor-pointer"
+        className="w-full rounded-xl px-3 py-2.5 flex items-center gap-3 transition-colors hover:bg-slate-50 active:bg-slate-100 cursor-pointer group"
+        aria-label="Seleccionar cliente"
       >
-        {/* Ícono con fondo teal */}
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
-          {selected.Id === 0 ? (
-            <User size={18} className="text-gray-500" />
+        {/* Avatar icon */}
+        <div
+          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+            isConsumidorFinal
+              ? "bg-slate-100 text-slate-400"
+              : "bg-[#67afc3]/10 text-[#67afc3]"
+          }`}
+        >
+          {isConsumidorFinal ? (
+            <User size={16} />
           ) : (
-            <UserCheck size={18} className="text-gray-500" />
+            <UserCheck size={16} />
           )}
         </div>
 
         {/* Info */}
         <div className="flex flex-col items-start flex-1 min-w-0">
-          <span className="text-gray-500 font-semibold text-xs truncate w-full text-left leading-tight">
+          <span
+            className={`font-semibold text-xs truncate w-full text-left leading-tight transition-colors ${
+              isConsumidorFinal ? "text-slate-500" : "text-slate-700"
+            }`}
+          >
             {displayName}
           </span>
-          <span className="text-gray-500 text-[10px] leading-tight">
+          <span className="text-slate-400 text-[10px] leading-tight font-mono">
             {displayDni}
           </span>
         </div>
 
-        {/* Chevron */}
-        <ChevronDown size={16} className="text-gray-500 shrink-0 mr-1" />
+        {/* Cta */}
+        <span className="text-[9px] font-semibold text-slate-400 group-hover:text-[#67afc3] uppercase tracking-wide transition-colors hidden sm:block shrink-0">
+          Cambiar
+        </span>
+        <ChevronDown
+          size={14}
+          className="text-slate-400 shrink-0 group-hover:text-[#67afc3] transition-colors"
+        />
       </button>
 
       <ClienteSearchModal

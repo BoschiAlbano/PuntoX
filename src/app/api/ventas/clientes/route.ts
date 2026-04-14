@@ -62,102 +62,99 @@ export async function GET(req: NextRequest) {
     // Calcular Saldos
     const clienteIds = clientes.map((c) => c.Id);
 
-    // Traemos todos los movimientos relevantes para estos 50 clientes.
-    // 1. Débitos (Ventas en Cta Cte)
-    const ventasCtaCte = await prisma.formaPago.findMany({
-      where: {
-        TenantId: tenantIdBigInt,
-        TipoPago: TIPO_PAGO.CUENTA_CORRIENTE,
-        // Usamos una logica OR mas amplia para encontrar el cliente
-        OR: [
-          { FormaPago_CtaCte: { ClienteId: { in: clienteIds } } },
-          {
-            Comprobante: {
-              Comprobante_Factura: { ClienteId: { in: clienteIds } },
+    // Traemos todos los movimientos relevantes para estos 50 clientes concurrentemente:
+    const [ventasCtaCte, pagosCtaCte, notasCreditoCtaCte] = await Promise.all([
+      // 1. Débitos (Ventas en Cta Cte)
+      prisma.formaPago.findMany({
+        where: {
+          TenantId: tenantIdBigInt,
+          TipoPago: TIPO_PAGO.CUENTA_CORRIENTE,
+          OR: [
+            { FormaPago_CtaCte: { ClienteId: { in: clienteIds } } },
+            {
+              Comprobante: {
+                Comprobante_Factura: { ClienteId: { in: clienteIds } },
+              },
             },
-          },
-          {
-            Comprobante: {
-              Comprobante_Presupuesto: { ClienteId: { in: clienteIds } },
+            {
+              Comprobante: {
+                Comprobante_Presupuesto: { ClienteId: { in: clienteIds } },
+              },
             },
-          },
-          {
-            Comprobante: {
-              Comprobante_Remito: { ClienteId: { in: clienteIds } },
+            {
+              Comprobante: {
+                Comprobante_Remito: { ClienteId: { in: clienteIds } },
+              },
             },
-          },
-        ],
-        Comprobante: {
-          TipoComprobante: {
-            in: [
-              TIPO_COMPROBANTE_VENTA.FACTURA_A,
-              TIPO_COMPROBANTE_VENTA.FACTURA_B,
-              TIPO_COMPROBANTE_VENTA.FACTURA_C,
-              TIPO_COMPROBANTE_VENTA.REMITO,
-            ],
+          ],
+          Comprobante: {
+            TipoComprobante: {
+              in: [
+                TIPO_COMPROBANTE_VENTA.FACTURA_A,
+                TIPO_COMPROBANTE_VENTA.FACTURA_B,
+                TIPO_COMPROBANTE_VENTA.FACTURA_C,
+                TIPO_COMPROBANTE_VENTA.REMITO,
+              ],
+            },
+            EstaEliminado: false,
           },
           EstaEliminado: false,
         },
-        EstaEliminado: false,
-      },
-      select: {
-        Monto: true,
-        FormaPago_CtaCte: {
-          select: {
-            ClienteId: true,
+        select: {
+          Monto: true,
+          FormaPago_CtaCte: {
+            select: { ClienteId: true },
+          },
+          Comprobante: {
+            select: {
+              Comprobante_Factura: { select: { ClienteId: true } },
+              Comprobante_Presupuesto: { select: { ClienteId: true } },
+              Comprobante_Remito: { select: { ClienteId: true } },
+            },
           },
         },
-        Comprobante: {
-          select: {
-            Comprobante_Factura: { select: { ClienteId: true } },
-            Comprobante_Presupuesto: { select: { ClienteId: true } },
-            Comprobante_Remito: { select: { ClienteId: true } },
+      }),
+
+      // 2. Créditos (Pagos/Cobranzas)
+      prisma.comprobante.findMany({
+        where: {
+          TenantId: tenantIdBigInt,
+          TipoComprobante: TIPO_COMPROBANTE_VENTA.CUENTA_CORRIENTE_CLIENTE,
+          Comprobante_CuentaCorriente: {
+            ClienteId: { in: clienteIds },
           },
-        },
-      },
-    });
-    // 2. Créditos (Pagos/Cobranzas)
-    const pagosCtaCte = await prisma.comprobante.findMany({
-      where: {
-        TenantId: tenantIdBigInt,
-        TipoComprobante: TIPO_COMPROBANTE_VENTA.CUENTA_CORRIENTE_CLIENTE,
-        Comprobante_CuentaCorriente: {
-          ClienteId: { in: clienteIds },
-        },
-        EstaEliminado: false,
-      },
-      select: {
-        Total: true,
-        Comprobante_CuentaCorriente: {
-          select: {
-            ClienteId: true,
-          },
-        },
-      },
-    });
-    // 3. Créditos (Notas de Crédito a Cta Cte)
-    const notasCreditoCtaCte = await prisma.formaPago.findMany({
-      where: {
-        TenantId: tenantIdBigInt,
-        TipoPago: TIPO_PAGO.CUENTA_CORRIENTE,
-        FormaPago_CtaCte: {
-          ClienteId: { in: clienteIds },
-        },
-        Comprobante: {
-          TipoComprobante: TIPO_COMPROBANTE_VENTA.NOTA_CREDITO,
           EstaEliminado: false,
         },
-        EstaEliminado: false,
-      },
-      select: {
-        Monto: true,
-        FormaPago_CtaCte: {
-          select: {
-            ClienteId: true,
+        select: {
+          Total: true,
+          Comprobante_CuentaCorriente: {
+            select: { ClienteId: true },
           },
         },
-      },
-    });
+      }),
+
+      // 3. Créditos (Notas de Crédito a Cta Cte)
+      prisma.formaPago.findMany({
+        where: {
+          TenantId: tenantIdBigInt,
+          TipoPago: TIPO_PAGO.CUENTA_CORRIENTE,
+          FormaPago_CtaCte: {
+            ClienteId: { in: clienteIds },
+          },
+          Comprobante: {
+            TipoComprobante: TIPO_COMPROBANTE_VENTA.NOTA_CREDITO,
+            EstaEliminado: false,
+          },
+          EstaEliminado: false,
+        },
+        select: {
+          Monto: true,
+          FormaPago_CtaCte: {
+            select: { ClienteId: true },
+          },
+        },
+      }),
+    ]);
     // Procesar datos en memoria
     const saldosMap = new Map<string, number>();
 

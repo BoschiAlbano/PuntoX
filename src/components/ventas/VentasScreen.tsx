@@ -1,6 +1,8 @@
 "use client";
 
 import { addToast } from "@heroui/react";
+import { useState } from "react";
+import { ShoppingCart, CreditCard } from "lucide-react";
 
 import ProductSearch from "./ProductSearch";
 import VentaGrid from "./VentaGrid";
@@ -11,7 +13,11 @@ import PriceListSelector from "./PriceListSelector";
 import { Producto } from "@/lib/validations/producto.schema";
 import { useVentaStore, Item } from "@/store/ventaStore";
 
+type MobileTab = "productos" | "pago";
+
 export default function VentasScreen() {
+  const [mobileTab, setMobileTab] = useState<MobileTab>("productos");
+
   // Store
   const {
     items,
@@ -133,21 +139,65 @@ export default function VentasScreen() {
     return subtotal - discountAmount;
   };
 
+  const total = calculateTotal();
+  const subtotal = items.reduce((acc, item) => acc + item.subtotal, 0);
+
   return (
-    <div className="h-full w-full flex flex-col gap-2">
-      <div className="flex flex-col lg:flex-row flex-1 gap-2 overflow-auto lg:overflow-hidden">
-        {/* LEFT PANEL: PRODUCT SEARCH & GRID */}
-        <div className="flex-1 flex flex-col gap-2 lg:overflow-hidden rounded-xl p-1 lg:p-2">
-          {/* Toolbar Card */}
-          <div className="p-2 rounded-xl border border-slate-100 flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center shrink-0 relative shadow-sm">
-            {/* Buscador de productos */}
+    <div className="h-full w-full flex flex-col gap-0">
+      {/* ── MOBILE TABS ── solo visible en pantallas < lg */}
+      <div className="lg:hidden flex items-center bg-white border-b border-slate-100 shrink-0 px-3 pt-1">
+        <button
+          onClick={() => setMobileTab("productos")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold border-b-2 transition-all duration-200 ${
+            mobileTab === "productos"
+              ? "border-[#67afc3] text-[#67afc3]"
+              : "border-transparent text-slate-400 hover:text-slate-600"
+          }`}
+        >
+          <ShoppingCart size={15} />
+          <span>Productos</span>
+          {items.length > 0 && (
+            <span className="ml-1 min-w-[20px] h-5 rounded-full bg-[#67afc3] text-white text-[10px] font-bold flex items-center justify-center px-1.5">
+              {items.length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setMobileTab("pago")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold border-b-2 transition-all duration-200 ${
+            mobileTab === "pago"
+              ? "border-[#67afc3] text-[#67afc3]"
+              : "border-transparent text-slate-400 hover:text-slate-600"
+          }`}
+        >
+          <CreditCard size={15} />
+          <span>Pago</span>
+          {total > 0 && (
+            <span className="ml-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
+              ${total.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* ── MAIN LAYOUT ── */}
+      <div className="flex flex-col lg:flex-row flex-1 gap-2 overflow-auto lg:overflow-hidden p-2">
+        {/* ── LEFT PANEL: PRODUCTS ── */}
+        <div
+          className={`flex-1 flex flex-col gap-2 lg:overflow-hidden rounded-xl ${
+            mobileTab === "productos" ? "flex" : "hidden lg:flex"
+          }`}
+        >
+          {/* Toolbar */}
+          <div className="bg-white p-2 rounded-xl border border-slate-100 flex flex-col sm:flex-row gap-2 sm:gap-0 items-stretch sm:items-center shrink-0 relative shadow-sm">
+            {/* Buscador */}
             <div className="flex-1">
               <ProductSearch onProductSelect={handleAddItem} />
             </div>
 
-            <div className="hidden sm:block h-6 w-px bg-slate-200 mx-2"></div>
+            <div className="hidden sm:block h-6 w-px bg-slate-200 mx-2" />
 
-            {/* Selector de lista de precios */}
+            {/* Lista de precios */}
             <PriceListSelector
               listaPrecios={listaPrecios}
               setListaPrecios={setListaPrecios}
@@ -162,19 +212,21 @@ export default function VentasScreen() {
           />
         </div>
 
-        {/* RIGHT PANEL: CLIENT & FOOTER */}
-        <div className="w-full lg:w-[320px] xl:w-[350px] flex flex-col gap-2 shrink-0 lg:h-full lg:overflow-hidden p-1 lg:p-2">
-          {/* Cliente y Comprobante en fila en mobile */}
+        {/* ── RIGHT PANEL: CLIENT + PAYMENT ── */}
+        <div
+          className={`w-full lg:w-[320px] xl:w-[350px] flex flex-col gap-2 shrink-0 lg:h-full lg:overflow-hidden ${
+            mobileTab === "pago" ? "flex" : "hidden lg:flex"
+          }`}
+        >
+          {/* Cliente y Comprobante */}
           <div className="flex flex-col sm:flex-row lg:flex-col gap-2">
-            {/* Cliente Card */}
-            <div className="rounded-xl border border-slate-100 flex flex-col shrink-0 overflow-hidden w-full shadow-sm">
-              <div className="p-0">
-                <ClienteSearch selected={cliente} onSelect={setCliente} />
-              </div>
+            {/* Cliente */}
+            <div className="bg-white rounded-xl border border-slate-100 flex flex-col shrink-0 overflow-hidden w-full shadow-sm">
+              <ClienteSearch selected={cliente} onSelect={setCliente} />
             </div>
 
-            {/* Comprobante Card */}
-            <div className="rounded-xl border border-slate-100 flex flex-col shrink-0 overflow-hidden w-full shadow-sm">
+            {/* Comprobante */}
+            <div className="bg-white rounded-xl border border-slate-100 flex flex-col shrink-0 overflow-hidden w-full shadow-sm">
               <div className="p-2">
                 <ComprobanteSelector
                   tipoComprobante={tipoComprobante}
@@ -186,13 +238,13 @@ export default function VentasScreen() {
             </div>
           </div>
 
-          {/* Footer / Totals Section */}
+          {/* Footer / Totales */}
           <div className="flex-1 min-h-0 flex flex-col">
             <VentaFooter
-              subtotal={items.reduce((acc, item) => acc + item.subtotal, 0)}
+              subtotal={subtotal}
               descuento={descuentoPorcentaje}
               setDescuento={setDescuentoPorcentaje}
-              total={calculateTotal()}
+              total={total}
               items={items}
               cliente={cliente}
               tipoComprobante={tipoComprobante}
