@@ -2,6 +2,8 @@
 
 Sistema SaaS multi-tenant de gestión de punto de venta. Gestiona ventas, productos, clientes, empleados, caja y configuración con aislamiento completo por tenant.
 
+d
+
 ## Stack
 
 - **Frontend:** Next.js 16 (App Router), React 19, TypeScript, HeroUI, TanStack Query, TailwindCSS
@@ -21,16 +23,16 @@ npm run dev
 
 ## Scripts
 
-| Comando | Descripción |
-|---------|-------------|
-| `npm run dev` | Servidor de desarrollo |
-| `npm run build` | Build de producción |
-| `npm run start` | Servidor de producción |
-| `npm run lint` | Ejecutar ESLint |
-| `npm run test` | Tests con Vitest |
-| `npm run prisma:generate` | Generar Prisma Client |
-| `npm run prisma:migrate` | Ejecutar migraciones |
-| `npm run db-seed` | Seed de base de datos |
+| Comando                   | Descripción            |
+| ------------------------- | ---------------------- |
+| `npm run dev`             | Servidor de desarrollo |
+| `npm run build`           | Build de producción    |
+| `npm run start`           | Servidor de producción |
+| `npm run lint`            | Ejecutar ESLint        |
+| `npm run test`            | Tests con Vitest       |
+| `npm run prisma:generate` | Generar Prisma Client  |
+| `npm run prisma:migrate`  | Ejecutar migraciones   |
+| `npm run db-seed`         | Seed de base de datos  |
 
 ## Estructura del proyecto
 
