@@ -15,11 +15,12 @@ import { useConfiguracion } from "@/hooks/useConfiguracion";
 import { parseScaleBarcode } from "@/lib/utils/barcode";
 import CameraScannerModal from "./CameraScannerModal";
 import ProductSearchModal from "./ProductSearchModal";
+import { OrigenPrecio } from "@/store/ventaStore";
 
 export default function ProductSearch({
   onProductSelect,
 }: {
-  onProductSelect: (p: Producto, cantidad?: number) => void;
+  onProductSelect: (p: Producto, cantidad?: number, precioOverride?: number, origenPrecio?: OrigenPrecio) => void;
 }) {
   const [inputValue, setInputValue] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -41,6 +42,58 @@ export default function ProductSearch({
 
       if (inputValue.trim()) {
         const term = inputValue.trim();
+
+        // ── Parsear sintaxis código*precio ──
+        const altPriceMatch = term.match(/^(\d+)\*(\d+\.?\d*)$/);
+        if (altPriceMatch) {
+          const codigo = altPriceMatch[1];
+          const precioAlternativo = parseFloat(altPriceMatch[2]);
+
+          if (precioAlternativo <= 0) {
+            addToast({
+              title: "Precio inválido",
+              description: "El precio alternativo debe ser mayor a 0.",
+              color: "warning",
+            });
+            setInputValue("");
+            return;
+          }
+
+          setIsSearching(true);
+          try {
+            const result = await queryClient.fetchQuery({
+              queryKey: ["productos-ventas-exact", codigo],
+              queryFn: ({ signal }) =>
+                fetchProductosVentas({
+                  signal,
+                  search: codigo,
+                  page: 1,
+                  limit: 5,
+                }),
+              staleTime: 10 * 1000,
+            });
+
+            const codigoNum = parseInt(codigo, 10);
+            const found = result.data.find((p) => p.Codigo === codigoNum);
+
+            if (found) {
+              handleSelectProduct(found, 1, precioAlternativo, "alternativo");
+            } else {
+              addToast({
+                title: "Producto no encontrado",
+                description: `No se encontró un producto con código ${codigo}.`,
+                color: "warning",
+              });
+            }
+          } catch (err) {
+            console.error("Error searching product with alt price:", err);
+          } finally {
+            setIsSearching(false);
+          }
+          setInputValue("");
+          return;
+        }
+
         setIsSearching(true);
 
         try {
@@ -157,8 +210,20 @@ export default function ProductSearch({
             if (result.data && result.data.length === 1) {
               // Producto exacto encontrado (ej. código exacto o código de barras)
               handleSelectProduct(result.data[0]);
+            } else if (result.data && result.data.length > 1) {
+              // Verificar si el primer resultado es coincidencia exacta por código
+              const codeNum = parseInt(term, 10);
+              const exactMatch = result.data.find((p) => p.Codigo === codeNum);
+              if (exactMatch) {
+                handleSelectProduct(exactMatch);
+              } else {
+                // Múltiples coincidencias sin código exacto -> Abrir Modal
+                setSearchTermForModal(term);
+                setIsSearchModalOpen(true);
+                setInputValue("");
+              }
             } else {
-              // Múltiples coincidencias o ninguna -> Abrir Modal
+              // Sin coincidencias -> Abrir Modal
               setSearchTermForModal(term);
               setIsSearchModalOpen(true);
               setInputValue("");
@@ -182,8 +247,8 @@ export default function ProductSearch({
     }
   };
 
-  const handleSelectProduct = (product: Producto, cantidad: number = 1) => {
-    onProductSelect(product, cantidad);
+  const handleSelectProduct = (product: Producto, cantidad: number = 1, precioOverride?: number, origenPrecio?: OrigenPrecio) => {
+    onProductSelect(product, cantidad, precioOverride, origenPrecio);
     setInputValue("");
     if (!isScannerOpen) {
       inputRef.current?.focus();
@@ -235,7 +300,7 @@ export default function ProductSearch({
           inputWrapper:
             "h-10 min-h-[40px] font-normal text-default-500 bg-transparent outline-none hover:bg-white focus-within:bg-white data-[hover=true]:bg-white rounded-lg border-none shadow-none",
         }}
-        placeholder="Escanear Código o Presionar Enter para Buscar..."
+        placeholder="Código, nombre o código*precio (ej: 2*350)"
         size="sm"
         value={inputValue}
         onValueChange={setInputValue}

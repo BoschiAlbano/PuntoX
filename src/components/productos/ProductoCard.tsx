@@ -74,29 +74,36 @@ export function ProductoCard({
             </div>
           </div>
           <div className="p-3 space-y-2">
-          <h3 className="font-semibold text-slate-800 truncate" title={item.Descripcion}>
-            {item.Descripcion}
-          </h3>
-          <p className="text-xs text-slate-500">
-            {item.Marca?.Descripcion ?? "—"} · {item.Rubro?.Descripcion ?? "—"}
-          </p>
-          <div
-            className={`text-sm font-medium ${
-              isLowStock ? "text-red-600" : "text-slate-700"
-            }`}
-          >
-            Stock: {stock}
-            {item.SucursalNombre && (
-              <span className="text-xs text-slate-400 ml-1">
-                ({item.SucursalNombre})
+            <h3
+              className="font-semibold text-slate-800 truncate"
+              title={item.Descripcion}
+            >
+              {item.Descripcion}
+            </h3>
+            <p className="text-xs text-slate-500">
+              {item.Marca?.Descripcion ?? "—"} ·{" "}
+              {item.Rubro?.Descripcion ?? "—"}
+            </p>
+            <div
+              className={`text-sm font-medium ${
+                isLowStock ? "text-red-600" : "text-slate-700"
+              }`}
+            >
+              Stock: {stock}
+              {item.SucursalNombre && (
+                <span className="text-xs text-slate-400 ml-1">
+                  ({item.SucursalNombre})
+                </span>
+              )}
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-slate-600">
+                {formatCurrency(
+                  Number(item.Precio?.PrecioPublico ?? 0),
+                  currency,
+                )}
               </span>
-            )}
-          </div>
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-slate-600">
-              {formatCurrency(Number(item.Precio?.PrecioPublico ?? 0), currency)}
-            </span>
-          </div>
+            </div>
           </div>
         </div>
         <div
@@ -107,8 +114,14 @@ export function ProductoCard({
             onPress={() => onOpenStockModal(item)}
             label={`Agregar stock ${item.Descripcion}`}
           />
-          <EditButton onPress={() => onEdit(item)} label={`Editar ${item.Descripcion}`} />
-          <DeleteButton onPress={() => onDelete(item)} label={`Eliminar ${item.Descripcion}`} />
+          <EditButton
+            onPress={() => onEdit(item)}
+            label={`Editar ${item.Descripcion}`}
+          />
+          <DeleteButton
+            onPress={() => onDelete(item)}
+            label={`Eliminar ${item.Descripcion}`}
+          />
         </div>
       </CardBody>
     </Card>

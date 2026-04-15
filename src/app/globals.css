@@ -87,7 +87,7 @@ body {
   grid-template-rows: auto 1fr auto;
 }
 
-::-webkit-scrollbar {
+/* ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
@@ -104,7 +104,7 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #67afc3;
-}
+} */
 
 /* * {
   transition-property: background-color, border-color, color, fill, stroke;

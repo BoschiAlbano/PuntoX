@@ -7,8 +7,7 @@ import MarcaForm, { Marca } from "./MarcaForm";
 import { Chip, addToast } from "@heroui/react";
 import { DeleteButton, EditButton } from "../shared/TableActions";
 import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
-import { BulkEditarCamposModal } from "@/components/shared/BulkEditarCamposModal";
-import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
+
 
 async function bulkPatchMarcas(
   ids: (number | string)[],
@@ -30,11 +29,6 @@ async function bulkPatchMarcas(
 export default function MarcaCRUD() {
   const queryClient = useQueryClient();
   const [bulkEstadoModal, setBulkEstadoModal] = useState<{
-    open: boolean;
-    items: Marca[];
-    clearSelection?: () => void;
-  }>({ open: false, items: [] });
-  const [bulkEditarModal, setBulkEditarModal] = useState<{
     open: boolean;
     items: Marca[];
     clearSelection?: () => void;
@@ -99,63 +93,6 @@ export default function MarcaCRUD() {
           label: "Cambiar estado",
           onAction: (ctx) => {
             setBulkEstadoModal({ open: true, items: ctx.items, clearSelection: ctx.clearSelection });
-          },
-        },
-        {
-          key: "editar-campos",
-          label: "Editar campos comunes",
-          onAction: (ctx) => {
-            setBulkEditarModal({ open: true, items: ctx.items, clearSelection: ctx.clearSelection });
-          },
-        },
-        {
-          key: "exportar-csv",
-          label: "Exportar como CSV",
-          onAction: (ctx) => {
-            const data = ctx.items.map((m) => ({
-              Id: m.Id,
-              Descripcion: m.Descripcion ?? "",
-              Productos: m.CantidadProductos ?? 0,
-              Estado: m.EstaEliminado ? "Inactivo" : "Activo",
-            }));
-            const columns = [
-              { key: "Id" as const, header: "ID" },
-              { key: "Descripcion" as const, header: "Descripción" },
-              { key: "Productos" as const, header: "Productos" },
-              { key: "Estado" as const, header: "Estado" },
-            ];
-            exportToCsv(data, columns, "marcas");
-            addToast({
-              title: "Exportado",
-              description: `${ctx.items.length} marca${ctx.items.length !== 1 ? "s" : ""} exportada${ctx.items.length !== 1 ? "s" : ""} como CSV`,
-              color: "success",
-            });
-            ctx.clearSelection();
-          },
-        },
-        {
-          key: "exportar-xls",
-          label: "Exportar como XLS",
-          onAction: (ctx) => {
-            const data = ctx.items.map((m) => ({
-              Id: m.Id,
-              Descripcion: m.Descripcion ?? "",
-              Productos: m.CantidadProductos ?? 0,
-              Estado: m.EstaEliminado ? "Inactivo" : "Activo",
-            }));
-            const columns = [
-              { key: "Id" as const, header: "ID" },
-              { key: "Descripcion" as const, header: "Descripción" },
-              { key: "Productos" as const, header: "Productos" },
-              { key: "Estado" as const, header: "Estado" },
-            ];
-            exportToXls(data, columns, "marcas");
-            addToast({
-              title: "Exportado",
-              description: `${ctx.items.length} marca${ctx.items.length !== 1 ? "s" : ""} exportada${ctx.items.length !== 1 ? "s" : ""} como Excel`,
-              color: "success",
-            });
-            ctx.clearSelection();
           },
         },
         ]}
@@ -232,27 +169,6 @@ export default function MarcaCRUD() {
         }}
       />
 
-      <BulkEditarCamposModal<Marca>
-        isOpen={bulkEditarModal.open}
-        onClose={() => setBulkEditarModal({ open: false, items: [] })}
-        items={bulkEditarModal.items}
-        entityLabel="marca"
-        fields={[
-          {
-            key: "Descripcion",
-            label: "Descripción",
-            type: "text",
-            placeholder: "Ej: Marca Premium",
-          },
-        ]}
-        onConfirm={async (ids, values) => {
-          await bulkPatchMarcas(ids, values);
-        }}
-        onSuccess={() => {
-          bulkEditarModal.clearSelection?.();
-          invalidateMarcas();
-        }}
-      />
     </>
   );
 }

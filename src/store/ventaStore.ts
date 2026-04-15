@@ -4,10 +4,13 @@ import { Producto } from "@/lib/validations/producto.schema";
 import { Cliente } from "@/lib/validations/cliente.schema";
 import { TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
 
+export type OrigenPrecio = "normal" | "alternativo";
+
 export interface Item extends Producto {
   cantidad: number;
   precio: number;
   subtotal: number;
+  origenPrecio: OrigenPrecio;
 }
 
 export interface Pago {
@@ -25,7 +28,7 @@ interface VentaState {
   numeroComprobanteAsociado: number | null;
 
   // Actions
-  addItem: (producto: Producto, cantidad: number, listaPrecios: 1 | 2) => void;
+  addItem: (producto: Producto, cantidad: number, listaPrecios: 1 | 2, precioOverride?: number, origenPrecio?: OrigenPrecio) => void;
   updateItemQuantity: (id: number, cantidad: number) => void;
   removeItem: (id: number) => void;
   setCliente: (cliente: Partial<Cliente>) => void;
@@ -55,27 +58,46 @@ export const useVentaStore = create<VentaState>()(
 
       pagos: [],
 
-      addItem: (producto, cantidad = 1, listaPrecios) => {
+      addItem: (producto, cantidad = 1, listaPrecios, precioOverride, origenPrecio = "normal") => {
         const { items } = get();
         const existing = items.find((i) => i.Id === producto.Id);
 
-        const precioUnitario =
-          listaPrecios === 1
-            ? producto.Precio.PrecioPublico
-            : producto.Precio.PrecioPublico2;
+        const precioUnitario = precioOverride != null
+          ? precioOverride
+          : listaPrecios === 1
+            ? Number(producto.Precio.PrecioPublico)
+            : Number(producto.Precio.PrecioPublico2);
 
         if (existing) {
-          set({
-            items: items.map((i) =>
-              i.Id === producto.Id
-                ? {
-                    ...i,
-                    cantidad: i.cantidad + cantidad,
-                    subtotal: (i.cantidad + cantidad) * i.precio,
-                  }
-                : i,
-            ),
-          });
+          // Si el precio override es diferente al existente, se agrega como nueva línea
+          if (precioOverride != null && existing.precio !== precioOverride) {
+            set({
+              items: [
+                ...items,
+                {
+                  ...producto,
+                  // Usar un ID único para no colisionar con el existente
+                  Id: producto.Id + Date.now(),
+                  cantidad,
+                  precio: precioUnitario,
+                  subtotal: precioUnitario * cantidad,
+                  origenPrecio,
+                },
+              ],
+            });
+          } else {
+            set({
+              items: items.map((i) =>
+                i.Id === existing.Id
+                  ? {
+                      ...i,
+                      cantidad: i.cantidad + cantidad,
+                      subtotal: (i.cantidad + cantidad) * i.precio,
+                    }
+                  : i,
+              ),
+            });
+          }
         } else {
           set({
             items: [
@@ -83,8 +105,9 @@ export const useVentaStore = create<VentaState>()(
               {
                 ...producto,
                 cantidad,
-                precio: Number(precioUnitario),
-                subtotal: Number(precioUnitario) * cantidad,
+                precio: precioUnitario,
+                subtotal: precioUnitario * cantidad,
+                origenPrecio,
               },
             ],
           });

@@ -7,8 +7,7 @@ import UnidadMedidaForm, { UnidadMedida } from "./UnidadMedidaForm";
 import { Chip, addToast } from "@heroui/react";
 import { DeleteButton, EditButton } from "@/components/shared/TableActions";
 import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
-import { BulkEditarCamposModal } from "@/components/shared/BulkEditarCamposModal";
-import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
+
 
 async function bulkPatchUnidadesMedidas(
   ids: (number | string)[],
@@ -34,11 +33,7 @@ export default function UnidadMedidaCRUD() {
     items: UnidadMedida[];
     clearSelection?: () => void;
   }>({ open: false, items: [] });
-  const [bulkEditarModal, setBulkEditarModal] = useState<{
-    open: boolean;
-    items: UnidadMedida[];
-    clearSelection?: () => void;
-  }>({ open: false, items: [] });
+
 
   const invalidateUnidadesMedidas = () => {
     queryClient.invalidateQueries({ queryKey: ["unidades-medidas-generic"] });
@@ -91,59 +86,6 @@ export default function UnidadMedidaCRUD() {
           label: "Cambiar estado",
           onAction: (ctx) => {
             setBulkEstadoModal({ open: true, items: ctx.items, clearSelection: ctx.clearSelection });
-          },
-        },
-        {
-          key: "editar-campos",
-          label: "Editar campos comunes",
-          onAction: (ctx) => {
-            setBulkEditarModal({ open: true, items: ctx.items, clearSelection: ctx.clearSelection });
-          },
-        },
-        {
-          key: "exportar-csv",
-          label: "Exportar como CSV",
-          onAction: (ctx) => {
-            const data = ctx.items.map((u) => ({
-              Id: u.Id,
-              Descripcion: u.Descripcion ?? "",
-              Estado: u.EstaEliminado ? "Inactivo" : "Activo",
-            }));
-            const columns = [
-              { key: "Id" as const, header: "ID" },
-              { key: "Descripcion" as const, header: "Descripción" },
-              { key: "Estado" as const, header: "Estado" },
-            ];
-            exportToCsv(data, columns, "unidades-medida");
-            addToast({
-              title: "Exportado",
-              description: `${ctx.items.length} unidad${ctx.items.length !== 1 ? "es" : ""} exportada${ctx.items.length !== 1 ? "s" : ""} como CSV`,
-              color: "success",
-            });
-            ctx.clearSelection();
-          },
-        },
-        {
-          key: "exportar-xls",
-          label: "Exportar como XLS",
-          onAction: (ctx) => {
-            const data = ctx.items.map((u) => ({
-              Id: u.Id,
-              Descripcion: u.Descripcion ?? "",
-              Estado: u.EstaEliminado ? "Inactivo" : "Activo",
-            }));
-            const columns = [
-              { key: "Id" as const, header: "ID" },
-              { key: "Descripcion" as const, header: "Descripción" },
-              { key: "Estado" as const, header: "Estado" },
-            ];
-            exportToXls(data, columns, "unidades-medida");
-            addToast({
-              title: "Exportado",
-              description: `${ctx.items.length} unidad${ctx.items.length !== 1 ? "es" : ""} exportada${ctx.items.length !== 1 ? "s" : ""} como Excel`,
-              color: "success",
-            });
-            ctx.clearSelection();
           },
         },
       ]}
@@ -212,27 +154,6 @@ export default function UnidadMedidaCRUD() {
         }}
       />
 
-      <BulkEditarCamposModal<UnidadMedida>
-        isOpen={bulkEditarModal.open}
-        onClose={() => setBulkEditarModal({ open: false, items: [] })}
-        items={bulkEditarModal.items}
-        entityLabel="unidad de medida"
-        fields={[
-          {
-            key: "Descripcion",
-            label: "Descripción",
-            type: "text",
-            placeholder: "Ej: Kilogramo",
-          },
-        ]}
-        onConfirm={async (ids, values) => {
-          await bulkPatchUnidadesMedidas(ids, values);
-        }}
-        onSuccess={() => {
-          bulkEditarModal.clearSelection?.();
-          invalidateUnidadesMedidas();
-        }}
-      />
     </>
   );
 }

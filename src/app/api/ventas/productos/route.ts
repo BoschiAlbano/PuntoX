@@ -22,54 +22,57 @@ export async function GET(req: NextRequest) {
       EstaEliminado: false,
     };
 
-    if (q) {
-      where.OR = [
-        { Descripcion: { contains: q, mode: "insensitive" } },
-        { CodigoBarra: { contains: q, mode: "insensitive" } },
-      ];
+    // Determinar si el término de búsqueda es numérico (código exacto)
+    const isNumericSearch = q && /^\d+$/.test(q);
+    const codeNum = isNumericSearch ? parseInt(q) : NaN;
 
-      // Si es un número, intentar buscar por código también
-      const codeNum = parseInt(q);
-      if (
-        !isNaN(codeNum) &&
-        codeNum < Number(process.env.MAX_ARTICLE_CODE || 999)
-      ) {
-        where.OR.push({ Codigo: codeNum });
+    if (q) {
+      if (isNumericSearch) {
+        // Para búsquedas numéricas: buscar por Código exacto, CodigoBarra, o Descripción
+        where.OR = [
+          { Codigo: codeNum },
+          { CodigoBarra: { contains: q, mode: "insensitive" } },
+          { Descripcion: { contains: q, mode: "insensitive" } },
+        ];
+      } else {
+        where.OR = [
+          { Descripcion: { contains: q, mode: "insensitive" } },
+          { CodigoBarra: { contains: q, mode: "insensitive" } },
+        ];
       }
     }
 
-    const [productos, total] = await Promise.all([
-      prisma.articulo.findMany({
-        where,
+    // Para búsquedas numéricas, primero buscar coincidencia exacta por código
+    // para garantizar que aparezca primero en los resultados
+    let exactCodeMatch: any[] = [];
+    if (isNumericSearch) {
+      exactCodeMatch = await prisma.articulo.findMany({
+        where: {
+          TenantId: BigInt(tenantId),
+          EstaEliminado: false,
+          Codigo: codeNum,
+        },
         select: {
           Id: true,
           Codigo: true,
           CodigoBarra: true,
           Descripcion: true,
-          // Reglas de negocio
           DescuentaStock: true,
           PermiteStockNegativo: true,
           StockMinimo: true,
-
           ActivarLimiteVenta: true,
           LimiteVenta: true,
-
           ActivarHoraVenta: true,
           HoraLimiteVentaDesde: true,
           HoraLimiteVentaHasta: true,
-
           TipoVenta: true,
-          // Stock global (fallback)
           Stock: true,
-
-          // Precios
           Precio: {
             select: {
               PrecioPublico: true,
               PrecioPublico2: true,
             },
           },
-
           Iva: {
             select: {
               Id: true,
@@ -77,7 +80,61 @@ export async function GET(req: NextRequest) {
               Descripcion: true,
             },
           },
-          // Stock especifico de sucursal
+          ArticuloStock: {
+            where: { SucursalId: BigInt(sucursalId) },
+            select: { Stock: true, StockMinimo: true, Ubicacion: true },
+            take: 1,
+          },
+        },
+        take: 1,
+      });
+    }
+
+    // IDs de coincidencias exactas para excluirlas de la búsqueda general
+    const exactIds = exactCodeMatch.map((p) => p.Id);
+
+    // Ajustar where para excluir coincidencias exactas ya encontradas
+    const restWhere = { ...where };
+    if (exactIds.length > 0) {
+      restWhere.AND = [
+        ...(restWhere.AND || []),
+        { Id: { notIn: exactIds } },
+      ];
+    }
+
+    const restLimit = Math.max(0, limit - exactIds.length);
+
+    const [restProductos, total] = await Promise.all([
+      prisma.articulo.findMany({
+        where: restWhere,
+        select: {
+          Id: true,
+          Codigo: true,
+          CodigoBarra: true,
+          Descripcion: true,
+          DescuentaStock: true,
+          PermiteStockNegativo: true,
+          StockMinimo: true,
+          ActivarLimiteVenta: true,
+          LimiteVenta: true,
+          ActivarHoraVenta: true,
+          HoraLimiteVentaDesde: true,
+          HoraLimiteVentaHasta: true,
+          TipoVenta: true,
+          Stock: true,
+          Precio: {
+            select: {
+              PrecioPublico: true,
+              PrecioPublico2: true,
+            },
+          },
+          Iva: {
+            select: {
+              Id: true,
+              Porcentaje: true,
+              Descripcion: true,
+            },
+          },
           ArticuloStock: {
             where: { SucursalId: BigInt(sucursalId) },
             select: { Stock: true, StockMinimo: true, Ubicacion: true },
@@ -85,11 +142,14 @@ export async function GET(req: NextRequest) {
           },
         },
         orderBy: { Descripcion: "asc" },
-        take: limit,
-        skip: skip,
+        take: restLimit,
+        skip: exactIds.length > 0 && page === 1 ? 0 : skip,
       }),
       prisma.articulo.count({ where }),
     ]);
+
+    // Combinar: exacto primero, luego el resto
+    const productos = [...exactCodeMatch, ...restProductos];
 
     const data = productos.map((p) => {
       const stockSucursal = p.ArticuloStock[0];

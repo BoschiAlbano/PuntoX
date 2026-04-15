@@ -5,7 +5,7 @@ import ClienteForm from "./ClienteForm";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
 import { Button, Chip, Tooltip, addToast } from "@heroui/react";
-import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
+
 import { clienteListAdapter } from "@/lib/adapters/cliente.adapter";
 import { Cliente } from "@/lib/validations/cliente.schema";
 import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
@@ -146,90 +146,6 @@ export default function ClienteCRUD() {
               title: "Cambiar estado",
               description: `${ctx.totalCount} cliente(s)`,
             });
-          },
-        },
-        {
-          key: "editar-campos",
-          label: "Editar campos comunes",
-          onAction: (ctx) => {
-            addToast({
-              title: "Editar campos",
-              description: `${ctx.totalCount} cliente(s)`,
-            });
-          },
-        },
-        {
-          key: "exportar-csv",
-          label: "Exportar como CSV",
-          onAction: (ctx) => {
-            const data = ctx.items.map((c) => ({
-              Nombre: c.Nombre,
-              Apellido: c.Apellido,
-              Dni: c.Dni ?? "",
-              Mail: c.Mail ?? "",
-              Telefono: c.Telefono ?? "",
-              Direccion: c.Direccion ?? "",
-              Localidad: c.Localidad ?? "",
-              CondicionIva: c.CondicionIva ?? "",
-              ActivarCtaCte: c.ActivarCtaCte ? "Sí" : "No",
-              MontoMaximoCtaCte: c.MontoMaximoCtaCte ?? 0,
-            }));
-            const columns = [
-              { key: "Nombre" as const, header: "Nombre" },
-              { key: "Apellido" as const, header: "Apellido" },
-              { key: "Dni" as const, header: "DNI" },
-              { key: "Mail" as const, header: "Email" },
-              { key: "Telefono" as const, header: "Teléfono" },
-              { key: "Direccion" as const, header: "Dirección" },
-              { key: "Localidad" as const, header: "Localidad" },
-              { key: "CondicionIva" as const, header: "Cond. IVA" },
-              { key: "ActivarCtaCte" as const, header: "Cta. Cte." },
-              { key: "MontoMaximoCtaCte" as const, header: "Límite Cta. Cte." },
-            ];
-            exportToCsv(data, columns, "clientes");
-            addToast({
-              title: "Exportado",
-              description: `${ctx.items.length} cliente${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como CSV`,
-              color: "success",
-            });
-            ctx.clearSelection();
-          },
-        },
-        {
-          key: "exportar-xls",
-          label: "Exportar como XLS",
-          onAction: (ctx) => {
-            const data = ctx.items.map((c) => ({
-              Nombre: c.Nombre,
-              Apellido: c.Apellido,
-              Dni: c.Dni ?? "",
-              Mail: c.Mail ?? "",
-              Telefono: c.Telefono ?? "",
-              Direccion: c.Direccion ?? "",
-              Localidad: c.Localidad ?? "",
-              CondicionIva: c.CondicionIva ?? "",
-              ActivarCtaCte: c.ActivarCtaCte ? "Sí" : "No",
-              MontoMaximoCtaCte: c.MontoMaximoCtaCte ?? 0,
-            }));
-            const columns = [
-              { key: "Nombre" as const, header: "Nombre" },
-              { key: "Apellido" as const, header: "Apellido" },
-              { key: "Dni" as const, header: "DNI" },
-              { key: "Mail" as const, header: "Email" },
-              { key: "Telefono" as const, header: "Teléfono" },
-              { key: "Direccion" as const, header: "Dirección" },
-              { key: "Localidad" as const, header: "Localidad" },
-              { key: "CondicionIva" as const, header: "Cond. IVA" },
-              { key: "ActivarCtaCte" as const, header: "Cta. Cte." },
-              { key: "MontoMaximoCtaCte" as const, header: "Límite Cta. Cte." },
-            ];
-            exportToXls(data, columns, "clientes");
-            addToast({
-              title: "Exportado",
-              description: `${ctx.items.length} cliente${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como Excel`,
-              color: "success",
-            });
-            ctx.clearSelection();
           },
         },
       ]}

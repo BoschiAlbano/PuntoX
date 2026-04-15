@@ -2,7 +2,7 @@
 
 import GenericCrud from "@/components/shared/GenericCrud";
 import { Chip, Tooltip, addToast } from "@heroui/react";
-import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
+
 import {
   formatTiempoRelativo,
   formatearAccion,
@@ -84,66 +84,7 @@ export default function AuditoriasCRUD() {
           ipAddress: a.ipAddress ?? "",
         }),
       }}
-      bulkActionsDropdown={[
-        {
-          key: "exportar-csv",
-          label: "Exportar como CSV",
-          onAction: (ctx) => {
-            const data = ctx.items.map((a) => ({
-              usuario: a.usuario ?? "",
-              accion: a.accion ?? "",
-              detalles: a.detalles ?? "",
-              fechaHora: a.fechaHora ?? "",
-              exitoso: a.exitoso ? "Sí" : "No",
-              ipAddress: a.ipAddress ?? "",
-            }));
-            const columns = [
-              { key: "usuario" as const, header: "Usuario" },
-              { key: "accion" as const, header: "Acción" },
-              { key: "detalles" as const, header: "Detalles" },
-              { key: "fechaHora" as const, header: "Fecha" },
-              { key: "exitoso" as const, header: "Exitoso" },
-              { key: "ipAddress" as const, header: "IP" },
-            ];
-            exportToCsv(data, columns, "auditorias");
-            addToast({
-              title: "Exportado",
-              description: `${ctx.items.length} auditoría${ctx.items.length !== 1 ? "s" : ""} exportada${ctx.items.length !== 1 ? "s" : ""} como CSV`,
-              color: "success",
-            });
-            ctx.clearSelection();
-          },
-        },
-        {
-          key: "exportar-xls",
-          label: "Exportar como XLS",
-          onAction: (ctx) => {
-            const data = ctx.items.map((a) => ({
-              usuario: a.usuario ?? "",
-              accion: a.accion ?? "",
-              detalles: a.detalles ?? "",
-              fechaHora: a.fechaHora ?? "",
-              exitoso: a.exitoso ? "Sí" : "No",
-              ipAddress: a.ipAddress ?? "",
-            }));
-            const columns = [
-              { key: "usuario" as const, header: "Usuario" },
-              { key: "accion" as const, header: "Acción" },
-              { key: "detalles" as const, header: "Detalles" },
-              { key: "fechaHora" as const, header: "Fecha" },
-              { key: "exitoso" as const, header: "Exitoso" },
-              { key: "ipAddress" as const, header: "IP" },
-            ];
-            exportToXls(data, columns, "auditorias");
-            addToast({
-              title: "Exportado",
-              description: `${ctx.items.length} auditoría${ctx.items.length !== 1 ? "s" : ""} exportada${ctx.items.length !== 1 ? "s" : ""} como Excel`,
-              color: "success",
-            });
-            ctx.clearSelection();
-          },
-        },
-      ]}
+      bulkActionsDropdown={[]}
       renderRowPreview={(item) => (
         <div className="space-y-6 text-sm">
           <div className="p-4 rounded-xl bg-linear-to-br from-slate-50 to-white border border-slate-100 shadow-sm flex items-center gap-4">

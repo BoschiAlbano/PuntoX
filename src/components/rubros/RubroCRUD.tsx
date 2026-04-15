@@ -7,8 +7,7 @@ import RubroForm, { Rubro } from "./RubroForm";
 import { Chip, addToast } from "@heroui/react";
 import { DeleteButton, EditButton } from "@/components/shared/TableActions";
 import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
-import { BulkEditarCamposModal } from "@/components/shared/BulkEditarCamposModal";
-import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
+
 
 async function bulkPatchRubros(
   ids: (number | string)[],
@@ -34,11 +33,7 @@ export default function RubroCRUD() {
     items: Rubro[];
     clearSelection?: () => void;
   }>({ open: false, items: [] });
-  const [bulkEditarModal, setBulkEditarModal] = useState<{
-    open: boolean;
-    items: Rubro[];
-    clearSelection?: () => void;
-  }>({ open: false, items: [] });
+
 
   const invalidateRubros = () => {
     queryClient.invalidateQueries({ queryKey: ["rubros-generic"] });
@@ -91,59 +86,6 @@ export default function RubroCRUD() {
           label: "Cambiar estado",
           onAction: (ctx) => {
             setBulkEstadoModal({ open: true, items: ctx.items, clearSelection: ctx.clearSelection });
-          },
-        },
-        {
-          key: "editar-campos",
-          label: "Editar campos comunes",
-          onAction: (ctx) => {
-            setBulkEditarModal({ open: true, items: ctx.items, clearSelection: ctx.clearSelection });
-          },
-        },
-        {
-          key: "exportar-csv",
-          label: "Exportar como CSV",
-          onAction: (ctx) => {
-            const data = ctx.items.map((r) => ({
-              Id: r.Id,
-              Descripcion: r.Descripcion ?? "",
-              Estado: r.EstaEliminado ? "Inactivo" : "Activo",
-            }));
-            const columns = [
-              { key: "Id" as const, header: "ID" },
-              { key: "Descripcion" as const, header: "Descripción" },
-              { key: "Estado" as const, header: "Estado" },
-            ];
-            exportToCsv(data, columns, "rubros");
-            addToast({
-              title: "Exportado",
-              description: `${ctx.items.length} rubro${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como CSV`,
-              color: "success",
-            });
-            ctx.clearSelection();
-          },
-        },
-        {
-          key: "exportar-xls",
-          label: "Exportar como XLS",
-          onAction: (ctx) => {
-            const data = ctx.items.map((r) => ({
-              Id: r.Id,
-              Descripcion: r.Descripcion ?? "",
-              Estado: r.EstaEliminado ? "Inactivo" : "Activo",
-            }));
-            const columns = [
-              { key: "Id" as const, header: "ID" },
-              { key: "Descripcion" as const, header: "Descripción" },
-              { key: "Estado" as const, header: "Estado" },
-            ];
-            exportToXls(data, columns, "rubros");
-            addToast({
-              title: "Exportado",
-              description: `${ctx.items.length} rubro${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como Excel`,
-              color: "success",
-            });
-            ctx.clearSelection();
           },
         },
       ]}
@@ -212,27 +154,6 @@ export default function RubroCRUD() {
         }}
       />
 
-      <BulkEditarCamposModal<Rubro>
-        isOpen={bulkEditarModal.open}
-        onClose={() => setBulkEditarModal({ open: false, items: [] })}
-        items={bulkEditarModal.items}
-        entityLabel="rubro"
-        fields={[
-          {
-            key: "Descripcion",
-            label: "Descripción",
-            type: "text",
-            placeholder: "Ej: Bebidas",
-          },
-        ]}
-        onConfirm={async (ids, values) => {
-          await bulkPatchRubros(ids, values);
-        }}
-        onSuccess={() => {
-          bulkEditarModal.clearSelection?.();
-          invalidateRubros();
-        }}
-      />
     </>
   );
 }

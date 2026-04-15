@@ -37,10 +37,10 @@ export default function DashboardLayout({
 
   return (
     <ProtectRoute>
-      <div className="flex h-screen bg-white relative overflow-hidden">
+      <div className="flex h-[100dvh] w-full bg-white relative overflow-hidden">
         <section
           onClick={() => setshow(false)}
-          className={`z-99 transition-transform duration-400 ease-in-out sm:relative absolute sm:w-auto w-screen sm:h-auto h-screen shrink-0 ${
+          className={`z-99 transition-transform duration-400 ease-in-out sm:relative absolute sm:w-auto w-screen sm:h-auto h-[100dvh] shrink-0 ${
             show ? `translate-x-[0%]` : `-translate-x-full`
           }`}
         >
@@ -56,7 +56,7 @@ export default function DashboardLayout({
         {/* Main Application Area */}
         <div
           id="main-scroll-container"
-          className="flex-1 flex flex-col h-screen overflow-y-auto overflow-x-hidden min-w-0 relative z-10 transition-all duration-300 w-full ml-0"
+          className="flex-1 flex flex-col h-full overflow-y-auto overflow-x-hidden min-w-0 relative z-10 transition-all duration-300 w-full ml-0"
         >
           <DashboardHeader
             isShow={setshow}

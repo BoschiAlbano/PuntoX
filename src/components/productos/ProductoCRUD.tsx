@@ -19,7 +19,6 @@ import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
 import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
-import { BulkEditarCamposModal } from "@/components/shared/BulkEditarCamposModal";
 import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
 import { ShoppingCart, Copy, Check } from "lucide-react";
 import { ProductoCard } from "./ProductoCard";
@@ -251,11 +250,6 @@ export default function ProductoCRUD() {
     items: Producto[];
     clearSelection?: () => void;
   }>({ open: false, items: [] });
-  const [bulkEditarModal, setBulkEditarModal] = useState<{
-    open: boolean;
-    items: Producto[];
-    clearSelection?: () => void;
-  }>({ open: false, items: [] });
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
 
   const invalidateProductos = () => {
@@ -335,98 +329,6 @@ export default function ProductoCRUD() {
                 items: ctx.items,
                 clearSelection: ctx.clearSelection,
               });
-            },
-          },
-          {
-            key: "actualizar-precios",
-            label: "Actualizar precios",
-            onAction: (ctx) => {
-              addToast({
-                title: "Actualizar precios",
-                description: `${ctx.totalCount} producto${ctx.totalCount !== 1 ? "s" : ""} (próximamente)`,
-                color: "primary",
-              });
-            },
-          },
-          {
-            key: "editar-campos",
-            label: "Editar campos comunes",
-            onAction: (ctx) => {
-              setBulkEditarModal({
-                open: true,
-                items: ctx.items,
-                clearSelection: ctx.clearSelection,
-              });
-            },
-          },
-          {
-            key: "exportar-csv",
-            label: "Exportar como CSV",
-            onAction: (ctx) => {
-              const data = ctx.items.map((p) => ({
-                CodigoBarra: p.CodigoBarra,
-                Descripcion: p.Descripcion,
-                Marca: p.Marca?.Descripcion ?? "",
-                Rubro: p.Rubro?.Descripcion ?? "",
-                Stock: p.Stock ?? 0,
-                StockMinimo: p.StockMinimo ?? 0,
-                Costo: p.Precio?.PrecioCosto ?? 0,
-                Minorista: p.Precio?.PrecioPublico ?? 0,
-                Mayorista: p.Precio?.PrecioPublico2 ?? 0,
-              }));
-              const columns = [
-                { key: "CodigoBarra" as const, header: "Código" },
-                { key: "Descripcion" as const, header: "Descripción" },
-                { key: "Marca" as const, header: "Marca" },
-                { key: "Rubro" as const, header: "Rubro" },
-                { key: "Stock" as const, header: "Stock" },
-                { key: "StockMinimo" as const, header: "Stock mínimo" },
-                { key: "Costo" as const, header: "Costo" },
-                { key: "Minorista" as const, header: "Minorista" },
-                { key: "Mayorista" as const, header: "Mayorista" },
-              ];
-              exportToCsv(data, columns, "productos");
-              addToast({
-                title: "Exportado",
-                description: `${ctx.items.length} producto${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como CSV`,
-                color: "success",
-              });
-              ctx.clearSelection();
-            },
-          },
-          {
-            key: "exportar-xls",
-            label: "Exportar como XLS",
-            onAction: (ctx) => {
-              const data = ctx.items.map((p) => ({
-                CodigoBarra: p.CodigoBarra,
-                Descripcion: p.Descripcion,
-                Marca: p.Marca?.Descripcion ?? "",
-                Rubro: p.Rubro?.Descripcion ?? "",
-                Stock: p.Stock ?? 0,
-                StockMinimo: p.StockMinimo ?? 0,
-                Costo: p.Precio?.PrecioCosto ?? 0,
-                Minorista: p.Precio?.PrecioPublico ?? 0,
-                Mayorista: p.Precio?.PrecioPublico2 ?? 0,
-              }));
-              const columns = [
-                { key: "CodigoBarra" as const, header: "Código" },
-                { key: "Descripcion" as const, header: "Descripción" },
-                { key: "Marca" as const, header: "Marca" },
-                { key: "Rubro" as const, header: "Rubro" },
-                { key: "Stock" as const, header: "Stock" },
-                { key: "StockMinimo" as const, header: "Stock mínimo" },
-                { key: "Costo" as const, header: "Costo" },
-                { key: "Minorista" as const, header: "Minorista" },
-                { key: "Mayorista" as const, header: "Mayorista" },
-              ];
-              exportToXls(data, columns, "productos");
-              addToast({
-                title: "Exportado",
-                description: `${ctx.items.length} producto${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como Excel`,
-                color: "success",
-              });
-              ctx.clearSelection();
             },
           },
         ]}
@@ -629,34 +531,6 @@ export default function ProductoCRUD() {
         }}
         onSuccess={() => {
           bulkEstadoModal.clearSelection?.();
-          invalidateProductos();
-        }}
-      />
-
-      <BulkEditarCamposModal<Producto>
-        isOpen={bulkEditarModal.open}
-        onClose={() => setBulkEditarModal({ open: false, items: [] })}
-        items={bulkEditarModal.items}
-        entityLabel="producto"
-        fields={[
-          {
-            key: "Ubicacion",
-            label: "Ubicación",
-            type: "text",
-            placeholder: "Ej: Estante A1",
-          },
-          {
-            key: "StockMinimo",
-            label: "Stock mínimo",
-            type: "number",
-            placeholder: "0",
-          },
-        ]}
-        onConfirm={async (ids, values) => {
-          await bulkPatchProductos(ids, values);
-        }}
-        onSuccess={() => {
-          bulkEditarModal.clearSelection?.();
           invalidateProductos();
         }}
       />

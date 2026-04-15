@@ -3,7 +3,7 @@
 import { useState } from "react";
 import GenericCrud from "@/components/shared/GenericCrud";
 import { Chip, Button, Tooltip, addToast } from "@heroui/react";
-import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
+
 import { EditButton, DeleteButton } from "../shared/TableActions";
 import UsuarioForm from "./UsuarioForm";
 import ChangePasswordModal from "./ChangePasswordModal";
@@ -99,83 +99,6 @@ export default function UsuariosCRUD() {
             label: "Cambiar estado",
             onAction: (ctx) => {
               addToast({ title: "Cambiar estado", description: `${ctx.totalCount} usuario(s)` });
-            },
-          },
-          {
-            key: "editar-campos",
-            label: "Editar campos comunes",
-            onAction: (ctx) => {
-              addToast({ title: "Editar campos", description: `${ctx.totalCount} usuario(s)` });
-            },
-          },
-          {
-            key: "exportar-csv",
-            label: "Exportar como CSV",
-            onAction: (ctx) => {
-              const data = ctx.items.map((u) => ({
-                nombreCompleto: u.nombreCompleto ?? "",
-                email: u.email ?? "",
-                username: u.username ?? "",
-                telefono: u.telefono ?? "",
-                rolNombre: u.rolNombre ?? "",
-                estado: u.estado ?? "",
-                legajo: u.legajo ?? "",
-                dni: u.dni ?? "",
-                ultimaActividad: u.ultimaActividad ?? "",
-              }));
-              const columns = [
-                { key: "nombreCompleto" as const, header: "Nombre completo" },
-                { key: "email" as const, header: "Email" },
-                { key: "username" as const, header: "Usuario" },
-                { key: "telefono" as const, header: "Teléfono" },
-                { key: "rolNombre" as const, header: "Rol" },
-                { key: "estado" as const, header: "Estado" },
-                { key: "legajo" as const, header: "Legajo" },
-                { key: "dni" as const, header: "DNI" },
-                { key: "ultimaActividad" as const, header: "Última actividad" },
-              ];
-              exportToCsv(data, columns, "usuarios");
-              addToast({
-                title: "Exportado",
-                description: `${ctx.items.length} usuario${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como CSV`,
-                color: "success",
-              });
-              ctx.clearSelection();
-            },
-          },
-          {
-            key: "exportar-xls",
-            label: "Exportar como XLS",
-            onAction: (ctx) => {
-              const data = ctx.items.map((u) => ({
-                nombreCompleto: u.nombreCompleto ?? "",
-                email: u.email ?? "",
-                username: u.username ?? "",
-                telefono: u.telefono ?? "",
-                rolNombre: u.rolNombre ?? "",
-                estado: u.estado ?? "",
-                legajo: u.legajo ?? "",
-                dni: u.dni ?? "",
-                ultimaActividad: u.ultimaActividad ?? "",
-              }));
-              const columns = [
-                { key: "nombreCompleto" as const, header: "Nombre completo" },
-                { key: "email" as const, header: "Email" },
-                { key: "username" as const, header: "Usuario" },
-                { key: "telefono" as const, header: "Teléfono" },
-                { key: "rolNombre" as const, header: "Rol" },
-                { key: "estado" as const, header: "Estado" },
-                { key: "legajo" as const, header: "Legajo" },
-                { key: "dni" as const, header: "DNI" },
-                { key: "ultimaActividad" as const, header: "Última actividad" },
-              ];
-              exportToXls(data, columns, "usuarios");
-              addToast({
-                title: "Exportado",
-                description: `${ctx.items.length} usuario${ctx.items.length !== 1 ? "s" : ""} exportado${ctx.items.length !== 1 ? "s" : ""} como Excel`,
-                color: "success",
-              });
-              ctx.clearSelection();
             },
           },
         ]}

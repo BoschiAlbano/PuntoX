@@ -35,6 +35,7 @@ export default function RolesCRUD() {
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [rolAEditar, setRolAEditar] = useState<Rol | null>(null);
   const [rolAEliminar, setRolAEliminar] = useState<Rol | null>(null);
+  const [rolVerPermisos, setRolVerPermisos] = useState<Rol | null>(null);
 
   const [nuevoRol, setNuevoRol] = useState({
     nombre: "",
@@ -280,12 +281,15 @@ export default function RolesCRUD() {
                     </span>
                   </div>
                   {rol.permisos && rol.permisos.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 border-t border-slate-100 pt-3">
-                      {rol.permisos.map((permiso) => (
-                        <span key={permiso} className="inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold bg-white border border-slate-200 text-slate-500">
-                          {permiso}
-                        </span>
-                      ))}
+                    <div className="flex flex-col gap-3 border-t border-slate-100 pt-3">
+                      <Button
+                        variant="light"
+                        size="sm"
+                        className="self-start text-[#67afc3] font-medium px-2 py-1 data-[hover=true]:bg-[#67afc3]/10 h-auto min-h-0"
+                        onPress={() => setRolVerPermisos(rol)}
+                      >
+                        Ver permisos ({rol.permisos.length})
+                      </Button>
                     </div>
                   )}
                 </CardBody>
@@ -604,6 +608,42 @@ export default function RolesCRUD() {
               Sí, eliminar
             </Button>
           </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal Ver Permisos */}
+      <Modal
+        isOpen={!!rolVerPermisos}
+        onClose={() => setRolVerPermisos(null)}
+        size="md"
+        placement="center"
+        classNames={{
+          backdrop: "bg-slate-900/40 backdrop-blur-md",
+          base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60",
+          header: "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8 bg-transparent",
+          body: "py-6 px-6 sm:px-8 overflow-y-auto overflow-x-hidden",
+          footer: "border-t border-slate-100/60 py-4 px-6 sm:px-8 bg-transparent hidden",
+          closeButton: "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
+        }}
+      >
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">
+              Permisos: {rolVerPermisos?.nombre}
+            </h2>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              Listado de accesos permitidos para este rol.
+            </p>
+          </ModalHeader>
+          <ModalBody>
+            <div className="flex flex-wrap gap-2">
+              {rolVerPermisos?.permisos?.map((permiso) => (
+                <span key={permiso} className="inline-block px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-[#67afc3]/10 text-[#67afc3] border border-[#67afc3]/30 shadow-sm">
+                  {permiso}
+                </span>
+              ))}
+            </div>
+          </ModalBody>
         </ModalContent>
       </Modal>
     </div>

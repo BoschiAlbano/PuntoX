@@ -22,7 +22,6 @@ import {
 import { useState, useRef, Key } from "react";
 import {
   Check,
-  ChevronDown,
   Columns2,
   Download,
   FileSpreadsheet,
@@ -115,8 +114,14 @@ interface GenericTableProps<T> {
   onSortChange?: (descriptor: SortDescriptor) => void;
   onNewClick?: () => void;
   newButtonText?: string;
+  /** Exportar todos los datos visibles como CSV */
   onExportCsv?: () => void;
+  /** Exportar todos los datos visibles como XLS */
   onExportXls?: () => void;
+  /** Exportar solo los ítems seleccionados como CSV */
+  onExportCsvSelected?: () => void;
+  /** Exportar solo los ítems seleccionados como XLS */
+  onExportXlsSelected?: () => void;
   onRefresh?: () => void;
   isRefreshing?: boolean;
   onRowClick?: (item: T) => void;
@@ -129,11 +134,11 @@ interface GenericTableProps<T> {
   onSelectionChange?: (keys: Set<string> | "all") => void;
   selectedCount?: number;
   totalCount?: number;
-  canScaleToAll?: boolean;
-  onScaleToAllMatching?: () => void;
+  /** Ítems seleccionados actuales (para imprimir/exportar seleccionados) */
+  selectedItems?: T[];
   onBulkDelete?: () => void;
   onClearSelection?: () => void;
-  /** Opciones del dropdown "Acciones masivas" (visibles solo con selección) */
+  /** Opciones del dropdown "Más opciones" visibles cuando hay selección */
   bulkActionsDropdown?: Array<{
     key: string;
     label: string;
@@ -178,6 +183,8 @@ export default function GenericTable<T extends { Id: number | string }>({
   newButtonText = "Nuevo",
   onExportCsv,
   onExportXls,
+  onExportCsvSelected,
+  onExportXlsSelected,
   onRefresh,
   isRefreshing = false,
   onRowClick,
@@ -188,8 +195,7 @@ export default function GenericTable<T extends { Id: number | string }>({
   onSelectionChange,
   selectedCount = 0,
   totalCount = 0,
-  canScaleToAll = false,
-  onScaleToAllMatching,
+  selectedItems,
   onBulkDelete,
   onClearSelection,
   bulkActionsDropdown,
@@ -234,6 +240,12 @@ export default function GenericTable<T extends { Id: number | string }>({
       : CENTER_UIDS.has(uid)
         ? "center"
         : "left");
+
+  // items a imprimir: si hay selección activa, solo los seleccionados
+  const printData =
+    selectedCount > 0 && selectedItems && selectedItems.length > 0
+      ? selectedItems
+      : data;
 
   const handlePrint = useReactToPrint({
     contentRef: tablePrintRef,
@@ -306,67 +318,172 @@ export default function GenericTable<T extends { Id: number | string }>({
             <div className="flex items-center gap-2 flex-1 sm:flex-none justify-end sm:justify-start">
               <Dropdown>
                 <DropdownTrigger>
-                  <button
-                    type="button"
-                    className="flex items-center justify-center sm:justify-start gap-2 px-3 w-auto h-10 sm:h-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[#67afc3] text-slate-700 hover:text-[#67afc3] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40 transition-all duration-150 flex-shrink-0"
-                    title="Exportar, Imprimir"
-                    aria-label="Más opciones: Exportar, Imprimir"
-                  >
-                    <Menu
-                      size={ICON_SIZE}
-                      strokeWidth={ICON_STROKE}
-                      aria-hidden="true"
-                    />
-                    <span className="hidden md:inline text-sm font-medium">
-                      Más opciones
-                    </span>
-                  </button>
+                  {/* Wrapper relativo para el badge de selección */}
+                  <div className="relative inline-flex flex-shrink-0">
+                    <button
+                      type="button"
+                      className="flex items-center justify-center sm:justify-start gap-2 px-3 w-auto h-10 sm:h-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[#67afc3] text-slate-700 hover:text-[#67afc3] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40 transition-all duration-150"
+                      title={selectedCount > 0 ? `Más opciones (${selectedCount} seleccionados)` : "Exportar, Imprimir"}
+                      aria-label={selectedCount > 0 ? `Más opciones: ${selectedCount} seleccionados` : "Más opciones: Exportar, Imprimir"}
+                    >
+                      <Menu
+                        size={ICON_SIZE}
+                        strokeWidth={ICON_STROKE}
+                        aria-hidden="true"
+                      />
+                      <span className="hidden md:inline text-sm font-medium">
+                        Más opciones
+                      </span>
+                    </button>
+                    {/* Badge de selección activa */}
+                    {selectedCount > 0 && (
+                      <span
+                        className="pointer-events-none absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-[#67afc3] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 shadow-sm ring-2 ring-white"
+                        aria-hidden="true"
+                      >
+                        {selectedCount > 99 ? "99+" : selectedCount}
+                      </span>
+                    )}
+                  </div>
                 </DropdownTrigger>
                 <DropdownMenu
                   aria-label="Más opciones"
                   classNames={{
-                    base: "min-w-[200px] p-2 rounded-lg shadow-lg border border-slate-200/80",
+                    base: "min-w-[220px] p-2 rounded-lg shadow-lg border border-slate-200/80",
                     list: "p-1 gap-0.5",
                   }}
-                  items={[
-                    ...(onExportCsv
-                      ? [
-                          {
-                            key: "exportar-csv",
-                            label: "Exportar como CSV",
-                            onPress: onExportCsv,
-                            startContent: (
-                              <Download size={16} strokeWidth={2} />
-                            ),
-                          },
-                        ]
-                      : []),
-                    ...(onExportXls
-                      ? [
-                          {
-                            key: "exportar-xls",
-                            label: "Exportar como XLS",
-                            onPress: onExportXls,
-                            startContent: (
-                              <FileSpreadsheet size={16} strokeWidth={2} />
-                            ),
-                          },
-                        ]
-                      : []),
-                    {
+                  items={(() => {
+                    // Build a flat array of menu item descriptors
+                    type MenuItem = {
+                      key: string;
+                      label: string;
+                      icon?: React.ReactNode;
+                      className?: string;
+                      onPress?: () => void;
+                      isSeparator?: boolean;
+                      textValue?: string;
+                    };
+                    const items: MenuItem[] = [];
+
+                    // ── Exportar / Imprimir (always visible, smart) ──
+                    const csvPressHandler =
+                      selectedCount > 0 && onExportCsvSelected
+                        ? onExportCsvSelected
+                        : onExportCsv;
+                    if (csvPressHandler) {
+                      items.push({
+                        key: "exportar-csv",
+                        label:
+                          selectedCount > 0
+                            ? `Exportar CSV (${selectedCount} sel.)`
+                            : "Exportar como CSV",
+                        icon: <Download size={16} strokeWidth={2} />,
+                        className:
+                          "rounded-md px-3 py-2 data-[hover=true]:bg-[#67afc3]/10 data-[focus=true]:bg-[#67afc3]/10",
+                        onPress: csvPressHandler,
+                      });
+                    }
+                    const xlsPressHandler =
+                      selectedCount > 0 && onExportXlsSelected
+                        ? onExportXlsSelected
+                        : onExportXls;
+                    if (xlsPressHandler) {
+                      items.push({
+                        key: "exportar-xls",
+                        label:
+                          selectedCount > 0
+                            ? `Exportar XLS (${selectedCount} sel.)`
+                            : "Exportar como XLS",
+                        icon: <FileSpreadsheet size={16} strokeWidth={2} />,
+                        className:
+                          "rounded-md px-3 py-2 data-[hover=true]:bg-[#67afc3]/10 data-[focus=true]:bg-[#67afc3]/10",
+                        onPress: () => handlePrint(),
+                      });
+                    }
+                    items.push({
                       key: "imprimir",
-                      label: "Imprimir",
+                      label:
+                        selectedCount > 0
+                          ? `Imprimir (${selectedCount} sel.)`
+                          : "Imprimir",
+                      icon: <Printer size={16} strokeWidth={2} />,
+                      className:
+                        "rounded-md px-3 py-2 data-[hover=true]:bg-[#67afc3]/10 data-[focus=true]:bg-[#67afc3]/10",
                       onPress: () => handlePrint(),
-                      startContent: <Printer size={16} strokeWidth={2} />,
-                    },
-                  ].filter(Boolean)}
+                    });
+
+                    // ── Bulk actions (only when items are selected) ──
+                    if (
+                      selectedCount > 0 &&
+                      bulkActionsDropdown &&
+                      bulkActionsDropdown.length > 0
+                    ) {
+                      items.push({
+                        key: "sep-bulk",
+                        label: " ",
+                        textValue: "separador",
+                        isSeparator: true,
+                        className:
+                          "h-px bg-slate-200 rounded-none my-1 p-0 data-[hover=true]:bg-slate-200",
+                      });
+                      bulkActionsDropdown.forEach((a) => {
+                        items.push({
+                          key: a.key,
+                          label: a.label,
+                          className:
+                            "rounded-md px-3 py-2 data-[hover=true]:bg-[#67afc3]/10",
+                          onPress: a.onClick,
+                        });
+                      });
+                    }
+
+                    if (selectedCount > 0 && onBulkDelete) {
+                      items.push({
+                        key: "sep-delete",
+                        label: " ",
+                        textValue: "separador",
+                        isSeparator: true,
+                        className:
+                          "h-px bg-slate-200 rounded-none my-1 p-0 data-[hover=true]:bg-slate-200",
+                      });
+                      items.push({
+                        key: "eliminar-sel",
+                        label: `Eliminar ${selectedCount} seleccionado${selectedCount !== 1 ? "s" : ""}`,
+                        className:
+                          "rounded-md px-3 py-2 text-red-600 data-[hover=true]:bg-red-50 data-[focus=true]:bg-red-50 font-medium",
+                        onPress: onBulkDelete,
+                      });
+                    }
+
+                    if (selectedCount > 0 && onClearSelection) {
+                      items.push({
+                        key: "sep-clear",
+                        label: " ",
+                        textValue: "separador",
+                        isSeparator: true,
+                        className:
+                          "h-px bg-slate-200 rounded-none my-1 p-0 data-[hover=true]:bg-slate-200",
+                      });
+                      items.push({
+                        key: "deseleccionar",
+                        label: "Deseleccionar todo",
+                        className:
+                          "rounded-md px-3 py-2 text-slate-600 data-[hover=true]:bg-slate-100 data-[focus=true]:bg-slate-100",
+                        onPress: onClearSelection,
+                      });
+                    }
+
+                    return items;
+                  })()}
                 >
                   {(item) => (
                     <DropdownItem
                       key={item.key}
-                      startContent={item.startContent}
-                      onPress={item.onPress}
-                      className="rounded-md px-3 py-2 data-[hover=true]:bg-[#67afc3]/10 data-[focus=true]:bg-[#67afc3]/10"
+                      isReadOnly={item.isSeparator}
+                      startContent={!item.isSeparator ? item.icon : undefined}
+                      onPress={!item.isSeparator ? item.onPress : undefined}
+                      textValue={item.textValue ?? item.label}
+                      className={item.className ?? ""}
                     >
                       {item.label}
                     </DropdownItem>
@@ -481,77 +598,7 @@ export default function GenericTable<T extends { Id: number | string }>({
           </div>
         </section>
 
-        {enableSelection && selectedCount >= 2 && (
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-2 p-3 sm:p-4 rounded-xl bg-[#67afc3]/10 border border-[#67afc3]/40 text-sm">
-            <div className="flex flex-col gap-1 items-center sm:items-start text-center sm:text-left">
-              <span className="font-medium text-slate-900">
-                {selectionMode === "manual"
-                  ? `${selectedCount} elemento${selectedCount !== 1 ? "s" : ""} seleccionado${selectedCount !== 1 ? "s" : ""}`
-                  : `${selectedCount} seleccionado${selectedCount !== 1 ? "s" : ""}${totalCount - selectedCount > 0 ? ` (${totalCount - selectedCount} excluido${totalCount - selectedCount !== 1 ? "s" : ""})` : ""}`}
-              </span>
-              {canScaleToAll && onScaleToAllMatching && (
-                <button
-                  type="button"
-                  onClick={onScaleToAllMatching}
-                  className="text-left text-[#67afc3] hover:underline font-medium text-xs"
-                >
-                  ¿Seleccionar los {totalCount} resultados?
-                </button>
-              )}
-            </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 w-full sm:w-auto">
-              {onClearSelection && (
-                <button
-                  type="button"
-                  onClick={onClearSelection}
-                  className="px-3 h-10 sm:h-9 flex items-center justify-center rounded-lg text-[#67afc3] hover:bg-[#67afc3]/15 font-medium transition-colors duration-150"
-                >
-                  Deseleccionar todo
-                </button>
-              )}
-              {bulkActionsDropdown && bulkActionsDropdown.length > 0 && (
-                <Dropdown>
-                  <DropdownTrigger>
-                    <button
-                      type="button"
-                      className="px-3 h-10 sm:h-9 rounded-lg font-medium transition-all duration-150 flex items-center justify-center gap-2 bg-[#67afc3] hover:bg-[#5a9db0] text-white focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40"
-                    >
-                      Acciones masivas
-                      <ChevronDown size={16} strokeWidth={2} />
-                    </button>
-                  </DropdownTrigger>
-                  <DropdownMenu
-                    aria-label="Acciones masivas"
-                    classNames={{
-                      base: "min-w-[180px] p-2 rounded-lg shadow-lg border border-slate-200/80",
-                      list: "p-1 gap-0.5",
-                    }}
-                  >
-                    {bulkActionsDropdown.map((item) => (
-                      <DropdownItem
-                        key={item.key}
-                        onPress={item.onClick}
-                        textValue={item.label}
-                        className="rounded-md px-3 py-2 data-[hover=true]:bg-[#67afc3]/10"
-                      >
-                        {item.label}
-                      </DropdownItem>
-                    ))}
-                  </DropdownMenu>
-                </Dropdown>
-              )}
-              {onBulkDelete && (
-                <button
-                  type="button"
-                  onClick={onBulkDelete}
-                  className="px-3 h-10 sm:h-9 flex items-center justify-center rounded-lg bg-red-500/90 hover:bg-red-500 text-white font-medium transition-all duration-150"
-                >
-                  Eliminar seleccionados
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+        {/* Barra de selección masiva eliminada — acciones movidas al menú "Más opciones" */}
 
         {/* Table/Cards + Pagination */}
         <div className="w-full overflow-hidden flex-1 flex flex-col h-full rounded-xl border border-slate-200/80 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
@@ -856,8 +903,8 @@ export default function GenericTable<T extends { Id: number | string }>({
                   </tr>
                 </thead>
                 <tbody>
-                  {!isLoading && !isError && data.length > 0 ? (
-                    data.map((item, idx) => (
+                  {!isLoading && !isError && printData.length > 0 ? (
+                    printData.map((item) => (
                       <tr key={String(item.Id)}>
                         {printColumns.map((col) => (
                           <td

@@ -11,7 +11,7 @@ import ClienteSearch from "./ClienteSearch";
 import ComprobanteSelector from "./ComprobanteSelector";
 import PriceListSelector from "./PriceListSelector";
 import { Producto } from "@/lib/validations/producto.schema";
-import { useVentaStore, Item } from "@/store/ventaStore";
+import { useVentaStore, Item, OrigenPrecio } from "@/store/ventaStore";
 
 type MobileTab = "productos" | "pago";
 
@@ -94,7 +94,7 @@ export default function VentasScreen() {
   };
 
   // Handlers
-  const handleAddItem = (producto: Producto, cantidad: number = 1) => {
+  const handleAddItem = (producto: Producto, cantidad: number = 1, precioOverride?: number, origenPrecio?: OrigenPrecio) => {
     try {
       const existing = items.find((i) => i.Id === producto.Id);
       const currentQty = existing ? existing.cantidad : 0;
@@ -102,7 +102,7 @@ export default function VentasScreen() {
 
       checkProductRules(producto, totalQty);
 
-      addItem(producto, cantidad, listaPrecios);
+      addItem(producto, cantidad, listaPrecios, precioOverride, origenPrecio);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Error desconocido";

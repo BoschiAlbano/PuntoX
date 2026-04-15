@@ -358,6 +358,8 @@ export default function GenericCrud<T extends { Id: number | string }>({
 
   const hasSelection = effectiveSelectedCount > 0;
 
+
+
   const handleSelectionChange = useCallback(
     (keys: Set<string> | "all") => {
       if (selectionMode === "manual") {
@@ -477,6 +479,82 @@ export default function GenericCrud<T extends { Id: number | string }>({
     fetchAllMatchingItems,
     clearSelection,
   ]);
+
+  /** Ítems de la página actual que están seleccionados (para imprimir/exportar seleccionados) */
+  const selectedItemsOnPage = useMemo(
+    () => sortedItems.filter((i) => selectedKeysForTable.has(String(i.Id))),
+    [sortedItems, selectedKeysForTable],
+  );
+
+  /** Exportar solo los ítems seleccionados como CSV */
+  const handleExportCsvSelected = useCallback(async () => {
+    if (!exportConfig || !hasSelection) return;
+    try {
+      const ctx = await getBulkSelectionContext();
+      const rows = ctx.items.map(exportConfig.mapItem);
+      if (rows.length === 0) {
+        addToast({
+          title: "Sin datos",
+          description: "No hay registros seleccionados para exportar",
+          color: "warning",
+        });
+        return;
+      }
+      exportToCsv(
+        rows,
+        exportConfig.columns,
+        `${exportConfig.filename}_seleccionados`,
+      );
+      addToast({
+        title: "Exportado",
+        description: `${rows.length} registro${
+          rows.length !== 1 ? "s" : ""
+        } exportado${rows.length !== 1 ? "s" : ""} como CSV`,
+        color: "success",
+      });
+    } catch {
+      addToast({
+        title: "Error",
+        description: "No se pudo exportar la selección",
+        color: "danger",
+      });
+    }
+  }, [exportConfig, hasSelection, getBulkSelectionContext]);
+
+  /** Exportar solo los ítems seleccionados como XLS */
+  const handleExportXlsSelected = useCallback(async () => {
+    if (!exportConfig || !hasSelection) return;
+    try {
+      const ctx = await getBulkSelectionContext();
+      const rows = ctx.items.map(exportConfig.mapItem);
+      if (rows.length === 0) {
+        addToast({
+          title: "Sin datos",
+          description: "No hay registros seleccionados para exportar",
+          color: "warning",
+        });
+        return;
+      }
+      exportToXls(
+        rows,
+        exportConfig.columns,
+        `${exportConfig.filename}_seleccionados`,
+      );
+      addToast({
+        title: "Exportado",
+        description: `${rows.length} registro${
+          rows.length !== 1 ? "s" : ""
+        } exportado${rows.length !== 1 ? "s" : ""} como Excel`,
+        color: "success",
+      });
+    } catch {
+      addToast({
+        title: "Error",
+        description: "No se pudo exportar la selección",
+        color: "danger",
+      });
+    }
+  }, [exportConfig, hasSelection, getBulkSelectionContext]);
 
   const isSaving = saveMutation.isPending || deleteMutation.isPending;
 
@@ -692,13 +770,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
         onSelectionChange={handleSelectionChange}
         selectedCount={effectiveSelectedCount}
         totalCount={paginationMeta.total}
-        canScaleToAll={
-          enableBulkActions &&
-          selectionMode === "manual" &&
-          selectedIds.size > 0 &&
-          paginationMeta.total > limit
-        }
-        onScaleToAllMatching={handleScaleToAllMatching}
+        selectedItems={selectedItemsOnPage}
         onBulkDelete={enableBulkActions ? onBulkDeleteOpen : undefined}
         onClearSelection={enableBulkActions ? clearSelection : undefined}
         bulkActionsDropdown={
@@ -719,6 +791,12 @@ export default function GenericCrud<T extends { Id: number | string }>({
                 },
               }))
             : undefined
+        }
+        onExportCsvSelected={
+          exportConfig && hasSelection ? handleExportCsvSelected : undefined
+        }
+        onExportXlsSelected={
+          exportConfig && hasSelection ? handleExportXlsSelected : undefined
         }
         printConfig={{
           title: printConfig?.title,
