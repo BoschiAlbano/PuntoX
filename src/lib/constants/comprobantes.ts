@@ -46,6 +46,12 @@ export const PERMISSIONS = {
   // Productos
   PRODUCTOS: "productos",
 
+  // Proveedores
+  PROVEEDORES: "proveedores",
+
+  // Compras
+  COMPRAS: "compras",
+
   // Empleados
   EMPLEADOS: "empleados",
 

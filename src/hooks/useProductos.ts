@@ -146,6 +146,37 @@ export const fetchProductosVentas = async ({
   };
 };
 
+/** Fetch de productos para COMPRAS — incluye PrecioCosto en la respuesta */
+export const fetchProductosCompras = async ({
+  signal,
+  search = "",
+  page = 1,
+  limit = 10,
+}: {
+  signal: AbortSignal;
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<ProductosResponse> => {
+  const params = new URLSearchParams();
+  if (search) params.append("q", search);
+  params.append("page", page.toString());
+  params.append("limit", limit.toString());
+
+  const response = await fetch(`/api/compras/productos?${params.toString()}`, { signal });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error?.message || `Error al cargar productos (${response.status})`);
+  }
+  const data = await response.json();
+
+  return {
+    data: productoListAdapter(data?.data || []),
+    meta: data?.meta || { total: 0, page: 1, limit: 10, totalPages: 0 },
+  };
+};
+
 export function useProductosVentas({
   search = "",
   page = 1,

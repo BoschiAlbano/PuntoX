@@ -360,17 +360,22 @@ async function seedSuperAdmin() {
 
       // Definir permisos para SuperAdmin (todos los permisos)
       const permisosBasicos = [
+        { clave: "ventas", descripcion: "Acceso a ventas" },
+        { clave: "caja", descripcion: "Acceso a caja" },
+        { clave: "productos", descripcion: "Acceso a productos" },
+        { clave: "proveedores", descripcion: "Acceso a proveedores" },
         {
           clave: "empleados:admin",
           descripcion: "Administración completa de empleados",
         },
-        { clave: "ventas", descripcion: "Acceso a ventas" },
-        { clave: "caja", descripcion: "Acceso a caja" },
         { clave: "clientes", descripcion: "Acceso a clientes" },
-        { clave: "productos", descripcion: "Acceso a productos" },
-        { clave: "analiticas", descripcion: "Acceso a analíticas" },
+        { clave: "reportes", descripcion: "Acceso a reportes" },
         { clave: "configuracion", descripcion: "Acceso a configuración" },
+        { clave: "sucursales", descripcion: "Acceso a sucursales" },
+        { clave: "auditoria", descripcion: "Acceso a auditoría" },
+        { clave: "analiticas", descripcion: "Acceso a analíticas" },
         { clave: "superadmin", descripcion: "Acceso de SuperAdmin" },
+        { clave: "compras", descripcion: "Acceso a compras" },
       ];
 
       // Crear y asignar permisos
