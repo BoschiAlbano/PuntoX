@@ -27,7 +27,8 @@ import {
 import { RefreshCcw, CreditCard, Banknote, Wallet, Search } from "lucide-react";
 import { TIPO_PAGO } from "@/lib/constants/comprobantes";
 import { LoadingComponent } from "../loading/loading";
-import { useCtaCte, ClienteCtaCte } from "@/hooks/useCtaCte";
+import { useCtaCte, ClienteCtaCte, MovimientoCtaCte } from "@/hooks/useCtaCte";
+import GenericTable, { Column } from "@/components/shared/GenericTable";
 
 export default function CuentasCorrientesCRUD() {
   const {
@@ -142,85 +143,100 @@ export default function CuentasCorrientesCRUD() {
     }
   };
 
+  React.useEffect(() => {
+    // Escucha teclado adicional si hiciera falta, actualmente manejado en el form principal
+  }, []);
+
+  const baseColumns: Column[] = [
+    { uid: "fecha", name: "FECHA", align: "start" },
+    { uid: "tipo", name: "TIPO", align: "start" },
+    { uid: "detalles", name: "DETALLES", align: "start" },
+    { uid: "debe", name: "DEBE", align: "center" },
+    { uid: "haber", name: "HABER", align: "center" },
+    { uid: "saldo", name: "SALDO", align: "center" },
+  ];
+
+  const renderTableCell = (item: MovimientoCtaCte, columnKey: React.Key) => {
+    switch (columnKey) {
+      case "fecha":
+        return (
+          <span className="whitespace-nowrap text-sm font-medium text-slate-700">
+            {formatDate(item.fecha)}
+          </span>
+        );
+      case "tipo":
+        return (
+          <Chip
+            size="sm"
+            className={
+              item.debe > 0
+                ? "bg-rose-100/50 text-rose-600 font-bold border border-rose-200/50 text-[10px]"
+                : "bg-emerald-100/50 text-emerald-600 font-bold border border-emerald-200/50 text-[10px]"
+            }
+          >
+            {item.tipo}
+          </Chip>
+        );
+      case "detalles":
+        return (
+          <span
+            className="whitespace-nowrap max-w-[200px] truncate block text-sm font-medium text-slate-700"
+            title={item.detalles}
+          >
+            {item.detalles}
+          </span>
+        );
+      case "debe":
+        return (
+          <span className="text-rose-500 font-semibold text-xs sm:text-sm">
+            {item.debe > 0 ? formatCurrency(item.debe) : "-"}
+          </span>
+        );
+      case "haber":
+        return (
+          <span className="text-emerald-500 font-semibold text-xs sm:text-sm">
+            {item.haber > 0 ? formatCurrency(item.haber) : "-"}
+          </span>
+        );
+      case "saldo":
+        return (
+          <span className="font-extrabold text-slate-800 text-xs sm:text-sm">
+            {formatCurrency(item.saldo)}
+          </span>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="w-full h-full relative flex flex-col gap-4">
-      <section className="w-full flex items-center sm:justify-end justify-start gap-2 sm:px-4 px-1">
-        {/* Botón de Nuevo Pago */}
-        <button
-          onClick={handleNewPago}
-          className=" px-4 h-[36px] rounded-lg border border-gray-300 bg-[#67afc3]/90 hover:bg-[#67afc3] hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 text-white cursor-pointer"
-          aria-label="Nuevo Pago"
-          disabled={!selectedClient}
-        >
-          Nuevo Pago
-        </button>
-
-        {/* Search */}
-        <div className="group flex justify-between items-center gap-2 border border-slate-200 focus-within:border-[#67afc3]/40! rounded-xl p-1.5 bg-white transition-all shadow-sm hover:shadow relative sm:w-[300px] w-full h-11 overflow-hidden">
-          <Search className="w-4 h-4 text-slate-400 ml-2 group-focus-within:text-[#67afc3] transition-colors" />
-          <input
-            placeholder="Buscar por nombre, DNI..."
-            className="flex-1 outline-none min-w-0 bg-transparent text-sm font-medium text-slate-700 placeholder:text-slate-400 placeholder:font-normal"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            aria-label="Buscar en la tabla"
-          />
-        </div>
-
-        {/* Botones */}
-        <div className="flex gap-2">
-          <button
-            className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-[#67afc3]/40 transition-all shadow-sm group disabled:opacity-50"
-            title="Actualizar datos"
-            aria-label="Actualizar datos de la tabla"
-            onClick={handleSearch}
-            disabled={isLoadingClients}
-          >
-            <RefreshCcw
-              size={18}
-              strokeWidth={2.5}
-              className={`text-slate-500 group-hover:text-[#67afc3] transition-colors ${
-                isLoadingClients ? "animate-spin text-[#67afc3]" : ""
-              }`}
-              aria-hidden="true"
-            />
-          </button>
-          
-          <button
-            onClick={handleNewPago}
-            className="px-4 h-11 rounded-xl bg-[#67afc3] hover:bg-[#5a9db0] transition-colors disabled:opacity-50 hover:shadow shadow-sm disabled:shadow-none text-white font-semibold cursor-pointer shrink-0"
-            aria-label="Nuevo Pago"
-            disabled={!selectedClient}
-          >
-            Nuevo Pago
-          </button>
-        </div>
-      </section>
-
       {selectedClient && (
-        <Card className="bg-linear-to-r from-slate-50 to-white border border-slate-100 shadow-sm rounded-2xl mx-1 sm:mx-4">
-          <CardBody className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-4 px-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#67afc3] to-[#2dd4bf] text-white flex items-center justify-center font-bold text-lg shadow-sm shrink-0">
+        <Card className="bg-white border border-slate-200/60 shadow-lg shadow-slate-200/40 rounded-xl sm:rounded-2xl mx-1 sm:mx-4 overflow-hidden relative">
+          <div className="absolute top-0 left-0 w-1 sm:w-1.5 h-full bg-linear-to-b from-[#67afc3] to-[#2dd4bf]" />
+          <CardBody className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-6 py-3 sm:py-5 px-3 sm:px-6">
+            <div className="flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/30 flex items-center justify-center font-bold text-base sm:text-xl text-[#67afc3] shadow-sm shrink-0">
                 {selectedClient.Nombre?.[0] || ""}
                 {selectedClient.Apellido?.[0] || ""}
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-800">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base sm:text-xl font-bold text-slate-800 tracking-tight truncate leading-tight">
                   {selectedClient.Nombre} {selectedClient.Apellido}
                 </h3>
-                <p className="text-sm font-medium text-slate-500">
+                <p className="text-[11px] sm:text-sm font-medium text-slate-500 mt-[1px] truncate">
                   DNI: {selectedClient.Dni || "N/A"}
                 </p>
               </div>
             </div>
-            <div className="flex flex-col items-start sm:items-end bg-white border border-slate-100 rounded-xl px-4 py-2 w-full sm:w-auto">
-              <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Saldo Actual</span>
+            <div className="flex flex-row sm:flex-col justify-between items-center sm:items-end bg-slate-50 sm:bg-transparent border border-slate-200/60 sm:border-transparent rounded-lg sm:rounded-xl px-3 py-2 sm:p-0 w-full sm:w-auto">
+              <span className="text-[9px] sm:text-[11px] uppercase tracking-wider font-bold text-slate-500 sm:mb-0.5">
+                Saldo Actual
+              </span>
               <span
-                className={`text-xl font-bold ${
+                className={`text-lg sm:text-2xl font-extrabold ${
                   (movements[movements.length - 1]?.saldo || 0) > 0
-                    ? "text-red-500"
+                    ? "text-rose-500"
                     : "text-emerald-500"
                 }`}
               >
@@ -231,63 +247,39 @@ export default function CuentasCorrientesCRUD() {
         </Card>
       )}
 
-      <div className="flex-1 overflow-auto rounded-2xl border border-slate-100 shadow-sm bg-white mx-1 sm:mx-4 mb-4">
-        <Table
-          aria-label="Tabla de cuenta corriente"
-          className="bg-white rounded-lg border-none"
-          classNames={{
-            wrapper:
-              "bg-white h-full shadow-none rounded-2xl border-none sm:p-4 p-2",
-            th: "bg-slate-50 border-b border-slate-100 text-slate-400 text-[11px] font-bold uppercase tracking-wider h-11",
-            base: "bg-transparent h-full shadow-none",
-            td: "py-3.5 text-sm font-medium text-slate-600 border-b border-slate-50 last:border-none",
+      <div
+        className="flex-1 w-full px-1 sm:px-4 pb-4 focus:outline-none focus:ring-0"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleSearch();
+          }
+        }}
+      >
+        <GenericTable
+          data={movements.map((m) => ({ ...m, Id: m.id }))}
+          columns={baseColumns}
+          defaultVisibleUidsMobile={["debe", "haber", "saldo"]}
+          renderCell={renderTableCell as any}
+          isLoading={isLoadingMovements}
+          isError={false}
+          emptyText="Sin movimientos registrados"
+          search={query}
+          onSearchChange={setQuery}
+          searchPlaceholder="Buscar por nombre o DNI (Presione Entrar)..."
+          page={1}
+          onPageChange={() => {}}
+          paginationMeta={{
+            totalPages: 1,
+            limit: 1000,
+            total: movements.length,
+            page: 1,
           }}
-        >
-          <TableHeader>
-            <TableColumn>FECHA</TableColumn>
-            <TableColumn>TIPO</TableColumn>
-            <TableColumn>DETALLES</TableColumn>
-            <TableColumn align="end">DEBE</TableColumn>
-            <TableColumn align="end">HABER</TableColumn>
-            <TableColumn align="end">SALDO</TableColumn>
-          </TableHeader>
-          <TableBody
-            items={movements}
-            isLoading={isLoadingMovements}
-            loadingContent={
-              <LoadingComponent message="Cargando movimientos..." />
-            }
-            emptyContent={"Sin movimientos registrados"}
-          >
-            {(item) => (
-              <TableRow key={item.id}>
-                <TableCell>{formatDate(item.fecha)}</TableCell>
-                <TableCell>
-                  <Chip
-                    size="sm"
-                    className={
-                      item.debe > 0
-                        ? "bg-amber-100/50 text-amber-600 font-bold"
-                        : "bg-emerald-100/50 text-emerald-600 font-bold"
-                    }
-                  >
-                    {item.tipo}
-                  </Chip>
-                </TableCell>
-                <TableCell>{item.detalles}</TableCell>
-                <TableCell className="text-danger font-medium">
-                  {item.debe > 0 ? formatCurrency(item.debe) : "-"}
-                </TableCell>
-                <TableCell className="text-success font-medium">
-                  {item.haber > 0 ? formatCurrency(item.haber) : "-"}
-                </TableCell>
-                <TableCell className="font-bold">
-                  {formatCurrency(item.saldo)}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+          onRefresh={handleSearch}
+          isRefreshing={isLoadingClients}
+          onNewClick={selectedClient ? handleNewPago : undefined}
+          newButtonText="Nuevo Pago"
+        />
       </div>
 
       <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl">
@@ -326,9 +318,6 @@ export default function CuentasCorrientesCRUD() {
                             </div>
                           </div>
                         </div>
-                        <Button size="sm" className="bg-slate-100 text-slate-600 font-semibold group-hover:bg-[#67afc3] group-hover:text-white transition-all shadow-sm">
-                          Seleccionar
-                        </Button>
                       </div>
                     ))}
                   </div>
@@ -355,13 +344,14 @@ export default function CuentasCorrientesCRUD() {
           header: "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8",
           body: "py-6 px-6 sm:px-8",
           footer: "border-t border-slate-100/60 py-4 px-6 sm:px-8",
-          closeButton: "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
+          closeButton:
+            "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
         }}
       >
         <ModalContent>
           {(onClose) => (
             <>
-               <ModalHeader className="flex flex-col gap-1">
+              <ModalHeader className="flex flex-col gap-1">
                 <div className="flex items-center gap-4">
                   <div className="p-2.5 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 shadow-sm">
                     <Banknote className="w-5 h-5 text-[#67afc3]" />
@@ -435,7 +425,11 @@ export default function CuentasCorrientesCRUD() {
                 </div>
               </ModalBody>
               <ModalFooter>
-                <Button variant="light" onPress={onClose} className="font-medium text-slate-500 hover:bg-slate-100 h-11 px-5 rounded-[10px]">
+                <Button
+                  variant="light"
+                  onPress={onClose}
+                  className="font-medium text-slate-500 hover:bg-slate-100 h-11 px-5 rounded-[10px]"
+                >
                   Cancelar
                 </Button>
                 <Button

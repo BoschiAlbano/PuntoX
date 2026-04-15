@@ -154,6 +154,8 @@ interface GenericTableProps<T> {
     orientation?: "portrait" | "landscape";
     filters?: string;
   };
+  /** Columnas opcionales forzadas por defecto en modo celular */
+  defaultVisibleUidsMobile?: string[];
   /** Modo cards: cuando se provee renderCards, se muestra toggle tabla/cards */
   viewMode?: "table" | "cards";
   onViewModeChange?: (mode: "table" | "cards") => void;
@@ -201,6 +203,7 @@ export default function GenericTable<T extends { Id: number | string }>({
   bulkActionsDropdown,
   extraSearchContent,
   printConfig,
+  defaultVisibleUidsMobile,
   viewMode = "table",
   onViewModeChange,
   renderCards,
@@ -211,6 +214,9 @@ export default function GenericTable<T extends { Id: number | string }>({
   const selectableColumns = columns.filter((c) => c.uid !== "acciones");
   const [visibleUids, setVisibleUids] = useState<Set<string>>(() => {
     if (typeof window !== "undefined" && window.innerWidth < 640) {
+      if (defaultVisibleUidsMobile && defaultVisibleUidsMobile.length > 0) {
+        return new Set(defaultVisibleUidsMobile);
+      }
       const defaultDesc =
         columns.find((c) => c.uid.toLowerCase() === "descripcion") ||
         columns.find((c) => c.uid !== "acciones" && c.uid !== "Id");
