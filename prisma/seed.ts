@@ -5,7 +5,11 @@ import * as fs from "fs";
 import * as path from "path";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { PerfilTipo, Prisma } from "./generated/prisma";
+import { fileURLToPath } from "url";
 import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Condiciones de IVA estándar de Argentina
 const condicionesIva = [
@@ -485,8 +489,10 @@ async function seedCondicionesIva() {
   console.log("🌱 Cargando condiciones de IVA...");
 
   for (const descripcion of condicionesIva) {
-    await db.condicionIva.create({
-      data: {
+    await db.condicionIva.upsert({
+      where: { Descripcion: descripcion },
+      update: { EstaEliminado: false },
+      create: {
         Descripcion: descripcion,
         EstaEliminado: false,
       },
@@ -498,8 +504,15 @@ async function seedIva() {
   console.log("🌱 Cargando IVA...");
 
   for (const iva of ivas) {
-    await db.iva.create({
-      data: {
+    await db.iva.upsert({
+      where: { Id: iva.Id },
+      update: {
+        Descripcion: iva.Descripcion,
+        Porcentaje: iva.Porcentaje,
+        EstaEliminado: false,
+      },
+      create: {
+        Id: iva.Id,
         Descripcion: iva.Descripcion,
         Porcentaje: iva.Porcentaje,
         EstaEliminado: false,
