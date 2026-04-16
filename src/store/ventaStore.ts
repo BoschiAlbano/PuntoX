@@ -131,7 +131,13 @@ export const useVentaStore = create<VentaState>()(
       },
 
       setCliente: (cliente) => set({ cliente }),
-      setTipoComprobante: (tipoComprobante) => set({ tipoComprobante }),
+      setTipoComprobante: (tipoComprobante) =>
+        set((state) => {
+          if (tipoComprobante !== TIPO_COMPROBANTE_VENTA.NOTA_CREDITO) {
+            return { tipoComprobante, numeroComprobanteAsociado: null };
+          }
+          return { tipoComprobante };
+        }),
       setListaPrecios: (listaPrecios) => set({ listaPrecios }),
       setDescuentoPorcentaje: (descuentoPorcentaje) =>
         set({ descuentoPorcentaje }),

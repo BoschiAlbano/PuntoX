@@ -69,7 +69,8 @@ export default function ComprobanteSelector({
 
       {tipoComprobante === TIPO_COMPROBANTE_VENTA.NOTA_CREDITO && (
         <Input
-          label="Nro. Factura"
+          placeholder="Nro. Factura"
+          aria-label="Número de Factura"
           size="sm"
           className="w-32"
           type="number"

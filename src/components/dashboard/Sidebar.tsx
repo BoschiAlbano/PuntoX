@@ -282,6 +282,24 @@ const menuSections: MenuSection[] = [
       {
         icon: (
           <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="w-5 h-5"
+          >
+            <path
+              fillRule="evenodd"
+              d="M1 4.25A2.25 2.25 0 0 1 3.25 2h13.5A2.25 2.25 0 0 1 19 4.25v2.531a.75.75 0 0 1-.75.75H1.75a.75.75 0 0 1-.75-.75V4.25ZM2 8.5h16v7.25A2.25 2.25 0 0 1 15.75 18H3.25A2.25 2.25 0 0 1 1 15.75V8.5Z"
+              clipRule="evenodd"
+            />
+          </svg>
+        ),
+        label: "Cuentas Cte. Prov.",
+        href: "/proveedores/cuentas-corrientes",
+      },
+      {
+        icon: (
+          <svg
             className="w-5 h-5"
             fill="none"
             stroke="currentColor"

@@ -32,6 +32,7 @@ const routeNames: Record<string, string> = {
   "/compras": "Compras",
   "/clientes": "Clientes",
   "/clientes/cuentas-corrientes": "Cuentas Corrientes",
+  "/proveedores/cuentas-corrientes": "Cuentas Cte. Prov.",
   "/empleados": "Empleados",
   "/empleados/roles": "Roles",
   "/empleados/auditoria": "Auditoría",

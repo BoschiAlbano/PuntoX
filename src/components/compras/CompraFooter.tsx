@@ -116,8 +116,11 @@ export default function CompraFooter({
         { key: TIPO_PAGO.TARJETA, label: "Tarjeta" },
         { key: TIPO_PAGO.TRANSFERENCIA, label: "Transferencia" },
         { key: TIPO_PAGO.CHEQUE, label: "Cheque" },
+        ...(proveedor
+          ? [{ key: TIPO_PAGO.CUENTA_CORRIENTE, label: "Cta. Corriente" }]
+          : []),
       ].filter((option) => !pagos.some((p) => p.tipoPago === option.key)),
-    [pagos],
+    [pagos, proveedor],
   );
 
   const handleAddPayment = () => {
@@ -189,6 +192,8 @@ export default function CompraFooter({
         return "Cheque";
       case TIPO_PAGO.TRANSFERENCIA:
         return "Transf.";
+      case TIPO_PAGO.CUENTA_CORRIENTE:
+        return "Cta. Corriente";
       default:
         return "Otro";
     }
@@ -204,6 +209,8 @@ export default function CompraFooter({
         return <ArrowRightLeft size={size} className="text-purple-500" />;
       case TIPO_PAGO.CHEQUE:
         return <Wallet size={size} className="text-orange-500" />;
+      case TIPO_PAGO.CUENTA_CORRIENTE:
+        return <Building2 size={size} className="text-[#67afc3]" />;
       default:
         return <Wallet size={size} className="text-slate-500" />;
     }

@@ -274,7 +274,7 @@ export async function POST(req: NextRequest) {
       }
 
       // 6. Movimiento de SALIDA en caja (egreso de dinero)
-      await tx.movimiento.create({
+      const movimiento = await tx.movimiento.create({
         data: {
           CajaId: caja.Id,
           ComprobanteId: comprobante.Id,
@@ -288,6 +288,24 @@ export async function POST(req: NextRequest) {
           SucursalId: sucursalId,
         },
       });
+
+      // 7. Cta Cte Proveedor
+      const hasCtaCte = data.formasPago.some((fp) => fp.tipoPago === TIPO_PAGO.CUENTA_CORRIENTE);
+      if (hasCtaCte) {
+        await tx.movimiento_CuentaCorrienteProveedor.create({
+          data: {
+            Id: movimiento.Id,
+            ProveedorId: BigInt(data.proveedorId),
+          },
+        });
+        await tx.comprobante_CtaCteProveedor.create({
+          data: {
+            Id: comprobante.Id,
+            ProveedorId: BigInt(data.proveedorId),
+            Estado: 1, // Ej: 1 para Deuda Pendiente
+          },
+        });
+      }
 
       return comprobante;
     }, { timeout: 30000 });
