@@ -23,17 +23,22 @@ export async function GET(req: NextRequest) {
     };
 
     // Determinar si el término de búsqueda es numérico (código exacto)
+    // Además verificamos que no exceda el límite de un entero de 32 bits para Prisma (max 2147483647)
     const isNumericSearch = q && /^\d+$/.test(q);
-    const codeNum = isNumericSearch ? parseInt(q) : NaN;
+    const codeNum = isNumericSearch ? parseInt(q, 10) : NaN;
+    const isValidInt = isNumericSearch && !isNaN(codeNum) && codeNum <= 2147483647;
 
     if (q) {
       if (isNumericSearch) {
         // Para búsquedas numéricas: buscar por Código exacto, CodigoBarra, o Descripción
-        where.OR = [
-          { Codigo: codeNum },
+        const orConditions: any[] = [
           { CodigoBarra: { contains: q, mode: "insensitive" } },
           { Descripcion: { contains: q, mode: "insensitive" } },
         ];
+        if (isValidInt) {
+          orConditions.unshift({ Codigo: codeNum });
+        }
+        where.OR = orConditions;
       } else {
         where.OR = [
           { Descripcion: { contains: q, mode: "insensitive" } },
@@ -45,7 +50,7 @@ export async function GET(req: NextRequest) {
     // Para búsquedas numéricas, primero buscar coincidencia exacta por código
     // para garantizar que aparezca primero en los resultados
     let exactCodeMatch: any[] = [];
-    if (isNumericSearch) {
+    if (isValidInt) {
       exactCodeMatch = await prisma.articulo.findMany({
         where: {
           TenantId: BigInt(tenantId),

@@ -23,15 +23,19 @@ export async function GET(req: NextRequest) {
     };
 
     const isNumericSearch = q && /^\d+$/.test(q);
-    const codeNum = isNumericSearch ? parseInt(q) : NaN;
+    const codeNum = isNumericSearch ? parseInt(q, 10) : NaN;
+    const isValidInt = isNumericSearch && !isNaN(codeNum) && codeNum <= 2147483647;
 
     if (q) {
       if (isNumericSearch) {
-        where.OR = [
-          { Codigo: codeNum },
+        const orConditions: any[] = [
           { CodigoBarra: { contains: q, mode: "insensitive" } },
           { Descripcion: { contains: q, mode: "insensitive" } },
         ];
+        if (isValidInt) {
+          orConditions.unshift({ Codigo: codeNum });
+        }
+        where.OR = orConditions;
       } else {
         where.OR = [
           { Descripcion: { contains: q, mode: "insensitive" } },
@@ -77,7 +81,7 @@ export async function GET(req: NextRequest) {
 
     // Coincidencia exacta por código primero
     let exactCodeMatch: any[] = [];
-    if (isNumericSearch) {
+    if (isValidInt) {
       exactCodeMatch = await prisma.articulo.findMany({
         where: { TenantId: BigInt(tenantId), EstaEliminado: false, Codigo: codeNum },
         select: selectFields,

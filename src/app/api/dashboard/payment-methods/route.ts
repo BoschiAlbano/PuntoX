@@ -1,20 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
-import { TIPO_COMPROBANTE_VENTA, PERMISSIONS, GET_PERMISSIONS, TIPO_PAGO } from "@/lib/constants/comprobantes";
+import {
+  TIPO_COMPROBANTE_VENTA,
+  TIPO_PAGO,
+} from "@/lib/constants/comprobantes";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 
 export async function GET(req: NextRequest) {
   try {
     const { tenantId, sucursalId } = await getAuthContext({
       req,
-      permission: GET_PERMISSIONS.ANALITICAS,
     });
 
     if (!sucursalId) {
       return NextResponse.json(
         { error: "Sucursal no especificada" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -33,7 +35,11 @@ export async function GET(req: NextRequest) {
       fechaFinLt.setDate(fechaFinLt.getDate() + 1);
     } else {
       const now = new Date();
-      fechaInicioGte = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      fechaInicioGte = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+      );
       fechaFinLt = new Date(fechaInicioGte);
       fechaFinLt.setDate(fechaFinLt.getDate() + 1);
     }
@@ -64,33 +70,39 @@ export async function GET(req: NextRequest) {
       // Don't return early with empty array, proceed to generate 0% items
     }
 
-    const pagosAgrupados = totalPagos > 0 ? await prisma.formaPago.groupBy({
-      by: ["TipoPago"],
-      where: {
-        TenantId: tenantIdBigInt,
-        EstaEliminado: false,
-        ComprobanteId: { not: null },
-        Comprobante: {
-          SucursalId: sucursalIdBigInt,
-          Fecha: { gte: fechaInicioGte, lt: fechaFinLt },
-          EstaEliminado: false,
-          TipoComprobante: { in: tiposVenta },
-        },
-      },
-      _count: { Id: true },
-      _sum: { Monto: true },
-      orderBy: {
-        _count: { Id: "desc" },
-      },
-      take: 10,
-    }) : [];
+    const pagosAgrupados =
+      totalPagos > 0
+        ? await prisma.formaPago.groupBy({
+            by: ["TipoPago"],
+            where: {
+              TenantId: tenantIdBigInt,
+              EstaEliminado: false,
+              ComprobanteId: { not: null },
+              Comprobante: {
+                SucursalId: sucursalIdBigInt,
+                Fecha: { gte: fechaInicioGte, lt: fechaFinLt },
+                EstaEliminado: false,
+                TipoComprobante: { in: tiposVenta },
+              },
+            },
+            _count: { Id: true },
+            _sum: { Monto: true },
+            orderBy: {
+              _count: { Id: "desc" },
+            },
+            take: 10,
+          })
+        : [];
 
-    const mapTipoPago = Object.entries(TIPO_PAGO).reduce((acc, [key, value]) => {
-      acc[value] = key.replace("_", " ");
-      return acc;
-    }, {} as Record<number, string>);
+    const mapTipoPago = Object.entries(TIPO_PAGO).reduce(
+      (acc, [key, value]) => {
+        acc[value] = key.replace("_", " ");
+        return acc;
+      },
+      {} as Record<number, string>,
+    );
 
-    let paymentMethods = Object.keys(mapTipoPago).map(key => ({
+    let paymentMethods = Object.keys(mapTipoPago).map((key) => ({
       TipoPago: Number(key),
       name: mapTipoPago[Number(key)],
       pct: 0,
@@ -102,8 +114,10 @@ export async function GET(req: NextRequest) {
       pagosAgrupados.forEach((item) => {
         const transacciones = item._count.Id;
         const pct = (transacciones / totalPagos) * 100;
-        
-        const index = paymentMethods.findIndex(p => p.TipoPago === item.TipoPago);
+
+        const index = paymentMethods.findIndex(
+          (p) => p.TipoPago === item.TipoPago,
+        );
         if (index !== -1) {
           paymentMethods[index].pct = Number(pct.toFixed(1));
           paymentMethods[index].money = Number(item._sum.Monto || 0);

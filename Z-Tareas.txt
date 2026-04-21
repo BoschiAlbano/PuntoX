@@ -1,9 +1,9 @@
-1- Mejorar el sistema de permisos. (controlar)
+1- Mejorar el sistema de permisos. (controlar) ✔️
 2- un usuario administrador deberia poder cerrar caja de otro usuario que la dejo abierta. o deberia manejar una sola caja.
-3- 
-
-
-
+3- al abrir un modal los compoenentes sidebar y dashboardhead deberian estar inaccesibles.
+4- el modal de roles es muy grande
+5- imagenes de productos y logos
+6- actualizacion de precios masiva
 
 
 Scripts importantes:

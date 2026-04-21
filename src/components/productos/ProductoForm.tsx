@@ -16,6 +16,8 @@ import {
   AccordionItem,
   Chip,
   addToast,
+  Autocomplete,
+  AutocompleteItem,
 } from "@heroui/react";
 import { Producto } from "@/lib/validations/producto.schema";
 import { GenericFormProps } from "@/components/shared/GenericCrud";
@@ -594,36 +596,36 @@ export default function ProductoForm({
                 <div className="space-y-5 pt-5">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center gap-2">
-                      <Select
+                      <Autocomplete
                         label="Marca"
                         placeholder="Seleccione una marca"
-                        selectedKeys={
-                          formData.MarcaId ? [formData.MarcaId.toString()] : []
+                        selectedKey={
+                          formData.MarcaId ? formData.MarcaId.toString() : null
                         }
-                        onChange={(e) =>
+                        onSelectionChange={(key) =>
                           setFormData({
                             ...formData,
-                            MarcaId: parseInt(e.target.value),
+                            MarcaId: key ? parseInt(key.toString()) : 0,
                           })
                         }
                         isRequired
                         isDisabled={isSaving}
                       >
                         {isLoadingMarcas ? (
-                          <SelectItem key="0" textValue="Cargando...">
+                          <AutocompleteItem key="0" textValue="Cargando...">
                             Cargando...
-                          </SelectItem>
+                          </AutocompleteItem>
                         ) : (
                           marcas?.map((marca: any) => (
-                            <SelectItem
+                            <AutocompleteItem
                               key={marca.Id.toString()}
                               textValue={marca.Descripcion}
                             >
                               {marca.Descripcion}
-                            </SelectItem>
+                            </AutocompleteItem>
                           ))
                         )}
-                      </Select>
+                      </Autocomplete>
                       <Button
                         color="primary"
                         variant="flat"
@@ -635,36 +637,36 @@ export default function ProductoForm({
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Select
+                      <Autocomplete
                         label="Rubro"
                         placeholder="Seleccione un rubro"
-                        selectedKeys={
-                          formData.RubroId ? [formData.RubroId.toString()] : []
+                        selectedKey={
+                          formData.RubroId ? formData.RubroId.toString() : null
                         }
-                        onChange={(e) =>
+                        onSelectionChange={(key) =>
                           setFormData({
                             ...formData,
-                            RubroId: parseInt(e.target.value),
+                            RubroId: key ? parseInt(key.toString()) : 0,
                           })
                         }
                         isRequired
                         isDisabled={isSaving}
                       >
                         {isLoadingRubros ? (
-                          <SelectItem key="0" textValue="Cargando...">
+                          <AutocompleteItem key="0" textValue="Cargando...">
                             Cargando...
-                          </SelectItem>
+                          </AutocompleteItem>
                         ) : (
                           rubros?.map((rubro: any) => (
-                            <SelectItem
+                            <AutocompleteItem
                               key={rubro.Id.toString()}
                               textValue={rubro.Descripcion}
                             >
                               {rubro.Descripcion}
-                            </SelectItem>
+                            </AutocompleteItem>
                           ))
                         )}
-                      </Select>
+                      </Autocomplete>
                       <Button
                         color="primary"
                         variant="flat"
@@ -676,38 +678,38 @@ export default function ProductoForm({
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Select
+                      <Autocomplete
                         label="Unidad de Medida"
                         placeholder="Seleccione unidad"
-                        selectedKeys={
+                        selectedKey={
                           formData.UnidadMedidaId
-                            ? [formData.UnidadMedidaId.toString()]
-                            : []
+                            ? formData.UnidadMedidaId.toString()
+                            : null
                         }
-                        onChange={(e) =>
+                        onSelectionChange={(key) =>
                           setFormData({
                             ...formData,
-                            UnidadMedidaId: parseInt(e.target.value),
+                            UnidadMedidaId: key ? parseInt(key.toString()) : 0,
                           })
                         }
                         isRequired
                         isDisabled={isSaving}
                       >
                         {isLoadingUnidades ? (
-                          <SelectItem key="0" textValue="Cargando...">
+                          <AutocompleteItem key="0" textValue="Cargando...">
                             Cargando...
-                          </SelectItem>
+                          </AutocompleteItem>
                         ) : (
                           unidades?.map((unidad: any) => (
-                            <SelectItem
+                            <AutocompleteItem
                               key={unidad.Id.toString()}
                               textValue={unidad.Descripcion}
                             >
                               {unidad.Descripcion}
-                            </SelectItem>
+                            </AutocompleteItem>
                           ))
                         )}
-                      </Select>
+                      </Autocomplete>
 
                       <Button
                         color="primary"

@@ -2,19 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS, GET_PERMISSIONS } from "@/lib/constants/comprobantes";
 
 export async function GET(req: NextRequest) {
   try {
     const { tenantId, sucursalId } = await getAuthContext({
       req,
-      permission: GET_PERMISSIONS.ANALITICAS,
     });
 
     if (!sucursalId) {
       return NextResponse.json(
         { error: "Sucursal no especificada" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -54,7 +52,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       lowStockItems: processedItems,
-      totalCount: processedItems.length
+      totalCount: processedItems.length,
     });
   } catch (error) {
     return handleError(error);
