@@ -35,46 +35,30 @@ export const TIPO_MOVIMIENTO = {
   ENTRADA: 1,
   SALIDA: 2,
 } as const;
-// Permisos
-export const PERMISSIONS = {
-  // Ventas
-  VENTAS: "ventas",
-
-  // Caja
-  CAJA: "caja",
-
-  // Productos
-  PRODUCTOS: "productos",
-
-  // Proveedores
-  PROVEEDORES: "proveedores",
-
-  // Compras
-  COMPRAS: "compras",
-
-  // Empleados
-  EMPLEADOS: "empleados",
-
-  // Clientes
-  CLIENTES: "clientes",
-
-  // Reportes
-  REPORTES: "reportes",
-
-  // Configuración
-  CONFIGURACION: "configuracion",
-
-  // Sucursales
-  SUCURSALES: "sucursales",
-
-  // Auditoría
-  AUDITORIA: "auditoria",
-
-  // Analíticas
-  ANALITICAS: "analiticas",
-} as const;
-
-export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+// Permisos — re-exportado desde el módulo canónico
+export {
+  PERMISSIONS,
+  PERMISSION_DEFINITIONS,
+  PAGE_PERMISSIONS,
+  GET_PERMISSIONS,
+  SET_PERMISSIONS,
+  PERMISSION_MODULES,
+  PERMISSION_MODULE_LABELS,
+  ALL_PERMISSIONS,
+  PERMISSION_DESCRIPTIONS,
+  getModuleLabel,
+  getPermissionDescription,
+  getModulePermissions,
+  WRITABLE_MODULES,
+} from "@/lib/constants/permissions";
+export type {
+  Permission,
+  PagePermission,
+  GetPermission,
+  SetPermission,
+  PermissionModule,
+  WritablePermissionModule,
+} from "@/lib/constants/permissions";
 
 // Tipos de perfil
 export const TIPO_PERFIL = {

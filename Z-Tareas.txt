@@ -1,44 +1,10 @@
-USUARIOS ❌❌❌ VER MAS ADELANTE
-1- Hacer mas fino el sistema de permisos.
-    tener mas cuidado con los permisos.
-        si el usuario no tiene permisos de configuracion, no puede traer la configuracion ni entrar a la pagina.
-        lo mismo para sucursales, no puede traer sucursales ni entrar a la pagina o cambiar de sucursal.
-
-2- Acciones de usuarios. Solo se puede modificar el mismo o a otros usuarios? ✔✔✔
-
-
-VENTAS
-1- 2 + 5 + 5 + 1 = 13 digitos
-CUANDO IMPRIME PRECIO: no se usan decimales porque solo hay 5 digitos para el precio. 00500 = $500  $99999
-CUANDO IMPRIME PESO: se usan 3 decimales para los gramos. 00500 = 500g  - 99,999G
-
-//Ejemplo: 2000001005001 - Articulo venta por unidad
-//PP: 20
-//CCC: 00001 - 9999
-//VVVVVVV: 00500
-//D: 1
-
-//Ejemplo: 2000002005001 - Articulo venta por peso
-//PP: 20
-//CCCCC: 00002
-//VVVVV: 00500
-//D: 1
-
-Nota: El ultimo digito es para saber si se le vien el codigo, es el resultado del modulo 10 de los 12 digitos anteriores.
+1- Mejorar el sistema de permisos.
+2- un usuario administrador deberia poder cerrar caja de otro usuario que la dejo abierta.
+3- 
 
 
 
-IMPRIME TICKET =>  para mejorar la resultado de la impresion usar https://parzibyte.me/http-esc-pos-desktop-docs/es/
-ya que ahora imprime una imagen y pierde calidad.  y no se puede cortar el ticket. por otro lado si se usa este servideor
-se pueded enviar comandos ESC/POS directamente a la impresora. y se puede cortar el ticket.
 
 
-FALTAN COSAS => 
-1- Cuentas corrientes de clientes.
-2- Proveedores, Cuentas corrientes de proveedores y Compras.
-3- Actualizar Precios.
-
-A FUTURO => 
-1- Cambiar precios por listas de precios.
-2- Mejorar la impresion de tickets.
-3- implementar afip.
+Scripts importantes:
+npx tsx scripts/sync-permisos.ts

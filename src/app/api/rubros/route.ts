@@ -1,30 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/constants/comprobantes";
+import { GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import {
   createRubroSchema,
   updateRubroSchema,
 } from "@/lib/validations/rubro.schema";
-import { ZodError } from "zod";
 
 import {
   parsePaginationParams,
   createPaginationResponse,
 } from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
+import { Prisma } from "../../../../prisma/generated/prisma";
 
 export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.PRODUCTOS, // Permiso de productos para rubros
+      permission: GET_PERMISSIONS.PRODUCTOS, // Permiso de productos para rubros
     });
 
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
     const limitParam = req.nextUrl.searchParams.get("limit");
 
-    const where: any = {
+    const where: Prisma.RubroWhereInput = {
       TenantId: BigInt(tenantId),
     };
 
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.PRODUCTOS,
+      permission: SET_PERMISSIONS.PRODUCTOS,
     });
 
     const body = await req.json();
@@ -121,20 +121,6 @@ export async function POST(req: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    // Manejo de errores de validación de Zod
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        {
-          error: "Datos inválidos",
-          details: error.issues.map((issue) => ({
-            field: issue.path.join("."),
-            message: issue.message,
-          })),
-        },
-        { status: 400 },
-      );
-    }
-
     return handleError(error);
   }
 }
@@ -143,7 +129,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.PRODUCTOS,
+      permission: SET_PERMISSIONS.PRODUCTOS,
     });
 
     const idParam =
@@ -190,7 +176,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.PRODUCTOS,
+      permission: SET_PERMISSIONS.PRODUCTOS,
     });
 
     const body = await req.json();
@@ -221,20 +207,6 @@ export async function PATCH(req: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    // Manejo de errores de validación de Zod
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        {
-          error: "Datos inválidos",
-          details: error.issues.map((issue) => ({
-            field: issue.path.join("."),
-            message: issue.message,
-          })),
-        },
-        { status: 400 },
-      );
-    }
-
     return handleError(error);
   }
 }

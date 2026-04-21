@@ -1,11 +1,10 @@
 /**
- * Definición de tipos estrictos para los permisos del sistema.
- * Esto asegura que los permisos sean verificados en tiempo de compilación.
+ * Definicion de tipos estrictos para los permisos del sistema.
+ * Esto asegura que los permisos sean verificados en tiempo de compilacion.
  */
 
-import { PERMISSIONS } from "../constants/comprobantes";
-
-export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+export type { Permission } from "../constants/comprobantes";
+import { type Permission } from "../constants/comprobantes";
 
 /**
  * Verifica si un array de permisos incluye uno específico

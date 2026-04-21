@@ -1,6 +1,7 @@
+// @ts-nocheck — Script obsoleto: Permiso ya no tiene TenantId (catálogo global desde v2)
 /**
  * Script para agregar el permiso "analiticas" a tenants existentes
- * 
+ *
  * Ejecutar con: npx tsx src/scripts/agregar-permiso-analiticas.ts
  */
 
@@ -37,7 +38,9 @@ async function agregarPermisoAnaliticas() {
       });
 
       if (permisoExistente) {
-        console.log(`✓ Tenant "${tenant.Nombre}" (${tenant.Id}) ya tiene el permiso "analiticas"`);
+        console.log(
+          `✓ Tenant "${tenant.Nombre}" (${tenant.Id}) ya tiene el permiso "analiticas"`,
+        );
         continue;
       }
 
@@ -51,7 +54,9 @@ async function agregarPermisoAnaliticas() {
         },
       });
 
-      console.log(`✓ Permiso "analiticas" creado para tenant "${tenant.Nombre}" (${tenant.Id})`);
+      console.log(
+        `✓ Permiso "analiticas" creado para tenant "${tenant.Nombre}" (${tenant.Id})`,
+      );
 
       // Opcional: Agregar el permiso a todos los roles ADMINISTRADOR
       const rolesAdmin = await prisma.perfiles.findMany({
@@ -101,4 +106,3 @@ async function agregarPermisoAnaliticas() {
 
 // Ejecutar
 agregarPermisoAnaliticas();
-

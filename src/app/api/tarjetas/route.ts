@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
 
 // GET: Listar tarjetas configuradas
 export async function GET() {
   try {
-    const { tenantId, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
+    const { tenantId } = await getAuthContext();
 
     const tarjetas = await prisma.tarjeta.findMany({
       where: {
@@ -32,10 +28,3 @@ export async function GET() {
     return handleError(error);
   }
 }
-
-
-
-
-
-
-

@@ -1,15 +1,16 @@
 /**
  * Tests para la API de IVAs (GET, POST, PATCH, DELETE).
- * Usa getAuthUser (no getAuthContext).
+ * Usa getAuthContext.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 import { GET, POST, PATCH, DELETE } from "./route";
-import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import prisma from "@/DB/prisma";
+import { PermisoError } from "@/lib/requirePermiso";
 
 vi.mock("@/lib/auth/getAuthUser", () => ({
-  getAuthUser: vi.fn(),
+  getAuthContext: vi.fn(),
 }));
 vi.mock("@/DB/prisma", () => ({
   default: {
@@ -23,32 +24,40 @@ vi.mock("@/DB/prisma", () => ({
   },
 }));
 vi.mock("@/lib/errors/handler", () => ({
-  handleError: vi.fn((err: unknown) =>
-    new Response(JSON.stringify({ error: "Error interno" }), { status: 500 }),
+  handleError: vi.fn(
+    (err: unknown) =>
+      new Response(JSON.stringify({ error: "Error interno" }), { status: 500 }),
   ),
 }));
 vi.mock("@/lib/pagination", () => ({
   parsePaginationParams: vi.fn(() => ({ page: 1, limit: 20, skip: 0 })),
   createPaginationResponse: vi.fn((data: unknown[], total: number) => ({
     data,
-    pagination: { page: 1, limit: 20, total, totalPages: 1, hasNextPage: false, hasPreviousPage: false },
+    pagination: {
+      page: 1,
+      limit: 20,
+      total,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    },
   })),
 }));
 
 describe("GET /api/ivas", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getAuthUser).mockResolvedValue({ tenantId: 1 } as any);
+    vi.mocked(getAuthContext).mockResolvedValue({ tenantId: 1 } as any);
     vi.mocked(prisma.iva.count).mockResolvedValue(1);
     vi.mocked(prisma.iva.findMany).mockResolvedValue([
       { Id: 1, Descripcion: "IVA 21", Porcentaje: 21, EstaEliminado: false },
     ] as any);
   });
 
-  it("retorna 401 cuando getAuthUser devuelve error", async () => {
-    vi.mocked(getAuthUser).mockResolvedValue({
-      error: new Response(JSON.stringify({ error: "No autenticado" }), { status: 401 }),
-    } as any);
+  it("retorna 401 cuando getAuthContext rechaza por no autenticado", async () => {
+    vi.mocked(getAuthContext).mockRejectedValue(
+      new PermisoError("No autenticado", 401),
+    );
     const req = new NextRequest("http://localhost:3000/api/ivas");
     const res = await GET(req);
     expect(res.status).toBe(401);
@@ -67,7 +76,7 @@ describe("GET /api/ivas", () => {
 describe("POST /api/ivas", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getAuthUser).mockResolvedValue({ tenantId: 1 } as any);
+    vi.mocked(getAuthContext).mockResolvedValue({ tenantId: 1 } as any);
     vi.mocked(prisma.iva.create).mockResolvedValue({
       Id: BigInt(1),
       Descripcion: "IVA 21",
@@ -104,7 +113,7 @@ describe("POST /api/ivas", () => {
 describe("PATCH /api/ivas", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getAuthUser).mockResolvedValue({ tenantId: 1 } as any);
+    vi.mocked(getAuthContext).mockResolvedValue({ tenantId: 1 } as any);
     vi.mocked(prisma.iva.update).mockResolvedValue({
       Id: BigInt(1),
       Descripcion: "IVA 10.5",
@@ -126,7 +135,11 @@ describe("PATCH /api/ivas", () => {
   it("retorna 201 con iva actualizado", async () => {
     const req = new NextRequest("http://localhost:3000/api/ivas", {
       method: "PATCH",
-      body: JSON.stringify({ Id: 1, Descripcion: "IVA 10.5", Porcentaje: 10.5 }),
+      body: JSON.stringify({
+        Id: 1,
+        Descripcion: "IVA 10.5",
+        Porcentaje: 10.5,
+      }),
     });
     const res = await PATCH(req);
     const data = await res.json();
@@ -138,7 +151,7 @@ describe("PATCH /api/ivas", () => {
 describe("DELETE /api/ivas", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getAuthUser).mockResolvedValue({ tenantId: 1 } as any);
+    vi.mocked(getAuthContext).mockResolvedValue({ tenantId: 1 } as any);
   });
 
   it("retorna 400 cuando id inválido", async () => {
@@ -152,7 +165,9 @@ describe("DELETE /api/ivas", () => {
   });
 
   it("retorna 404 cuando iva no existe", async () => {
-    vi.mocked(prisma.iva.delete).mockRejectedValue(new Error("Record to update not found"));
+    vi.mocked(prisma.iva.delete).mockRejectedValue(
+      new Error("Record to update not found"),
+    );
     const req = new NextRequest("http://localhost:3000/api/ivas?Id=999", {
       method: "DELETE",
     });

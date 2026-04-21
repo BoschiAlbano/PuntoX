@@ -1,7 +1,8 @@
+// @ts-nocheck — Script obsoleto: Permiso ya no tiene TenantId (catálogo global desde v2)
 /**
  * Script para asignar todos los permisos básicos a perfiles Administrador existentes
  * que no los tengan asignados.
- * 
+ *
  * Permisos que se asignan:
  * - empleados:admin
  * - ventas
@@ -10,7 +11,7 @@
  * - productos
  * - analiticas
  * - configuracion
- * 
+ *
  * Uso: npx tsx scripts/asignar-permiso-admin.ts [tenantId]
  * Si no se especifica tenantId, se procesan todos los tenants.
  */
@@ -21,7 +22,11 @@ import { PerfilTipo } from "../prisma/generated/prisma";
 async function asignarPermisoAdmin(tenantId?: number) {
   try {
     const whereClause = tenantId
-      ? { TenantId: BigInt(tenantId), EstaEliminado: false, Tipo: PerfilTipo.ADMINISTRADOR }
+      ? {
+          TenantId: BigInt(tenantId),
+          EstaEliminado: false,
+          Tipo: PerfilTipo.ADMINISTRADOR,
+        }
       : { EstaEliminado: false, Tipo: PerfilTipo.ADMINISTRADOR };
 
     // Buscar todos los perfiles Administrador
@@ -40,7 +45,10 @@ async function asignarPermisoAdmin(tenantId?: number) {
 
     // Definir los permisos básicos que debe tener un administrador
     const permisosBasicos = [
-      { clave: "empleados:admin", descripcion: "Administración completa de empleados" },
+      {
+        clave: "empleados:admin",
+        descripcion: "Administración completa de empleados",
+      },
       { clave: "ventas", descripcion: "Acceso a ventas" },
       { clave: "caja", descripcion: "Acceso a caja" },
       { clave: "clientes", descripcion: "Acceso a clientes" },
@@ -51,7 +59,7 @@ async function asignarPermisoAdmin(tenantId?: number) {
 
     for (const perfil of perfilesAdmin) {
       console.log(
-        `\nProcesando perfil "${perfil.Descripcion}" (Id: ${perfil.Id}, Tenant: ${perfil.TenantId})`
+        `\nProcesando perfil "${perfil.Descripcion}" (Id: ${perfil.Id}, Tenant: ${perfil.TenantId})`,
       );
 
       let permisosAsignados = 0;
@@ -61,8 +69,8 @@ async function asignarPermisoAdmin(tenantId?: number) {
       for (const permisoData of permisosBasicos) {
         // Verificar si ya tiene el permiso
         const tienePermiso = perfil.PerfilPermiso.some(
-          (pp: { Permiso: { Clave: string; EstaEliminado: boolean } }) => 
-            pp.Permiso.Clave === permisoData.clave && !pp.Permiso.EstaEliminado
+          (pp: { Permiso: { Clave: string; EstaEliminado: boolean } }) =>
+            pp.Permiso.Clave === permisoData.clave && !pp.Permiso.EstaEliminado,
         );
 
         if (tienePermiso) {
@@ -105,19 +113,18 @@ async function asignarPermisoAdmin(tenantId?: number) {
             },
           });
           permisosAsignados++;
-          console.log(
-            `  ✓ Permiso "${permisoData.clave}" asignado`
-          );
+          console.log(`  ✓ Permiso "${permisoData.clave}" asignado`);
         }
       }
 
-      if (permisosAsignados === 0 && permisosYaExistentes === permisosBasicos.length) {
-        console.log(
-          `  ✓ Todos los permisos ya estaban asignados`
-        );
+      if (
+        permisosAsignados === 0 &&
+        permisosYaExistentes === permisosBasicos.length
+      ) {
+        console.log(`  ✓ Todos los permisos ya estaban asignados`);
       } else {
         console.log(
-          `  ✓ Asignados ${permisosAsignados} permiso(s) nuevo(s), ${permisosYaExistentes} ya existían`
+          `  ✓ Asignados ${permisosAsignados} permiso(s) nuevo(s), ${permisosYaExistentes} ya existían`,
         );
       }
     }
@@ -149,4 +156,3 @@ asignarPermisoAdmin(tenantId)
     console.error("Error ejecutando el script:", error);
     process.exit(1);
   });
-

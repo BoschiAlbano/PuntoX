@@ -32,6 +32,8 @@ interface UserState {
   currentBranch: UserBranch;
   permissions: string[];
   roles: Role[];
+  isSuperAdmin: boolean;
+  isAdministrador: boolean;
   isLoading: boolean;
   isInitialized: boolean;
 
@@ -58,6 +60,8 @@ export const useUserStore = create<UserState>()(
       },
       permissions: [],
       roles: [],
+      isSuperAdmin: false,
+      isAdministrador: false,
       isLoading: false,
       isInitialized: false,
 
@@ -90,6 +94,12 @@ export const useUserStore = create<UserState>()(
                 currentBranch: branchToUse,
                 permissions: data.permissions,
                 roles: data.roles,
+                isSuperAdmin: data.roles.some(
+                  (r: Role) => r.Tipo === "SUPERADMIN",
+                ),
+                isAdministrador: data.roles.some(
+                  (r: Role) => r.Tipo === "ADMINISTRADOR",
+                ),
                 isInitialized: true,
               },
               false,
@@ -113,8 +123,13 @@ export const useUserStore = create<UserState>()(
       hasPermission: (path: string) => {
         const { permissions, roles } = get();
 
-        // SuperAdmin has access to everything
-        if (roles.some((r) => r.Tipo === "SUPERADMIN")) return true;
+        // SuperAdmin y Administrador tienen acceso a todo
+        if (
+          roles.some(
+            (r) => r.Tipo === "SUPERADMIN" || r.Tipo === "ADMINISTRADOR",
+          )
+        )
+          return true;
 
         // Basic routes
         if (path === "/" || path === "/dashboard") return true;
@@ -147,15 +162,15 @@ export const useUserStore = create<UserState>()(
 
       updateBranch: (branch) => {
         const { branches, currentBranch } = get();
-        const updatedBranches = branches.map((b) => 
-          b.Id == branch.Id ? { ...b, ...branch } : b
+        const updatedBranches = branches.map((b) =>
+          b.Id == branch.Id ? { ...b, ...branch } : b,
         );
-        
+
         let newCurrent = currentBranch;
         if (currentBranch.Id == branch.Id) {
           newCurrent = { ...currentBranch, ...branch };
         }
-        
+
         set({ branches: updatedBranches, currentBranch: newCurrent });
       },
     }),

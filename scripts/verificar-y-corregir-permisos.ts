@@ -1,3 +1,4 @@
+// @ts-nocheck — Script obsoleto: Permiso ya no tiene TenantId (catálogo global desde v2)
 import { PrismaClient } from "../prisma/generated/prisma";
 
 const prisma = new PrismaClient();
@@ -18,7 +19,10 @@ async function main() {
   console.log(`📊 Encontrados ${tenants.length} tenants activos\n`);
 
   const permisosBasicos = [
-    { clave: "empleados:admin", descripcion: "Administración completa de empleados" },
+    {
+      clave: "empleados:admin",
+      descripcion: "Administración completa de empleados",
+    },
     { clave: "ventas", descripcion: "Acceso a ventas" },
     { clave: "caja", descripcion: "Acceso a caja" },
     { clave: "clientes", descripcion: "Acceso a clientes" },
@@ -29,7 +33,7 @@ async function main() {
 
   for (const tenant of tenants) {
     console.log(`\n🏢 Procesando tenant: ${tenant.Nombre} (ID: ${tenant.Id})`);
-    
+
     // Buscar el perfil de administrador
     const perfilAdmin = await prisma.perfiles.findFirst({
       where: {
@@ -40,7 +44,9 @@ async function main() {
     });
 
     if (!perfilAdmin) {
-      console.log(`  ⚠️  No se encontró perfil "Administrador" para este tenant`);
+      console.log(
+        `  ⚠️  No se encontró perfil "Administrador" para este tenant`,
+      );
       continue;
     }
 
@@ -102,15 +108,22 @@ async function main() {
               TenantId: tenant.Id,
             },
           });
-          console.log(`  🔗 Permiso "${permisoData.clave}" asignado al perfil Administrador`);
+          console.log(
+            `  🔗 Permiso "${permisoData.clave}" asignado al perfil Administrador`,
+          );
           permisosAsignados++;
         }
       } catch (error) {
-        console.error(`  ❌ Error procesando permiso "${permisoData.clave}":`, error);
+        console.error(
+          `  ❌ Error procesando permiso "${permisoData.clave}":`,
+          error,
+        );
       }
     }
 
-    console.log(`  📈 Resumen: ${permisosCreados} permisos creados, ${permisosAsignados} permisos asignados`);
+    console.log(
+      `  📈 Resumen: ${permisosCreados} permisos creados, ${permisosAsignados} permisos asignados`,
+    );
 
     // Actualizar permisos en JWT de todos los usuarios con este perfil
     const usuariosConPerfil = await prisma.perfilUsuario.findMany({
@@ -128,8 +141,12 @@ async function main() {
     });
 
     if (usuariosConPerfil.length > 0) {
-      console.log(`  🔄 Se encontraron ${usuariosConPerfil.length} usuario(s) con este perfil`);
-      console.log(`  💡 Nota: Los usuarios necesitarán cerrar sesión y volver a iniciar sesión para actualizar sus permisos en el JWT`);
+      console.log(
+        `  🔄 Se encontraron ${usuariosConPerfil.length} usuario(s) con este perfil`,
+      );
+      console.log(
+        `  💡 Nota: Los usuarios necesitarán cerrar sesión y volver a iniciar sesión para actualizar sus permisos en el JWT`,
+      );
     }
   }
 
@@ -144,4 +161,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-

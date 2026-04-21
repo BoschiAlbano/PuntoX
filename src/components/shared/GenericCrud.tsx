@@ -358,8 +358,6 @@ export default function GenericCrud<T extends { Id: number | string }>({
 
   const hasSelection = effectiveSelectedCount > 0;
 
-
-
   const handleSelectionChange = useCallback(
     (keys: Set<string> | "all") => {
       if (selectionMode === "manual") {
@@ -598,9 +596,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
           }, 150);
         },
         onError: (error: any) => {
-          // Manejo básico de errores, se puede mejorar parseando Zod errors
-          const msg = error.error || error.message || "Error al guardar";
-          handleError(new Error(msg), "Error al guardar");
+          handleError(error, "Error al guardar");
         },
       },
     );
@@ -628,8 +624,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
       });
       clearSelection();
     } catch (error: any) {
-      const msg = error?.error || error?.message || "Error al eliminar";
-      handleError(new Error(msg), "Error al eliminar seleccionados");
+      handleError(error, "Error al eliminar seleccionados");
     }
   };
 
@@ -658,11 +653,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
         }, 150);
       },
       onError: (error: any) => {
-        const errorMessage =
-          typeof error?.error === "string"
-            ? error.error
-            : error?.error?.message || "Error al eliminar";
-        handleError(new Error(errorMessage), "Error al eliminar");
+        handleError(error, "Error al eliminar");
       },
     });
   };

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/constants/comprobantes";
+import { PERMISSIONS, GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import {
   createMarcaSchema,
   updateMarcaSchema,
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.PRODUCTOS, // Mismo permiso que productos por coherencia
+      permission: GET_PERMISSIONS.PRODUCTOS, // Mismo permiso que productos por coherencia
     });
 
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.PRODUCTOS, // Permiso de escritura (agrupado bajo productos)
+      permission: SET_PERMISSIONS.PRODUCTOS, // Permiso de escritura (agrupado bajo productos)
     });
 
     const body = await req.json();
@@ -158,7 +158,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.PRODUCTOS, // Permiso de eliminación
+      permission: SET_PERMISSIONS.PRODUCTOS, // Permiso de eliminación
     });
 
     const idParam =
@@ -205,7 +205,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.PRODUCTOS, // Permiso de edición
+      permission: SET_PERMISSIONS.PRODUCTOS, // Permiso de edición
     });
 
     const body = await req.json();

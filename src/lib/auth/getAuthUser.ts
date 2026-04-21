@@ -56,6 +56,7 @@ export interface AuthContext {
   usuarioId: number;
   sucursalId: number; // 0 si no se especificó header
   isSuperAdmin: boolean;
+  isAdministrador: boolean; // Dueño del negocio — acceso completo a su tenant
   permissions: string[]; // Permisos del usuario desde JWT
 }
 
@@ -92,7 +93,11 @@ export async function getAuthContext(
   const cachedContext = getRequestAuthContext();
   if (cachedContext) {
     // Validar permiso si se requiere uno nuevo
-    if (options.permission && !cachedContext.isSuperAdmin) {
+    if (
+      options.permission &&
+      !cachedContext.isSuperAdmin &&
+      !cachedContext.isAdministrador
+    ) {
       if (!cachedContext.permissions.includes(options.permission)) {
         throw new PermisoError(`Permiso denegado: ${options.permission}`, 403);
       }
@@ -134,6 +139,13 @@ export async function getAuthContext(
     (pu) => pu.Perfiles.Tipo === PerfilTipo.SUPERADMIN,
   );
 
+  // Administrador tiene acceso completo a su propio tenant (no a otros tenants)
+  const isAdministrador =
+    !isSuperAdmin &&
+    dbUsuario.PerfilUsuario.some(
+      (pu) => pu.Perfiles.Tipo === PerfilTipo.ADMINISTRADOR,
+    );
+
   // 5. 🚀 Validar Sucursal con cache (Si se provee request)
   let sucursalId = 0;
   if (req) {
@@ -141,8 +153,8 @@ export async function getAuthContext(
     if (sucursalHeader) {
       sucursalId = Number(sucursalHeader);
 
-      // Si es SuperAdmin, tiene acceso a todo. Si no, verificamos.
-      if (!isSuperAdmin) {
+      // SuperAdmin y Administrador tienen acceso a todas las sucursales de su tenant
+      if (!isSuperAdmin && !isAdministrador) {
         const tieneAcceso = await getCachedBranchAccess(
           usuarioId,
           sucursalId,
@@ -159,23 +171,26 @@ export async function getAuthContext(
   // 6. 🚀 Validar Permiso (Solo JWT, sin fallback a DB)
   let permissions = (user.app_metadata?.permissions as string[]) || [];
 
-  if (permission && !isSuperAdmin) {
+  if (permission && !isSuperAdmin && !isAdministrador) {
     if (!permissions.includes(permission)) {
       // 🚀 FALLBACK: Verificar en DB por si el token está stale (no actualizado)
       // Esto pasa cuando se asignan permisos pero el usuario no ha relogueado
       try {
         const { calcularPermisosUsuario } =
           await import("./updateUserPermissions");
-        const { permisos: dbPermissions } = await calcularPermisosUsuario(
-          user.id,
-        );
+        const { permisos: dbPermissions, isAdministrador: isAdminDB } =
+          await calcularPermisosUsuario(user.id);
 
-        if (!dbPermissions.includes(permission)) {
+        // Si en DB es Administrador, tiene acceso completo
+        if (isAdminDB) {
+          permissions = ["*"];
+        } else if (!dbPermissions.includes(permission)) {
           throw new PermisoError(`Permiso denegado: ${permission}`, 403);
+        } else {
+          // Si tiene permiso en DB, permitimos continuar
+          // Nota: El JWT seguirá stale hasta el próximo login/refresh
+          permissions = dbPermissions;
         }
-        // Si tiene permiso en DB, permitimos continuar
-        // Nota: El JWT seguirá stale hasta el próximo login/refresh
-        permissions = dbPermissions;
       } catch (error) {
         if (error instanceof PermisoError) throw error;
         // Si falla la verificación en DB, asumir que no tiene permiso
@@ -191,6 +206,7 @@ export async function getAuthContext(
     usuarioId,
     sucursalId,
     isSuperAdmin,
+    isAdministrador,
     permissions,
   };
 

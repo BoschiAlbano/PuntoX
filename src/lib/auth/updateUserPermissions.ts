@@ -1,5 +1,6 @@
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import prisma from "@/DB/prisma";
+import { PerfilTipo } from "../../../prisma/generated/prisma";
 
 /**
  * Calcula los permisos de un usuario desde la base de datos
@@ -7,6 +8,7 @@ import prisma from "@/DB/prisma";
 export async function calcularPermisosUsuario(authUserId: string): Promise<{
   permisos: string[];
   isSuperAdmin: boolean;
+  isAdministrador: boolean;
   roles: Array<{ id: number; nombre: string; tipo: string }>;
 }> {
   const usuario = await prisma.usuario.findFirst({
@@ -39,21 +41,30 @@ export async function calcularPermisosUsuario(authUserId: string): Promise<{
     return {
       permisos: [],
       isSuperAdmin: false,
+      isAdministrador: false,
       roles: [],
     };
   }
 
-  const isSuperAdmin = usuario.PerfilUsuario.some((pu) => {
-    const descripcion = pu.Perfiles.Descripcion?.trim() || "";
-    return (
-      descripcion === "SuperAdmin" || descripcion.toLowerCase() === "superadmin"
+  const isSuperAdmin = usuario.PerfilUsuario.some(
+    (pu) => pu.Perfiles.Tipo === PerfilTipo.SUPERADMIN,
+  );
+
+  const isAdministrador =
+    !isSuperAdmin &&
+    usuario.PerfilUsuario.some(
+      (pu) => pu.Perfiles.Tipo === PerfilTipo.ADMINISTRADOR,
     );
-  });
 
   const permisos = usuario.PerfilUsuario.flatMap((pu) =>
     pu.Perfiles.PerfilPermiso.filter((pp) => !pp.Permiso?.EstaEliminado).map(
-      (pp) => pp.Permiso?.Clave ?? ""
-    )
+      (pp) => {
+        const clave = pp.Permiso?.Clave ?? "";
+        // Normalizar formato con guión → formato con dos puntos
+        // Ej: "ventas-page" → "ventas:page" (datos legacy en la DB)
+        return clave.replace(/-(page|get|set)$/, ":$1");
+      },
+    ),
   ).filter((c) => c);
 
   const roles = usuario.PerfilUsuario.map((pu) => ({
@@ -65,6 +76,7 @@ export async function calcularPermisosUsuario(authUserId: string): Promise<{
   return {
     permisos: Array.from(new Set(permisos)), // Eliminar duplicados
     isSuperAdmin,
+    isAdministrador,
     roles,
   };
 }
@@ -77,12 +89,11 @@ export async function calcularPermisosUsuario(authUserId: string): Promise<{
  * - Cuando se actualiza un rol que tiene usuarios asignados
  */
 export async function actualizarPermisosEnJWT(
-  authUserId: string
+  authUserId: string,
 ): Promise<void> {
   try {
-    const { permisos, isSuperAdmin, roles } = await calcularPermisosUsuario(
-      authUserId
-    );
+    const { permisos, isSuperAdmin, isAdministrador, roles } =
+      await calcularPermisosUsuario(authUserId);
 
     // Obtener el usuario actual para preservar otros metadatos
     const { data: currentUser } =
@@ -94,6 +105,7 @@ export async function actualizarPermisosEnJWT(
       ...currentMetadata,
       permissions: permisos,
       isSuperAdmin,
+      isAdministrador,
       roles: roles.map((r) => ({ id: r.id, nombre: r.nombre, tipo: r.tipo })),
       permissionsVersion: Date.now(), // Timestamp para invalidar cache
     };
@@ -106,7 +118,7 @@ export async function actualizarPermisosEnJWT(
     if (error) {
       console.error(
         `Error actualizando permisos para usuario ${authUserId}:`,
-        error
+        error,
       );
       throw error;
     }
@@ -122,7 +134,7 @@ export async function actualizarPermisosEnJWT(
  */
 export async function actualizarPermisosUsuariosDelRol(
   rolId: bigint,
-  tenantId: bigint
+  tenantId: bigint,
 ): Promise<void> {
   try {
     // Obtener todos los usuarios que tienen este rol

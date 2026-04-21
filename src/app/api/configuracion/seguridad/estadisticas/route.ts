@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/constants/comprobantes";
+import { PERMISSIONS, GET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { handleError } from "@/lib/errors/handler";
 import prisma from "@/DB/prisma";
 
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.CONFIGURACION,
+      permission: GET_PERMISSIONS.CONFIGURACION,
     });
 
     if (!tenantId) {

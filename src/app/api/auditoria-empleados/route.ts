@@ -9,7 +9,11 @@ import {
 import { handleError } from "@/lib/errors/handler";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/constants/comprobantes";
+import {
+  PERMISSIONS,
+  GET_PERMISSIONS,
+  SET_PERMISSIONS,
+} from "@/lib/constants/comprobantes";
 
 const crearAuditoriaSchema = z.object({
   accion: z.enum([
@@ -38,7 +42,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
+      permission: GET_PERMISSIONS.AUDITORIA, // Mismo permiso que productos por coherencia
     });
     const pagination = parsePaginationParams(req);
 
@@ -249,7 +253,7 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId, usuarioId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
+      permission: GET_PERMISSIONS.AUDITORIA,
     });
 
     const json = await req.json().catch(() => null);

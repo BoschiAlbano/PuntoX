@@ -1,22 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
-import { TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
+import {
+  TIPO_COMPROBANTE_VENTA,
+  GET_PERMISSIONS,
+} from "@/lib/constants/comprobantes";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/constants/comprobantes";
 
 export async function GET(req: NextRequest) {
   try {
     const { tenantId, sucursalId } = await getAuthContext({
       req,
       // Usar permiso de lectura general/analíticas. Puedes ajustarlo según tu política
-      permission: PERMISSIONS.ANALITICAS, 
+      permission: GET_PERMISSIONS.ANALITICAS,
     });
 
     if (!sucursalId) {
       return NextResponse.json(
         { error: "Sucursal no especificada" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -25,9 +27,13 @@ export async function GET(req: NextRequest) {
 
     // Definir rangos de fechas
     const now = new Date();
-    
+
     // Rango de "Hoy"
-    const hoyInicio = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const hoyInicio = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
     const hoyFin = new Date(hoyInicio);
     hoyFin.setDate(hoyFin.getDate() + 1);
 
@@ -37,9 +43,13 @@ export async function GET(req: NextRequest) {
 
     // Rango de "Este Mes"
     const esteMesInicio = new Date(now.getFullYear(), now.getMonth(), 1);
-    
+
     // Rango de "Mes Anterior" (para comparativa)
-    const mesAnteriorInicio = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const mesAnteriorInicio = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      1,
+    );
     const mesAnteriorFin = new Date(now.getFullYear(), now.getMonth(), 1);
 
     // Tipos de comprobante de venta válidos
@@ -143,7 +153,7 @@ export async function GET(req: NextRequest) {
       ingresosMes,
       ingresosMesAnterior,
       clientesMes,
-      clientesMesAnterior
+      clientesMesAnterior,
     ] = await Promise.all([
       ventasHoyPromise,
       ventasAyerPromise,
@@ -162,19 +172,26 @@ export async function GET(req: NextRequest) {
     const ventasHoyCount = ventasHoy._count.Id;
     let percepcionVentas = 0;
     if (ventasAyerMonto > 0) {
-      percepcionVentas = ((ventasHoyMonto - ventasAyerMonto) / ventasAyerMonto) * 100;
+      percepcionVentas =
+        ((ventasHoyMonto - ventasAyerMonto) / ventasAyerMonto) * 100;
     }
 
     // 2. Stock Bajo
     const stockBajoArray = stockBajoResult as any[];
-    const stockBajoCount = stockBajoArray.length > 0 ? Number(stockBajoArray[0].count) : 0;
+    const stockBajoCount =
+      stockBajoArray.length > 0 ? Number(stockBajoArray[0].count) : 0;
 
     // 3. Ingresos del Mes
     const ingresosMesMonto = Number(ingresosMes._sum.Total || 0);
-    const ingresosMesAnteriorMonto = Number(ingresosMesAnterior._sum.Total || 0);
+    const ingresosMesAnteriorMonto = Number(
+      ingresosMesAnterior._sum.Total || 0,
+    );
     let percepcionIngresos = 0;
     if (ingresosMesAnteriorMonto > 0) {
-      percepcionIngresos = ((ingresosMesMonto - ingresosMesAnteriorMonto) / ingresosMesAnteriorMonto) * 100;
+      percepcionIngresos =
+        ((ingresosMesMonto - ingresosMesAnteriorMonto) /
+          ingresosMesAnteriorMonto) *
+        100;
     }
 
     // 4. Clientes Nuevos/Activos
@@ -182,7 +199,10 @@ export async function GET(req: NextRequest) {
     const clientesMesAnteriorCount = clientesMesAnterior.length;
     let percepcionClientes = 0;
     if (clientesMesAnteriorCount > 0) {
-      percepcionClientes = ((clientesMesCount - clientesMesAnteriorCount) / clientesMesAnteriorCount) * 100;
+      percepcionClientes =
+        ((clientesMesCount - clientesMesAnteriorCount) /
+          clientesMesAnteriorCount) *
+        100;
     }
 
     return NextResponse.json({
@@ -203,7 +223,6 @@ export async function GET(req: NextRequest) {
         percentage: Number(percepcionClientes.toFixed(2)),
       },
     });
-
   } catch (error) {
     return handleError(error);
   }

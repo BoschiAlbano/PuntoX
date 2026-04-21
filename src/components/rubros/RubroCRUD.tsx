@@ -4,14 +4,13 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import GenericCrud from "@/components/shared/GenericCrud";
 import RubroForm, { Rubro } from "./RubroForm";
-import { Chip, addToast } from "@heroui/react";
+import { Chip } from "@heroui/react";
 import { DeleteButton, EditButton } from "@/components/shared/TableActions";
 import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
 
-
 async function bulkPatchRubros(
   ids: (number | string)[],
-  data: { EstaEliminado?: boolean; Descripcion?: string }
+  data: { EstaEliminado?: boolean; Descripcion?: string },
 ) {
   for (const id of ids) {
     const res = await fetch("/api/rubros", {
@@ -34,7 +33,6 @@ export default function RubroCRUD() {
     clearSelection?: () => void;
   }>({ open: false, items: [] });
 
-
   const invalidateRubros = () => {
     queryClient.invalidateQueries({ queryKey: ["rubros-generic"] });
   };
@@ -42,102 +40,108 @@ export default function RubroCRUD() {
   return (
     <>
       <GenericCrud<Rubro>
-      apiPath="/api/rubros"
-      queryKey="rubros-generic"
-      title="Gestión de Rubros"
-      searchPlaceholder="Buscar rubros..."
-      FormComponent={RubroForm}
-      renderRowPreview={(item) => (
-        <div className="space-y-4 text-sm">
-          <div>
-            <p className="text-slate-500 text-xs mb-0.5">Descripción</p>
-            <p className="font-medium text-slate-800">{item.Descripcion}</p>
-          </div>
-          <div>
-            <p className="text-slate-500 text-xs mb-0.5">Estado</p>
-            <span
-              className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                item.EstaEliminado ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
-              }`}
-            >
-              {item.EstaEliminado ? "Inactivo" : "Activo"}
-            </span>
-          </div>
-        </div>
-      )}
-      getRowPreviewTitle={(item) => item.Descripcion || "Rubro"}
-      enableBulkActions
-      exportConfig={{
-        filename: "rubros",
-        columns: [
-          { key: "Id", header: "ID" },
-          { key: "Descripcion", header: "Descripción" },
-          { key: "Estado", header: "Estado" },
-        ],
-        mapItem: (r) => ({
-          Id: r.Id,
-          Descripcion: r.Descripcion ?? "",
-          Estado: r.EstaEliminado ? "Inactivo" : "Activo",
-        }),
-      }}
-      bulkActionsDropdown={[
-        {
-          key: "cambiar-estado",
-          label: "Cambiar estado",
-          onAction: (ctx) => {
-            setBulkEstadoModal({ open: true, items: ctx.items, clearSelection: ctx.clearSelection });
-          },
-        },
-      ]}
-      columns={[
-        {
-          uid: "Descripcion",
-          name: "DESCRIPCIÓN",
-          sortable: true,
-          align: "start",
-        },
-        { uid: "Estado", name: "ESTADO" },
-        { uid: "acciones", name: "ACCIONES" },
-      ]}
-      // Función para renderizar celdas personalizadas
-      renderCell={(item, columnKey, actions) => {
-        switch (columnKey) {
-          case "Id":
-            return item.Id;
-          case "Descripcion":
-            return (
-              <span className="font-medium text-gray-700">
-                {item.Descripcion}
-              </span>
-            );
-          case "Estado":
-            return (
-              <Chip
-                color={item.EstaEliminado ? "danger" : "success"}
-                variant="flat"
-                size="sm"
+        apiPath="/api/rubros"
+        queryKey="rubros-generic"
+        title="Gestión de Rubros"
+        searchPlaceholder="Buscar rubros..."
+        FormComponent={RubroForm}
+        renderRowPreview={(item) => (
+          <div className="space-y-4 text-sm">
+            <div>
+              <p className="text-slate-500 text-xs mb-0.5">Descripción</p>
+              <p className="font-medium text-slate-800">{item.Descripcion}</p>
+            </div>
+            <div>
+              <p className="text-slate-500 text-xs mb-0.5">Estado</p>
+              <span
+                className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                  item.EstaEliminado
+                    ? "bg-red-100 text-red-700"
+                    : "bg-green-100 text-green-700"
+                }`}
               >
                 {item.EstaEliminado ? "Inactivo" : "Activo"}
-              </Chip>
-            );
-          case "acciones":
-            return (
-              <div className="flex gap-2 w-full justify-center items-center">
-                <EditButton
-                  onPress={() => actions.onEdit(item)}
-                  label={`Editar ${item.Descripcion || "rubro"}`}
-                />
-                <DeleteButton
-                  onPress={() => actions.onDelete(item)}
-                  label={`Eliminar ${item.Descripcion || "rubro"}`}
-                />
-              </div>
-            );
-          default:
-            return null;
-        }
-      }}
-    />
+              </span>
+            </div>
+          </div>
+        )}
+        getRowPreviewTitle={(item) => item.Descripcion || "Rubro"}
+        enableBulkActions
+        exportConfig={{
+          filename: "rubros",
+          columns: [
+            { key: "Id", header: "ID" },
+            { key: "Descripcion", header: "Descripción" },
+            { key: "Estado", header: "Estado" },
+          ],
+          mapItem: (r) => ({
+            Id: r.Id,
+            Descripcion: r.Descripcion ?? "",
+            Estado: r.EstaEliminado ? "Inactivo" : "Activo",
+          }),
+        }}
+        bulkActionsDropdown={[
+          {
+            key: "cambiar-estado",
+            label: "Cambiar estado",
+            onAction: (ctx) => {
+              setBulkEstadoModal({
+                open: true,
+                items: ctx.items,
+                clearSelection: ctx.clearSelection,
+              });
+            },
+          },
+        ]}
+        columns={[
+          {
+            uid: "Descripcion",
+            name: "DESCRIPCIÓN",
+            sortable: true,
+            align: "start",
+          },
+          { uid: "Estado", name: "ESTADO" },
+          { uid: "acciones", name: "ACCIONES" },
+        ]}
+        // Función para renderizar celdas personalizadas
+        renderCell={(item, columnKey, actions) => {
+          switch (columnKey) {
+            case "Id":
+              return item.Id;
+            case "Descripcion":
+              return (
+                <span className="font-medium text-gray-700">
+                  {item.Descripcion}
+                </span>
+              );
+            case "Estado":
+              return (
+                <Chip
+                  color={item.EstaEliminado ? "danger" : "success"}
+                  variant="flat"
+                  size="sm"
+                >
+                  {item.EstaEliminado ? "Inactivo" : "Activo"}
+                </Chip>
+              );
+            case "acciones":
+              return (
+                <div className="flex gap-2 w-full justify-center items-center">
+                  <EditButton
+                    onPress={() => actions.onEdit(item)}
+                    label={`Editar ${item.Descripcion || "rubro"}`}
+                  />
+                  <DeleteButton
+                    onPress={() => actions.onDelete(item)}
+                    label={`Eliminar ${item.Descripcion || "rubro"}`}
+                  />
+                </div>
+              );
+            default:
+              return null;
+          }
+        }}
+      />
 
       <BulkCambiarEstadoModal<Rubro>
         isOpen={bulkEstadoModal.open}
@@ -153,7 +157,6 @@ export default function RubroCRUD() {
           invalidateRubros();
         }}
       />
-
     </>
   );
 }

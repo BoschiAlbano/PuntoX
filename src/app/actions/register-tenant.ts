@@ -3,11 +3,10 @@
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
-// import { actualizarPermisosEnJWT } from "@/lib/auth/updateUserPermissions";
+import { actualizarPermisosEnJWT } from "@/lib/auth/updateUserPermissions";
 import { requireSuperAdminServer } from "@/lib/requireSuperAdmin";
 import { PerfilTipo, Prisma } from "../../../prisma/generated/prisma";
 import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
-import { PERMISSIONS } from "@/lib/constants/comprobantes";
 // Helper para convertir cadenas vacías a undefined
 const emptyStringToUndefined = z.preprocess(
   (val) => (val === "" || val === null ? undefined : val),
@@ -276,71 +275,7 @@ export async function registerTenant(formData: FormData) {
         });
       }
 
-      // Definir los permisos básicos que debe tener un administrador
-      // const permisosBasicos = [
-      //   {
-      //     clave: "empleados:admin",
-      //     descripcion: "Administración completa de empleados",
-      //   },
-      //   { clave: "ventas", descripcion: "Acceso a ventas" },
-      //   { clave: "caja", descripcion: "Acceso a caja" },
-      //   { clave: "clientes", descripcion: "Acceso a clientes" },
-      //   { clave: "productos", descripcion: "Acceso a productos" },
-      //   { clave: "analiticas", descripcion: "Acceso a analíticas" },
-      //   { clave: "configuracion", descripcion: "Acceso a configuración" },
-      // ];
-
-      const permisosBasicos = Object.values(PERMISSIONS).map((clave) => ({
-        clave,
-        descripcion: `Acceso a ${clave}`,
-      }));
-
-      // Crear y asignar todos los permisos básicos al rol de administrador
-      for (const permisoData of permisosBasicos) {
-        try {
-          // Crear o actualizar el permiso
-          const permiso = await tx.permiso.upsert({
-            where: {
-              Clave_TenantId: {
-                Clave: permisoData.clave,
-                TenantId: newTenant.Id,
-              },
-            },
-            update: { EstaEliminado: false },
-            create: {
-              Clave: permisoData.clave,
-              Descripcion: permisoData.descripcion,
-              TenantId: newTenant.Id,
-              EstaEliminado: false,
-            },
-          });
-
-          // Verificar si el permiso ya está asignado al perfil
-          const permisoAsignado = await tx.perfilPermiso.findFirst({
-            where: {
-              PerfilId: perfilAdmin.Id,
-              PermisoId: permiso.Id,
-            },
-          });
-
-          // Asignar el permiso al perfil de administrador si no está asignado
-          if (!permisoAsignado) {
-            await tx.perfilPermiso.create({
-              data: {
-                PerfilId: perfilAdmin.Id,
-                PermisoId: permiso.Id,
-                TenantId: newTenant.Id,
-              },
-            });
-          }
-        } catch (error) {
-          console.error(`Error creando permiso "${permisoData.clave}":`, error);
-          // Continuar con los demás permisos aunque uno falle
-          // Pero lanzar el error si es crítico
-          throw error;
-        }
-      }
-
+      // El perfil Administrador tiene acceso completo por su Tipo — no necesita permisos explícitos
       await tx.perfilUsuario.create({
         data: {
           Perfil_Id: perfilAdmin.Id,
@@ -387,7 +322,7 @@ export async function registerTenant(formData: FormData) {
       return newTenant;
     });
 
-    // actualizo las metadatos del usuario para guardar el id del tenant
+    // Actualizar app_metadata con tenantId
     const { error: metaError } =
       await getSupabaseServiceClient().auth.admin.updateUserById(authUserId, {
         app_metadata: {
@@ -407,6 +342,9 @@ export async function registerTenant(formData: FormData) {
           (metaError?.message ?? "error desconocido"),
       };
     }
+
+    // Sincronizar permisos al JWT: detecta PerfilTipo.ADMINISTRADOR y escribe isAdministrador: true
+    await actualizarPermisosEnJWT(authUserId);
 
     return {
       ok: true as const,

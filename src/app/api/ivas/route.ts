@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { createIvaSchema, updateIvaSchema } from "@/lib/validations/iva.schema";
 import { ZodError } from "zod";
 
@@ -12,14 +12,9 @@ import { createError } from "@/lib/errors/types";
 import { handleError } from "@/lib/errors/handler";
 
 export async function GET(req: NextRequest) {
-  // Obtener la session del usuario
-  const { error } = await getAuthUser();
-
-  if (error) {
-    return error;
-  }
-
   try {
+    await getAuthContext();
+
     const pagination = parsePaginationParams(req);
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
 
@@ -62,13 +57,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: Request) {
-  const { error } = await getAuthUser();
-
-  if (error) {
-    return error;
-  }
-
   try {
+    await getAuthContext();
+
     const body = await req.json();
 
     // Validar el body con Zod
@@ -88,7 +79,7 @@ export async function POST(req: Request) {
         ...iva,
         Id: Number(iva.Id),
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     // Manejo de errores de validación de Zod
@@ -101,7 +92,7 @@ export async function POST(req: Request) {
             message: issue.message,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -110,20 +101,20 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const { error } = await getAuthUser();
-
-  if (error) {
-    return error;
-  }
-  const idParam =
-    req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
-  const ivaId = idParam ? Number(idParam) : NaN;
-
-  if (!Number.isInteger(ivaId)) {
-    return NextResponse.json({ error: "Id de iva invalido" }, { status: 400 });
-  }
-
   try {
+    await getAuthContext();
+
+    const idParam =
+      req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
+    const ivaId = idParam ? Number(idParam) : NaN;
+
+    if (!Number.isInteger(ivaId)) {
+      return NextResponse.json(
+        { error: "Id de iva invalido" },
+        { status: 400 },
+      );
+    }
+
     const ivaActualizada = await prisma.iva.delete({
       where: {
         Id: ivaId,
@@ -135,7 +126,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json(
       { success: true, Id: Number(ivaActualizada.Id) },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     if (
@@ -151,11 +142,7 @@ export async function DELETE(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
+    const { tenantId } = await getAuthContext();
 
     if (!tenantId || tenantId <= 0) {
       throw createError.unauthorized("TenantId inválido o no proporcionado");
@@ -184,7 +171,7 @@ export async function PATCH(req: NextRequest) {
         Id: Number(iva.Id),
         TenantId: tenantId,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     // Manejo de errores de validación de Zod
@@ -197,7 +184,7 @@ export async function PATCH(req: NextRequest) {
             message: issue.message,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 

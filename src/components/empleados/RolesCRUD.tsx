@@ -6,7 +6,6 @@ import {
   CardBody,
   CardHeader,
   Button,
-  Chip,
   Tooltip,
   Input,
   Modal,
@@ -21,14 +20,179 @@ import {
 } from "@heroui/react";
 import { Pencil, Trash2, RefreshCw, Plus, Users } from "lucide-react";
 import {
-  PERMISSIONS,
+  PERMISSION_MODULES,
+  PERMISSION_MODULE_LABELS,
+  WRITABLE_MODULES,
   TIPO_PERFIL,
   type TipoPerfil,
+  type PermissionModule,
 } from "@/lib/constants/comprobantes";
 import { LoadingComponent } from "../loading/loading";
 import { useRoles, Rol } from "@/hooks/useRoles";
 
-const permisosDisponibles = Object.values(PERMISSIONS);
+const WRITABLE_MODULE_SET = new Set<PermissionModule>(
+  WRITABLE_MODULES as PermissionModule[],
+);
+
+/** Renderiza la tabla de permisos por módulo */
+function PermisosTable({
+  permisos,
+  onChange,
+  readOnly = false,
+  showOnlyAssigned = false,
+}: {
+  permisos: string[];
+  onChange?: (permisos: string[]) => void;
+  readOnly?: boolean;
+  showOnlyAssigned?: boolean;
+}) {
+  const toggle = (clave: string) => {
+    if (readOnly || !onChange) return;
+    const next = permisos.includes(clave)
+      ? permisos.filter((p) => p !== clave)
+      : [...permisos, clave];
+    onChange(next);
+  };
+
+  const toggleRow = (mod: PermissionModule, checked: boolean) => {
+    if (readOnly || !onChange) return;
+    const rowKeys = [
+      `${mod}:page`,
+      `${mod}:get`,
+      ...(WRITABLE_MODULE_SET.has(mod) ? [`${mod}:set`] : []),
+    ];
+    const next = checked
+      ? Array.from(new Set([...permisos, ...rowKeys]))
+      : permisos.filter((p) => !rowKeys.includes(p));
+    onChange(next);
+  };
+
+  const CellBtn = ({ clave, color }: { clave: string; color: string }) => {
+    const active = permisos.includes(clave);
+    return (
+      <button
+        type="button"
+        disabled={readOnly}
+        onClick={() => toggle(clave)}
+        className={`w-full h-8 rounded-md text-[11px] font-bold transition-all border ${
+          active ? color : "bg-white text-slate-400 border-slate-200"
+        }`}
+      >
+        {active ? "✓" : "+"}
+      </button>
+    );
+  };
+
+  const visibleModules = PERMISSION_MODULES.filter((mod) => {
+    if (!showOnlyAssigned) return true;
+
+    const rowKeys = [
+      `${mod}:page`,
+      `${mod}:get`,
+      ...(WRITABLE_MODULE_SET.has(mod) ? [`${mod}:set`] : []),
+    ];
+
+    return rowKeys.some((key) => permisos.includes(key));
+  });
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm border-collapse">
+        <thead>
+          <tr className="border-b border-slate-200">
+            <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-36">
+              Módulo
+            </th>
+            <th className="text-center py-2 px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider w-20">
+              Página
+            </th>
+            <th className="text-center py-2 px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider w-20">
+              Leer
+            </th>
+            <th className="text-center py-2 px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider w-20">
+              Escribir
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {visibleModules.map((mod) => {
+            const hasWrite = WRITABLE_MODULE_SET.has(mod);
+            const rowKeys = [
+              `${mod}:page`,
+              `${mod}:get`,
+              ...(hasWrite ? [`${mod}:set`] : []),
+            ];
+            const allActive = rowKeys.every((k) => permisos.includes(k));
+            return (
+              <tr
+                key={mod}
+                className="border-b border-slate-100 hover:bg-slate-50/50"
+              >
+                <td className="py-1.5 px-3">
+                  <label
+                    className={`flex items-center gap-2 select-none ${
+                      readOnly ? "cursor-default" : "cursor-pointer"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      disabled={readOnly}
+                      checked={allActive}
+                      onChange={(e) => toggleRow(mod, e.target.checked)}
+                      className={`w-4 h-4 rounded accent-[#67afc3] ${
+                        readOnly ? "cursor-default" : "cursor-pointer"
+                      }`}
+                    />
+                    <span className="font-medium text-slate-700">
+                      {PERMISSION_MODULE_LABELS[mod]}
+                    </span>
+                  </label>
+                </td>
+                <td className="py-1.5 px-2">
+                  <CellBtn
+                    clave={`${mod}:page`}
+                    color="bg-[#67afc3]/10 text-[#67afc3] border-[#67afc3]/30"
+                  />
+                </td>
+                <td className="py-1.5 px-2">
+                  <CellBtn
+                    clave={`${mod}:get`}
+                    color="bg-blue-50 text-blue-600 border-blue-200"
+                  />
+                </td>
+                <td className="py-1.5 px-2">
+                  {hasWrite ? (
+                    <CellBtn
+                      clave={`${mod}:set`}
+                      color="bg-amber-50 text-amber-600 border-amber-200"
+                    />
+                  ) : (
+                    <span className="flex items-center justify-center w-full h-8 text-slate-300 text-xs">
+                      —
+                    </span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <p className="mt-2 text-[11px] text-slate-400">
+        <span className="text-[#67afc3] font-semibold">Página</span> → acceso a
+        la sección · <span className="text-blue-500 font-semibold">Leer</span> →
+        consultar datos ·{" "}
+        <span className="text-amber-500 font-semibold">Escribir</span> → crear,
+        editar y eliminar
+      </p>
+
+      {showOnlyAssigned && visibleModules.length === 0 ? (
+        <p className="mt-3 text-sm text-slate-500">
+          Este rol no tiene módulos asignados.
+        </p>
+      ) : null}
+    </div>
+  );
+}
 
 export default function RolesCRUD() {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -40,7 +204,7 @@ export default function RolesCRUD() {
   const [nuevoRol, setNuevoRol] = useState({
     nombre: "",
     descripcion: "",
-    permisos: [PERMISSIONS.VENTAS, PERMISSIONS.CAJA] as string[],
+    permisos: [] as string[],
     tipo: TIPO_PERFIL.EMPLEADO as TipoPerfil,
   });
 
@@ -95,7 +259,7 @@ export default function RolesCRUD() {
         setNuevoRol({
           nombre: "",
           descripcion: "",
-          permisos: [PERMISSIONS.VENTAS, PERMISSIONS.CAJA],
+          permisos: [],
           tipo: TIPO_PERFIL.EMPLEADO,
         });
       },
@@ -163,7 +327,9 @@ export default function RolesCRUD() {
       {/* Header con botones de acción */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 tracking-tight">Roles del Sistema</h2>
+          <h2 className="text-xl font-bold text-slate-800 tracking-tight">
+            Roles del Sistema
+          </h2>
           <p className="text-sm text-slate-500">
             Gestiona los niveles de acceso y permisos del personal.
           </p>
@@ -214,7 +380,10 @@ export default function RolesCRUD() {
             const puedeEliminar = !esRolSistema && !tieneUsuarios;
 
             return (
-              <Card key={rol.id} className="bg-linear-to-br from-slate-50 to-white border border-slate-100 shadow-sm rounded-2xl hover:shadow-md transition-shadow group">
+              <Card
+                key={rol.id}
+                className="bg-linear-to-br from-slate-50 to-white border border-slate-100 shadow-sm rounded-2xl hover:shadow-md transition-shadow group"
+              >
                 <CardHeader className="flex flex-col items-start gap-2 pt-5 px-5">
                   <div className="flex items-center justify-between w-full">
                     <span
@@ -271,8 +440,9 @@ export default function RolesCRUD() {
                   </h3>
                 </CardHeader>
                 <CardBody className="pt-0 px-5 pb-5">
-                  <p className="text-sm text-slate-500 mb-4 line-clamp-2 min-h-[40px]">
-                    {rol.descripcion || "Sin descripción proporcionada para este rol."}
+                  <p className="text-sm text-slate-500 mb-4 line-clamp-2 min-h-10">
+                    {rol.descripcion ||
+                      "Sin descripción proporcionada para este rol."}
                   </p>
                   <div className="flex items-center gap-2 text-xs font-medium text-slate-500 bg-white border border-slate-100 px-3 py-1.5 rounded-lg w-fit mb-4">
                     <Users size={14} className="text-[#67afc3]" />
@@ -308,10 +478,13 @@ export default function RolesCRUD() {
         classNames={{
           backdrop: "bg-slate-900/40 backdrop-blur-md",
           base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 max-w-xl",
-          header: "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8 bg-transparent",
+          header:
+            "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8 bg-transparent",
           body: "py-6 px-6 sm:px-8 overflow-y-auto overflow-x-hidden",
-          footer: "border-t border-slate-100/60 py-4 px-6 sm:px-8 bg-transparent",
-          closeButton: "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
+          footer:
+            "border-t border-slate-100/60 py-4 px-6 sm:px-8 bg-transparent",
+          closeButton:
+            "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
         }}
       >
         <ModalContent>
@@ -321,7 +494,9 @@ export default function RolesCRUD() {
                 <Plus className="w-5 h-5 text-[#67afc3]" />
               </div>
               <div>
-                <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">Crear Nuevo Rol</h2>
+                <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">
+                  Crear Nuevo Rol
+                </h2>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">
                   Define permisos base. Luego podrás afinarlos en cada usuario.
                 </p>
@@ -365,32 +540,13 @@ export default function RolesCRUD() {
               }
             />
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-slate-700">Permisos de Acceso</p>
-              <div className="flex flex-wrap gap-2">
-                {permisosDisponibles.map((permiso) => {
-                  const activo = nuevoRol.permisos.includes(permiso);
-                  return (
-                    <button
-                      key={permiso}
-                      onClick={() =>
-                        setNuevoRol((prev) => ({
-                          ...prev,
-                          permisos: activo
-                            ? prev.permisos.filter((p) => p !== permiso)
-                            : [...prev.permisos, permiso],
-                        }))
-                      }
-                      className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all border ${
-                        activo
-                          ? "bg-[#67afc3]/10 text-[#67afc3] border-[#67afc3]/30 shadow-sm"
-                          : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                      }`}
-                    >
-                      {permiso}
-                    </button>
-                  );
-                })}
-              </div>
+              <p className="text-sm font-semibold text-slate-700">Permisos</p>
+              <PermisosTable
+                permisos={nuevoRol.permisos}
+                onChange={(permisos) =>
+                  setNuevoRol((prev) => ({ ...prev, permisos }))
+                }
+              />
             </div>
           </ModalBody>
           <ModalFooter className="gap-3">
@@ -430,10 +586,13 @@ export default function RolesCRUD() {
         classNames={{
           backdrop: "bg-slate-900/40 backdrop-blur-md",
           base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 max-w-xl",
-          header: "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8 bg-transparent",
+          header:
+            "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8 bg-transparent",
           body: "py-6 px-6 sm:px-8 overflow-y-auto overflow-x-hidden",
-          footer: "border-t border-slate-100/60 py-4 px-6 sm:px-8 bg-transparent",
-          closeButton: "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
+          footer:
+            "border-t border-slate-100/60 py-4 px-6 sm:px-8 bg-transparent",
+          closeButton:
+            "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
         }}
       >
         <ModalContent>
@@ -443,7 +602,9 @@ export default function RolesCRUD() {
                 <Pencil className="w-5 h-5 text-[#67afc3]" />
               </div>
               <div>
-                <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">Editar Rol</h2>
+                <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">
+                  Editar Rol
+                </h2>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">
                   Modifica los permisos y configuración del rol.
                 </p>
@@ -498,31 +659,12 @@ export default function RolesCRUD() {
                     <p className="text-sm font-semibold text-slate-700">
                       Permisos
                     </p>
-                    <div className="flex flex-wrap gap-2">
-                      {permisosDisponibles.map((permiso) => {
-                        const activo = rolEditDraft.permisos.includes(permiso);
-                        return (
-                          <button
-                            key={permiso}
-                            onClick={() =>
-                              setRolEditDraft((prev) => ({
-                                ...prev,
-                                permisos: activo
-                                  ? prev.permisos.filter((p) => p !== permiso)
-                                  : [...prev.permisos, permiso],
-                              }))
-                            }
-                            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all border ${
-                              activo
-                                ? "bg-[#67afc3]/10 text-[#67afc3] border-[#67afc3]/30 shadow-sm"
-                                : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                            }`}
-                          >
-                            {permiso}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <PermisosTable
+                      permisos={rolEditDraft.permisos}
+                      onChange={(permisos) =>
+                        setRolEditDraft((prev) => ({ ...prev, permisos }))
+                      }
+                    />
                   </div>
                 </>
               );
@@ -576,7 +718,9 @@ export default function RolesCRUD() {
                 <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-xl font-bold tracking-tight">Eliminar Rol</h3>
+                <h3 className="text-xl font-bold tracking-tight">
+                  Eliminar Rol
+                </h3>
               </div>
             </div>
           </ModalHeader>
@@ -615,15 +759,18 @@ export default function RolesCRUD() {
       <Modal
         isOpen={!!rolVerPermisos}
         onClose={() => setRolVerPermisos(null)}
-        size="md"
+        size="xl"
         placement="center"
         classNames={{
           backdrop: "bg-slate-900/40 backdrop-blur-md",
           base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60",
-          header: "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8 bg-transparent",
+          header:
+            "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8 bg-transparent",
           body: "py-6 px-6 sm:px-8 overflow-y-auto overflow-x-hidden",
-          footer: "border-t border-slate-100/60 py-4 px-6 sm:px-8 bg-transparent hidden",
-          closeButton: "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
+          footer:
+            "border-t border-slate-100/60 py-4 px-6 sm:px-8 bg-transparent hidden",
+          closeButton:
+            "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
         }}
       >
         <ModalContent>
@@ -632,17 +779,15 @@ export default function RolesCRUD() {
               Permisos: {rolVerPermisos?.nombre}
             </h2>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Listado de accesos permitidos para este rol.
+              Vista del esquema de accesos asignados a este rol.
             </p>
           </ModalHeader>
           <ModalBody>
-            <div className="flex flex-wrap gap-2">
-              {rolVerPermisos?.permisos?.map((permiso) => (
-                <span key={permiso} className="inline-block px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-[#67afc3]/10 text-[#67afc3] border border-[#67afc3]/30 shadow-sm">
-                  {permiso}
-                </span>
-              ))}
-            </div>
+            <PermisosTable
+              permisos={rolVerPermisos?.permisos ?? []}
+              readOnly
+              showOnlyAssigned
+            />
           </ModalBody>
         </ModalContent>
       </Modal>

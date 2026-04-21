@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
-import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import {
   parsePaginationParams,
   createPaginationResponse,
@@ -17,7 +17,10 @@ export const abrirCajaSchema = z.object({
   montoInicial: z
     .number()
     .min(0, "El monto inicial debe ser mayor o igual a 0")
-    .max(MONTO_CAJA_MAX, "El monto inicial no puede exceder el límite permitido"),
+    .max(
+      MONTO_CAJA_MAX,
+      "El monto inicial no puede exceder el límite permitido",
+    ),
 });
 
 // Schema para cerrar caja (exportado para tests de validación)
@@ -25,17 +28,16 @@ export const cerrarCajaSchema = z.object({
   montoCierre: z
     .number()
     .min(0, "El monto de cierre debe ser mayor o igual a 0")
-    .max(MONTO_CAJA_MAX, "El monto de cierre no puede exceder el límite permitido"),
+    .max(
+      MONTO_CAJA_MAX,
+      "El monto de cierre no puede exceder el límite permitido",
+    ),
 });
 
 // GET: Obtener caja actual o historial
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId, user, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
+    const { tenantId, user } = await getAuthContext({ req });
 
     const searchParams = req.nextUrl.searchParams;
     const cajaId = searchParams.get("id");
@@ -47,7 +49,6 @@ export async function GET(req: NextRequest) {
     const sucursalIdParam = req.nextUrl.searchParams.get("sucursalId");
 
     let sucursalId: bigint | null = null;
-    let sucursalNombre: string | null = null;
 
     if (sucursalIdParam) {
       const access = await verifyUserBranchAccess(
@@ -57,7 +58,6 @@ export async function GET(req: NextRequest) {
       );
       if (access) {
         sucursalId = access.sucursal.Id;
-        sucursalNombre = access.sucursal.Nombre;
       }
     }
 
@@ -642,16 +642,7 @@ export async function GET(req: NextRequest) {
 // POST: Abrir caja
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, user, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
-
-    // Obtener usuario actual
-    if (!user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-    }
+    const { tenantId, user } = await getAuthContext({ req });
 
     const usuario = await prisma.usuario.findFirst({
       where: { AuthUserId: user.id, EstaEliminado: false },
@@ -668,7 +659,6 @@ export async function POST(req: NextRequest) {
     const sucursalIdParam = req.nextUrl.searchParams.get("sucursalId");
 
     let sucursalId: bigint | null = null;
-    let sucursalNombre: string | null = null;
 
     if (sucursalIdParam) {
       const access = await verifyUserBranchAccess(
@@ -678,7 +668,6 @@ export async function POST(req: NextRequest) {
       );
       if (access) {
         sucursalId = access.sucursal.Id;
-        sucursalNombre = access.sucursal.Nombre;
       }
     }
 
@@ -765,15 +754,7 @@ export async function POST(req: NextRequest) {
 // PATCH: Cerrar caja o agregar gasto
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, user, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
-
-    if (!user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-    }
+    const { tenantId, user } = await getAuthContext({ req });
 
     const usuario = await prisma.usuario.findFirst({
       where: { AuthUserId: user.id, EstaEliminado: false },
@@ -790,7 +771,6 @@ export async function PATCH(req: NextRequest) {
     const sucursalIdParam = req.nextUrl.searchParams.get("sucursalId");
 
     let sucursalId: bigint | null = null;
-    let sucursalNombre: string | null = null;
 
     if (sucursalIdParam) {
       const access = await verifyUserBranchAccess(
@@ -800,7 +780,6 @@ export async function PATCH(req: NextRequest) {
       );
       if (access) {
         sucursalId = access.sucursal.Id;
-        sucursalNombre = access.sucursal.Nombre;
       }
     }
 

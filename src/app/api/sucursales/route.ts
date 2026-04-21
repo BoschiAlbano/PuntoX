@@ -15,7 +15,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/constants/comprobantes";
+import { PERMISSIONS, GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import {
   parsePaginationParams,
   createPaginationResponse,
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS,
+      permission: GET_PERMISSIONS.SUCURSALES,
     });
 
     // Obtener parámetros de búsqueda y paginación
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId, usuarioId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS,
+      permission: SET_PERMISSIONS.SUCURSALES,
     });
 
     const body = await req.json();
@@ -206,7 +206,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS,
+      permission: SET_PERMISSIONS.SUCURSALES,
     });
 
     const searchParams = req.nextUrl.searchParams;

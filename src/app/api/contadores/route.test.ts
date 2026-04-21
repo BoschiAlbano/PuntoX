@@ -4,10 +4,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 import { GET } from "./route";
-import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import prisma from "@/DB/prisma";
+import { PermisoError } from "@/lib/requirePermiso";
 
-vi.mock("@/lib/auth/getAuthUser", () => ({ getAuthUser: vi.fn() }));
+vi.mock("@/lib/auth/getAuthUser", () => ({ getAuthContext: vi.fn() }));
 vi.mock("@/DB/prisma", () => ({
   default: {
     contador: {
@@ -18,22 +19,25 @@ vi.mock("@/DB/prisma", () => ({
   },
 }));
 vi.mock("@/lib/errors/handler", () => ({
-  handleError: vi.fn((err: unknown) =>
-    new Response(JSON.stringify({ error: "Error interno" }), { status: 500 })
+  handleError: vi.fn(
+    (err: unknown) =>
+      new Response(JSON.stringify({ error: "Error interno" }), { status: 500 }),
   ),
 }));
 
 describe("GET /api/contadores", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getAuthUser).mockResolvedValue({ tenantId: 1 } as any);
+    vi.mocked(getAuthContext).mockResolvedValue({ tenantId: 1 } as any);
   });
 
-  it("retorna 401 cuando getAuthUser devuelve error", async () => {
-    vi.mocked(getAuthUser).mockResolvedValue({
-      error: new Response(JSON.stringify({ error: "No autenticado" }), { status: 401 }),
-    } as any);
-    const req = new NextRequest("http://localhost:3000/api/contadores?tipoComprobante=1");
+  it("retorna 401 cuando getAuthContext rechaza por no autenticado", async () => {
+    vi.mocked(getAuthContext).mockRejectedValue(
+      new PermisoError("No autenticado", 401),
+    );
+    const req = new NextRequest(
+      "http://localhost:3000/api/contadores?tipoComprobante=1",
+    );
     const res = await GET(req);
     expect(res.status).toBe(401);
   });
@@ -47,7 +51,9 @@ describe("GET /api/contadores", () => {
   });
 
   it("retorna 400 cuando tipoComprobante inválido", async () => {
-    const req = new NextRequest("http://localhost:3000/api/contadores?tipoComprobante=0");
+    const req = new NextRequest(
+      "http://localhost:3000/api/contadores?tipoComprobante=0",
+    );
     const res = await GET(req);
     expect(res.status).toBe(400);
   });
@@ -65,7 +71,9 @@ describe("GET /api/contadores", () => {
       Valor: 11,
     } as any);
 
-    const req = new NextRequest("http://localhost:3000/api/contadores?tipoComprobante=1");
+    const req = new NextRequest(
+      "http://localhost:3000/api/contadores?tipoComprobante=1",
+    );
     const res = await GET(req);
     const data = await res.json();
     expect(res.status).toBe(200);
@@ -86,7 +94,9 @@ describe("GET /api/contadores", () => {
       Valor: 2,
     } as any);
 
-    const req = new NextRequest("http://localhost:3000/api/contadores?tipoComprobante=1");
+    const req = new NextRequest(
+      "http://localhost:3000/api/contadores?tipoComprobante=1",
+    );
     const res = await GET(req);
     const data = await res.json();
     expect(res.status).toBe(200);

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/constants/comprobantes";
+import { PERMISSIONS, GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { handleError } from "@/lib/errors/handler";
 import {
   TIPO_COMPROBANTE_COMPRA,
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.PROVEEDORES,
+      permission: GET_PERMISSIONS.PROVEEDORES,
     });
 
     const searchParams = req.nextUrl.searchParams;
@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.PROVEEDORES,
+      permission: SET_PERMISSIONS.PROVEEDORES,
     });
     const tenantIdBigInt = BigInt(tenantId);
 

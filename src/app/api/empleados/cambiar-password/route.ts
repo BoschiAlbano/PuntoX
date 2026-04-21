@@ -5,7 +5,7 @@ import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
-import { PERMISSIONS } from "@/lib/constants/comprobantes";
+import { PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 
 const cambiarPasswordSchema = z.object({
   usuarioId: z.union([z.number(), z.string()]),
@@ -21,7 +21,7 @@ export async function PUT(req: NextRequest) {
       isSuperAdmin,
     } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS,
+      permission: SET_PERMISSIONS.EMPLEADOS,
     });
 
     const json = await req.json().catch(() => null);

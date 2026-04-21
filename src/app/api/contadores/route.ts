@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
-import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { z } from "zod";
 import { handleError } from "@/lib/errors/handler";
 
@@ -12,11 +12,7 @@ const getNextNumberSchema = z.object({
 // GET: Obtener próximo número de comprobante
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId, error } = await getAuthUser();
-
-    if (error) {
-      return error;
-    }
+    const { tenantId } = await getAuthContext();
 
     const searchParams = req.nextUrl.searchParams;
     const tipoComprobanteParam = searchParams.get("tipoComprobante");
@@ -24,7 +20,7 @@ export async function GET(req: NextRequest) {
     if (!tipoComprobanteParam) {
       return NextResponse.json(
         { error: "tipoComprobante es requerido" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -35,7 +31,7 @@ export async function GET(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: "tipoComprobante inválido", details: parsed.error.issues },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -76,16 +72,9 @@ export async function GET(req: NextRequest) {
         numero: contadorActualizado.Valor,
         tipoComprobante: tipoComprobante,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     return handleError(error);
   }
 }
-
-
-
-
-
-
-

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/constants/comprobantes";
+import { PERMISSIONS, GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { handleError } from "@/lib/errors/handler";
 
 const saveNotificacionesSchema = z.object({
@@ -14,7 +14,7 @@ const saveNotificacionesSchema = z.object({
 export async function GET(req: NextRequest) {
   const { tenantId } = await getAuthContext({
     req,
-    permission: PERMISSIONS.CONFIGURACION,
+    permission: GET_PERMISSIONS.CONFIGURACION,
   });
   if (!tenantId) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   const { tenantId } = await getAuthContext({
     req,
-    permission: PERMISSIONS.CONFIGURACION,
+    permission: SET_PERMISSIONS.CONFIGURACION,
   });
   if (!tenantId) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });

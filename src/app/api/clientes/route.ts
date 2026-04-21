@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/constants/comprobantes";
+import { PERMISSIONS, GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import {
   parsePaginationParams,
   createPaginationResponse,
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.CLIENTES,
+      permission: GET_PERMISSIONS.CLIENTES,
     });
 
     const pagination = parsePaginationParams(req);
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.CLIENTES,
+      permission: SET_PERMISSIONS.CLIENTES,
     });
 
     const json = await req.json().catch(() => null);
@@ -317,7 +317,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.CLIENTES,
+      permission: SET_PERMISSIONS.CLIENTES,
     });
 
     const body = await req.json();
@@ -557,7 +557,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.CLIENTES,
+      permission: SET_PERMISSIONS.CLIENTES,
     });
 
     const searchParams = req.nextUrl.searchParams;

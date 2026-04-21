@@ -1,6 +1,9 @@
 import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
-import { calcularPermisosUsuario, actualizarPermisosEnJWT } from "@/lib/auth/updateUserPermissions";
+import {
+  calcularPermisosUsuario,
+  actualizarPermisosEnJWT,
+} from "@/lib/auth/updateUserPermissions";
 
 type PermisoResult = {
   tenantId: number;
@@ -21,7 +24,7 @@ export class PermisoError extends Error {
  * Prioriza JWT para evitar queries innecesarias
  */
 export async function requirePermiso(
-  clavePermiso: string
+  clavePermiso: string,
 ): Promise<PermisoResult> {
   const supabase = await getSupabaseServerClient();
   const {
@@ -52,14 +55,16 @@ export async function requirePermiso(
   const metadata = user.app_metadata || {};
   const permisosJWT = (metadata.permissions as string[]) || [];
   const isSuperAdminJWT = metadata.isSuperAdmin === true;
+  const isAdministradorJWT = metadata.isAdministrador === true;
 
   // Si tiene permisos en JWT, usarlos (rápido, sin DB)
-  if (permisosJWT.length > 0 || isSuperAdminJWT) {
-    if (isSuperAdminJWT) {
+  if (permisosJWT.length > 0 || isSuperAdminJWT || isAdministradorJWT) {
+    // SuperAdmin y Administrador tienen acceso completo a su tenant
+    if (isSuperAdminJWT || isAdministradorJWT) {
       return {
         tenantId,
         usuarioId,
-        permisos: ["*"], // SuperAdmin tiene acceso completo
+        permisos: ["*"],
       };
     }
 
@@ -79,14 +84,15 @@ export async function requirePermiso(
   // Esto puede pasar si el usuario es antiguo o si hubo un error
   // También actualizamos el JWT para futuras requests
   try {
-    const { permisos, isSuperAdmin } = await calcularPermisosUsuario(user.id);
+    const { permisos, isSuperAdmin, isAdministrador } =
+      await calcularPermisosUsuario(user.id);
 
     // Actualizar JWT para futuras requests (no bloqueamos si falla)
     actualizarPermisosEnJWT(user.id).catch((err) => {
       console.warn("No se pudo actualizar permisos en JWT:", err);
     });
 
-    if (isSuperAdmin) {
+    if (isSuperAdmin || isAdministrador) {
       return {
         tenantId,
         usuarioId,

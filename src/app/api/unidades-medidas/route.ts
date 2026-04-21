@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/constants/comprobantes";
+import { PERMISSIONS, GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import {
   createUnidadMedidaSchema,
   updateUnidadMedidaSchema,
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.PRODUCTOS, // Permiso compartido
+      permission: GET_PERMISSIONS.PRODUCTOS, // Permiso compartido
     });
 
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.PRODUCTOS,
+      permission: SET_PERMISSIONS.PRODUCTOS,
     });
 
     const body = await req.json();
@@ -146,7 +146,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.PRODUCTOS,
+      permission: SET_PERMISSIONS.PRODUCTOS,
     });
 
     const idParam =
@@ -193,7 +193,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.PRODUCTOS,
+      permission: SET_PERMISSIONS.PRODUCTOS,
     });
 
     const body = await req.json();

@@ -1,3 +1,4 @@
+// @ts-nocheck — Script obsoleto: Permiso ya no tiene TenantId (catálogo global desde v2)
 /**
  * Script para REMPLAZAR los permisos de todos los roles ADMINISTRADOR existentes
  * con la lista completa de permisos definida en PERMISSIONS.

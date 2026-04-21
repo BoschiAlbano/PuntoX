@@ -7,6 +7,10 @@ import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { PerfilTipo, Prisma } from "./generated/prisma";
 import { fileURLToPath } from "url";
 import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
+import {
+  ALL_PERMISSIONS,
+  getPermissionDescription,
+} from "@/lib/constants/permissions";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -362,52 +366,34 @@ async function seedSuperAdmin() {
       });
       console.log("✅ Perfil SuperAdmin creado");
 
-      // Definir permisos para SuperAdmin (todos los permisos)
-      const permisosBasicos = [
-        { clave: "ventas", descripcion: "Acceso a ventas" },
-        { clave: "caja", descripcion: "Acceso a caja" },
-        { clave: "productos", descripcion: "Acceso a productos" },
-        { clave: "proveedores", descripcion: "Acceso a proveedores" },
-        {
-          clave: "empleados:admin",
-          descripcion: "Administración completa de empleados",
-        },
-        { clave: "clientes", descripcion: "Acceso a clientes" },
-        { clave: "reportes", descripcion: "Acceso a reportes" },
-        { clave: "configuracion", descripcion: "Acceso a configuración" },
-        { clave: "sucursales", descripcion: "Acceso a sucursales" },
-        { clave: "auditoria", descripcion: "Acceso a auditoría" },
-        { clave: "analiticas", descripcion: "Acceso a analíticas" },
-        { clave: "superadmin", descripcion: "Acceso de SuperAdmin" },
-        { clave: "compras", descripcion: "Acceso a compras" },
-      ];
+      // Seedear catálogo global de permisos del sistema
+      const todasLasClaves = ALL_PERMISSIONS;
+      await tx.permiso.createMany({
+        data: todasLasClaves.map((clave) => ({
+          Clave: clave,
+          Descripcion: getPermissionDescription(clave),
+          EstaEliminado: false,
+        })),
+        skipDuplicates: true,
+      });
+      console.log(
+        `✅ Catálogo de permisos creado (${todasLasClaves.length} claves)`,
+      );
 
-      // Crear y asignar permisos
-      for (const permisoData of permisosBasicos) {
-        const permiso = await tx.permiso.upsert({
-          where: {
-            Clave_TenantId: {
-              Clave: permisoData.clave,
-              TenantId: newTenant.Id,
-            },
-          },
-          update: { EstaEliminado: false },
-          create: {
-            Clave: permisoData.clave,
-            Descripcion: permisoData.descripcion,
-            TenantId: newTenant.Id,
-            EstaEliminado: false,
-          },
-        });
+      // Obtener todos los permisos recién creados para asignar al perfil SuperAdmin
+      const todosLosPermisos = await tx.permiso.findMany({
+        where: { Clave: { in: todasLasClaves }, EstaEliminado: false },
+      });
 
-        await tx.perfilPermiso.create({
-          data: {
-            PerfilId: perfilSuperAdmin.Id,
-            PermisoId: permiso.Id,
-            TenantId: newTenant.Id,
-          },
-        });
-      }
+      // Crear y asignar permisos al perfil SuperAdmin
+      await tx.perfilPermiso.createMany({
+        data: todosLosPermisos.map((permiso) => ({
+          PerfilId: perfilSuperAdmin.Id,
+          PermisoId: permiso.Id,
+          TenantId: newTenant.Id,
+        })),
+        skipDuplicates: true,
+      });
       console.log("✅ Permisos creados y asignados");
 
       // Asignar perfil al usuario

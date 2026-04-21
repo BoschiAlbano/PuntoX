@@ -1,18 +1,18 @@
 /**
  * Tests para la API de caja (GET, POST abrir, PATCH cerrar).
  * Estructura de referencia: src/app/api/marcas/route.test.ts
- * (Esta ruta usa getAuthUser; mismo patrón de mocks y casos 401/400/200.)
+ * Usa getAuthContext; mismo patrón de mocks y casos 401/400/200.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 import { GET, POST, PATCH } from "./route";
-import { getAuthUser } from "@/lib/auth/getAuthUser";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import prisma from "@/DB/prisma";
 import { verifyUserBranchAccess } from "@/lib/sucursal/verifyUserBranch";
 import { PermisoError } from "@/lib/requirePermiso";
 
 vi.mock("@/lib/auth/getAuthUser", () => ({
-  getAuthUser: vi.fn(),
+  getAuthContext: vi.fn(),
 }));
 vi.mock("@/DB/prisma", () => ({
   default: {
@@ -54,19 +54,15 @@ vi.mock("@/lib/errors/handler", () => ({
 const authOk = {
   user: { id: "auth-1" },
   tenantId: 1,
-  error: null,
-};
-const authError = {
-  user: null,
-  tenantId: null,
-  error: new Response(JSON.stringify({ message: "No autenticado" }), { status: 401 }),
 };
 
 describe("GET /api/caja", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("retorna 401 si no está autenticado", async () => {
-    vi.mocked(getAuthUser).mockResolvedValue(authError as any);
+    vi.mocked(getAuthContext).mockRejectedValue(
+      new PermisoError("No autenticado", 401),
+    );
     const req = new NextRequest("http://localhost:3000/api/caja");
     const res = await GET(req);
     const data = await res.json();
@@ -75,7 +71,7 @@ describe("GET /api/caja", () => {
   });
 
   it("retorna 200 con data y pagination cuando está autenticado", async () => {
-    vi.mocked(getAuthUser).mockResolvedValue(authOk as any);
+    vi.mocked(getAuthContext).mockResolvedValue(authOk as any);
     vi.mocked(prisma.caja.count).mockResolvedValue(0);
     vi.mocked(prisma.caja.findMany).mockResolvedValue([]);
     const req = new NextRequest("http://localhost:3000/api/caja");
@@ -92,11 +88,9 @@ describe("POST /api/caja", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("retorna 401 si no está autenticado", async () => {
-    vi.mocked(getAuthUser).mockResolvedValue({
-      user: null,
-      tenantId: null,
-      error: new Response(JSON.stringify({ message: "No autenticado" }), { status: 401 }),
-    } as any);
+    vi.mocked(getAuthContext).mockRejectedValue(
+      new PermisoError("No autenticado", 401),
+    );
     const req = new NextRequest("http://localhost:3000/api/caja", {
       method: "POST",
       body: JSON.stringify({ montoInicial: 0 }),
@@ -106,7 +100,7 @@ describe("POST /api/caja", () => {
   });
 
   it("retorna 400 con error cuando el body es inválido", async () => {
-    vi.mocked(getAuthUser).mockResolvedValue(authOk as any);
+    vi.mocked(getAuthContext).mockResolvedValue(authOk as any);
     vi.mocked(prisma.usuario.findFirst).mockResolvedValue({ Id: 1 } as any);
     vi.mocked(verifyUserBranchAccess).mockResolvedValue({
       sucursal: { Id: 1n, Nombre: "Suc1" },
@@ -123,7 +117,7 @@ describe("POST /api/caja", () => {
   });
 
   it("retorna 200 con caja creada cuando el body es válido", async () => {
-    vi.mocked(getAuthUser).mockResolvedValue(authOk as any);
+    vi.mocked(getAuthContext).mockResolvedValue(authOk as any);
     vi.mocked(prisma.usuario.findFirst).mockResolvedValue({ Id: 1 } as any);
     vi.mocked(verifyUserBranchAccess).mockResolvedValue({
       sucursal: { Id: 1n, Nombre: "Suc1" },
@@ -152,30 +146,34 @@ describe("PATCH /api/caja", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("retorna 401 si no está autenticado", async () => {
-    vi.mocked(getAuthUser).mockResolvedValue({
-      user: null,
-      tenantId: null,
-      error: new Response(JSON.stringify({ message: "No autenticado" }), { status: 401 }),
-    } as any);
-    const req = new NextRequest("http://localhost:3000/api/caja?accion=cerrar", {
-      method: "PATCH",
-      body: JSON.stringify({ montoCierre: 100 }),
-    });
+    vi.mocked(getAuthContext).mockRejectedValue(
+      new PermisoError("No autenticado", 401),
+    );
+    const req = new NextRequest(
+      "http://localhost:3000/api/caja?accion=cerrar",
+      {
+        method: "PATCH",
+        body: JSON.stringify({ montoCierre: 100 }),
+      },
+    );
     const res = await PATCH(req);
     expect(res.status).toBe(401);
   });
 
   it("retorna 400 cuando no tiene caja abierta", async () => {
-    vi.mocked(getAuthUser).mockResolvedValue(authOk as any);
+    vi.mocked(getAuthContext).mockResolvedValue(authOk as any);
     vi.mocked(prisma.usuario.findFirst).mockResolvedValue({ Id: 1 } as any);
     vi.mocked(verifyUserBranchAccess).mockResolvedValue({
       sucursal: { Id: 1n, Nombre: "Suc1" },
     } as any);
     vi.mocked(prisma.caja.findFirst).mockResolvedValue(null);
-    const req = new NextRequest("http://localhost:3000/api/caja?accion=cerrar", {
-      method: "PATCH",
-      body: JSON.stringify({ montoCierre: 100 }),
-    });
+    const req = new NextRequest(
+      "http://localhost:3000/api/caja?accion=cerrar",
+      {
+        method: "PATCH",
+        body: JSON.stringify({ montoCierre: 100 }),
+      },
+    );
     const res = await PATCH(req);
     const data = await res.json();
     expect(res.status).toBe(400);
@@ -183,7 +181,7 @@ describe("PATCH /api/caja", () => {
   });
 
   it("retorna 400 con error cuando el body para cerrar es inválido", async () => {
-    vi.mocked(getAuthUser).mockResolvedValue(authOk as any);
+    vi.mocked(getAuthContext).mockResolvedValue(authOk as any);
     vi.mocked(prisma.usuario.findFirst).mockResolvedValue({ Id: 1 } as any);
     vi.mocked(verifyUserBranchAccess).mockResolvedValue({
       sucursal: { Id: 1n, Nombre: "Suc1" },
@@ -193,10 +191,13 @@ describe("PATCH /api/caja", () => {
       UsuarioAperturaId: 1,
       Usuario_Caja_UsuarioCierreIdToUsuario: null,
     } as any);
-    const req = new NextRequest("http://localhost:3000/api/caja?accion=cerrar", {
-      method: "PATCH",
-      body: JSON.stringify({ montoCierre: -50 }),
-    });
+    const req = new NextRequest(
+      "http://localhost:3000/api/caja?accion=cerrar",
+      {
+        method: "PATCH",
+        body: JSON.stringify({ montoCierre: -50 }),
+      },
+    );
     const res = await PATCH(req);
     const data = await res.json();
     expect(res.status).toBe(400);
@@ -204,7 +205,7 @@ describe("PATCH /api/caja", () => {
   });
 
   it("retorna 200 con caja cerrada cuando el body es válido", async () => {
-    vi.mocked(getAuthUser).mockResolvedValue(authOk as any);
+    vi.mocked(getAuthContext).mockResolvedValue(authOk as any);
     vi.mocked(prisma.usuario.findFirst).mockResolvedValue({ Id: 1 } as any);
     vi.mocked(verifyUserBranchAccess).mockResolvedValue({
       sucursal: { Id: 1n, Nombre: "Suc1" },
@@ -225,10 +226,13 @@ describe("PATCH /api/caja", () => {
       UsuarioCierreId: 1,
       Usuario_Caja_UsuarioCierreIdToUsuario: { Id: 1, Nombre: "user" },
     } as any);
-    const req = new NextRequest("http://localhost:3000/api/caja?accion=cerrar", {
-      method: "PATCH",
-      body: JSON.stringify({ montoCierre: 100 }),
-    });
+    const req = new NextRequest(
+      "http://localhost:3000/api/caja?accion=cerrar",
+      {
+        method: "PATCH",
+        body: JSON.stringify({ montoCierre: 100 }),
+      },
+    );
     const res = await PATCH(req);
     const data = await res.json();
     expect(res.status).toBe(200);

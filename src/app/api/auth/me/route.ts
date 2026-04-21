@@ -95,6 +95,10 @@ export async function GET() {
     // Also include roles
     const roles = dbUser.PerfilUsuario.map((pu) => pu.Perfiles);
 
+    const isSuperAdmin = roles.some((r) => r.Tipo === "SUPERADMIN");
+    const isAdministrador =
+      !isSuperAdmin && roles.some((r) => r.Tipo === "ADMINISTRADOR");
+
     const permissions = Array.from(permissionsSet);
 
     return NextResponse.json({
@@ -104,6 +108,8 @@ export async function GET() {
       currentBranch,
       permissions,
       roles,
+      isSuperAdmin,
+      isAdministrador,
     });
   } catch (error) {
     console.error("Error fetching user data:", error);

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
-import { TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
+import { TIPO_COMPROBANTE_VENTA, GET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { PERMISSIONS } from "@/lib/constants/comprobantes";
 
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId, sucursalId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.ANALITICAS,
+      permission: GET_PERMISSIONS.ANALITICAS,
     });
 
     if (!sucursalId) {

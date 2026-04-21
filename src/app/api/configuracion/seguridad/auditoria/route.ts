@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/constants/comprobantes";
+import { PERMISSIONS, GET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { handleError } from "@/lib/errors/handler";
 
 /**
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.CONFIGURACION,
+      permission: GET_PERMISSIONS.CONFIGURACION,
     });
     if (!tenantId) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma"; // Assuming this is the correct path for prisma client
-import { getAuthUser } from "@/lib/auth/getAuthUser";
-import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
 import { TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
 import {
@@ -20,21 +19,7 @@ import { getNextNumeroComprobante } from "@/lib/services/contadores";
 // POST: Crear comprobante (venta)
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, error: authError } = await getAuthUser();
-
-    if (authError) {
-      return authError;
-    }
-
-    // Obtener usuario y empleado actual
-    const supabase = await getSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-    }
+    const { tenantId, user } = await getAuthContext();
 
     const usuario = await prisma.usuario.findFirst({
       where: { AuthUserId: user.id, EstaEliminado: false },
@@ -434,8 +419,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId, error: authError } = await getAuthUser();
-    if (authError) return authError;
+    const { tenantId } = await getAuthContext();
 
     const url = new URL(req.url);
     const id = url.searchParams.get("id");

@@ -50,7 +50,6 @@ model Tenant {
   PerfilPermisos        PerfilPermiso[]
   PerfilesUsuarios      PerfilUsuario[]
   Perfiles              Perfiles[]
-  Permisos              Permiso[]
   Personas              Persona[]
   Precios               Precio[]
   Proveedores           Proveedor[]
@@ -870,18 +869,13 @@ model Perfiles {
   @@index([TenantId])
 }
 
-/// Permisos disponibles por tenant (permisos funcionales que se pueden asignar a un rol).
+/// Catálogo global de permisos del sistema (compartido por todos los tenants).
 model Permiso {
   Id             BigInt          @id @default(autoincrement())
-  Clave          String          @db.VarChar(100)
+  Clave          String          @unique @db.VarChar(100)
   Descripcion    String?         @db.VarChar(250)
   EstaEliminado  Boolean         @default(false)
-  TenantId       BigInt
   PerfilPermisos PerfilPermiso[]
-  Tenant         Tenant          @relation(fields: [TenantId], references: [Id])
-
-  @@unique([Clave, TenantId])
-  @@index([TenantId])
 }
 
 /// RelaciÃ³n muchos a muchos entre perfiles (roles) y permisos.

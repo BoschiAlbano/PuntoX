@@ -502,15 +502,12 @@ export async function DELETE(req: NextRequest) {
         where: { TenantId: tenantId },
       });
 
-      // 24. Eliminar perfiles
+      // 24. Eliminar perfiles (PerfilPermiso se elimina en cascada)
       await tx.perfiles.deleteMany({
         where: { TenantId: tenantId },
       });
 
-      // 25. Eliminar permisos
-      await tx.permiso.deleteMany({
-        where: { TenantId: tenantId },
-      });
+      // Nota: Permiso es catálogo global — no se elimina al borrar un tenant
 
       // 26. Eliminar formularios
       await tx.formularios.deleteMany({

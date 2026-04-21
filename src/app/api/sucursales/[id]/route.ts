@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/constants/comprobantes";
+import { PERMISSIONS, GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { handleError } from "@/lib/errors/handler";
 
 // Schema de validación para actualizar sucursal
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS,
+      permission: GET_PERMISSIONS.SUCURSALES,
     });
 
     const { id } = await params;
@@ -121,7 +121,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS,
+      permission: SET_PERMISSIONS.SUCURSALES,
     });
 
     const { id } = await params;
@@ -222,7 +222,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS,
+      permission: SET_PERMISSIONS.SUCURSALES,
     });
 
     const { id } = await params;

@@ -5,24 +5,26 @@ import { PermisoError } from "@/lib/requirePermiso";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 import { handleError } from "@/lib/errors/handler";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS } from "@/lib/constants/comprobantes";
+import {
+  ALL_PERMISSIONS,
+  GET_PERMISSIONS,
+  SET_PERMISSIONS,
+} from "@/lib/constants/comprobantes";
+
+// Conjunto de todas las claves válidas del sistema de permisos
+const CLAVES_VALIDAS = new Set<string>(ALL_PERMISSIONS);
 
 type RolTipo = "ADMINISTRADOR" | "EMPLEADO";
 
 export const rolSchema = z.object({
-  nombre: z.string().min(1).max(250, "El nombre no puede exceder 250 caracteres"),
+  nombre: z
+    .string()
+    .min(1)
+    .max(250, "El nombre no puede exceder 250 caracteres"),
   descripcion: z.string().optional().nullable(),
   tipo: z.enum(["ADMINISTRADOR", "EMPLEADO"]).default("EMPLEADO"),
   permisos: z.array(z.string().min(1)).optional().default([]),
 });
-
-function normalizePermisoKey(label: string) {
-  return label
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 function mapRolTipo(tipo?: string | null): RolTipo {
   if (tipo === "ADMINISTRADOR" || tipo === "EMPLEADO") return tipo;
@@ -33,7 +35,7 @@ export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
+      permission: GET_PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
 
     const roles = await prisma.perfiles.findMany({
@@ -62,7 +64,7 @@ export async function GET(req: NextRequest) {
       usuarios: rol.PerfilUsuario.length,
       permisos: rol.PerfilPermiso.filter(
         (pp) => !pp.Permiso?.EstaEliminado,
-      ).map((pp) => pp.Permiso?.Descripcion ?? pp.Permiso?.Clave ?? ""),
+      ).map((pp) => pp.Permiso?.Clave ?? ""),
     }));
 
     return NextResponse.json({ roles: response }, { status: 200 });
@@ -81,7 +83,7 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId, usuarioId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
+      permission: SET_PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
     const json = await req.json().catch(() => null);
     const parsed = rolSchema.safeParse(json);
@@ -94,7 +96,9 @@ export async function POST(req: NextRequest) {
     const permisosSolicitados = Array.from(
       new Set([
         ...(data.permisos ?? []),
-        ...(data.tipo === "ADMINISTRADOR" ? ["empleados:admin"] : []),
+        ...(data.tipo === "ADMINISTRADOR"
+          ? [] /* "empleados:admin" eliminado — redundante con bypass Administrador */
+          : []),
       ]),
     );
 
@@ -138,32 +142,31 @@ export async function POST(req: NextRequest) {
       }[];
 
       if (permisosUnicos.length) {
-        permisos = await Promise.all(
-          permisosUnicos.map((permisoLabel) => {
-            const clave =
-              normalizePermisoKey(permisoLabel) || permisoLabel.toLowerCase();
-            return tx.permiso.upsert({
-              where: {
-                Clave_TenantId: { Clave: clave, TenantId: tenantIdBigInt },
-              },
-              update: { Descripcion: permisoLabel, EstaEliminado: false },
-              create: {
-                Clave: clave,
-                Descripcion: permisoLabel,
-                TenantId: tenantIdBigInt,
-              },
-            });
-          }),
+        // Solo procesar claves que pertenezcan al catálogo válido del sistema
+        const clavesValidas = permisosUnicos.filter((c) =>
+          CLAVES_VALIDAS.has(c),
         );
 
-        await tx.perfilPermiso.createMany({
-          data: permisos.map((permiso) => ({
-            PerfilId: rol.Id,
-            PermisoId: permiso.Id,
-            TenantId: tenantIdBigInt,
-          })),
-          skipDuplicates: true,
-        });
+        permisos = await Promise.all(
+          clavesValidas.map((clave) =>
+            tx.permiso.upsert({
+              where: { Clave: clave },
+              update: { EstaEliminado: false },
+              create: { Clave: clave, EstaEliminado: false },
+            }),
+          ),
+        );
+
+        if (permisos.length > 0) {
+          await tx.perfilPermiso.createMany({
+            data: permisos.map((permiso) => ({
+              PerfilId: rol.Id,
+              PermisoId: permiso.Id,
+              TenantId: tenantIdBigInt,
+            })),
+            skipDuplicates: true,
+          });
+        }
       }
 
       return { rol, permisos };
@@ -175,7 +178,7 @@ export async function POST(req: NextRequest) {
       tipo: mapRolTipo(created.rol.Tipo as string | undefined),
       descripcion: data.descripcion ?? null,
       usuarios: 0,
-      permisos: created.permisos.map((p) => p.Descripcion ?? p.Clave),
+      permisos: created.permisos.map((p) => p.Clave),
     };
 
     // Registrar auditoría CREAR_ROL
@@ -187,7 +190,7 @@ export async function POST(req: NextRequest) {
       valorNuevo: {
         nombre: created.rol.Descripcion,
         tipo: created.rol.Tipo,
-        permisos: created.permisos.map((p) => p.Descripcion ?? p.Clave),
+        permisos: created.permisos.map((p) => p.Clave),
       },
       req,
     });
@@ -208,7 +211,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const { tenantId, usuarioId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
+      permission: SET_PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
     const tenantIdBigInt = BigInt(tenantId);
 
@@ -315,7 +318,9 @@ export async function PATCH(req: NextRequest) {
     const permisosSolicitados = Array.from(
       new Set([
         ...(data.permisos ?? []),
-        ...(data.tipo === "ADMINISTRADOR" ? ["empleados:admin"] : []),
+        ...(data.tipo === "ADMINISTRADOR"
+          ? [] /* "empleados:admin" eliminado — redundante con bypass Administrador */
+          : []),
       ]),
     );
 
@@ -353,32 +358,31 @@ export async function PATCH(req: NextRequest) {
       }[];
 
       if (permisosUnicos.length) {
-        permisos = await Promise.all(
-          permisosUnicos.map((permisoLabel) => {
-            const clave =
-              normalizePermisoKey(permisoLabel) || permisoLabel.toLowerCase();
-            return tx.permiso.upsert({
-              where: {
-                Clave_TenantId: { Clave: clave, TenantId: tenantIdBigInt },
-              },
-              update: { Descripcion: permisoLabel, EstaEliminado: false },
-              create: {
-                Clave: clave,
-                Descripcion: permisoLabel,
-                TenantId: tenantIdBigInt,
-              },
-            });
-          }),
+        // Solo procesar claves que pertenezcan al catálogo válido del sistema
+        const clavesValidas = permisosUnicos.filter((c) =>
+          CLAVES_VALIDAS.has(c),
         );
 
-        await tx.perfilPermiso.createMany({
-          data: permisos.map((permiso) => ({
-            PerfilId: rolIdBigInt,
-            PermisoId: permiso.Id,
-            TenantId: tenantIdBigInt,
-          })),
-          skipDuplicates: true,
-        });
+        permisos = await Promise.all(
+          clavesValidas.map((clave) =>
+            tx.permiso.upsert({
+              where: { Clave: clave },
+              update: { EstaEliminado: false },
+              create: { Clave: clave, EstaEliminado: false },
+            }),
+          ),
+        );
+
+        if (permisos.length > 0) {
+          await tx.perfilPermiso.createMany({
+            data: permisos.map((permiso) => ({
+              PerfilId: rolIdBigInt,
+              PermisoId: permiso.Id,
+              TenantId: tenantIdBigInt,
+            })),
+            skipDuplicates: true,
+          });
+        }
       }
 
       // Obtener el rol actualizado con conteo de usuarios
@@ -417,17 +421,17 @@ export async function PATCH(req: NextRequest) {
       usuarios: updated.rol.PerfilUsuario.length,
       permisos: updated.rol.PerfilPermiso.filter(
         (pp) => !pp.Permiso?.EstaEliminado,
-      ).map((pp) => pp.Permiso?.Descripcion ?? pp.Permiso?.Clave ?? ""),
+      ).map((pp) => pp.Permiso?.Clave ?? ""),
     };
 
     // Registrar auditoría EDITAR_ROL
     const permisosAnteriores = rolExistente.PerfilPermiso.filter(
       (pp) => !pp.Permiso?.EstaEliminado,
-    ).map((pp) => pp.Permiso?.Descripcion ?? pp.Permiso?.Clave ?? "");
+    ).map((pp) => pp.Permiso?.Clave ?? "");
 
     const permisosNuevos = updated.rol.PerfilPermiso.filter(
       (pp) => !pp.Permiso?.EstaEliminado,
-    ).map((pp) => pp.Permiso?.Descripcion ?? pp.Permiso?.Clave ?? "");
+    ).map((pp) => pp.Permiso?.Clave ?? "");
 
     await registrarAuditoria({
       tenantId: tenantIdBigInt,
@@ -470,7 +474,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const { tenantId, usuarioId } = await getAuthContext({
       req,
-      permission: PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
+      permission: SET_PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
     const tenantIdBigInt = BigInt(tenantId);
 

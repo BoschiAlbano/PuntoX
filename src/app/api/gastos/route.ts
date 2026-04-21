@@ -4,7 +4,7 @@ import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { verifyUserBranchAccess } from "@/lib/sucursal/verifyUserBranch";
 import { handleError } from "@/lib/errors/handler";
-import { PERMISSIONS } from "@/lib/constants/comprobantes";
+import { PERMISSIONS, SET_PERMISSIONS, GET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { TIPO_PAGO } from "@/lib/constants/comprobantes";
 
 export const createGastoSchema = z.object({
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   try {
     const { tenantId, user } = await getAuthContext({
       req,
-      permission: PERMISSIONS.CAJA,
+      permission: SET_PERMISSIONS.CAJA,
     });
 
     if (!user) {
@@ -180,7 +180,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const { tenantId, user } = await getAuthContext({
       req,
-      permission: PERMISSIONS.CAJA,
+      permission: SET_PERMISSIONS.CAJA,
     });
 
     if (!user) {
@@ -279,7 +279,7 @@ export async function PUT(req: NextRequest) {
   try {
     const { tenantId, user } = await getAuthContext({
       req,
-      permission: PERMISSIONS.CAJA,
+      permission: SET_PERMISSIONS.CAJA,
     });
 
     if (!user) {

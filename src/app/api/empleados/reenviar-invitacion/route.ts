@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermiso, PermisoError } from "@/lib/requirePermiso";
+import { SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 import prisma from "@/DB/prisma";
 import { z } from "zod";
@@ -13,15 +14,17 @@ const reenviarInvitacionSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, usuarioId } = await requirePermiso("empleados:admin");
+    const { tenantId, usuarioId } = await requirePermiso(
+      SET_PERMISSIONS.EMPLEADOS,
+    );
 
     const json = await req.json().catch(() => null);
     const parsed = reenviarInvitacionSchema.safeParse(json);
-    
+
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Datos inválidos", details: parsed.error.issues },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -50,7 +53,7 @@ export async function POST(req: NextRequest) {
     if (!persona) {
       return NextResponse.json(
         { error: "Persona no encontrada o no pertenece a este tenant" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -58,7 +61,7 @@ export async function POST(req: NextRequest) {
     if (!empleado) {
       return NextResponse.json(
         { error: "No se encontró información de empleado" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -82,21 +85,20 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { 
+      {
         message: "Invitación reenviada exitosamente",
         email,
         personaId: Number(persona.Id),
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     if (error instanceof PermisoError) {
       return NextResponse.json(
         { error: error.message },
-        { status: error.status }
+        { status: error.status },
       );
     }
     return handleError(error);
   }
 }
-

@@ -1,3 +1,4 @@
+// @ts-nocheck — Script obsoleto: Permiso ya no tiene TenantId (catálogo global desde v2)
 import { PrismaClient } from "../prisma/generated/prisma";
 
 const prisma = new PrismaClient();
@@ -16,7 +17,7 @@ async function main() {
 
   for (const tenant of tenants) {
     console.log(`\n🏢 Tenant: ${tenant.Nombre} (ID: ${tenant.Id})`);
-    
+
     // Buscar el perfil de administrador
     const perfilAdmin = await prisma.perfiles.findFirst({
       where: {
@@ -46,25 +47,30 @@ async function main() {
     }
 
     console.log(`  ✅ Perfil Administrador (ID: ${perfilAdmin.Id})`);
-    console.log(`  📋 Permisos asignados (${perfilAdmin.PerfilPermiso.length}):`);
+    console.log(
+      `  📋 Permisos asignados (${perfilAdmin.PerfilPermiso.length}):`,
+    );
 
     if (perfilAdmin.PerfilPermiso.length === 0) {
       console.log(`     ⚠️  No hay permisos asignados`);
     } else {
       perfilAdmin.PerfilPermiso.forEach((pp) => {
         const estado = pp.Permiso.EstaEliminado ? "❌ ELIMINADO" : "✅";
-        console.log(`     ${estado} ${pp.Permiso.Clave} - ${pp.Permiso.Descripcion || "Sin descripción"}`);
+        console.log(
+          `     ${estado} ${pp.Permiso.Clave} - ${pp.Permiso.Descripcion || "Sin descripción"}`,
+        );
       });
     }
 
     // Verificar si falta el permiso empleados:admin
     const tieneEmpleadosAdmin = perfilAdmin.PerfilPermiso.some(
-      (pp) => pp.Permiso.Clave === "empleados:admin" && !pp.Permiso.EstaEliminado
+      (pp) =>
+        pp.Permiso.Clave === "empleados:admin" && !pp.Permiso.EstaEliminado,
     );
 
     if (!tieneEmpleadosAdmin) {
       console.log(`  ⚠️  FALTA el permiso "empleados:admin"`);
-      
+
       // Verificar si el permiso existe pero no está asignado
       const permisoEmpleados = await prisma.permiso.findFirst({
         where: {
@@ -94,4 +100,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-
