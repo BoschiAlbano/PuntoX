@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma"; // Assuming this is the correct path for prisma client
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
-import { TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
+import {
+  GET_PERMISSIONS,
+  SET_PERMISSIONS,
+  TIPO_COMPROBANTE_VENTA,
+} from "@/lib/constants/comprobantes";
 import {
   createComprobanteBaseSchema,
   createFacturaA,
@@ -19,7 +23,10 @@ import { getNextNumeroComprobante } from "@/lib/services/contadores";
 // POST: Crear comprobante (venta)
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, user } = await getAuthContext();
+    const { tenantId, user } = await getAuthContext({
+      req,
+      permission: SET_PERMISSIONS.VENTAS,
+    });
 
     const usuario = await prisma.usuario.findFirst({
       where: { AuthUserId: user.id, EstaEliminado: false },
@@ -419,7 +426,10 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext();
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: GET_PERMISSIONS.VENTAS,
+    });
 
     const url = new URL(req.url);
     const id = url.searchParams.get("id");

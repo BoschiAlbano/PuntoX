@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
+import { GET_PERMISSIONS } from "@/lib/constants/comprobantes";
 
 // GET: Listar tarjetas configuradas
 export async function GET() {
   try {
-    const { tenantId } = await getAuthContext();
+    const { tenantId } = await getAuthContext({
+      permission: GET_PERMISSIONS.CAJA,
+    });
 
     const tarjetas = await prisma.tarjeta.findMany({
       where: {

@@ -3,6 +3,7 @@ import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { createIvaSchema, updateIvaSchema } from "@/lib/validations/iva.schema";
 import { ZodError } from "zod";
+import { GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 
 import {
   parsePaginationParams,
@@ -13,7 +14,10 @@ import { handleError } from "@/lib/errors/handler";
 
 export async function GET(req: NextRequest) {
   try {
-    await getAuthContext();
+    await getAuthContext({
+      req,
+      permission: GET_PERMISSIONS.PRODUCTOS,
+    });
 
     const pagination = parsePaginationParams(req);
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
@@ -56,9 +60,12 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    await getAuthContext();
+    await getAuthContext({
+      req,
+      permission: SET_PERMISSIONS.PRODUCTOS,
+    });
 
     const body = await req.json();
 
@@ -102,7 +109,10 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    await getAuthContext();
+    await getAuthContext({
+      req,
+      permission: SET_PERMISSIONS.PRODUCTOS,
+    });
 
     const idParam =
       req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
@@ -142,7 +152,10 @@ export async function DELETE(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext();
+    const { tenantId } = await getAuthContext({
+      req,
+      permission: SET_PERMISSIONS.PRODUCTOS,
+    });
 
     if (!tenantId || tenantId <= 0) {
       throw createError.unauthorized("TenantId inválido o no proporcionado");

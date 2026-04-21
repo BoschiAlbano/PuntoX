@@ -3,17 +3,35 @@ import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { z } from "zod";
 import { handleError } from "@/lib/errors/handler";
+import {
+  SET_PERMISSIONS,
+  TIPO_COMPROBANTE_COMPRA,
+  TIPO_COMPROBANTE_VENTA,
+} from "@/lib/constants/comprobantes";
 
 // Schema para obtener próximo número
 const getNextNumberSchema = z.object({
   tipoComprobante: z.number().int().min(1),
 });
 
+function getContadorPermission(tipoComprobante: number) {
+  const tiposVenta = new Set<number>(Object.values(TIPO_COMPROBANTE_VENTA));
+  const tiposCompra = new Set<number>(Object.values(TIPO_COMPROBANTE_COMPRA));
+
+  if (tiposVenta.has(tipoComprobante)) {
+    return SET_PERMISSIONS.VENTAS;
+  }
+
+  if (tiposCompra.has(tipoComprobante)) {
+    return SET_PERMISSIONS.COMPRAS;
+  }
+
+  return null;
+}
+
 // GET: Obtener próximo número de comprobante
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext();
-
     const searchParams = req.nextUrl.searchParams;
     const tipoComprobanteParam = searchParams.get("tipoComprobante");
 
@@ -36,6 +54,20 @@ export async function GET(req: NextRequest) {
     }
 
     const { tipoComprobante } = parsed.data;
+    const permission = getContadorPermission(tipoComprobante);
+
+    if (!permission) {
+      return NextResponse.json(
+        { error: "tipoComprobante no soportado" },
+        { status: 400 },
+      );
+    }
+
+    const { tenantId } = await getAuthContext({
+      req,
+      permission,
+    });
+
     const tenantIdBigInt = BigInt(tenantId);
 
     // Buscar contador existente

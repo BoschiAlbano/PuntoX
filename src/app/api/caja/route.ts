@@ -8,6 +8,7 @@ import {
 } from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
 import { verifyUserBranchAccess } from "@/lib/sucursal/verifyUserBranch";
+import { GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 
 /** Límite máximo razonable para montos de caja (evita overflow/DoS) */
 const MONTO_CAJA_MAX = 999_999_999_999;
@@ -37,7 +38,10 @@ export const cerrarCajaSchema = z.object({
 // GET: Obtener caja actual o historial
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId, user } = await getAuthContext({ req });
+    const { tenantId, user } = await getAuthContext({
+      req,
+      permission: GET_PERMISSIONS.CAJA,
+    });
 
     const searchParams = req.nextUrl.searchParams;
     const cajaId = searchParams.get("id");
@@ -642,7 +646,10 @@ export async function GET(req: NextRequest) {
 // POST: Abrir caja
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, user } = await getAuthContext({ req });
+    const { tenantId, user } = await getAuthContext({
+      req,
+      permission: SET_PERMISSIONS.CAJA,
+    });
 
     const usuario = await prisma.usuario.findFirst({
       where: { AuthUserId: user.id, EstaEliminado: false },
@@ -754,7 +761,10 @@ export async function POST(req: NextRequest) {
 // PATCH: Cerrar caja o agregar gasto
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, user } = await getAuthContext({ req });
+    const { tenantId, user } = await getAuthContext({
+      req,
+      permission: SET_PERMISSIONS.CAJA,
+    });
 
     const usuario = await prisma.usuario.findFirst({
       where: { AuthUserId: user.id, EstaEliminado: false },

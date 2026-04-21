@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { handleError } from "@/lib/errors/handler";
 
 export async function GET(req: NextRequest) {
   try {
@@ -46,19 +47,26 @@ export async function GET(req: NextRequest) {
       pagination: { unreadCount, total: safeData.length },
     });
   } catch (error) {
-    console.error("Error GET /api/notificaciones:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 },
-    );
+    return handleError(error);
   }
 }
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, usuarioId } = await getAuthContext({
-      req,
-    });
+    const { tenantId, usuarioId, isAdministrador, isSuperAdmin } =
+      await getAuthContext({
+        req,
+      });
+
+    if (!isAdministrador && !isSuperAdmin) {
+      return NextResponse.json(
+        {
+          error:
+            "Solo administradores o superadmin pueden modificar notificaciones",
+        },
+        { status: 403 },
+      );
+    }
 
     const data = await req.json();
     const { markAll, id } = data;
@@ -95,16 +103,25 @@ export async function PATCH(req: NextRequest) {
       { status: 400 },
     );
   } catch (error) {
-    console.error("Error PATCH /api/notificaciones:", error);
-    return NextResponse.json({ error: "Error interno" }, { status: 500 });
+    return handleError(error);
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext({
+    const { tenantId, isAdministrador, isSuperAdmin } = await getAuthContext({
       req,
     });
+
+    if (!isAdministrador && !isSuperAdmin) {
+      return NextResponse.json(
+        {
+          error:
+            "Solo administradores o superadmin pueden crear notificaciones",
+        },
+        { status: 403 },
+      );
+    }
 
     const payload = await req.json();
     const {
@@ -173,10 +190,6 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error POST /api/notificaciones:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 },
-    );
+    return handleError(error);
   }
 }

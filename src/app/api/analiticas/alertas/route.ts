@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS, GET_PERMISSIONS } from "@/lib/constants/comprobantes";
+import { GET_PERMISSIONS } from "@/lib/constants/comprobantes";
 
 /**
  * GET /api/analiticas/alertas

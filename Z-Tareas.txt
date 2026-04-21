@@ -1,5 +1,5 @@
-1- Mejorar el sistema de permisos.
-2- un usuario administrador deberia poder cerrar caja de otro usuario que la dejo abierta.
+1- Mejorar el sistema de permisos. (controlar)
+2- un usuario administrador deberia poder cerrar caja de otro usuario que la dejo abierta. o deberia manejar una sola caja.
 3- 
 
 

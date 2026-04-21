@@ -3,6 +3,7 @@ import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
 import {
+  SET_PERMISSIONS,
   TIPO_COMPROBANTE_COMPRA,
   TIPO_MOVIMIENTO,
   TIPO_PAGO,
@@ -38,7 +39,10 @@ const createCompraSchema = z.object({
 // POST: Registrar una compra
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, user } = await getAuthContext();
+    const { tenantId, user } = await getAuthContext({
+      req,
+      permission: SET_PERMISSIONS.COMPRAS,
+    });
 
     const usuario = await prisma.usuario.findFirst({
       where: { AuthUserId: user.id, EstaEliminado: false },

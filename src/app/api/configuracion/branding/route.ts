@@ -2,11 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS, SET_PERMISSIONS, GET_PERMISSIONS } from "@/lib/constants/comprobantes";
+import {
+  PERMISSIONS,
+  SET_PERMISSIONS,
+  GET_PERMISSIONS,
+} from "@/lib/constants/comprobantes";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 
 export async function GET(req: NextRequest) {
-  const { tenantId } = await getAuthContext({ req });
+  const { tenantId } = await getAuthContext({
+    req,
+    permission: GET_PERMISSIONS.CONFIGURACION,
+  });
 
   if (!tenantId) {
     return NextResponse.json(

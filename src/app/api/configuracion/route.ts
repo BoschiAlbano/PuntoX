@@ -3,7 +3,11 @@ import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS, GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
+import {
+  PERMISSIONS,
+  GET_PERMISSIONS,
+  SET_PERMISSIONS,
+} from "@/lib/constants/comprobantes";
 
 const payloadSchema = z.object({
   razonSocial: z.string().min(1, "Razon social requerida"),
@@ -59,7 +63,10 @@ const payloadSchema = z.object({
   montoMaximoRetiroCaja: z
     .number()
     .min(0)
-    .max(999_999_999_999, "El monto máximo de retiro no puede exceder el límite")
+    .max(
+      999_999_999_999,
+      "El monto máximo de retiro no puede exceder el límite",
+    )
     .optional(),
   // Productos
   unificarRenglonesIngresarMismoProducto: z.boolean().optional(),
@@ -74,7 +81,7 @@ const payloadSchema = z.object({
 export async function GET(req: NextRequest) {
   const { tenantId } = await getAuthContext({
     req,
-    // permission: GET_PERMISSIONS.CONFIGURACION,
+    permission: GET_PERMISSIONS.CONFIGURACION,
   });
 
   if (!tenantId) {
