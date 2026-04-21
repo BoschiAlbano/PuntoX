@@ -54,9 +54,7 @@ function getSectionStatus(formData: Partial<Producto>) {
     (formData.RubroId ?? 0) > 0 &&
     (formData.UnidadMedidaId ?? 0) > 0 &&
     (formData.IvaId ?? 0) > 0;
-  const precios =
-    (formData.Precio?.PrecioPublico ?? 0) > 0 ||
-    (formData.Precio?.PrecioPublico2 ?? 0) > 0;
+  const precios = (formData.PreciosLista ?? []).some(p => (p.PrecioFinal ?? 0) > 0);
   const stock = (formData.Stock ?? 0) > 0;
   return {
     general,
@@ -73,7 +71,6 @@ const defaultProducto: Producto = {
   RubroId: 0,
   UnidadMedidaId: 0,
   IvaId: 0,
-  PrecioId: 0,
   Codigo: 0,
   CodigoBarra: "",
   Abreviatura: "",
@@ -91,13 +88,8 @@ const defaultProducto: Producto = {
   VencimientoDias: 0,
   TipoVenta: TiposVenta.UNIDAD,
   EstaEliminado: false,
-  Precio: {
-    PorcentajeGanancia: 0,
-    PorcentajeGanancia2: 0,
-    PrecioPublico: 0,
-    PrecioPublico2: 0,
-    PrecioCosto: 0,
-  },
+  PrecioCosto: 0,
+  PreciosLista: [],
   Stock: 0,
 };
 
@@ -135,6 +127,13 @@ const fetchUltimoCodigo = async () => {
   if (!res.ok) throw new Error("Error fetching ultimo codigo");
   const data = await res.json();
   return data;
+};
+
+const fetchListasPrecios = async () => {
+  const res = await fetch("/api/listas-precios");
+  if (!res.ok) throw new Error("Error fetching listas");
+  const data = await res.json();
+  return data.data;
 };
 
 export default function ProductoForm({
@@ -272,6 +271,10 @@ export default function ProductoForm({
     queryKey: ["ivas-generic"],
     queryFn: fetchIvas,
   });
+  const { data: listasPrecios = [], isLoading: isLoadingListas } = useQuery({
+    queryKey: ["listas-precios-generic"],
+    queryFn: fetchListasPrecios,
+  });
 
   const { data: nextCodeData } = useQuery({
     queryKey: ["ultimo-codigo"],
@@ -352,66 +355,55 @@ export default function ProductoForm({
     </div>
   );
 
-  const updatePrecio = (field: string, value: number) => {
+  const updatePrecio = (listaId: number | null, field: string, value: number) => {
     setFormData((prev) => {
-      const currentPrecio = prev.Precio || { ...defaultProducto.Precio };
-      const newPrecio = { ...currentPrecio, [field]: value };
-      const costo =
-        field === "PrecioCosto" ? value : currentPrecio.PrecioCosto || 0;
-
-      // Cálculo para Precio 1 (Principal)
-      if (field === "PrecioCosto" || field === "PorcentajeGanancia") {
-        const ganancia =
-          field === "PorcentajeGanancia"
-            ? value
-            : currentPrecio.PorcentajeGanancia || 0;
-        newPrecio.PrecioPublico = parseFloat(
-          (costo * (1 + ganancia / 100)).toFixed(2),
-        );
+      // Cambio en el precio de costo general
+      if (listaId === null && field === "PrecioCosto") {
+        const newCosto = value;
+        const newPreciosLista = (prev.PreciosLista || []).map(p => {
+          const ganancia = p.PorcentajeGanancia || 0;
+          return {
+            ...p,
+            PrecioFinal: parseFloat((newCosto * (1 + ganancia / 100)).toFixed(2))
+          };
+        });
+        return { ...prev, PrecioCosto: newCosto, PreciosLista: newPreciosLista };
       }
 
-      // Cálculo Inverso para Precio 1: Si cambio Precio Publico, actualizo Porcentaje Ganancia
-      if (field === "PrecioPublico") {
-        if (costo > 0) {
-          newPrecio.PorcentajeGanancia = parseFloat(
-            ((value / costo - 1) * 100).toFixed(2),
-          );
+      // Cambio en una lista específica
+      const prevCosto = prev.PrecioCosto || 0;
+      const currentListas = [...(prev.PreciosLista || [])];
+      const listaIndex = currentListas.findIndex(p => p.ListaPrecioId === listaId);
+      
+      const currentLista = listaIndex >= 0 ? currentListas[listaIndex] : {
+        ListaPrecioId: listaId as number,
+        PorcentajeGanancia: 0,
+        PrecioFinal: 0,
+      };
+
+      if (field === "PorcentajeGanancia") {
+        currentLista.PorcentajeGanancia = value;
+        currentLista.PrecioFinal = parseFloat((prevCosto * (1 + value / 100)).toFixed(2));
+      } else if (field === "PrecioFinal") {
+        currentLista.PrecioFinal = value;
+        if (prevCosto > 0) {
+          currentLista.PorcentajeGanancia = parseFloat(((value / prevCosto - 1) * 100).toFixed(2));
         }
       }
 
-      // Cálculo para Precio 2 (Alternativo)
-      if (field === "PrecioCosto" || field === "PorcentajeGanancia2") {
-        const ganancia2 =
-          field === "PorcentajeGanancia2"
-            ? value
-            : currentPrecio.PorcentajeGanancia2 || 0;
-        newPrecio.PrecioPublico2 = parseFloat(
-          (costo * (1 + ganancia2 / 100)).toFixed(2),
-        );
+      if (listaIndex >= 0) {
+        currentListas[listaIndex] = {
+          ...currentLista,
+          ListaPrecioId: currentLista.ListaPrecioId as number,
+        };
+      } else {
+        currentListas.push({
+          ...currentLista,
+          ListaPrecioId: currentLista.ListaPrecioId as number,
+        });
       }
 
-      // Cálculo Inverso para Precio 2: Si cambio Precio Publico 2, actualizo Porcentaje Ganancia 2
-      if (field === "PrecioPublico2") {
-        if (costo > 0) {
-          newPrecio.PorcentajeGanancia2 = parseFloat(
-            ((value / costo - 1) * 100).toFixed(2),
-          );
-        }
-      }
-
-      // Si cambió el costo, recalculamos ambos precios públicos usando los porcentajes actuales
-      if (field === "PrecioCosto") {
-        const ganancia1 = currentPrecio.PorcentajeGanancia || 0;
-        const ganancia2 = currentPrecio.PorcentajeGanancia2 || 0;
-        newPrecio.PrecioPublico = parseFloat(
-          (value * (1 + ganancia1 / 100)).toFixed(2),
-        );
-        newPrecio.PrecioPublico2 = parseFloat(
-          (value * (1 + ganancia2 / 100)).toFixed(2),
-        );
-      }
-
-      return { ...prev, Precio: newPrecio };
+      return { ...prev, PreciosLista: currentListas };
     });
   };
 
@@ -801,9 +793,9 @@ export default function ProductoForm({
                       label="Precio Costo"
                       classNames={inputClassNames}
                       placeholder="0,00"
-                      value={Number(formData.Precio?.PrecioCosto) || 0}
+                      value={Number(formData.PrecioCosto) || 0}
                       onValueChange={(value) =>
-                        updatePrecio("PrecioCosto", value)
+                        updatePrecio(null, "PrecioCosto", value)
                       }
                       isRequired
                       isDisabled={isSaving}
@@ -812,69 +804,55 @@ export default function ProductoForm({
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {/* Lista de Precios 1 */}
-                    <div className="space-y-4 p-5 rounded-xl border border-[#e5e7eb] bg-white shadow-sm">
-                      <h4 className="font-semibold text-[#0f172a] text-sm uppercase tracking-wide">
-                        Lista Principal
-                      </h4>
-                      <NumberInput
-                        label="% Ganancia"
-                        placeholder="0"
-                        value={
-                          Number(formData?.Precio?.PorcentajeGanancia) || 0
-                        }
-                        onValueChange={(value) =>
-                          updatePrecio("PorcentajeGanancia", value)
-                        }
-                        isRequired
-                        isDisabled={isSaving}
-                        classNames={inputClassNames}
-                      />
-                      <NumberInput
-                        label="Precio de Venta ($)"
-                        placeholder="0.00"
-                        value={formData?.Precio?.PrecioPublico || 0}
-                        onValueChange={(value) =>
-                          updatePrecio("PrecioPublico", value)
-                        }
-                        isDisabled={isSaving}
-                        classNames={{
-                          input: "font-bold text-green-600",
-                        }}
-                      />
-                    </div>
-
-                    {/* Lista de Precios 2 */}
-                    <div className="space-y-4 p-5 rounded-xl border border-[#e5e7eb] bg-white shadow-sm">
-                      <h4 className="font-semibold text-[#0f172a] text-sm uppercase tracking-wide">
-                        Lista Secundaria
-                      </h4>
-                      <NumberInput
-                        label="% Ganancia"
-                        placeholder="0"
-                        value={
-                          Number(formData?.Precio?.PorcentajeGanancia2) || 0
-                        }
-                        onValueChange={(value) =>
-                          updatePrecio("PorcentajeGanancia2", value)
-                        }
-                        isRequired
-                        isDisabled={isSaving}
-                        classNames={inputClassNames}
-                      />
-                      <NumberInput
-                        label="Precio de Venta ($)"
-                        placeholder="0.00"
-                        value={formData?.Precio?.PrecioPublico2 || 0}
-                        onValueChange={(value) =>
-                          updatePrecio("PrecioPublico2", value)
-                        }
-                        isDisabled={isSaving}
-                        classNames={{
-                          input: "font-bold text-blue-600",
-                        }}
-                      />
-                    </div>
+                    {isLoadingListas ? (
+                      <div className="col-span-1 md:col-span-2 text-center text-sm text-slate-500 py-4">Cargando listas de precios...</div>
+                    ) : listasPrecios.length === 0 ? (
+                      <div className="col-span-1 md:col-span-2 text-center text-sm text-slate-500 py-4">No hay listas de precios activas.</div>
+                    ) : (
+                      listasPrecios.map((lista: any) => {
+                        const isDefault = lista.PorDefecto;
+                        const listaData = formData.PreciosLista?.find(p => Number(p.ListaPrecioId) === Number(lista.Id)) || { PorcentajeGanancia: 0, PrecioFinal: 0 };
+                        
+                        return (
+                          <div key={lista.Id} className="space-y-4 p-5 rounded-xl border border-[#e5e7eb] bg-white shadow-sm relative">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-semibold text-[#0f172a] text-sm uppercase tracking-wide">
+                                {lista.Nombre}
+                              </h4>
+                              {isDefault && (
+                                <Chip size="sm" color="primary" variant="flat" className="h-5 text-[10px]">
+                                  Por Defecto
+                                </Chip>
+                              )}
+                            </div>
+                            
+                            <NumberInput
+                              label="% Ganancia"
+                              placeholder="0"
+                              value={Number(listaData.PorcentajeGanancia) || 0}
+                              onValueChange={(value) =>
+                                updatePrecio(lista.Id, "PorcentajeGanancia", value)
+                              }
+                              isRequired
+                              isDisabled={isSaving}
+                              classNames={inputClassNames}
+                            />
+                            <NumberInput
+                              label="Precio de Venta ($)"
+                              placeholder="0.00"
+                              value={Number(listaData.PrecioFinal) || 0}
+                              onValueChange={(value) =>
+                                updatePrecio(lista.Id, "PrecioFinal", value)
+                              }
+                              isDisabled={isSaving}
+                              classNames={{
+                                input: `font-bold ${isDefault ? 'text-[#67afc3]' : 'text-slate-700'}`,
+                              }}
+                            />
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               </AccordionItem>

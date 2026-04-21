@@ -15,7 +15,7 @@ import { useConfiguracion } from "@/hooks/useConfiguracion";
 import { parseScaleBarcode } from "@/lib/utils/barcode";
 import CameraScannerModal from "./CameraScannerModal";
 import ProductSearchModal from "./ProductSearchModal";
-import { OrigenPrecio } from "@/store/ventaStore";
+import { useVentaStore, OrigenPrecio } from "@/store/ventaStore";
 
 export default function ProductSearch({
   onProductSelect,
@@ -29,6 +29,7 @@ export default function ProductSearch({
   // Estado para el modal de búsqueda
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [searchTermForModal, setSearchTermForModal] = useState("");
+  const { listaPrecios } = useVentaStore();
 
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
@@ -174,11 +175,9 @@ export default function ProductSearch({
               let cantidad = 1;
               if (scaleResult.type === "weight") {
                 cantidad = scaleResult.value;
-              } else if (
-                scaleResult.type === "price" &&
-                found.Precio?.PrecioPublico
-              ) {
-                const price = Number(found.Precio.PrecioPublico);
+              } else if (scaleResult.type === "price") {
+                const pl = found.PreciosLista?.find(p => Number(p.ListaPrecioId) === Number(listaPrecios));
+                const price = pl ? Number(pl.PrecioFinal) : Number(found.PrecioCosto || 0);
                 if (price > 0) {
                   cantidad = Number((scaleResult.value / price).toFixed(3));
                 }

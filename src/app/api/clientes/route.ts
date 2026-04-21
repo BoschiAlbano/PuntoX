@@ -76,6 +76,7 @@ export async function GET(req: NextRequest) {
               ActivarCtaCte: true,
               TieneLimiteCompra: true,
               MontoMaximoCtaCte: true,
+              ListaPrecioId: true,
               CondicionIva: {
                 select: {
                   Id: true,
@@ -228,6 +229,7 @@ export async function POST(req: NextRequest) {
           MontoMaximoCtaCte: data.MontoMaximoCtaCte
             ? new Prisma.Decimal(data.MontoMaximoCtaCte)
             : new Prisma.Decimal(0),
+          ListaPrecioId: data.ListaPrecioId ? BigInt(data.ListaPrecioId) : null,
         },
       });
 
@@ -262,6 +264,7 @@ export async function POST(req: NextRequest) {
               ActivarCtaCte: true,
               TieneLimiteCompra: true,
               MontoMaximoCtaCte: true,
+              ListaPrecioId: true,
               CondicionIva: {
                 select: {
                   Descripcion: true,
@@ -304,6 +307,9 @@ export async function POST(req: NextRequest) {
       montoMaximoCtaCte: clienteCompleto!.Persona_Cliente?.MontoMaximoCtaCte
         ? Number(clienteCompleto!.Persona_Cliente.MontoMaximoCtaCte)
         : 0,
+      listaPrecioId: clienteCompleto!.Persona_Cliente?.ListaPrecioId
+        ? Number(clienteCompleto!.Persona_Cliente.ListaPrecioId)
+        : null,
     };
 
     return NextResponse.json({ cliente: clienteResponse }, { status: 201 });
@@ -465,6 +471,13 @@ export async function PATCH(req: NextRequest) {
         updateClienteData.MontoMaximoCtaCte = new Prisma.Decimal(
           validarCliente.MontoMaximoCtaCte,
         );
+      if (validarCliente.ListaPrecioId !== undefined) {
+        if (validarCliente.ListaPrecioId) {
+          updateClienteData.ListaPrecio = { connect: { Id: BigInt(validarCliente.ListaPrecioId) } };
+        } else {
+          updateClienteData.ListaPrecio = { disconnect: true };
+        }
+      }
 
       if (Object.keys(updateClienteData).length > 0) {
         await tx.persona_Cliente.update({
@@ -506,6 +519,7 @@ export async function PATCH(req: NextRequest) {
               ActivarCtaCte: true,
               TieneLimiteCompra: true,
               MontoMaximoCtaCte: true,
+              ListaPrecioId: true,
               CondicionIva: {
                 select: {
                   Descripcion: true,
@@ -544,6 +558,9 @@ export async function PATCH(req: NextRequest) {
       montoMaximoCtaCte: clienteCompleto!.Persona_Cliente?.MontoMaximoCtaCte
         ? Number(clienteCompleto!.Persona_Cliente.MontoMaximoCtaCte)
         : 0,
+      listaPrecioId: clienteCompleto!.Persona_Cliente?.ListaPrecioId
+        ? Number(clienteCompleto!.Persona_Cliente.ListaPrecioId)
+        : null,
     };
 
     return NextResponse.json({ cliente: clienteResponse }, { status: 200 });

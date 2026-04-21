@@ -51,7 +51,8 @@ model Tenant {
   PerfilesUsuarios      PerfilUsuario[]
   Perfiles              Perfiles[]
   Personas              Persona[]
-  Precios               Precio[]
+  ListasPrecios         ListaPrecio[]
+  PreciosLista          PrecioLista[]
   Proveedores           Proveedor[]
   Rubros                Rubro[]
   SesionesActivas       SesionActiva[]
@@ -187,14 +188,13 @@ model Articulo {
   RubroId              BigInt
   UnidadMedidaId       BigInt
   IvaId                BigInt
-  PrecioId             BigInt
   Codigo               Int
   CodigoBarra          String               @db.VarChar(100)
   Abreviatura          String?              @db.VarChar(20)
   Descripcion          String               @db.VarChar(250)
   Detalle              String?              @db.VarChar(500)
   Ubicacion            String?              @db.VarChar(500)
-  PorcentajeGanancia   Decimal              @db.Decimal(18, 2)
+  PrecioCosto          Decimal              @default(0) @db.Decimal(18, 2)
   Foto                 Bytes
   ActivarLimiteVenta   Boolean
   LimiteVenta          Decimal              @db.Decimal(18, 2)
@@ -214,18 +214,17 @@ model Articulo {
   Stock                Decimal              @default(0) @db.Decimal(18, 2)
   Iva                  Iva                  @relation(fields: [IvaId], references: [Id], onUpdate: NoAction)
   Marca                Marca                @relation(fields: [MarcaId], references: [Id], onUpdate: NoAction)
-  Precio               Precio               @relation(fields: [PrecioId], references: [Id], onUpdate: NoAction)
   Rubro                Rubro                @relation(fields: [RubroId], references: [Id], onUpdate: NoAction)
   Tenant               Tenant               @relation(fields: [TenantId], references: [Id])
   UnidadMedida         UnidadMedida         @relation(fields: [UnidadMedidaId], references: [Id], onUpdate: NoAction)
   ArticuloStock        ArticuloStock[]
   BajaArticulo         BajaArticulo[]
   DetalleComprobante   DetalleComprobante[]
+  Precios              PrecioLista[]
 
   @@index([TenantId])
   @@index([IvaId])
   @@index([MarcaId])
-  @@index([PrecioId])
   @@index([RubroId])
   @@index([UnidadMedidaId])
 }
@@ -937,6 +936,8 @@ model Persona_Cliente {
   ActivarCtaCte               Boolean
   TieneLimiteCompra           Boolean
   MontoMaximoCtaCte           Decimal                       @db.Decimal(18, 2)
+  ListaPrecioId               BigInt?
+  ListaPrecio                 ListaPrecio?                  @relation(fields: [ListaPrecioId], references: [Id])
   Cheque                      Cheque[]
   Comprobante_CuentaCorriente Comprobante_CuentaCorriente[]
   Comprobante_Factura         Comprobante_Factura[]
@@ -965,24 +966,39 @@ model Persona_Empleado {
   @@index([Id])
 }
 
-/// Precios asociados a artÃ­culos (estructura heredada).
-/// OJO: el diseÃ±o original es medio raro (Precio <-> Articulo).
-model Precio {
-  Id                  BigInt     @id @default(autoincrement())
-  ArticuloId          BigInt
-  PrecioCosto         Decimal    @db.Decimal(18, 2)
-  PorcentajeGanancia  Decimal    @db.Decimal(18, 2)
-  PrecioPublico       Decimal    @db.Decimal(18, 2)
-  PorcentajeGanancia2 Decimal    @db.Decimal(18, 2)
-  PrecioPublico2      Decimal    @db.Decimal(18, 2)
-  FechaActualizacion  DateTime
-  EstaEliminado       Boolean
-  /// Tenant dueÃ±o de este precio
-  TenantId            BigInt
-  Articulo            Articulo[]
-  Tenant              Tenant     @relation(fields: [TenantId], references: [Id])
+/// Listas de Precios
+model ListaPrecio {
+  Id            BigInt  @id @default(autoincrement())
+  TenantId      BigInt
+  Nombre        String  @db.VarChar(100)
+  PorDefecto    Boolean @default(false)
+  Activa        Boolean @default(true)
+  EstaEliminado Boolean @default(false)
+
+  Tenant   Tenant            @relation(fields: [TenantId], references: [Id])
+  Precios  PrecioLista[]
+  Clientes Persona_Cliente[]
 
   @@index([TenantId])
+}
+
+/// Precios por Articulo y Lista
+model PrecioLista {
+  Id                 BigInt  @id @default(autoincrement())
+  TenantId           BigInt
+  ArticuloId         BigInt
+  ListaPrecioId      BigInt
+  PorcentajeGanancia Decimal @db.Decimal(18, 2)
+  PrecioFinal        Decimal @db.Decimal(18, 2)
+
+  Articulo    Articulo    @relation(fields: [ArticuloId], references: [Id])
+  ListaPrecio ListaPrecio @relation(fields: [ListaPrecioId], references: [Id])
+  Tenant      Tenant      @relation(fields: [TenantId], references: [Id])
+
+  @@unique([ArticuloId, ListaPrecioId])
+  @@index([TenantId])
+  @@index([ArticuloId])
+  @@index([ListaPrecioId])
 }
 
 /// Proveedores del comercio.

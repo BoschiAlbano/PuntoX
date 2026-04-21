@@ -22,18 +22,18 @@ interface VentaState {
   items: Item[];
   cliente: Partial<Cliente>;
   tipoComprobante: number;
-  listaPrecios: 1 | 2;
+  listaPrecios: number | null;
   descuentoPorcentaje: number;
   pagos: Pago[];
   numeroComprobanteAsociado: number | null;
 
   // Actions
-  addItem: (producto: Producto, cantidad: number, listaPrecios: 1 | 2, precioOverride?: number, origenPrecio?: OrigenPrecio) => void;
+  addItem: (producto: Producto, cantidad: number, listaPrecios: number | null, precioOverride?: number, origenPrecio?: OrigenPrecio) => void;
   updateItemQuantity: (id: number, cantidad: number) => void;
   removeItem: (id: number) => void;
   setCliente: (cliente: Partial<Cliente>) => void;
   setTipoComprobante: (tipo: number) => void;
-  setListaPrecios: (lista: 1 | 2) => void;
+  setListaPrecios: (lista: number | null) => void;
   setDescuentoPorcentaje: (descuento: number) => void;
   setNumeroComprobanteAsociado: (numero: number | null) => void;
   addPago: (pago: Pago) => void;
@@ -51,7 +51,7 @@ export const useVentaStore = create<VentaState>()(
         Nombre: "Consumidor Final",
       },
       tipoComprobante: TIPO_COMPROBANTE_VENTA.FACTURA_B,
-      listaPrecios: 1,
+      listaPrecios: null,
       descuentoPorcentaje: 0,
 
       numeroComprobanteAsociado: null,
@@ -64,9 +64,10 @@ export const useVentaStore = create<VentaState>()(
 
         const precioUnitario = precioOverride != null
           ? precioOverride
-          : listaPrecios === 1
-            ? Number(producto.Precio.PrecioPublico)
-            : Number(producto.Precio.PrecioPublico2);
+          : (() => {
+              const pl = producto.PreciosLista?.find(p => Number(p.ListaPrecioId) === Number(listaPrecios));
+              return pl ? Number(pl.PrecioFinal) : Number(producto.PrecioCosto || 0);
+            })();
 
         if (existing) {
           // Si el precio override es diferente al existente, se agrega como nueva línea
@@ -130,7 +131,10 @@ export const useVentaStore = create<VentaState>()(
         set({ items: get().items.filter((i) => i.Id !== id) });
       },
 
-      setCliente: (cliente) => set({ cliente }),
+      setCliente: (cliente) => set((state) => ({ 
+        cliente,
+        listaPrecios: cliente.ListaPrecioId || null
+      })),
       setTipoComprobante: (tipoComprobante) =>
         set((state) => {
           if (tipoComprobante !== TIPO_COMPROBANTE_VENTA.NOTA_CREDITO) {
@@ -156,7 +160,7 @@ export const useVentaStore = create<VentaState>()(
           items: [],
           cliente: { Id: 0, Nombre: "Consumidor Final" },
           tipoComprobante: TIPO_COMPROBANTE_VENTA.FACTURA_B,
-          listaPrecios: 1,
+          listaPrecios: null,
           descuentoPorcentaje: 0,
           numeroComprobanteAsociado: null,
           pagos: [],

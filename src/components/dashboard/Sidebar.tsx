@@ -228,6 +228,24 @@ const menuSections: MenuSection[] = [
         label: "Unidades de Medida",
         href: "/productos/unidades",
       },
+      {
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="w-5 h-5"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10 2c-1.716 0-3.408.106-5.07.31C3.806 2.45 3 3.414 3 4.517V17.25a.75.75 0 0 0 1.065.681L5.5 17l1.435.931a.75.75 0 0 0 .826 0L9.5 17l1.435.931a.75.75 0 0 0 .826 0L13.5 17l1.435.931a.75.75 0 0 0 .826 0l1.435-.931a.75.75 0 0 0 1.065-.681V4.517c0-1.103-.806-2.068-1.93-2.207A41.403 41.403 0 0 0 10 2Zm0 5.5a.75.75 0 0 0-.75.75v1.5H7.75a.75.75 0 0 0 0 1.5h1.5v1.5a.75.75 0 0 0 1.5 0v-1.5h1.5a.75.75 0 0 0 0-1.5h-1.5V8.25A.75.75 0 0 0 10 7.5Z"
+              clipRule="evenodd"
+            />
+          </svg>
+        ),
+        label: "Listas de Precios",
+        href: "/productos/listas-precios",
+      },
     ],
   },
   {

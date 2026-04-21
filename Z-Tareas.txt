@@ -4,7 +4,8 @@
 4- el modal de roles es muy grande
 5- imagenes de productos y logos
 6- actualizacion de precios masiva
-
+7- implementacion de listas de precios ✔️
+8- crear crud iva por defecto en seed cargo solo dos (no se si sea necesario cargar mas)
 
 Scripts importantes:
 npx tsx scripts/sync-permisos.ts

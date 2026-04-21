@@ -1,0 +1,202 @@
+[
+  {
+    "Descripcion":"Almacén",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Bebidas",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Bebidas Alcohólicas",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Limpieza",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Perfumería",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Higiene Personal",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Lácteos",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Fiambres y Quesos",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Carnicería",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Pollería",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Pescadería",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Verdulería y Frutería",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Panadería",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Confitería",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Pastas Frescas",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Congelados",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Helados",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Rotisería",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Comidas Elaboradas",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Kiosco",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Golosinas",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Cigarrillos y Tabaco",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Snacks",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Galletitas",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Desayuno y Merienda",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Especias y Condimentos",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Aceites y Vinagres",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Enlatados y Conservas",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Harinas y Farináceos",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Arroz y Legumbres",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Salsas y Aderezos",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Mermeladas y Dulces",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Infusiones",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Yerba Mate",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Café",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Té",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Cacao",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Alimento para Mascotas",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Artículos de Limpieza",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Papelería y Librería",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Juguetería",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Regalería",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Bazar",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Descartables",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Cuidado del Bebé",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Farmacia",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Carga Virtual",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Servicios",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Hielo",
+    "EstaEliminado":false
+  },
+  {
+    "Descripcion":"Carbón y Leña",
+    "EstaEliminado":false
+  }
+]

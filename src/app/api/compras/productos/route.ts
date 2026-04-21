@@ -63,10 +63,6 @@ export async function GET(req: NextRequest) {
       Precio: {
         select: {
           PrecioCosto: true,           // ← Campo clave para compras
-          PrecioPublico: true,
-          PrecioPublico2: true,
-          PorcentajeGanancia: true,
-          PorcentajeGanancia2: true,
         },
       },
       Iva: {
@@ -130,13 +126,8 @@ export async function GET(req: NextRequest) {
         HoraLimiteVentaHasta: p.HoraLimiteVentaHasta,
         TipoVenta: p.TipoVenta,
 
-        // En compras devolvemos el costo como campo principal
         Precio: {
           PrecioCosto: Number(p.Precio?.PrecioCosto ?? 0),
-          PrecioPublico: Number(p.Precio?.PrecioPublico ?? 0),
-          PrecioPublico2: Number(p.Precio?.PrecioPublico2 ?? 0),
-          PorcentajeGanancia: Number(p.Precio?.PorcentajeGanancia ?? 0),
-          PorcentajeGanancia2: Number(p.Precio?.PorcentajeGanancia2 ?? 0),
         },
         Iva: p.Iva,
       };

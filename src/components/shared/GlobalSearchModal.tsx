@@ -53,6 +53,7 @@ const STATIC_PAGES: SearchItem[] = [
   { id: "p-prod", type: "page", title: "Productos", subtitle: "Gestión de inventario", icon: Package, href: "/productos" },
   { id: "p-marcas", type: "page", title: "Marcas", subtitle: "Gestión de marcas", icon: Tag, href: "/productos/marcas" },
   { id: "p-rubros", type: "page", title: "Rubros", subtitle: "Categorías de productos", icon: Box, href: "/productos/rubros" },
+  { id: "p-listas", type: "page", title: "Listas de Precios", subtitle: "Gestión de listas de precios", icon: DollarSign, href: "/productos/listas-precios" },
   { id: "p-client", type: "page", title: "Clientes", subtitle: "Gestión de clientes y Cta. Cte.", icon: Users, href: "/clientes" },
   { id: "p-analit", type: "page", title: "Analíticas", subtitle: "Métricas y reportes", icon: PieChart, href: "/analiticas" },
   { id: "p-empleados", type: "page", title: "Empleados", subtitle: "Personal y Roles", icon: UserCircle, href: "/empleados" },

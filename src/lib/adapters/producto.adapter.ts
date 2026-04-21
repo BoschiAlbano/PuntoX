@@ -11,7 +11,6 @@ export const productoAdapter = (data: any): Producto => {
     RubroId: Number(data.RubroId),
     UnidadMedidaId: Number(data.UnidadMedidaId),
     IvaId: Number(data.IvaId),
-    PrecioId: Number(data.PrecioId),
     Codigo: Number(data.Codigo),
     CodigoBarra: data.CodigoBarra || "",
     Abreviatura: data.Abreviatura || "",
@@ -30,13 +29,13 @@ export const productoAdapter = (data: any): Producto => {
     VencimientoDias: Number(data.VencimientoDias),
     TipoVenta: data.TipoVenta,
     EstaEliminado: Boolean(data.EstaEliminado),
-    Precio: {
-      PorcentajeGanancia: Number(data.Precio?.PorcentajeGanancia || 0),
-      PorcentajeGanancia2: Number(data.Precio?.PorcentajeGanancia2 || 0),
-      PrecioPublico: Number(data.Precio?.PrecioPublico || 0),
-      PrecioPublico2: Number(data.Precio?.PrecioPublico2 || 0),
-      PrecioCosto: Number(data.Precio?.PrecioCosto || 0),
-    },
+    PrecioCosto: Number(data.PrecioCosto || 0),
+    PreciosLista: Array.isArray(data.PreciosLista) ? data.PreciosLista.map((pl: any) => ({
+      ListaPrecioId: Number(pl.ListaPrecioId),
+      PorcentajeGanancia: Number(pl.PorcentajeGanancia),
+      PrecioFinal: Number(pl.PrecioFinal),
+      ListaPrecio: pl.ListaPrecio
+    })) : [],
     Stock: Number(data.Stock || 0),
     SucursalNombre: data.SucursalNombre || null,
     FechaActualizacion: data.FechaActualizacion || undefined,

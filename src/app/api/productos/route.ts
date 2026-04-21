@@ -95,17 +95,18 @@ export async function GET(req: NextRequest) {
         EstaEliminado: true,
         Stock: true, // Legacy/Global
         StockMinimo: true,
+        PrecioCosto: true,
 
         Marca: { select: { Descripcion: true } },
         Rubro: { select: { Descripcion: true } },
 
-        // Relación Precio: incluye FechaActualizacion para cache-busting de foto
-        Precio: {
+        // Relación Precios
+        Precios: {
           select: {
-            PrecioCosto: true,
-            PrecioPublico: true,
-            PrecioPublico2: true,
-            FechaActualizacion: true,
+            ListaPrecioId: true,
+            PorcentajeGanancia: true,
+            PrecioFinal: true,
+            ListaPrecio: { select: { Nombre: true } },
           },
         },
 
@@ -162,15 +163,14 @@ export async function GET(req: NextRequest) {
             ? Number(stockSucursal.StockMinimo)
             : Number(producto.StockMinimo ?? 0),
         SucursalNombre: stockSucursal?.Sucursal.Nombre || null,
-        FechaActualizacion:
-          producto.Precio?.FechaActualizacion?.toISOString() ?? undefined,
-
-        // Precio
-        Precio: {
-          PrecioCosto: Number(producto.Precio.PrecioCosto),
-          PrecioPublico: Number(producto.Precio.PrecioPublico),
-          PrecioPublico2: Number(producto.Precio.PrecioPublico2),
-        },
+        // Precios
+        PrecioCosto: Number(producto.PrecioCosto || 0),
+        PreciosLista: producto.Precios.map((p) => ({
+          ListaPrecioId: Number(p.ListaPrecioId),
+          PorcentajeGanancia: Number(p.PorcentajeGanancia),
+          PrecioFinal: Number(p.PrecioFinal),
+          ListaPrecio: p.ListaPrecio ? { Nombre: p.ListaPrecio.Nombre } : undefined,
+        })),
       };
     });
 
@@ -198,22 +198,7 @@ export async function POST(req: NextRequest) {
 
     // Iniciar transacción para crear Precio y Artículo
     const producto = await prisma.$transaction(async (tx) => {
-      // 1. Crear Precio primero (con ArticuloId temporal 0 o 1)
-      const nuevoPrecio = await tx.precio.create({
-        data: {
-          ArticuloId: 0, // Se actualizará al final
-          PrecioCosto: validarProducto.Precio.PrecioCosto,
-          PorcentajeGanancia: validarProducto.Precio.PorcentajeGanancia,
-          PrecioPublico: validarProducto.Precio.PrecioPublico,
-          PorcentajeGanancia2: validarProducto.Precio.PorcentajeGanancia2,
-          PrecioPublico2: validarProducto.Precio.PrecioPublico2,
-          FechaActualizacion: new Date(),
-          EstaEliminado: false,
-          TenantId: BigInt(tenantId),
-        },
-      });
-
-      // 2. Crear Artículo relacionado con el Precio creado
+      // Ya no creamos "Precio", todo va directo en Articulo y PrecioLista
       const nuevoArticulo = await tx.articulo.create({
         data: {
           ActivarHoraVenta: validarProducto.ActivarHoraVenta,
@@ -232,8 +217,8 @@ export async function POST(req: NextRequest) {
           StockMinimo: validarProducto.StockMinimo,
           VencimientoDias: validarProducto.VencimientoDias,
           TipoVenta: validarProducto.TipoVenta,
-          // Redundancia en Articulo
-          PorcentajeGanancia: validarProducto.Precio.PorcentajeGanancia,
+          // Redundancia/Costo en Articulo
+          PrecioCosto: validarProducto.PrecioCosto,
           Ubicacion: validarProducto.Ubicacion,
           Stock: validarProducto.Stock,
           Tenant: {
@@ -257,10 +242,13 @@ export async function POST(req: NextRequest) {
             }
             return fotoDefault();
           })(),
-          Precio: {
-            connect: {
-              Id: nuevoPrecio.Id,
-            },
+          Precios: {
+            create: validarProducto.PreciosLista.map((pl) => ({
+              TenantId: BigInt(tenantId),
+              ListaPrecioId: BigInt(pl.ListaPrecioId),
+              PorcentajeGanancia: pl.PorcentajeGanancia,
+              PrecioFinal: pl.PrecioFinal,
+            })),
           },
           Marca: {
             connect: {
@@ -279,15 +267,11 @@ export async function POST(req: NextRequest) {
           },
         },
         include: {
-          Precio: true,
+          Precios: true,
         },
       });
 
-      // 3. Actualizar Precio con el ID correcto del Artículo
-      await tx.precio.update({
-        where: { Id: nuevoPrecio.Id },
-        data: { ArticuloId: nuevoArticulo.Id },
-      });
+      // Ya no actualizamos el Id de Precio
 
       // 4. Crear ArticuloStock para la sucursal activa
       if (sucursalId && validarProducto.Stock !== undefined) {
@@ -363,7 +347,7 @@ export async function PATCH(req: NextRequest) {
         // EstaEliminado: false,
       },
       include: {
-        Precio: true,
+        Precios: true,
       },
     });
 
@@ -374,29 +358,21 @@ export async function PATCH(req: NextRequest) {
     }
 
     const producto = await prisma.$transaction(async (tx) => {
-      let precioUpdate = null;
-
-      // 1. Update Price (Only if provided)
-      if (validarProducto.Precio) {
-        // Build price data dynamically
-        const priceData: any = {
-          FechaActualizacion: new Date(),
-          TenantId: tenantIdBigInt,
-        };
-        const p = validarProducto.Precio;
-        if (p.PrecioCosto !== undefined) priceData.PrecioCosto = p.PrecioCosto;
-        if (p.PorcentajeGanancia !== undefined)
-          priceData.PorcentajeGanancia = p.PorcentajeGanancia;
-        if (p.PrecioPublico !== undefined)
-          priceData.PrecioPublico = p.PrecioPublico;
-        if (p.PorcentajeGanancia2 !== undefined)
-          priceData.PorcentajeGanancia2 = p.PorcentajeGanancia2;
-        if (p.PrecioPublico2 !== undefined)
-          priceData.PrecioPublico2 = p.PrecioPublico2;
-
-        precioUpdate = await tx.precio.update({
-          where: { Id: articulo.Precio.Id },
-          data: priceData,
+      // 1. Update PreciosLista (Only if provided)
+      if (validarProducto.PreciosLista && validarProducto.PreciosLista.length > 0) {
+        // Eliminar precios anteriores (podrías hacer upsert, pero recrear es más fácil si envían todo)
+        await tx.precioLista.deleteMany({
+          where: { ArticuloId: articulo.Id, TenantId: tenantIdBigInt },
+        });
+        
+        await tx.precioLista.createMany({
+          data: validarProducto.PreciosLista.map(pl => ({
+            ArticuloId: articulo.Id,
+            TenantId: tenantIdBigInt,
+            ListaPrecioId: BigInt(pl.ListaPrecioId),
+            PorcentajeGanancia: pl.PorcentajeGanancia,
+            PrecioFinal: pl.PrecioFinal,
+          }))
         });
       }
 
@@ -439,10 +415,9 @@ export async function PATCH(req: NextRequest) {
           validarProducto.HoraLimiteVentaHasta,
         );
       }
-      // Sync PorcentajeGanancia if Price is updated
-      if (validarProducto.Precio?.PorcentajeGanancia !== undefined) {
-        articuloData.PorcentajeGanancia =
-          validarProducto.Precio.PorcentajeGanancia;
+      // Sync PrecioCosto si cambió
+      if (validarProducto.PrecioCosto !== undefined) {
+        articuloData.PrecioCosto = validarProducto.PrecioCosto;
       }
 
       // Foto (base64)
@@ -480,7 +455,6 @@ export async function PATCH(req: NextRequest) {
             CodigoBarra: true,
             Descripcion: true,
             Stock: true, // Select current global stock
-            Precio: { select: { Id: true, PrecioPublico: true } },
           },
         });
       } else {

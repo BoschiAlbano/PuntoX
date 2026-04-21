@@ -107,26 +107,24 @@ function ProductoPreviewContent({ item }: { item: Producto }) {
               {formatCurrency(Number(p?.Precio?.PrecioCosto ?? 0), currency)}
             </p>
           </div>
-          <div>
-            <p className="text-slate-400 text-xs">Minorista</p>
-            <p className="font-semibold text-green-700">
-              {formatCurrency(Number(p?.Precio?.PrecioPublico ?? 0), currency)}
-            </p>
-          </div>
-          <div>
-            <p className="text-slate-400 text-xs">Mayorista</p>
-            <p className="font-semibold text-blue-700">
-              {formatCurrency(Number(p?.Precio?.PrecioPublico2 ?? 0), currency)}
-            </p>
-          </div>
+          {p?.PreciosLista?.slice(0, 2).map((pl: any, idx: number) => (
+            <div key={pl.Id || idx}>
+              <p className="text-slate-400 text-xs truncate" title={pl.ListaPrecio?.Nombre}>
+                {pl.ListaPrecio?.Nombre || `Lista ${idx + 1}`}
+              </p>
+              <p className={`font-semibold ${idx === 0 ? 'text-green-700' : 'text-blue-700'}`}>
+                {formatCurrency(Number(pl.PrecioFinal ?? 0), currency)}
+              </p>
+            </div>
+          ))}
         </div>
         {(() => {
           const costo = Number(p?.Precio?.PrecioCosto ?? 0);
-          const venta = Number(p?.Precio?.PrecioPublico ?? 0);
+          const venta = p?.PreciosLista?.[0] ? Number(p.PreciosLista[0].PrecioFinal) : 0;
           const margen =
-            costo > 0 ? ((venta / costo - 1) * 100).toFixed(1) : null;
+            costo > 0 && venta > 0 ? ((venta / costo - 1) * 100).toFixed(1) : null;
           return margen != null ? (
-            <p className="text-slate-400 text-xs mt-1">Margen: {margen}%</p>
+            <p className="text-slate-400 text-xs mt-1">Margen princ.: {margen}%</p>
           ) : null;
         })()}
       </div>
@@ -344,8 +342,7 @@ export default function ProductoCRUD() {
             { key: "Stock", header: "Stock" },
             { key: "StockMinimo", header: "Stock mínimo" },
             { key: "Costo", header: "Costo" },
-            { key: "Minorista", header: "Minorista" },
-            { key: "Mayorista", header: "Mayorista" },
+            { key: "Precios", header: "Precios" },
           ],
           mapItem: (p) => ({
             CodigoBarra: p.CodigoBarra,
@@ -354,9 +351,8 @@ export default function ProductoCRUD() {
             Rubro: p.Rubro?.Descripcion ?? "",
             Stock: p.Stock ?? 0,
             StockMinimo: p.StockMinimo ?? 0,
-            Costo: p.Precio?.PrecioCosto ?? 0,
-            Minorista: p.Precio?.PrecioPublico ?? 0,
-            Mayorista: p.Precio?.PrecioPublico2 ?? 0,
+            Costo: p.PrecioCosto ?? 0,
+            Precios: p.PreciosLista?.map((pl: any) => `${pl.ListaPrecio?.Nombre}: $${pl.PrecioFinal}`).join(' | ') || "",
           }),
         }}
         columns={[
@@ -377,16 +373,9 @@ export default function ProductoCRUD() {
             sortKey: "Precio.PrecioCosto",
           },
           {
-            uid: "Minorista",
-            name: "MINORISTA",
-            sortable: true,
-            sortKey: "Precio.PrecioPublico",
-          },
-          {
-            uid: "Mayorista",
-            name: "MAYORISTA",
-            sortable: true,
-            sortKey: "Precio.PrecioPublico2",
+            uid: "Precios",
+            name: "PRECIOS",
+            sortable: false,
           },
           { uid: "Estado", name: "ESTADO" },
           { uid: "acciones", name: "ACCIONES" },
@@ -460,23 +449,22 @@ export default function ProductoCRUD() {
             case "Costo":
               return (
                 <span className="font-medium text-gray-700">
-                  {item.Precio.PrecioCosto}
+                  {formatCurrency(Number(item.PrecioCosto ?? 0), currency)}
                 </span>
               );
-            case "Minorista":
+            case "Precios":
               return (
-                <span className="font-medium text-gray-700">
-                  {formatCurrency(
-                    Number(item.Precio?.PrecioPublico ?? 0),
-                    currency,
+                <div className="flex flex-col gap-0.5">
+                  {item.PreciosLista?.slice(0, 2).map((pl: any, idx: number) => (
+                    <span key={pl.Id || idx} className="text-xs text-gray-700 truncate max-w-[120px]" title={`${pl.ListaPrecio?.Nombre}: ${pl.PrecioFinal}`}>
+                      <span className="text-gray-400 mr-1">{pl.ListaPrecio?.Nombre?.substring(0,3)}:</span>
+                      <span className="font-medium">{formatCurrency(Number(pl.PrecioFinal ?? 0), currency)}</span>
+                    </span>
+                  ))}
+                  {(item.PreciosLista?.length || 0) > 2 && (
+                    <span className="text-[10px] text-gray-400">+{item.PreciosLista!.length - 2} más</span>
                   )}
-                </span>
-              );
-            case "Mayorista":
-              return (
-                <span className="font-medium text-gray-700">
-                  {item.Precio.PrecioPublico2}
-                </span>
+                </div>
               );
             case "Estado":
               return (

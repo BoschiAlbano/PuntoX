@@ -21,6 +21,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchProductosVentas } from "@/hooks/useProductos";
 import { Producto } from "@/lib/validations/producto.schema";
 import { LoadingComponent } from "../loading/loading";
+import { useVentaStore } from "@/store/ventaStore";
 
 // Hook para debounce
 function useDebounceValue<T>(value: T, delay: number): T {
@@ -49,6 +50,7 @@ export default function ProductSearchModal({
 }: ProductSearchModalProps) {
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const debouncedSearch = useDebounceValue(searchQuery, 300);
+  const { listaPrecios } = useVentaStore();
 
   // Sincronizar el initialSearch cuando se abre el modal
   useEffect(() => {
@@ -193,7 +195,7 @@ export default function ProductSearchModal({
                           {/* Price + Stock */}
                           <div className="shrink-0 flex flex-col items-end gap-1">
                             <span className="text-sm font-bold text-slate-800">
-                              ${item.Precio?.PrecioPublico || 0}
+                              ${(item.PreciosLista?.find(p => Number(p.ListaPrecioId) === Number(listaPrecios))?.PrecioFinal || item.PrecioCosto || 0).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
                             </span>
                             <span
                               className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
@@ -286,11 +288,13 @@ export default function ProductSearchModal({
                             <TableCell>
                               <div className="flex flex-col items-end">
                                 <span className="text-slate-800 font-semibold text-sm">
-                                  ${item.Precio?.PrecioPublico || 0}
+                                  ${(item.PreciosLista?.find(p => Number(p.ListaPrecioId) === Number(listaPrecios))?.PrecioFinal || item.PrecioCosto || 0).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
                                 </span>
-                                <span className="text-[11px] text-slate-400">
-                                  L2: ${item.Precio?.PrecioPublico2 || 0}
-                                </span>
+                                {item.PreciosLista && item.PreciosLista.length > 1 && (
+                                  <span className="text-[11px] text-slate-400">
+                                    {item.PreciosLista.length} precios disp.
+                                  </span>
+                                )}
                               </div>
                             </TableCell>
                             <TableCell>

@@ -144,7 +144,7 @@ export default function ProductSearchComprasModal({ isOpen, onOpenChange, initia
                           </div>
                           <div className="shrink-0 flex flex-col items-end gap-1">
                             <span className="text-xs font-bold text-amber-600">
-                              Costo: ${Number(item.Precio?.PrecioCosto ?? 0).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                              Costo: ${Number(item.PrecioCosto ?? 0).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
                             </span>
                             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${item.Stock <= 0 ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}`}>
                               Stock: {item.Stock}
@@ -200,7 +200,7 @@ export default function ProductSearchComprasModal({ isOpen, onOpenChange, initia
                             </TableCell>
                             <TableCell>
                               <span className="font-bold text-amber-600 text-sm">
-                                ${Number(item.Precio?.PrecioCosto ?? 0).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                                ${Number(item.PrecioCosto ?? 0).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
                               </span>
                             </TableCell>
                             <TableCell>

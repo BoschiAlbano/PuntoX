@@ -29,6 +29,7 @@ const routeNames: Record<string, string> = {
   "/productos/marcas": "Marcas",
   "/productos/rubros": "Rubros",
   "/productos/unidades": "Unidades",
+  "/productos/listas-precios": "Listas de Precios",
   "/compras": "Compras",
   "/clientes": "Clientes",
   "/clientes/cuentas-corrientes": "Cuentas Corrientes",

@@ -24,6 +24,7 @@ export default function ClienteSearch({
       Dni: client.dni,
       Mail: client.mail,
       Direccion: client.direccion,
+      ListaPrecioId: client.ListaPrecioId,
       Persona_Cliente: {
         ActivarCtaCte: client.activarCtaCte,
         TieneLimiteCompra: client.tieneLimiteCompra,

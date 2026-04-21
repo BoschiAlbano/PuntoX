@@ -62,23 +62,14 @@ export const createProductoSchema = z.object({
   // Imagen (Opcional, puede ser base64)
   Foto: z.any().optional(), // Se valida aparte o se procesa como Buffer
 
-  Precio: z.object({
-    PrecioCosto: z
-      .number({ message: "El precio de costo debe ser un número" })
-      .min(0),
-    PorcentajeGanancia: z
-      .number({ message: "El porcentaje de ganancia debe ser un número" })
-      .min(0),
-    PrecioPublico: z
-      .number({ message: "El precio publico debe ser un número" })
-      .min(0, "El precio público no puede ser negativo"),
-    PorcentajeGanancia2: z
-      .number({ message: "El porcentaje de ganancia debe ser un número" })
-      .min(0),
-    PrecioPublico2: z
-      .number({ message: "El precio publico debe ser un número" })
-      .min(0, "El precio público no puede ser negativo"),
-  }),
+  PrecioCosto: z.number({ message: "El precio de costo debe ser un número" }).min(0).default(0),
+  PreciosLista: z.array(
+    z.object({
+      ListaPrecioId: z.number().int(),
+      PorcentajeGanancia: z.number().min(0),
+      PrecioFinal: z.number().min(0),
+    })
+  ).default([]),
 });
 
 export const updateProductoSchema = z.object({
@@ -116,31 +107,15 @@ export const updateProductoSchema = z.object({
   Detalle: z.string().max(500).optional().nullable(),
   Ubicacion: z.string().max(500).optional().nullable(),
 
-  // Precios (Se reciben como number desde el front, Prisma usa Decimal)
-  Precio: z
-    .object({
-      PrecioCosto: z
-        .number({ message: "El precio de costo debe ser un número" })
-        .min(0)
-        .optional(),
-      PorcentajeGanancia: z
-        .number({ message: "El porcentaje de ganancia debe ser un número" })
-        .min(0)
-        .optional(),
-      PrecioPublico: z
-        .number({ message: "El precio publico debe ser un número" })
-        .min(0, "El precio público no puede ser negativo")
-        .optional(),
-      PorcentajeGanancia2: z
-        .number({ message: "El porcentaje de ganancia debe ser un número" })
-        .min(0)
-        .optional(),
-      PrecioPublico2: z
-        .number({ message: "El precio publico debe ser un número" })
-        .min(0, "El precio público no puede ser negativo")
-        .optional(),
+  // Precios
+  PrecioCosto: z.number().min(0).optional(),
+  PreciosLista: z.array(
+    z.object({
+      ListaPrecioId: z.number().int(),
+      PorcentajeGanancia: z.number().min(0),
+      PrecioFinal: z.number().min(0),
     })
-    .optional(),
+  ).optional(),
   // Configuración de Venta
   ActivarLimiteVenta: z.boolean().optional(),
   LimiteVenta: z.number().min(0).optional(),
@@ -174,7 +149,6 @@ export interface Producto {
   RubroId: number;
   UnidadMedidaId: number;
   IvaId: number;
-  PrecioId: number;
   Codigo: number;
   CodigoBarra: string;
   Abreviatura?: string;
@@ -198,13 +172,13 @@ export interface Producto {
   FechaActualizacion?: string; // ISO string para cache-busting de foto
   Marca?: { Descripcion: string } | null;
   Rubro?: { Descripcion: string } | null;
-  Precio: {
-    PorcentajeGanancia?: number;
-    PorcentajeGanancia2?: number;
-    PrecioPublico?: number;
-    PrecioPublico2?: number;
-    PrecioCosto?: number;
-  };
+  PrecioCosto: number;
+  PreciosLista: {
+    ListaPrecioId: number;
+    PorcentajeGanancia: number;
+    PrecioFinal: number;
+    ListaPrecio?: { Nombre: string };
+  }[];
   Iva?: {
     Id?: number;
     Porcentaje?: number;

@@ -11,6 +11,7 @@ export const createClienteSchema = z.object({
   CondicionIvaId: z.union([z.number(), z.string()]),
   ActivarCtaCte: z.boolean().optional().default(false),
   TieneLimiteCompra: z.boolean().optional().default(false),
+  ListaPrecioId: z.union([z.number(), z.string()]).optional().nullable(),
   MontoMaximoCtaCte: z
     .number()
     .min(0)
@@ -32,6 +33,7 @@ export const updateClienteSchema = z.object({
   CondicionIvaId: z.union([z.number(), z.string()]).optional(),
   ActivarCtaCte: z.boolean().optional(),
   TieneLimiteCompra: z.boolean().optional(),
+  ListaPrecioId: z.union([z.number(), z.string()]).optional().nullable(),
   MontoMaximoCtaCte: z
     .number()
     .min(0)
@@ -61,4 +63,5 @@ export interface Cliente {
   ActivarCtaCte: boolean;
   TieneLimiteCompra: boolean;
   MontoMaximoCtaCte: number;
+  ListaPrecioId?: number | null;
 }

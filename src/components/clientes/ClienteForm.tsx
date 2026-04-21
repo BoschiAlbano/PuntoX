@@ -32,6 +32,13 @@ const fetchCondicionesIva = async () => {
   return Array.isArray(data) ? data : data?.condicionesIva || [];
 };
 
+const fetchListasPrecios = async () => {
+  const res = await fetch("/api/listas-precios");
+  if (!res.ok) throw new Error("Error fetching listas precios");
+  const data = await res.json();
+  return data.data || [];
+};
+
 const fetchProvincias = async () => {
   const res = await fetch("/api/provincias");
   if (!res.ok) throw new Error("Error fetching provincias");
@@ -88,6 +95,7 @@ const clientePorDefecto: Partial<Cliente> = {
   ActivarCtaCte: false,
   TieneLimiteCompra: false,
   MontoMaximoCtaCte: 0,
+  ListaPrecioId: null,
 };
 
 export default function ClienteForm({
@@ -106,6 +114,12 @@ export default function ClienteForm({
       queryFn: fetchCondicionesIva,
       enabled: isOpen,
     });
+
+  const { data: listasPrecios = [], isLoading: isLoadingListas } = useQuery({
+    queryKey: ["listas-precios-generic"],
+    queryFn: fetchListasPrecios,
+    enabled: isOpen,
+  });
 
   const { data: provincias = [], isLoading: isLoadingProvincias } = useQuery({
     queryKey: ["provincias"],
@@ -144,6 +158,7 @@ export default function ClienteForm({
         ActivarCtaCte: initialData.ActivarCtaCte,
         TieneLimiteCompra: initialData.TieneLimiteCompra,
         MontoMaximoCtaCte: initialData.MontoMaximoCtaCte,
+        ListaPrecioId: initialData.ListaPrecioId,
       });
     } else {
       setFormData({
@@ -161,6 +176,7 @@ export default function ClienteForm({
         ActivarCtaCte: false,
         TieneLimiteCompra: false,
         MontoMaximoCtaCte: 0,
+        ListaPrecioId: null,
       });
     }
   }, [initialData, isOpen]);
@@ -191,6 +207,7 @@ export default function ClienteForm({
       Mail: formData?.Mail?.trim(),
       LocalidadId: Number(formData?.LocalidadId),
       CondicionIvaId: Number(formData?.CondicionIvaId),
+      ListaPrecioId: formData?.ListaPrecioId ? Number(formData.ListaPrecioId) : null,
       ActivarCtaCte: formData?.ActivarCtaCte,
       TieneLimiteCompra: formData?.TieneLimiteCompra,
       MontoMaximoCtaCte: formData?.TieneLimiteCompra
@@ -348,6 +365,29 @@ export default function ClienteForm({
                       isRequired
                       classNames={inputClassNames}
                     />
+                    <Select
+                      label="Lista de Precios (Opcional)"
+                      selectedKeys={
+                        formData.ListaPrecioId
+                          ? [String(formData.ListaPrecioId)]
+                          : []
+                      }
+                      onSelectionChange={(keys) => {
+                        const val = Array.from(keys)[0];
+                        handleChange("ListaPrecioId", val ? Number(val) : null);
+                      }}
+                      placeholder="Lista por defecto (Opcional)"
+                      isLoading={isLoadingListas}
+                    >
+                      {listasPrecios.map((lista: any) => (
+                        <SelectItem
+                          key={String(lista.Id)}
+                          textValue={lista.Nombre}
+                        >
+                          {lista.Nombre}
+                        </SelectItem>
+                      ))}
+                    </Select>
                   </div>
                 </div>
               </AccordionItem>

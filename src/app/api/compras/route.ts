@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
       },
       include: {
         Iva: true,
-        Precio: true,
+        Precios: true,
         ArticuloStock: { where: { SucursalId: sucursalId } },
       },
     });
@@ -246,32 +246,41 @@ export async function POST(req: NextRequest) {
           }
 
           // 4c. Actualizar costo si configuración lo indica
-          if (configuracion?.ActualizaCostoDesdeCompra && articulo.Precio) {
+          if (configuracion?.ActualizaCostoDesdeCompra) {
             const nuevoPrecioCosto = detalle.costoUnitario;
-            let nuevoPrecioPublico = Number(articulo.Precio.PrecioPublico);
-            let nuevoPrecioPublico2 = Number(articulo.Precio.PrecioPublico2);
+            const updateListasPromises: any[] = [];
 
             // 4d. Recalcular precio venta si la config lo pide
             if (configuracion.ModificaPrecioVentaDesdeCompra) {
-              const margen1 = Number(articulo.Precio.PorcentajeGanancia);
-              const margen2 = Number(articulo.Precio.PorcentajeGanancia2);
-              if (margen1 > 0) {
-                nuevoPrecioPublico = nuevoPrecioCosto * (1 + margen1 / 100);
-              }
-              if (margen2 > 0) {
-                nuevoPrecioPublico2 = nuevoPrecioCosto * (1 + margen2 / 100);
+
+              // Recalcular listas de precios dinámicas
+              if (articulo.Precios) {
+                for (const pl of articulo.Precios) {
+                  const ganancia = Number(pl.PorcentajeGanancia);
+                  if (ganancia > 0) {
+                    const nuevoPrecioFinal = nuevoPrecioCosto * (1 + ganancia / 100);
+                    updateListasPromises.push(
+                      tx.precioLista.update({
+                        where: { Id: pl.Id },
+                        data: { PrecioFinal: nuevoPrecioFinal },
+                      })
+                    );
+                  }
+                }
               }
             }
 
-            await tx.precio.update({
-              where: { Id: articulo.Precio.Id },
+            await tx.articulo.update({
+              where: { Id: articulo.Id },
               data: {
                 PrecioCosto: nuevoPrecioCosto,
-                PrecioPublico: nuevoPrecioPublico,
-                PrecioPublico2: nuevoPrecioPublico2,
-                FechaActualizacion: fechaCompra,
               },
             });
+
+            // Ejecutar actualizaciones de listas en paralelo
+            if (updateListasPromises.length > 0) {
+              await Promise.all(updateListasPromises);
+            }
           }
         }
 

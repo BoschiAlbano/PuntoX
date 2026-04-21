@@ -29,7 +29,7 @@ export default function ComprasScreen() {
   const handleAddItem = (producto: Producto, cantidad: number = 1) => {
     try {
       // Pre-cargar el costo del artículo desde su PrecioCosto
-      const costoDefault = Number(producto.Precio?.PrecioCosto ?? 0);
+      const costoDefault = Number(producto.PrecioCosto ?? 0);
       addItem(producto, cantidad, costoDefault);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error desconocido";

@@ -314,7 +314,7 @@ export default function VentaFooter({
         precio: i.precio,
         iva: Number(i.Iva?.Porcentaje || 0),
         subtotal: i.subtotal,
-        costo: Number(i.Precio?.PrecioCosto || 0),
+        costo: Number(i.PrecioCosto || 0),
       })),
       formasPago: pagos.map((p) => ({
         tipoPago: p.tipoPago,

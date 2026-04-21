@@ -51,10 +51,11 @@ export async function GET(req: NextRequest) {
         Stock: true,
 
         // Precios
-        Precio: {
+        PrecioCosto: true,
+        Precios: {
           select: {
-            PrecioPublico: true,
-            PrecioPublico2: true,
+            PrecioFinal: true,
+            ListaPrecioId: true,
           },
         },
 

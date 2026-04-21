@@ -450,8 +450,8 @@ export async function DELETE(req: NextRequest) {
         where: { TenantId: tenantId },
       });
 
-      // 16. Eliminar precios
-      await tx.precio.deleteMany({
+      // 16. Eliminar precios por lista
+      await tx.precioLista.deleteMany({
         where: { TenantId: tenantId },
       });
 

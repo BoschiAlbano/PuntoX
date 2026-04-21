@@ -99,9 +99,9 @@ export function ProductoCard({
             <div className="flex justify-between items-center text-sm">
               <span className="text-slate-600">
                 {formatCurrency(
-                  Number(item.Precio?.PrecioPublico ?? 0),
-                  currency,
-                )}
+                item.PreciosLista?.length ? Number(item.PreciosLista[0].PrecioFinal) : 0,
+                currency,
+              )}
               </span>
             </div>
           </div>

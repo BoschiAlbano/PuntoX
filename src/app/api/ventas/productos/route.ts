@@ -72,10 +72,12 @@ export async function GET(req: NextRequest) {
           HoraLimiteVentaHasta: true,
           TipoVenta: true,
           Stock: true,
-          Precio: {
+          PrecioCosto: true,
+          Precios: {
             select: {
-              PrecioPublico: true,
-              PrecioPublico2: true,
+              ListaPrecioId: true,
+              PorcentajeGanancia: true,
+              PrecioFinal: true,
             },
           },
           Iva: {
@@ -127,10 +129,12 @@ export async function GET(req: NextRequest) {
           HoraLimiteVentaHasta: true,
           TipoVenta: true,
           Stock: true,
-          Precio: {
+          PrecioCosto: true,
+          Precios: {
             select: {
-              PrecioPublico: true,
-              PrecioPublico2: true,
+              ListaPrecioId: true,
+              PorcentajeGanancia: true,
+              PrecioFinal: true,
             },
           },
           Iva: {
@@ -180,10 +184,12 @@ export async function GET(req: NextRequest) {
         HoraLimiteVentaDesde: formatTime(p.HoraLimiteVentaDesde),
         HoraLimiteVentaHasta: formatTime(p.HoraLimiteVentaHasta),
 
-        Precio: {
-          PrecioPublico: Number(p.Precio?.PrecioPublico || 0),
-          PrecioPublico2: Number(p.Precio?.PrecioPublico2 || 0),
-        },
+        PrecioCosto: Number(p.PrecioCosto || 0),
+        PreciosLista: (p.Precios || []).map((pl: { ListaPrecioId: bigint; PorcentajeGanancia: unknown; PrecioFinal: unknown }) => ({
+          ListaPrecioId: Number(pl.ListaPrecioId),
+          PorcentajeGanancia: Number(pl.PorcentajeGanancia),
+          PrecioFinal: Number(pl.PrecioFinal),
+        })),
         Iva: p.Iva,
         TipoVenta: p.TipoVenta,
       };

@@ -51,6 +51,7 @@ export async function GET(req: NextRequest) {
             ActivarCtaCte: true,
             TieneLimiteCompra: true,
             MontoMaximoCtaCte: true,
+            ListaPrecioId: true,
           },
         },
       },
@@ -211,6 +212,7 @@ export async function GET(req: NextRequest) {
         activarCtaCte: c.Persona_Cliente?.ActivarCtaCte ?? false,
         tieneLimiteCompra: tieneLimite,
         montoMaximoCtaCte: montoMaximo,
+        ListaPrecioId: c.Persona_Cliente?.ListaPrecioId ? Number(c.Persona_Cliente.ListaPrecioId) : null,
         saldoActual: Number(saldo.toFixed(2)),
         margenDisponible: tieneLimite
           ? Number((montoMaximo - saldo).toFixed(2))

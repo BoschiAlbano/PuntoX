@@ -49,7 +49,7 @@ export const useCompraStore = create<CompraState>()(
       addItem: (producto, cantidad = 1, costoOverride) => {
         const { items } = get();
         const costoUnitario =
-          costoOverride ?? Number(producto.Precio?.PrecioCosto ?? 0);
+          costoOverride ?? Number(producto.PrecioCosto ?? 0);
         const existing = items.find((i) => i.Id === producto.Id);
 
         if (existing) {

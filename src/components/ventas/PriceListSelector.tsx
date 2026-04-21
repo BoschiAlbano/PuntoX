@@ -1,58 +1,93 @@
 "use client";
 
-import { Store, Truck } from "lucide-react";
-import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { Select, SelectItem } from "@heroui/react";
+import { Tag } from "lucide-react";
+import { useEffect } from "react";
+import { useVentaStore } from "@/store/ventaStore";
 
 interface PriceListSelectorProps {
-  listaPrecios: number;
-  setListaPrecios: (lista: 1 | 2) => void;
+  listaPrecios: number | null;
+  setListaPrecios: (lista: number | null) => void;
 }
 
 export default function PriceListSelector({
   listaPrecios,
   setListaPrecios,
 }: PriceListSelectorProps) {
-  return (
-    <div className="flex bg-slate-100/70 p-1 rounded-xl items-center relative w-full sm:w-auto sm:ml-auto">
-      <button
-        type="button"
-        onClick={() => setListaPrecios(1)}
-        className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 relative px-3 py-1.5 rounded-lg text-[13px] font-semibold transition-all duration-200 z-10 ${
-          listaPrecios === 1
-            ? "text-white"
-            : "text-slate-500 hover:text-slate-700"
-        }`}
-      >
-        <Store size={14} />
-        <span>Minorista</span>
-        {listaPrecios === 1 && (
-          <motion.div
-            layoutId="priceListTab"
-            className="absolute inset-0 bg-[#67afc3] rounded-lg -z-10 shadow-sm"
-            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-          />
-        )}
-      </button>
+  const { cliente } = useVentaStore();
 
-      <button
-        type="button"
-        onClick={() => setListaPrecios(2)}
-        className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 relative px-3 py-1.5 rounded-lg text-[13px] font-semibold transition-all duration-200 z-10 ${
-          listaPrecios === 2
-            ? "text-white"
-            : "text-slate-500 hover:text-slate-700"
-        }`}
+  const { data: listas = [], isLoading } = useQuery({
+    queryKey: ["listas-precios-activas"],
+    queryFn: async () => {
+      const res = await fetch("/api/listas-precios");
+      if (!res.ok) throw new Error("Error fetching");
+      const json = await res.json();
+      return json.data || [];
+    },
+  });
+
+  // Set default list if none is selected
+  useEffect(() => {
+    if (!listaPrecios && listas.length > 0) {
+      const defaultList = listas.find((l: any) => l.PorDefecto);
+      if (defaultList) {
+        setListaPrecios(defaultList.Id);
+      } else {
+        setListaPrecios(listas[0].Id);
+      }
+    }
+  }, [listaPrecios, listas, setListaPrecios]);
+
+  return (
+    <div className="w-full sm:w-[200px] flex items-center shrink-0">
+      <Select
+        aria-label="Lista de Precios"
+        placeholder="Seleccionar Lista"
+        selectedKeys={listaPrecios ? [listaPrecios.toString()] : []}
+        onChange={(e) => {
+          if (e.target.value) {
+            setListaPrecios(Number(e.target.value));
+          } else {
+            setListaPrecios(null);
+          }
+        }}
+        isLoading={isLoading}
+        size="sm"
+        startContent={<Tag size={14} className="text-slate-400" />}
+        classNames={{
+          trigger: "bg-slate-100/70 border-none hover:bg-slate-200/70 shadow-none",
+          value: "font-semibold text-slate-700 text-[13px]"
+        }}
       >
-        <Truck size={14} />
-        <span>Mayorista</span>
-        {listaPrecios === 2 && (
-          <motion.div
-            layoutId="priceListTab"
-            className="absolute inset-0 bg-[#67afc3] rounded-lg -z-10 shadow-sm"
-            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-          />
-        )}
-      </button>
+        {listas.map((lista: any) => (
+          <SelectItem key={lista.Id} textValue={lista.Nombre}>
+            <div className="flex items-center justify-between w-full">
+              <span className="font-medium text-[13px]">{lista.Nombre}</span>
+              <div className="flex gap-1">
+                {cliente?.ListaPrecioId === lista.Id && lista.PorDefecto ? (
+                  <span className="text-[10px] text-[#67afc3] font-bold bg-[#67afc3]/10 px-1.5 py-0.5 rounded">
+                    Defecto
+                  </span>
+                ) : (
+                  <>
+                    {cliente?.ListaPrecioId === lista.Id && (
+                      <span className="text-[10px] text-[#67afc3] font-bold bg-[#67afc3]/10 px-1.5 py-0.5 rounded">
+                        Cliente
+                      </span>
+                    )}
+                    {lista.PorDefecto && (
+                      <span className="text-[10px] text-[#67afc3] font-bold bg-[#67afc3]/10 px-1.5 py-0.5 rounded">
+                        Sistema
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </SelectItem>
+        ))}
+      </Select>
     </div>
   );
 }

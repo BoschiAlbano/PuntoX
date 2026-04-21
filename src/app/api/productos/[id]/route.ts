@@ -44,7 +44,11 @@ export async function GET(
         TenantId: BigInt(tenantId),
       },
       include: {
-        Precio: true,
+        Precios: {
+          include: {
+            ListaPrecio: { select: { Nombre: true } },
+          },
+        },
         Marca: { select: { Descripcion: true } },
         Rubro: { select: { Descripcion: true } },
         UnidadMedida: { select: { Descripcion: true } },
@@ -76,17 +80,16 @@ export async function GET(
       ...producto,
       Id: Number(producto.Id),
 
-      // Stock: Priorizamos el de la sucursal
-      Precio: {
-        Id: Number(producto.Precio.Id),
-        ArticuloId: Number(producto.Precio.ArticuloId),
-        PrecioCosto: Number(producto.Precio.PrecioCosto),
-        PorcentajeGanancia: Number(producto.Precio.PorcentajeGanancia),
-        PrecioPublico: Number(producto.Precio.PrecioPublico),
-        PorcentajeGanancia2: Number(producto.Precio.PorcentajeGanancia2),
-        PrecioPublico2: Number(producto.Precio.PrecioPublico2),
-        FechaActualizacion: producto.Precio.FechaActualizacion,
-      },
+      PrecioCosto: Number(producto.PrecioCosto),
+      PreciosLista: producto.Precios?.map((pl: { Id: bigint; ListaPrecioId: bigint; PrecioFinal: unknown; PorcentajeGanancia: unknown; ListaPrecio?: { Nombre: string } | null }) => ({
+        Id: Number(pl.Id),
+        ListaPrecioId: Number(pl.ListaPrecioId),
+        PrecioFinal: Number(pl.PrecioFinal),
+        PorcentajeGanancia: Number(pl.PorcentajeGanancia),
+        ListaPrecio: {
+          Nombre: pl.ListaPrecio?.Nombre,
+        }
+      })) || [],
 
       // Hora en formato HH:mm:ss
       HoraLimiteVentaDesde: producto.HoraLimiteVentaDesde
