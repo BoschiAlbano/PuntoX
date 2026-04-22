@@ -235,30 +235,17 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Si se solicita solo la caja abierta
+    // Si se solicita la caja abierta de la sucursal (cualquier usuario/turno)
     if (soloAbierta) {
-      const usuarioIdParam = searchParams.get("usuarioId");
-
-      if (!usuarioIdParam) {
-        return NextResponse.json(
-          { error: "usuarioId es requerido para obtener caja abierta" },
-          { status: 400 },
-        );
-      }
-
-      // Buscar el usuario en la base de datos
       const usuario = await prisma.usuario.findFirst({
-        where: {
-          Id: BigInt(usuarioIdParam),
-          TenantId: BigInt(tenantId),
-          EstaEliminado: false,
-        },
+        where: { AuthUserId: user.id, EstaEliminado: false },
+        select: { Id: true },
       });
 
       if (!usuario) {
         return NextResponse.json(
           { error: "Usuario no encontrado" },
-          { status: 404 },
+          { status: 401 },
         );
       }
 
@@ -266,7 +253,6 @@ export async function GET(req: NextRequest) {
         where: {
           TenantId: BigInt(tenantId),
           SucursalId: sucursalId,
-          UsuarioAperturaId: usuario.Id,
           EstaEliminado: false,
           FechaCierre: null,
         },
@@ -332,6 +318,42 @@ export async function GET(req: NextRequest) {
 
       if (!caja) {
         return NextResponse.json({ caja: null });
+      }
+
+      // Si la caja fue abierta por otro usuario, crear notificación para el usuario actual
+      if (caja.UsuarioAperturaId !== usuario.Id) {
+        const cajaIdStr = caja.Id.toString();
+        const existingNotif = await prisma.notificacion.findFirst({
+          where: {
+            TenantId: BigInt(tenantId),
+            UsuarioId: usuario.Id,
+            EntidadTipo: "CAJA",
+            EntidadId: cajaIdStr,
+            Leida: false,
+          },
+        });
+
+        if (!existingNotif) {
+          const usuarioApertura = caja.Usuario_Caja_UsuarioAperturaIdToUsuario as any;
+          const persona = usuarioApertura?.Persona_Empleado?.[0]?.Persona;
+          const nombreApertura = persona
+            ? `${persona.Nombre} ${persona.Apellido}`.trim()
+            : (usuarioApertura?.Nombre ?? "otro usuario");
+
+          await prisma.notificacion.create({
+            data: {
+              TenantId: BigInt(tenantId),
+              UsuarioId: usuario.Id,
+              Tipo: "WARNING",
+              Titulo: "Caja abierta por otro usuario",
+              Mensaje: `La caja está abierta por ${nombreApertura}. Por favor, realizá el cierre antes de comenzar tu turno.`,
+              AccionUrl: "/caja",
+              EntidadTipo: "CAJA",
+              EntidadId: cajaIdStr,
+              Leida: false,
+            },
+          });
+        }
       }
 
       // Formatear nombre completo del usuario
@@ -678,20 +700,70 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Verificar si el usuario ya tiene una caja abierta en esta sucursal
+    // Verificar si hay alguna caja abierta en esta sucursal (cualquier usuario)
     const cajaAbierta = await prisma.caja.findFirst({
       where: {
         TenantId: BigInt(tenantId),
         SucursalId: sucursalId,
-        UsuarioAperturaId: usuario.Id,
         EstaEliminado: false,
         FechaCierre: null,
+      },
+      include: {
+        Usuario_Caja_UsuarioAperturaIdToUsuario: {
+          select: {
+            Id: true,
+            Nombre: true,
+            Persona_Empleado: {
+              select: { Persona: { select: { Nombre: true, Apellido: true } } },
+            },
+          },
+        },
       },
     });
 
     if (cajaAbierta) {
+      // Formatear nombre del usuario que dejó la caja abierta
+      const usuarioApertura = cajaAbierta.Usuario_Caja_UsuarioAperturaIdToUsuario as any;
+      const persona = usuarioApertura?.Persona_Empleado?.[0]?.Persona;
+      const nombreApertura = persona
+        ? `${persona.Nombre} ${persona.Apellido}`.trim()
+        : (usuarioApertura?.Nombre ?? "otro usuario");
+
+      // Crear notificación de advertencia (anti-spam: solo si no hay una sin leer para esta caja)
+      const cajaIdStr = cajaAbierta.Id.toString();
+      const existingNotif = await prisma.notificacion.findFirst({
+        where: {
+          TenantId: BigInt(tenantId),
+          EntidadTipo: "CAJA",
+          EntidadId: cajaIdStr,
+          Leida: false,
+        },
+      });
+      if (!existingNotif) {
+        await prisma.notificacion.create({
+          data: {
+            TenantId: BigInt(tenantId),
+            UsuarioId: null, // visible para todos en el tenant
+            Tipo: "WARNING",
+            Titulo: "Caja abierta sin cerrar",
+            Mensaje: `Hay una caja abierta por ${nombreApertura} desde el ${new Date(cajaAbierta.FechaApertura).toLocaleString("es-AR")}. Cerrá el turno anterior antes de abrir una nueva caja.`,
+            AccionUrl: "/caja",
+            EntidadTipo: "CAJA",
+            EntidadId: cajaIdStr,
+            Leida: false,
+          },
+        });
+      }
+
       return NextResponse.json(
-        { error: "Ya tienes una caja abierta en esta sucursal" },
+        {
+          error: `Hay una caja abierta por ${nombreApertura}. Cerrá el turno anterior antes de abrir una nueva caja.`,
+          cajaAbierta: {
+            Id: Number(cajaAbierta.Id),
+            FechaApertura: cajaAbierta.FechaApertura,
+            UsuarioApertura: nombreApertura,
+          },
+        },
         { status: 400 },
       );
     }
@@ -797,12 +869,11 @@ export async function PATCH(req: NextRequest) {
     const accion = searchParams.get("accion");
 
     if (accion === "cerrar") {
-      // Cerrar caja
+      // Cerrar caja (cualquier caja abierta de la sucursal, no solo la del usuario actual)
       const cajaAbierta = await prisma.caja.findFirst({
         where: {
           TenantId: BigInt(tenantId),
           SucursalId: sucursalId,
-          UsuarioAperturaId: usuario.Id,
           EstaEliminado: false,
           FechaCierre: null,
         },
@@ -810,7 +881,7 @@ export async function PATCH(req: NextRequest) {
 
       if (!cajaAbierta) {
         return NextResponse.json(
-          { error: "No tienes una caja abierta" },
+          { error: "No hay una caja abierta en esta sucursal" },
           { status: 400 },
         );
       }
@@ -843,6 +914,17 @@ export async function PATCH(req: NextRequest) {
             },
           },
         },
+      });
+
+      // Al cerrar la caja, marcar como leídas las notificaciones de advertencia asociadas
+      await prisma.notificacion.updateMany({
+        where: {
+          TenantId: BigInt(tenantId),
+          EntidadTipo: "CAJA",
+          EntidadId: cajaAbierta.Id.toString(),
+          Leida: false,
+        },
+        data: { Leida: true },
       });
 
       // Formatear nombre completo del usuario
