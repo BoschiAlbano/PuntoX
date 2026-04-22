@@ -585,7 +585,7 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
   return (
     <motion.section
       onClick={(e) => e.stopPropagation()}
-      className={`z-99 sm:relative sticky flex-col h-auto sm:flex  ${
+      className={`z-40 sm:relative sticky flex-col h-auto sm:flex  ${
         isCollapsed ? "sm:w-[80px] w-0" : "w-[280px]"
       }`}
       initial={false}

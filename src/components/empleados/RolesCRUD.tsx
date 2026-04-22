@@ -100,16 +100,16 @@ function PermisosTable({
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="border-b border-slate-200">
-            <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-36">
+            <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
               Módulo
             </th>
-            <th className="text-center py-2 px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider w-20">
+            <th className="text-center py-2 px-1 text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-16 sm:w-20">
               Página
             </th>
-            <th className="text-center py-2 px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider w-20">
+            <th className="text-center py-2 px-1 text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-16 sm:w-20">
               Leer
             </th>
-            <th className="text-center py-2 px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider w-20">
+            <th className="text-center py-2 px-1 text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-16 sm:w-20">
               Escribir
             </th>
           </tr>
@@ -473,16 +473,17 @@ export default function RolesCRUD() {
       <Modal
         isOpen={openCreateModal}
         onClose={() => setOpenCreateModal(false)}
-        size="xl"
+        size="md"
         placement="center"
+        scrollBehavior="inside"
         classNames={{
           backdrop: "bg-slate-900/40 backdrop-blur-md",
-          base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 max-w-xl",
+          base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 w-full mx-2 sm:mx-0",
           header:
-            "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8 bg-transparent",
-          body: "py-6 px-6 sm:px-8 overflow-y-auto overflow-x-hidden",
+            "border-b border-slate-100/60 pb-4 pt-5 px-5 sm:px-6 bg-transparent",
+          body: "py-5 px-5 sm:px-6 overflow-y-auto overflow-x-hidden",
           footer:
-            "border-t border-slate-100/60 py-4 px-6 sm:px-8 bg-transparent",
+            "border-t border-slate-100/60 py-4 px-5 sm:px-6 bg-transparent",
           closeButton:
             "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
         }}
@@ -504,7 +505,7 @@ export default function RolesCRUD() {
             </div>
           </ModalHeader>
           <ModalBody className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <Input
                 label="Nombre"
                 placeholder="Ej: Supervisor de turno"
@@ -581,16 +582,17 @@ export default function RolesCRUD() {
             permisos: [],
           });
         }}
-        size="xl"
+        size="md"
         placement="center"
+        scrollBehavior="inside"
         classNames={{
           backdrop: "bg-slate-900/40 backdrop-blur-md",
-          base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 max-w-xl",
+          base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 w-full mx-2 sm:mx-0",
           header:
-            "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8 bg-transparent",
-          body: "py-6 px-6 sm:px-8 overflow-y-auto overflow-x-hidden",
+            "border-b border-slate-100/60 pb-4 pt-5 px-5 sm:px-6 bg-transparent",
+          body: "py-5 px-5 sm:px-6 overflow-y-auto overflow-x-hidden",
           footer:
-            "border-t border-slate-100/60 py-4 px-6 sm:px-8 bg-transparent",
+            "border-t border-slate-100/60 py-4 px-5 sm:px-6 bg-transparent",
           closeButton:
             "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
         }}
@@ -759,16 +761,17 @@ export default function RolesCRUD() {
       <Modal
         isOpen={!!rolVerPermisos}
         onClose={() => setRolVerPermisos(null)}
-        size="xl"
+        size="md"
         placement="center"
+        scrollBehavior="inside"
         classNames={{
           backdrop: "bg-slate-900/40 backdrop-blur-md",
-          base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60",
+          base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 w-full mx-2 sm:mx-0",
           header:
-            "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8 bg-transparent",
-          body: "py-6 px-6 sm:px-8 overflow-y-auto overflow-x-hidden",
+            "border-b border-slate-100/60 pb-4 pt-5 px-5 sm:px-6 bg-transparent",
+          body: "py-5 px-5 sm:px-6 overflow-y-auto overflow-x-hidden",
           footer:
-            "border-t border-slate-100/60 py-4 px-6 sm:px-8 bg-transparent hidden",
+            "border-t border-slate-100/60 py-4 px-5 sm:px-6 bg-transparent hidden",
           closeButton:
             "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
         }}

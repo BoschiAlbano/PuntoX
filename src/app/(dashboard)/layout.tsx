@@ -40,7 +40,7 @@ export default function DashboardLayout({
       <div className="flex h-[100dvh] w-full bg-white relative overflow-hidden">
         <section
           onClick={() => setshow(false)}
-          className={`z-99 transition-transform duration-400 ease-in-out sm:relative absolute sm:w-auto w-screen sm:h-auto h-[100dvh] shrink-0 ${
+          className={`z-40 transition-transform duration-400 ease-in-out sm:relative absolute sm:w-auto w-screen sm:h-auto h-[100dvh] shrink-0 ${
             show ? `translate-x-[0%]` : `-translate-x-full`
           }`}
         >
