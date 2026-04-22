@@ -2,10 +2,10 @@
 2- un usuario administrador deberia poder cerrar caja de otro usuario que la dejo abierta. o deberia manejar una sola caja. ✔️
 3- al abrir un modal los compoenentes sidebar y dashboardhead deberian estar inaccesibles. ✔️
 4- el modal de roles es muy grande, deberia ser mas pequeño y responsive. ✔️
-5- imagenes de productos articulos esta guardando un arreglo de bits y logos esta usando store de supabase pero no elimina los logos viejos. ❌
+5- imagenes de productos articulos esta guardando un arreglo de bits y logos esta usando store de supabase pero no elimina los logos viejos. ✔️
 6- actualizacion de precios masiva. ❌
 7- implementacion de listas de precios ✔️
 8- crear crud iva por defecto en seed cargo solo dos (no se si sea necesario cargar mas) ❌
-
+9- el modal abrir caja no se pone por encima de todo. como los demas modales ✔️
 Scripts importantes:
 npx tsx scripts/sync-permisos.ts

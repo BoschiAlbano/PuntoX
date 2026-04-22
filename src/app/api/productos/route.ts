@@ -14,6 +14,7 @@ import {
 import { handleError } from "@/lib/errors/handler";
 import { createError } from "@/lib/errors/types";
 import { fotoDefault } from "@/utilities/fotoDefault";
+import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 
 export async function GET(req: NextRequest) {
   try {
@@ -93,9 +94,9 @@ export async function GET(req: NextRequest) {
         CodigoBarra: true,
         Descripcion: true,
         EstaEliminado: true,
-        Stock: true, // Legacy/Global
         StockMinimo: true,
         PrecioCosto: true,
+        Foto: true,
 
         Marca: { select: { Descripcion: true } },
         Rubro: { select: { Descripcion: true } },
@@ -148,6 +149,7 @@ export async function GET(req: NextRequest) {
         CodigoBarra: producto.CodigoBarra,
         Descripcion: producto.Descripcion,
         EstaEliminado: producto.EstaEliminado,
+        Foto: producto.Foto,
 
         Marca: producto.Marca
           ? { Descripcion: producto.Marca.Descripcion }
@@ -196,6 +198,32 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const validarProducto = createProductoSchema.parse(body);
 
+    // 1. Subir Foto a Supabase si existe
+    let fotoUrl: string | null = null;
+    if (typeof validarProducto.Foto === "string" && validarProducto.Foto.length > 0) {
+      try {
+        const b64Data = validarProducto.Foto.includes("base64,")
+          ? validarProducto.Foto.split("base64,")[1]
+          : validarProducto.Foto;
+        const buffer = Buffer.from(b64Data, "base64");
+        const supabase = getSupabaseServiceClient();
+        const fileName = `${tenantId}/art-${Date.now()}.png`;
+
+        const { error } = await supabase.storage
+          .from("articulos")
+          .upload(fileName, buffer, { contentType: "image/png", upsert: true });
+
+        if (!error) {
+          const { data } = supabase.storage.from("articulos").getPublicUrl(fileName);
+          fotoUrl = data.publicUrl;
+        } else {
+          console.error("Supabase upload error (POST articulo):", error);
+        }
+      } catch (e) {
+        console.error("Error procesando foto (POST articulo):", e);
+      }
+    }
+
     // Iniciar transacción para crear Precio y Artículo
     const producto = await prisma.$transaction(async (tx) => {
       // Ya no creamos "Precio", todo va directo en Articulo y PrecioLista
@@ -231,17 +259,7 @@ export async function POST(req: NextRequest) {
               Id: validarProducto.IvaId,
             },
           },
-          Foto: (() => {
-            const b64 = validarProducto.Foto;
-            if (typeof b64 === "string" && b64.length > 0) {
-              try {
-                return Buffer.from(b64, "base64");
-              } catch {
-                return fotoDefault();
-              }
-            }
-            return fotoDefault();
-          })(),
+          Foto: fotoUrl,
           Precios: {
             create: validarProducto.PreciosLista.map((pl) => ({
               TenantId: BigInt(tenantId),
@@ -420,13 +438,46 @@ export async function PATCH(req: NextRequest) {
         articuloData.PrecioCosto = validarProducto.PrecioCosto;
       }
 
-      // Foto (base64)
+      // Foto (base64 o URL actual)
       const b64 = validarProducto.Foto;
       if (typeof b64 === "string" && b64.length > 0) {
-        try {
-          articuloData.Foto = Buffer.from(b64, "base64");
-        } catch {
-          // Ignorar si la conversión falla
+        // Si no empieza con http, es un base64 nuevo
+        if (!b64.startsWith("http")) {
+          try {
+            const supabase = getSupabaseServiceClient();
+
+            // Borrar foto vieja si era de supabase
+            if (articulo.Foto && typeof articulo.Foto === "string" && articulo.Foto.includes("/articulos/")) {
+              const urlParts = articulo.Foto.split("/articulos/");
+              if (urlParts.length > 1) {
+                const oldPath = urlParts[1];
+                await supabase.storage.from("articulos").remove([oldPath]);
+              }
+            }
+
+            const b64Data = b64.includes("base64,") ? b64.split("base64,")[1] : b64;
+            const buffer = Buffer.from(b64Data, "base64");
+            const fileName = `${tenantIdBigInt}/art-${Date.now()}.png`;
+
+            const { error } = await supabase.storage
+              .from("articulos")
+              .upload(fileName, buffer, { contentType: "image/png", upsert: true });
+
+            if (!error) {
+              const { data } = supabase.storage.from("articulos").getPublicUrl(fileName);
+              articuloData.Foto = data.publicUrl;
+            } else {
+              console.error("Supabase upload error (PATCH articulo):", error);
+            }
+          } catch (e) {
+            console.error("Error subiendo foto update (PATCH articulo):", e);
+          }
+        }
+        // Si empieza con http, significa que el usuario no cambió la foto en el form. No hacemos nada.
+      } else {
+        // Si enviaron vacío o nulo, podrían querer borrarla
+        if (b64 === "" || b64 === null) {
+          articuloData.Foto = null;
         }
       }
 

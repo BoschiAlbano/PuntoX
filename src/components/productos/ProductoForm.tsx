@@ -558,11 +558,7 @@ export default function ProductoForm({
                   />
                   <div className="md:col-span-2">
                     <ImageUploadField
-                      existingImageUrl={
-                        initialData?.Id
-                          ? `/api/productos/${initialData.Id}?foto=1`
-                          : null
-                      }
+                      existingImageUrl={formData.Foto || null}
                       previewUrl={fotoPreview}
                       onChange={(file, base64) => {
                         setFotoFile(file);

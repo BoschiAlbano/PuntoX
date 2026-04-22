@@ -26,18 +26,6 @@ export async function GET(
       throw createError.validation("ID requerido");
     }
 
-    const fotoParam = req.nextUrl.searchParams.get("foto");
-    if (fotoParam === "1" || fotoParam?.toLowerCase() === "true") {
-      const { buffer, contentType } = await getArticuloFoto(tenantId, id);
-      return new NextResponse(new Uint8Array(buffer), {
-        status: 200,
-        headers: {
-          "Content-Type": contentType,
-          "Cache-Control": "private, max-age=3600",
-        },
-      });
-    }
-
     const producto = await prisma.articulo.findFirst({
       where: {
         Id: Number(id),
@@ -128,9 +116,8 @@ export async function GET(
 
       Stock: stockSucursal ? Number(stockSucursal.Stock) : Number(0),
       SucursalNombre: stockSucursal?.Sucursal?.Nombre ?? null,
+      Foto: producto.Foto, // Ya es un string de Supabase
     };
-
-    delete (response as Record<string, unknown>).Foto;
 
     return NextResponse.json(response);
   } catch (error) {

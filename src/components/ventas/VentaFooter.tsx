@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, ReactNode, useMemo } from "react";
+import ReactDOM from "react-dom";
 import {
   Button,
   Input,
@@ -758,8 +759,8 @@ function ModalShell({
 
   const sizeClass = size === "xl" ? "max-w-2xl" : "max-w-md";
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+  return ReactDOM.createPortal(
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center px-4">
       <button
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
         onClick={onClose}
@@ -787,6 +788,7 @@ function ModalShell({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

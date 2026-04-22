@@ -56,7 +56,7 @@ export function ProductoCard({
         >
           <div className="aspect-square bg-slate-100 relative">
             <img
-              src={`/api/productos/${item.Id}?foto=1${item.FechaActualizacion ? `&v=${encodeURIComponent(item.FechaActualizacion)}` : ""}`}
+              src={item.Foto || PLACEHOLDER_IMG}
               alt={item.Descripcion}
               className="w-full h-full object-contain"
               onError={(e) => {

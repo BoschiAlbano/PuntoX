@@ -195,7 +195,7 @@ model Articulo {
   Detalle              String?              @db.VarChar(500)
   Ubicacion            String?              @db.VarChar(500)
   PrecioCosto          Decimal              @default(0) @db.Decimal(18, 2)
-  Foto                 Bytes
+  Foto                 String?              @db.VarChar(1000)
   ActivarLimiteVenta   Boolean
   LimiteVenta          Decimal              @db.Decimal(18, 2)
   ActivarHoraVenta     Boolean

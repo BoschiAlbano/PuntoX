@@ -578,7 +578,19 @@ export default function CajaActual() {
           Abrir Caja
         </Button>
 
-        <Modal isOpen={isAbrirOpen} onOpenChange={onAbrirChange}>
+        <Modal 
+          isOpen={isAbrirOpen} 
+          onOpenChange={onAbrirChange}
+          placement="center"
+          backdrop="opaque"
+          classNames={{
+            backdrop: "bg-black/50 backdrop-blur-sm z-[999]",
+            wrapper: "z-[1000]",
+            base: "font-sans bg-white rounded-2xl shadow-xl",
+            header: "border-b border-gray-100",
+            footer: "border-t border-gray-100"
+          }}
+        >
           <ModalContent>
             {(onClose) => (
               <>
@@ -856,7 +868,15 @@ export default function CajaActual() {
       />
 
       {/* Modal Nuevo Gasto */}
-      <Modal isOpen={isGastoOpen} onOpenChange={onGastoChange} size="2xl">
+      <Modal 
+        isOpen={isGastoOpen} 
+        onOpenChange={onGastoChange} 
+        size="2xl"
+        classNames={{
+          backdrop: "bg-black/50 backdrop-blur-sm z-[999]",
+          wrapper: "z-[1000]",
+        }}
+      >
         <ModalContent>
           {(onClose) => (
             <>
@@ -1044,7 +1064,15 @@ export default function CajaActual() {
       </Modal>
 
       {/* Modal Nuevo Concepto */}
-      <Modal isOpen={isConceptoOpen} onOpenChange={onConceptoChange} size="sm">
+      <Modal 
+        isOpen={isConceptoOpen} 
+        onOpenChange={onConceptoChange} 
+        size="sm"
+        classNames={{
+          backdrop: "bg-black/50 backdrop-blur-sm z-[999]",
+          wrapper: "z-[1000]",
+        }}
+      >
         <ModalContent>
           {(onClose) => (
             <>
@@ -1075,7 +1103,15 @@ export default function CajaActual() {
       </Modal>
 
       {/* Delete Confirmation Modal */}
-      <Modal isOpen={isDeleteOpen} onOpenChange={onDeleteChange} size="sm">
+      <Modal 
+        isOpen={isDeleteOpen} 
+        onOpenChange={onDeleteChange} 
+        size="sm"
+        classNames={{
+          backdrop: "bg-black/50 backdrop-blur-sm z-[999]",
+          wrapper: "z-[1000]",
+        }}
+      >
         <ModalContent>
           {(onClose) => (
             <>
@@ -1109,7 +1145,8 @@ export default function CajaActual() {
         onOpenChange={onCerrarChange}
         backdrop="opaque"
         classNames={{
-          backdrop: "bg-slate-900/40 backdrop-blur-md",
+          backdrop: "bg-slate-900/40 backdrop-blur-md z-[999]",
+          wrapper: "z-[1000]",
           base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 max-w-md",
           header: "border-b border-slate-100/60 pb-4 pt-6 px-6",
           body: "py-5 px-6",
@@ -1275,6 +1312,10 @@ export default function CajaActual() {
         onOpenChange={onTicketChange}
         size="2xl"
         scrollBehavior="inside"
+        classNames={{
+          backdrop: "bg-black/50 backdrop-blur-sm z-[999]",
+          wrapper: "z-[1000]",
+        }}
       >
         <ModalContent>
           {(onClose) => (
