@@ -41,7 +41,8 @@ export function useRealizarCompra(onSuccess?: (data: any) => void) {
     onSuccess: (data) => {
       // Invalidar queries de stock, artículos y caja para refrescar datos
       queryClient.invalidateQueries({ queryKey: ["productos"] });
-      queryClient.invalidateQueries({ queryKey: ["productos-generic"] });
+      queryClient.removeQueries({ queryKey: ["productos-generic"] });
+      queryClient.removeQueries({ queryKey: ["producto-detail"] });
       queryClient.invalidateQueries({ queryKey: ["caja"] });
       queryClient.invalidateQueries({ queryKey: ["proveedores"] });
 

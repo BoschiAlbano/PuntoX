@@ -54,7 +54,9 @@ function getSectionStatus(formData: Partial<Producto>) {
     (formData.RubroId ?? 0) > 0 &&
     (formData.UnidadMedidaId ?? 0) > 0 &&
     (formData.IvaId ?? 0) > 0;
-  const precios = (formData.PreciosLista ?? []).some(p => (p.PrecioFinal ?? 0) > 0);
+  const precios = (formData.PreciosLista ?? []).some(
+    (p) => (p.PrecioFinal ?? 0) > 0,
+  );
   const stock = (formData.Stock ?? 0) > 0;
   return {
     general,
@@ -292,7 +294,7 @@ export default function ProductoForm({
       return res.json();
     },
     enabled: !!initialData?.Id && isOpen,
-    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   useEffect(() => {
@@ -355,39 +357,58 @@ export default function ProductoForm({
     </div>
   );
 
-  const updatePrecio = (listaId: number | null, field: string, value: number) => {
+  const updatePrecio = (
+    listaId: number | null,
+    field: string,
+    value: number,
+  ) => {
     setFormData((prev) => {
       // Cambio en el precio de costo general
       if (listaId === null && field === "PrecioCosto") {
         const newCosto = value;
-        const newPreciosLista = (prev.PreciosLista || []).map(p => {
+        const newPreciosLista = (prev.PreciosLista || []).map((p) => {
           const ganancia = p.PorcentajeGanancia || 0;
           return {
             ...p,
-            PrecioFinal: parseFloat((newCosto * (1 + ganancia / 100)).toFixed(2))
+            PrecioFinal: parseFloat(
+              (newCosto * (1 + ganancia / 100)).toFixed(2),
+            ),
           };
         });
-        return { ...prev, PrecioCosto: newCosto, PreciosLista: newPreciosLista };
+        return {
+          ...prev,
+          PrecioCosto: newCosto,
+          PreciosLista: newPreciosLista,
+        };
       }
 
       // Cambio en una lista específica
       const prevCosto = prev.PrecioCosto || 0;
       const currentListas = [...(prev.PreciosLista || [])];
-      const listaIndex = currentListas.findIndex(p => p.ListaPrecioId === listaId);
-      
-      const currentLista = listaIndex >= 0 ? currentListas[listaIndex] : {
-        ListaPrecioId: listaId as number,
-        PorcentajeGanancia: 0,
-        PrecioFinal: 0,
-      };
+      const listaIndex = currentListas.findIndex(
+        (p) => p.ListaPrecioId === listaId,
+      );
+
+      const currentLista =
+        listaIndex >= 0
+          ? currentListas[listaIndex]
+          : {
+              ListaPrecioId: listaId as number,
+              PorcentajeGanancia: 0,
+              PrecioFinal: 0,
+            };
 
       if (field === "PorcentajeGanancia") {
         currentLista.PorcentajeGanancia = value;
-        currentLista.PrecioFinal = parseFloat((prevCosto * (1 + value / 100)).toFixed(2));
+        currentLista.PrecioFinal = parseFloat(
+          (prevCosto * (1 + value / 100)).toFixed(2),
+        );
       } else if (field === "PrecioFinal") {
         currentLista.PrecioFinal = value;
         if (prevCosto > 0) {
-          currentLista.PorcentajeGanancia = parseFloat(((value / prevCosto - 1) * 100).toFixed(2));
+          currentLista.PorcentajeGanancia = parseFloat(
+            ((value / prevCosto - 1) * 100).toFixed(2),
+          );
         }
       }
 
@@ -801,33 +822,51 @@ export default function ProductoForm({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {isLoadingListas ? (
-                      <div className="col-span-1 md:col-span-2 text-center text-sm text-slate-500 py-4">Cargando listas de precios...</div>
+                      <div className="col-span-1 md:col-span-2 text-center text-sm text-slate-500 py-4">
+                        Cargando listas de precios...
+                      </div>
                     ) : listasPrecios.length === 0 ? (
-                      <div className="col-span-1 md:col-span-2 text-center text-sm text-slate-500 py-4">No hay listas de precios activas.</div>
+                      <div className="col-span-1 md:col-span-2 text-center text-sm text-slate-500 py-4">
+                        No hay listas de precios activas.
+                      </div>
                     ) : (
                       listasPrecios.map((lista: any) => {
                         const isDefault = lista.PorDefecto;
-                        const listaData = formData.PreciosLista?.find(p => Number(p.ListaPrecioId) === Number(lista.Id)) || { PorcentajeGanancia: 0, PrecioFinal: 0 };
-                        
+                        const listaData = formData.PreciosLista?.find(
+                          (p) => Number(p.ListaPrecioId) === Number(lista.Id),
+                        ) || { PorcentajeGanancia: 0, PrecioFinal: 0 };
+
                         return (
-                          <div key={lista.Id} className="space-y-4 p-5 rounded-xl border border-[#e5e7eb] bg-white shadow-sm relative">
+                          <div
+                            key={lista.Id}
+                            className="space-y-4 p-5 rounded-xl border border-[#e5e7eb] bg-white shadow-sm relative"
+                          >
                             <div className="flex items-center gap-2">
                               <h4 className="font-semibold text-[#0f172a] text-sm uppercase tracking-wide">
                                 {lista.Nombre}
                               </h4>
                               {isDefault && (
-                                <Chip size="sm" color="primary" variant="flat" className="h-5 text-[10px]">
+                                <Chip
+                                  size="sm"
+                                  color="primary"
+                                  variant="flat"
+                                  className="h-5 text-[10px]"
+                                >
                                   Por Defecto
                                 </Chip>
                               )}
                             </div>
-                            
+
                             <NumberInput
                               label="% Ganancia"
                               placeholder="0"
                               value={Number(listaData.PorcentajeGanancia) || 0}
                               onValueChange={(value) =>
-                                updatePrecio(lista.Id, "PorcentajeGanancia", value)
+                                updatePrecio(
+                                  lista.Id,
+                                  "PorcentajeGanancia",
+                                  value,
+                                )
                               }
                               isRequired
                               isDisabled={isSaving}
@@ -842,7 +881,7 @@ export default function ProductoForm({
                               }
                               isDisabled={isSaving}
                               classNames={{
-                                input: `font-bold ${isDefault ? 'text-[#67afc3]' : 'text-slate-700'}`,
+                                input: `font-bold ${isDefault ? "text-[#67afc3]" : "text-slate-700"}`,
                               }}
                             />
                           </div>

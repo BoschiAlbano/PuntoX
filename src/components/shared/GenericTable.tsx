@@ -19,7 +19,7 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/react";
-import { useState, useRef, Key } from "react";
+import { useState, useRef, Key, useEffect } from "react";
 import {
   Check,
   Columns2,
@@ -230,6 +230,24 @@ export default function GenericTable<T extends { Id: number | string }>({
   const visibleColumns = columns.filter((c) => visibleUids.has(c.uid));
   const printColumns = visibleColumns.filter((c) => c.uid !== "acciones");
 
+  // Cuando se agreguen columnas dinámicas (ej. listas de precios cargadas async),
+  // añadirlas a visibleUids solo en desktop. En mobile se respeta defaultVisibleUidsMobile.
+  useEffect(() => {
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+    if (isMobile) return;
+    setVisibleUids((prev) => {
+      const next = new Set(prev);
+      let changed = false;
+      for (const col of columns) {
+        if (!next.has(col.uid)) {
+          next.add(col.uid);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [columns]);
+
   const NUMERIC_UIDS = new Set([
     "Stock",
     "StockMinimo",
@@ -329,8 +347,16 @@ export default function GenericTable<T extends { Id: number | string }>({
                     <button
                       type="button"
                       className="flex items-center justify-center sm:justify-start gap-2 px-3 w-auto h-10 sm:h-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[#67afc3] text-slate-700 hover:text-[#67afc3] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40 transition-all duration-150"
-                      title={selectedCount > 0 ? `Más opciones (${selectedCount} seleccionados)` : "Exportar, Imprimir"}
-                      aria-label={selectedCount > 0 ? `Más opciones: ${selectedCount} seleccionados` : "Más opciones: Exportar, Imprimir"}
+                      title={
+                        selectedCount > 0
+                          ? `Más opciones (${selectedCount} seleccionados)`
+                          : "Exportar, Imprimir"
+                      }
+                      aria-label={
+                        selectedCount > 0
+                          ? `Más opciones: ${selectedCount} seleccionados`
+                          : "Más opciones: Exportar, Imprimir"
+                      }
                     >
                       <Menu
                         size={ICON_SIZE}

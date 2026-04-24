@@ -1,0 +1,48 @@
+### Variables Globales
+@baseUrl = http://localhost:3000/api
+# IMPORTANTE: Pegar el valor de la Cookie de una sesión activa de Chrome aquí
+@cookie = sb-axuadjuavytmxvgfqzyj-auth-token.0=...; sb-axuadjuavytmxvgfqzyj-auth-token.1=...
+
+### 1. Obtener artículos con todos sus precios (con filtros)
+# Puedes filtrar por marcaId, rubroId, estado (activo/inactivo/todos) y búsqueda (q)
+GET {{baseUrl}}/productos/con-precios?limit=10&estado=activo
+Cookie: {{cookie}}
+
+### 2. Actualización Masiva: Aumento del 5% sobre costo (con redondeo ★ Ceil $99)
+# Este ejemplo aplica a los artículos con IDs 1, 2 y 3 (ajustar según tus datos)
+PATCH {{baseUrl}}/precios/actualizar-masivo
+Content-Type: application/json
+Cookie: {{cookie}}
+
+{
+  "articuloIds": [1, 2, 3],
+  "tipo": "porcentaje_sobre_costo",
+  "valor": 5,
+  "redondear": true,
+  "redondeoTipo": "ceil_99"
+}
+
+### 3. Actualización Masiva: Incremento del 10% sobre precio actual (sin redondeo)
+PATCH {{baseUrl}}/precios/actualizar-masivo
+Content-Type: application/json
+Cookie: {{cookie}}
+
+{
+  "articuloIds": [1, 2, 3],
+  "tipo": "porcentaje_incremento",
+  "valor": 10,
+  "redondear": false
+}
+
+### 4. Actualización Masiva: Descuento del 15% (con redondeo entero superior)
+PATCH {{baseUrl}}/precios/actualizar-masivo
+Content-Type: application/json
+Cookie: {{cookie}}
+
+{
+  "articuloIds": [1, 2, 3],
+  "tipo": "porcentaje_descuento",
+  "valor": 15,
+  "redondear": true,
+  "redondeoTipo": "ceil"
+}
