@@ -4,6 +4,7 @@ import prisma from "@/DB/prisma";
 import { User } from "@supabase/supabase-js";
 import { PerfilTipo, Prisma } from "../../../prisma/generated/prisma";
 import { PermisoError } from "../requirePermiso";
+import { createError } from "@/lib/errors/types";
 import { Permission } from "./permissions";
 import { getRequestAuthContext, setRequestAuthContext } from "./requestContext";
 import { cookies } from "next/headers";
@@ -111,28 +112,29 @@ export async function getAuthContext(
   const user = await getCachedUser();
 
   if (!user) {
-    throw new Error("No autenticado");
+    throw createError.unauthorized("No autenticado");
   }
 
   // 2. Extraer Tenant
   const tenantIdRaw =
     user.app_metadata?.tenant_id || user.app_metadata?.tenantId;
   if (!tenantIdRaw) {
-    throw new Error("Usuario sin TenantId configurado");
+    throw createError.unauthorized("Usuario sin TenantId configurado");
   }
   const tenantId = Number(tenantIdRaw);
 
   // 3. Verificar Sesión Activa (Opcional, para logout forzado)
   if (checkActiveSession) {
     const isValid = await checkSessionAlive(user.id, tenantId);
-    if (!isValid) throw new Error("Sesión cerrada o expirada");
+    if (!isValid) throw createError.unauthorized("Sesión cerrada o expirada");
   }
 
   // 4. 🚀 Buscar Usuario en DB con cache
   const dbUsuario = await getCachedUserContext(user.id, tenantId);
 
-  if (!dbUsuario) throw new Error("Usuario no encontrado en base de datos");
-  if (dbUsuario.EstaBloqueado) throw new Error("Usuario bloqueado");
+  if (!dbUsuario)
+    throw createError.unauthorized("Usuario no encontrado en base de datos");
+  if (dbUsuario.EstaBloqueado) throw createError.forbidden("Usuario bloqueado");
 
   const usuarioId = Number(dbUsuario.Id);
   const isSuperAdmin = dbUsuario.PerfilUsuario.some(
@@ -162,7 +164,9 @@ export async function getAuthContext(
         );
 
         if (!tieneAcceso) {
-          throw new Error("No tienes acceso a la sucursal solicitada");
+          throw createError.forbidden(
+            "No tienes acceso a la sucursal solicitada",
+          );
         }
       }
     }

@@ -2,3 +2,4 @@
 2- controlar compra los precios y las listas de precios.
 3- quitar logs y auditorias. por que no terminamos mas.
 4- quitar cosas de configuracion y dejar que si se ba usar.
+5- consotrolar api register
