@@ -28,6 +28,9 @@ export default function VentasScreen() {
     addItem,
     updateItemQuantity,
     removeItem,
+    updateItemsListaPrecios,
+    removeItems,
+    applyDiscountToItems,
     setCliente,
     setTipoComprobante,
     setListaPrecios,
@@ -209,6 +212,9 @@ export default function VentasScreen() {
             items={items}
             onUpdateQuantity={handleUpdateQuantity}
             onRemoveItem={removeItem}
+            onChangeListaPrecios={updateItemsListaPrecios}
+            onRemoveItems={removeItems}
+            onApplyDiscount={applyDiscountToItems}
           />
         </div>
 

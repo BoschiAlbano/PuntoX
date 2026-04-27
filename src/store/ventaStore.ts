@@ -36,6 +36,9 @@ interface VentaState {
   setListaPrecios: (lista: number | null) => void;
   setDescuentoPorcentaje: (descuento: number) => void;
   setNumeroComprobanteAsociado: (numero: number | null) => void;
+  updateItemsListaPrecios: (ids: number[], listaPrecioId: number) => void;
+  removeItems: (ids: number[]) => void;
+  applyDiscountToItems: (ids: number[], porcentaje: number) => void;
   addPago: (pago: Pago) => void;
   removePago: (index: number) => void;
   setPagos: (pagos: Pago[]) => void;
@@ -147,6 +150,48 @@ export const useVentaStore = create<VentaState>()(
         set({ descuentoPorcentaje }),
       setNumeroComprobanteAsociado: (numero) =>
         set({ numeroComprobanteAsociado: numero }),
+
+      updateItemsListaPrecios: (ids, listaPrecioId) => {
+        set((state) => ({
+          items: state.items.map((item) => {
+            if (!ids.includes(item.Id)) return item;
+            const pl = item.PreciosLista?.find(
+              (p) => Number(p.ListaPrecioId) === Number(listaPrecioId),
+            );
+            if (!pl) return item;
+            const newPrecio = Number(pl.PrecioFinal);
+            return {
+              ...item,
+              precio: newPrecio,
+              subtotal: newPrecio * item.cantidad,
+              origenPrecio: "normal" as OrigenPrecio,
+            };
+          }),
+        }));
+      },
+
+      removeItems: (ids) => {
+        set((state) => ({
+          items: state.items.filter((item) => !ids.includes(item.Id)),
+        }));
+      },
+
+      applyDiscountToItems: (ids, porcentaje) => {
+        set((state) => ({
+          items: state.items.map((item) => {
+            if (!ids.includes(item.Id)) return item;
+            const newPrecio = parseFloat(
+              (item.precio * (1 - porcentaje / 100)).toFixed(2),
+            );
+            return {
+              ...item,
+              precio: newPrecio,
+              subtotal: newPrecio * item.cantidad,
+              origenPrecio: "alternativo" as OrigenPrecio,
+            };
+          }),
+        }));
+      },
 
       addPago: (pago) => set((state) => ({ pagos: [...state.pagos, pago] })),
       removePago: (index) =>
