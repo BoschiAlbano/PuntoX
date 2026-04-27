@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS, SET_PERMISSIONS, GET_PERMISSIONS } from "@/lib/constants/comprobantes";
+import { SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { handleError } from "@/lib/errors/handler";
 import { createError } from "@/lib/errors/types";
 import prisma from "@/DB/prisma";
@@ -11,8 +11,6 @@ const seguridadSchema = z.object({
   expirarSesiones30Dias: z.boolean().optional(),
   bloquearTrasIntentos: z.enum(["nunca", "5", "10"]).optional(),
   alertarNuevoDispositivo: z.boolean().optional(),
-  bloquearPorInactividad: z.boolean().optional(),
-  tiempoInactividadMinutos: z.number().int().positive().optional(),
   recordarSesion30Dias: z.boolean().optional(),
 });
 
@@ -42,12 +40,7 @@ export async function GET(req: NextRequest) {
         ExpirarSesiones30Dias: true,
         BloquearTrasIntentos: true,
         AlertarNuevoDispositivo: true,
-        BloquearPorInactividad: true,
-        TiempoInactividadMinutos: true,
         RecordarSesion30Dias: true,
-      },
-      orderBy: {
-        Id: "desc",
       },
     });
 
@@ -59,8 +52,6 @@ export async function GET(req: NextRequest) {
           expirarSesiones30Dias: true,
           bloquearTrasIntentos: "5" as const,
           alertarNuevoDispositivo: true,
-          bloquearPorInactividad: false,
-          tiempoInactividadMinutos: 30,
           recordarSesion30Dias: true,
         },
         { status: 200 },
@@ -83,8 +74,6 @@ export async function GET(req: NextRequest) {
         expirarSesiones30Dias: config.ExpirarSesiones30Dias ?? true,
         bloquearTrasIntentos,
         alertarNuevoDispositivo: config.AlertarNuevoDispositivo ?? true,
-        bloquearPorInactividad: config.BloquearPorInactividad ?? false,
-        tiempoInactividadMinutos: config.TiempoInactividadMinutos ?? 30,
         recordarSesion30Dias: config.RecordarSesion30Dias ?? true,
       },
       { status: 200 },
@@ -152,8 +141,6 @@ export async function PUT(req: NextRequest) {
       ExpirarSesiones30Dias?: boolean;
       BloquearTrasIntentos?: number | null;
       AlertarNuevoDispositivo?: boolean;
-      BloquearPorInactividad?: boolean;
-      TiempoInactividadMinutos?: number;
       RecordarSesion30Dias?: boolean;
     } = {};
 
@@ -171,12 +158,6 @@ export async function PUT(req: NextRequest) {
     }
     if (data.alertarNuevoDispositivo !== undefined) {
       updateData.AlertarNuevoDispositivo = data.alertarNuevoDispositivo;
-    }
-    if (data.bloquearPorInactividad !== undefined) {
-      updateData.BloquearPorInactividad = data.bloquearPorInactividad;
-    }
-    if (data.tiempoInactividadMinutos !== undefined) {
-      updateData.TiempoInactividadMinutos = data.tiempoInactividadMinutos;
     }
     if (data.recordarSesion30Dias !== undefined) {
       updateData.RecordarSesion30Dias = data.recordarSesion30Dias;
@@ -196,8 +177,6 @@ export async function PUT(req: NextRequest) {
         ExpirarSesiones30Dias: true,
         BloquearTrasIntentos: true,
         AlertarNuevoDispositivo: true,
-        BloquearPorInactividad: true,
-        TiempoInactividadMinutos: true,
         RecordarSesion30Dias: true,
       },
     });
@@ -218,8 +197,6 @@ export async function PUT(req: NextRequest) {
         expirarSesiones30Dias: updatedConfig?.ExpirarSesiones30Dias ?? true,
         bloquearTrasIntentos,
         alertarNuevoDispositivo: updatedConfig?.AlertarNuevoDispositivo ?? true,
-        bloquearPorInactividad: updatedConfig?.BloquearPorInactividad ?? false,
-        tiempoInactividadMinutos: updatedConfig?.TiempoInactividadMinutos ?? 30,
         recordarSesion30Dias: updatedConfig?.RecordarSesion30Dias ?? true,
       },
       { status: 200 },

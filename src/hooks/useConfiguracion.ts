@@ -68,8 +68,6 @@ export interface Seguridad {
   expirarSesiones30Dias: boolean;
   bloquearTrasIntentos: "nunca" | "5" | "10";
   alertarNuevoDispositivo: boolean;
-  bloquearPorInactividad: boolean;
-  tiempoInactividadMinutos: number;
   recordarSesion30Dias: boolean;
 }
 
@@ -346,8 +344,6 @@ const fetchSeguridad = async ({
       expirarSesiones30Dias: true,
       bloquearTrasIntentos: "5",
       alertarNuevoDispositivo: true,
-      bloquearPorInactividad: false,
-      tiempoInactividadMinutos: 30,
       recordarSesion30Dias: true,
     };
   }
@@ -360,8 +356,6 @@ const fetchSeguridad = async ({
       expirarSesiones30Dias: true,
       bloquearTrasIntentos: "5",
       alertarNuevoDispositivo: true,
-      bloquearPorInactividad: false,
-      tiempoInactividadMinutos: 30,
       recordarSesion30Dias: true,
     }
   );

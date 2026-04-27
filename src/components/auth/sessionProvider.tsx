@@ -190,13 +190,15 @@ const SessionProviderComponent = ({
 
           // Si no tiene permisos en JWT, sincronizar en background (no bloquea)
           if (!tienePermisos) {
-            // Usar setTimeout para no bloquear el renderizado
             setTimeout(() => {
-              fetch("/api/auth/sync-permissions", { method: "POST" }).catch(
-                (err) => {
+              fetch("/api/auth/sync-permissions", { method: "POST" })
+                .then((res) => {
+                  // Forzar refresh del JWT para que el nuevo token incluya los permisos
+                  if (res.ok) supabase.auth.refreshSession().catch(() => {});
+                })
+                .catch((err) => {
                   console.warn("No se pudieron sincronizar permisos:", err);
-                },
-              );
+                });
             }, 0);
           }
         }
@@ -238,60 +240,76 @@ const SessionProviderComponent = ({
             Array.isArray(metadata.permissions) &&
             metadata.permissions.length > 0;
 
-          // Sincronizar permisos después del login
+          // Sincronizar permisos después del login - forzar refresh del JWT para que el nuevo token incluya los permisos
           if (!tienePermisos) {
-            fetch("/api/auth/sync-permissions", { method: "POST" }).catch(
-              (err) => {
+            fetch("/api/auth/sync-permissions", { method: "POST" })
+              .then((res) => {
+                if (res.ok) supabase.auth.refreshSession().catch(() => {});
+              })
+              .catch((err) => {
                 console.warn("No se pudieron sincronizar permisos:", err);
-              },
+              });
+          }
+
+          // Registrar sesión activa con cooldown: evita writes en cada token auto-refresh
+          // Supabase emite SIGNED_IN también cuando refresca el token automáticamente
+          const SESSION_REGISTER_KEY = `session_registered_${newSession.user.id}`;
+          const SESSION_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutos
+          const lastRegistered = parseInt(
+            typeof localStorage !== "undefined"
+              ? (localStorage.getItem(SESSION_REGISTER_KEY) || "0")
+              : "0"
+          );
+
+          if (Date.now() - lastRegistered > SESSION_COOLDOWN_MS) {
+            if (typeof localStorage !== "undefined") {
+              localStorage.setItem(SESSION_REGISTER_KEY, String(Date.now()));
+            }
+
+            const userAgent =
+              typeof navigator !== "undefined" ? navigator.userAgent : null;
+            let dispositivo = "Dispositivo desconocido";
+            if (userAgent) {
+              try {
+                const nav = navigator as any;
+                if (nav.userAgentData) {
+                  dispositivo = `${nav.userAgentData.platform || "Unknown"} - ${
+                    nav.userAgentData.brands
+                      ?.map((b: any) => b.brand)
+                      .join(", ") || "Unknown"
+                  }`;
+                } else {
+                  dispositivo = `${
+                    navigator.platform || "Unknown"
+                  } - ${userAgent.substring(0, 50)}`;
+                }
+              } catch {
+                dispositivo = userAgent.substring(0, 100);
+              }
+            }
+
+            const email = newSession.user.email || "";
+            const esConfiable =
+              typeof localStorage !== "undefined"
+                ? localStorage.getItem(`device_trusted_${email}`) === "true"
+                : false;
+
+            fetch("/api/auth/registrar-sesion", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                token: newSession.access_token || null,
+                dispositivo,
+                ubicacion: null,
+                esConfiable,
+              }),
+            }).catch((err) =>
+              console.warn(
+                "Error al registrar sesión desde sessionProvider:",
+                err,
+              ),
             );
           }
-
-          // Registrar sesión activa (si no se registró ya desde el formulario)
-          // Esto es un fallback por si alguien se autentica de otra manera
-          const userAgent =
-            typeof navigator !== "undefined" ? navigator.userAgent : null;
-          let dispositivo = "Dispositivo desconocido";
-          if (userAgent) {
-            try {
-              const nav = navigator as any;
-              if (nav.userAgentData) {
-                dispositivo = `${nav.userAgentData.platform || "Unknown"} - ${
-                  nav.userAgentData.brands
-                    ?.map((b: any) => b.brand)
-                    .join(", ") || "Unknown"
-                }`;
-              } else {
-                dispositivo = `${
-                  navigator.platform || "Unknown"
-                } - ${userAgent.substring(0, 50)}`;
-              }
-            } catch {
-              dispositivo = userAgent.substring(0, 100);
-            }
-          }
-
-          const email = newSession.user.email || "";
-          const esConfiable =
-            typeof localStorage !== "undefined"
-              ? localStorage.getItem(`device_trusted_${email}`) === "true"
-              : false;
-
-          fetch("/api/auth/registrar-sesion", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              token: newSession.access_token || null,
-              dispositivo,
-              ubicacion: null,
-              esConfiable,
-            }),
-          }).catch((err) =>
-            console.warn(
-              "Error al registrar sesión desde sessionProvider:",
-              err,
-            ),
-          );
         }
 
         // Cerrar sesiones cuando hay un logout

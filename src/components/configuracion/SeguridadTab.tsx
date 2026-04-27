@@ -66,8 +66,6 @@ export function SeguridadTab() {
     expirarSesiones30Dias: true,
     bloquearTrasIntentos: "5",
     alertarNuevoDispositivo: true,
-    bloquearPorInactividad: false,
-    tiempoInactividadMinutos: 30,
     recordarSesion30Dias: true,
   });
 

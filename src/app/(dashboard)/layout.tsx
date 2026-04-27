@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
 import { useUserStore } from "@/store/useUserStore";
 import ProtectRoute from "@/components/auth/ProtectRoute";
 import { LoadingPage } from "@/components/loading/loading";
@@ -19,9 +18,6 @@ export default function DashboardLayout({
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [show, setshow] = useState(true);
 
-  // Monitorear inactividad y cerrar sesión automáticamente
-  useInactivityTimeout();
-
   useEffect(() => {
     initialize();
     setshow(window.innerWidth > 768);
@@ -37,10 +33,10 @@ export default function DashboardLayout({
 
   return (
     <ProtectRoute>
-      <div className="flex h-[100dvh] w-full bg-white relative overflow-hidden">
+      <div className="flex h-dvh w-full bg-white relative overflow-hidden">
         <section
           onClick={() => setshow(false)}
-          className={`z-40 transition-transform duration-400 ease-in-out sm:relative absolute sm:w-auto w-screen sm:h-auto h-[100dvh] shrink-0 ${
+          className={`z-40 transition-transform duration-400 ease-in-out sm:relative absolute sm:w-auto w-screen sm:h-auto h-dvh shrink-0 ${
             show ? `translate-x-[0%]` : `-translate-x-full`
           }`}
         >

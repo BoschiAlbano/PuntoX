@@ -1,7 +1,7 @@
 "use client";
 
 import GenericCrud from "@/components/shared/GenericCrud";
-import { Chip, Tooltip, addToast } from "@heroui/react";
+import { Tooltip } from "@heroui/react";
 
 import {
   formatTiempoRelativo,
@@ -33,9 +33,8 @@ export default function AuditoriasCRUD() {
       // Si la severidad es CRITICAL o WARNING, podría indicar un problema
       // Por ahora, asumimos que todas son exitosas a menos que haya un indicador específico
       const severidad = item.severidad || "INFO";
-      const exitoso = item.exitoso !== undefined 
-        ? item.exitoso 
-        : severidad !== "CRITICAL"; // Asumir exitoso excepto si es CRITICAL
+      const exitoso =
+        item.exitoso !== undefined ? item.exitoso : severidad !== "CRITICAL"; // Asumir exitoso excepto si es CRITICAL
 
       return {
         ...item,
@@ -92,7 +91,9 @@ export default function AuditoriasCRUD() {
               {item.usuario?.charAt(0) || "-"}
             </div>
             <div>
-              <p className="font-bold text-slate-800 text-base">{item.usuario}</p>
+              <p className="font-bold text-slate-800 text-base">
+                {item.usuario}
+              </p>
               <p className="text-slate-500 font-medium text-xs mt-0.5 font-mono">
                 {item.ipAddress || "Autenticado sin IP"}
               </p>
@@ -101,16 +102,25 @@ export default function AuditoriasCRUD() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
-              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Acción</p>
+              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">
+                Acción
+              </p>
               <span className="font-semibold text-slate-700">
-                {formatearAccion({ accion: item.accion, detalle: item.detalles ?? undefined })}
+                {formatearAccion({
+                  accion: item.accion,
+                  detalle: item.detalles ?? undefined,
+                })}
               </span>
             </div>
             <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
-              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Resultado</p>
+              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">
+                Resultado
+              </p>
               <span
                 className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase ${
-                  item.exitoso ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
+                  item.exitoso
+                    ? "bg-emerald-50 text-emerald-600"
+                    : "bg-red-50 text-red-500"
                 }`}
               >
                 {item.exitoso ? "Exitoso" : "Fallido"}
@@ -120,22 +130,32 @@ export default function AuditoriasCRUD() {
 
           {item.detalles && (
             <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
-              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1.5">Detalles Adicionales</p>
-              <p className="text-slate-600 font-mono text-xs break-all">{item.detalles}</p>
+              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1.5">
+                Detalles Adicionales
+              </p>
+              <p className="text-slate-600 font-mono text-xs break-all">
+                {item.detalles}
+              </p>
             </div>
           )}
 
           <div className="flex gap-4 p-3 rounded-xl bg-slate-50/50 border border-slate-100">
             <div className="flex-1">
-              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-0.5">Fecha y Hora</p>
+              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-0.5">
+                Fecha y Hora
+              </p>
               <p className="font-medium text-slate-700 text-xs">
                 {new Date(item.fechaHora).toLocaleString()}
               </p>
             </div>
             {item.motivoFallo && (
               <div className="flex-1">
-                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-0.5">Motivo del fallo</p>
-                <p className="text-red-600 font-medium text-xs">{item.motivoFallo}</p>
+                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-0.5">
+                  Motivo del fallo
+                </p>
+                <p className="text-red-600 font-medium text-xs">
+                  {item.motivoFallo}
+                </p>
               </div>
             )}
           </div>
@@ -170,8 +190,8 @@ export default function AuditoriasCRUD() {
               severidad === "danger"
                 ? "bg-red-50 text-red-600 border border-red-100"
                 : severidad === "warning"
-                ? "bg-amber-50 text-amber-600 border border-amber-100"
-                : "bg-slate-50 text-slate-600 border border-slate-200";
+                  ? "bg-amber-50 text-amber-600 border border-amber-100"
+                  : "bg-slate-50 text-slate-600 border border-slate-200";
 
             return (
               <span
@@ -207,7 +227,9 @@ export default function AuditoriasCRUD() {
                     : "bg-red-50 text-red-600"
                 }`}
               >
-                <span className={`w-1.5 h-1.5 rounded-full ${item.exitoso ? "bg-emerald-500" : "bg-red-500"}`}></span>
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${item.exitoso ? "bg-emerald-500" : "bg-red-500"}`}
+                ></span>
                 {item.exitoso ? "Exitoso" : "Fallido"}
               </span>
             );

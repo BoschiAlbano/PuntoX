@@ -326,14 +326,6 @@ export default function RolesCRUD() {
     <div className="space-y-4">
       {/* Header con botones de acción */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-800 tracking-tight">
-            Roles del Sistema
-          </h2>
-          <p className="text-sm text-slate-500">
-            Gestiona los niveles de acceso y permisos del personal.
-          </p>
-        </div>
         <div className="flex gap-2 w-full sm:w-auto">
           {/* Botón de actualizar */}
           <button
