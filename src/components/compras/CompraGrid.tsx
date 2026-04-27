@@ -12,6 +12,7 @@ import {
 } from "@heroui/react";
 import { Trash2, Minus, Plus, ShoppingBag } from "lucide-react";
 import { ItemCompra } from "@/store/useCompraStore";
+import { TiposVenta } from "../../../prisma/generated/prisma";
 
 interface CompraGridProps {
   items: ItemCompra[];
@@ -34,7 +35,9 @@ export default function CompraGrid({
             <ShoppingBag size={28} className="text-slate-300" />
           </div>
           <div className="flex flex-col items-center gap-1">
-            <p className="text-sm font-semibold text-slate-500">Sin productos</p>
+            <p className="text-sm font-semibold text-slate-500">
+              Sin productos
+            </p>
             <p className="text-xs text-slate-400 text-center max-w-[220px] leading-relaxed">
               Busca un producto para agregar a la compra
             </p>
@@ -45,11 +48,50 @@ export default function CompraGrid({
           {/* ── MOBILE CARD LAYOUT ── */}
           <div className="sm:hidden flex-1 overflow-auto scrollbar-hide divide-y divide-slate-50">
             {items.map((item) => (
-              <div key={item.Id} className="px-3 py-2.5 flex flex-col gap-1.5 hover:bg-slate-50/50 transition-colors">
+              <div
+                key={item.Id}
+                className="px-3 py-2.5 flex flex-col gap-1.5 hover:bg-slate-50/50 transition-colors"
+              >
                 <div className="flex items-start gap-1.5">
-                  <span className="flex-1 font-medium text-slate-700 text-xs leading-snug line-clamp-2">
-                    {item.Descripcion}
-                  </span>
+                  <div className="flex-1 flex flex-col gap-0.5">
+                    <span className="font-medium text-slate-700 text-xs leading-snug line-clamp-2">
+                      {item.Descripcion}
+                    </span>
+                    {item.preciosListaActualizados?.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {item.preciosListaActualizados.map(
+                          (pl: {
+                            ListaPrecioId: number;
+                            PorcentajeGanancia: number;
+                            PrecioFinal: number;
+                          }) => {
+                            const original = item.PreciosLista?.find(
+                              (o: { ListaPrecioId: number }) =>
+                                o.ListaPrecioId === pl.ListaPrecioId,
+                            );
+                            const changed =
+                              original &&
+                              original.PrecioFinal !== pl.PrecioFinal;
+                            return (
+                              <span
+                                key={pl.ListaPrecioId}
+                                className={`text-[9px] px-1.5 py-px rounded font-medium ${
+                                  changed
+                                    ? "bg-[#67afc3]/10 text-[#67afc3] border border-[#67afc3]/25"
+                                    : "bg-slate-50 text-slate-400"
+                                }`}
+                              >
+                                {changed && (
+                                  <span className="mr-0.5 opacity-60">→</span>
+                                )}
+                                ${pl.PrecioFinal.toLocaleString("es-AR")}
+                              </span>
+                            );
+                          },
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={() => onRemoveItem(item.Id)}
                     className="shrink-0 p-1 rounded-md text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
@@ -66,10 +108,14 @@ export default function CompraGrid({
                   <QuantitySelector
                     value={item.cantidad}
                     onChange={(val) => onUpdateQuantity(item.Id, val)}
+                    tipoVenta={item.TipoVenta}
                     compact
                   />
                   <span className="text-[11px] font-bold text-slate-800 min-w-[55px] text-right">
-                    ${item.subtotal.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                    $
+                    {item.subtotal.toLocaleString("es-AR", {
+                      minimumFractionDigits: 2,
+                    })}
                   </span>
                 </div>
               </div>
@@ -91,11 +137,19 @@ export default function CompraGrid({
             className="h-full overflow-auto scrollbar-hide"
           >
             <TableHeader>
-              <TableColumn width={110} align="center">CÓDIGO</TableColumn>
+              <TableColumn width={110} align="center">
+                CÓDIGO
+              </TableColumn>
               <TableColumn>DESCRIPCIÓN</TableColumn>
-              <TableColumn width={120} align="center">COSTO UNIT.</TableColumn>
-              <TableColumn width={115} align="center">CANT.</TableColumn>
-              <TableColumn width={95} align="end">SUBTOTAL</TableColumn>
+              <TableColumn width={120} align="center">
+                COSTO UNIT.
+              </TableColumn>
+              <TableColumn width={115} align="center">
+                CANT.
+              </TableColumn>
+              <TableColumn width={95} align="end">
+                SUBTOTAL
+              </TableColumn>
               <TableColumn width={40} align="center">
                 <span className="sr-only">ACCIONES</span>
               </TableColumn>
@@ -108,9 +162,46 @@ export default function CompraGrid({
                   </TableCell>
 
                   <TableCell>
-                    <span className="font-medium text-slate-700 text-xs leading-snug">
-                      {item.Descripcion}
-                    </span>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-medium text-slate-700 text-xs leading-snug">
+                        {item.Descripcion}
+                      </span>
+                      {item.preciosListaActualizados?.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-0.5">
+                          {item.preciosListaActualizados.map(
+                            (pl: {
+                              ListaPrecioId: number;
+                              PorcentajeGanancia: number;
+                              PrecioFinal: number;
+                            }) => {
+                              const original = item.PreciosLista?.find(
+                                (o: { ListaPrecioId: number }) =>
+                                  o.ListaPrecioId === pl.ListaPrecioId,
+                              );
+                              const changed =
+                                original &&
+                                original.PrecioFinal !== pl.PrecioFinal;
+                              return (
+                                <span
+                                  key={pl.ListaPrecioId}
+                                  className={`text-[9px] px-1.5 py-px rounded font-medium ${
+                                    changed
+                                      ? "bg-[#67afc3]/10 text-[#67afc3] border border-[#67afc3]/25"
+                                      : "bg-slate-50 text-slate-400"
+                                  }`}
+                                  title={`${pl.PorcentajeGanancia}% ganancia`}
+                                >
+                                  {changed && (
+                                    <span className="mr-0.5 opacity-60">→</span>
+                                  )}
+                                  ${pl.PrecioFinal.toLocaleString("es-AR")}
+                                </span>
+                              );
+                            },
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
 
                   <TableCell>
@@ -124,12 +215,16 @@ export default function CompraGrid({
                     <QuantitySelector
                       value={item.cantidad}
                       onChange={(val) => onUpdateQuantity(item.Id, val)}
+                      tipoVenta={item.TipoVenta}
                     />
                   </TableCell>
 
                   <TableCell>
                     <span className="font-bold text-slate-800 text-xs">
-                      ${item.subtotal.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                      $
+                      {item.subtotal.toLocaleString("es-AR", {
+                        minimumFractionDigits: 2,
+                      })}
                     </span>
                   </TableCell>
 
@@ -166,80 +261,49 @@ function CostoInput({
   onChange: (v: number) => void;
   compact?: boolean;
 }) {
-  // Mostramos el valor formateado; solo cuando el usuario está editando mostramos el raw
-  const [local, setLocal] = React.useState(() => value.toFixed(2));
   const [isFocused, setIsFocused] = React.useState(false);
 
-  // Cada vez que el valor externo cambie y el campo no esté en edición → actualizar el display
-  React.useEffect(() => {
-    if (!isFocused) {
-      setLocal(value.toFixed(2));
-    }
-  // Solo react a cambios del `value` externo; isFocused es referencia estable
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const parsed = parseFloat(e.target.value);
+    if (!isNaN(parsed) && parsed >= 0) onChange(parsed);
+  };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     setIsFocused(true);
-    // Seleccionar todo el texto al enfocar para facilitar reemplazo
     e.target.select();
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    // Solo permitir dígitos, punto y coma decimal
-    if (/^[0-9]*[.,]?[0-9]*$/.test(raw) || raw === "") {
-      setLocal(raw.replace(",", "."));
-    }
-  };
-
-  const handleBlur = () => {
-    setIsFocused(false);
-    const parsed = parseFloat(local.replace(",", "."));
-    if (!isNaN(parsed) && parsed >= 0) {
-      onChange(parsed);
-      setLocal(parsed.toFixed(2));
-    } else {
-      // Restaurar el valor previo
-      setLocal(value.toFixed(2));
-    }
-  };
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      (e.target as HTMLInputElement).blur();
-    }
+    if (e.key === "Enter") (e.target as HTMLInputElement).blur();
   };
 
   const height = compact ? "h-7" : "h-8";
   const fontSize = compact ? "text-[10px]" : "text-[11px]";
-  // Ancho fijo según modo: suficiente para "$ 9999.99"
-  const containerWidth = compact ? "w-[68px]" : "w-[82px]";
+  const containerWidth = compact ? "w-[72px]" : "w-[88px]";
 
   return (
     <div
       className={`inline-flex flex-row items-center border rounded-lg overflow-hidden ${height} ${containerWidth} shrink-0 transition-colors ${
         isFocused
-          ? "border-amber-400 bg-amber-50 shadow-sm shadow-amber-100"
-          : "border-amber-200 bg-amber-50/50"
+          ? "border-[#67afc3] bg-[#67afc3]/5 shadow-sm shadow-[#67afc3]/20"
+          : "border-[#67afc3]/30 bg-[#67afc3]/5"
       }`}
     >
-      {/* Signo $ fijo a la izquierda — nunca se mueve */}
       <span
-        className={`${fontSize} text-amber-500 font-semibold pl-1.5 pr-0.5 shrink-0 select-none leading-none`}
+        className={`${fontSize} text-[#67afc3] font-semibold pl-1.5 pr-0.5 shrink-0 select-none leading-none`}
       >
         $
       </span>
-
-      {/* Input de texto con validación numérica */}
       <input
-        type="text"
+        type="number"
         inputMode="decimal"
-        className={`min-w-0 w-full h-full text-right ${fontSize} font-semibold focus:outline-none bg-transparent border-none pr-1.5 text-amber-700 placeholder:text-amber-300`}
-        value={local}
+        min={0}
+        step={0.01}
+        className={`min-w-0 w-full h-full text-right ${fontSize} font-semibold focus:outline-none bg-transparent border-none pr-1.5 text-slate-700 placeholder:text-slate-300 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+        value={value === 0 ? "" : value}
         onChange={handleChange}
         onFocus={handleFocus}
-        onBlur={handleBlur}
+        onBlur={() => setIsFocused(false)}
         onKeyDown={handleKeyDown}
         placeholder="0.00"
         aria-label="Costo unitario"
@@ -253,17 +317,24 @@ function CostoInput({
 function QuantitySelector({
   value,
   onChange,
+  tipoVenta,
   compact = false,
 }: {
   value: number;
   onChange: (value: number) => void;
+  tipoVenta?: string;
   compact?: boolean;
 }) {
+  const esPeso = tipoVenta === TiposVenta.PESO;
+  const step = esPeso ? 0.001 : 1;
+
   const [localValue, setLocalValue] = React.useState(value.toString());
 
   React.useEffect(() => {
     const parsedLocal = parseFloat(localValue);
-    if (parsedLocal !== value) setLocalValue(value.toString());
+    if (value === 0 && localValue === "") return;
+    if (parsedLocal === value) return;
+    setLocalValue(value.toString());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
@@ -272,6 +343,19 @@ function QuantitySelector({
     setLocalValue(valStr);
     const valNum = parseFloat(valStr);
     if (!isNaN(valNum)) onChange(valNum);
+    else onChange(0);
+  };
+
+  const handleMinus = () => {
+    let val = Number(value) - step;
+    if (esPeso) val = parseFloat(val.toFixed(3));
+    onChange(Math.max(0, val));
+  };
+
+  const handlePlus = () => {
+    let val = Number(value) + step;
+    if (esPeso) val = parseFloat(val.toFixed(3));
+    onChange(val);
   };
 
   const btnSize = compact ? "min-w-[24px] w-6" : "min-w-[28px] w-7";
@@ -282,9 +366,12 @@ function QuantitySelector({
 
   return (
     <div className="flex items-center justify-center">
-      <div className={`flex flex-row items-center border border-slate-200 rounded-lg overflow-hidden bg-white ${height}`}>
+      <div
+        className={`flex flex-row items-center border border-slate-200 rounded-lg overflow-hidden bg-white ${height}`}
+      >
         <button
-          onClick={() => onChange(Math.max(0.001, value - 1))}
+          onClick={handleMinus}
+          aria-label="Reducir cantidad"
           className={`${btnSize} h-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200 transition-colors`}
         >
           <Minus size={iconSize} strokeWidth={2.5} />
@@ -292,16 +379,17 @@ function QuantitySelector({
         <div className="h-4 w-px bg-slate-200" />
         <input
           type="number"
-          className={`${inputWidth} h-full text-center ${fontSize} font-semibold focus:ring-0 focus:bg-blue-50/50 p-0 outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none text-slate-700 placeholder:text-slate-300 bg-transparent border-none transition-colors`}
+          className={`${inputWidth} h-full text-center ${fontSize} font-semibold focus:ring-0 focus:bg-[#67afc3]/5 p-0 outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none text-slate-700 placeholder:text-slate-300 bg-transparent border-none transition-colors`}
           value={localValue}
           onChange={handleInputChange}
-          min={0.001}
-          step={1}
+          step={esPeso ? "0.001" : "1"}
+          min={0}
           placeholder="0"
         />
         <div className="h-4 w-px bg-slate-200" />
         <button
-          onClick={() => onChange(value + 1)}
+          onClick={handlePlus}
+          aria-label="Aumentar cantidad"
           className={`${btnSize} h-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200 transition-colors`}
         >
           <Plus size={iconSize} strokeWidth={2.5} />

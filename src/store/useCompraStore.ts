@@ -7,6 +7,8 @@ export interface ItemCompra extends Producto {
   cantidad: number;
   costoUnitario: number; // Nuevo costo ingresado en la compra
   subtotal: number;
+  // PreciosLista recalculados en base al nuevo costo (se persisten al guardar)
+  preciosListaActualizados: { ListaPrecioId: number; PorcentajeGanancia: number; PrecioFinal: number }[];
 }
 
 export interface PagoCompra {
@@ -52,6 +54,13 @@ export const useCompraStore = create<CompraState>()(
           costoOverride ?? Number(producto.PrecioCosto ?? 0);
         const existing = items.find((i) => i.Id === producto.Id);
 
+        const calcPreciosLista = (costo: number, listas: Producto["PreciosLista"]) =>
+          listas.map((pl) => ({
+            ListaPrecioId: pl.ListaPrecioId,
+            PorcentajeGanancia: pl.PorcentajeGanancia,
+            PrecioFinal: Math.round(costo * (1 + pl.PorcentajeGanancia / 100) * 100) / 100,
+          }));
+
         if (existing) {
           set({
             items: items.map((i) =>
@@ -73,6 +82,7 @@ export const useCompraStore = create<CompraState>()(
                 cantidad,
                 costoUnitario,
                 subtotal: costoUnitario * cantidad,
+                preciosListaActualizados: calcPreciosLista(costoUnitario, producto.PreciosLista),
               },
             ],
           });
@@ -95,7 +105,16 @@ export const useCompraStore = create<CompraState>()(
         set({
           items: items.map((item) =>
             item.Id === id
-              ? { ...item, costoUnitario: costo, subtotal: costo * item.cantidad }
+              ? {
+                  ...item,
+                  costoUnitario: costo,
+                  subtotal: costo * item.cantidad,
+                  preciosListaActualizados: item.PreciosLista.map((pl) => ({
+                    ListaPrecioId: pl.ListaPrecioId,
+                    PorcentajeGanancia: pl.PorcentajeGanancia,
+                    PrecioFinal: Math.round(costo * (1 + pl.PorcentajeGanancia / 100) * 100) / 100,
+                  })),
+                }
               : item,
           ),
         });

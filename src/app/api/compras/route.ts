@@ -18,6 +18,11 @@ const detalleCompraSchema = z.object({
   cantidad: z.number().positive(),
   costoUnitario: z.number().nonnegative(),
   subtotal: z.number().nonnegative(),
+  preciosListaActualizados: z.array(z.object({
+    ListaPrecioId: z.number().int().positive(),
+    PorcentajeGanancia: z.number().min(0),
+    PrecioFinal: z.number().min(0),
+  })).optional().default([]),
 });
 
 const createCompraSchema = z.object({
@@ -245,41 +250,37 @@ export async function POST(req: NextRequest) {
             });
           }
 
-          // 4c. Actualizar costo si configuración lo indica
-          if (configuracion?.ActualizaCostoDesdeCompra) {
-            const nuevoPrecioCosto = detalle.costoUnitario;
-            const updateListasPromises: any[] = [];
+          // 4c. Actualizar PrecioCosto siempre
+          await tx.articulo.update({
+            where: { Id: articulo.Id },
+            data: { PrecioCosto: detalle.costoUnitario },
+          });
 
-            // 4d. Recalcular precio venta si la config lo pide
-            if (configuracion.ModificaPrecioVentaDesdeCompra) {
-
-              // Recalcular listas de precios dinámicas
-              if (articulo.Precios) {
-                for (const pl of articulo.Precios) {
-                  const ganancia = Number(pl.PorcentajeGanancia);
-                  if (ganancia > 0) {
-                    const nuevoPrecioFinal = nuevoPrecioCosto * (1 + ganancia / 100);
-                    updateListasPromises.push(
-                      tx.precioLista.update({
-                        where: { Id: pl.Id },
-                        data: { PrecioFinal: nuevoPrecioFinal },
-                      })
-                    );
-                  }
-                }
-              }
-            }
-
-            await tx.articulo.update({
-              where: { Id: articulo.Id },
-              data: {
-                PrecioCosto: nuevoPrecioCosto,
-              },
-            });
-
-            // Ejecutar actualizaciones de listas en paralelo
-            if (updateListasPromises.length > 0) {
-              await Promise.all(updateListasPromises);
+          // 4d. Recalcular PreciosLista usando los porcentajes enviados por el cliente
+          if (detalle.preciosListaActualizados.length > 0) {
+            await Promise.all(
+              detalle.preciosListaActualizados.map((pl) =>
+                tx.precioLista.updateMany({
+                  where: {
+                    ArticuloId: articulo.Id,
+                    ListaPrecioId: BigInt(pl.ListaPrecioId),
+                  },
+                  data: {
+                    PrecioFinal: pl.PrecioFinal,
+                    PorcentajeGanancia: pl.PorcentajeGanancia,
+                  },
+                }),
+              ),
+            );
+          } else {
+            // Fallback: recalcular desde los porcentajes existentes en DB
+            for (const pl of articulo.Precios) {
+              const ganancia = Number(pl.PorcentajeGanancia);
+              const nuevoPrecioFinal = detalle.costoUnitario * (1 + ganancia / 100);
+              await tx.precioLista.update({
+                where: { Id: pl.Id },
+                data: { PrecioFinal: Math.round(nuevoPrecioFinal * 100) / 100 },
+              });
             }
           }
         }

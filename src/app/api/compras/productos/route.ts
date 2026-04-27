@@ -50,6 +50,7 @@ export async function GET(req: NextRequest) {
       Codigo: true,
       CodigoBarra: true,
       Descripcion: true,
+      PrecioCosto: true,            // ← Directo en Articulo
       DescuentaStock: true,
       PermiteStockNegativo: true,
       StockMinimo: true,
@@ -60,9 +61,16 @@ export async function GET(req: NextRequest) {
       HoraLimiteVentaHasta: true,
       TipoVenta: true,
       Stock: true,
-      Precio: {
+      Precios: {
         select: {
-          PrecioCosto: true,           // ← Campo clave para compras
+          Id: true,
+          ListaPrecioId: true,
+          PorcentajeGanancia: true,
+          PrecioFinal: true,
+          ListaPrecio: { select: { Nombre: true } },
+        },
+        where: {
+          ListaPrecio: { Activa: true, EstaEliminado: false },
         },
       },
       Iva: {
@@ -126,9 +134,13 @@ export async function GET(req: NextRequest) {
         HoraLimiteVentaHasta: p.HoraLimiteVentaHasta,
         TipoVenta: p.TipoVenta,
 
-        Precio: {
-          PrecioCosto: Number(p.Precio?.PrecioCosto ?? 0),
-        },
+        PrecioCosto: Number(p.PrecioCosto ?? 0),
+        PreciosLista: (p.Precios ?? []).map((pl) => ({
+          ListaPrecioId: Number(pl.ListaPrecioId),
+          PorcentajeGanancia: Number(pl.PorcentajeGanancia),
+          PrecioFinal: Number(pl.PrecioFinal),
+          ListaPrecio: pl.ListaPrecio ? { Nombre: pl.ListaPrecio.Nombre } : undefined,
+        })),
         Iva: p.Iva,
       };
     });

@@ -176,6 +176,7 @@ export default function CompraFooter({
         cantidad: i.cantidad,
         costoUnitario: i.costoUnitario,
         subtotal: i.subtotal,
+        preciosListaActualizados: i.preciosListaActualizados ?? [],
       })),
       formasPago: pagos.map((p) => ({ tipoPago: p.tipoPago, monto: p.monto })),
       fecha: new Date().toISOString(),

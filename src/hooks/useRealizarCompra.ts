@@ -8,6 +8,7 @@ interface DetalleCompra {
   cantidad: number;
   costoUnitario: number;
   subtotal: number;
+  preciosListaActualizados: { ListaPrecioId: number; PorcentajeGanancia: number; PrecioFinal: number }[];
 }
 
 interface PagoCompra {
