@@ -45,7 +45,18 @@ interface Props {
   seleccionadosCount: number;
 }
 
-const OBJETIVOS: { key: TipoObjetivo; label: string; icon: React.ReactNode; desc: string }[] = [
+const OBJETIVOS: {
+  key: TipoObjetivo;
+  label: string;
+  icon: React.ReactNode;
+  desc: string;
+}[] = [
+  {
+    key: "costo",
+    label: "Precio de costo",
+    icon: <DollarSign className="w-4 h-4" />,
+    desc: "Modifica el costo y recalcula cada lista con su markup.",
+  },
   {
     key: "todas_las_listas",
     label: "Todas las listas",
@@ -58,27 +69,21 @@ const OBJETIVOS: { key: TipoObjetivo; label: string; icon: React.ReactNode; desc
     icon: <List className="w-4 h-4" />,
     desc: "Modifica el precio final de una sola lista.",
   },
-  {
-    key: "costo",
-    label: "Precio de costo",
-    icon: <DollarSign className="w-4 h-4" />,
-    desc: "Modifica el costo y recalcula cada lista con su markup.",
-  },
 ];
 
 // 4 tipos en una grilla 2x2: signo + unidad
 const TIPOS: { key: TipoAjustePrecio; label: string; icon: string }[] = [
-  { key: "incremento_porcentaje", label: "+%",  icon: "+" },
-  { key: "decremento_porcentaje", label: "-%",  icon: "-" },
-  { key: "incremento_fijo",       label: "+$",  icon: "+" },
-  { key: "decremento_fijo",       label: "-$",  icon: "-" },
+  { key: "incremento_porcentaje", label: "+%", icon: "+" },
+  { key: "decremento_porcentaje", label: "-%", icon: "-" },
+  { key: "incremento_fijo", label: "+$", icon: "+" },
+  { key: "decremento_fijo", label: "-$", icon: "-" },
 ];
 
 const TIPOS_REDONDEO: { key: TipoRedondeo; label: string; desc: string }[] = [
-  { key: "none",    label: "Sin redondeo",    desc: "Mantiene decimales estandar" },
-  { key: "ceil",    label: "Entero superior", desc: "$1234.10 -> $1235" },
-  { key: "ceil_99", label: "* Ceil $99",      desc: "Recomendado: $1234 -> $1299" },
-  { key: "floor",   label: "Entero inferior", desc: "$1234.90 -> $1234" },
+  { key: "none", label: "Sin redondeo", desc: "Mantiene decimales estandar" },
+  { key: "ceil", label: "Entero superior", desc: "$1234.10 -> $1235" },
+  { key: "ceil_99", label: "* Ceil $99", desc: "Recomendado: $1234 -> $1299" },
+  { key: "floor", label: "Entero inferior", desc: "$1234.90 -> $1234" },
 ];
 
 function esPorcentaje(tipo: TipoAjustePrecio) {
@@ -99,17 +104,26 @@ export function PanelRegla({
 }: Props) {
   const handleChange = (key: keyof ReglaActualizacion, value: unknown) => {
     if (key === "objetivo") {
-      setRegla({ ...regla, objetivo: value as TipoObjetivo, listaPrecioId: null });
+      setRegla({
+        ...regla,
+        objetivo: value as TipoObjetivo,
+        listaPrecioId: null,
+      });
       return;
     }
     setRegla({ ...regla, [key]: value });
   };
 
   const selectedObjetivo = OBJETIVOS.find((o) => o.key === regla.objetivo);
-  const previewButtonLabel = !previewModo ? "Ver Vista Previa" : "Actualizar Vista Previa";
-  const previewButtonIcon = previewModo && previewEstaActualizada
-    ? <RefreshCcw className="w-4 h-4" />
-    : <Calculator className="w-4 h-4" />;
+  const previewButtonLabel = !previewModo
+    ? "Ver Vista Previa"
+    : "Actualizar Vista Previa";
+  const previewButtonIcon =
+    previewModo && previewEstaActualizada ? (
+      <RefreshCcw className="w-4 h-4" />
+    ) : (
+      <Calculator className="w-4 h-4" />
+    );
 
   return (
     <Card className="border border-[#67afc3]/20 shadow-lg shadow-[#67afc3]/5">
@@ -153,9 +167,14 @@ export function PanelRegla({
         {regla.objetivo === "lista_especifica" && (
           <Select
             label="Lista de precios"
-            selectedKeys={regla.listaPrecioId ? [String(regla.listaPrecioId)] : []}
+            selectedKeys={
+              regla.listaPrecioId ? [String(regla.listaPrecioId)] : []
+            }
             onChange={(e) =>
-              handleChange("listaPrecioId", e.target.value ? Number(e.target.value) : null)
+              handleChange(
+                "listaPrecioId",
+                e.target.value ? Number(e.target.value) : null,
+              )
             }
             variant="bordered"
             placeholder="Selecciona una lista..."
@@ -200,7 +219,9 @@ export function PanelRegla({
           variant="bordered"
           min={0}
           value={String(regla.valor)}
-          onValueChange={(val) => handleChange("valor", Math.max(0, Number(val)))}
+          onValueChange={(val) =>
+            handleChange("valor", Math.max(0, Number(val)))
+          }
           startContent={
             <span className="text-slate-400 font-semibold">
               {esPorcentaje(regla.tipo) ? "%" : "$"}
@@ -210,7 +231,9 @@ export function PanelRegla({
             const sign = regla.tipo.startsWith("incremento") ? "+" : "-";
             const unit = esPorcentaje(regla.tipo) ? "%" : "$";
             return `Se aplicara ${sign}${regla.valor}${unit} sobre ${
-              regla.objetivo === "costo" ? "el precio de costo" : "el precio final de lista"
+              regla.objetivo === "costo"
+                ? "el precio de costo"
+                : "el precio final de lista"
             }`;
           })()}
         />
@@ -245,7 +268,11 @@ export function PanelRegla({
               variant="flat"
             >
               {TIPOS_REDONDEO.map((r) => (
-                <SelectItem key={r.key} textValue={r.label} description={r.desc}>
+                <SelectItem
+                  key={r.key}
+                  textValue={r.label}
+                  description={r.desc}
+                >
                   {r.label}
                 </SelectItem>
               ))}
@@ -259,7 +286,9 @@ export function PanelRegla({
         <div className="flex flex-col gap-3 mt-auto">
           <Button
             variant={previewModo && previewEstaActualizada ? "solid" : "flat"}
-            color={previewModo && previewEstaActualizada ? "primary" : "default"}
+            color={
+              previewModo && previewEstaActualizada ? "primary" : "default"
+            }
             onPress={onGenerarPreview}
             startContent={previewButtonIcon}
             className="font-semibold"

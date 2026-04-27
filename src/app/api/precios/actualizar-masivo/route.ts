@@ -203,29 +203,28 @@ export async function PATCH(req: NextRequest) {
 
       // ── Objetivo LISTAS (todas o específica, el filtro ya fue aplicado en la query)
       for (const precioLista of articulo.Precios) {
-        const precioActual = Number(precioLista.PrecioFinal);
+        const porcentajeActual = Number(precioLista.PorcentajeGanancia);
 
-        const nuevoPrecio = calcularNuevoPrecio(
+        // Ajustar el porcentaje de ganancia y recalcular PrecioFinal desde el costo
+        const nuevoPorcRaw = calcularNuevoPrecio(
           input.tipo,
           input.valor,
-          precioActual, // base = PrecioFinal de la lista
+          porcentajeActual, // base = PorcentajeGanancia
         );
 
-        if (nuevoPrecio === null || nuevoPrecio < 0) {
+        if (nuevoPorcRaw === null || nuevoPorcRaw < 0) {
           errores.push(
-            `Artículo Id=${articulo.Id} / Lista Id=${precioLista.ListaPrecioId}: el precio resultante sería inválido (${nuevoPrecio})`,
+            `Artículo Id=${articulo.Id} / Lista Id=${precioLista.ListaPrecioId}: el porcentaje resultante sería inválido (${nuevoPorcRaw})`,
           );
           continue;
         }
 
-        const precioFinal = input.redondear
-          ? aplicarRedondeo(nuevoPrecio, input.redondeoTipo)
-          : Math.round(nuevoPrecio * 100) / 100;
+        const nuevoPorcentajeGanancia = Math.round(nuevoPorcRaw * 100) / 100;
+        const nuevoPrecioRaw = precioCosto * (1 + nuevoPorcentajeGanancia / 100);
 
-        const nuevoPorcentajeGanancia =
-          precioCosto > 0
-            ? Math.round((precioFinal / precioCosto - 1) * 100 * 100) / 100
-            : 0;
+        const precioFinal = input.redondear
+          ? aplicarRedondeo(nuevoPrecioRaw, input.redondeoTipo)
+          : Math.round(nuevoPrecioRaw * 100) / 100;
 
         precioListaOps.push({
           precioListaId: precioLista.Id,

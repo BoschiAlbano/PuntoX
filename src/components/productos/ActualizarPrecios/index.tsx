@@ -39,6 +39,8 @@ export default function ActualizarPreciosContainer() {
     isLoading,
     page,
     setPage,
+    limit,
+    setLimit,
     regla,
     setRegla,
     previewModo,
@@ -142,15 +144,15 @@ export default function ActualizarPreciosContainer() {
       if (key === "Descripcion") {
         return (
           <div className="flex flex-col">
-            <span className="font-bold text-slate-700">
+            <span className="font-medium text-slate-700 leading-snug">
               {articulo.Descripcion}
             </span>
             <div className="flex gap-1 mt-0.5">
-              <span className="text-[10px] text-slate-400 bg-slate-100 px-1 rounded">
+              <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-px rounded">
                 {articulo.CodigoBarra}
               </span>
               {articulo.Marca && (
-                <span className="text-[10px] text-blue-500 bg-blue-50 px-1 rounded">
+                <span className="text-[10px] text-[#67afc3] bg-[#67afc3]/10 px-1.5 py-px rounded">
                   {articulo.Marca.Descripcion}
                 </span>
               )}
@@ -175,8 +177,8 @@ export default function ActualizarPreciosContainer() {
         return (
           <div className="flex flex-col items-end gap-0.5">
             <span
-              className={`font-mono ${
-                costoCambio ? "font-bold text-sky-700" : "text-slate-500"
+              className={`font-mono text-sm ${
+                costoCambio ? "font-medium text-sky-600" : "text-slate-400 font-normal"
               }`}
             >
               ${costoActual.toLocaleString()}
@@ -208,7 +210,7 @@ export default function ActualizarPreciosContainer() {
         return (
           <div className="flex flex-col items-end gap-0.5">
             <span
-              className={`font-mono ${previewModo ? "font-bold text-sky-700" : "font-bold text-slate-700"}`}
+              className={`font-mono text-sm ${previewModo ? "font-medium text-sky-600" : "font-normal text-slate-600"}`}
             >
               ${precioActual.PrecioFinal.toLocaleString()}
             </span>
@@ -315,6 +317,8 @@ export default function ActualizarPreciosContainer() {
               page={page}
               onPageChange={setPage}
               paginationMeta={pagination}
+              limit={limit}
+              onLimitChange={setLimit}
               enableSelection={true}
               selectedKeys={seleccionados}
               onSelectionChange={(keys) => {

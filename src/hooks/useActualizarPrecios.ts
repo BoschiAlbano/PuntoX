@@ -117,11 +117,16 @@ export function useActualizarPrecios() {
   });
 
   const [page, setPage] = useState(1);
-  const [limit] = useState(20);
+  const [limit, setLimit] = useState(10);
+
+  const handleSetLimit = (newLimit: number) => {
+    setLimit(newLimit);
+    setPage(1);
+  };
 
   // ─── Estado de la Regla de Ajuste ────────────────────────────────────────
   const [regla, setRegla] = useState<ReglaActualizacion>({
-    objetivo: "todas_las_listas",
+    objetivo: "costo",
     listaPrecioId: null,
     tipo: "incremento_porcentaje",
     valor: 0,
@@ -207,32 +212,6 @@ export function useActualizarPrecios() {
 
   // ─── Lógica de Previsualización (Client-side) ───────────────────────────
 
-  /**
-   * Calcula el nuevo precio final para una lista específica de un artículo.
-   * Basado exactamente en la misma lógica del backend.
-   */
-  // Calcula el nuevo precio de una lista usando los helpers puros
-  const calcularPrecioSegunRegla = useCallback(
-    (
-      precioActual: number,
-      reglaAplicada: ReglaActualizacion,
-    ): number | null => {
-      const nuevo = aplicarAjustePuro(
-        reglaAplicada.tipo,
-        reglaAplicada.valor,
-        precioActual,
-      );
-      if (nuevo === null || nuevo < 0) return null;
-
-      return redondearPrecioPuro(
-        nuevo,
-        reglaAplicada.redondear,
-        reglaAplicada.redondeoTipo,
-      );
-    },
-    [],
-  );
-
   const articulosPreview = useMemo<ProductoPreview[]>(() => {
     const base = articulosBase.map((articulo) => ({
       ...articulo,
@@ -299,15 +278,32 @@ export function useActualizarPrecios() {
             return pl;
           }
 
-          const nuevoPrecio = calcularPrecioSegunRegla(
-            pl.PrecioFinal, // base = PrecioFinal de la lista
-            previewRegla,
+          // Ajustar PorcentajeGanancia y recalcular PrecioFinal desde el costo
+          const nuevoPorcRaw = aplicarAjustePuro(
+            previewRegla.tipo,
+            previewRegla.valor,
+            pl.PorcentajeGanancia,
           );
-          return { ...pl, PrecioFinal: nuevoPrecio ?? pl.PrecioFinal };
+          if (nuevoPorcRaw === null || nuevoPorcRaw < 0) return pl;
+
+          const nuevoPorcentaje = Math.round(nuevoPorcRaw * 100) / 100;
+          const nuevoPrecioRaw =
+            articulo.PrecioCosto * (1 + nuevoPorcentaje / 100);
+          const nuevoPrecio = redondearPrecioPuro(
+            nuevoPrecioRaw,
+            previewRegla.redondear,
+            previewRegla.redondeoTipo,
+          );
+
+          return {
+            ...pl,
+            PorcentajeGanancia: nuevoPorcentaje,
+            PrecioFinal: nuevoPrecio,
+          };
         }),
       };
     });
-  }, [articulosBase, calcularPrecioSegunRegla, previewModo, previewRegla]);
+  }, [articulosBase, previewModo, previewRegla]);
 
   // El resumen se deriva directamente del snapshot ya calculado
   const previewResumen = useMemo<PreviewResumen>(() => {
@@ -424,8 +420,8 @@ export function useActualizarPrecios() {
 
   const toggleFiltro = (key: keyof FiltrosPrecios, value: any) => {
     setFiltros((prev) => ({ ...prev, [key]: value }));
-    setPage(1); // Reset a primera página al filtrar
-    setSeleccionados(new Set()); // Limpiar selección por seguridad
+    setPage(1);
+    setSeleccionados(new Set()); // Limpiar selección al filtrar
   };
 
   return {
@@ -437,12 +433,14 @@ export function useActualizarPrecios() {
     pagination: query.data?.pagination || {
       total: 0,
       page: 1,
-      limit: 20,
-      totalPages: 0,
+      limit,
+      totalPages: 1,
     },
     isLoading: query.isLoading,
     page,
     setPage,
+    limit,
+    setLimit: handleSetLimit,
 
     // Regla y Preview
     regla,
