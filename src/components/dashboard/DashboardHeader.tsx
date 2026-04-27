@@ -1,7 +1,14 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Dispatch, SetStateAction, memo, useMemo, useState, useEffect } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  memo,
+  useMemo,
+  useState,
+  useEffect,
+} from "react";
 import { usePathname } from "next/navigation";
 import {
   Menu,
@@ -38,7 +45,6 @@ const routeNames: Record<string, string> = {
   "/empleados/roles": "Roles",
   "/empleados/auditoria": "Auditoría",
   "/analiticas": "Analíticas",
-  "/analiticas/logs": "Logs",
   "/sucursales": "Sucursales",
   "/configuracion": "Configuración",
   "/configuracion/ventas": "Preferencias de Venta",
@@ -366,9 +372,9 @@ function DashboardHeaderComponent({
         </div>
       </div>
 
-      <GlobalSearchModal 
-        isOpen={isSearchOpen} 
-        onClose={() => setIsSearchOpen(false)} 
+      <GlobalSearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
       />
     </motion.header>
   );

@@ -2,3 +2,4 @@
 4- quitar cosas de configuracion y dejar que si se ba usar.
 5- consotrolar api register
 6- no todos los datos para un nuevo proveedor son necesarios.
+7- cuando se le cambie la contraseña a un empleado este deberia cerrarse la sesion en otros dispositivos.

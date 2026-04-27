@@ -49,29 +49,6 @@ export async function GET(req: NextRequest) {
     );
     const ultimaSesion = ultimaSesionResult[0] || null;
 
-    // Contar intentos fallidos en los últimos 7 días
-    const fecha7DiasAtras = new Date();
-    fecha7DiasAtras.setDate(fecha7DiasAtras.getDate() - 7);
-
-    const intentosFallidosResult = await prisma.$queryRawUnsafe<
-      Array<{ count: bigint }>
-    >(
-      `SELECT COUNT(*) as count FROM "IntentoLogin" WHERE "TenantId" = $1 AND "Exitoso" = false AND "FechaIntento" >= $2`,
-      tenantIdBigInt,
-      fecha7DiasAtras,
-    );
-    const intentosFallidos = Number(intentosFallidosResult[0]?.count || 0);
-
-    // Contar intentos exitosos en los últimos 7 días
-    const intentosExitososResult = await prisma.$queryRawUnsafe<
-      Array<{ count: bigint }>
-    >(
-      `SELECT COUNT(*) as count FROM "IntentoLogin" WHERE "TenantId" = $1 AND "Exitoso" = true AND "FechaIntento" >= $2`,
-      tenantIdBigInt,
-      fecha7DiasAtras,
-    );
-    const intentosExitosos = Number(intentosExitososResult[0]?.count || 0);
-
     return NextResponse.json(
       {
         estadisticas: {
@@ -80,8 +57,6 @@ export async function GET(req: NextRequest) {
           ultimaActividad: ultimaSesion?.FechaUltimaActividad
             ? ultimaSesion.FechaUltimaActividad.toISOString()
             : null,
-          intentosFallidos7Dias: intentosFallidos,
-          intentosExitosos7Dias: intentosExitosos,
         },
       },
       { status: 200 },

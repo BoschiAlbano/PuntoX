@@ -22,7 +22,6 @@ import {
   Save,
   LogOut,
   Shield,
-  AlertTriangle,
 } from "lucide-react";
 import { useConfiguracion, Seguridad } from "@/hooks/useConfiguracion";
 import { VentasSection, ToggleRow } from "./ventas/VentasPrimitives";
@@ -77,7 +76,6 @@ export function SeguridadTab() {
   const [estadisticas, setEstadisticas] = useState({
     sesionesActivas: 0,
     dispositivosActivos: 0,
-    intentosFallidos7Dias: 0,
   });
   const [modalDetalle, setModalDetalle] = useState<"sesiones" | "dispositivos" | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -100,7 +98,7 @@ export function SeguridadTab() {
       if (dispRes.ok) setDispositivos((await dispRes.json()).dispositivos || []);
       if (estRes.ok) {
         const d = await estRes.json();
-        setEstadisticas(d.estadisticas || { sesionesActivas: 0, dispositivosActivos: 0, intentosFallidos7Dias: 0 });
+        setEstadisticas(d.estadisticas || { sesionesActivas: 0, dispositivosActivos: 0 });
       }
     } catch (e) { console.error(e); }
     finally { setIsLoading(false); }
@@ -127,7 +125,6 @@ export function SeguridadTab() {
   const statCards = [
     { label: "Sesiones activas", value: estadisticas.sesionesActivas, icon: Shield, modal: "sesiones" as const },
     { label: "Dispositivos confiables", value: estadisticas.dispositivosActivos, icon: Smartphone, modal: "dispositivos" as const },
-    { label: "Intentos fallidos (7d)", value: estadisticas.intentosFallidos7Dias, icon: AlertTriangle, modal: null },
   ];
 
   return (

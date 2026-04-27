@@ -19,7 +19,6 @@ model Tenant {
   PlanId                BigInt?
   OnboardingCompleto    Boolean                @default(false)
   EstaEliminado         Boolean                @default(false)
-  AlertasSeguridad      AlertaSeguridad[]
   Articulos             Articulo[]
   ArticulosStock        ArticuloStock[]
   AuditoriaEmpleados    AuditoriaEmpleado[]
@@ -41,9 +40,6 @@ model Tenant {
   FormulariosPerfiles   FormularioPerfil[]
   FormulariosPermisos   Formularios[]
   Gastos                Gasto[]
-  IntentosLogin         IntentoLogin[]
-  IpsBloqueadas         IpBloqueada[]
-  Logs                  Log[]
   Marcas                Marca[]
   MotivosBaja           MotivoBajas[]
   Movimientos           Movimiento[]
@@ -162,21 +158,6 @@ model PlanSaaS {
   /// CaracterÃ­sticas adicionales (texto/JSON serializado)
   Caracteristicas String?  @db.VarChar(4000)
   Tenants         Tenant[]
-}
-
-/// Logs de aplicacion; TenantId nullable permite logs globales o por tenant
-model Log {
-  Id       BigInt   @id @default(autoincrement())
-  TenantId BigInt?
-  Fecha    DateTime @default(now())
-  Nivel    String   @db.VarChar(50)
-  Servicio String?  @db.VarChar(200)
-  Mensaje  String   @db.VarChar(4000)
-  Metadata String?  @db.VarChar(4000)
-  Tenant   Tenant?  @relation(fields: [TenantId], references: [Id])
-
-  @@index([TenantId])
-  @@index([Fecha])
 }
 
 /// ArtÃ­culos/Productos del comercio. Incluye datos de stock y atributos comerciales.
@@ -1079,8 +1060,6 @@ model Usuario {
   TenantId                             BigInt
   /// ID del usuario en Supabase Auth (auth.users.id)
   AuthUserId                           String                 @unique @db.VarChar(255)
-  AlertasSeguridadResueltas            AlertaSeguridad[]      @relation("Alerta_ResueltoPor")
-  AlertasSeguridad                     AlertaSeguridad[]
   AuditoriaEmpleadosAfectados          AuditoriaEmpleado[]    @relation("Auditoria_UsuarioAfectado")
   AuditoriaEmpleados                   AuditoriaEmpleado[]    @relation("Auditoria_Usuario")
   Caja_Caja_UsuarioAperturaIdToUsuario Caja[]                 @relation("Caja_UsuarioAperturaIdToUsuario")
@@ -1088,7 +1067,6 @@ model Usuario {
   Codigos2FA                           Codigo2FA[]
   Comprobante                          Comprobante[]
   DispositivosConfiable                DispositivoConfiable[]
-  IntentosLogin                        IntentoLogin[]
   Movimiento                           Movimiento[]
   PerfilUsuario                        PerfilUsuario[]
   SesionesActivas                      SesionActiva[]
@@ -1235,45 +1213,7 @@ model DispositivoConfiable {
   @@index([EstaActivo])
 }
 
-model IntentoLogin {
-  Id           BigInt   @id @default(autoincrement())
-  TenantId     BigInt
-  Email        String   @db.VarChar(250)
-  IpAddress    String?  @db.VarChar(50)
-  UserAgent    String?  @db.VarChar(500)
-  Exitoso      Boolean  @default(false)
-  MotivoFallo  String?  @db.VarChar(200)
-  FechaIntento DateTime @default(now())
-  UsuarioId    BigInt?
-  Tenant       Tenant   @relation(fields: [TenantId], references: [Id])
-  Usuario      Usuario? @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
-
-  @@index([TenantId])
-  @@index([Email])
-  @@index([IpAddress])
-  @@index([FechaIntento])
-  @@index([Exitoso])
-}
-
-model IpBloqueada {
-  Id               BigInt    @id @default(autoincrement())
-  TenantId         BigInt
-  IpAddress        String    @db.VarChar(50)
-  Motivo           String?   @db.VarChar(200)
-  FechaBloqueo     DateTime  @default(now())
-  FechaDesbloqueo  DateTime?
-  EstaActiva       Boolean   @default(true)
-  IntentosFallidos Int       @default(0)
-  Tenant           Tenant    @relation(fields: [TenantId], references: [Id])
-
-  @@unique([TenantId, IpAddress])
-  @@index([TenantId])
-  @@index([IpAddress])
-  @@index([EstaActiva])
-  @@index([FechaBloqueo])
-}
-
-/// Tokens CSRF para protecciÃ³n contra ataques CSRF
+/// Tokens CSRF para protecci\u00f3n contra ataques CSRF
 model TokenCsrf {
   Id              BigInt   @id @default(autoincrement())
   TenantId        BigInt
@@ -1309,33 +1249,6 @@ model Codigo2FA {
   @@index([TenantId])
   @@index([UsuarioId])
   @@index([EstaActivo])
-}
-
-/// Alertas de seguridad para eventos sospechosos
-model AlertaSeguridad {
-  Id              BigInt    @id @default(autoincrement())
-  TenantId        BigInt
-  UsuarioId       BigInt?
-  Tipo            String    @db.VarChar(50)
-  Severidad       String    @default("MEDIA") @db.VarChar(20)
-  Mensaje         String    @db.VarChar(500)
-  Detalles        String?   @db.VarChar(2000)
-  IpAddress       String?   @db.VarChar(50)
-  UserAgent       String?   @db.VarChar(500)
-  FechaCreacion   DateTime  @default(now())
-  EstaResuelta    Boolean   @default(false)
-  FechaResolucion DateTime?
-  ResueltoPor     BigInt?
-  UsuarioResuelto Usuario?  @relation("Alerta_ResueltoPor", fields: [ResueltoPor], references: [Id], onUpdate: NoAction)
-  Tenant          Tenant    @relation(fields: [TenantId], references: [Id])
-  Usuario         Usuario?  @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
-
-  @@index([TenantId])
-  @@index([UsuarioId])
-  @@index([Tipo])
-  @@index([Severidad])
-  @@index([FechaCreacion])
-  @@index([EstaResuelta])
 }
 
 enum PerfilTipo {

@@ -18,6 +18,7 @@
     "prisma:reset": "npx prisma migrate reset",
     "check-env": "node scripts/check-env.js",
     "db-seed": "npx prisma db seed",
+    "db-seed:articulos": "npx tsx scripts/prisma/seed-catalogo-tenant.ts --tenantId=1",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },

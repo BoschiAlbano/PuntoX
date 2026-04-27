@@ -183,20 +183,6 @@ export default function CredentialsForm() {
           setIsRateLimited(true);
         }
 
-        // Registrar intento fallido
-        try {
-          await fetch("/api/auth/registrar-intento-login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: internalEmail,
-              exitoso: false,
-              motivoFallo: getErrorMessage(authError),
-            }),
-          });
-        } catch (regError) {
-          console.warn("Error al registrar intento fallido:", regError);
-        }
         throw authError;
       }
 
@@ -255,19 +241,6 @@ export default function CredentialsForm() {
         if (recordarDispositivo) {
           localStorage.setItem(`device_trusted_${normalizedUsername}`, "true");
         }
-
-        // Registrar intento exitoso (en background, no bloqueamos)
-        fetch("/api/auth/registrar-intento-login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: internalEmail,
-            exitoso: true,
-            tenantId: tenantId || null,
-          }),
-        }).catch((err) =>
-          console.warn("Error al registrar intento exitoso:", err),
-        );
 
         // Registrar sesión activa (en background, no bloqueamos)
         fetch("/api/auth/registrar-sesion", {
