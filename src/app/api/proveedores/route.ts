@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS, GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
+import { PERMISSIONS, GET_PERMISSIONS, SET_PERMISSIONS, TIPO_PAGO, TIPO_COMPROBANTE_COMPRA } from "@/lib/constants/comprobantes";
 import {
   parsePaginationParams,
   createPaginationResponse,
@@ -80,6 +80,52 @@ export async function GET(req: NextRequest) {
       }),
     ]);
 
+    const provIds = proveedores.map(p => p.Id);
+
+    const [comprasCtaCte, pagosCtaCte] = await Promise.all([
+      prisma.comprobante.findMany({
+        where: {
+          TenantId: BigInt(tenantId),
+          EstaEliminado: false,
+          Comprobante_Compra: { ProveedorId: { in: provIds } },
+          FormaPago: { some: { TipoPago: TIPO_PAGO.CUENTA_CORRIENTE } },
+        },
+        select: {
+          Comprobante_Compra: { select: { ProveedorId: true } },
+          FormaPago: {
+            where: { TipoPago: TIPO_PAGO.CUENTA_CORRIENTE },
+            select: { Monto: true },
+          },
+        },
+      }),
+      prisma.comprobante.findMany({
+        where: {
+          TenantId: BigInt(tenantId),
+          EstaEliminado: false,
+          TipoComprobante: TIPO_COMPROBANTE_COMPRA.CTA_CORRIENTE_PROVEEDOR,
+          Comprobante_CtaCteProveedor: { ProveedorId: { in: provIds } },
+        },
+        select: {
+          Comprobante_CtaCteProveedor: { select: { ProveedorId: true } },
+          Total: true,
+        },
+      }),
+    ]);
+
+    const deudaMap = new Map<string, number>();
+    for (const c of comprasCtaCte) {
+      const provId = c.Comprobante_Compra?.ProveedorId?.toString();
+      if (!provId) continue;
+      const monto = c.FormaPago.reduce((sum: number, fp: { Monto: unknown }) => sum + Number(fp.Monto), 0);
+      deudaMap.set(provId, (deudaMap.get(provId) ?? 0) + monto);
+    }
+    const pagosMap = new Map<string, number>();
+    for (const p of pagosCtaCte) {
+      const provId = p.Comprobante_CtaCteProveedor?.ProveedorId?.toString();
+      if (!provId) continue;
+      pagosMap.set(provId, (pagosMap.get(provId) ?? 0) + Number(p.Total));
+    }
+
     const formattedProveedores = proveedores.map(prov => ({
       Id: Number(prov.Id),
       RazonSocial: prov.RazonSocial,
@@ -95,6 +141,7 @@ export async function GET(req: NextRequest) {
       Provincia: prov.Localidad?.Departamento?.Provincia?.Descripcion ?? null,
       CondicionIvaId: Number(prov.CondicionIvaId),
       CondicionIva: prov.CondicionIva?.Descripcion ?? null,
+      SaldoCtaCte: parseFloat(((deudaMap.get(prov.Id.toString()) ?? 0) - (pagosMap.get(prov.Id.toString()) ?? 0)).toFixed(2)),
     }));
 
     const paginatedResponse = createPaginationResponse(

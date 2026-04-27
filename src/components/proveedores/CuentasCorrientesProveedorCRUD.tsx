@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Input,
   Button,
@@ -23,6 +24,7 @@ import { useCtaCteProveedor, ProveedorCtaCte, MovimientoCtaCteProveedor } from "
 import GenericTable, { Column } from "@/components/shared/GenericTable";
 
 export default function CuentasCorrientesProveedorCRUD() {
+  const searchParams = useSearchParams();
   const {
     useBuscarProveedores,
     useMovimientosProveedor,
@@ -41,6 +43,22 @@ export default function CuentasCorrientesProveedorCRUD() {
   const [selectedProveedor, setSelectedProveedor] = useState<ProveedorCtaCte | null>(
     null,
   );
+
+  // Auto-seleccionar proveedor si viene desde la página de proveedores
+  useEffect(() => {
+    const proveedorIdParam = searchParams.get("proveedorId");
+    const nombreParam = searchParams.get("nombre");
+    const cuitParam = searchParams.get("cuit");
+    if (proveedorIdParam && nombreParam) {
+      setSelectedProveedor({
+        Id: Number(proveedorIdParam),
+        RazonSocial: nombreParam,
+        CUIT: cuitParam ?? undefined,
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const { data: movementsData, isLoading: isLoadingMovements } =
     useMovimientosProveedor(selectedProveedor?.Id);
   const movements = movementsData || [];

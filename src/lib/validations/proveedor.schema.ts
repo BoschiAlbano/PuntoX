@@ -41,4 +41,5 @@ export interface Proveedor {
   Departamento: string;
   CondicionIvaId: number;
   CondicionIva: string;
+  SaldoCtaCte?: number;
 }

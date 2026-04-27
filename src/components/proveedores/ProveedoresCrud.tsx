@@ -1,11 +1,14 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Proveedor } from "@/lib/validations/proveedor.schema";
 import GenericCrud from "@/components/shared/GenericCrud";
 import FormularioProveedor from "./FormularioProveedor";
 import { Button, Tooltip, addToast } from "@heroui/react";
+import { CreditCard } from "lucide-react";
 
 export default function ProveedoresCrud() {
+  const router = useRouter();
   return (
     <GenericCrud<Proveedor>
       apiPath="/api/proveedores"
@@ -114,15 +117,13 @@ export default function ProveedoresCrud() {
         },
       ]}
       columns={[
-        {
-          uid: "razonSocial",
-          name: "PROVEEDOR",
-          sortable: true,
+        { uid: "razonSocial", name: "PROVEEDOR", sortable: true,
           align: "start",
         },
         { uid: "condicionIva", name: "CONDICIÓN IVA", sortable: true },
         { uid: "localidad", name: "UBICACIÓN", sortable: false },
         { uid: "contacto", name: "CONTACTO", sortable: false },
+        { uid: "saldoCtaCte", name: "CTA. CORRIENTE", sortable: false },
         { uid: "acciones", name: "ACCIONES" },
       ]}
       renderCell={(item, columnKey, actions) => {
@@ -196,6 +197,37 @@ export default function ProveedoresCrud() {
                 )}
               </div>
             );
+          case "saldoCtaCte": {
+            const saldo = item.SaldoCtaCte ?? 0;
+            if (saldo > 0) {
+              return (
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold bg-rose-50 text-rose-500 border border-rose-100">
+                    ${saldo.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                  </span>
+                  <Tooltip content="Ver cuenta corriente">
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      className="bg-[#67afc3]/10 text-[#67afc3] hover:bg-[#67afc3]/25 transition-colors"
+                      onPress={() =>
+                        router.push(
+                          `/proveedores/cuentas-corrientes?proveedorId=${item.Id}&nombre=${encodeURIComponent(item.RazonSocial)}&cuit=${encodeURIComponent(item.CUIT ?? "")}`
+                        )
+                      }
+                    >
+                      <CreditCard className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
+                </div>
+              );
+            }
+            return (
+              <span className="inline-flex px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-500 border border-emerald-100">
+                Al día
+              </span>
+            );
+          }
           case "acciones":
             return (
               <div className="flex gap-2 w-full justify-center items-center">
