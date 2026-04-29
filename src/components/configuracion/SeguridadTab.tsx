@@ -24,6 +24,8 @@ import {
   LogOut,
   Shield,
   CheckCircle,
+  Calendar,
+  Globe,
 } from "lucide-react";
 import { useConfiguracion, Seguridad } from "@/hooks/useConfiguracion";
 import { VentasSection, ToggleRow } from "./ventas/VentasPrimitives";
@@ -82,6 +84,8 @@ export function SeguridadTab() {
   const [estadisticas, setEstadisticas] = useState({
     sesionesActivas: 0,
     dispositivosActivos: 0,
+    loginUltimos30Dias: 0,
+    ipsUnicas30Dias: 0,
   });
   const [modalDetalle, setModalDetalle] = useState<
     "sesiones" | "dispositivos" | null
@@ -110,10 +114,13 @@ export function SeguridadTab() {
       if (dispRes.ok)
         setDispositivos((await dispRes.json()).dispositivos || []);
       if (estRes.ok) {
-        const d = await estRes.json();
-        setEstadisticas(
-          d.estadisticas || { sesionesActivas: 0, dispositivosActivos: 0 },
-        );
+        const estData = await estRes.json();
+        setEstadisticas({
+          sesionesActivas: estData.estadisticas?.sesionesActivas ?? 0,
+          dispositivosActivos: estData.estadisticas?.dispositivosActivos ?? 0,
+          loginUltimos30Dias: estData.estadisticas?.loginUltimos30Dias ?? 0,
+          ipsUnicas30Dias: estData.estadisticas?.ipsUnicas30Dias ?? 0,
+        });
       }
     } catch (e) {
       console.error(e);
@@ -192,6 +199,18 @@ export function SeguridadTab() {
       value: estadisticas.dispositivosActivos,
       icon: Smartphone,
       modal: "dispositivos" as const,
+    },
+    {
+      label: "Accesos (30 días)",
+      value: estadisticas.loginUltimos30Dias,
+      icon: Calendar,
+      modal: null,
+    },
+    {
+      label: "IPs únicas (30 días)",
+      value: estadisticas.ipsUnicas30Dias,
+      icon: Globe,
+      modal: null,
     },
   ];
 
@@ -280,7 +299,7 @@ export function SeguridadTab() {
 
       {/* Estado de seguridad */}
       <VentasSection title="Estado de seguridad" icon={Shield}>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {statCards.map(({ label, value, icon: Icon, modal }) => (
             <button
               key={label}
@@ -293,7 +312,7 @@ export function SeguridadTab() {
                   {label}
                 </span>
               </div>
-              <p className="text-3xl font-extrabold text-[#67afc3] leading-none">
+              <p className="text-3xl font-extrabold leading-none text-[#67afc3]">
                 {value}
               </p>
               {modal && (
