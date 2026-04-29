@@ -65,7 +65,8 @@ export interface Notificaciones {
 
 export interface Seguridad {
   dobleFactor: boolean;
-  expirarSesiones30Dias: boolean;
+  expirarSesiones: boolean;
+  diasExpiracionSesion: number;
   bloquearTrasIntentos: "nunca" | "5" | "10";
   alertarNuevoDispositivo: boolean;
   recordarSesion30Dias: boolean;
@@ -341,7 +342,8 @@ const fetchSeguridad = async ({
   if (!response.ok) {
     return {
       dobleFactor: false,
-      expirarSesiones30Dias: true,
+      expirarSesiones: true,
+      diasExpiracionSesion: 30,
       bloquearTrasIntentos: "5",
       alertarNuevoDispositivo: true,
       recordarSesion30Dias: true,
@@ -353,7 +355,8 @@ const fetchSeguridad = async ({
   return (
     data || {
       dobleFactor: false,
-      expirarSesiones30Dias: true,
+      expirarSesiones: true,
+      diasExpiracionSesion: 30,
       bloquearTrasIntentos: "5",
       alertarNuevoDispositivo: true,
       recordarSesion30Dias: true,

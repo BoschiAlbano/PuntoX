@@ -63,7 +63,7 @@ describe("GET /api/configuracion/seguridad", () => {
     const data = await res.json();
     expect(res.status).toBe(200);
     expect(data.dobleFactor).toBe(false);
-    expect(data.expirarSesiones30Dias).toBe(true);
+    expect(data.expirarSesiones).toBe(true);
     expect(data.bloquearTrasIntentos).toBe("5");
   });
 

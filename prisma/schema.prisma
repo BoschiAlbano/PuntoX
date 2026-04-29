@@ -528,6 +528,8 @@ model Configuracion {
   InicioActividades                      DateTime?
   Forzar2FA                              Boolean       @default(false)
   ExpirarSesiones30Dias                  Boolean       @default(true)
+  /// Días de inactividad antes de expirar sesión (se usa cuando ExpirarSesiones30Dias = true)
+  DiasExpiracionSesion                   Int           @default(30)
   BloquearTrasIntentos                   Int?          @default(5)
   AlertarNuevoDispositivo                Boolean       @default(true)
   BloquearPorInactividad                 Boolean       @default(false)

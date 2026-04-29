@@ -8,7 +8,8 @@ import prisma from "@/DB/prisma";
 
 const seguridadSchema = z.object({
   dobleFactor: z.boolean().optional(),
-  expirarSesiones30Dias: z.boolean().optional(),
+  expirarSesiones: z.boolean().optional(),
+  diasExpiracionSesion: z.number().int().min(1).max(365).optional(),
   bloquearTrasIntentos: z.enum(["nunca", "5", "10"]).optional(),
   alertarNuevoDispositivo: z.boolean().optional(),
   recordarSesion30Dias: z.boolean().optional(),
@@ -38,6 +39,7 @@ export async function GET(req: NextRequest) {
       select: {
         Forzar2FA: true,
         ExpirarSesiones30Dias: true,
+        DiasExpiracionSesion: true,
         BloquearTrasIntentos: true,
         AlertarNuevoDispositivo: true,
         RecordarSesion30Dias: true,
@@ -49,7 +51,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(
         {
           dobleFactor: false,
-          expirarSesiones30Dias: true,
+          expirarSesiones: true,
+          diasExpiracionSesion: 30,
           bloquearTrasIntentos: "5" as const,
           alertarNuevoDispositivo: true,
           recordarSesion30Dias: true,
@@ -71,7 +74,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       {
         dobleFactor: config.Forzar2FA ?? false,
-        expirarSesiones30Dias: config.ExpirarSesiones30Dias ?? true,
+        expirarSesiones: config.ExpirarSesiones30Dias ?? true,
+        diasExpiracionSesion: config.DiasExpiracionSesion ?? 30,
         bloquearTrasIntentos,
         alertarNuevoDispositivo: config.AlertarNuevoDispositivo ?? true,
         recordarSesion30Dias: config.RecordarSesion30Dias ?? true,
@@ -139,6 +143,7 @@ export async function PUT(req: NextRequest) {
     const updateData: {
       Forzar2FA?: boolean;
       ExpirarSesiones30Dias?: boolean;
+      DiasExpiracionSesion?: number;
       BloquearTrasIntentos?: number | null;
       AlertarNuevoDispositivo?: boolean;
       RecordarSesion30Dias?: boolean;
@@ -147,8 +152,11 @@ export async function PUT(req: NextRequest) {
     if (data.dobleFactor !== undefined) {
       updateData.Forzar2FA = data.dobleFactor;
     }
-    if (data.expirarSesiones30Dias !== undefined) {
-      updateData.ExpirarSesiones30Dias = data.expirarSesiones30Dias;
+    if (data.expirarSesiones !== undefined) {
+      updateData.ExpirarSesiones30Dias = data.expirarSesiones;
+    }
+    if (data.diasExpiracionSesion !== undefined) {
+      updateData.DiasExpiracionSesion = data.diasExpiracionSesion;
     }
     if (data.bloquearTrasIntentos !== undefined) {
       updateData.BloquearTrasIntentos =
@@ -175,6 +183,7 @@ export async function PUT(req: NextRequest) {
       select: {
         Forzar2FA: true,
         ExpirarSesiones30Dias: true,
+        DiasExpiracionSesion: true,
         BloquearTrasIntentos: true,
         AlertarNuevoDispositivo: true,
         RecordarSesion30Dias: true,
@@ -194,7 +203,8 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json(
       {
         dobleFactor: updatedConfig?.Forzar2FA ?? false,
-        expirarSesiones30Dias: updatedConfig?.ExpirarSesiones30Dias ?? true,
+        expirarSesiones: updatedConfig?.ExpirarSesiones30Dias ?? true,
+        diasExpiracionSesion: updatedConfig?.DiasExpiracionSesion ?? 30,
         bloquearTrasIntentos,
         alertarNuevoDispositivo: updatedConfig?.AlertarNuevoDispositivo ?? true,
         recordarSesion30Dias: updatedConfig?.RecordarSesion30Dias ?? true,

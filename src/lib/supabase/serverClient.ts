@@ -20,10 +20,19 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient> {
         return cookieStore.get(name)?.value;
       },
       set(name: string, value: string, options) {
-        cookieStore.set({ name, value, ...options });
+        try {
+          cookieStore.set({ name, value, ...options });
+        } catch {
+          // Server Components tienen cookies de solo lectura — ignorar silenciosamente.
+          // El token se refresca correctamente en el próximo Route Handler.
+        }
       },
       remove(name: string, options) {
-        cookieStore.set({ name, value: "", ...options, maxAge: 0 });
+        try {
+          cookieStore.set({ name, value: "", ...options, maxAge: 0 });
+        } catch {
+          // Server Components tienen cookies de solo lectura — ignorar silenciosamente.
+        }
       },
     },
   });

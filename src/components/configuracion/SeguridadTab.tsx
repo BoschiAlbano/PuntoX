@@ -5,6 +5,7 @@ import {
   Button,
   Select,
   SelectItem,
+  Input,
   Modal,
   ModalContent,
   ModalHeader,
@@ -69,7 +70,8 @@ export function SeguridadTab() {
 
   const [seguridad, setSeguridad] = useState<Seguridad>({
     dobleFactor: false,
-    expirarSesiones30Dias: true,
+    expirarSesiones: true,
+    diasExpiracionSesion: 30,
     bloquearTrasIntentos: "5",
     alertarNuevoDispositivo: true,
     recordarSesion30Dias: true,
@@ -205,13 +207,38 @@ export function SeguridadTab() {
         />
         <ToggleRow
           icon={Clock}
-          title="Expirar sesiones después de 30 días"
-          description="Las sesiones de usuario se cerrarán automáticamente al superar los 30 días de inactividad"
-          isSelected={seguridad.expirarSesiones30Dias}
+          title="Expirar sesiones por inactividad"
+          description="Las sesiones se cerrarán automáticamente si superan el tiempo de inactividad configurado"
+          isSelected={seguridad.expirarSesiones}
           onValueChange={(v) =>
-            setSeguridad({ ...seguridad, expirarSesiones30Dias: v })
+            setSeguridad({ ...seguridad, expirarSesiones: v })
           }
-        />
+        >
+          {seguridad.expirarSesiones && (
+            <div className="flex items-center gap-2 mt-1">
+              <Input
+                type="number"
+                size="sm"
+                variant="bordered"
+                min={1}
+                max={365}
+                value={String(seguridad.diasExpiracionSesion)}
+                onValueChange={(v) => {
+                  const n = parseInt(v);
+                  if (!isNaN(n) && n >= 1 && n <= 365) {
+                    setSeguridad({ ...seguridad, diasExpiracionSesion: n });
+                  }
+                }}
+                className="max-w-[90px]"
+                classNames={{ input: "text-center font-semibold text-sm", inputWrapper: "border-[#67afc3]/40" }}
+                aria-label="Días de inactividad"
+                endContent={
+                  <span className="text-xs text-slate-400 whitespace-nowrap">días</span>
+                }
+              />
+            </div>
+          )}
+        </ToggleRow>
         <ToggleRow
           icon={MonitorX}
           title="Bloquear cuenta tras intentos fallidos"

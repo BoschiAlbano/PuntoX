@@ -43,6 +43,30 @@ export function UserDropdown() {
       setIsLoggingOut(true);
       queryClient.cancelQueries();
       queryClient.clear();
+
+      // Cerrar sesión en nuestra DB ANTES de revocar el token en Supabase
+      // (después del signOut el token ya no es válido y el servidor no puede identificar al usuario)
+      const supabaseUser = (await supabase.auth.getUser()).data.user;
+      if (supabaseUser) {
+        const sesionId =
+          typeof localStorage !== "undefined"
+            ? localStorage.getItem(`session_id_${supabaseUser.id}`)
+            : null;
+
+        const url = sesionId
+          ? `/api/auth/registrar-sesion?sesionId=${sesionId}`
+          : "/api/auth/registrar-sesion";
+
+        await fetch(url, {
+          method: "DELETE",
+          credentials: "include",
+        }).catch(() => {}); // No crítico — el heartbeat/cleanup lo cierra eventualmente
+
+        if (sesionId && typeof localStorage !== "undefined") {
+          localStorage.removeItem(`session_id_${supabaseUser.id}`);
+        }
+      }
+
       await supabase.auth.signOut();
       router.push("/signin");
     } catch (error) {

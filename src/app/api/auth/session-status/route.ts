@@ -8,18 +8,15 @@ import prisma from "@/DB/prisma";
  * Heartbeat: verifica si la sesión del usuario sigue activa en nuestra DB.
  * El sessionProvider del cliente lo llama cada 30 segundos.
  *
- * - 200 { activa: true }             → sesión válida.
- * - 200 { activa: false, sesionCerrada: true } → sesión cerrada remotamente.
- *   El interceptor del sessionProvider detecta `sesionCerrada: true`
- *   y dispara el logout automático en el browser remoto.
+ * Respuestas:
+ * - 200 { activa: true }                            → sesión válida.
+ * - 200 { activa: false, sesionCerrada: true }      → sesión cerrada remotamente.
+ * - 200 { activa: false, sesionExpirada: true }     → inactiva por más de N días (config del tenant).
+ * - 200 { activa: false }                           → token inválido/expirado (flujo normal de Supabase).
  *
- * ⚠️ Implementación read-only:
- * En un GET Route Handler Next.js NO permite modificar cookies.
- * Por eso NO usamos getSupabaseServerClient() (que llama a cookieStore.set/remove
- * durante el auto-refresh del token).
- * En cambio, creamos un cliente read-only que ignora silenciosamente
- * los intentos de escritura de cookies, y extraemos el session_id
- * directamente del JWT de la cookie de Supabase.
+ * ⚠️ Read-only para cookies: en GET handlers Next.js no permite modificar cookies.
+ * Creamos un cliente Supabase con set/remove como no-ops y leemos el JWT directamente.
+ * Las operaciones de escritura a la DB (Prisma) sí están permitidas.
  */
 export async function GET(req: NextRequest) {
   try {
@@ -30,8 +27,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ activa: true }, { status: 200 });
     }
 
-    // Cliente Supabase read-only: las cookies set/remove son no-ops.
-    // getUser() valida el JWT con Supabase sin necesitar escribir cookies.
+    // Cliente Supabase read-only (set/remove son no-ops para no violar restricción de GET handler)
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
         get(name: string) {
@@ -46,15 +42,13 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // getUser() verifica el JWT con Supabase (network call, sin modificar cookies)
+    // getUser() valida el JWT con Supabase sin necesitar escribir cookies
     const {
       data: { user },
       error,
     } = await supabase.auth.getUser();
 
     if (error || !user) {
-      // Token inválido o expirado — Supabase ya lo rechazó,
-      // no es cierre remoto sino expiración normal
       return NextResponse.json({ activa: false }, { status: 200 });
     }
 
@@ -64,24 +58,28 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ activa: false }, { status: 200 });
     }
 
-    // Extraer el SupabaseSessionId directamente del JWT en la cookie.
-    // No llamamos a getSession() porque podría intentar refrescar el token
-    // y escribir cookies (prohibido en GET handlers).
+    // Extraer SupabaseSessionId directamente de la cookie del JWT
+    // (no usamos getSession() porque podría intentar refrescar el token y escribir cookies)
     let supabaseSessionId: string | null = null;
     const allCookies = req.cookies.getAll();
-    // Supabase almacena el token en cookies con nombre sb-*-auth-token (puede estar en chunks)
     const authTokenCookie = allCookies.find(
-      (c) => c.name.startsWith("sb-") && c.name.includes("-auth-token") && !c.name.includes("."),
+      (c) =>
+        c.name.startsWith("sb-") &&
+        c.name.includes("-auth-token") &&
+        !c.name.includes("."),
     );
 
     if (authTokenCookie?.value) {
       try {
-        // El valor puede estar JSON-encoded como { access_token, ... }
         const parsed = JSON.parse(authTokenCookie.value);
-        const accessToken = parsed?.access_token || parsed?.[0]?.access_token;
+        const accessToken =
+          parsed?.access_token || parsed?.[0]?.access_token;
         if (accessToken) {
           const payload = JSON.parse(
-            Buffer.from(accessToken.split(".")[1], "base64url").toString(),
+            Buffer.from(
+              accessToken.split(".")[1],
+              "base64url",
+            ).toString(),
           );
           supabaseSessionId = payload.session_id || null;
         }
@@ -90,48 +88,97 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Verificar en nuestra DB si esta sesión sigue activa
-    let sesionActiva: Array<{ Id: bigint }> = [];
+    // Buscar la sesión en nuestra DB — tanto activa como inactiva —
+    // para distinguir entre "usuario nuevo sin registro" vs "sesión cerrada remotamente".
+    const [sesiones, configTenant] = await Promise.all([
+      supabaseSessionId
+        ? prisma.$queryRawUnsafe<
+            Array<{ Id: bigint; FechaUltimaActividad: Date; EstaActiva: boolean }>
+          >(
+            `
+            SELECT sa."Id", sa."FechaUltimaActividad", sa."EstaActiva"
+            FROM "SesionActiva" sa
+            INNER JOIN "Usuario" u ON sa."UsuarioId" = u."Id"
+            WHERE u."AuthUserId" = $1
+              AND sa."TenantId" = $2
+              AND sa."SupabaseSessionId" = $3
+            ORDER BY sa."FechaUltimaActividad" DESC
+            LIMIT 1
+          `,
+            user.id,
+            BigInt(tenantId),
+            supabaseSessionId,
+          )
+        : prisma.$queryRawUnsafe<
+            Array<{ Id: bigint; FechaUltimaActividad: Date; EstaActiva: boolean }>
+          >(
+            `
+            SELECT sa."Id", sa."FechaUltimaActividad", sa."EstaActiva"
+            FROM "SesionActiva" sa
+            INNER JOIN "Usuario" u ON sa."UsuarioId" = u."Id"
+            WHERE u."AuthUserId" = $1
+              AND sa."TenantId" = $2
+            ORDER BY sa."FechaUltimaActividad" DESC
+            LIMIT 1
+          `,
+            user.id,
+            BigInt(tenantId),
+          ),
+      prisma.configuracion.findFirst({
+        where: { TenantId: BigInt(tenantId), EstaEliminado: false },
+        select: {
+          ExpirarSesiones30Dias: true,
+          DiasExpiracionSesion: true,
+        },
+      }),
+    ]);
 
-    if (supabaseSessionId) {
-      // Buscar por SupabaseSessionId exacto (más preciso)
-      sesionActiva = await prisma.$queryRawUnsafe<Array<{ Id: bigint }>>(
-        `
-        SELECT sa."Id"
-        FROM "SesionActiva" sa
-        INNER JOIN "Usuario" u ON sa."UsuarioId" = u."Id"
-        WHERE u."AuthUserId" = $1
-          AND sa."TenantId" = $2
-          AND sa."SupabaseSessionId" = $3
-          AND sa."EstaActiva" = true
-        LIMIT 1
-      `,
-        user.id,
-        BigInt(tenantId),
-        supabaseSessionId,
-      );
-    } else {
-      // Fallback: verificar si existe al menos una sesión activa del usuario
-      sesionActiva = await prisma.$queryRawUnsafe<Array<{ Id: bigint }>>(
-        `
-        SELECT sa."Id"
-        FROM "SesionActiva" sa
-        INNER JOIN "Usuario" u ON sa."UsuarioId" = u."Id"
-        WHERE u."AuthUserId" = $1
-          AND sa."TenantId" = $2
-          AND sa."EstaActiva" = true
-        LIMIT 1
-      `,
-        user.id,
-        BigInt(tenantId),
-      );
+    // Sin ningún registro → usuario recién logueado, sesión aún no registrada en DB.
+    // No patear: el POST /registrar-sesion se dispara en paralelo y puede no haber terminado.
+    if (!sesiones || sesiones.length === 0) {
+      return NextResponse.json({ activa: true }, { status: 200 });
     }
 
-    if (sesionActiva.length === 0) {
-      // La sesión fue cerrada remotamente
+    const sesion = sesiones[0];
+
+    // Registro existe pero está inactivo → fue cerrada remotamente
+    if (!sesion.EstaActiva) {
       return NextResponse.json(
         { activa: false, sesionCerrada: true },
         { status: 200 },
+      );
+    }
+
+    // Verificar expiración por inactividad (configuración del tenant)
+    if (configTenant?.ExpirarSesiones30Dias) {
+      const diasConfig = configTenant.DiasExpiracionSesion ?? 30;
+      const diasMs = diasConfig * 24 * 60 * 60 * 1000;
+      const ultimaActividad = sesion.FechaUltimaActividad;
+      const inactiva = Date.now() - ultimaActividad.getTime() > diasMs;
+
+      if (inactiva) {
+        // Cerrar la sesión por inactividad
+        await prisma.$executeRawUnsafe(
+          `UPDATE "SesionActiva" SET "EstaActiva" = false WHERE "Id" = $1`,
+          sesion.Id,
+        );
+        return NextResponse.json(
+          { activa: false, sesionCerrada: true, sesionExpirada: true },
+          { status: 200 },
+        );
+      }
+    }
+
+    // Actualizar FechaUltimaActividad para mantener la sesión viva
+    // (solo si ha pasado más de 1 minuto desde la última actualización para no saturar DB)
+    const UN_MINUTO_MS = 60 * 1000;
+    const debeActualizar =
+      Date.now() - sesion.FechaUltimaActividad.getTime() > UN_MINUTO_MS;
+
+    if (debeActualizar) {
+      await prisma.$executeRawUnsafe(
+        `UPDATE "SesionActiva" SET "FechaUltimaActividad" = NOW() WHERE "Id" = $1`,
+        sesion.Id,
       );
     }
 

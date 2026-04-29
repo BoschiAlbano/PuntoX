@@ -294,6 +294,8 @@ const SessionProviderComponent = ({
                 ? localStorage.getItem(`device_trusted_${email}`) === "true"
                 : false;
 
+            const SESSION_ID_KEY = `session_id_${newSession.user.id}`;
+
             fetch("/api/auth/registrar-sesion", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -303,23 +305,52 @@ const SessionProviderComponent = ({
                 ubicacion: null,
                 esConfiable,
               }),
-            }).catch((err) =>
-              console.warn(
-                "Error al registrar sesión desde sessionProvider:",
-                err,
-              ),
-            );
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                // Guardar sesionId en localStorage para poder cerrar la sesión
+                // correctamente al hacer logout (el token ya no es válido en SIGNED_OUT)
+                if (data?.sesionId && typeof localStorage !== "undefined") {
+                  localStorage.setItem(SESSION_ID_KEY, String(data.sesionId));
+                }
+              })
+              .catch((err) =>
+                console.warn(
+                  "Error al registrar sesión desde sessionProvider:",
+                  err,
+                ),
+              );
           }
         }
 
         // Cerrar sesiones cuando hay un logout
         if (event === "SIGNED_OUT") {
-          fetch("/api/auth/registrar-sesion", {
+          // Recuperar el sesionId guardado al iniciar sesión
+          // (no podemos usar getUser() aquí porque el token ya fue revocado)
+          const userId = session?.user?.id || newSession?.user?.id;
+          const SESSION_ID_KEY = userId
+            ? `session_id_${userId}`
+            : null;
+          const sesionId =
+            SESSION_ID_KEY && typeof localStorage !== "undefined"
+              ? localStorage.getItem(SESSION_ID_KEY)
+              : null;
+
+          const url = sesionId
+            ? `/api/auth/registrar-sesion?sesionId=${sesionId}`
+            : "/api/auth/registrar-sesion";
+
+          fetch(url, {
             method: "DELETE",
             credentials: "include",
           }).catch((err) =>
             console.warn("Error al cerrar sesión desde sessionProvider:", err),
           );
+
+          // Limpiar localStorage
+          if (SESSION_ID_KEY && typeof localStorage !== "undefined") {
+            localStorage.removeItem(SESSION_ID_KEY);
+          }
         }
       },
     );
@@ -365,11 +396,16 @@ const SessionProviderComponent = ({
       }
     };
 
-    // Primera verificación inmediata al autenticarse, luego periódica
-    checkSession();
+    // Primera verificación con delay: darle tiempo al POST /registrar-sesion
+    // de completarse antes de chequear (evita falsos positivos en login)
+    const FIRST_CHECK_DELAY = 10 * 1000; // 10 segundos
+    const firstCheckTimer = setTimeout(checkSession, FIRST_CHECK_DELAY);
     const interval = setInterval(checkSession, HEARTBEAT_INTERVAL);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(firstCheckTimer);
+      clearInterval(interval);
+    };
   }, [status, supabase]);
 
   const value = useMemo(() => {

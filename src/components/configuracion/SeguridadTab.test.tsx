@@ -24,7 +24,8 @@ vi.mock("@/hooks/useConfiguracion", () => ({
   useConfiguracion: vi.fn(() => ({
     seguridad: {
       dobleFactor: false,
-      expirarSesiones30Dias: true,
+      expirarSesiones: true,
+      diasExpiracionSesion: 30,
       bloquearTrasIntentos: "5",
       alertarNuevoDispositivo: true,
       bloquearPorInactividad: false,
