@@ -329,6 +329,49 @@ const SessionProviderComponent = ({
     };
   }, [supabase]);
 
+  // Heartbeat: verifica periódicamente si la sesión sigue activa en nuestra DB.
+  // Detecta cierres remotos: cuando un admin cierra la sesión desde otro dispositivo,
+  // la DB marca EstaActiva=false y el próximo heartbeat dispara el logout.
+  useEffect(() => {
+    if (status !== "authenticated") return;
+
+    const HEARTBEAT_INTERVAL = 30 * 1000; // 30 segundos
+
+    const checkSession = async () => {
+      try {
+        const res = await fetch("/api/auth/session-status", {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+        });
+
+        if (!res.ok) return; // Error de red → ignorar, no desloguear
+
+        const data = await res.json();
+
+        if (data.sesionCerrada === true) {
+          console.warn(
+            "[SessionProvider] Heartbeat: sesión cerrada remotamente, haciendo logout",
+          );
+          setSession(null);
+          setStatus("unauthenticated");
+          supabase.auth.signOut().catch(() => {});
+          setTimeout(() => {
+            window.location.replace("/signin?reason=session_closed");
+          }, 100);
+        }
+      } catch {
+        // Error de red → ignorar silenciosamente
+      }
+    };
+
+    // Primera verificación inmediata al autenticarse, luego periódica
+    checkSession();
+    const interval = setInterval(checkSession, HEARTBEAT_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [status, supabase]);
+
   const value = useMemo(() => {
     const metadata = (session?.user?.app_metadata ?? {}) as Record<
       string,

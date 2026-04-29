@@ -620,3 +620,160 @@ Todas las APIs detectan errores reales de conexión a la base de datos y retorna
 - ⏳ Seguridad: API lista, falta tabla de persistencia
 - ⏳ Fiscal: API lista, falta persistencia completa
 - ⏳ Branding: Logo funcional, slogan/color preparados para persistencia
+
+---
+
+## Gestión de Sesiones Activas (Cierre Remoto) ✅ IMPLEMENTADO
+
+Permite ver y cerrar remotamente sesiones activas desde **Configuración → Seguridad**.
+
+### Endpoints
+
+#### `GET /api/configuracion/seguridad/sesiones`
+- **Permiso**: `GET_PERMISSIONS.CONFIGURACION`
+- **Función**: Devuelve las sesiones activas del tenant.
+- **Deduplicación**: Usa `DISTINCT ON (UsuarioId, Dispositivo, IpAddress)` para evitar duplicados y retorna siempre la actividad más reciente por combinación.
+- **Campo `esActual`**: Compara el `SupabaseSessionId` de cada sesión con el del JWT del request actual (`extractSessionIdFromJwt(accessToken)`) para marcar la sesión propia.
+- **Respuesta**: `{ sesiones: SesionActiva[] }` donde cada ítem incluye:
+  - `id`, `usuarioId`, `usuarioNombre`, `ipAddress`, `dispositivo`, `ubicacion`
+  - `fechaInicio`, `fechaUltimaActividad`, `esConfiable`, `esActual`
+
+#### `DELETE /api/configuracion/seguridad/sesiones?id={sesionId}`
+- **Permiso**: `SET_PERMISSIONS.CONFIGURACION`
+- **Función**: Cierra una sesión específica.
+- **Validaciones**:
+  - Usuario normal: solo puede cerrar sus propias sesiones.
+  - Administrador: puede cerrar sesiones de cualquier usuario de su tenant.
+  - SuperAdmin: puede cerrar sesiones de cualquier tenant.
+  - **Protección anti-autocierre**: Si `SupabaseSessionId` coincide con la sesión actual, retorna `400` con mensaje explicativo.
+- **Revocación en Supabase**: Llama a `serviceClient.auth.admin.signOut(supabaseSessionId, "local")` para invalidar el refresh token del dispositivo remoto. Si falla, no es crítico (el token expira naturalmente).
+- **Cierre en DB**: Actualiza `EstaActiva = false` filtrando **directamente por `Id`** (ver sección de bug corregido).
+
+#### `POST /api/configuracion/seguridad/sesiones/cerrar-otras`
+- **Permiso**: `SET_PERMISSIONS.CONFIGURACION`
+- **Función**: Cierra todas las sesiones del usuario actual excepto la sesión en curso.
+- **Flujo** (cliente llama primero a Supabase, luego a este endpoint):
+  1. **Frontend**: `supabase.auth.signOut({ scope: "others" })` — revoca todos los refresh tokens excepto el actual en Supabase.
+  2. **Backend**: `UPDATE SesionActiva SET EstaActiva = false WHERE ... AND SupabaseSessionId != currentSessionId` — sincroniza estado en DB.
+- **Respuesta**: `{ message: "X sesión(es) cerrada(s) correctamente", sesionesCerradas: number }`
+
+### Componente UI — `SeguridadTab.tsx`
+
+**Flujo del usuario**:
+1. El **card "Sesiones activas"** muestra el total y permite hacer clic para abrir el modal.
+2. El **modal** lista todas las sesiones con: dispositivo, IP, fecha, usuario, badge "Esta sesión" si es la actual.
+3. Por cada sesión que no sea la actual aparece el botón **"Cerrar"** → llama a `cerrarSesion(id)`.
+4. En el footer del modal, si hay sesiones ajenas: botón **"Cerrar todas las demás"** con confirmación de dos pasos.
+5. Después de cualquier acción, se recarga el listado con `recargarDatos()`.
+
+**Estados del componente**:
+- `sesionesActivas`: Array de sesiones cargadas del API.
+- `isCerrandoOtras`: Loading state para "cerrar todas las demás".
+- `confirmCerrarOtras`: Controla el estado de confirmación en dos pasos.
+
+### Modelo de datos — Tabla `SesionActiva`
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `Id` | BigInt PK | Identificador único |
+| `TenantId` | BigInt | Tenant al que pertenece |
+| `UsuarioId` | BigInt | Usuario al que pertenece |
+| `SupabaseSessionId` | String? | UUID de sesión en Supabase (extraído del JWT) |
+| `IpAddress` | String? | IP del cliente |
+| `UserAgent` | String? | User-Agent del navegador |
+| `Dispositivo` | String? | Nombre amigable del dispositivo |
+| `Ubicacion` | String? | Ubicación aproximada (GeoIP) |
+| `FechaInicio` | DateTime | Cuando se inició la sesión |
+| `FechaUltimaActividad` | DateTime | Última actividad registrada |
+| `EstaActiva` | Boolean | `false` cuando se cierra (lógico) |
+| `EsConfiable` | Boolean | Si el dispositivo fue marcado como confiable |
+
+Las sesiones se registran en `POST /api/auth/registrar-sesion` (llamado desde el `sessionProvider` al iniciar sesión).
+
+### Utilidad interna — `extractSessionIdFromJwt`
+
+```typescript
+function extractSessionIdFromJwt(accessToken: string): string | null {
+  const payload = JSON.parse(
+    Buffer.from(accessToken.split(".")[1], "base64url").toString()
+  );
+  return payload.session_id || null;
+}
+```
+
+El `session_id` es un claim estable del JWT de Supabase que identifica la sesión, a diferencia del `access_token` que rota. Se usa para:
+- Marcar `esActual` en el GET.
+- Proteger la sesión propia en el DELETE.
+- Excluir la sesión propia al cerrar todas las demás.
+
+### Bug corregido (2026-04-29)
+
+**Síntoma**: Al presionar "Cerrar" en una sesión específica, la operación no tenía efecto en la DB (aunque la revocación en Supabase podía funcionar).
+
+**Causa raíz**: El `UPDATE` en el `DELETE` handler filtraba por la combinación `TenantId + UsuarioId + Dispositivo + IpAddress` en lugar de hacerlo directamente por `Id`. Cuando `Dispositivo` o `IpAddress` eran `NULL` en múltiples registros del mismo usuario, la condición `COALESCE(campo, '') = COALESCE($param, '')` evaluaba `'' = ''` y podía afectar filas incorrectas o no encontrar la fila exacta buscada.
+
+**Fix aplicado** en `src/app/api/configuracion/seguridad/sesiones/route.ts`:
+
+```diff
+- // --- Cerrar en nuestra DB ---
+- await prisma.$executeRawUnsafe(
+-   `UPDATE "SesionActiva"
+-    SET "EstaActiva" = false
+-    WHERE "TenantId" = $1
+-      AND "UsuarioId" = $2
+-      AND COALESCE("Dispositivo", '') = COALESCE($3, '')
+-      AND COALESCE("IpAddress", '') = COALESCE($4, '')
+-      AND "EstaActiva" = true`,
+-   sesionObj.TenantId,
+-   sesionObj.UsuarioId,
+-   sesionObj.Dispositivo,
+-   sesionObj.IpAddress,
+- );
++ // --- Cerrar en nuestra DB (filtrando por Id exacto para evitar ambigüedades) ---
++ await prisma.$executeRawUnsafe(
++   `UPDATE "SesionActiva"
++    SET "EstaActiva" = false
++    WHERE "Id" = $1
++      AND "EstaActiva" = true`,
++   sesionIdBigInt,
++ );
+```
+
+**Por qué funciona "cerrar todas las demás"**: Ese endpoint usa `UsuarioId + SupabaseSessionId != currentId` como filtro, que no depende de `Dispositivo`/`IpAddress`, por eso no tenía el mismo problema.
+
+### Bug corregido 2 (2026-04-29) — Sesiones duplicadas al renovar token
+
+**Síntoma**: Después de cerrar una sesión remota, al cabo de un rato (minutos u horas) volvía a aparecer como sesión activa.
+
+**Causa raíz**: `registrar-sesion` buscaba sesiones existentes filtrando por `Dispositivo + IpAddress + UserAgent`. Al hacer token refresh, Supabase emite un evento `SIGNED_IN` desde el `sessionProvider`. Si el cooldown de 5 minutos del `localStorage` había expirado, el endpoint era llamado de nuevo. Como la fila anterior estaba con `EstaActiva = false` (cerrada remotamente), la búsqueda no la encontraba y **creaba una fila nueva**, haciendo que la sesión reaparezca en el listado.
+
+**Fix aplicado** en `src/app/api/auth/registrar-sesion/route.ts`:
+
+La deduplicación ahora tiene dos estrategias en orden de prioridad:
+
+1. **Buscar por `SupabaseSessionId`** (clave estable que no cambia con el token refresh, solo con un nuevo signIn). Filtra `EstaActiva = true` — si la sesión fue cerrada remotamente (`EstaActiva = false`), no la reutiliza ni la reactiva.
+2. **Fallback por `Dispositivo + IpAddress + UserAgent`** solo cuando `SupabaseSessionId IS NULL` (sesiones antiguas sin ese campo).
+
+```typescript
+// Estrategia 1: por SupabaseSessionId (activo solamente)
+if (supabaseSessionId) {
+  sesionExistente = await prisma.$queryRawUnsafe(`
+    SELECT "Id" FROM "SesionActiva"
+    WHERE "SupabaseSessionId" = $3 AND "EstaActiva" = true
+    ...
+  `);
+}
+
+// Estrategia 2: fallback para sesiones sin SupabaseSessionId
+if (sesionExistente.length === 0) {
+  sesionExistente = await prisma.$queryRawUnsafe(`
+    SELECT "Id" FROM "SesionActiva"
+    WHERE "SupabaseSessionId" IS NULL
+      AND "Dispositivo" = $3 AND "IpAddress" = $4 AND "UserAgent" = $5
+    ...
+  `);
+}
+```
+
+**Resultado**: Si una sesión fue cerrada remotamente (`EstaActiva = false`), el próximo `SIGNED_IN` por token refresh no la reutiliza (porque `EstaActiva = true` filtra), y el `SupabaseSessionId` es el mismo así que tampoco cae en el fallback. La sesión permanece cerrada.
+

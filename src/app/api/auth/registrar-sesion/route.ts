@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     if (!tenantId) {
       return NextResponse.json(
         { error: "No se pudo determinar el tenant" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     if (!usuario) {
       return NextResponse.json(
         { error: "Usuario no encontrado" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -66,33 +66,76 @@ export async function POST(req: NextRequest) {
           .update(user.id + Date.now().toString())
           .digest("hex");
 
-    // Verificar si ya existe una sesión activa para este usuario/dispositivo/IP
-    // Esto evita crear sesiones duplicadas para el mismo dispositivo
-    const sesionExistente = await prisma.$queryRawUnsafe<
-      Array<{
-        Id: bigint;
-      }>
-    >(
-      `
-      SELECT "Id" FROM "SesionActiva"
-      WHERE "TenantId" = $1
-        AND "UsuarioId" = $2
-        AND "EstaActiva" = true
-        AND COALESCE("Dispositivo", '') = COALESCE($3, '')
-        AND COALESCE("IpAddress", '') = COALESCE($4, '')
-        AND COALESCE("UserAgent", '') = COALESCE($5, '')
-      ORDER BY "FechaUltimaActividad" DESC
-      LIMIT 1
-    `,
-      usuario.TenantId,
-      usuario.Id,
-      dispositivo || null,
-      ipAddress,
-      userAgent
-    );
+    // Extraer session_id del JWT para identificación estable de sesión
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    let supabaseSessionId: string | null = null;
+    if (session?.access_token) {
+      try {
+        const payload = JSON.parse(
+          Buffer.from(
+            session.access_token.split(".")[1],
+            "base64url",
+          ).toString(),
+        );
+        supabaseSessionId = payload.session_id || null;
+      } catch {
+        // no crítico
+      }
+    }
+
+    // Deduplicación de sesiones:
+    // 1. Prioridad: buscar por SupabaseSessionId (identifica inequívocamente la sesión de Supabase,
+    //    no rota con el token refresh, solo cambia al hacer signOut+signIn).
+    // 2. Fallback: si no hay SupabaseSessionId, buscar por Dispositivo+IpAddress+UserAgent
+    //    (comportamiento anterior, solo para sesiones sin session_id registrado).
+    let sesionExistente: Array<{ Id: bigint }> = [];
+
+    if (supabaseSessionId) {
+      // Estrategia 1: buscar por SupabaseSessionId (activa o inactiva — puede haberse cerrado
+      // remotamente pero Supabase aún emite SIGNED_IN por el mismo session_id al refrescar token;
+      // en ese caso NO se debe reactivar: solo actualizar si está activa)
+      sesionExistente = await prisma.$queryRawUnsafe<Array<{ Id: bigint }>>(
+        `
+        SELECT "Id" FROM "SesionActiva"
+        WHERE "TenantId" = $1
+          AND "UsuarioId" = $2
+          AND "SupabaseSessionId" = $3
+          AND "EstaActiva" = true
+        LIMIT 1
+      `,
+        usuario.TenantId,
+        usuario.Id,
+        supabaseSessionId,
+      );
+    }
+
+    if (sesionExistente.length === 0) {
+      // Estrategia 2: fallback por Dispositivo+IpAddress+UserAgent (sesiones sin SupabaseSessionId)
+      sesionExistente = await prisma.$queryRawUnsafe<Array<{ Id: bigint }>>(
+        `
+        SELECT "Id" FROM "SesionActiva"
+        WHERE "TenantId" = $1
+          AND "UsuarioId" = $2
+          AND "EstaActiva" = true
+          AND "SupabaseSessionId" IS NULL
+          AND COALESCE("Dispositivo", '') = COALESCE($3, '')
+          AND COALESCE("IpAddress", '') = COALESCE($4, '')
+          AND COALESCE("UserAgent", '') = COALESCE($5, '')
+        ORDER BY "FechaUltimaActividad" DESC
+        LIMIT 1
+      `,
+        usuario.TenantId,
+        usuario.Id,
+        dispositivo || null,
+        ipAddress,
+        userAgent,
+      );
+    }
 
     if (sesionExistente && sesionExistente.length > 0) {
-      // Actualizar sesión existente (incluyendo el token hash por si cambió)
+      // Actualizar sesión existente
       await prisma.$executeRawUnsafe(
         `
         UPDATE "SesionActiva"
@@ -102,7 +145,8 @@ export async function POST(req: NextRequest) {
             "UserAgent" = $3,
             "Dispositivo" = $4,
             "Ubicacion" = $5,
-            "EsConfiable" = $6
+            "EsConfiable" = $6,
+            "SupabaseSessionId" = COALESCE($8, "SupabaseSessionId")
         WHERE "Id" = $7
       `,
         tokenHash,
@@ -111,7 +155,8 @@ export async function POST(req: NextRequest) {
         dispositivo || null,
         ubicacion || null,
         esConfiable === true,
-        sesionExistente[0].Id
+        sesionExistente[0].Id,
+        supabaseSessionId,
       );
 
       return NextResponse.json(
@@ -119,7 +164,7 @@ export async function POST(req: NextRequest) {
           message: "Sesión actualizada",
           sesionId: Number(sesionExistente[0].Id),
         },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
@@ -130,8 +175,8 @@ export async function POST(req: NextRequest) {
       }>
     >(
       `
-      INSERT INTO "SesionActiva" ("TenantId", "UsuarioId", "TokenHash", "IpAddress", "UserAgent", "Dispositivo", "Ubicacion", "FechaInicio", "FechaUltimaActividad", "EstaActiva", "EsConfiable")
-      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), true, $8)
+      INSERT INTO "SesionActiva" ("TenantId", "UsuarioId", "TokenHash", "SupabaseSessionId", "IpAddress", "UserAgent", "Dispositivo", "Ubicacion", "FechaInicio", "FechaUltimaActividad", "EstaActiva", "EsConfiable")
+      VALUES ($1, $2, $3, $9, $4, $5, $6, $7, NOW(), NOW(), true, $8)
       RETURNING "Id"
     `,
       usuario.TenantId,
@@ -141,7 +186,8 @@ export async function POST(req: NextRequest) {
       userAgent,
       dispositivo || null,
       ubicacion || null,
-      esConfiable === true
+      esConfiable === true,
+      supabaseSessionId,
     );
 
     // Si es confiable, también registrar en DispositivoConfiable
@@ -165,7 +211,7 @@ export async function POST(req: NextRequest) {
         usuario.TenantId,
         usuario.Id,
         userAgent,
-        ipAddress
+        ipAddress,
       );
 
       if (dispositivoExistente && dispositivoExistente.length > 0) {
@@ -176,7 +222,7 @@ export async function POST(req: NextRequest) {
           SET "FechaUltimoUso" = NOW()
           WHERE "Id" = $1
         `,
-          dispositivoExistente[0].Id
+          dispositivoExistente[0].Id,
         );
       } else {
         // Crear nuevo dispositivo confiable
@@ -196,7 +242,7 @@ export async function POST(req: NextRequest) {
             usuario.Id,
             nombreDispositivo,
             userAgent,
-            ipAddress
+            ipAddress,
           );
         } catch (insertError: any) {
           // Si falla por constraint único, actualizar en su lugar
@@ -220,7 +266,7 @@ export async function POST(req: NextRequest) {
               usuario.TenantId,
               usuario.Id,
               userAgent,
-              ipAddress
+              ipAddress,
             );
           }
           // No lanzamos el error para no interrumpir el flujo
@@ -236,14 +282,14 @@ export async function POST(req: NextRequest) {
         message: "Sesión registrada correctamente",
         sesionId,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     // No queremos que un error en el registro de sesión rompa el login
     // handleError ya registra el error internamente
     return NextResponse.json(
       { message: "Error al registrar sesión (no crítico)" },
-      { status: 200 } // Retornamos 200 para no interrumpir el flujo
+      { status: 200 }, // Retornamos 200 para no interrumpir el flujo
     );
   }
 }
@@ -265,7 +311,7 @@ export async function DELETE(req: NextRequest) {
         SET "EstaActiva" = false
         WHERE "Id" = $1
       `,
-        BigInt(sesionId)
+        BigInt(sesionId),
       );
     } else {
       // Cerrar todas las sesiones del usuario actual
@@ -289,7 +335,7 @@ export async function DELETE(req: NextRequest) {
             LIMIT 1
           `,
             user.id,
-            BigInt(tenantId)
+            BigInt(tenantId),
           );
 
           if (usuario && usuario.length > 0) {
@@ -302,7 +348,7 @@ export async function DELETE(req: NextRequest) {
                 AND "EstaActiva" = true
             `,
               usuario[0].TenantId,
-              usuario[0].Id
+              usuario[0].Id,
             );
           }
         }
@@ -311,13 +357,13 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json(
       { message: "Sesión cerrada correctamente" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     // handleError ya registra el error internamente
     return NextResponse.json(
       { message: "Error al cerrar sesión (no crítico)" },
-      { status: 200 }
+      { status: 200 },
     );
   }
 }

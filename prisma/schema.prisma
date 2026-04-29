@@ -1176,6 +1176,7 @@ model SesionActiva {
   TenantId             BigInt
   UsuarioId            BigInt
   TokenHash            String   @db.VarChar(255)
+  SupabaseSessionId    String?  @db.VarChar(50)
   IpAddress            String?  @db.VarChar(50)
   UserAgent            String?  @db.VarChar(500)
   Dispositivo          String?  @db.VarChar(100)
@@ -1190,6 +1191,7 @@ model SesionActiva {
   @@index([TenantId])
   @@index([UsuarioId])
   @@index([TokenHash])
+  @@index([SupabaseSessionId])
   @@index([EstaActiva])
   @@index([FechaUltimaActividad])
 }
