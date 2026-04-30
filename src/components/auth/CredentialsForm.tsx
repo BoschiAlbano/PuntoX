@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
-import { User, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Lock, Eye, EyeOff, Shield } from "lucide-react";
 
 // Función para mapear errores de Supabase a mensajes específicos
 const getErrorMessage = (error: unknown): string => {
@@ -66,6 +66,9 @@ export default function CredentialsForm() {
   const [attemptCount, setAttemptCount] = useState(0);
   const [isRateLimited, setIsRateLimited] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showMfa, setShowMfa] = useState(false);
+  const [mfaCode, setMfaCode] = useState("");
+  const [factorId, setFactorId] = useState("");
   const searchParams = useSearchParams();
 
   // Obtener callbackUrl de los parámetros de búsqueda
@@ -192,6 +195,37 @@ export default function CredentialsForm() {
       setAttemptCount(0);
       setIsRateLimited(false);
 
+      // Verificar si requiere 2FA (MFA)
+      const { data: mfaData, error: mfaError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (mfaError) throw mfaError;
+
+      if (mfaData.nextLevel === "aal2" && mfaData.currentLevel === "aal1") {
+        // Necesita 2FA
+        const { data: factorsData, error: factorsError } = await supabase.auth.mfa.listFactors();
+        if (factorsError) throw factorsError;
+
+        const totpFactor = factorsData.totp[0];
+        if (!totpFactor) throw new Error("No se encontró factor TOTP activo");
+
+        setFactorId(totpFactor.id);
+        setShowMfa(true);
+        setIsLoading(false);
+        return; // Detenemos aquí, el usuario debe ingresar el código
+      }
+
+      // Si no requiere 2FA, procesar como login exitoso normal
+      await processSuccessfulLogin(authData, normalizedUsername);
+    } catch (err) {
+      console.error("Error al iniciar sesion:", err);
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+    } finally {
+      if (!showMfa) setIsLoading(false);
+    }
+  };
+
+  const processSuccessfulLogin = async (authData: any, normalizedUsername: string) => {
+
       // Login exitoso - registrar intento exitoso y sesión
       if (authData?.user) {
         const userMetadata = authData.user.app_metadata || {};
@@ -262,14 +296,102 @@ export default function CredentialsForm() {
           : "/dashboard";
 
       window.location.href = safeCallbackUrl;
+  };
+
+  const handleMfaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!mfaCode || mfaCode.length !== 6) {
+      setError("El código debe tener 6 dígitos");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: verifyData, error: verifyError } = await supabase.auth.mfa.challengeAndVerify({
+        factorId,
+        code: mfaCode,
+      });
+
+      if (verifyError) throw verifyError;
+
+      // El 2FA fue exitoso, procesar como login normal
+      const { data: authData } = await supabase.auth.getSession();
+      await processSuccessfulLogin(authData, username.trim().toLowerCase());
     } catch (err) {
-      console.error("Error al iniciar sesion:", err);
-      const errorMessage = getErrorMessage(err);
-      setError(errorMessage);
-    } finally {
+      console.error("Error al verificar 2FA:", err);
+      setError("Código incorrecto o expirado. Intenta de nuevo.");
       setIsLoading(false);
     }
   };
+
+  if (showMfa) {
+    return (
+      <form onSubmit={handleMfaSubmit} className="space-y-5">
+        <div className="text-center mb-6">
+          <Shield className="mx-auto h-12 w-12 text-[#67afc3] mb-3" />
+          <h3 className="text-xl font-bold text-slate-800">Autenticación de dos pasos</h3>
+          <p className="text-sm text-slate-500 mt-2">
+            Ingresa el código de 6 dígitos generado por tu aplicación autenticadora (ej. Google Authenticator).
+          </p>
+        </div>
+
+        <div>
+          <label htmlFor="mfaCode" className="block text-sm font-medium text-slate-700 mb-1.5 text-center">
+            Código de verificación
+          </label>
+          <input
+            id="mfaCode"
+            type="text"
+            value={mfaCode}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+              setMfaCode(val);
+              setError("");
+            }}
+            required
+            disabled={isLoading}
+            autoComplete="one-time-code"
+            className="w-full text-center text-2xl tracking-[0.5em] font-mono py-4 border rounded-xl bg-slate-50/60 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#67afc3]/50 focus:border-[#67afc3]/50 transition-all"
+            placeholder="000000"
+          />
+        </div>
+
+        {error && (
+          <div className="text-red-700 text-sm bg-red-50 p-3 rounded-xl border border-red-200 text-center">
+            {error}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={isLoading || mfaCode.length !== 6}
+          className={`w-full bg-linear-to-r from-[#0284c7] to-[#2dd4bf] text-white py-3 px-4 rounded-xl focus:outline-none transition-all duration-200 font-semibold shadow-lg shadow-[#0284c7]/20 ${
+            isLoading || mfaCode.length !== 6
+              ? "opacity-60 cursor-not-allowed"
+              : "hover:shadow-xl hover:shadow-[#0284c7]/30 hover:brightness-110 active:scale-[0.98]"
+          }`}
+        >
+          {isLoading ? "Verificando..." : "Verificar código"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setShowMfa(false);
+            const supabase = getSupabaseBrowserClient();
+            supabase.auth.signOut();
+          }}
+          className="w-full text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors py-2"
+        >
+          Volver e iniciar sesión con otro usuario
+        </button>
+      </form>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">

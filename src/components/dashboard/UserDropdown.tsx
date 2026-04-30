@@ -142,6 +142,15 @@ export function UserDropdown() {
         </DropdownItem>
 
         <DropdownItem
+          key="my_profile"
+          startContent={<User size={16} className="text-slate-500" />}
+          textValue="Mi Perfil"
+          onPress={() => router.push("/perfil")}
+        >
+          Mi perfil
+        </DropdownItem>
+
+        <DropdownItem
           key="config"
           startContent={<Settings size={16} className="text-slate-500" />}
           textValue="Configuración"

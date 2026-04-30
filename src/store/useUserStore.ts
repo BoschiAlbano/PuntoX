@@ -132,7 +132,7 @@ export const useUserStore = create<UserState>()(
           return true;
 
         // Basic routes
-        if (path === "/" || path === "/dashboard") return true;
+        if (path === "/" || path === "/dashboard" || path.startsWith("/perfil")) return true;
 
         return tienePermisoParaRuta(permissions, path);
       },
