@@ -33,18 +33,42 @@ export default function ProtectRoute({
           const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
           if (error) throw error;
           
-          // Si el usuario no tiene 2FA configurado (solo nivel 1)
+          // Si el usuario no tiene 2FA configurado, o no lo verificó (solo nivel 1)
           if (data?.currentLevel === "aal1") {
             const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
             if (factorsError) throw factorsError;
             
             const hasTotp = factors?.totp?.some((f) => f.status === "verified");
 
-            // Si no tiene 2FA y no está ya en la página de perfil
+            // 1. Si no tiene 2FA y no está ya en la página de perfil, lo forzamos a configurarlo
             if (!hasTotp && pathname !== "/perfil") {
               console.warn("MFA Forzado: Redirigiendo a configurar 2FA");
               router.push("/perfil");
               return;
+            }
+
+            // 2. Si TIENE 2FA configurado, pero sigue en AAL1 (no puso el código)
+            // Solo lo dejamos pasar si el dispositivo es confiable.
+            if (hasTotp) {
+              try {
+                const trustedRes = await fetch("/api/auth/trusted-device/verify");
+                if (trustedRes.ok) {
+                  const trustedData = await trustedRes.json();
+                  if (!trustedData?.isTrusted) {
+                    console.warn("MFA Forzado: Intento de evasión detectado o sesión sin AAL2 en dispositivo no confiable. Expulsando...");
+                    await supabase.auth.signOut();
+                    router.push("/signin");
+                    return;
+                  }
+                  // Si es confiable, lo dejamos continuar con su sesión AAL1
+                }
+              } catch (e) {
+                console.error("Error validando dispositivo confiable en ProtectRoute", e);
+                // Ante la duda, si falla la API, lo expulsamos por seguridad
+                await supabase.auth.signOut();
+                router.push("/signin");
+                return;
+              }
             }
           }
         }

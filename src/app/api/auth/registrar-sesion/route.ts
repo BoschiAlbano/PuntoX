@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import crypto from "crypto";
@@ -10,7 +11,8 @@ import crypto from "crypto";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { token, dispositivo, ubicacion, esConfiable } = body;
+    const { token, dispositivo, ubicacion } = body;
+    let { esConfiable } = body;
 
     // Obtener usuario autenticado
     const supabase = await getSupabaseServerClient();
@@ -57,6 +59,16 @@ export async function POST(req: NextRequest) {
       "unknown";
 
     const userAgent = req.headers.get("user-agent") || null;
+
+    // VULNERABILITY FIX: Un atacante podría enviar esConfiable=true en el nivel AAL1 
+    // antes de pasar el 2FA. Debemos forzar esConfiable=false si el usuario requiere AAL2 pero solo tiene AAL1.
+    if (esConfiable) {
+      const { data: mfaData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (mfaData?.nextLevel === "aal2" && mfaData?.currentLevel === "aal1") {
+        console.warn("Intento de registrar dispositivo confiable bloqueado (Usuario pendiente de 2FA).");
+        esConfiable = false;
+      }
+    }
 
     // Generar hash del token si no se proporciona
     const tokenHash = token
@@ -134,6 +146,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    let sesionId = null;
+
     if (sesionExistente && sesionExistente.length > 0) {
       // Actualizar sesión existente
       await prisma.$executeRawUnsafe(
@@ -158,124 +172,81 @@ export async function POST(req: NextRequest) {
         sesionExistente[0].Id,
         supabaseSessionId,
       );
-
-      return NextResponse.json(
-        {
-          message: "Sesión actualizada",
-          sesionId: Number(sesionExistente[0].Id),
-        },
-        { status: 200 },
+      sesionId = Number(sesionExistente[0].Id);
+    } else {
+      // Crear nueva sesión
+      const nuevaSesion = await prisma.$queryRawUnsafe<Array<{ Id: bigint }>>(
+        `
+        INSERT INTO "SesionActiva" ("TenantId", "UsuarioId", "TokenHash", "SupabaseSessionId", "IpAddress", "UserAgent", "Dispositivo", "Ubicacion", "FechaInicio", "FechaUltimaActividad", "EstaActiva", "EsConfiable")
+        VALUES ($1, $2, $3, $9, $4, $5, $6, $7, NOW(), NOW(), true, $8)
+        RETURNING "Id"
+      `,
+        usuario.TenantId,
+        usuario.Id,
+        tokenHash,
+        ipAddress,
+        userAgent,
+        dispositivo || null,
+        ubicacion || null,
+        esConfiable === true,
+        supabaseSessionId,
       );
+      sesionId = nuevaSesion && nuevaSesion.length > 0 ? Number(nuevaSesion[0].Id) : null;
     }
-
-    // Crear nueva sesión
-    const nuevaSesion = await prisma.$queryRawUnsafe<
-      Array<{
-        Id: bigint;
-      }>
-    >(
-      `
-      INSERT INTO "SesionActiva" ("TenantId", "UsuarioId", "TokenHash", "SupabaseSessionId", "IpAddress", "UserAgent", "Dispositivo", "Ubicacion", "FechaInicio", "FechaUltimaActividad", "EstaActiva", "EsConfiable")
-      VALUES ($1, $2, $3, $9, $4, $5, $6, $7, NOW(), NOW(), true, $8)
-      RETURNING "Id"
-    `,
-      usuario.TenantId,
-      usuario.Id,
-      tokenHash,
-      ipAddress,
-      userAgent,
-      dispositivo || null,
-      ubicacion || null,
-      esConfiable === true,
-      supabaseSessionId,
-    );
 
     // Si es confiable, también registrar en DispositivoConfiable
     // Nota: Aceptamos cualquier IP, incluyendo "::1" (localhost)
     if (esConfiable === true && userAgent) {
-      // Verificar si ya existe
-      const dispositivoExistente = await prisma.$queryRawUnsafe<
-        Array<{
-          Id: bigint;
-        }>
-      >(
-        `
-        SELECT "Id" FROM "DispositivoConfiable"
-        WHERE "TenantId" = $1
-          AND "UsuarioId" = $2
-          AND "UserAgent" = $3
-          AND "IpAddress" = $4
-          AND "EstaActivo" = true
-        LIMIT 1
-      `,
-        usuario.TenantId,
-        usuario.Id,
-        userAgent,
-        ipAddress,
-      );
+      const cookieStore = await cookies();
+      const existingToken = cookieStore.get("trusted_device_token")?.value;
 
-      if (dispositivoExistente && dispositivoExistente.length > 0) {
-        // Actualizar último uso
-        await prisma.$executeRawUnsafe(
-          `
-          UPDATE "DispositivoConfiable"
-          SET "FechaUltimoUso" = NOW()
-          WHERE "Id" = $1
-        `,
-          dispositivoExistente[0].Id,
-        );
-      } else {
-        // Crear nuevo dispositivo confiable
+      if (!existingToken) {
+        // Generar un token único y seguro
+        const deviceToken = crypto.randomUUID();
+        
         const nombreDispositivo =
           dispositivo ||
           userAgent?.substring(0, 50) ||
           "Dispositivo desconocido";
 
-        // Intentar insertar, si ya existe actualizar
+        // Insertar nuevo dispositivo confiable
         try {
           await prisma.$executeRawUnsafe(
             `
-            INSERT INTO "DispositivoConfiable" ("TenantId", "UsuarioId", "NombreDispositivo", "UserAgent", "IpAddress", "FechaRegistro", "FechaUltimoUso", "EstaActivo")
-            VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), true)
+            INSERT INTO "DispositivoConfiable" ("TenantId", "UsuarioId", "NombreDispositivo", "Token", "UserAgent", "IpAddress", "FechaRegistro", "FechaUltimoUso", "EstaActivo")
+            VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW(), true)
           `,
             usuario.TenantId,
             usuario.Id,
             nombreDispositivo,
+            deviceToken,
             userAgent,
             ipAddress,
           );
-        } catch (insertError: any) {
-          // Si falla por constraint único, actualizar en su lugar
-          if (
-            insertError?.code === "23505" ||
-            insertError?.message?.includes("unique") ||
-            insertError?.message?.includes("duplicate")
-          ) {
-            await prisma.$executeRawUnsafe(
-              `
-              UPDATE "DispositivoConfiable"
-              SET "FechaUltimoUso" = NOW(), 
-                  "EstaActivo" = true,
-                  "NombreDispositivo" = $1
-              WHERE "TenantId" = $2
-                AND "UsuarioId" = $3
-                AND "UserAgent" = $4
-                AND "IpAddress" = $5
-            `,
-              nombreDispositivo,
-              usuario.TenantId,
-              usuario.Id,
-              userAgent,
-              ipAddress,
-            );
-          }
-          // No lanzamos el error para no interrumpir el flujo
+
+          // Setear la cookie HttpOnly con el token
+          cookieStore.set("trusted_device_token", deviceToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            maxAge: 60 * 60 * 24 * 30, // 30 días
+          });
+        } catch (deviceError) {
+          console.error("[registrar-sesion] ERROR al registrar DispositivoConfiable:", deviceError);
+        }
+      } else {
+        // Ya tiene cookie: solo actualizar FechaUltimoUso
+        try {
+          await prisma.$executeRawUnsafe(
+            `UPDATE "DispositivoConfiable" SET "FechaUltimoUso" = NOW() WHERE "Token" = $1`,
+            existingToken,
+          );
+        } catch (updateError) {
+          console.error("[registrar-sesion] ERROR al actualizar FechaUltimoUso:", updateError);
         }
       }
     }
-
-    const sesionId =
-      nuevaSesion && nuevaSesion.length > 0 ? Number(nuevaSesion[0].Id) : null;
 
     return NextResponse.json(
       {
@@ -286,7 +257,7 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     // No queremos que un error en el registro de sesión rompa el login
-    // handleError ya registra el error internamente
+    console.error("[registrar-sesion] ERROR GENERAL en POST:", error);
     return NextResponse.json(
       { message: "Error al registrar sesión (no crítico)" },
       { status: 200 }, // Retornamos 200 para no interrumpir el flujo

@@ -1203,6 +1203,7 @@ model DispositivoConfiable {
   TenantId          BigInt
   UsuarioId         BigInt
   NombreDispositivo String   @db.VarChar(100)
+  Token             String   @unique @default(uuid())
   UserAgent         String?  @db.VarChar(500)
   IpAddress         String?  @db.VarChar(50)
   FechaRegistro     DateTime @default(now())
@@ -1211,7 +1212,7 @@ model DispositivoConfiable {
   Tenant            Tenant   @relation(fields: [TenantId], references: [Id])
   Usuario           Usuario  @relation(fields: [UsuarioId], references: [Id], onUpdate: NoAction)
 
-  @@unique([TenantId, UsuarioId, UserAgent, IpAddress])
+  @@index([Token])
   @@index([TenantId])
   @@index([UsuarioId])
   @@index([EstaActivo])

@@ -201,6 +201,24 @@ export default function CredentialsForm() {
 
       if (mfaData.nextLevel === "aal2" && mfaData.currentLevel === "aal1") {
         // Necesita 2FA
+
+        // 1. Verificar si el dispositivo está marcado como confiable en nuestra BD y tiene token válido
+        try {
+          const trustedRes = await fetch("/api/auth/trusted-device/verify");
+          if (trustedRes.ok) {
+            const trustedData = await trustedRes.json();
+            if (trustedData?.isTrusted) {
+              console.log("Login: Dispositivo confiable detectado, saltando 2FA.");
+              await processSuccessfulLogin(authData, normalizedUsername);
+              return;
+            }
+          }
+        } catch (e) {
+          console.error("Error verificando dispositivo confiable", e);
+          // Si falla la verificación silenciosa, continuamos con el flujo normal de pedir el código
+        }
+
+        // 2. Si no es confiable, buscar factores TOTP y pedir el código
         const { data: factorsData, error: factorsError } = await supabase.auth.mfa.listFactors();
         if (factorsError) throw factorsError;
 
@@ -228,9 +246,6 @@ export default function CredentialsForm() {
 
       // Login exitoso - registrar intento exitoso y sesión
       if (authData?.user) {
-        const userMetadata = authData.user.app_metadata || {};
-        const tenantId = userMetadata.tenantId;
-
         // Obtener información del dispositivo
         let dispositivo = "Dispositivo desconocido";
         try {
@@ -265,31 +280,50 @@ export default function CredentialsForm() {
           // Ignorar errores de geolocalización
         }
 
-        // Verificar si el dispositivo es confiable o si el usuario quiere recordarlo
-        const esConfiable =
-          recordarDispositivo ||
-          localStorage.getItem(`device_trusted_${normalizedUsername}`) ===
-            "true";
+        // El dispositivo es confiable SOLO si el checkbox está marcado actualmente
+        const esConfiable = recordarDispositivo;
 
-        // Guardar en localStorage si el usuario marcó "Recordar dispositivo"
+        // Guardar flag de confiable usando AMBAS claves (email para sessionProvider, username para el onBlur)
+        const userEmail = authData.user.email || "";
         if (recordarDispositivo) {
+          localStorage.setItem(`device_trusted_${userEmail}`, "true");
           localStorage.setItem(`device_trusted_${normalizedUsername}`, "true");
+        } else {
+          localStorage.removeItem(`device_trusted_${userEmail}`);
+          localStorage.removeItem(`device_trusted_${normalizedUsername}`);
         }
 
-        // Registrar sesión activa (en background, no bloqueamos)
-        fetch("/api/auth/registrar-sesion", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            token: authData.session?.access_token || null,
-            dispositivo,
-            ubicacion,
-            esConfiable,
-          }),
-        }).catch((err) => console.warn("Error al registrar sesión:", err));
+        // ── INHIBIR REGISTRO DUPLICADO EN sessionProvider ──────────────────────
+        // El evento SIGNED_IN del sessionProvider también llama a /api/auth/registrar-sesion.
+        // Para evitar dos INSERTs simultáneos, activamos su cooldown de 5 min ANTES
+        // de que llegue ese evento. El sessionProvider respeta el cooldown y lo saltea.
+        const SESSION_REGISTER_KEY = `session_registered_${authData.user.id}`;
+        localStorage.setItem(SESSION_REGISTER_KEY, String(Date.now()));
+        // ───────────────────────────────────────────────────────────────────────
+
+        // Registrar sesión activa — única llamada al POST en todo el flujo de login
+        try {
+          const res = await fetch("/api/auth/registrar-sesion", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              token: authData.session?.access_token || null,
+              dispositivo,
+              ubicacion,
+              esConfiable,
+            }),
+          });
+          const data = await res.json().catch(() => ({}));
+          // Guardar sesionId para el logout correcto
+          if (data?.sesionId) {
+            localStorage.setItem(`session_id_${authData.user.id}`, String(data.sesionId));
+          }
+        } catch (err) {
+          console.warn("Error al registrar sesión:", err);
+        }
       }
 
-      // Redirigir después de login exitoso (usar callbackUrl si existe, sino /ventas)
+      // Redirigir después de login exitoso
       const safeCallbackUrl =
         callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
           ? callbackUrl
@@ -319,7 +353,12 @@ export default function CredentialsForm() {
       if (verifyError) throw verifyError;
 
       // El 2FA fue exitoso, procesar como login normal
-      const { data: authData } = await supabase.auth.getSession();
+      // Nota: getSession() retorna { session }, pero processSuccessfulLogin espera { user, session }
+      const { data: sessionData } = await supabase.auth.getSession();
+      const authData = {
+        user: sessionData.session?.user ?? null,
+        session: sessionData.session,
+      };
       await processSuccessfulLogin(authData, username.trim().toLowerCase());
     } catch (err) {
       console.error("Error al verificar 2FA:", err);
@@ -380,10 +419,14 @@ export default function CredentialsForm() {
 
         <button
           type="button"
-          onClick={() => {
-            setShowMfa(false);
+          onClick={async () => {
             const supabase = getSupabaseBrowserClient();
-            supabase.auth.signOut();
+            await supabase.auth.signOut();
+            setShowMfa(false);
+            setUsername("");
+            setPassword("");
+            setMfaCode("");
+            setError("");
           }}
           className="w-full text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors py-2"
         >
@@ -414,6 +457,11 @@ export default function CredentialsForm() {
                 setUsernameError(
                   "El nombre de usuario debe tener al menos 2 caracteres",
                 );
+              } else if (username) {
+                const trusted = localStorage.getItem(`device_trusted_${username.trim().toLowerCase()}`);
+                if (trusted === "true") {
+                  setRecordarDispositivo(true);
+                }
               }
             }}
             required

@@ -327,14 +327,21 @@ const SessionProviderComponent = ({
         if (event === "SIGNED_OUT") {
           // Recuperar el sesionId guardado al iniciar sesión
           // (no podemos usar getUser() aquí porque el token ya fue revocado)
-          const userId = session?.user?.id || newSession?.user?.id;
-          const SESSION_ID_KEY = userId
-            ? `session_id_${userId}`
-            : null;
-          const sesionId =
-            SESSION_ID_KEY && typeof localStorage !== "undefined"
-              ? localStorage.getItem(SESSION_ID_KEY)
-              : null;
+          // Como estamos en un useEffect que solo se monta una vez, las variables de estado
+          // como "session" están obsoletas (stale closure). Por lo tanto, no podemos confiar
+          // en userId. En lugar de eso, buscamos dinámicamente en localStorage.
+          
+          let sesionId = null;
+          if (typeof localStorage !== "undefined") {
+            // Buscar si hay alguna clave que empiece con session_id_
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && key.startsWith("session_id_")) {
+                sesionId = localStorage.getItem(key);
+                break;
+              }
+            }
+          }
 
           const url = sesionId
             ? `/api/auth/registrar-sesion?sesionId=${sesionId}`
@@ -347,9 +354,16 @@ const SessionProviderComponent = ({
             console.warn("Error al cerrar sesión desde sessionProvider:", err),
           );
 
-          // Limpiar localStorage
-          if (SESSION_ID_KEY && typeof localStorage !== "undefined") {
-            localStorage.removeItem(SESSION_ID_KEY);
+          // Limpiar localStorage (todas las keys relacionadas a sesiones)
+          if (typeof localStorage !== "undefined") {
+            const keysToRemove: string[] = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && (key.startsWith("session_id_") || key.startsWith("session_registered_"))) {
+                keysToRemove.push(key);
+              }
+            }
+            keysToRemove.forEach((k) => localStorage.removeItem(k));
           }
         }
       },

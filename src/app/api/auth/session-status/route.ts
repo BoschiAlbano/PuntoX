@@ -62,16 +62,17 @@ export async function GET(req: NextRequest) {
     // (no usamos getSession() porque podría intentar refrescar el token y escribir cookies)
     let supabaseSessionId: string | null = null;
     const allCookies = req.cookies.getAll();
-    const authTokenCookie = allCookies.find(
-      (c) =>
-        c.name.startsWith("sb-") &&
-        c.name.includes("-auth-token") &&
-        !c.name.includes("."),
-    );
+    
+    // Supabase puede fragmentar las cookies si son muy grandes (ej. sb-xxx-auth-token.0, sb-xxx-auth-token.1)
+    const authTokenChunks = allCookies
+      .filter((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"))
+      .sort((a, b) => a.name.localeCompare(b.name));
 
-    if (authTokenCookie?.value) {
+    const authTokenValue = authTokenChunks.map((c) => c.value).join("");
+
+    if (authTokenValue) {
       try {
-        const parsed = JSON.parse(authTokenCookie.value);
+        const parsed = JSON.parse(authTokenValue);
         const accessToken =
           parsed?.access_token || parsed?.[0]?.access_token;
         if (accessToken) {
