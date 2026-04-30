@@ -135,7 +135,7 @@ export async function GET(req: NextRequest) {
         TipoVenta: p.TipoVenta,
 
         PrecioCosto: Number(p.PrecioCosto ?? 0),
-        PreciosLista: (p.Precios ?? []).map((pl) => ({
+        PreciosLista: (p.Precios ?? []).map((pl: any) => ({
           ListaPrecioId: Number(pl.ListaPrecioId),
           PorcentajeGanancia: Number(pl.PorcentajeGanancia),
           PrecioFinal: Number(pl.PrecioFinal),

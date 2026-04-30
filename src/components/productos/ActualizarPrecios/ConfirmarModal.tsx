@@ -23,10 +23,10 @@ export function ConfirmarModal({ isOpen, onClose, onConfirm, regla, count, isApp
   
   const getTipoLabel = () => {
     switch (regla.tipo) {
-      case "porcentaje_sobre_costo": return "incremento sobre el costo";
-      case "porcentaje_incremento": return "incremento sobre el precio actual";
-      case "porcentaje_descuento": return "descuento sobre el precio actual";
-      case "precio_costo_mas_fijo": return "monto fijo sobre el costo";
+      case "incremento_porcentaje": return "incremento en porcentaje";
+      case "decremento_porcentaje": return "descuento en porcentaje";
+      case "incremento_fijo": return "incremento fijo";
+      case "decremento_fijo": return "descuento fijo";
       default: return "";
     }
   };

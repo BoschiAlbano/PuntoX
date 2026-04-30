@@ -559,10 +559,6 @@ export async function DELETE(req: NextRequest) {
         where: { TenantId: tenantId },
       });
 
-      // 37. Eliminar logs
-      await tx.log.deleteMany({
-        where: { TenantId: tenantId },
-      });
 
       // 38. Finalmente, eliminar el tenant
       await tx.tenant.delete({
