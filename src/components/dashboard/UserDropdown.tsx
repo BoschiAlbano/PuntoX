@@ -12,6 +12,7 @@ import {
   DropdownItem,
 } from "@heroui/react";
 import { ChevronDown, LogOut, Settings, User } from "lucide-react";
+import { clearAllClientState, getStoredSesionId } from "@/lib/auth/clearClientState";
 
 const ACCENT = "#67afc3";
 
@@ -44,30 +45,26 @@ export function UserDropdown() {
       queryClient.cancelQueries();
       queryClient.clear();
 
-      // Cerrar sesión en nuestra DB ANTES de revocar el token en Supabase
-      // (después del signOut el token ya no es válido y el servidor no puede identificar al usuario)
-      const supabaseUser = (await supabase.auth.getUser()).data.user;
-      if (supabaseUser) {
-        const sesionId =
-          typeof localStorage !== "undefined"
-            ? localStorage.getItem(`session_id_${supabaseUser.id}`)
-            : null;
+      // 1. Recuperar sesionId ANTES de limpiar el localStorage
+      const sesionId = getStoredSesionId();
 
-        const url = sesionId
-          ? `/api/auth/registrar-sesion?sesionId=${sesionId}`
-          : "/api/auth/registrar-sesion";
+      // 2. Cerrar sesión en nuestra DB ANTES de revocar el token en Supabase
+      //    (después del signOut el token ya no es válido)
+      const url = sesionId
+        ? `/api/auth/registrar-sesion?sesionId=${sesionId}`
+        : "/api/auth/registrar-sesion";
 
-        await fetch(url, {
-          method: "DELETE",
-          credentials: "include",
-        }).catch(() => {}); // No crítico — el heartbeat/cleanup lo cierra eventualmente
+      await fetch(url, {
+        method: "DELETE",
+        credentials: "include",
+      }).catch(() => {}); // No crítico
 
-        if (sesionId && typeof localStorage !== "undefined") {
-          localStorage.removeItem(`session_id_${supabaseUser.id}`);
-        }
-      }
+      // 3. Limpiar TODO el estado del cliente (localStorage, sessionStorage, cookies)
+      clearAllClientState();
 
+      // 4. Cerrar sesión en Supabase
       await supabase.auth.signOut();
+
       router.push("/signin");
     } catch (error) {
       console.error("Error during sign out:", error);

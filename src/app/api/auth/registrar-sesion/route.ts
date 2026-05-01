@@ -6,7 +6,7 @@ import crypto from "crypto";
 
 /**
  * POST /api/auth/registrar-sesion
- * Registra o actualiza una sesión activa cuando un usuario inicia sesión
+ * Registra o actualiza una sesión activa cuando un usuario inicia sesión.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -78,22 +78,33 @@ export async function POST(req: NextRequest) {
           .update(user.id + Date.now().toString())
           .digest("hex");
 
-    // Extraer session_id del JWT para identificación estable de sesión
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    // Extraer session_id del JWT provisto en el body para identificación estable de sesión
     let supabaseSessionId: string | null = null;
-    if (session?.access_token) {
+    
+    // Priorizar el token enviado por el cliente en el body, que es 100% fresco
+    if (token) {
       try {
         const payload = JSON.parse(
-          Buffer.from(
-            session.access_token.split(".")[1],
-            "base64url",
-          ).toString(),
+          Buffer.from(token.split(".")[1], "base64url").toString()
         );
         supabaseSessionId = payload.session_id || null;
       } catch {
-        // no crítico
+        // Fallback
+      }
+    }
+
+    // Si no vino en el body, intentar con la cookie de la sesión del servidor
+    if (!supabaseSessionId) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        try {
+          const payload = JSON.parse(
+            Buffer.from(session.access_token.split(".")[1], "base64url").toString()
+          );
+          supabaseSessionId = payload.session_id || null;
+        } catch {
+          // no crítico
+        }
       }
     }
 
@@ -174,6 +185,25 @@ export async function POST(req: NextRequest) {
       );
       sesionId = Number(sesionExistente[0].Id);
     } else {
+      // Nueva sesión: primero cerrar sesiones anteriores del mismo dispositivo (UserAgent)
+      // que hayan quedado huérfanas (el usuario cerró el tab sin hacer logout explícito).
+      // Esto previene la acumulación de sesiones activas fantasma.
+      if (userAgent) {
+        await prisma.$executeRawUnsafe(
+          `
+          UPDATE "SesionActiva"
+          SET "EstaActiva" = false
+          WHERE "TenantId" = $1
+            AND "UsuarioId" = $2
+            AND "EstaActiva" = true
+            AND COALESCE("UserAgent", '') = COALESCE($3, '')
+        `,
+          usuario.TenantId,
+          usuario.Id,
+          userAgent,
+        );
+      }
+
       // Crear nueva sesión
       const nuevaSesion = await prisma.$queryRawUnsafe<Array<{ Id: bigint }>>(
         `

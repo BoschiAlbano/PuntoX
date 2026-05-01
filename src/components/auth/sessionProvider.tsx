@@ -11,6 +11,8 @@ import type { Session } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
 import type { TenantUser } from "@/types/auth";
 import { useUserStore } from "@/store/useUserStore";
+import { clearAllClientState, getStoredSesionId } from "@/lib/auth/clearClientState";
+import { usePathname } from "next/navigation";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
@@ -41,14 +43,15 @@ function resolveTenantId(metadata: Record<string, unknown> | undefined) {
   );
 }
 
-const SessionProviderComponent = ({
+export const SessionProviderComponent = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const pathname = usePathname();
 
   // Interceptor global para detectar sesiones cerradas
   useEffect(() => {
@@ -76,9 +79,6 @@ const SessionProviderComponent = ({
       if (isPublicPath) {
         return originalFetch(...args);
       }
-
-      // Importar dinámicamente o usar getState para evitar conflictos de inicialización
-      // import { useUserStore } from "@/store/useUserStore"; <-- Asumimos import arriba
 
       const currentBranch = useUserStore.getState().currentBranch;
       const sucursalId = currentBranch?.Id;
@@ -131,6 +131,9 @@ const SessionProviderComponent = ({
             console.warn(
               "[SessionProvider] Sesión cerrada detectada, haciendo logout automático",
             );
+
+            // Limpiar todo el estado del cliente
+            clearAllClientState();
 
             // Actualizar estado primero
             setSession(null);
@@ -188,8 +191,13 @@ const SessionProviderComponent = ({
             Array.isArray(metadata.permissions) &&
             metadata.permissions.length > 0;
 
+          const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+          const isLoginPage = currentPath.startsWith("/signin") || currentPath.startsWith("/signup");
+
           // Si no tiene permisos en JWT, sincronizar en background (no bloquea)
-          if (!tienePermisos) {
+          // NO sincronizar en la página de login para evitar que un refreshSession()
+          // asíncrono sobreescriba el AAL2 (2FA) recién obtenido con un viejo AAL1
+          if (!tienePermisos && !isLoginPage) {
             setTimeout(() => {
               fetch("/api/auth/sync-permissions", { method: "POST" })
                 .then((res) => {
@@ -240,8 +248,14 @@ const SessionProviderComponent = ({
             Array.isArray(metadata.permissions) &&
             metadata.permissions.length > 0;
 
-          // Sincronizar permisos después del login - forzar refresh del JWT para que el nuevo token incluya los permisos
-          if (!tienePermisos) {
+          const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+          const isLoginPage = currentPath.startsWith("/signin") || currentPath.startsWith("/signup");
+
+          // Sincronizar permisos después del login - forzar refresh del JWT para que el nuevo token incluya los permisos.
+          // NUNCA disparar esto en la página de login porque el refreshSession() es asíncrono y puede 
+          // sobreescribir el JWT de AAL2 (generado por el 2FA) con un JWT viejo, expulsando al usuario.
+          // Se sincronizará automáticamente al llegar al dashboard.
+          if (!tienePermisos && !isLoginPage) {
             fetch("/api/auth/sync-permissions", { method: "POST" })
               .then((res) => {
                 if (res.ok) supabase.auth.refreshSession().catch(() => {});
@@ -261,7 +275,8 @@ const SessionProviderComponent = ({
               : "0"
           );
 
-          if (Date.now() - lastRegistered > SESSION_COOLDOWN_MS) {
+          // Evitar race conditions: si estamos en /signin, el CredentialsForm se encarga de registrarla
+          if (!isLoginPage && Date.now() - lastRegistered > SESSION_COOLDOWN_MS) {
             if (typeof localStorage !== "undefined") {
               localStorage.setItem(SESSION_REGISTER_KEY, String(Date.now()));
             }
@@ -325,23 +340,10 @@ const SessionProviderComponent = ({
 
         // Cerrar sesiones cuando hay un logout
         if (event === "SIGNED_OUT") {
-          // Recuperar el sesionId guardado al iniciar sesión
-          // (no podemos usar getUser() aquí porque el token ya fue revocado)
-          // Como estamos en un useEffect que solo se monta una vez, las variables de estado
-          // como "session" están obsoletas (stale closure). Por lo tanto, no podemos confiar
-          // en userId. En lugar de eso, buscamos dinámicamente en localStorage.
-          
-          let sesionId = null;
-          if (typeof localStorage !== "undefined") {
-            // Buscar si hay alguna clave que empiece con session_id_
-            for (let i = 0; i < localStorage.length; i++) {
-              const key = localStorage.key(i);
-              if (key && key.startsWith("session_id_")) {
-                sesionId = localStorage.getItem(key);
-                break;
-              }
-            }
-          }
+          // Recuperar el sesionId guardado al iniciar sesión.
+          // Como estamos en un useEffect que solo se monta una vez, buscamos
+          // dinámicamente en localStorage con getStoredSesionId().
+          const sesionId = getStoredSesionId();
 
           const url = sesionId
             ? `/api/auth/registrar-sesion?sesionId=${sesionId}`
@@ -354,17 +356,8 @@ const SessionProviderComponent = ({
             console.warn("Error al cerrar sesión desde sessionProvider:", err),
           );
 
-          // Limpiar localStorage (todas las keys relacionadas a sesiones)
-          if (typeof localStorage !== "undefined") {
-            const keysToRemove: string[] = [];
-            for (let i = 0; i < localStorage.length; i++) {
-              const key = localStorage.key(i);
-              if (key && (key.startsWith("session_id_") || key.startsWith("session_registered_"))) {
-                keysToRemove.push(key);
-              }
-            }
-            keysToRemove.forEach((k) => localStorage.removeItem(k));
-          }
+          // Limpiar TODO el estado del cliente
+          clearAllClientState();
         }
       },
     );
@@ -379,6 +372,12 @@ const SessionProviderComponent = ({
   // la DB marca EstaActiva=false y el próximo heartbeat dispara el logout.
   useEffect(() => {
     if (status !== "authenticated") return;
+
+    // NO iniciar el heartbeat en la página de login (ej: mientras ingresa 2FA)
+    // porque la sesión AAL1 aún no está registrada en DB y el chequeo 
+    // fallaría haciendo que lo expulse al login form de nuevo.
+    const isLoginPage = pathname?.startsWith("/signin") || pathname?.startsWith("/signup");
+    if (isLoginPage) return;
 
     const HEARTBEAT_INTERVAL = 30 * 1000; // 30 segundos
 
@@ -420,7 +419,7 @@ const SessionProviderComponent = ({
       clearTimeout(firstCheckTimer);
       clearInterval(interval);
     };
-  }, [status, supabase]);
+  }, [status, supabase, pathname]);
 
   const value = useMemo(() => {
     const metadata = (session?.user?.app_metadata ?? {}) as Record<
