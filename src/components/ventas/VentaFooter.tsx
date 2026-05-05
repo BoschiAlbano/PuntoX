@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, ReactNode, useMemo } from "react";
-import ReactDOM from "react-dom";
 import {
   Button,
   Input,
@@ -15,6 +14,7 @@ import {
   ModalBody,
   ModalFooter,
 } from "@heroui/react";
+import { ModalAbrirCaja } from "@/components/caja/ModalAbrirCaja";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Trash2,
@@ -76,11 +76,9 @@ export default function VentaFooter({
   );
   const [currentMonto, setCurrentMonto] = useState<string>("");
 
-  const [openModalAbrirCaja, setOpenModalAbrirCaja] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
-  const [isOpening, setIsOpening] = useState(false);
-  const [montoInicial, setMontoInicial] = useState<string>("0");
+  const [openModalAbrirCaja, setOpenModalAbrirCaja] = useState(false);
 
   // Ticket Printing
   const [lastSaleData, setLastSaleData] = useState<any>(null);
@@ -110,32 +108,6 @@ export default function VentaFooter({
 
   const totalPagado = pagos.reduce((acc, p) => acc + p.monto, 0);
   const restante = total - totalPagado;
-
-  const handleAbrirCaja = async () => {
-    try {
-      setIsOpening(true);
-      const montoVal = parseFloat(montoInicial);
-      if (isNaN(montoVal) || montoVal < 0) {
-        addToast({
-          title: "Error",
-          description: "Monto inicial inválido",
-          color: "danger",
-        });
-        return;
-      }
-      await abrirCaja(montoVal);
-      setOpenModalAbrirCaja(false);
-      setMontoInicial("");
-    } catch (error) {
-      addToast({
-        title: "Error",
-        description: "Error al abrir caja",
-        color: "danger",
-      });
-    } finally {
-      setIsOpening(false);
-    }
-  };
 
   // Reset payments if items are cleared
   useEffect(() => {
@@ -692,103 +664,15 @@ export default function VentaFooter({
         </ModalContent>
       </Modal>
 
-      <ModalShell
+      <ModalAbrirCaja
         open={openModalAbrirCaja}
-        title="Abrir Caja"
         onClose={() => setOpenModalAbrirCaja(false)}
-        footer={
-          <>
-            <button
-              onClick={() => setOpenModalAbrirCaja(false)}
-              className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleAbrirCaja}
-              disabled={isOpening}
-              className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isOpening ? "Abriendo..." : "Abrir Caja"}
-            </button>
-          </>
-        }
-      >
-        <div className="space-y-3">
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Monto inicial
-          </label>
-          <input
-            type="number"
-            value={montoInicial}
-            onChange={(e) => setMontoInicial(e.target.value)}
-            placeholder="0.00"
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500/20"
-            aria-label="Monto inicial para abrir la caja"
-          />
-          <p className="text-xs text-slate-500">
-            Ingrese el monto inicial con el que se abrira la caja.
-          </p>
-        </div>
-      </ModalShell>
+      />
 
       {/* Hidden Ticket Component */}
       <div style={{ display: "none" }}>
         <TicketImpresion ref={ticketRef} datosVenta={lastSaleData} />
       </div>
     </section>
-  );
-}
-
-function ModalShell({
-  open,
-  title,
-  onClose,
-  size = "md",
-  children,
-  footer,
-}: {
-  open: boolean;
-  title: string;
-  onClose: () => void;
-  size?: "md" | "xl";
-  children: ReactNode;
-  footer?: ReactNode;
-}) {
-  if (!open) return null;
-
-  const sizeClass = size === "xl" ? "max-w-2xl" : "max-w-md";
-
-  return ReactDOM.createPortal(
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center px-4">
-      <button
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-        aria-label="Cerrar modal"
-      />
-      <div
-        className={`relative w-full ${sizeClass} rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl transform transition-all`}
-        role="dialog"
-        aria-modal="true"
-      >
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
-          <button
-            onClick={onClose}
-            className="rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-            aria-label="Cerrar modal"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="mt-2">{children}</div>
-        {footer && (
-          <div className="mt-6 flex justify-end gap-3 pt-3 border-t border-slate-100">
-            {footer}
-          </div>
-        )}
-      </div>
-    </div>,
-    document.body
   );
 }

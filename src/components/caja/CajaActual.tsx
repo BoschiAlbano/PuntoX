@@ -1,5 +1,6 @@
 import { useCaja } from "@/hooks/useCaja";
 import { useGastos } from "@/hooks/useGastos";
+import { ModalAbrirCaja } from "@/components/caja/ModalAbrirCaja";
 import {
   Button,
   Card,
@@ -117,7 +118,6 @@ export default function CajaActual() {
     enableConfiguracion: true,
   });
 
-  const [montoInicial, setMontoInicial] = useState("0,00");
   const {
     isOpen: isAbrirOpen,
     onOpen: onAbrirOpen,
@@ -263,18 +263,6 @@ export default function CajaActual() {
     }),
     [filteredGastos.length, gastoPage],
   );
-
-  const handleAbrirCaja = async () => {
-    const monto = parseFloat(montoInicial.replace(",", "."));
-    if (!montoInicial || isNaN(monto) || monto < 0) return;
-    try {
-      await abrirCaja(monto);
-      onAbrirChange();
-      setMontoInicial("");
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   const handleAgregarGasto = async () => {
     try {
@@ -578,59 +566,10 @@ export default function CajaActual() {
           Abrir Caja
         </Button>
 
-        <Modal 
-          isOpen={isAbrirOpen} 
-          onOpenChange={onAbrirChange}
-          placement="center"
-          backdrop="opaque"
-          classNames={{
-            backdrop: "bg-black/50 backdrop-blur-sm z-[999]",
-            wrapper: "z-[1000]",
-            base: "font-sans bg-white rounded-2xl shadow-xl",
-            header: "border-b border-gray-100",
-            footer: "border-t border-gray-100"
-          }}
-        >
-          <ModalContent>
-            {(onClose) => (
-              <>
-                <ModalHeader>Apertura de Caja</ModalHeader>
-                <ModalBody>
-                  <Input
-                    label="Monto Inicial"
-                    placeholder="0.00"
-                    type="text"
-                    value={montoInicial}
-                    onValueChange={(val) =>
-                      handleNumberInput(val, setMontoInicial)
-                    }
-                    startContent={
-                      <div className="pointer-events-none flex items-center">
-                        <span className="text-default-400 text-small">$</span>
-                      </div>
-                    }
-                  />
-                  <p className="text-xs text-gray-500">
-                    Ingrese el dinero en efectivo disponible al inicio del
-                    turno.
-                  </p>
-                </ModalBody>
-                <ModalFooter>
-                  <Button variant="light" color="danger" onPress={onClose}>
-                    Cancelar
-                  </Button>
-                  <Button
-                    color="primary"
-                    onPress={handleAbrirCaja}
-                    isLoading={isOpening}
-                  >
-                    Abrir Caja
-                  </Button>
-                </ModalFooter>
-              </>
-            )}
-          </ModalContent>
-        </Modal>
+        <ModalAbrirCaja
+          open={isAbrirOpen}
+          onClose={onAbrirChange}
+        />
       </div>
     );
   }

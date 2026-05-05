@@ -1,10 +1,10 @@
-Analiticas: implementar graficas y estadisticas necesarias.
+Analiticas: implementar graficas y estadisticas necesarias. ✔️
 
 
 Preferencias de venta:
-Preferencias básicas:  borrar todas.
+Preferencias básicas:  borrar todas. ✔️
 stock y compras: test.
-caja y pagos: ingreso manual de caja inicial - habilitaría el input al abrir caja.
+caja y pagos: ingreso manual de caja inicial - habilitaría el input al abrir caja. ✔️
 puesto de caja separado: pendiente, los comprobantes quedan estado pendientes de pago.
 unificar renglones al ingresar el mismo producto: pendiente, implementar en compra y venta.
 bascula / balanza: test.
