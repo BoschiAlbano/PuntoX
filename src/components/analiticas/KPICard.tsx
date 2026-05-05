@@ -10,7 +10,6 @@ interface KPICardProps {
   previousValue?: number;
   format?: "currency" | "number" | "percentage" | "custom";
   icon?: React.ReactNode;
-  color?: "primary" | "success" | "warning" | "danger" | "default";
 }
 
 export default function KPICard({
@@ -20,7 +19,6 @@ export default function KPICard({
   previousValue,
   format = "number",
   icon,
-  color = "default",
 }: KPICardProps) {
   const formatValue = (val: number | string): string => {
     if (typeof val === "string") return val;
@@ -56,17 +54,11 @@ export default function KPICard({
     return "text-gray-500";
   };
 
-  const colorClasses = {
-    primary: "border-l-indigo-400 bg-linear-to-br from-indigo-50/20 to-white",
-    success: "border-l-emerald-400 bg-linear-to-br from-emerald-50/20 to-white",
-    warning: "border-l-amber-400 bg-linear-to-br from-amber-50/20 to-white",
-    danger: "border-l-red-400 bg-linear-to-br from-red-50/20 to-white",
-    default: "border-l-[#67afc3] bg-linear-to-br from-[#67afc3]/5 to-white",
-  };
+
 
   return (
     <Card
-      className={`rounded-2xl border border-slate-100 shadow-sm backdrop-blur-2xl hover:shadow-md transition-shadow group ${colorClasses[color]}`}
+      className={`rounded-2xl border border-slate-100 shadow-sm backdrop-blur-2xl hover:shadow-md transition-shadow group border-l-[#67afc3] bg-linear-to-br from-[#67afc3]/5 to-white`}
     >
       <CardBody className="p-5">
         <div className="flex items-start justify-between">
@@ -101,13 +93,7 @@ export default function KPICard({
             )}
           </div>
           {icon && (
-            <div className={`p-2.5 rounded-xl border shrink-0 transition-transform group-hover:scale-105 shadow-sm ${
-              color === "primary" ? "bg-indigo-50 border-indigo-100 text-indigo-500" :
-              color === "success" ? "bg-emerald-50 border-emerald-100 text-emerald-500" :
-              color === "warning" ? "bg-amber-50 border-amber-100 text-amber-500" :
-              color === "danger" ? "bg-red-50 border-red-100 text-red-500" :
-              "bg-[#67afc3]/10 border-[#67afc3]/20 text-[#67afc3]"
-            }`}>
+            <div className="p-2.5 rounded-xl border shrink-0 transition-transform group-hover:scale-105 shadow-sm bg-[#67afc3]/10 border-[#67afc3]/20 text-[#67afc3]">
               {icon}
             </div>
           )}

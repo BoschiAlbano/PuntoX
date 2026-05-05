@@ -69,66 +69,6 @@ export interface GraficaData {
   datos: any[];
 }
 
-export interface AlertasData {
-  alertas: {
-    stock?: Array<{
-      id: number;
-      nombre: string;
-      codigo: string;
-      stock: number;
-      stockMinimo: number;
-      diasHastaAgotar: number | null;
-      esUrgente: boolean;
-    }>;
-    cobranzas?: Array<{
-      id: number;
-      nombre: string;
-      email: string;
-      telefono: string | null;
-      saldo: number;
-      diasVencido: number;
-      fechaUltimoMovimiento: string;
-      esVencido: boolean;
-    }>;
-    actividad?: Array<{
-      id: number;
-      fecha: string;
-      accion: string;
-      severidad: string;
-      detalle: string | null;
-      usuario: string;
-      ipAddress: string | null;
-    }>;
-    cheques?: Array<{
-      id: number;
-      numero: string;
-      banco: string;
-      cliente: string;
-      fechaVencimiento: string;
-      diasHastaVencimiento: number;
-      esUrgente: boolean;
-    }>;
-    cajas?: Array<{
-      id: number;
-      fechaApertura: string;
-      empleado: string;
-      horasSinActividad: number;
-      requiereAtencion: boolean;
-    }>;
-  };
-  resumen: {
-    stock: number;
-    stockUrgentes: number;
-    cobranzas: number;
-    cobranzasVencidas: number;
-    actividad: number;
-    cheques: number;
-    chequesUrgentes: number;
-    cajas: number;
-    cajasSinActividad: number;
-  };
-}
-
 export interface ComplementariosData {
   gastos?: {
     total: number;
@@ -142,31 +82,6 @@ export interface ComplementariosData {
     cajasAbiertas: number;
     cajasCerradas: number;
   };
-  usuarios?: {
-    activosAhora: number;
-    porDia: Array<{
-      fecha: string;
-      cantidad: number;
-    }>;
-    dispositivosNoConfiables: Array<{
-      id: number;
-      usuario: string;
-      dispositivo: string | null;
-      ubicacion: string | null;
-      ipAddress: string | null;
-      fechaUltimaActividad: string;
-    }>;
-  };
-  auditoria?: Array<{
-    id: number;
-    fecha: string;
-    accion: string;
-    severidad: string;
-    detalle: string | null;
-    usuario: string;
-    empleadoAfectado: string | null;
-    ipAddress: string | null;
-  }>;
 }
 
 const fetchKPIs = async ({
@@ -230,30 +145,6 @@ const fetchGraficas = async ({
       .json()
       .catch(() => ({ error: "Error desconocido" }));
     throw new Error(error?.error || "Error al cargar gráficas");
-  }
-
-  return response.json();
-};
-
-const fetchAlertas = async ({
-  tipo,
-  signal,
-}: {
-  tipo?: string;
-  signal?: AbortSignal;
-}): Promise<AlertasData> => {
-  const params = new URLSearchParams();
-  if (tipo) params.append("tipo", tipo);
-
-  const response = await fetch(`/api/analiticas/alertas?${params.toString()}`, {
-    signal,
-  });
-
-  if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ error: "Error desconocido" }));
-    throw new Error(error?.error || "Error al cargar alertas");
   }
 
   return response.json();
@@ -338,22 +229,6 @@ export function useGraficas({
     queryFn: ({ signal }) =>
       fetchGraficas({ tipo, fechaDesde, fechaHasta, agrupacion, signal }),
     enabled: enabled && !!fechaDesde && !!fechaHasta, // Solo ejecutar si las fechas están definidas
-    ...analyticsQueryOptions,
-  });
-}
-
-export function useAlertas({
-  tipo,
-  enabled = true,
-}: {
-  tipo?: string;
-  enabled?: boolean;
-}) {
-  return useQuery({
-    queryKey: ["analiticas", "alertas", tipo],
-    queryFn: ({ signal }) => fetchAlertas({ tipo, signal }),
-    enabled,
-    refetchInterval: 60000, // 1 minuto
     ...analyticsQueryOptions,
   });
 }

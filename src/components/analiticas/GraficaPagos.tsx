@@ -55,38 +55,38 @@ export default function GraficaPagos({ datos }: GraficaPagosProps) {
       </CardHeader>
       <CardBody>
         <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
+          <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
             <Pie
               data={datosConPorcentaje}
               cx="50%"
               cy="50%"
-              labelLine={false}
-              label={(entry: any) => {
-                const data = entry as { nombre: string; porcentaje: number };
-                return `${data.nombre}: ${data.porcentaje.toFixed(1)}%`;
-              }}
+              innerRadius={70}
               outerRadius={100}
-              fill="#8884d8"
+              paddingAngle={5}
+              labelLine={false}
               dataKey="monto"
             >
               {datosConPorcentaje.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
                   fill={COLORS[index % COLORS.length]}
+                  stroke="transparent"
                 />
               ))}
             </Pie>
             <Tooltip
-              formatter={(value: number | undefined) =>
+              contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
+              formatter={(value: number | undefined, name: string) => [
                 value !== undefined
                   ? new Intl.NumberFormat("es-AR", {
                       style: "currency",
                       currency: "ARS",
                     }).format(value)
-                  : ""
-              }
+                  : "",
+                name,
+              ]}
             />
-            <Legend />
+            <Legend iconType="circle" wrapperStyle={{ paddingTop: "20px", fontSize: "12px" }} />
           </PieChart>
         </ResponsiveContainer>
       </CardBody>

@@ -49,6 +49,11 @@ const menuSections: MenuSection[] = [
         label: "Dashboard",
         href: "/dashboard",
       },
+    ],
+  },
+  {
+    title: "Ventas",
+    items: [
       {
         icon: (
           <svg
@@ -110,7 +115,7 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
-    title: "Inventario",
+    title: "Artículos",
     items: [
       {
         icon: (
@@ -130,44 +135,6 @@ const menuSections: MenuSection[] = [
         ),
         label: "Productos",
         href: "/productos",
-      },
-      {
-        icon: (
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-            />
-          </svg>
-        ),
-        label: "Compras",
-        href: "/compras",
-      },
-      {
-        icon: (
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-            />
-          </svg>
-        ),
-        label: "Proveedores",
-        href: "/proveedores",
       },
       {
         icon: (
@@ -265,10 +232,29 @@ const menuSections: MenuSection[] = [
         label: "Actualizar Precios",
         href: "/productos/actualizar-precios",
       },
+      {
+        icon: (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+            />
+          </svg>
+        ),
+        label: "Compras",
+        href: "/compras",
+      },
     ],
   },
   {
-    title: "Gestión",
+    title: "Clientes",
     items: [
       {
         icon: (
@@ -312,6 +298,30 @@ const menuSections: MenuSection[] = [
         label: "Cuentas Corrientes",
         href: "/clientes/cuentas-corrientes",
       },
+    ],
+  },
+  {
+    title: "Proveedores",
+    items: [
+      {
+        icon: (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+            />
+          </svg>
+        ),
+        label: "Proveedores",
+        href: "/proveedores",
+      },
       {
         icon: (
           <svg
@@ -327,9 +337,38 @@ const menuSections: MenuSection[] = [
             />
           </svg>
         ),
-        label: "Cuentas Cte. Prov.",
+        label: "Cuentas Corrientes",
         href: "/proveedores/cuentas-corrientes",
       },
+    ],
+  },
+  {
+    title: "Analíticas",
+    items: [
+      {
+        icon: (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            />
+          </svg>
+        ),
+        label: "Analíticas",
+        href: "/analiticas",
+      },
+    ],
+  },
+  {
+    title: "Gestión",
+    items: [
       {
         icon: (
           <svg
@@ -384,30 +423,6 @@ const menuSections: MenuSection[] = [
         ),
         label: "Auditoría",
         href: "/empleados/auditoria",
-      },
-    ],
-  },
-  {
-    title: "Reportes",
-    items: [
-      {
-        icon: (
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-            />
-          </svg>
-        ),
-        label: "Analíticas",
-        href: "/analiticas",
       },
     ],
   },

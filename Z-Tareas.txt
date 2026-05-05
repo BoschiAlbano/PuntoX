@@ -1,5 +1,22 @@
-3- quitar logs y auditorias. por que no terminamos mas.
-4- quitar cosas de configuracion y dejar que si se ba usar.
-5- consotrolar api register
-6- no todos los datos para un nuevo proveedor son necesarios.
-7- cuando se le cambie la contraseña a un empleado este deberia cerrarse la sesion en otros dispositivos.
+Analiticas: implementar graficas y estadisticas necesarias.
+
+
+Preferencias de venta:
+Preferencias básicas:  borrar todas.
+stock y compras: test.
+caja y pagos: ingreso manual de caja inicial - habilitaría el input al abrir caja.
+puesto de caja separado: pendiente, los comprobantes quedan estado pendientes de pago.
+unificar renglones al ingresar el mismo producto: pendiente, implementar en compra y venta.
+bascula / balanza: test.
+
+Notificaciones:
+notificaciones push: pendiente
+resumen diario por correo: pendiente
+Alerta de stock bajo: pendiente
+
+Seguridad y acceso:
+bloquear empleado / cuenta tras 5 intentos fallidos.
+
+Facturación y región:
+Configuración reginal: pendiente implementar
+AFIP: Pendiente

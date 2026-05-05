@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -59,17 +59,30 @@ export default function GraficaIngresos({
       </CardHeader>
       <CardBody>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={datosFormateados}>
-            <CartesianGrid strokeDasharray="3 3" />
+          <AreaChart data={datosFormateados} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="colorIngresos" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#67afc3" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#67afc3" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="colorDescuentos" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
             <XAxis
               dataKey="fecha"
-              tick={{ fontSize: 12 }}
-              angle={-45}
-              textAnchor="end"
-              height={80}
+              tick={{ fontSize: 11, fill: "#64748b" }}
+              axisLine={false}
+              tickLine={false}
+              dy={10}
             />
             <YAxis
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 11, fill: "#64748b" }}
+              axisLine={false}
+              tickLine={false}
+              dx={-10}
               tickFormatter={(value) =>
                 new Intl.NumberFormat("es-AR", {
                   style: "currency",
@@ -79,6 +92,7 @@ export default function GraficaIngresos({
               }
             />
             <Tooltip
+              contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
               formatter={(value: number | undefined) =>
                 value !== undefined
                   ? new Intl.NumberFormat("es-AR", {
@@ -88,22 +102,26 @@ export default function GraficaIngresos({
                   : ""
               }
             />
-            <Legend />
-            <Line
+            <Legend iconType="circle" wrapperStyle={{ paddingTop: "20px", fontSize: "12px" }} />
+            <Area
               type="monotone"
               dataKey="ingresosNetos"
               stroke="#67afc3"
-              strokeWidth={2}
+              strokeWidth={3}
+              fillOpacity={1}
+              fill="url(#colorIngresos)"
               name="Ingresos Netos"
             />
-            <Line
+            <Area
               type="monotone"
               dataKey="descuentos"
               stroke="#f59e0b"
-              strokeWidth={2}
+              strokeWidth={3}
+              fillOpacity={1}
+              fill="url(#colorDescuentos)"
               name="Descuentos"
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </CardBody>
     </Card>

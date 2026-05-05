@@ -1,16 +1,5 @@
 "use client";
 
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
 import { Card, CardBody, CardHeader } from "@heroui/react";
 
 export interface GraficaProductosProps {
@@ -24,12 +13,7 @@ export interface GraficaProductosProps {
   }>;
 }
 
-const getColorByMargen = (margenPorcentaje: number): string => {
-  if (margenPorcentaje >= 30) return "#10b981"; // Verde (buen margen)
-  if (margenPorcentaje >= 15) return "#67afc3"; // Azul (margen aceptable)
-  if (margenPorcentaje >= 0) return "#f59e0b"; // Amarillo (margen bajo)
-  return "#ef4444"; // Rojo (pérdida)
-};
+
 
 export default function GraficaProductos({ datos }: GraficaProductosProps) {
   const top10 = datos.slice(0, 10);
@@ -53,76 +37,57 @@ export default function GraficaProductos({ datos }: GraficaProductosProps) {
     );
   }
 
+  const maxMonto = top10.length > 0 ? Math.max(...top10.map(p => p.monto)) : 0;
+
   return (
     <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
       <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
         <h3 className="text-lg font-semibold text-slate-900">
-          Top 10 Productos por Ventas
+          Ranking de Productos por Ventas
         </h3>
       </CardHeader>
-      <CardBody>
-        <ResponsiveContainer width="100%" height={400}>
-          <BarChart
-            data={top10}
-            layout="vertical"
-            margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              type="number"
-              tickFormatter={(value) =>
-                new Intl.NumberFormat("es-AR", {
-                  style: "currency",
-                  currency: "ARS",
-                  notation: "compact",
-                }).format(value)
-              }
-            />
-            <YAxis
-              type="category"
-              dataKey="nombre"
-              width={90}
-              tick={{ fontSize: 11 }}
-            />
-            <Tooltip
-              formatter={(
-                value: number | undefined,
-                name: string | undefined,
-              ) => {
-                if (value === undefined) return ["", name || ""];
-                const nameStr = name || "";
-                if (nameStr === "monto") {
-                  return [
-                    new Intl.NumberFormat("es-AR", {
-                      style: "currency",
-                      currency: "ARS",
-                    }).format(value),
-                    "Ventas",
-                  ];
-                }
-                if (nameStr === "margen") {
-                  return [
-                    new Intl.NumberFormat("es-AR", {
-                      style: "currency",
-                      currency: "ARS",
-                    }).format(value),
-                    "Margen",
-                  ];
-                }
-                return [value, nameStr];
-              }}
-            />
-            <Legend />
-            <Bar dataKey="monto" name="Ventas" fill="#67afc3">
-              {top10.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={getColorByMargen(entry.margenPorcentaje)}
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+      <CardBody className="p-5">
+        <div className="flex flex-col gap-4">
+          {top10.map((producto, index) => {
+            const widthPercentage = maxMonto > 0 ? (producto.monto / maxMonto) * 100 : 0;
+            // Variamos la opacidad del color acento para darle jerarquía sin usar otros colores
+            const opacity = 1 - (index * 0.06);
+
+            return (
+              <div key={producto.id} className="flex flex-col gap-1.5 group">
+                <div className="flex justify-between items-end text-sm">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <span className="text-xs font-bold text-slate-400 w-4">{index + 1}.</span>
+                    <span className="font-medium text-slate-700 truncate group-hover:text-[#67afc3] transition-colors">
+                      {producto.nombre}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end shrink-0 pl-3">
+                    <span className="font-bold text-slate-800">
+                      {new Intl.NumberFormat("es-AR", {
+                        style: "currency",
+                        currency: "ARS",
+                      }).format(producto.monto)}
+                    </span>
+                    <span className="text-[10px] font-medium text-slate-400">
+                      {producto.cantidad} un.
+                    </span>
+                  </div>
+                </div>
+                <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="h-2 rounded-full transition-all duration-1000 ease-out"
+                    style={{
+                      width: `${widthPercentage}%`,
+                      backgroundColor: "#67afc3",
+                      opacity: Math.max(opacity, 0.4), // Nunca más transparente que 0.4
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </CardBody>
     </Card>
   );
