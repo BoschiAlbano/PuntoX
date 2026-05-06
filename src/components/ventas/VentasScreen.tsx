@@ -12,6 +12,7 @@ import ComprobanteSelector from "./ComprobanteSelector";
 import PriceListSelector from "./PriceListSelector";
 import { Producto } from "@/lib/validations/producto.schema";
 import { useVentaStore, Item, OrigenPrecio } from "@/store/ventaStore";
+import { useConfiguracion } from "@/hooks/useConfiguracion";
 
 type MobileTab = "productos" | "pago";
 
@@ -39,6 +40,9 @@ export default function VentasScreen() {
     setNumeroComprobanteAsociado,
     clearVenta,
   } = useVentaStore();
+
+  const { configuracion } = useConfiguracion({ enableConfiguracion: true });
+  const unificarRenglones = configuracion?.unificarRenglonesIngresarMismoProducto ?? true;
 
   // Business Logic Helpers
   const checkProductRules = (product: Producto | Item, newQuantity: number) => {
@@ -99,13 +103,16 @@ export default function VentasScreen() {
   // Handlers
   const handleAddItem = (producto: Producto, cantidad: number = 1, precioOverride?: number, origenPrecio?: OrigenPrecio) => {
     try {
-      const existing = items.find((i) => i.Id === producto.Id);
-      const currentQty = existing ? existing.cantidad : 0;
+      // Sumar todas las cantidades de productos con el mismo código
+      // (necesario cuando no se unifica y hay múltiples renglones del mismo producto)
+      const currentQty = items
+        .filter((i) => i.CodigoBarra === producto.CodigoBarra)
+        .reduce((sum, i) => sum + i.cantidad, 0);
       const totalQty = currentQty + cantidad;
 
       checkProductRules(producto, totalQty);
 
-      addItem(producto, cantidad, listaPrecios, precioOverride, origenPrecio);
+      addItem(producto, cantidad, listaPrecios, precioOverride, origenPrecio, unificarRenglones);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Error desconocido";
@@ -122,7 +129,17 @@ export default function VentasScreen() {
       const item = items.find((i) => i.Id === id);
       if (!item) return;
 
-      checkProductRules(item, cantidad);
+      // Calcular la cantidad total de todos los renglones de este producto
+      // para validar correctamente el stock
+      const currentItemQty = item.cantidad;
+      const totalOtherItems = items
+        .filter((i) => i.CodigoBarra === item.CodigoBarra && i.Id !== id)
+        .reduce((sum, i) => sum + i.cantidad, 0);
+      const totalQty = (cantidad - currentItemQty) + totalOtherItems + cantidad;
+
+      // Validar contra la cantidad total en lugar de solo este renglón
+      const productForCheck = { ...item, cantidad: cantidad + totalOtherItems };
+      checkProductRules(productForCheck, cantidad + totalOtherItems);
 
       updateItemQuantity(id, cantidad);
     } catch (error) {

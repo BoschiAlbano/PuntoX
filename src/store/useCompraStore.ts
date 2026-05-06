@@ -28,7 +28,7 @@ interface CompraState {
   pagos: PagoCompra[];
 
   // Actions
-  addItem: (producto: Producto, cantidad: number, costoOverride?: number) => void;
+  addItem: (producto: Producto, cantidad: number, costoOverride?: number, unificarRenglones?: boolean) => void;
   updateItemQuantity: (id: number, cantidad: number) => void;
   updateItemCosto: (id: number, costo: number) => void;
   removeItem: (id: number) => void;
@@ -48,7 +48,7 @@ export const useCompraStore = create<CompraState>()(
       tipoComprobante: TIPO_COMPROBANTE_COMPRA.COMPRA,
       pagos: [],
 
-      addItem: (producto, cantidad = 1, costoOverride) => {
+      addItem: (producto, cantidad = 1, costoOverride, unificarRenglones = true) => {
         const { items } = get();
         const costoUnitario =
           costoOverride ?? Number(producto.PrecioCosto ?? 0);
@@ -61,7 +61,7 @@ export const useCompraStore = create<CompraState>()(
             PrecioFinal: Math.round(costo * (1 + pl.PorcentajeGanancia / 100) * 100) / 100,
           }));
 
-        if (existing) {
+        if (existing && unificarRenglones) {
           set({
             items: items.map((i) =>
               i.Id === existing.Id
@@ -79,6 +79,8 @@ export const useCompraStore = create<CompraState>()(
               ...items,
               {
                 ...producto,
+                // Si ya existe el producto y no se unifica, generar ID único
+                Id: existing && !unificarRenglones ? producto.Id + Date.now() : producto.Id,
                 cantidad,
                 costoUnitario,
                 subtotal: costoUnitario * cantidad,

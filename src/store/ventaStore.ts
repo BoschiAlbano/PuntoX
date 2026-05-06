@@ -28,7 +28,7 @@ interface VentaState {
   numeroComprobanteAsociado: number | null;
 
   // Actions
-  addItem: (producto: Producto, cantidad: number, listaPrecios: number | null, precioOverride?: number, origenPrecio?: OrigenPrecio) => void;
+  addItem: (producto: Producto, cantidad: number, listaPrecios: number | null, precioOverride?: number, origenPrecio?: OrigenPrecio, unificarRenglones?: boolean) => void;
   updateItemQuantity: (id: number, cantidad: number) => void;
   removeItem: (id: number) => void;
   setCliente: (cliente: Partial<Cliente>) => void;
@@ -61,7 +61,7 @@ export const useVentaStore = create<VentaState>()(
 
       pagos: [],
 
-      addItem: (producto, cantidad = 1, listaPrecios, precioOverride, origenPrecio = "normal") => {
+      addItem: (producto, cantidad = 1, listaPrecios, precioOverride, origenPrecio = "normal", unificarRenglones = true) => {
         const { items } = get();
         const existing = items.find((i) => i.Id === producto.Id);
 
@@ -72,7 +72,7 @@ export const useVentaStore = create<VentaState>()(
               return pl ? Number(pl.PrecioFinal) : Number(producto.PrecioCosto || 0);
             })();
 
-        if (existing) {
+        if (existing && unificarRenglones) {
           // Si el precio override es diferente al existente, se agrega como nueva línea
           if (precioOverride != null && existing.precio !== precioOverride) {
             set({
@@ -108,6 +108,8 @@ export const useVentaStore = create<VentaState>()(
               ...items,
               {
                 ...producto,
+                // Si ya existe el producto y no se unifica, generar ID único
+                Id: existing && !unificarRenglones ? producto.Id + Date.now() : producto.Id,
                 cantidad,
                 precio: precioUnitario,
                 subtotal: precioUnitario * cantidad,

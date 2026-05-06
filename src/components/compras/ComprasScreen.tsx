@@ -9,6 +9,7 @@ import CompraGrid from "./CompraGrid";
 import CompraFooter from "./CompraFooter";
 import { Producto } from "@/lib/validations/producto.schema";
 import { useCompraStore } from "@/store/useCompraStore";
+import { useConfiguracion } from "@/hooks/useConfiguracion";
 
 type MobileTab = "productos" | "pago";
 
@@ -24,13 +25,35 @@ export default function ComprasScreen() {
     clearCompra,
   } = useCompraStore();
 
+  const { configuracion } = useConfiguracion({ enableConfiguracion: true });
+  const unificarRenglones = configuracion?.unificarRenglonesIngresarMismoProducto ?? true;
+
   // ProductSearch puede pasar hasta 4 args: (producto, cantidad?, precioOverride?, origenPrecio?)
   // En compras ignoramos precioOverride/origenPrecio y siempre usamos PrecioCosto como default
   const handleAddItem = (producto: Producto, cantidad: number = 1) => {
     try {
       // Pre-cargar el costo del artículo desde su PrecioCosto
       const costoDefault = Number(producto.PrecioCosto ?? 0);
-      addItem(producto, cantidad, costoDefault);
+      
+      // Sumar todas las cantidades de productos con el mismo código
+      // (necesario cuando no se unifica y hay múltiples renglones del mismo producto)
+      const currentQty = items
+        .filter((i) => i.CodigoBarra === producto.CodigoBarra)
+        .reduce((sum, i) => sum + i.cantidad, 0);
+      const totalQty = currentQty + cantidad;
+      
+      // Validar que no se exceda el stock mínimo si está configurado
+      if (producto.StockMinimo && producto.DescuentaStock) {
+        if (totalQty > producto.StockMinimo) {
+          addToast({
+            title: "Advertencia",
+            description: `La cantidad total (${totalQty}) supera el stock mínimo (${producto.StockMinimo})`,
+            color: "warning",
+          });
+        }
+      }
+      
+      addItem(producto, cantidad, costoDefault, unificarRenglones);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error desconocido";
       addToast({ title: "Error", description: message, color: "danger" });
@@ -39,6 +62,25 @@ export default function ComprasScreen() {
 
   const handleUpdateQuantity = (id: number, cantidad: number) => {
     if (cantidad <= 0) return;
+    
+    const item = items.find((i) => i.Id === id);
+    if (item && item.StockMinimo && item.DescuentaStock) {
+      // Calcular la cantidad total de todos los renglones de este producto
+      const currentItemQty = item.cantidad;
+      const totalOtherItems = items
+        .filter((i) => i.CodigoBarra === item.CodigoBarra && i.Id !== id)
+        .reduce((sum, i) => sum + i.cantidad, 0);
+      const totalQty = cantidad + totalOtherItems;
+      
+      if (totalQty > item.StockMinimo) {
+        addToast({
+          title: "Advertencia",
+          description: `La cantidad total (${totalQty}) supera el stock mínimo (${item.StockMinimo})`,
+          color: "warning",
+        });
+      }
+    }
+    
     updateItemQuantity(id, cantidad);
   };
 
