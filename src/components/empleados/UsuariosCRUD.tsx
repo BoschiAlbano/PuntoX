@@ -2,7 +2,19 @@
 
 import { useState } from "react";
 import GenericCrud from "@/components/shared/GenericCrud";
-import { Chip, Button, Tooltip, addToast } from "@heroui/react";
+import {
+  Chip,
+  Button,
+  Tooltip,
+  addToast,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/react";
+import { LockKeyhole, LockKeyholeOpen } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { EditButton, DeleteButton } from "../shared/TableActions";
 import UsuarioForm from "./UsuarioForm";
@@ -42,13 +54,58 @@ export type Usuario = {
   legajo: string | null;
   dni: string | null;
   ultimaActividad: string | null;
+  intentosFallidos?: number;
 };
 
 export default function UsuariosCRUD() {
   const { user, roles } = useUserStore();
+  const queryClient = useQueryClient();
   const [passwordModalUser, setPasswordModalUser] = useState<Usuario | null>(
     null,
   );
+  const [lockConfirm, setLockConfirm] = useState<{
+    item: Usuario;
+    bloquear: boolean;
+  } | null>(null);
+  const [isLocking, setIsLocking] = useState(false);
+
+  const handleLockToggle = async () => {
+    if (!lockConfirm) return;
+    setIsLocking(true);
+    try {
+      const res = await fetch("/api/empleados", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          usuarioId: lockConfirm.item.usuarioId ?? lockConfirm.item.Id,
+          bloquear: lockConfirm.bloquear,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Error al actualizar el estado");
+      }
+      addToast({
+        title: lockConfirm.bloquear
+          ? "Cuenta bloqueada"
+          : "Cuenta desbloqueada",
+        description: lockConfirm.bloquear
+          ? `${lockConfirm.item.nombreCompleto} ya no puede iniciar sesión`
+          : `${lockConfirm.item.nombreCompleto} puede volver a iniciar sesión`,
+        color: lockConfirm.bloquear ? "warning" : "success",
+      });
+      queryClient.invalidateQueries({ queryKey: ["usuarios-crud"] });
+    } catch (err: any) {
+      addToast({
+        title: "Error",
+        description: err.message || "No se pudo actualizar el estado",
+        color: "danger",
+      });
+    } finally {
+      setIsLocking(false);
+      setLockConfirm(null);
+    }
+  };
 
   // Transformer para adaptar la respuesta de la API
   const transformer = (data: any): Usuario[] => {
@@ -98,7 +155,10 @@ export default function UsuariosCRUD() {
             key: "cambiar-estado",
             label: "Cambiar estado",
             onAction: (ctx) => {
-              addToast({ title: "Cambiar estado", description: `${ctx.totalCount} usuario(s)` });
+              addToast({
+                title: "Cambiar estado",
+                description: `${ctx.totalCount} usuario(s)`,
+              });
             },
           },
         ]}
@@ -110,19 +170,27 @@ export default function UsuariosCRUD() {
                 {item.apellido?.charAt(0).toUpperCase()}
               </div>
               <div>
-                <p className="font-bold text-slate-800 text-base">{item.nombreCompleto}</p>
+                <p className="font-bold text-slate-800 text-base">
+                  {item.nombreCompleto}
+                </p>
                 {item.legajo && (
-                  <p className="text-slate-500 font-medium text-xs mt-0.5">Legajo: {item.legajo}</p>
+                  <p className="text-slate-500 font-medium text-xs mt-0.5">
+                    Legajo: {item.legajo}
+                  </p>
                 )}
                 {item.dni && (
-                  <p className="text-slate-500 font-medium text-xs">DNI: {item.dni}</p>
+                  <p className="text-slate-500 font-medium text-xs">
+                    DNI: {item.dni}
+                  </p>
                 )}
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
-                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Estado</p>
+                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">
+                  Estado
+                </p>
                 <span
                   className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase ${
                     item.estado === "Activo"
@@ -136,11 +204,13 @@ export default function UsuariosCRUD() {
                 </span>
               </div>
               <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
-                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Rol Asignado</p>
+                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">
+                  Rol Asignado
+                </p>
                 <span
                   className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase ${
-                    item.rolTipo === "ADMINISTRADOR" 
-                      ? "bg-[#67afc3]/10 text-[#67afc3]" 
+                    item.rolTipo === "ADMINISTRADOR"
+                      ? "bg-[#67afc3]/10 text-[#67afc3]"
                       : "bg-slate-100 text-slate-600"
                   }`}
                 >
@@ -151,35 +221,46 @@ export default function UsuariosCRUD() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
-                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Acceso</p>
+                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">
+                  Acceso
+                </p>
                 <div className="space-y-1.5">
                   <p className="text-slate-700 text-xs font-mono font-medium truncate">
                     @ {item.username || "—"}
                   </p>
                   <p className="text-slate-700 text-xs font-medium truncate flex items-center gap-1">
-                    <span className="text-slate-400 text-[10px]">✉️</span> {item.email || "—"}
+                    <span className="text-slate-400 text-[10px]">✉️</span>{" "}
+                    {item.email || "—"}
                   </p>
                 </div>
               </div>
               <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
-                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Ubicación</p>
-                <p className="font-medium text-slate-700 text-xs truncate">{item.localidad || "Pendiente"}</p>
+                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">
+                  Ubicación
+                </p>
+                <p className="font-medium text-slate-700 text-xs truncate">
+                  {item.localidad || "Pendiente"}
+                </p>
                 {item.direccion && (
-                  <p className="text-slate-500 text-[10px] mt-0.5 truncate">{item.direccion}</p>
+                  <p className="text-slate-500 text-[10px] mt-0.5 truncate">
+                    {item.direccion}
+                  </p>
                 )}
               </div>
             </div>
 
-            {(item.sucursales && item.sucursales.length > 0) ? (
+            {item.sucursales && item.sucursales.length > 0 ? (
               <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
-                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Sucursales asignadas</p>
+                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">
+                  Sucursales asignadas
+                </p>
                 <div className="flex flex-wrap gap-1.5 mt-1">
                   {item.sucursales.map((s) => (
                     <span
                       key={s.Id}
                       className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
-                        s.EsDefault 
-                          ? "bg-[#67afc3]/10 text-[#67afc3] border-[#67afc3]/20" 
+                        s.EsDefault
+                          ? "bg-[#67afc3]/10 text-[#67afc3] border-[#67afc3]/20"
                           : "bg-white text-slate-500 border-slate-200"
                       }`}
                     >
@@ -193,12 +274,20 @@ export default function UsuariosCRUD() {
 
             <div className="flex gap-4 p-3 rounded-xl bg-slate-50/50 border border-slate-100">
               <div className="flex-1">
-                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-0.5">Teléfono</p>
-                <p className="font-medium text-slate-700 text-xs">{item.telefono || "—"}</p>
+                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-0.5">
+                  Teléfono
+                </p>
+                <p className="font-medium text-slate-700 text-xs">
+                  {item.telefono || "—"}
+                </p>
               </div>
               <div className="flex-1">
-                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-0.5">Última actividad</p>
-                <p className="text-slate-600 text-xs">{item.ultimaActividad || "—"}</p>
+                <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-0.5">
+                  Última actividad
+                </p>
+                <p className="text-slate-600 text-xs">
+                  {item.ultimaActividad || "—"}
+                </p>
               </div>
             </div>
           </div>
@@ -243,8 +332,8 @@ export default function UsuariosCRUD() {
               return (
                 <span
                   className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase ${
-                    item.rolTipo === "ADMINISTRADOR" 
-                      ? "bg-[#67afc3]/10 text-[#67afc3]" 
+                    item.rolTipo === "ADMINISTRADOR"
+                      ? "bg-[#67afc3]/10 text-[#67afc3]"
                       : "bg-slate-100 text-slate-600"
                   }`}
                 >
@@ -263,21 +352,37 @@ export default function UsuariosCRUD() {
                   {item.localidad || "Pendiente"}
                 </span>
               );
-            case "estado":
+            case "estado": {
               const estadoStyle =
                 item.estado === "Activo"
                   ? "bg-emerald-50 text-emerald-600"
                   : item.estado === "Invitado"
                     ? "bg-amber-50 text-amber-600"
                     : "bg-red-50 text-red-500";
+              const esBloqueoAutomatico =
+                item.estado === "Suspendido" &&
+                (item.intentosFallidos ?? 0) > 0;
               return (
-                <span
-                  className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase ${estadoStyle}`}
-                >
-                  {item.estado}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase ${estadoStyle}`}
+                  >
+                    {item.estado}
+                  </span>
+                  {esBloqueoAutomatico && (
+                    <Tooltip
+                      content={`Bloqueado automáticamente tras ${item.intentosFallidos} intento${(item.intentosFallidos ?? 0) !== 1 ? "s" : ""} fallido${(item.intentosFallidos ?? 0) !== 1 ? "s" : ""}`}
+                      placement="top"
+                    >
+                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-orange-100 text-orange-600 text-[9px] font-bold cursor-default">
+                        !
+                      </span>
+                    </Tooltip>
+                  )}
+                </div>
               );
-            case "acciones":
+            }
+            case "acciones": {
               const isCurrentUser = Number(item.Id) === Number(user?.Id);
 
               // Check if the CURRENT user is an Administrator
@@ -287,49 +392,77 @@ export default function UsuariosCRUD() {
                   r.Tipo === "SUPERADMIN",
               );
 
-              // Lógica de Permisos Refinada:
-
-              // 1. Editar / Cambiar Contraseña:
-              // - Admin: Puede editar a todos.
-              // - No-Admin: Solo puede editarse a sí mismo.
+              // 1. Editar / Cambiar Contraseña: admin puede editar a todos; no-admin solo a sí mismo
               const canEditOrPass = currentUserIsAdmin || isCurrentUser;
-
-              // 2. Eliminar:
-              // - Admin: Puede eliminar a todos, MENOS a sí mismo.
-              // - No-Admin: No puede eliminar a nadie (ni a sí mismo, ni a otros).
+              // 2. Eliminar: admin puede eliminar a todos menos a sí mismo
               const canDelete = currentUserIsAdmin && !isCurrentUser;
+              // 3. Bloquear/Desbloquear: solo admins, no sobre sí mismos, y solo si tiene usuario
+              const canBlock =
+                currentUserIsAdmin && !isCurrentUser && !!item.usuarioId;
+              const estaActivo = item.estado !== "Suspendido";
 
               return (
                 <div className="flex gap-2 w-full justify-center items-center">
-                  <Button
-                    isIconOnly
-                    size="sm"
-                    variant="light"
-                    color="secondary"
-                    onPress={() => setPasswordModalUser(item)}
+                  <Tooltip
+                    content="Cambiar contraseña"
+                    placement="top"
                     isDisabled={!canEditOrPass}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                      className="size-5"
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      color="secondary"
+                      onPress={() => setPasswordModalUser(item)}
+                      isDisabled={!canEditOrPass}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
-                      />
-                    </svg>
-                  </Button>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="size-5"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+                        />
+                      </svg>
+                    </Button>
+                  </Tooltip>
 
                   <EditButton
                     onPress={() => actions.onEdit(item)}
                     label={`Editar ${item.nombreCompleto || "usuario"}`}
                     isDisabled={!canEditOrPass}
                   />
+
+                  {canBlock && (
+                    <Tooltip
+                      content={
+                        estaActivo ? "Bloquear acceso" : "Desbloquear acceso"
+                      }
+                      placement="top"
+                    >
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        color={estaActivo ? "danger" : "success"}
+                        onPress={() =>
+                          setLockConfirm({ item, bloquear: estaActivo })
+                        }
+                      >
+                        {estaActivo ? (
+                          <LockKeyhole className="size-4" />
+                        ) : (
+                          <LockKeyholeOpen className="size-4" />
+                        )}
+                      </Button>
+                    </Tooltip>
+                  )}
 
                   <DeleteButton
                     onPress={() => actions.onDelete(item)}
@@ -338,6 +471,7 @@ export default function UsuariosCRUD() {
                   />
                 </div>
               );
+            }
             default:
               return null;
           }
@@ -354,6 +488,65 @@ export default function UsuariosCRUD() {
           }
         />
       )}
+
+      {/* Modal de confirmación para bloquear/desbloquear */}
+      <Modal
+        isOpen={!!lockConfirm}
+        onClose={() => !isLocking && setLockConfirm(null)}
+        placement="center"
+        backdrop="opaque"
+        size="sm"
+      >
+        <ModalContent>
+          {() => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                {lockConfirm?.bloquear
+                  ? "Bloquear cuenta"
+                  : "Desbloquear cuenta"}
+              </ModalHeader>
+              <ModalBody>
+                <p className="text-sm text-slate-600">
+                  {lockConfirm?.bloquear ? (
+                    <>
+                      ¿Estás seguro de que querés bloquear la cuenta de{" "}
+                      <span className="font-semibold">
+                        {lockConfirm.item.nombreCompleto}
+                      </span>
+                      ? El usuario no podrá iniciar sesión hasta que sea
+                      desbloqueado.
+                    </>
+                  ) : (
+                    <>
+                      ¿Querés desbloquear la cuenta de{" "}
+                      <span className="font-semibold">
+                        {lockConfirm?.item.nombreCompleto}
+                      </span>
+                      ? El usuario podrá volver a iniciar sesión.
+                    </>
+                  )}
+                </p>
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  variant="light"
+                  onPress={() => setLockConfirm(null)}
+                  isDisabled={isLocking}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  color={lockConfirm?.bloquear ? "danger" : "success"}
+                  onPress={handleLockToggle}
+                  isLoading={isLocking}
+                >
+                  {lockConfirm?.bloquear ? "Bloquear" : "Desbloquear"}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </>
   );
 }

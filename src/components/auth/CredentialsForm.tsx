@@ -28,6 +28,13 @@ const getErrorMessage = (error: unknown): string => {
     return "Nombre de usuario o contraseña incorrectos";
   }
 
+  if (
+    errorMessage.includes("cuenta bloqueada") ||
+    errorMessage.includes("ACCOUNT_BLOCKED")
+  ) {
+    return "Tu cuenta ha sido bloqueada. Contactá al administrador para recuperar el acceso";
+  }
+
   if (errorMessage.includes("Email not confirmed")) {
     return "Por favor confirma tu email antes de iniciar sesión";
   }
@@ -63,8 +70,6 @@ export default function CredentialsForm() {
   const [usernameError, setUsernameError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [recordarDispositivo, setRecordarDispositivo] = useState(false);
-  const [attemptCount, setAttemptCount] = useState(0);
-  const [isRateLimited, setIsRateLimited] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showMfa, setShowMfa] = useState(false);
   const [mfaCode, setMfaCode] = useState("");
@@ -74,34 +79,7 @@ export default function CredentialsForm() {
   // Obtener callbackUrl de los parámetros de búsqueda
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
-  // Rate limiting básico: resetear después de 5 minutos
-  useEffect(() => {
-    const storedAttempts = localStorage.getItem("login_attempts");
-    const storedTime = localStorage.getItem("login_attempt_time");
-
-    if (storedAttempts && storedTime) {
-      const timeDiff = Date.now() - parseInt(storedTime, 10);
-      const fiveMinutes = 5 * 60 * 1000;
-
-      if (timeDiff < fiveMinutes) {
-        const attempts = parseInt(storedAttempts, 10);
-        setAttemptCount(attempts);
-        if (attempts >= 5) {
-          setIsRateLimited(true);
-          const remainingTime = Math.ceil((fiveMinutes - timeDiff) / 1000 / 60);
-          setError(
-            `Demasiados intentos fallidos. Intenta de nuevo en ${remainingTime} minutos.`,
-          );
-        }
-      } else {
-        // Resetear contador después de 5 minutos
-        localStorage.removeItem("login_attempts");
-        localStorage.removeItem("login_attempt_time");
-        setAttemptCount(0);
-        setIsRateLimited(false);
-      }
-    }
-  }, []);
+  // Rate limiting por usuario: se evalúa en handleSubmit cuando ya conocemos el username
 
   // Validación de username en tiempo real
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,14 +100,6 @@ export default function CredentialsForm() {
     e.preventDefault();
     setError("");
     setUsernameError("");
-
-    // Verificar rate limiting
-    if (isRateLimited) {
-      setError(
-        "Demasiados intentos fallidos. Por favor espera unos minutos antes de intentar de nuevo.",
-      );
-      return;
-    }
 
     // Normalizar username: trim y lowercase
     const normalizedUsername = username.trim().toLowerCase();
@@ -160,10 +130,15 @@ export default function CredentialsForm() {
         throw new Error(errorData.error || "Usuario no encontrado");
       }
 
-      const { email: internalEmail } = await emailResponse.json();
+      const { email: internalEmail, isBlocked } = await emailResponse.json();
 
       if (!internalEmail) {
         throw new Error("No se pudo obtener el email del usuario");
+      }
+
+      // Si la cuenta ya está bloqueada, informar antes de intentar con Supabase
+      if (isBlocked) {
+        throw new Error("ACCOUNT_BLOCKED");
       }
 
       // Ahora hacer login con el email interno
@@ -175,28 +150,37 @@ export default function CredentialsForm() {
         });
 
       if (authError) {
-        // Incrementar contador de intentos fallidos
-        const newAttemptCount = attemptCount + 1;
-        setAttemptCount(newAttemptCount);
-        localStorage.setItem("login_attempts", newAttemptCount.toString());
-        localStorage.setItem("login_attempt_time", Date.now().toString());
-
-        // Activar rate limiting después de 5 intentos
-        if (newAttemptCount >= 5) {
-          setIsRateLimited(true);
+        // Registrar intento fallido en el servidor para bloqueo automático
+        try {
+          const intentoRes = await fetch(
+            "/api/auth/registrar-intento-fallido",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username: normalizedUsername }),
+            },
+          );
+          if (intentoRes.ok) {
+            const intentoData = await intentoRes.json().catch(() => ({}));
+            if (intentoData?.bloqueado) {
+              throw new Error("ACCOUNT_BLOCKED");
+            }
+          }
+        } catch (intentoErr: any) {
+          if (intentoErr?.message === "ACCOUNT_BLOCKED") {
+            throw intentoErr;
+          }
         }
 
         throw authError;
       }
 
-      // Login exitoso: resetear contador de intentos
-      localStorage.removeItem("login_attempts");
-      localStorage.removeItem("login_attempt_time");
-      setAttemptCount(0);
-      setIsRateLimited(false);
+      // Login exitoso
+      setError("");
 
       // Verificar si requiere 2FA (MFA)
-      const { data: mfaData, error: mfaError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      const { data: mfaData, error: mfaError } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (mfaError) throw mfaError;
 
       if (mfaData.nextLevel === "aal2" && mfaData.currentLevel === "aal1") {
@@ -208,7 +192,9 @@ export default function CredentialsForm() {
           if (trustedRes.ok) {
             const trustedData = await trustedRes.json();
             if (trustedData?.isTrusted) {
-              console.log("Login: Dispositivo confiable detectado, saltando 2FA.");
+              console.log(
+                "Login: Dispositivo confiable detectado, saltando 2FA.",
+              );
               await processSuccessfulLogin(authData, normalizedUsername);
               return;
             }
@@ -219,7 +205,8 @@ export default function CredentialsForm() {
         }
 
         // 2. Si no es confiable, buscar factores TOTP y pedir el código
-        const { data: factorsData, error: factorsError } = await supabase.auth.mfa.listFactors();
+        const { data: factorsData, error: factorsError } =
+          await supabase.auth.mfa.listFactors();
         if (factorsError) throw factorsError;
 
         const totpFactor = factorsData.totp[0];
@@ -242,94 +229,99 @@ export default function CredentialsForm() {
     }
   };
 
-  const processSuccessfulLogin = async (authData: any, normalizedUsername: string) => {
-
-      // Login exitoso - registrar intento exitoso y sesión
-      if (authData?.user) {
-        // Obtener información del dispositivo
-        let dispositivo = "Dispositivo desconocido";
-        try {
-          const nav = navigator as any;
-          if (nav.userAgentData) {
-            dispositivo = `${nav.userAgentData.platform || "Unknown"} - ${
-              nav.userAgentData.brands?.map((b: any) => b.brand).join(", ") ||
-              "Unknown"
-            }`;
-          } else {
-            dispositivo = `${
-              navigator.platform || "Unknown"
-            } - ${navigator.userAgent.substring(0, 50)}`;
-          }
-        } catch {
-          dispositivo = navigator.userAgent.substring(0, 100);
-        }
-
-        // Intentar obtener ubicación aproximada (opcional, no bloqueante)
-        let ubicacion = null;
-        try {
-          // Esto es opcional y puede fallar, no bloqueamos si falla
-          const geo = await fetch("https://ipapi.co/json/")
-            .then((r) => r.json())
-            .catch(() => null);
-          if (geo && geo.city) {
-            ubicacion = `${geo.city || ""}, ${geo.region || ""}, ${
-              geo.country_name || ""
-            }`.trim();
-          }
-        } catch {
-          // Ignorar errores de geolocalización
-        }
-
-        // El dispositivo es confiable SOLO si el checkbox está marcado actualmente
-        const esConfiable = recordarDispositivo;
-
-        // Guardar flag de confiable usando AMBAS claves (email para sessionProvider, username para el onBlur)
-        const userEmail = authData.user.email || "";
-        if (recordarDispositivo) {
-          localStorage.setItem(`device_trusted_${userEmail}`, "true");
-          localStorage.setItem(`device_trusted_${normalizedUsername}`, "true");
+  const processSuccessfulLogin = async (
+    authData: any,
+    normalizedUsername: string,
+  ) => {
+    // Login exitoso - registrar intento exitoso y sesión
+    if (authData?.user) {
+      // Obtener información del dispositivo
+      let dispositivo = "Dispositivo desconocido";
+      try {
+        const nav = navigator as any;
+        if (nav.userAgentData) {
+          dispositivo = `${nav.userAgentData.platform || "Unknown"} - ${
+            nav.userAgentData.brands?.map((b: any) => b.brand).join(", ") ||
+            "Unknown"
+          }`;
         } else {
-          localStorage.removeItem(`device_trusted_${userEmail}`);
-          localStorage.removeItem(`device_trusted_${normalizedUsername}`);
+          dispositivo = `${
+            navigator.platform || "Unknown"
+          } - ${navigator.userAgent.substring(0, 50)}`;
         }
-
-        // ── INHIBIR REGISTRO DUPLICADO EN sessionProvider ──────────────────────
-        // El evento SIGNED_IN del sessionProvider también llama a /api/auth/registrar-sesion.
-        // Para evitar dos INSERTs simultáneos, activamos su cooldown de 5 min ANTES
-        // de que llegue ese evento. El sessionProvider respeta el cooldown y lo saltea.
-        const SESSION_REGISTER_KEY = `session_registered_${authData.user.id}`;
-        localStorage.setItem(SESSION_REGISTER_KEY, String(Date.now()));
-        // ───────────────────────────────────────────────────────────────────────
-
-        // Registrar sesión activa — única llamada al POST en todo el flujo de login
-        try {
-          const res = await fetch("/api/auth/registrar-sesion", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              token: authData.session?.access_token || null,
-              dispositivo,
-              ubicacion,
-              esConfiable,
-            }),
-          });
-          const data = await res.json().catch(() => ({}));
-          // Guardar sesionId para el logout correcto
-          if (data?.sesionId) {
-            localStorage.setItem(`session_id_${authData.user.id}`, String(data.sesionId));
-          }
-        } catch (err) {
-          console.warn("Error al registrar sesión:", err);
-        }
+      } catch {
+        dispositivo = navigator.userAgent.substring(0, 100);
       }
 
-      // Redirigir después de login exitoso
-      const safeCallbackUrl =
-        callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
-          ? callbackUrl
-          : "/dashboard";
+      // Intentar obtener ubicación aproximada (opcional, no bloqueante)
+      let ubicacion = null;
+      try {
+        // Esto es opcional y puede fallar, no bloqueamos si falla
+        const geo = await fetch("https://ipapi.co/json/")
+          .then((r) => r.json())
+          .catch(() => null);
+        if (geo && geo.city) {
+          ubicacion = `${geo.city || ""}, ${geo.region || ""}, ${
+            geo.country_name || ""
+          }`.trim();
+        }
+      } catch {
+        // Ignorar errores de geolocalización
+      }
 
-      window.location.href = safeCallbackUrl;
+      // El dispositivo es confiable SOLO si el checkbox está marcado actualmente
+      const esConfiable = recordarDispositivo;
+
+      // Guardar flag de confiable usando AMBAS claves (email para sessionProvider, username para el onBlur)
+      const userEmail = authData.user.email || "";
+      if (recordarDispositivo) {
+        localStorage.setItem(`device_trusted_${userEmail}`, "true");
+        localStorage.setItem(`device_trusted_${normalizedUsername}`, "true");
+      } else {
+        localStorage.removeItem(`device_trusted_${userEmail}`);
+        localStorage.removeItem(`device_trusted_${normalizedUsername}`);
+      }
+
+      // ── INHIBIR REGISTRO DUPLICADO EN sessionProvider ──────────────────────
+      // El evento SIGNED_IN del sessionProvider también llama a /api/auth/registrar-sesion.
+      // Para evitar dos INSERTs simultáneos, activamos su cooldown de 5 min ANTES
+      // de que llegue ese evento. El sessionProvider respeta el cooldown y lo saltea.
+      const SESSION_REGISTER_KEY = `session_registered_${authData.user.id}`;
+      localStorage.setItem(SESSION_REGISTER_KEY, String(Date.now()));
+      // ───────────────────────────────────────────────────────────────────────
+
+      // Registrar sesión activa — única llamada al POST en todo el flujo de login
+      try {
+        const res = await fetch("/api/auth/registrar-sesion", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token: authData.session?.access_token || null,
+            dispositivo,
+            ubicacion,
+            esConfiable,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        // Guardar sesionId para el logout correcto
+        if (data?.sesionId) {
+          localStorage.setItem(
+            `session_id_${authData.user.id}`,
+            String(data.sesionId),
+          );
+        }
+      } catch (err) {
+        console.warn("Error al registrar sesión:", err);
+      }
+    }
+
+    // Redirigir después de login exitoso
+    const safeCallbackUrl =
+      callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
+        ? callbackUrl
+        : "/dashboard";
+
+    window.location.href = safeCallbackUrl;
   };
 
   const handleMfaSubmit = async (e: React.FormEvent) => {
@@ -345,10 +337,11 @@ export default function CredentialsForm() {
 
     try {
       const supabase = getSupabaseBrowserClient();
-      const { data: verifyData, error: verifyError } = await supabase.auth.mfa.challengeAndVerify({
-        factorId,
-        code: mfaCode,
-      });
+      const { data: verifyData, error: verifyError } =
+        await supabase.auth.mfa.challengeAndVerify({
+          factorId,
+          code: mfaCode,
+        });
 
       if (verifyError) throw verifyError;
 
@@ -372,14 +365,20 @@ export default function CredentialsForm() {
       <form onSubmit={handleMfaSubmit} className="space-y-5">
         <div className="text-center mb-6">
           <Shield className="mx-auto h-12 w-12 text-[#67afc3] mb-3" />
-          <h3 className="text-xl font-bold text-slate-800">Autenticación de dos pasos</h3>
+          <h3 className="text-xl font-bold text-slate-800">
+            Autenticación de dos pasos
+          </h3>
           <p className="text-sm text-slate-500 mt-2">
-            Ingresa el código de 6 dígitos generado por tu aplicación autenticadora (ej. Google Authenticator).
+            Ingresa el código de 6 dígitos generado por tu aplicación
+            autenticadora (ej. Google Authenticator).
           </p>
         </div>
 
         <div>
-          <label htmlFor="mfaCode" className="block text-sm font-medium text-slate-700 mb-1.5 text-center">
+          <label
+            htmlFor="mfaCode"
+            className="block text-sm font-medium text-slate-700 mb-1.5 text-center"
+          >
             Código de verificación
           </label>
           <input
@@ -458,7 +457,9 @@ export default function CredentialsForm() {
                   "El nombre de usuario debe tener al menos 2 caracteres",
                 );
               } else if (username) {
-                const trusted = localStorage.getItem(`device_trusted_${username.trim().toLowerCase()}`);
+                const trusted = localStorage.getItem(
+                  `device_trusted_${username.trim().toLowerCase()}`,
+                );
                 if (trusted === "true") {
                   setRecordarDispositivo(true);
                 }
@@ -467,9 +468,7 @@ export default function CredentialsForm() {
             required
             disabled={isLoading}
             className={`w-full pl-10 pr-3 py-3 border rounded-xl bg-slate-50/60 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#67afc3]/50 focus:border-[#67afc3]/50 transition-all ${
-              usernameError
-                ? "border-red-300 bg-red-50/50"
-                : "border-slate-200"
+              usernameError ? "border-red-300 bg-red-50/50" : "border-slate-200"
             } ${isLoading ? "opacity-60 cursor-not-allowed" : ""}`}
             placeholder="juan"
             autoComplete="username"

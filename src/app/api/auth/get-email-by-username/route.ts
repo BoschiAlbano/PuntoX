@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     if (!username || typeof username !== "string") {
       return NextResponse.json(
         { error: "Nombre de usuario requerido" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -26,7 +26,10 @@ export async function POST(req: NextRequest) {
         Nombre: usernameNormalized,
         EstaEliminado: false,
       },
-      include: {
+      select: {
+        EstaBloqueado: true,
+        TenantId: true,
+        AuthUserId: true,
         Persona_Empleado: {
           include: {
             Persona: {
@@ -43,7 +46,7 @@ export async function POST(req: NextRequest) {
     if (!usuario) {
       return NextResponse.json(
         { error: "Usuario no encontrado" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -54,14 +57,14 @@ export async function POST(req: NextRequest) {
     // Si no hay email, significa que es un empleado nuevo con email interno
     // Generamos el email interno basado en el username
     if (!email) {
-      const { generateInternalEmail } = await import(
-        "@/lib/auth/generateInternalEmail"
-      );
+      const { generateInternalEmail } =
+        await import("@/lib/auth/generateInternalEmail");
       const internalEmail = generateInternalEmail(usernameNormalized);
 
       return NextResponse.json({
         email: internalEmail,
         isInternal: true,
+        isBlocked: usuario.EstaBloqueado,
         tenantId: usuario.TenantId ? Number(usuario.TenantId) : null,
       });
     }
@@ -72,6 +75,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       email,
       isInternal,
+      isBlocked: usuario.EstaBloqueado,
       tenantId: usuario.TenantId ? Number(usuario.TenantId) : null,
     });
   } catch (error) {

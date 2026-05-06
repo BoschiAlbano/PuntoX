@@ -1058,7 +1058,11 @@ model Usuario {
   Nombre                               String                 @db.VarChar(50)
   EstaBloqueado                        Boolean
   EstaEliminado                        Boolean
-  /// Tenant dueÃ±o de este usuario
+  /// Contador de intentos de login fallidos consecutivos. Se resetea al iniciar sesión correctamente o al desbloquear.
+  IntentosFallidos                     Int                    @default(0)
+  /// Timestamp del último intento de login fallido. Se usa para resetear el contador tras 30 minutos de inactividad.
+  FechaUltimoIntento                   DateTime?
+  /// Tenant dueño de este usuario
   TenantId                             BigInt
   /// ID del usuario en Supabase Auth (auth.users.id)
   AuthUserId                           String                 @unique @db.VarChar(255)

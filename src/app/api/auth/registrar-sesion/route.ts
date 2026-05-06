@@ -60,12 +60,15 @@ export async function POST(req: NextRequest) {
 
     const userAgent = req.headers.get("user-agent") || null;
 
-    // VULNERABILITY FIX: Un atacante podría enviar esConfiable=true en el nivel AAL1 
+    // VULNERABILITY FIX: Un atacante podría enviar esConfiable=true en el nivel AAL1
     // antes de pasar el 2FA. Debemos forzar esConfiable=false si el usuario requiere AAL2 pero solo tiene AAL1.
     if (esConfiable) {
-      const { data: mfaData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      const { data: mfaData } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (mfaData?.nextLevel === "aal2" && mfaData?.currentLevel === "aal1") {
-        console.warn("Intento de registrar dispositivo confiable bloqueado (Usuario pendiente de 2FA).");
+        console.warn(
+          "Intento de registrar dispositivo confiable bloqueado (Usuario pendiente de 2FA).",
+        );
         esConfiable = false;
       }
     }
@@ -80,12 +83,12 @@ export async function POST(req: NextRequest) {
 
     // Extraer session_id del JWT provisto en el body para identificación estable de sesión
     let supabaseSessionId: string | null = null;
-    
+
     // Priorizar el token enviado por el cliente en el body, que es 100% fresco
     if (token) {
       try {
         const payload = JSON.parse(
-          Buffer.from(token.split(".")[1], "base64url").toString()
+          Buffer.from(token.split(".")[1], "base64url").toString(),
         );
         supabaseSessionId = payload.session_id || null;
       } catch {
@@ -95,11 +98,16 @@ export async function POST(req: NextRequest) {
 
     // Si no vino en el body, intentar con la cookie de la sesión del servidor
     if (!supabaseSessionId) {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session?.access_token) {
         try {
           const payload = JSON.parse(
-            Buffer.from(session.access_token.split(".")[1], "base64url").toString()
+            Buffer.from(
+              session.access_token.split(".")[1],
+              "base64url",
+            ).toString(),
           );
           supabaseSessionId = payload.session_id || null;
         } catch {
@@ -221,7 +229,10 @@ export async function POST(req: NextRequest) {
         esConfiable === true,
         supabaseSessionId,
       );
-      sesionId = nuevaSesion && nuevaSesion.length > 0 ? Number(nuevaSesion[0].Id) : null;
+      sesionId =
+        nuevaSesion && nuevaSesion.length > 0
+          ? Number(nuevaSesion[0].Id)
+          : null;
     }
 
     // Si es confiable, también registrar en DispositivoConfiable
@@ -233,7 +244,7 @@ export async function POST(req: NextRequest) {
       if (!existingToken) {
         // Generar un token único y seguro
         const deviceToken = crypto.randomUUID();
-        
+
         const nombreDispositivo =
           dispositivo ||
           userAgent?.substring(0, 50) ||
@@ -263,7 +274,10 @@ export async function POST(req: NextRequest) {
             maxAge: 60 * 60 * 24 * 30, // 30 días
           });
         } catch (deviceError) {
-          console.error("[registrar-sesion] ERROR al registrar DispositivoConfiable:", deviceError);
+          console.error(
+            "[registrar-sesion] ERROR al registrar DispositivoConfiable:",
+            deviceError,
+          );
         }
       } else {
         // Ya tiene cookie: solo actualizar FechaUltimoUso
@@ -273,9 +287,22 @@ export async function POST(req: NextRequest) {
             existingToken,
           );
         } catch (updateError) {
-          console.error("[registrar-sesion] ERROR al actualizar FechaUltimoUso:", updateError);
+          console.error(
+            "[registrar-sesion] ERROR al actualizar FechaUltimoUso:",
+            updateError,
+          );
         }
       }
+    }
+
+    // Resetear contador de intentos fallidos al iniciar sesión correctamente
+    try {
+      await prisma.usuario.update({
+        where: { Id: usuario.Id },
+        data: { IntentosFallidos: 0, FechaUltimoIntento: null },
+      });
+    } catch {
+      // No crítico: no interrumpir el login si esto falla
     }
 
     return NextResponse.json(

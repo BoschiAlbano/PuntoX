@@ -60,7 +60,11 @@ import { handleError } from "@/lib/errors/handler";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 import { PerfilTipo } from "../../../../prisma/generated/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS, GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
+import {
+  PERMISSIONS,
+  GET_PERMISSIONS,
+  SET_PERMISSIONS,
+} from "@/lib/constants/comprobantes";
 
 export async function GET(req: NextRequest) {
   try {
@@ -217,6 +221,7 @@ export async function GET(req: NextRequest) {
                 Id: true,
                 Nombre: true,
                 EstaBloqueado: true,
+                IntentosFallidos: true,
                 PerfilUsuario: {
                   select: {
                     Perfiles: {
@@ -316,6 +321,7 @@ export async function GET(req: NextRequest) {
           legajo: legajo ? `PX-${legajo}` : null,
           dni: persona.Dni,
           ultimaActividad: "Pendiente",
+          intentosFallidos: usuario ? Number(usuario.IntentosFallidos ?? 0) : 0,
         };
       });
     } catch (mapError) {
@@ -1054,7 +1060,13 @@ export async function PATCH(req: NextRequest) {
 
     const updated = await prisma.usuario.update({
       where: { Id: BigInt(usuarioIdAfectado), TenantId: BigInt(tenantId) },
-      data: { EstaBloqueado: parsed.data.bloquear },
+      data: {
+        EstaBloqueado: parsed.data.bloquear,
+        // Al desbloquear manualmente, resetear el contador de intentos fallidos
+        ...(!parsed.data.bloquear
+          ? { IntentosFallidos: 0, FechaUltimoIntento: null }
+          : {}),
+      },
       select: { Id: true, EstaBloqueado: true },
     });
 

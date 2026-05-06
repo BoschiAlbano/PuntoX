@@ -19,7 +19,8 @@ type AccionAuditoria =
   | "CREAR_ROL"
   | "EDITAR_ROL"
   | "ELIMINAR_ROL"
-  | "CAMBIAR_CONFIG_SEGURIDAD";
+  | "CAMBIAR_CONFIG_SEGURIDAD"
+  | "BLOQUEO_AUTOMATICO";
 
 type SeveridadAuditoria = "INFO" | "WARNING" | "CRITICAL";
 
@@ -44,17 +45,18 @@ function inferirSeveridad(accion: AccionAuditoria): SeveridadAuditoria {
   if (accion === "ELIMINAR_USUARIO" || accion === "ELIMINAR_ROL") {
     return "CRITICAL";
   }
-  
+
   // WARNING: Cambios importantes o suspensiones
   if (
     accion === "CAMBIAR_ROL" ||
     accion === "EDITAR_ROL" ||
     accion === "SUSPENDER_USUARIO" ||
+    accion === "BLOQUEO_AUTOMATICO" ||
     accion === "CAMBIAR_CONFIG_SEGURIDAD"
   ) {
     return "WARNING";
   }
-  
+
   // INFO: Creaciones, invitaciones, reactivaciones
   return "INFO";
 }
@@ -63,13 +65,13 @@ function inferirSeveridad(accion: AccionAuditoria): SeveridadAuditoria {
  * Registra una auditoría de acción sobre empleados/usuarios
  */
 export async function registrarAuditoria(
-  params: RegistrarAuditoriaParams
+  params: RegistrarAuditoriaParams,
 ): Promise<void> {
   try {
     // Obtener IP y User-Agent de los headers
     let ipAddress = "unknown";
     let userAgent: string | null = null;
-    
+
     if (params.req) {
       // Si tenemos el request (API route), usar sus headers
       ipAddress =
@@ -121,4 +123,3 @@ export async function registrarAuditoria(
     console.error("[auditoria] Error al registrar auditoría:", error);
   }
 }
-
