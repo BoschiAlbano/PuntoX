@@ -1,12 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import {
-  ShoppingCart,
-  TrendingUp,
-  Users,
-  AlertTriangle,
-  LayoutDashboard,
-} from "lucide-react";
+import { ShoppingCart, TrendingUp, Users, AlertTriangle } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import {
@@ -16,7 +10,6 @@ import {
   useLowStock,
 } from "@/hooks/useDashboard";
 import {
-  Spinner,
   Modal,
   ModalContent,
   ModalHeader,
@@ -26,7 +19,7 @@ import {
 import Link from "next/link";
 
 export default function DashboardPage() {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { isOpen, onOpenChange } = useDisclosure();
   const { data: summaryData, isLoading } = useDashboardSummary();
   const { data: topProductsData, isLoading: isLoadingTopProducts } =
     useTopProducts();
@@ -73,12 +66,12 @@ export default function DashboardPage() {
               value={isLoading ? "..." : summaryData?.lowStock?.count || 0}
               subtitle="Productos Críticos"
               bottomText={
-                <span
+                <Link
+                  href="/productos?bajoStock=true"
                   className="underline cursor-pointer hover:text-orange-600 transition-colors"
-                  onClick={onOpen}
                 >
                   Ver todos
-                </span>
+                </Link>
               }
               icon={AlertTriangle}
               colorScheme="orange"

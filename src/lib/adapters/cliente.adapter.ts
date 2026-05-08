@@ -20,7 +20,11 @@ export const clienteAdapter = (data: any): Cliente => {
     ActivarCtaCte: Boolean(data.Persona_Cliente?.ActivarCtaCte),
     TieneLimiteCompra: Boolean(data.Persona_Cliente?.TieneLimiteCompra),
     MontoMaximoCtaCte: Number(data.Persona_Cliente?.MontoMaximoCtaCte || 0),
-    ListaPrecioId: data.Persona_Cliente?.ListaPrecioId ? Number(data.Persona_Cliente.ListaPrecioId) : null,
+    ListaPrecioId: data.Persona_Cliente?.ListaPrecioId
+      ? Number(data.Persona_Cliente.ListaPrecioId)
+      : null,
+    SaldoCtaCte:
+      data.SaldoCtaCte !== undefined ? Number(data.SaldoCtaCte) : undefined,
   };
 };
 

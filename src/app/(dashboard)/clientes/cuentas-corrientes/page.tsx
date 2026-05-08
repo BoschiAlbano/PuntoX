@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { motion } from "framer-motion";
 import CuentasCorrientesCRUD from "@/components/clientes/CuentasCorrientesCRUD";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -20,7 +21,9 @@ export default function CuentasCorrientesPage() {
         className="flex-1 overflow-hidden relative flex flex-col"
       >
         <div className="relative z-10 flex-1 flex flex-col h-full overflow-hidden">
-          <CuentasCorrientesCRUD />
+          <Suspense fallback={<div />}>
+            <CuentasCorrientesCRUD />
+          </Suspense>
         </div>
       </motion.div>
     </div>

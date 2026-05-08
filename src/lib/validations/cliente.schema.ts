@@ -15,7 +15,10 @@ export const createClienteSchema = z.object({
   MontoMaximoCtaCte: z
     .number()
     .min(0)
-    .max(999_999_999_999, "El monto máximo de cuenta corriente no puede exceder el límite")
+    .max(
+      999_999_999_999,
+      "El monto máximo de cuenta corriente no puede exceder el límite",
+    )
     .optional()
     .default(0),
 });
@@ -37,7 +40,10 @@ export const updateClienteSchema = z.object({
   MontoMaximoCtaCte: z
     .number()
     .min(0)
-    .max(999_999_999_999, "El monto máximo de cuenta corriente no puede exceder el límite")
+    .max(
+      999_999_999_999,
+      "El monto máximo de cuenta corriente no puede exceder el límite",
+    )
     .optional(),
 });
 
@@ -64,4 +70,5 @@ export interface Cliente {
   TieneLimiteCompra: boolean;
   MontoMaximoCtaCte: number;
   ListaPrecioId?: number | null;
+  SaldoCtaCte?: number;
 }

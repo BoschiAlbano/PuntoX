@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Input,
   Button,
@@ -29,8 +30,11 @@ import { TIPO_PAGO } from "@/lib/constants/comprobantes";
 import { LoadingComponent } from "../loading/loading";
 import { useCtaCte, ClienteCtaCte, MovimientoCtaCte } from "@/hooks/useCtaCte";
 import GenericTable, { Column } from "@/components/shared/GenericTable";
+import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
 
 export default function CuentasCorrientesCRUD() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const {
     useBuscarClientes,
     useMovimientosCliente,
@@ -49,6 +53,35 @@ export default function CuentasCorrientesCRUD() {
   const [selectedClient, setSelectedClient] = useState<ClienteCtaCte | null>(
     null,
   );
+
+  // Auto-seleccionar cliente si viene desde la página de clientes
+  useEffect(() => {
+    const clienteIdParam = searchParams?.get("clienteId");
+    const nombreParam = searchParams?.get("nombre");
+    const dniParam = searchParams?.get("dni");
+    if (clienteIdParam && nombreParam) {
+      const [nombre, ...apellidoParts] = nombreParam.split(" ");
+      const apellido = apellidoParts.join(" ");
+
+      // Bloquear acceso al consumidor final
+      if (
+        nombre === consumidorFinalSchema.Nombre &&
+        apellido === consumidorFinalSchema.Apellido
+      ) {
+        router.replace("/clientes");
+        return;
+      }
+
+      setSelectedClient({
+        Id: Number(clienteIdParam),
+        Nombre: nombre,
+        Apellido: apellido,
+        Dni: dniParam ?? "",
+        Mail: "",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const { data: movementsData, isLoading: isLoadingMovements } =
     useMovimientosCliente(selectedClient?.Id);
   const movements = movementsData || [];

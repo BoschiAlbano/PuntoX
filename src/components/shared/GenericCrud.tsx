@@ -162,12 +162,14 @@ export default function GenericCrud<T extends { Id: number | string }>({
   const [selectedItem, setSelectedItem] = useState<T | null>(null);
   const [itemToDelete, setItemToDelete] = useState<T | null>(null);
   const [previewItem, setPreviewItem] = useState<T | null>(null);
-  const [lowStockOnly, setLowStockOnly] = useState(false);
-
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   const editId = searchParams?.get("editId");
+
+  const [lowStockOnly, setLowStockOnly] = useState(
+    () => searchParams?.get("bajoStock") === "true",
+  );
 
   // Selección masiva cross-page
   const [selectionMode, setSelectionMode] = useState<SelectionMode>("manual");

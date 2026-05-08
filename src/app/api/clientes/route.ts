@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS, GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
+import {
+  PERMISSIONS,
+  GET_PERMISSIONS,
+  SET_PERMISSIONS,
+  TIPO_COMPROBANTE_VENTA,
+  TIPO_PAGO,
+} from "@/lib/constants/comprobantes";
 import {
   parsePaginationParams,
   createPaginationResponse,
@@ -11,6 +17,7 @@ import {
   createClienteSchema,
   updateClienteSchema,
 } from "@/lib/validations/cliente.schema";
+import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
 import { Prisma } from "../../../../prisma/generated/prisma";
 
 // GET: Listar clientes
@@ -29,6 +36,12 @@ export async function GET(req: NextRequest) {
       TenantId: BigInt(tenantId),
       EstaEliminado: false,
       Persona_Cliente: { isNot: null },
+      NOT: {
+        AND: [
+          { Nombre: consumidorFinalSchema.Nombre },
+          { Apellido: consumidorFinalSchema.Apellido },
+        ],
+      },
     };
 
     // Si hay búsqueda, filtrar por nombre, apellido, email o DNI
@@ -92,8 +105,72 @@ export async function GET(req: NextRequest) {
       }),
     ]);
 
+    const clienteIds = clientes.map((c) => c.Id);
+
+    const [ventasCtaCte, pagosCtaCte] = await Promise.all([
+      prisma.formaPago.findMany({
+        where: {
+          TenantId: BigInt(tenantId),
+          TipoPago: TIPO_PAGO.CUENTA_CORRIENTE,
+          Comprobante: { EstaEliminado: false },
+          FormaPago_CtaCte: { ClienteId: { in: clienteIds } },
+        },
+        select: {
+          Monto: true,
+          FormaPago_CtaCte: { select: { ClienteId: true } },
+        },
+      }),
+      prisma.comprobante.findMany({
+        where: {
+          TenantId: BigInt(tenantId),
+          EstaEliminado: false,
+          TipoComprobante: TIPO_COMPROBANTE_VENTA.CUENTA_CORRIENTE_CLIENTE,
+          Comprobante_CuentaCorriente: { ClienteId: { in: clienteIds } },
+        },
+        select: {
+          Total: true,
+          Comprobante_CuentaCorriente: { select: { ClienteId: true } },
+        },
+      }),
+    ]);
+
+    const deudaMap = new Map<string, number>();
+    for (const fp of ventasCtaCte) {
+      const clienteId = fp.FormaPago_CtaCte?.ClienteId?.toString();
+      if (!clienteId) continue;
+      deudaMap.set(
+        clienteId,
+        (deudaMap.get(clienteId) ?? 0) + Number(fp.Monto),
+      );
+    }
+    const pagosMap = new Map<string, number>();
+    for (const p of pagosCtaCte) {
+      const clienteId = p.Comprobante_CuentaCorriente?.ClienteId?.toString();
+      if (!clienteId) continue;
+      pagosMap.set(clienteId, (pagosMap.get(clienteId) ?? 0) + Number(p.Total));
+    }
+
+    const formattedClientes = clientes.map((c) => ({
+      Id: Number(c.Id),
+      Nombre: c.Nombre,
+      Apellido: c.Apellido,
+      Dni: c.Dni,
+      Direccion: c.Direccion,
+      Telefono: c.Telefono,
+      Mail: c.Mail,
+      LocalidadId: Number(c.LocalidadId),
+      Localidad: c.Localidad,
+      Persona_Cliente: c.Persona_Cliente,
+      SaldoCtaCte: parseFloat(
+        (
+          (deudaMap.get(c.Id.toString()) ?? 0) -
+          (pagosMap.get(c.Id.toString()) ?? 0)
+        ).toFixed(2),
+      ),
+    }));
+
     const paginatedResponse = createPaginationResponse(
-      clientes,
+      formattedClientes,
       total,
       pagination,
     );
@@ -473,7 +550,9 @@ export async function PATCH(req: NextRequest) {
         );
       if (validarCliente.ListaPrecioId !== undefined) {
         if (validarCliente.ListaPrecioId) {
-          updateClienteData.ListaPrecio = { connect: { Id: BigInt(validarCliente.ListaPrecioId) } };
+          updateClienteData.ListaPrecio = {
+            connect: { Id: BigInt(validarCliente.ListaPrecioId) },
+          };
         } else {
           updateClienteData.ListaPrecio = { disconnect: true };
         }

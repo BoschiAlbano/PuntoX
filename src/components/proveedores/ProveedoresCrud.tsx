@@ -29,14 +29,18 @@ export default function ProveedoresCrud() {
                 {item.RazonSocial}
               </p>
               {item.CUIT && (
-                <p className="text-slate-500 font-medium text-xs mt-0.5">CUIT: {item.CUIT}</p>
+                <p className="text-slate-500 font-medium text-xs mt-0.5">
+                  CUIT: {item.CUIT}
+                </p>
               )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
-              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Condición IVA</p>
+              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">
+                Condición IVA
+              </p>
               <span
                 className={`inline-block px-2.5 py-1 rounded-md text-xs font-semibold ${
                   item.CondicionIva
@@ -48,11 +52,14 @@ export default function ProveedoresCrud() {
               </span>
             </div>
             <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
-              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Contacto</p>
+              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">
+                Contacto
+              </p>
               <div className="space-y-1.5">
                 {item.Mail && (
                   <p className="text-slate-700 text-xs font-medium flex items-center gap-1.5">
-                    <span className="text-slate-400">✉️</span> <span className="truncate">{item.Mail}</span>
+                    <span className="text-slate-400">✉️</span>{" "}
+                    <span className="truncate">{item.Mail}</span>
                   </p>
                 )}
                 {item.Telefono && (
@@ -68,8 +75,12 @@ export default function ProveedoresCrud() {
           </div>
 
           <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
-            <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Ubicación</p>
-            <p className="font-medium text-slate-700 text-sm">{item.Direccion || "—"}</p>
+            <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">
+              Ubicación
+            </p>
+            <p className="font-medium text-slate-700 text-sm">
+              {item.Direccion || "—"}
+            </p>
             {(item.Localidad || item.Departamento || item.Provincia) && (
               <p className="text-slate-500 text-xs mt-1">
                 {[item.Localidad, item.Departamento, item.Provincia]
@@ -108,16 +119,19 @@ export default function ProveedoresCrud() {
           key: "eliminar-masivo",
           label: "Eliminar seleccionados",
           onAction: (ctx) => {
-               // logica bulk actions mock
-              addToast({
-                title: "Acción en lote",
-                description: `Se han procesado ${ctx.totalCount} proveedores.`,
-              });
+            // logica bulk actions mock
+            addToast({
+              title: "Acción en lote",
+              description: `Se han procesado ${ctx.totalCount} proveedores.`,
+            });
           },
         },
       ]}
       columns={[
-        { uid: "razonSocial", name: "PROVEEDOR", sortable: true,
+        {
+          uid: "razonSocial",
+          name: "PROVEEDOR",
+          sortable: true,
           align: "start",
         },
         { uid: "condicionIva", name: "CONDICIÓN IVA", sortable: true },
@@ -193,7 +207,9 @@ export default function ProveedoresCrud() {
                   </div>
                 ) : null}
                 {!item.Mail && !item.Telefono && (
-                  <span className="text-xs text-slate-400 italic">Sin contacto</span>
+                  <span className="text-xs text-slate-400 italic">
+                    Sin contacto
+                  </span>
                 )}
               </div>
             );
@@ -201,25 +217,9 @@ export default function ProveedoresCrud() {
             const saldo = item.SaldoCtaCte ?? 0;
             if (saldo > 0) {
               return (
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold bg-rose-50 text-rose-500 border border-rose-100">
-                    ${saldo.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
-                  </span>
-                  <Tooltip content="Ver cuenta corriente">
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      className="bg-[#67afc3]/10 text-[#67afc3] hover:bg-[#67afc3]/25 transition-colors"
-                      onPress={() =>
-                        router.push(
-                          `/proveedores/cuentas-corrientes?proveedorId=${item.Id}&nombre=${encodeURIComponent(item.RazonSocial)}&cuit=${encodeURIComponent(item.CUIT ?? "")}`
-                        )
-                      }
-                    >
-                      <CreditCard className="w-4 h-4" />
-                    </Button>
-                  </Tooltip>
-                </div>
+                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold bg-rose-50 text-rose-500 border border-rose-100">
+                  ${saldo.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                </span>
               );
             }
             return (
@@ -228,13 +228,36 @@ export default function ProveedoresCrud() {
               </span>
             );
           }
-          case "acciones":
+          case "acciones": {
+            const tieneDeudaProveedor = (item.SaldoCtaCte ?? 0) > 0;
             return (
               <div className="flex gap-2 w-full justify-center items-center">
                 <Tooltip
-                  content="Editar Proveedor"
-                  color="warning"
+                  content={
+                    tieneDeudaProveedor
+                      ? "Tiene deuda — Ver cuenta corriente"
+                      : "Ver cuenta corriente"
+                  }
+                  color={tieneDeudaProveedor ? "danger" : "default"}
                 >
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    className={
+                      tieneDeudaProveedor
+                        ? "bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
+                        : "bg-[#67afc3]/10 text-[#67afc3] hover:bg-[#67afc3]/25 transition-colors"
+                    }
+                    onPress={() =>
+                      router.push(
+                        `/proveedores/cuentas-corrientes?proveedorId=${item.Id}&nombre=${encodeURIComponent(item.RazonSocial)}&cuit=${encodeURIComponent(item.CUIT ?? "")}`,
+                      )
+                    }
+                  >
+                    <CreditCard className="w-4 h-4" />
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Editar Proveedor" color="warning">
                   <Button
                     isIconOnly
                     size="sm"
@@ -252,10 +275,7 @@ export default function ProveedoresCrud() {
                     </svg>
                   </Button>
                 </Tooltip>
-                <Tooltip
-                  content="Eliminar Proveedor"
-                  color="danger"
-                >
+                <Tooltip content="Eliminar Proveedor" color="danger">
                   <Button
                     isIconOnly
                     size="sm"
@@ -278,6 +298,7 @@ export default function ProveedoresCrud() {
                 </Tooltip>
               </div>
             );
+          }
           default:
             return null;
         }

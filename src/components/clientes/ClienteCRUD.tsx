@@ -1,10 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import GenericCrud from "@/components/shared/GenericCrud";
 import ClienteForm from "./ClienteForm";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
 import { Button, Chip, Tooltip, addToast } from "@heroui/react";
+import { CreditCard } from "lucide-react";
 
 import { clienteListAdapter } from "@/lib/adapters/cliente.adapter";
 import { Cliente } from "@/lib/validations/cliente.schema";
@@ -12,6 +14,7 @@ import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema"
 
 export default function ClienteCRUD() {
   const currency = useCurrency();
+  const router = useRouter();
   return (
     <GenericCrud<Cliente>
       apiPath="/api/clientes"
@@ -33,14 +36,18 @@ export default function ClienteCRUD() {
                 {item.Nombre} {item.Apellido}
               </p>
               {item.Dni && (
-                <p className="text-slate-500 font-medium text-xs mt-0.5">DNI: {item.Dni}</p>
+                <p className="text-slate-500 font-medium text-xs mt-0.5">
+                  DNI: {item.Dni}
+                </p>
               )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
-              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Condición IVA</p>
+              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">
+                Condición IVA
+              </p>
               <span
                 className={`inline-block px-2.5 py-1 rounded-md text-xs font-semibold ${
                   item.CondicionIva
@@ -52,11 +59,14 @@ export default function ClienteCRUD() {
               </span>
             </div>
             <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
-              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Contacto</p>
+              <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">
+                Contacto
+              </p>
               <div className="space-y-1.5">
                 {item.Mail && (
                   <p className="text-slate-700 text-xs font-medium flex items-center gap-1.5">
-                    <span className="text-slate-400">✉️</span> <span className="truncate">{item.Mail}</span>
+                    <span className="text-slate-400">✉️</span>{" "}
+                    <span className="truncate">{item.Mail}</span>
                   </p>
                 )}
                 {item.Telefono && (
@@ -72,8 +82,12 @@ export default function ClienteCRUD() {
           </div>
 
           <div className="p-3 rounded-xl bg-slate-50/50 border border-slate-100">
-            <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">Ubicación</p>
-            <p className="font-medium text-slate-700 text-sm">{item.Direccion || "—"}</p>
+            <p className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-1">
+              Ubicación
+            </p>
+            <p className="font-medium text-slate-700 text-sm">
+              {item.Direccion || "—"}
+            </p>
             {(item.Localidad || item.Departamento || item.Provincia) && (
               <p className="text-slate-500 text-xs mt-1">
                 {[item.Localidad, item.Departamento, item.Provincia]
@@ -84,13 +98,19 @@ export default function ClienteCRUD() {
           </div>
 
           <div className="p-4 rounded-xl bg-linear-to-br from-green-50 to-emerald-50/20 border border-green-100/50">
-            <p className="text-green-600/60 font-semibold text-[10px] uppercase tracking-wider mb-1">Cuenta Corriente</p>
+            <p className="text-green-600/60 font-semibold text-[10px] uppercase tracking-wider mb-1">
+              Cuenta Corriente
+            </p>
             {item.ActivarCtaCte ? (
               <div className="flex items-center justify-between">
-                <span className="text-green-700 font-semibold text-sm">Habilitada</span>
+                <span className="text-green-700 font-semibold text-sm">
+                  Habilitada
+                </span>
                 {item.TieneLimiteCompra ? (
                   <div className="text-right">
-                    <p className="text-green-800/60 text-[10px] uppercase font-bold tracking-wider">Límite</p>
+                    <p className="text-green-800/60 text-[10px] uppercase font-bold tracking-wider">
+                      Límite
+                    </p>
                     <p className="text-green-700 font-bold">
                       {formatCurrency(
                         Number(item.MontoMaximoCtaCte ?? 0),
@@ -99,11 +119,15 @@ export default function ClienteCRUD() {
                     </p>
                   </div>
                 ) : (
-                  <p className="text-green-700 font-medium text-sm">Sin límite de compra</p>
+                  <p className="text-green-700 font-medium text-sm">
+                    Sin límite de compra
+                  </p>
                 )}
               </div>
             ) : (
-              <span className="text-slate-500 font-medium text-sm">No activada</span>
+              <span className="text-slate-500 font-medium text-sm">
+                No activada
+              </span>
             )}
           </div>
         </div>
@@ -230,7 +254,9 @@ export default function ClienteCRUD() {
                   </div>
                 ) : null}
                 {!item.Mail && !item.Telefono && (
-                  <span className="text-xs text-slate-400 italic">Sin contacto</span>
+                  <span className="text-xs text-slate-400 italic">
+                    Sin contacto
+                  </span>
                 )}
               </div>
             );
@@ -244,10 +270,15 @@ export default function ClienteCRUD() {
                     </span>
                     {item.TieneLimiteCompra ? (
                       <span className="text-[11px] font-semibold text-slate-500">
-                        {formatCurrency(Number(item.MontoMaximoCtaCte ?? 0), currency)}
+                        {formatCurrency(
+                          Number(item.MontoMaximoCtaCte ?? 0),
+                          currency,
+                        )}
                       </span>
                     ) : (
-                      <span className="text-[11px] text-slate-400">Sin límite</span>
+                      <span className="text-[11px] text-slate-400">
+                        Sin límite
+                      </span>
                     )}
                   </>
                 ) : (
@@ -257,9 +288,40 @@ export default function ClienteCRUD() {
                 )}
               </div>
             );
-          case "acciones":
+          case "acciones": {
+            const tieneDeudaCliente = (item.SaldoCtaCte ?? 0) > 0;
+            const esConsumidorFinal =
+              item.Nombre === consumidorFinalSchema.Nombre &&
+              item.Apellido === consumidorFinalSchema.Apellido;
             return (
               <div className="flex gap-2 w-full justify-center items-center">
+                {!esConsumidorFinal && (
+                  <Tooltip
+                    content={
+                      tieneDeudaCliente
+                        ? "Tiene deuda — Ver cuenta corriente"
+                        : "Ver cuenta corriente"
+                    }
+                    color={tieneDeudaCliente ? "danger" : "default"}
+                  >
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      className={
+                        tieneDeudaCliente
+                          ? "bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
+                          : "bg-[#67afc3]/10 text-[#67afc3] hover:bg-[#67afc3]/25 transition-colors"
+                      }
+                      onPress={() =>
+                        router.push(
+                          `/clientes/cuentas-corrientes?clienteId=${item.Id}&nombre=${encodeURIComponent(`${item.Nombre} ${item.Apellido}`)}&dni=${encodeURIComponent(item.Dni ?? "")}`,
+                        )
+                      }
+                    >
+                      <CreditCard className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
+                )}
                 <Tooltip
                   content={
                     item.Nombre === consumidorFinalSchema.Nombre ||
@@ -272,7 +334,7 @@ export default function ClienteCRUD() {
                   <Button
                     isIconOnly
                     size="sm"
-                    className="bg-slate-50 text-slate-400 hover:bg-warning-50 hover:text-warning-600 transition-colors"
+                    className="bg-slate-50 text-slate-400  hover:text-warning-600 transition-colors"
                     disabled={
                       item.Nombre === consumidorFinalSchema.Nombre ||
                       item.Apellido === consumidorFinalSchema.Apellido
@@ -302,7 +364,7 @@ export default function ClienteCRUD() {
                   <Button
                     isIconOnly
                     size="sm"
-                    className="bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                    className="bg-slate-50 text-slate-400  hover:text-red-500 transition-colors"
                     disabled={
                       item.Nombre === consumidorFinalSchema.Nombre ||
                       item.Apellido === consumidorFinalSchema.Apellido
@@ -325,6 +387,7 @@ export default function ClienteCRUD() {
                 </Tooltip>
               </div>
             );
+          }
           default:
             return null;
         }
