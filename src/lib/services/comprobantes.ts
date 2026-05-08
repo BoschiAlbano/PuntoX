@@ -42,7 +42,7 @@ export const createComprobanteBaseSchema = z
     fecha: z.string().optional(),
     descuento: z.number().nonnegative().optional().default(0),
     detalles: z.array(detalleComprobanteSchema).min(1),
-    formasPago: z.array(formaPagoSchema).min(1),
+    formasPago: z.array(formaPagoSchema).min(0).default([]),
     // Additional fields for specific types
     comprobanteAsociadoId: z.number().int().positive().optional().nullable(), // For Nota de Credito
     numeroComprobanteAsociado: z.number().int().positive().optional().nullable(), // Alternative to ID
@@ -408,6 +408,7 @@ export async function createFacturaA(
   descuentaStock: boolean,
   sucursalId: bigint,
   cajaId?: bigint,
+  esDiferido?: boolean,
 ) {
   const { comprobante } = await createBaseComprobante(
     tx,
@@ -419,7 +420,7 @@ export async function createFacturaA(
     descuentaStock,
     sucursalId,
     clienteId, // passed
-    cajaId,
+    esDiferido ? undefined : cajaId,
   );
   // Update IVA
   await tx.comprobante.update({
@@ -431,7 +432,7 @@ export async function createFacturaA(
     data: {
       Id: comprobante.Id,
       ClienteId: BigInt(clienteId),
-      Estado: ESTADO_FACTURA.CONFIRMADO,
+      Estado: esDiferido ? ESTADO_FACTURA.PENDIENTE : ESTADO_FACTURA.CONFIRMADO,
     },
   });
   return comprobante;
@@ -450,6 +451,7 @@ export async function createFacturaB(
   descuentaStock: boolean,
   sucursalId: bigint,
   cajaId?: bigint,
+  esDiferido?: boolean,
 ) {
   const { comprobante } = await createBaseComprobante(
     tx,
@@ -461,7 +463,7 @@ export async function createFacturaB(
     descuentaStock,
     sucursalId,
     clienteId, // passed
-    cajaId,
+    esDiferido ? undefined : cajaId,
   );
   await tx.comprobante.update({
     where: { Id: comprobante.Id },
@@ -472,7 +474,7 @@ export async function createFacturaB(
     data: {
       Id: comprobante.Id,
       ClienteId: BigInt(clienteId),
-      Estado: ESTADO_FACTURA.CONFIRMADO,
+      Estado: esDiferido ? ESTADO_FACTURA.PENDIENTE : ESTADO_FACTURA.CONFIRMADO,
     },
   });
   return comprobante;
@@ -489,6 +491,7 @@ export async function createFacturaC(
   descuentaStock: boolean,
   sucursalId: bigint,
   cajaId?: bigint,
+  esDiferido?: boolean,
 ) {
   // Factura C has NO IVA discriminator usually, but the table has fields.
   const { comprobante } = await createBaseComprobante(
@@ -501,14 +504,14 @@ export async function createFacturaC(
     descuentaStock,
     sucursalId,
     clienteId, // passed
-    cajaId,
+    esDiferido ? undefined : cajaId,
   );
 
   await tx.comprobante_Factura.create({
     data: {
       Id: comprobante.Id,
       ClienteId: BigInt(clienteId),
-      Estado: ESTADO_FACTURA.CONFIRMADO,
+      Estado: esDiferido ? ESTADO_FACTURA.PENDIENTE : ESTADO_FACTURA.CONFIRMADO,
     },
   });
   return comprobante;

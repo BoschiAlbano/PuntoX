@@ -196,13 +196,24 @@ export async function POST(req: NextRequest) {
 
     const total = subtotalConDescuento;
 
-    // Validar formas de pago
+    // Determinar si es venta diferida (PuestoCajaSeparado activo y tipo es Factura A/B/C)
+    const esDiferido =
+      !!configuracion?.PuestoCajaSeparado &&
+      (
+        [
+          TIPO_COMPROBANTE_VENTA.FACTURA_A,
+          TIPO_COMPROBANTE_VENTA.FACTURA_B,
+          TIPO_COMPROBANTE_VENTA.FACTURA_C,
+        ] as number[]
+      ).includes(data.tipoComprobante);
+
+    // Validar formas de pago (solo si no es diferido)
     const totalFormasPago = data.formasPago.reduce(
       (sum, fp) => sum + fp.monto,
       0,
     );
 
-    if (Math.abs(totalFormasPago - total) > 0.01) {
+    if (!esDiferido && Math.abs(totalFormasPago - total) > 0.01) {
       return NextResponse.json(
         {
           error: `El total de formas de pago (${totalFormasPago}) no coincide con el total de la venta (${total})`,
@@ -211,23 +222,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Find Open Caja
-    const caja = await prisma.caja.findFirst({
-      where: {
-        UsuarioAperturaId: usuarioId,
-        UsuarioCierreId: null,
-        EstaEliminado: false,
-      },
-    });
+    // Find Open Caja (solo si no es diferido)
+    let cajaId: bigint | undefined;
 
-    if (!caja) {
-      return NextResponse.json(
-        { error: "No tienes una caja abierta" },
-        { status: 400 },
-      );
+    if (!esDiferido) {
+      const caja = await prisma.caja.findFirst({
+        where: {
+          UsuarioAperturaId: usuarioId,
+          UsuarioCierreId: null,
+          EstaEliminado: false,
+        },
+      });
+
+      if (!caja) {
+        return NextResponse.json(
+          { error: "No tienes una caja abierta" },
+          { status: 400 },
+        );
+      }
+
+      cajaId = caja.Id;
     }
-
-    const cajaId = caja.Id;
 
     if (
       data.tipoComprobante ===
@@ -281,6 +296,7 @@ export async function POST(req: NextRequest) {
             !!descuentaStock,
             sucursalId,
             cajaId,
+            esDiferido,
           );
         case TIPO_COMPROBANTE_VENTA.FACTURA_B:
           const numeroB = await getNextNumeroComprobante(
@@ -302,6 +318,7 @@ export async function POST(req: NextRequest) {
             !!descuentaStock,
             sucursalId,
             cajaId,
+            esDiferido,
           );
         case TIPO_COMPROBANTE_VENTA.FACTURA_C:
           const numeroC = await getNextNumeroComprobante(
@@ -321,6 +338,7 @@ export async function POST(req: NextRequest) {
             !!descuentaStock,
             sucursalId,
             cajaId,
+            esDiferido,
           );
         case TIPO_COMPROBANTE_VENTA.PRESUPUESTO:
           const numeroP = await getNextNumeroComprobante(
@@ -415,6 +433,7 @@ export async function POST(req: NextRequest) {
           tipoComprobante: resultado.TipoComprobante,
           total: Number(resultado.Total),
           fecha: resultado.Fecha.toISOString(),
+          esDiferido,
         },
       },
       { status: 201 },

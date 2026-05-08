@@ -8,7 +8,12 @@ import {
 } from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
 import { verifyUserBranchAccess } from "@/lib/sucursal/verifyUserBranch";
-import { GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
+import {
+  GET_PERMISSIONS,
+  SET_PERMISSIONS,
+  ESTADO_FACTURA,
+  TIPO_COMPROBANTE_VENTA,
+} from "@/lib/constants/comprobantes";
 
 /** Límite máximo razonable para montos de caja (evita overflow/DoS) */
 const MONTO_CAJA_MAX = 999_999_999_999;
@@ -882,6 +887,34 @@ export async function PATCH(req: NextRequest) {
       if (!cajaAbierta) {
         return NextResponse.json(
           { error: "No hay una caja abierta en esta sucursal" },
+          { status: 400 },
+        );
+      }
+
+      // Guard: no cerrar si hay comprobantes pendientes de cobro
+      const pendientesCount = await prisma.comprobante.count({
+        where: {
+          TenantId: BigInt(tenantId),
+          EstaEliminado: false,
+          TipoComprobante: {
+            in: [
+              TIPO_COMPROBANTE_VENTA.FACTURA_A,
+              TIPO_COMPROBANTE_VENTA.FACTURA_B,
+              TIPO_COMPROBANTE_VENTA.FACTURA_C,
+            ],
+          },
+          Comprobante_Factura: {
+            Estado: ESTADO_FACTURA.PENDIENTE,
+          },
+        },
+      });
+
+      if (pendientesCount > 0) {
+        return NextResponse.json(
+          {
+            error: `No se puede cerrar la caja: hay ${pendientesCount} comprobante${pendientesCount > 1 ? "s" : ""} pendiente${pendientesCount > 1 ? "s" : ""} de cobro. Completá los cobros desde Caja › Cobros antes de cerrar.`,
+            pendientesCount,
+          },
           { status: 400 },
         );
       }

@@ -7,6 +7,7 @@ import { SucursalSelector } from "@/components/sucursal";
 import { useUserStore } from "@/store/useUserStore";
 import { PuntoXLogo } from "@/components/ui/PuntoXLogo";
 import { Tooltip } from "@heroui/react";
+import { useQuery } from "@tanstack/react-query";
 
 interface MenuItem {
   icon: React.ReactNode;
@@ -111,6 +112,26 @@ const menuSections: MenuSection[] = [
         ),
         label: "Historial de Cajas",
         href: "/caja/historial",
+      },
+      {
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+            stroke="currentColor"
+            className="w-5 h-5"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+            />
+          </svg>
+        ),
+        label: "Cobros",
+        href: "/caja/cobros",
       },
     ],
   },
@@ -560,6 +581,20 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
   // Use global store
   const { canAccessRoute } = useUserStore();
 
+  // Poll cobros pendientes count for badge
+  const { data: cobrosData } = useQuery({
+    queryKey: ["cobros-pendientes", "count"],
+    queryFn: async () => {
+      const res = await fetch("/api/cobros?count=true", { credentials: "include" });
+      if (!res.ok) return { count: 0 };
+      return res.json() as Promise<{ count: number }>;
+    },
+    refetchInterval: 5000,
+    refetchIntervalInBackground: false,
+    staleTime: 4000,
+  });
+  const cobrosCount = cobrosData?.count ?? 0;
+
   // Solo una sección abierta a la vez (acordeón). Por defecto "Principal".
   const [openSection, setOpenSection] = useState<string | null>("Principal");
 
@@ -583,10 +618,20 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
     return menuSections
       .map((section) => ({
         ...section,
-        items: section.items.filter((item) => canAccessRoute(item.href)),
+        items: section.items
+          .filter((item) => canAccessRoute(item.href))
+          .map((item) => {
+            if (item.href === "/caja/cobros" && cobrosCount > 0) {
+              return {
+                ...item,
+                badge: cobrosCount > 99 ? "99+" : String(cobrosCount),
+              };
+            }
+            return item;
+          }),
       }))
       .filter((section) => section.items.length > 0);
-  }, [canAccessRoute]);
+  }, [canAccessRoute, cobrosCount]);
 
   // Prefetch todas las rutas disponibles al montar el componente para navegación instantánea
   useEffect(() => {

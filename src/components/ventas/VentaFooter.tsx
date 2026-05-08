@@ -25,6 +25,7 @@ import {
   Banknote,
   ArrowRightLeft,
   AlertTriangle,
+  Clock,
 } from "lucide-react";
 import {
   TIPO_PAGO,
@@ -109,6 +110,15 @@ export default function VentaFooter({
   const totalPagado = pagos.reduce((acc, p) => acc + p.monto, 0);
   const restante = total - totalPagado;
 
+  // Modo diferido: PuestoCajaSeparado activo + factura A/B/C
+  const modoDiferido =
+    !!configuracion?.puestoCajaSeparado &&
+    [
+      TIPO_COMPROBANTE_VENTA.FACTURA_A,
+      TIPO_COMPROBANTE_VENTA.FACTURA_B,
+      TIPO_COMPROBANTE_VENTA.FACTURA_C,
+    ].includes(tipoComprobante as 1 | 2 | 3);
+
   // Reset payments if items are cleared
   useEffect(() => {
     if (items.length === 0) {
@@ -184,6 +194,19 @@ export default function VentaFooter({
       return res.json();
     },
     onSuccess: (data) => {
+      // Modo diferido: no imprimir, invalidar cobros-pendientes
+      if (data.comprobante.esDiferido) {
+        addToast({
+          title: "Factura registrada",
+          description: `Factura #${data.comprobante.numero} pendiente de cobro en Caja.`,
+        });
+        queryClient.invalidateQueries({ queryKey: ["cobros-pendientes"] });
+        queryClient.invalidateQueries({ queryKey: ["productos"] });
+        handleLimpiar();
+        setIsSaving(false);
+        return;
+      }
+
       // Prepare data for printing BEFORE clearing state
       const ticketData = {
         items: [...items], // Copy items
@@ -252,7 +275,7 @@ export default function VentaFooter({
       return;
     }
 
-    if (Math.abs(restante) > 0.01) {
+    if (!modoDiferido && Math.abs(restante) > 0.01) {
       addToast({
         title: "Error",
         description: "El pago debe ser exacto (cubrir el total sin excedente)",
@@ -289,10 +312,12 @@ export default function VentaFooter({
         subtotal: i.subtotal,
         costo: Number(i.PrecioCosto || 0),
       })),
-      formasPago: pagos.map((p) => ({
-        tipoPago: p.tipoPago,
-        monto: p.monto,
-      })),
+      formasPago: modoDiferido
+        ? []
+        : pagos.map((p) => ({
+            tipoPago: p.tipoPago,
+            monto: p.monto,
+          })),
       descuento: subtotal * (descuento / 100),
       fecha: new Date().toISOString(),
       numeroComprobanteAsociado,
@@ -364,6 +389,21 @@ export default function VentaFooter({
     <section className="flex-1 flex flex-col gap-2">
       {/* Payment Methods Section */}
       <div className="bg-white flex-1 rounded-xl border border-slate-100 flex flex-col shadow-sm overflow-hidden">
+        {modoDiferido ? (
+          /* Banner modo diferido */
+          <div className="flex flex-col items-center justify-center gap-3 flex-1 p-5 text-center">
+            <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center">
+              <Clock size={22} className="text-amber-500" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-700">Cobro diferido activo</p>
+              <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
+                La factura se registra como <b>pendiente</b>. El cobro se completa desde <b>Caja &rsaquo; Cobros</b>.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
         {/* Header con margen de cta cte */}
         {currentTipo === TIPO_PAGO.CUENTA_CORRIENTE &&
           cliente?.Persona_Cliente?.ActivarCtaCte && (
@@ -519,6 +559,8 @@ export default function VentaFooter({
             )}
           </div>
         </div>
+          </>
+        )}
       </div>
 
       {/* Totals & Actions Card */}
@@ -590,11 +632,16 @@ export default function VentaFooter({
               className="flex-1 h-11 bg-[#182337] hover:bg-[#0f1929] text-white font-bold rounded-xl transition-all active:scale-[0.98] text-sm tracking-wide shadow-sm"
               onPress={handleFinalizeSale}
               isLoading={isSaving}
-              isDisabled={Math.abs(restante) > 0.01 || items.length === 0}
+              isDisabled={
+                items.length === 0 ||
+                (!modoDiferido && Math.abs(restante) > 0.01)
+              }
             >
-              {Math.abs(restante) < 0.01 && items.length > 0
-                ? "Confirmar venta"
-                : "Completar pago"}
+              {modoDiferido
+                ? "Registrar factura"
+                : Math.abs(restante) < 0.01 && items.length > 0
+                  ? "Confirmar venta"
+                  : "Completar pago"}
             </Button>
           ) : (
             <Button
