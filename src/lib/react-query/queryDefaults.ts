@@ -34,12 +34,16 @@ export const staticDataQueryOptions = {
 
 /**
  * Configuración para queries de datos dinámicos (listados, búsquedas, paginación)
- * queryKey completa + staleTime + keepPreviousData = UX óptima
+ * staleTime: 0 + refetchOnMount: true = stale-while-revalidate genérico.
+ * Cualquier página muestra el cache inmediatamente y refresca en background al montar,
+ * sin necesidad de mapear dependencias entre entidades.
  */
 export const dynamicDataQueryOptions = {
   ...defaultQueryOptions,
-  staleTime: 60 * 1000, // 1 minuto - menos refetches al cambiar página
+  staleTime: 0, // siempre stale → refetchea en background al montar
   gcTime: 5 * 60 * 1000, // 5 minutos
+  refetchOnMount: true, // override: refresca al navegar a cualquier página
+  refetchOnWindowFocus: true, // override: refresca al volver al foco de la ventana
 } satisfies Partial<UseQueryOptions<any, any, any, any>>;
 
 /**

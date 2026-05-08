@@ -211,6 +211,11 @@ export function useGenericApi<T extends { Id: number | string }>({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
+      additionalInvalidateQueryKeys.forEach((key) => {
+        queryClient.invalidateQueries({
+          queryKey: Array.isArray(key) ? key : [key],
+        });
+      });
     },
   });
 
