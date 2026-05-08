@@ -345,13 +345,14 @@ export default function CredentialsForm() {
 
       if (verifyError) throw verifyError;
 
-      // El 2FA fue exitoso, procesar como login normal
-      // Nota: getSession() retorna { session }, pero processSuccessfulLogin espera { user, session }
+      // Después de challengeAndVerify, Supabase actualiza la sesión interna a AAL2.
+      // getSession() devuelve la sesión actualizada con el access_token AAL2.
       const { data: sessionData } = await supabase.auth.getSession();
       const authData = {
         user: sessionData.session?.user ?? null,
         session: sessionData.session,
       };
+
       await processSuccessfulLogin(authData, username.trim().toLowerCase());
     } catch (err) {
       console.error("Error al verificar 2FA:", err);
@@ -372,6 +373,11 @@ export default function CredentialsForm() {
             Ingresa el código de 6 dígitos generado por tu aplicación
             autenticadora (ej. Google Authenticator).
           </p>
+          {recordarDispositivo && (
+            <p className="text-xs text-[#67afc3] mt-2 font-medium">
+              Este dispositivo será recordado al verificar
+            </p>
+          )}
         </div>
 
         <div>

@@ -5,18 +5,23 @@ import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 
 /**
  * GET /api/auth/trusted-device/verify
- * Verifica si el usuario actual tiene una cookie de dispositivo confiable válida
+ * Verifica si el usuario actual tiene una cookie de dispositivo confiable válida.
+ * La verificación incluye TenantId + UsuarioId + Token para evitar que una cookie
+ * de un usuario sea usada por otro usuario del mismo tenant.
  */
 export async function GET(req: NextRequest) {
   try {
     const supabase = await getSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ isTrusted: false });
     }
 
-    const tenantId = user.app_metadata?.tenantId;
+    // Soportar tanto "tenantId" (camelCase, usuarios legacy/admin) como "tenant_id" (snake_case, empleados creados vía API)
+    const tenantId = user.app_metadata?.tenantId || user.app_metadata?.tenant_id;
     if (!tenantId) {
       return NextResponse.json({ isTrusted: false });
     }
@@ -28,31 +33,49 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ isTrusted: false });
     }
 
-    // Buscar en la BD si existe este dispositivo confiable para este usuario
+    // Buscar el UsuarioId en la BD para validar que el token pertenece al usuario actual
+    const usuarioRows = await prisma.$queryRawUnsafe<Array<{ Id: bigint }>>(
+      `SELECT "Id" FROM "Usuario" WHERE "AuthUserId" = $1 AND "TenantId" = $2 LIMIT 1`,
+      user.id,
+      BigInt(tenantId),
+    );
+
+    if (!usuarioRows || usuarioRows.length === 0) {
+      return NextResponse.json({ isTrusted: false });
+    }
+
+    const usuarioId = usuarioRows[0].Id;
+
+    // Buscar en la BD: el token debe pertenecer a este usuario Y tenant
     const dispositivo = await prisma.$queryRawUnsafe<Array<{ Id: bigint }>>(
       `
       SELECT "Id" FROM "DispositivoConfiable"
       WHERE "TenantId" = $1
-        AND "Token" = $2
+        AND "UsuarioId" = $2
+        AND "Token" = $3
         AND "EstaActivo" = true
       LIMIT 1
     `,
       BigInt(tenantId),
-      token
+      usuarioId,
+      token,
     );
 
     if (dispositivo && dispositivo.length > 0) {
-      // Opcional: Actualizar FechaUltimoUso aquí, aunque no es estrictamente necesario en cada GET
+      // Actualizar FechaUltimoUso en background (no bloqueante)
+      prisma.$executeRawUnsafe(
+        `UPDATE "DispositivoConfiable" SET "FechaUltimoUso" = NOW() WHERE "Token" = $1`,
+        token,
+      ).catch(() => {});
       return NextResponse.json({ isTrusted: true });
     }
 
-    // Si el token existe pero no está en la BD (fue revocado), limpiamos la cookie
+    // Si el token existe en cookie pero no en BD (fue revocado), limpiar la cookie
     const response = NextResponse.json({ isTrusted: false });
     response.cookies.delete("trusted_device_token");
     return response;
-
   } catch (error) {
-    console.error("Error verificando dispositivo confiable:", error);
+    console.error("[trusted-device/verify] Error:", error);
     return NextResponse.json({ isTrusted: false });
   }
 }

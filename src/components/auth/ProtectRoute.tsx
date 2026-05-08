@@ -20,8 +20,13 @@ export default function ProtectRoute({
 
   useEffect(() => {
     const verifyMfaEnforcement = async () => {
-      if (!isInitialized || isLoadingSeguridad) {
-        console.log("ProtectRoute: Waiting for init...", { isInitialized, isLoadingSeguridad });
+      // Esperar a que tanto el usuario como la config de seguridad estén listos.
+      // isLoadingSeguridad puede volverse false antes de que seguridad tenga datos
+      // (ej. si la query está en estado "idle" brevemente). Esperamos también a
+      // que seguridad no sea undefined para evitar evaluar dobleFactor como false
+      // cuando en realidad aún no se cargó.
+      if (!isInitialized || isLoadingSeguridad || seguridad === undefined) {
+        console.log("ProtectRoute: Waiting for init...", { isInitialized, isLoadingSeguridad, hasSeguridad: seguridad !== undefined });
         return;
       }
 

@@ -24,7 +24,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const tenantId = user.app_metadata?.tenantId;
+    // Soportar tanto "tenantId" (camelCase, usuarios legacy/admin) como "tenant_id" (snake_case, empleados creados vía API)
+    const tenantId = user.app_metadata?.tenantId || user.app_metadata?.tenant_id;
     if (!tenantId) {
       return NextResponse.json(
         { error: "No se pudo determinar el tenant" },
@@ -60,19 +61,6 @@ export async function POST(req: NextRequest) {
 
     const userAgent = req.headers.get("user-agent") || null;
 
-    // VULNERABILITY FIX: Un atacante podría enviar esConfiable=true en el nivel AAL1
-    // antes de pasar el 2FA. Debemos forzar esConfiable=false si el usuario requiere AAL2 pero solo tiene AAL1.
-    if (esConfiable) {
-      const { data: mfaData } =
-        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      if (mfaData?.nextLevel === "aal2" && mfaData?.currentLevel === "aal1") {
-        console.warn(
-          "Intento de registrar dispositivo confiable bloqueado (Usuario pendiente de 2FA).",
-        );
-        esConfiable = false;
-      }
-    }
-
     // Generar hash del token si no se proporciona
     const tokenHash = token
       ? crypto.createHash("sha256").update(token).digest("hex")
@@ -81,18 +69,49 @@ export async function POST(req: NextRequest) {
           .update(user.id + Date.now().toString())
           .digest("hex");
 
-    // Extraer session_id del JWT provisto en el body para identificación estable de sesión
+    // Decodificar el token del body una sola vez: extraer session_id y aal
     let supabaseSessionId: string | null = null;
+    let tokenAalFromBody = "aal1";
 
-    // Priorizar el token enviado por el cliente en el body, que es 100% fresco
     if (token) {
       try {
-        const payload = JSON.parse(
+        const tokenPayload = JSON.parse(
           Buffer.from(token.split(".")[1], "base64url").toString(),
         );
-        supabaseSessionId = payload.session_id || null;
+        supabaseSessionId = tokenPayload.session_id || null;
+        tokenAalFromBody = tokenPayload.aal || "aal1";
       } catch {
-        // Fallback
+        // Fallback: no crítico
+      }
+    }
+
+    // VULNERABILITY FIX: Un atacante podría enviar esConfiable=true en el nivel AAL1
+    // antes de pasar el 2FA. Debemos forzar esConfiable=false si el usuario requiere AAL2 pero solo tiene AAL1.
+    //
+    // ESTRATEGIA: usamos el AAL del token enviado en el body como fuente primaria, ya que
+    // dicho token es el que acaba de emitir Supabase tras challengeAndVerify (AAL2).
+    // Esto resuelve el problema donde la cookie del servidor puede tener aún el token viejo (AAL1)
+    // por un desfase de timing entre el cliente y el servidor tras completar el 2FA.
+    //
+    // El token del body NO se usa para autenticación (eso lo hace getUser() con la cookie),
+    // sino únicamente para verificar el nivel AAL que el cliente obtuvo.
+    if (esConfiable) {
+      if (tokenAalFromBody === "aal2") {
+        // El token del cliente ya está en AAL2 → el usuario completó el 2FA → permitir dispositivo confiable
+      } else {
+        // El token del cliente está en AAL1 → verificar en el servidor si se requiere AAL2
+        const { data: mfaData } =
+          await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (
+          mfaData?.nextLevel === "aal2" &&
+          mfaData?.currentLevel !== "aal2"
+        ) {
+          console.warn(
+            "[registrar-sesion] Dispositivo confiable bloqueado: usuario pendiente de completar 2FA.",
+            { tokenAal: tokenAalFromBody, serverCurrentLevel: mfaData?.currentLevel, serverNextLevel: mfaData?.nextLevel },
+          );
+          esConfiable = false;
+        }
       }
     }
 
@@ -280,11 +299,20 @@ export async function POST(req: NextRequest) {
           );
         }
       } else {
-        // Ya tiene cookie: solo actualizar FechaUltimoUso
+        // Ya tiene cookie: actualizar FechaUltimoUso solo si el token pertenece
+        // al usuario actual y sigue activo. Esto evita que una cookie de un ciclo
+        // anterior (2FA desactivado y reactivado) sea reutilizada por otro contexto.
         try {
           await prisma.$executeRawUnsafe(
-            `UPDATE "DispositivoConfiable" SET "FechaUltimoUso" = NOW() WHERE "Token" = $1`,
+            `
+            UPDATE "DispositivoConfiable"
+            SET "FechaUltimoUso" = NOW()
+            WHERE "Token" = $1
+              AND "UsuarioId" = $2
+              AND "EstaActivo" = true
+            `,
             existingToken,
+            usuario.Id,
           );
         } catch (updateError) {
           console.error(
@@ -349,7 +377,7 @@ export async function DELETE(req: NextRequest) {
       } = await supabase.auth.getUser();
 
       if (user) {
-        const tenantId = user.app_metadata?.tenantId;
+        const tenantId = user.app_metadata?.tenantId || user.app_metadata?.tenant_id;
         if (tenantId) {
           const usuario = await prisma.$queryRawUnsafe<
             Array<{
