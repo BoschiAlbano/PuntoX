@@ -75,22 +75,31 @@ export default function GraficaPagos({ datos }: GraficaPagosProps) {
               ))}
             </Pie>
             <Tooltip
-              contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-              formatter={(value: number | undefined, name: string) => [
+              contentStyle={{
+                borderRadius: "12px",
+                border: "none",
+                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+              }}
+              formatter={(
+                value: number | undefined,
+                name: string | undefined,
+              ) => [
                 value !== undefined
                   ? new Intl.NumberFormat("es-AR", {
                       style: "currency",
                       currency: "ARS",
                     }).format(value)
                   : "",
-                name,
+                name ?? "",
               ]}
             />
-            <Legend iconType="circle" wrapperStyle={{ paddingTop: "20px", fontSize: "12px" }} />
+            <Legend
+              iconType="circle"
+              wrapperStyle={{ paddingTop: "20px", fontSize: "12px" }}
+            />
           </PieChart>
         </ResponsiveContainer>
       </CardBody>
     </Card>
   );
 }
-
