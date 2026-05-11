@@ -54,6 +54,7 @@ export function NotificacionesDropdown() {
   return (
     <Popover
       placement="bottom-end"
+      offset={18}
       isOpen={isOpen}
       onOpenChange={setIsOpen}
       classNames={{
@@ -64,7 +65,7 @@ export function NotificacionesDropdown() {
     >
       <PopoverTrigger>
         <button
-          className="relative text-slate-500 hover:text-slate-800 transition-colors p-2 rounded-full hover:bg-slate-100"
+          className="relative flex h-8 w-8 items-center justify-center rounded-lg p-1.5 text-(--nav-btn-text) transition-colors hover:bg-(--nav-btn-hover-bg) hover:text-(--nav-btn-hover-text)"
           aria-label="Ver notificaciones"
         >
           {unreadCount > 0 ? (

@@ -566,10 +566,7 @@ export default function CajaActual() {
           Abrir Caja
         </Button>
 
-        <ModalAbrirCaja
-          open={isAbrirOpen}
-          onClose={onAbrirChange}
-        />
+        <ModalAbrirCaja open={isAbrirOpen} onClose={onAbrirChange} />
       </div>
     );
   }
@@ -807,9 +804,9 @@ export default function CajaActual() {
       />
 
       {/* Modal Nuevo Gasto */}
-      <Modal 
-        isOpen={isGastoOpen} 
-        onOpenChange={onGastoChange} 
+      <Modal
+        isOpen={isGastoOpen}
+        onOpenChange={onGastoChange}
         size="2xl"
         classNames={{
           backdrop: "bg-black/50 backdrop-blur-sm z-[999]",
@@ -1003,9 +1000,9 @@ export default function CajaActual() {
       </Modal>
 
       {/* Modal Nuevo Concepto */}
-      <Modal 
-        isOpen={isConceptoOpen} 
-        onOpenChange={onConceptoChange} 
+      <Modal
+        isOpen={isConceptoOpen}
+        onOpenChange={onConceptoChange}
         size="sm"
         classNames={{
           backdrop: "bg-black/50 backdrop-blur-sm z-[999]",
@@ -1042,9 +1039,9 @@ export default function CajaActual() {
       </Modal>
 
       {/* Delete Confirmation Modal */}
-      <Modal 
-        isOpen={isDeleteOpen} 
-        onOpenChange={onDeleteChange} 
+      <Modal
+        isOpen={isDeleteOpen}
+        onOpenChange={onDeleteChange}
         size="sm"
         classNames={{
           backdrop: "bg-black/50 backdrop-blur-sm z-[999]",

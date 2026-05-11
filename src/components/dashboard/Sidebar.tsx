@@ -585,7 +585,9 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
   const { data: cobrosData } = useQuery({
     queryKey: ["cobros-pendientes", "count"],
     queryFn: async () => {
-      const res = await fetch("/api/cobros?count=true", { credentials: "include" });
+      const res = await fetch("/api/cobros?count=true", {
+        credentials: "include",
+      });
       if (!res.ok) return { count: 0 };
       return res.json() as Promise<{ count: number }>;
     },
@@ -646,30 +648,30 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
     <motion.section
       onClick={(e) => e.stopPropagation()}
       className={`z-40 sm:relative sticky flex-col h-auto sm:flex  ${
-        isCollapsed ? "sm:w-[80px] w-0" : "w-[280px]"
+        isCollapsed ? "sm:w-20 w-0" : "w-70"
       }`}
       initial={false}
       animate={{
         width: isCollapsed ? "80px" : "280px",
       }}
       transition={{
-        duration: 0.4,
+        duration: 0.35,
         ease: "easeInOut",
       }}
     >
       <motion.aside
-        className="fixed bg-[#182337] border-r border-slate-700/50 flex flex-col h-screen"
+        className="fixed flex h-screen flex-col rounded-br-4xl bg-(--nav-bg)"
         initial={false}
         animate={{
           width: isCollapsed ? "80px" : "280px",
         }}
         transition={{
-          duration: 0.3,
+          duration: 0.35,
           ease: "easeInOut",
         }}
       >
         {/* Header del Sidebar */}
-        <div className="w-full flex items-center justify-center p-6 border-b border-slate-700/50 ">
+        <div className="w-full flex items-center justify-center px-4 py-4">
           <AnimatePresence mode="wait">
             {!isCollapsed ? (
               <motion.div
@@ -678,12 +680,14 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.3 }}
-                className="flex flex-row items-center gap-2 h-[40px] w-full  "
+                className="flex h-7.5 w-full flex-row items-center gap-2"
               >
-                <PuntoXLogo className="w-12 h-12  border border-[#67afc3]/50 rounded-lg p-1 hover:rotate-345 transition-all duration-300 cursor-pointer shadow-sm shadow-[#67afc3]/50" />
+                <PuntoXLogo className="h-11 w-11 rounded-lg border border-[#67afc3]/40 p-1.5 shadow-sm shadow-[#67afc3]/30 transition-all duration-300 hover:rotate-345" />
                 <div className="flex flex-col items-start truncate">
-                  <span className="text-xl font-bold text-white">Punto X</span>
-                  <span className="text-sm font-bold text-slate-400">
+                  <span className="text-lg font-bold tracking-tight text-(--nav-logo-title)">
+                    Punto X
+                  </span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-(--nav-logo-subtitle)">
                     Software de gestión
                   </span>
                 </div>
@@ -695,9 +699,9 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.3 }}
-                className="flex items-center justify-center h-[40px]"
+                className="flex items-center justify-center h-7.5"
               >
-                <PuntoXLogo className="w-12 h-12  border border-[#67afc3]/50 rounded-lg p-1 hover:rotate-345 transition-all duration-300 cursor-pointer shadow-sm shadow-[#67afc3]/50" />
+                <PuntoXLogo className="h-11 w-11 rounded-lg border border-[#67afc3]/40 p-1.5 shadow-sm shadow-[#67afc3]/30 transition-all duration-300 hover:rotate-345" />
               </motion.div>
             )}
           </AnimatePresence>
@@ -710,7 +714,7 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="px-3 py-6 space-y-2 group cursor-pointer group-hover:text-[#5fa7b8]"
+            className="group cursor-pointer space-y-2 px-3 py-4"
           >
             <SucursalSelector hideIfSingle={false} isCollapsed={isCollapsed} />
           </motion.div>
@@ -719,7 +723,7 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
         {/* Menu Items por Secciones */}
         <nav
           id="Scroll"
-          className="flex-1 px-3 space-y-1 overflow-y-auto scrollbar-hide"
+          className="flex-1 space-y-1 overflow-y-auto px-3 pb-3 scrollbar-hide"
         >
           {menuSectionsFiltradas.map((section, sectionIndex) => {
             const isSectionCollapsed = isCollapsed
@@ -741,15 +745,15 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -10 }}
                       transition={{ duration: 0.2 }}
-                      className="w-full flex items-center justify-between px-4 pb-2 pt-1 cursor-pointer group/section"
+                      className="group/section flex w-full cursor-pointer items-center justify-between px-3 pb-2 pt-1"
                     >
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 group-hover/section:text-slate-400 transition-colors">
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-(--nav-section-label) transition-colors group-hover/section:text-(--nav-item-hover-text)">
                         {section.title}
                       </span>
                       <motion.svg
                         animate={{ rotate: isSectionCollapsed ? -90 : 0 }}
                         transition={{ duration: 0.2 }}
-                        className="w-3.5 h-3.5 text-slate-500 group-hover/section:text-slate-400 transition-colors"
+                        className="h-3.5 w-3.5 text-(--nav-section-chevron) transition-colors group-hover/section:text-(--nav-item-hover-text)"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -769,7 +773,7 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="mx-4 mb-2 border-t border-slate-700/40"
+                        className="mx-3 mb-2 border-t border-(--nav-divider)"
                       />
                     )
                   )}
@@ -784,7 +788,7 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.25, ease: "easeInOut" }}
-                      className="overflow-hidden"
+                      className="overflow-hidden px-1 -mx-1"
                     >
                       <div className="space-y-1">
                         {section.items.map((item) => {
@@ -811,7 +815,7 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                                 offset={20}
                                 classNames={{
                                   content:
-                                    "bg-[#1f2d47] text-white font-semibold text-xs border border-slate-700/50 shadow-lg",
+                                    "bg-(--nav-tooltip-bg) text-(--nav-tooltip-text) font-semibold text-xs border border-(--nav-tooltip-border) shadow-lg",
                                 }}
                               >
                                 <motion.div
@@ -821,19 +825,18 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                                   }}
                                   whileTap={{ scale: 0.98 }}
                                   className={`
-                                      w-full h-[50px] flex items-center gap-3 px-4 py-3 rounded-xl overflow-hidden
-                                      relative group cursor-pointer
+                                      relative group flex h-11 w-full cursor-pointer items-center gap-3 overflow-hidden rounded-lg px-3 py-2
                                       ${
                                         isActive
-                                          ? "bg-slate-800/80 text-white shadow-none"
-                                          : "text-slate-300 hover:text-white hover:bg-slate-700/30"
+                                          ? "bg-(--nav-item-active-bg) text-(--nav-item-active-text) shadow-[inset_0_0_0_1px_rgba(103,175,195,0.2)]"
+                                          : "text-(--nav-item-text) hover:bg-(--nav-item-hover-bg) hover:text-(--nav-item-hover-text)"
                                       }
                                     `}
                                 >
                                   {isActive && (
                                     <motion.div
                                       layoutId="activeIndicator"
-                                      className="absolute top-1 left-1 w-[5px] h-[5px] rounded-full bg-[#5fa7b8] animate-pulse"
+                                      className="absolute left-1.5 h-5 w-[3px] rounded-full bg-[#67afc3]"
                                       transition={{
                                         type: "spring",
                                         stiffness: 300,
@@ -845,15 +848,15 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                                   <div
                                     className={`relative ${
                                       isActive
-                                        ? "text-[#5fa7b8] animate-pulse"
-                                        : "text-slate-500 dark:text-white animate-none"
+                                        ? "text-(--nav-item-active-icon)"
+                                        : "text-(--nav-item-icon)"
                                     }`}
                                   >
-                                    <div className=" group-hover:text-[#5fa7b8]">
+                                    <div className="transition-colors group-hover:text-[#67afc3]">
                                       {item.icon}
                                     </div>
                                     {item.badge && (
-                                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-linear-to-b from-blue-500 to-[#90c472] text-white text-xs rounded-full flex items-center justify-center">
+                                      <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-linear-to-b from-blue-500 to-[#90c472] px-1 text-[10px] text-white">
                                         {item.badge}
                                       </span>
                                     )}
@@ -866,9 +869,9 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                                         animate={{ opacity: 1, width: "auto" }}
                                         exit={{ opacity: 0, width: 0 }}
                                         transition={{ duration: 0.2 }}
-                                        className="whitespace-nowrap flex-1"
+                                        className="flex-1 whitespace-nowrap"
                                       >
-                                        <span className="text-[13px] font-semibold tracking-wide relative z-10">
+                                        <span className="relative z-10 text-[13px] font-semibold tracking-tight">
                                           {item.label}
                                         </span>
                                       </motion.div>
@@ -889,19 +892,19 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
         </nav>
 
         {/* Footer del Sidebar */}
-        <div className="w-full p-4 border-t border-slate-700/50 flex flex-col gap-3 items-center">
+        <div className="flex w-full flex-col items-center gap-2 border-t border-(--nav-footer-border) p-3">
           <AnimatePresence mode="wait">
             {!isCollapsed ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="w-full p-4 bg-linear-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20"
+                className="w-full rounded-lg border border-(--nav-footer-card-border) bg-(--nav-footer-card-bg) p-3"
               >
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2 truncate">
+                <p className="mb-1 truncate text-[11px] font-semibold uppercase tracking-wide text-(--nav-footer-text)">
                   Version 1.0.0
                 </p>
-                <p className="text-xs text-slate-500 truncate">
+                <p className="truncate text-xs text-(--nav-footer-text)">
                   (c) 2024 Punto X SaaS
                 </p>
               </motion.div>
@@ -912,7 +915,7 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                 exit={{ opacity: 0 }}
                 className="flex justify-center"
               >
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                <p className="text-xs text-(--nav-footer-text) truncate">
                   V 1.0.0
                 </p>
               </motion.div>

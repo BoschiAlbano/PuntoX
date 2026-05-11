@@ -26,6 +26,7 @@ import {
   ArrowRightLeft,
   AlertTriangle,
   Clock,
+  DollarSign,
 } from "lucide-react";
 import {
   TIPO_PAGO,
@@ -388,7 +389,16 @@ export default function VentaFooter({
   return (
     <section className="flex-1 flex flex-col gap-2">
       {/* Payment Methods Section */}
-      <div className="bg-white flex-1 rounded-xl border border-slate-100 flex flex-col shadow-sm overflow-hidden">
+      <div className="bg-white/90 backdrop-blur-xl border border-slate-100 rounded-[20px] shadow-sm overflow-hidden flex-1 flex flex-col">
+        {/* Section header */}
+        <div className="px-4 py-3 border-b border-slate-100/60 bg-slate-50/50 flex items-center gap-2.5 shrink-0">
+          <div className="p-1.5 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 text-[#67afc3]">
+            <CreditCard size={14} strokeWidth={2.5} />
+          </div>
+          <h3 className="text-xs font-bold text-slate-600 tracking-tight">
+            Formas de pago
+          </h3>
+        </div>
         {modoDiferido ? (
           /* Banner modo diferido */
           <div className="flex flex-col items-center justify-center gap-3 flex-1 p-5 text-center">
@@ -396,263 +406,333 @@ export default function VentaFooter({
               <Clock size={22} className="text-amber-500" />
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-700">Cobro diferido activo</p>
+              <p className="text-sm font-bold text-slate-700">
+                Cobro diferido activo
+              </p>
               <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                La factura se registra como <b>pendiente</b>. El cobro se completa desde <b>Caja &rsaquo; Cobros</b>.
+                La factura se registra como <b>pendiente</b>. El cobro se
+                completa desde <b>Caja &rsaquo; Cobros</b>.
               </p>
             </div>
           </div>
         ) : (
           <>
-        {/* Header con margen de cta cte */}
-        {currentTipo === TIPO_PAGO.CUENTA_CORRIENTE &&
-          cliente?.Persona_Cliente?.ActivarCtaCte && (
-            <div className="px-3 py-1.5 border-b border-slate-100 bg-slate-50/50 flex items-center shrink-0">
-              <div
-                className={`text-xs px-2 py-0.5 rounded-full border ${
-                  cliente?.Persona_Cliente?.TieneLimiteCompra
-                    ? cliente.Persona_Cliente.MargenDisponible < 0
-                      ? "text-red-600 border-red-200 bg-red-50"
-                      : "text-emerald-600 border-emerald-200 bg-emerald-50"
-                    : "text-slate-500 border-slate-200 bg-slate-50"
-                }`}
-              >
-                {cliente?.Persona_Cliente?.TieneLimiteCompra ? (
+            {/* Header con margen de cta cte */}
+            {currentTipo === TIPO_PAGO.CUENTA_CORRIENTE &&
+              cliente?.Persona_Cliente?.ActivarCtaCte && (
+                <div className="px-3 py-1.5 border-b border-slate-100 bg-slate-50/50 flex items-center shrink-0">
+                  <div
+                    className={`text-xs px-2 py-0.5 rounded-full border ${
+                      cliente?.Persona_Cliente?.TieneLimiteCompra
+                        ? cliente.Persona_Cliente.MargenDisponible < 0
+                          ? "text-red-600 border-red-200 bg-red-50"
+                          : "text-emerald-600 border-emerald-200 bg-emerald-50"
+                        : "text-slate-500 border-slate-200 bg-slate-50"
+                    }`}
+                  >
+                    {cliente?.Persona_Cliente?.TieneLimiteCompra ? (
+                      <>
+                        Margen disponible:{" "}
+                        <b>
+                          $
+                          {(
+                            cliente.Persona_Cliente.MargenDisponible -
+                            pagos
+                              .filter(
+                                (p) =>
+                                  p.tipoPago === TIPO_PAGO.CUENTA_CORRIENTE,
+                              )
+                              .reduce((acc, p) => acc + p.monto, 0)
+                          ).toLocaleString("es-AR", {
+                            minimumFractionDigits: 2,
+                          })}
+                        </b>
+                      </>
+                    ) : (
+                      "Sin límite de compra"
+                    )}
+                  </div>
+                </div>
+              )}
+
+            <div className="p-3 flex flex-col gap-3 flex-1">
+              {/* Payment Input Group */}
+              <div className="flex gap-2 items-end shrink-0">
+                <Select
+                  label="Método"
+                  selectedKeys={[currentTipo.toString()]}
+                  onChange={(e) => setCurrentTipo(Number(e.target.value))}
+                  className="flex-[1.2]"
+                  size="sm"
+                  variant="flat"
+                  classNames={{
+                    trigger:
+                      "rounded-lg bg-slate-50 h-10 min-h-10 border border-slate-200",
+                    label: "text-xs",
+                  }}
+                >
+                  {paymentOptions.map((option) => (
+                    <SelectItem
+                      key={option.key}
+                      textValue={option.label}
+                      className="text-xs"
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </Select>
+                <Input
+                  label="Monto"
+                  type="number"
+                  value={currentMonto}
+                  onValueChange={setCurrentMonto}
+                  startContent={
+                    <span className="text-slate-400 text-xs">$</span>
+                  }
+                  className="flex-[1.5]"
+                  size="sm"
+                  variant="flat"
+                  classNames={{
+                    inputWrapper:
+                      "rounded-lg bg-slate-50 h-10 min-h-10 border border-slate-200",
+                    label: "text-xs",
+                    input: "text-xs",
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleAddPayment();
+                  }}
+                />
+                <button
+                  onClick={handleAddPayment}
+                  aria-label="Agregar pago"
+                  className="h-10 w-10 min-w-10 bg-[#67afc3] hover:bg-[#5a9eb1] active:scale-95 text-white rounded-lg flex items-center justify-center transition-all shrink-0"
+                >
+                  <Plus size={18} />
+                </button>
+              </div>
+
+              {/* Payment List */}
+              <div className="flex-1 overflow-y-auto min-h-0 scrollbar-hide">
+                {pagos.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center gap-3 h-full py-6 text-slate-300">
+                    <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center">
+                      <Wallet
+                        size={22}
+                        className="text-slate-300"
+                        strokeWidth={1.5}
+                      />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {(
+                        [
+                          CreditCard,
+                          Banknote,
+                          ArrowRightLeft,
+                          Wallet,
+                        ] as React.ElementType[]
+                      ).map((Icon, i) => (
+                        <div
+                          key={i}
+                          className="w-9 h-6 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center"
+                        >
+                          <Icon
+                            size={11}
+                            className="text-slate-300"
+                            strokeWidth={1.5}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] font-medium text-slate-400 text-center max-w-[150px] leading-relaxed">
+                      Selecciona un método y monto para agregar
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-1 p-0.5">
+                    {pagos.map((p, idx) => (
+                      <div
+                        key={idx}
+                        className="flex justify-between items-center px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-all"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0">
+                            {getTipoIcon(p.tipoPago, 13)}
+                          </div>
+                          <span className="text-xs font-semibold text-slate-700">
+                            {getTipoLabel(p.tipoPago)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-slate-800">
+                            $
+                            {p.monto.toLocaleString("es-AR", {
+                              minimumFractionDigits: 2,
+                            })}
+                          </span>
+                          <button
+                            onClick={() => handleRemovePayment(idx)}
+                            aria-label={`Eliminar pago ${getTipoLabel(p.tipoPago)}`}
+                            className="min-w-[28px] h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors"
+                          >
+                            <X size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Restante / Vuelto */}
+              <div className="pt-2.5 border-t border-slate-100 flex justify-between items-center shrink-0">
+                {restante > 0.01 ? (
                   <>
-                    Margen disponible:{" "}
-                    <b>
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
+                      Restante
+                    </span>
+                    <span className="text-base font-bold text-slate-700">
                       $
-                      {
-                        (
-                          cliente.Persona_Cliente.MargenDisponible -
-                          pagos
-                            .filter((p) => p.tipoPago === TIPO_PAGO.CUENTA_CORRIENTE)
-                            .reduce((acc, p) => acc + p.monto, 0)
-                        ).toLocaleString("es-AR", { minimumFractionDigits: 2 })
-                      }
-                    </b>
+                      {Math.max(0, restante).toLocaleString("es-AR", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
                   </>
                 ) : (
-                  "Sin límite de compra"
+                  <>
+                    <span
+                      className="text-[10px] font-semibold uppercase tracking-widest"
+                      style={{ color: "#67afc3" }}
+                    >
+                      Vuelto
+                    </span>
+                    <span
+                      className="text-base font-bold"
+                      style={{ color: "#67afc3" }}
+                    >
+                      $
+                      {Math.abs(restante).toLocaleString("es-AR", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </>
                 )}
               </div>
             </div>
-          )}
-
-        <div className="p-3 flex flex-col gap-3 flex-1">
-          {/* Título sección */}
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
-            Formas de pago
-          </p>
-
-          {/* Payment Input Group */}
-          <div className="flex gap-2 items-end shrink-0">
-            <Select
-              label="Método"
-              selectedKeys={[currentTipo.toString()]}
-              onChange={(e) => setCurrentTipo(Number(e.target.value))}
-              className="flex-[1.2]"
-              size="sm"
-              variant="flat"
-              classNames={{
-                trigger: "rounded-lg bg-slate-50 h-10 min-h-10 border border-slate-200",
-                label: "text-xs",
-              }}
-            >
-              {paymentOptions.map((option) => (
-                <SelectItem
-                  key={option.key}
-                  textValue={option.label}
-                  className="text-xs"
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </Select>
-            <Input
-              label="Monto"
-              type="number"
-              value={currentMonto}
-              onValueChange={setCurrentMonto}
-              startContent={<span className="text-slate-400 text-xs">$</span>}
-              className="flex-[1.5]"
-              size="sm"
-              variant="flat"
-              classNames={{
-                inputWrapper: "rounded-lg bg-slate-50 h-10 min-h-10 border border-slate-200",
-                label: "text-xs",
-                input: "text-xs",
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleAddPayment();
-              }}
-            />
-            <button
-              onClick={handleAddPayment}
-              aria-label="Agregar pago"
-              className="h-10 w-10 min-w-10 bg-[#67afc3] hover:bg-[#5a9eb1] active:scale-95 text-white rounded-lg flex items-center justify-center transition-all shrink-0"
-            >
-              <Plus size={18} />
-            </button>
-          </div>
-
-          {/* Payment List */}
-          <div className="flex-1 overflow-y-auto min-h-0 space-y-1 scrollbar-hide">
-            {pagos.length === 0 ? (
-              <div className="flex flex-col items-center justify-center text-slate-300 gap-1.5 py-4 min-h-[56px]">
-                <div className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center">
-                  <Wallet size={16} className="text-slate-300" />
-                </div>
-                <span className="text-[10px] font-medium">Sin pagos agregados</span>
-              </div>
-            ) : (
-              pagos.map((p, idx) => (
-                <div
-                  key={idx}
-                  className="flex justify-between items-center px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-all"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0">
-                      {getTipoIcon(p.tipoPago, 13)}
-                    </div>
-                    <span className="text-xs font-semibold text-slate-700">
-                      {getTipoLabel(p.tipoPago)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-slate-800">
-                      ${p.monto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
-                    </span>
-                    <button
-                      onClick={() => handleRemovePayment(idx)}
-                      aria-label={`Eliminar pago ${getTipoLabel(p.tipoPago)}`}
-                      className="min-w-[28px] h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors"
-                    >
-                      <X size={13} />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Restante / Vuelto */}
-          <div className="pt-2.5 border-t border-slate-100 flex justify-between items-center shrink-0">
-            {restante > 0.01 ? (
-              <>
-                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
-                  Restante
-                </span>
-                <span className="text-base font-bold text-slate-700">
-                  ${Math.max(0, restante).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="text-[10px] font-semibold text-emerald-500 uppercase tracking-widest">
-                  Vuelto
-                </span>
-                <span className="text-base font-bold text-emerald-600">
-                  ${Math.abs(restante).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
-                </span>
-              </>
-            )}
-          </div>
-        </div>
           </>
         )}
       </div>
 
       {/* Totals & Actions Card */}
-      <div className="bg-white rounded-xl border border-slate-100 p-3 shrink-0 flex flex-col gap-3 relative z-10 shadow-sm">
-        {/* Subtotal + Descuento */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex justify-between items-center text-xs text-slate-500">
-            <span className="font-medium">Subtotal</span>
-            <span>
-              ${subtotal.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
+      <div className="bg-white/90 backdrop-blur-xl border border-slate-100 rounded-[20px] shadow-sm overflow-hidden shrink-0 relative z-10">
+        {/* Section header */}
+        <div className="px-4 py-3 border-b border-slate-100/60 bg-slate-50/50 flex items-center gap-2.5 shrink-0">
+          <div className="p-1.5 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 text-[#67afc3]">
+            <DollarSign size={14} strokeWidth={2.5} />
           </div>
+          <h3 className="text-xs font-bold text-slate-600 tracking-tight">
+            Totales
+          </h3>
+        </div>
+        <div className="p-3 flex flex-col gap-3">
+          {/* Subtotal + Descuento */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex justify-between items-center text-xs text-slate-500">
+              <span className="font-medium">Subtotal</span>
+              <span>
+                $
+                {subtotal.toLocaleString("es-AR", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
 
-          <div className="flex justify-between items-center text-xs text-slate-500">
-            <span className="font-medium">Descuento</span>
-            <div className="flex items-center gap-2">
-              {descuento > 0 && subtotal > 0 && (
-                <span className="text-[10px] text-red-400 font-medium">
-                  − ${(subtotal * (descuento / 100)).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
-                </span>
-              )}
-              <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
-                <input
-                  data-testid="descuento-input"
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={descuento.toString()}
-                  onChange={(e) => {
-                    const v = parseFloat(e.target.value) || 0;
-                    setDescuento(Math.min(100, Math.max(0, v)));
-                  }}
-                  className="w-10 text-right bg-transparent text-xs font-semibold focus:outline-none py-1 pl-2"
-                />
-                <span className="text-xs text-slate-400 pr-1.5">%</span>
+            <div className="flex justify-between items-center text-xs text-slate-500">
+              <span className="font-medium">Descuento</span>
+              <div className="flex items-center gap-2">
+                {descuento > 0 && subtotal > 0 && (
+                  <span className="text-[10px] text-red-400 font-medium">
+                    − $
+                    {(subtotal * (descuento / 100)).toLocaleString("es-AR", {
+                      minimumFractionDigits: 2,
+                    })}
+                  </span>
+                )}
+                <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+                  <input
+                    data-testid="descuento-input"
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={descuento.toString()}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value) || 0;
+                      setDescuento(Math.min(100, Math.max(0, v)));
+                    }}
+                    className="w-10 text-right bg-transparent text-xs font-semibold focus:outline-none py-1 pl-2"
+                  />
+                  <span className="text-xs text-slate-400 pr-1.5">%</span>
+                </div>
               </div>
+            </div>
+
+            <div className="h-px bg-slate-100 w-full" />
+
+            {/* Total destacado */}
+            <div className="flex justify-between items-center py-1">
+              <span className="text-sm font-bold text-slate-500">Total</span>
+              <span
+                className="text-2xl font-extrabold tracking-tight"
+                style={{ color: "#67afc3" }}
+              >
+                ${total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+              </span>
             </div>
           </div>
 
-          <div className="h-px bg-slate-100 w-full" />
+          {/* Action buttons */}
+          <div className="flex gap-2">
+            <Button
+              variant="flat"
+              aria-label="Limpiar venta"
+              className="w-11 h-11 min-w-11 rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 border border-slate-200 transition-colors"
+              isIconOnly
+              onPress={() => setIsCancelModalOpen(true)}
+              isDisabled={isSaving || items.length === 0}
+            >
+              <Trash2 size={17} />
+            </Button>
 
-          {/* Total destacado */}
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-bold text-slate-800">Total</span>
-            <span className="text-2xl font-extrabold text-slate-900 tracking-tight">
-              ${total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
-            </span>
+            {isLoading ? (
+              <Skeleton className="flex-1 rounded-xl h-11" />
+            ) : cajaActual ? (
+              <Button
+                size="sm"
+                className="flex-1 h-11 bg-[#67afc3] hover:bg-[#5a9eb1] text-white font-bold rounded-xl transition-all active:scale-[0.98] text-sm tracking-wide shadow-[0_4px_14px_rgba(103,175,195,0.35)] hover:shadow-[0_6px_20px_rgba(103,175,195,0.45)]"
+                onPress={handleFinalizeSale}
+                isLoading={isSaving}
+                isDisabled={
+                  items.length === 0 ||
+                  (!modoDiferido && Math.abs(restante) > 0.01)
+                }
+              >
+                {modoDiferido
+                  ? "Registrar factura"
+                  : Math.abs(restante) < 0.01 && items.length > 0
+                    ? "Confirmar venta"
+                    : "Completar pago"}
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                color="warning"
+                className="flex-1 h-11 font-bold text-white rounded-xl text-sm tracking-wide"
+                onPress={() => setOpenModalAbrirCaja(true)}
+              >
+                Abrir Caja
+              </Button>
+            )}
           </div>
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex gap-2">
-          <Button
-            variant="flat"
-            aria-label="Limpiar venta"
-            className="w-11 h-11 min-w-11 rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 border border-slate-200 transition-colors"
-            isIconOnly
-            onPress={() => setIsCancelModalOpen(true)}
-            isDisabled={isSaving || items.length === 0}
-          >
-            <Trash2 size={17} />
-          </Button>
-
-          {isLoading ? (
-            <Skeleton className="flex-1 rounded-xl h-11" />
-          ) : cajaActual ? (
-            <Button
-              size="sm"
-              className="flex-1 h-11 bg-[#182337] hover:bg-[#0f1929] text-white font-bold rounded-xl transition-all active:scale-[0.98] text-sm tracking-wide shadow-sm"
-              onPress={handleFinalizeSale}
-              isLoading={isSaving}
-              isDisabled={
-                items.length === 0 ||
-                (!modoDiferido && Math.abs(restante) > 0.01)
-              }
-            >
-              {modoDiferido
-                ? "Registrar factura"
-                : Math.abs(restante) < 0.01 && items.length > 0
-                  ? "Confirmar venta"
-                  : "Completar pago"}
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              color="warning"
-              className="flex-1 h-11 font-bold text-white rounded-xl text-sm tracking-wide"
-              onPress={() => setOpenModalAbrirCaja(true)}
-            >
-              Abrir Caja
-            </Button>
-          )}
         </div>
       </div>
 
@@ -666,7 +746,8 @@ export default function VentaFooter({
           header: "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8",
           body: "py-6 px-4 sm:px-8 text-center",
           footer: "border-t border-slate-100/60 py-4 px-4 sm:px-8",
-          closeButton: "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
+          closeButton:
+            "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
         }}
       >
         <ModalContent>
@@ -685,7 +766,8 @@ export default function VentaFooter({
                   ¿Estás seguro de que deseas cancelar la venta actual?
                 </p>
                 <p className="text-xs text-slate-400 mt-1">
-                  Se eliminarán todos los productos agregados y pagos ingresados. Esta acción no se puede deshacer.
+                  Se eliminarán todos los productos agregados y pagos
+                  ingresados. Esta acción no se puede deshacer.
                 </p>
               </ModalBody>
               <ModalFooter className="flex w-full justify-between gap-2">

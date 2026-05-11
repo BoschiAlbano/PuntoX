@@ -222,10 +222,10 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
       onOpenChange={(open) => !open && onClose()}
       size="2xl"
       backdrop="blur"
-      placement="top"
+      placement="center"
       hideCloseButton
       classNames={{
-        base: "bg-white/95 backdrop-blur-3xl shadow-2xl border border-white/60 rounded-[20px] mt-16 overflow-hidden",
+        base: "bg-white/95 backdrop-blur-3xl shadow-2xl border border-white/60 rounded-[20px] overflow-hidden",
         body: "p-0",
       }}
       motionProps={{
@@ -237,7 +237,7 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
             transition: { duration: 0.2, ease: "easeOut" },
           },
           exit: {
-            y: -20,
+            y: 20,
             opacity: 0,
             scale: 0.95,
             transition: { duration: 0.15, ease: "easeIn" },

@@ -74,19 +74,19 @@ export function UserDropdown() {
   };
 
   return (
-    <Dropdown placement="bottom-end">
+    <Dropdown placement="bottom-end" offset={18}>
       <DropdownTrigger>
         <button
-          className="flex items-center gap-2 pl-1 pr-2 sm:pr-3 py-1.5 rounded-xl cursor-pointer
-                     hover:bg-slate-100 transition-all duration-200 group
+          className="flex cursor-pointer items-center gap-2 rounded-lg py-1 pl-1 pr-2 sm:pr-3
+                     hover:bg-(--nav-btn-hover-bg) transition-all duration-200 group
                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#67afc3]/50"
           aria-label="Menú de perfil de usuario"
           aria-haspopup="true"
         >
           {/* Avatar */}
           <div
-            className="relative w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-bold
-                        shrink-0 shadow-sm ring-2 ring-white group-hover:ring-[#67afc3]/20
+            className="relative flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold text-white
+                        shrink-0 shadow-sm ring-2 ring-white/10 group-hover:ring-[#67afc3]/30
                         transition-all duration-200"
             style={{ backgroundColor: ACCENT }}
             aria-hidden="true"
@@ -95,17 +95,17 @@ export function UserDropdown() {
             {/* Online indicator */}
             <span
               className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400
-                         rounded-full border-2 border-white"
+                         rounded-full border-2 border-(--nav-bg)"
               aria-hidden="true"
             />
           </div>
 
           {/* Info usuario — md+ */}
           <div className="hidden md:flex flex-col items-start min-w-0">
-            <span className="text-[12.5px] font-semibold text-slate-800 leading-tight truncate max-w-[130px]">
+            <span className="text-[12.5px] font-semibold text-(--nav-logo-title) leading-tight truncate max-w-[130px]">
               {displayName}
             </span>
-            <span className="text-[11px] text-slate-400 leading-tight truncate max-w-[130px]">
+            <span className="text-[11px] text-(--nav-item-text) leading-tight truncate max-w-[130px]">
               {displayRol}
             </span>
           </div>
@@ -113,7 +113,7 @@ export function UserDropdown() {
           {/* Chevron — md+ */}
           <ChevronDown
             size={13}
-            className="hidden md:block text-slate-400 group-hover:text-slate-600
+            className="hidden md:block text-(--nav-btn-text) group-hover:text-(--nav-btn-hover-text)
                        transition-colors duration-200 shrink-0 ml-0.5"
             strokeWidth={2.5}
             aria-hidden="true"

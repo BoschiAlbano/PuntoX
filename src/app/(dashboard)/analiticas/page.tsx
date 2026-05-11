@@ -66,7 +66,9 @@ function Panel({
   className?: string;
 }) {
   return (
-    <div className={`bg-white/90 backdrop-blur-xl border border-slate-100 rounded-[20px] shadow-sm overflow-hidden ${className}`}>
+    <div
+      className={`bg-white/90 backdrop-blur-xl border border-slate-100 rounded-[20px] shadow-sm ${className}`}
+    >
       <div className="px-6 py-4 border-b border-slate-100/60 bg-slate-50/50 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 text-[#67afc3]">
@@ -159,7 +161,7 @@ function AnaliticasContent() {
     kpisLoading || ingresosLoading || pagosLoading || productosLoading;
 
   return (
-    <div className="max-w-[1400px] mx-auto py-4 sm:py-6 px-3 sm:px-6 flex flex-col items-stretch h-full relative space-y-4 sm:space-y-6 print:p-0 print:m-0 print:block">
+    <div className="   flex flex-col items-stretch h-full relative space-y-4 sm:space-y-6 print:p-0 print:m-0 print:block">
       <div className="print:hidden">
         <PageHeader
           title="Gestión de"
@@ -169,7 +171,9 @@ function AnaliticasContent() {
       </div>
 
       <div className="hidden print:block mb-6 border-b pb-4">
-        <h1 className="text-2xl font-bold text-slate-800">Resumen de Analíticas</h1>
+        <h1 className="text-2xl font-bold text-slate-800">
+          Resumen de Analíticas
+        </h1>
         <p className="text-slate-500">
           Período: {filtrosActivos.fechaDesde} al {filtrosActivos.fechaHasta}
         </p>
@@ -179,7 +183,7 @@ function AnaliticasContent() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
-        className="flex-1 overflow-hidden relative flex flex-col print:overflow-visible print:block print:h-auto"
+        className="flex-1 relative flex flex-col print:overflow-visible print:block print:h-auto"
       >
         <div className="space-y-5 pt-2">
           {/* Filtros */}
@@ -241,7 +245,10 @@ function AnaliticasContent() {
                   fechasModificadasPorUsuario.current = true;
                 }}
                 startContent={
-                  <CalendarDays size={14} className="text-slate-400 shrink-0 mr-1" />
+                  <CalendarDays
+                    size={14}
+                    className="text-slate-400 shrink-0 mr-1"
+                  />
                 }
                 className="w-full sm:w-1/4"
               />
@@ -258,7 +265,10 @@ function AnaliticasContent() {
                   fechasModificadasPorUsuario.current = true;
                 }}
                 startContent={
-                  <CalendarDays size={14} className="text-slate-400 shrink-0 mr-1" />
+                  <CalendarDays
+                    size={14}
+                    className="text-slate-400 shrink-0 mr-1"
+                  />
                 }
                 className="w-full sm:w-1/4"
               />
@@ -283,89 +293,87 @@ function AnaliticasContent() {
 
           {/* ─── Top Level KPIs ─── */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {kpisLoading ? (
-              Array.from({ length: 10 }).map((_, i) => <KPISkeleton key={i} />)
-            ) : (
-              kpisData && (
-                <>
-                  <KPICard
-                    title="Ingresos Netos"
-                    value={kpisData.kpis.ingresosNetos.valor}
-                    variation={kpisData.kpis.ingresosNetos.variacion}
-                    format="currency"
-                    icon={<DollarSign size={20} />}
-                  />
-                  {complementariosData?.gastos && (
+            {kpisLoading
+              ? Array.from({ length: 10 }).map((_, i) => (
+                  <KPISkeleton key={i} />
+                ))
+              : kpisData && (
+                  <>
                     <KPICard
-                      title="Total Gastos"
-                      value={complementariosData.gastos.total}
+                      title="Ingresos Netos"
+                      value={kpisData.kpis.ingresosNetos.valor}
+                      variation={kpisData.kpis.ingresosNetos.variacion}
                       format="currency"
-                      icon={<Receipt size={20} />}
+                      icon={<DollarSign size={20} />}
                     />
-                  )}
-                  {complementariosData?.gastos && (
+                    {complementariosData?.gastos && (
+                      <KPICard
+                        title="Total Gastos"
+                        value={complementariosData.gastos.total}
+                        format="currency"
+                        icon={<Receipt size={20} />}
+                      />
+                    )}
+                    {complementariosData?.gastos && (
+                      <KPICard
+                        title="Ganancia de Cajas"
+                        value={complementariosData.gastos.totalGanancia}
+                        format="currency"
+                        icon={<TrendingUp size={20} />}
+                      />
+                    )}
                     <KPICard
-                      title="Ganancia de Cajas"
-                      value={complementariosData.gastos.totalGanancia}
+                      title="Margen de Ganancia (Ventas)"
+                      value={kpisData.kpis.margenGanancia.valor}
+                      variation={kpisData.kpis.margenGanancia.variacion}
                       format="currency"
                       icon={<TrendingUp size={20} />}
                     />
-                  )}
-                  <KPICard
-                    title="Margen de Ganancia (Ventas)"
-                    value={kpisData.kpis.margenGanancia.valor}
-                    variation={kpisData.kpis.margenGanancia.variacion}
-                    format="currency"
-                    icon={<TrendingUp size={20} />}
-                  />
 
-                  <KPICard
-                    title="Tickets Emitidos"
-                    value={kpisData.kpis.tickets.valor}
-                    variation={kpisData.kpis.tickets.variacion}
-                    format="number"
-                    icon={<Receipt size={20} />}
-                  />
-                  <KPICard
-                    title="Productos Vendidos"
-                    value={kpisData.kpis.productosVendidos.valor}
-                    variation={kpisData.kpis.productosVendidos.variacion}
-                    format="number"
-                    icon={<ShoppingCart size={20} />}
-                  />
-                  <KPICard
-                    title="Clientes Activos"
-                    value={kpisData.kpis.clientesActivos.valor}
-                    variation={kpisData.kpis.clientesActivos.variacion}
-                    format="number"
-                    icon={<Users size={20} />}
-                  />
-                  <KPICard
-                    title="IVA Facturado"
-                    value={kpisData.kpis.ivaFacturado.valor}
-                    variation={kpisData.kpis.ivaFacturado.variacion}
-                    format="currency"
-                    icon={<Receipt size={20} />}
-                  />
-                  <KPICard
-                    title="Descuentos Aplicados"
-                    value={kpisData.kpis.descuentos.valor}
-                    variation={kpisData.kpis.descuentos.variacion}
-                    format="currency"
-                    icon={<Percent size={20} />}
-                  />
-                  <KPICard
-                    title="Notas de Crédito"
-                    value={kpisData.kpis.notasCredito.valor}
-                    format="number"
-                    icon={<Package size={20} />}
-                  />
-                </>
-              )
-            )}
+                    <KPICard
+                      title="Tickets Emitidos"
+                      value={kpisData.kpis.tickets.valor}
+                      variation={kpisData.kpis.tickets.variacion}
+                      format="number"
+                      icon={<Receipt size={20} />}
+                    />
+                    <KPICard
+                      title="Productos Vendidos"
+                      value={kpisData.kpis.productosVendidos.valor}
+                      variation={kpisData.kpis.productosVendidos.variacion}
+                      format="number"
+                      icon={<ShoppingCart size={20} />}
+                    />
+                    <KPICard
+                      title="Clientes Activos"
+                      value={kpisData.kpis.clientesActivos.valor}
+                      variation={kpisData.kpis.clientesActivos.variacion}
+                      format="number"
+                      icon={<Users size={20} />}
+                    />
+                    <KPICard
+                      title="IVA Facturado"
+                      value={kpisData.kpis.ivaFacturado.valor}
+                      variation={kpisData.kpis.ivaFacturado.variacion}
+                      format="currency"
+                      icon={<Receipt size={20} />}
+                    />
+                    <KPICard
+                      title="Descuentos Aplicados"
+                      value={kpisData.kpis.descuentos.valor}
+                      variation={kpisData.kpis.descuentos.variacion}
+                      format="currency"
+                      icon={<Percent size={20} />}
+                    />
+                    <KPICard
+                      title="Notas de Crédito"
+                      value={kpisData.kpis.notasCredito.valor}
+                      format="number"
+                      icon={<Package size={20} />}
+                    />
+                  </>
+                )}
           </div>
-
-
 
           {/* ─── Charts Section ─── */}
           <div className="pt-4 border-t border-slate-100 mt-4 space-y-5 print:hidden">

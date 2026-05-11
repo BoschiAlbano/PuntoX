@@ -7,6 +7,7 @@ import { LoadingPage } from "@/components/loading/loading";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/dashboard/Sidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import { AppProgressProvider as ProgressProvider } from "@bprogress/next";
 
 export default function DashboardLayout({
   children,
@@ -16,12 +17,22 @@ export default function DashboardLayout({
   const { initialize, isInitialized, isLoading, branches, roles } =
     useUserStore();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [show, setshow] = useState(true);
+  const [show, setShow] = useState(true);
 
   useEffect(() => {
     initialize();
-    setshow(window.innerWidth > 768);
-  }, []);
+
+    const syncSidebarVisibility = () => {
+      setShow(window.innerWidth > 768);
+    };
+
+    syncSidebarVisibility();
+    window.addEventListener("resize", syncSidebarVisibility);
+
+    return () => {
+      window.removeEventListener("resize", syncSidebarVisibility);
+    };
+  }, [initialize]);
 
   if (isLoading && !isInitialized) {
     return <LoadingPage message="Verificando autenticación..." />;
@@ -33,64 +44,57 @@ export default function DashboardLayout({
 
   return (
     <ProtectRoute>
-      <div className="flex h-dvh w-full bg-white relative overflow-hidden print:h-auto print:overflow-visible">
+      <div className=" bg-(--fondo) relative flex h-dvh w-full overflow-hidden print:h-auto print:overflow-visible">
         <section
-          onClick={() => setshow(false)}
-          className={`print:hidden z-40 transition-transform duration-400 ease-in-out sm:relative absolute sm:w-auto w-screen sm:h-auto h-dvh shrink-0 ${
+          onClick={() => setShow(false)}
+          className={`print:hidden z-50 transition-transform duration-400 ease-in-out sm:relative absolute sm:w-auto w-screen sm:h-auto h-dvh shrink-0 ${
             show ? `translate-x-[0%]` : `-translate-x-full`
           }`}
         >
           <Sidebar
             isCollapsed={isSidebarCollapsed}
-            onClose={() => setshow(false)}
+            onClose={() => setShow(false)}
           />
         </section>
 
-        {/* Background Gradients & Grid Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#f8fafc_2px,transparent_1px),linear-gradient(to_bottom,#f8fafc_2px,transparent_1px)] bg-size-[4rem_4rem] z-0 pointer-events-none" />
-
-        {/* Main Application Area */}
         <div
-          id="main-scroll-container"
-          className="flex-1 flex flex-col h-full overflow-y-auto overflow-x-hidden min-w-0 relative z-10 transition-all duration-300 w-full ml-0 print:overflow-visible print:h-auto"
-        >
-          <div className="print:hidden">
+          className={`fixed inset-0 z-40  backdrop-blur-[1px] transition-opacity duration-300 sm:hidden print:hidden ${
+            show ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
+          onClick={() => setShow(false)}
+          aria-hidden="true"
+        />
+
+        <div className="relative flex min-w-0 flex-1 flex-col">
+          <div className="relative z-20 print:hidden">
             <DashboardHeader
-              isShow={setshow}
+              isShow={setShow}
               show={show}
               isCollapsed={isSidebarCollapsed}
               onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             />
           </div>
-          <main className="flex-1 flex flex-col z-10 w-full print:p-0 print:m-0">{children}</main>
-          <div className="print:hidden">
-            <Footer />
+
+          <div className="relative flex min-h-0 flex-1 print:p-0 overflow-y-auto overflow-x-hidden">
+            <div className=" relative flex min-h-0 flex-1 flex-col">
+              <div className="relative z-10 flex min-h-0 flex-1 flex-col print:overflow-visible print:h-auto">
+                <main className=" bg-white rounded-tl-4xl  relative z-10 flex w-full min-h-0 flex-1 print:m-0 print:bg-white print:p-0">
+                  <div className="shell-content-frame min-h-full w-full overflow-y-auto ">
+                    <ProgressProvider
+                      height="3px"
+                      color="#67AFC3"
+                      options={{ showSpinner: false }}
+                      shallowRouting
+                    >
+                      {children}
+                    </ProgressProvider>
+                  </div>
+                </main>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </ProtectRoute>
-  );
-}
-
-function Footer() {
-  return (
-    <footer className="backdrop-blur-sm  py-4 px-6">
-      <div className="flex flex-col sm:flex-row items-center justify-between sm:gap-0 gap-2 text-sm text-[#182337]">
-        <p className="text-center">
-          ЖИ 2026 Punto X. Todos los derechos reservados.
-        </p>
-        <div className="flex items-center gap-4">
-          <a href="#" className="hover:text-[#76b7c8] transition-colors">
-            Terminos
-          </a>
-          <a href="#" className="hover:text-[#76b7c8] transition-colors">
-            Privacidad
-          </a>
-          <a href="#" className="hover:text-[#76b7c8] transition-colors">
-            Soporte
-          </a>
-        </div>
-      </div>
-    </footer>
   );
 }

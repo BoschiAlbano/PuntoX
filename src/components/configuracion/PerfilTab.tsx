@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Input,
-  Select,
-  SelectItem,
-  Button,
-  Switch,
-} from "@heroui/react";
+import { Input, Select, SelectItem, Button, Switch } from "@heroui/react";
 import Image from "next/image";
 import {
   Store,
@@ -51,7 +45,7 @@ function FormSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white/90 backdrop-blur-xl border border-slate-100 rounded-[20px] shadow-sm overflow-hidden">
+    <div className="bg-white/90 backdrop-blur-xl border border-slate-100 rounded-[20px] shadow-sm">
       <div className="px-6 py-4 border-b border-slate-100/60 bg-slate-50/50 flex items-center gap-3">
         <div className="p-2 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 text-[#67afc3]">
           <Icon size={16} strokeWidth={2.5} />
@@ -103,8 +97,12 @@ export function PerfilTab() {
   const [logo, setLogo] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [logoPreviewOriginal, setLogoPreviewOriginal] = useState<string>("");
-  const [provinciaSeleccionada, setProvinciaSeleccionada] = useState<string | null>(null);
-  const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState<string | null>(null);
+  const [provinciaSeleccionada, setProvinciaSeleccionada] = useState<
+    string | null
+  >(null);
+  const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState<
+    string | null
+  >(null);
 
   const provinciasQuery = useProvincias();
   const departamentosQuery = useDepartamentos(provinciaSeleccionada);
@@ -114,7 +112,11 @@ export function PerfilTab() {
   const localidades = localidadesQuery.data || [];
 
   useEffect(() => {
-    if (tenantData) setTenant({ nombre: tenantData.nombre || "", dominio: tenantData.dominio || "" });
+    if (tenantData)
+      setTenant({
+        nombre: tenantData.nombre || "",
+        dominio: tenantData.dominio || "",
+      });
   }, [tenantData]);
 
   useEffect(() => {
@@ -133,8 +135,10 @@ export function PerfilTab() {
         observacionPieFactura: configuracionData.observacionPieFactura || "",
         ShowFoto: configuracionData.ShowFoto || false,
       });
-      if (configuracionData.provinciaId) setProvinciaSeleccionada(String(configuracionData.provinciaId));
-      if (configuracionData.departamentoId) setDepartamentoSeleccionado(String(configuracionData.departamentoId));
+      if (configuracionData.provinciaId)
+        setProvinciaSeleccionada(String(configuracionData.provinciaId));
+      if (configuracionData.departamentoId)
+        setDepartamentoSeleccionado(String(configuracionData.departamentoId));
     }
   }, [configuracionData]);
 
@@ -211,7 +215,10 @@ export function PerfilTab() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => { setLogo(null); setLogoPreview(logoPreviewOriginal); }}
+                      onClick={() => {
+                        setLogo(null);
+                        setLogoPreview(logoPreviewOriginal);
+                      }}
                       className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold hover:bg-red-600 shadow transition-all"
                     >
                       ×
@@ -220,7 +227,9 @@ export function PerfilTab() {
                 ) : (
                   <div className="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-1 text-slate-300">
                     <ImageIcon size={28} />
-                    <span className="text-[9px] font-bold uppercase tracking-wider">Logo</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider">
+                      Logo
+                    </span>
                   </div>
                 )}
               </div>
@@ -229,11 +238,16 @@ export function PerfilTab() {
               <div className="flex-1 space-y-3">
                 <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 cursor-pointer hover:border-[#67afc3]/60 hover:bg-[#67afc3]/5 transition-all group">
                   <div className="flex flex-col items-center gap-1.5">
-                    <Upload size={20} className="text-slate-300 group-hover:text-[#67afc3] transition-colors" />
+                    <Upload
+                      size={20}
+                      className="text-slate-300 group-hover:text-[#67afc3] transition-colors"
+                    />
                     <span className="text-xs font-bold text-slate-400 group-hover:text-[#67afc3] transition-colors">
                       Subir imagen
                     </span>
-                    <span className="text-[10px] text-slate-300">JPG, PNG — máx. 5MB</span>
+                    <span className="text-[10px] text-slate-300">
+                      JPG, PNG — máx. 5MB
+                    </span>
                   </div>
                   <input
                     type="file"
@@ -245,12 +259,18 @@ export function PerfilTab() {
 
                 <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50 border border-slate-100">
                   <div className="flex flex-col">
-                    <span className="text-xs font-bold text-slate-600">Mostrar logo en ticket</span>
-                    <span className="text-[10px] text-slate-400">Incluir imagen en el comprobante impreso</span>
+                    <span className="text-xs font-bold text-slate-600">
+                      Mostrar logo en ticket
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      Incluir imagen en el comprobante impreso
+                    </span>
                   </div>
                   <Switch
                     isSelected={configuracion.ShowFoto}
-                    onValueChange={(v) => setConfiguracion({ ...configuracion, ShowFoto: v })}
+                    onValueChange={(v) =>
+                      setConfiguracion({ ...configuracion, ShowFoto: v })
+                    }
                     size="sm"
                     color="primary"
                   />
@@ -267,7 +287,9 @@ export function PerfilTab() {
             classNames={inputCls}
             value={tenant.nombre}
             onChange={(e) => setTenant({ ...tenant, nombre: e.target.value })}
-            startContent={<Store size={15} className="text-slate-400 mr-1 shrink-0" />}
+            startContent={
+              <Store size={15} className="text-slate-400 mr-1 shrink-0" />
+            }
           />
           <Input
             label="Nombre de fantasía"
@@ -276,8 +298,15 @@ export function PerfilTab() {
             variant="bordered"
             classNames={inputCls}
             value={configuracion.nombreFantasia}
-            onChange={(e) => setConfiguracion({ ...configuracion, nombreFantasia: e.target.value })}
-            startContent={<Building2 size={15} className="text-slate-400 mr-1 shrink-0" />}
+            onChange={(e) =>
+              setConfiguracion({
+                ...configuracion,
+                nombreFantasia: e.target.value,
+              })
+            }
+            startContent={
+              <Building2 size={15} className="text-slate-400 mr-1 shrink-0" />
+            }
           />
           <Input
             label="Dominio web"
@@ -287,7 +316,9 @@ export function PerfilTab() {
             classNames={inputCls}
             value={tenant.dominio}
             onChange={(e) => setTenant({ ...tenant, dominio: e.target.value })}
-            startContent={<Globe size={15} className="text-slate-400 mr-1 shrink-0" />}
+            startContent={
+              <Globe size={15} className="text-slate-400 mr-1 shrink-0" />
+            }
           />
           <Input
             label="Razón social"
@@ -297,8 +328,15 @@ export function PerfilTab() {
             classNames={inputCls}
             isRequired
             value={configuracion.razonSocial}
-            onChange={(e) => setConfiguracion({ ...configuracion, razonSocial: e.target.value })}
-            startContent={<FileText size={15} className="text-slate-400 mr-1 shrink-0" />}
+            onChange={(e) =>
+              setConfiguracion({
+                ...configuracion,
+                razonSocial: e.target.value,
+              })
+            }
+            startContent={
+              <FileText size={15} className="text-slate-400 mr-1 shrink-0" />
+            }
           />
         </div>
       </FormSection>
@@ -314,8 +352,12 @@ export function PerfilTab() {
             variant="bordered"
             classNames={inputCls}
             value={configuracion.email}
-            onChange={(e) => setConfiguracion({ ...configuracion, email: e.target.value })}
-            startContent={<Mail size={15} className="text-slate-400 mr-1 shrink-0" />}
+            onChange={(e) =>
+              setConfiguracion({ ...configuracion, email: e.target.value })
+            }
+            startContent={
+              <Mail size={15} className="text-slate-400 mr-1 shrink-0" />
+            }
           />
           <Input
             label="Teléfono fijo"
@@ -324,8 +366,12 @@ export function PerfilTab() {
             variant="bordered"
             classNames={inputCls}
             value={configuracion.telefono}
-            onChange={(e) => setConfiguracion({ ...configuracion, telefono: e.target.value })}
-            startContent={<Phone size={15} className="text-slate-400 mr-1 shrink-0" />}
+            onChange={(e) =>
+              setConfiguracion({ ...configuracion, telefono: e.target.value })
+            }
+            startContent={
+              <Phone size={15} className="text-slate-400 mr-1 shrink-0" />
+            }
           />
           <Input
             label="Celular / WhatsApp"
@@ -334,8 +380,12 @@ export function PerfilTab() {
             variant="bordered"
             classNames={inputCls}
             value={configuracion.celular}
-            onChange={(e) => setConfiguracion({ ...configuracion, celular: e.target.value })}
-            startContent={<Smartphone size={15} className="text-slate-400 mr-1 shrink-0" />}
+            onChange={(e) =>
+              setConfiguracion({ ...configuracion, celular: e.target.value })
+            }
+            startContent={
+              <Smartphone size={15} className="text-slate-400 mr-1 shrink-0" />
+            }
           />
           <Input
             label="Dirección"
@@ -345,8 +395,12 @@ export function PerfilTab() {
             classNames={inputCls}
             isRequired
             value={configuracion.direccion}
-            onChange={(e) => setConfiguracion({ ...configuracion, direccion: e.target.value })}
-            startContent={<MapPin size={15} className="text-slate-400 mr-1 shrink-0" />}
+            onChange={(e) =>
+              setConfiguracion({ ...configuracion, direccion: e.target.value })
+            }
+            startContent={
+              <MapPin size={15} className="text-slate-400 mr-1 shrink-0" />
+            }
           />
         </div>
       </FormSection>
@@ -362,8 +416,12 @@ export function PerfilTab() {
             classNames={inputCls}
             isRequired
             value={configuracion.cuit}
-            onChange={(e) => setConfiguracion({ ...configuracion, cuit: e.target.value })}
-            startContent={<Hash size={15} className="text-slate-400 mr-1 shrink-0" />}
+            onChange={(e) =>
+              setConfiguracion({ ...configuracion, cuit: e.target.value })
+            }
+            startContent={
+              <Hash size={15} className="text-slate-400 mr-1 shrink-0" />
+            }
           />
         </div>
       </FormSection>
@@ -399,13 +457,19 @@ export function PerfilTab() {
           <Select
             label="Departamento"
             labelPlacement="outside"
-            placeholder={!provinciaSeleccionada ? "Primero elegí provincia" : "Seleccioná departamento"}
+            placeholder={
+              !provinciaSeleccionada
+                ? "Primero elegí provincia"
+                : "Seleccioná departamento"
+            }
             variant="bordered"
             classNames={selectCls}
             isRequired
             isDisabled={!provinciaSeleccionada || departamentosQuery.isLoading}
             isLoading={departamentosQuery.isLoading}
-            selectedKeys={departamentoSeleccionado ? [departamentoSeleccionado] : []}
+            selectedKeys={
+              departamentoSeleccionado ? [departamentoSeleccionado] : []
+            }
             onSelectionChange={(keys) => {
               const selected = Array.from(keys)[0] as string;
               setDepartamentoSeleccionado(selected || null);
@@ -416,8 +480,12 @@ export function PerfilTab() {
               }));
             }}
           >
-            {departamentos.length === 0 && !departamentosQuery.isLoading && provinciaSeleccionada ? (
-              <SelectItem key="none" isDisabled>Sin departamentos</SelectItem>
+            {departamentos.length === 0 &&
+            !departamentosQuery.isLoading &&
+            provinciaSeleccionada ? (
+              <SelectItem key="none" isDisabled>
+                Sin departamentos
+              </SelectItem>
             ) : (
               departamentos.map((d) => (
                 <SelectItem key={d.Id.toString()}>{d.Descripcion}</SelectItem>
@@ -428,13 +496,21 @@ export function PerfilTab() {
           <Select
             label="Localidad"
             labelPlacement="outside"
-            placeholder={!departamentoSeleccionado ? "Primero elegí departamento" : "Seleccioná localidad"}
+            placeholder={
+              !departamentoSeleccionado
+                ? "Primero elegí departamento"
+                : "Seleccioná localidad"
+            }
             variant="bordered"
             classNames={selectCls}
             isRequired
             isDisabled={!departamentoSeleccionado || localidadesQuery.isLoading}
             isLoading={localidadesQuery.isLoading}
-            selectedKeys={configuracion.localidadId ? [configuracion.localidadId.toString()] : []}
+            selectedKeys={
+              configuracion.localidadId
+                ? [configuracion.localidadId.toString()]
+                : []
+            }
             onSelectionChange={(keys) => {
               const selected = Array.from(keys)[0];
               setConfiguracion((prev) => ({
@@ -443,8 +519,12 @@ export function PerfilTab() {
               }));
             }}
           >
-            {localidades.length === 0 && !localidadesQuery.isLoading && departamentoSeleccionado ? (
-              <SelectItem key="none" isDisabled>Sin localidades</SelectItem>
+            {localidades.length === 0 &&
+            !localidadesQuery.isLoading &&
+            departamentoSeleccionado ? (
+              <SelectItem key="none" isDisabled>
+                Sin localidades
+              </SelectItem>
             ) : (
               localidades.map((l) => (
                 <SelectItem key={l.Id.toString()}>{l.Descripcion}</SelectItem>
@@ -463,8 +543,15 @@ export function PerfilTab() {
           variant="bordered"
           classNames={inputCls}
           value={configuracion.observacionPieFactura}
-          onChange={(e) => setConfiguracion({ ...configuracion, observacionPieFactura: e.target.value })}
-          startContent={<Receipt size={15} className="text-slate-400 mr-1 shrink-0" />}
+          onChange={(e) =>
+            setConfiguracion({
+              ...configuracion,
+              observacionPieFactura: e.target.value,
+            })
+          }
+          startContent={
+            <Receipt size={15} className="text-slate-400 mr-1 shrink-0" />
+          }
         />
       </FormSection>
 

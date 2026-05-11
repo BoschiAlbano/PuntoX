@@ -18,6 +18,89 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --shell-max-width: 1400px;
+  --shell-gutter: clamp(0.75rem, 1vw + 0.35rem, 1.5rem);
+  --shell-header-height: 3.5rem;
+  --shell-status-height: 2.25rem;
+  --shell-sidebar-width: 280px;
+  --shell-sidebar-width-collapsed: 80px;
+
+  /* ────────────────────────────────────────────────────────
+     NAV — Sidebar & Header
+     Ajustá estos valores para cambiar los colores del menú
+     lateral y la barra superior sin tocar el código.
+     ──────────────────────────────────────────────────────── */
+
+  /* Fondo principal del sidebar y header */
+  --nav-bg:                        #1d293d;
+
+  /* Logo */
+  --nav-logo-title:                #f1f5f9;   /* blanco suave — título prominente */
+  --nav-logo-subtitle:             #94a3b8;   /* slate-400 — legible sobre dark navy */
+
+  /* Etiquetas de sección ("PRINCIPAL", "VENTAS"…) */
+  --nav-section-label:             #64748b;   /* slate-500 — visible pero secundario */
+  --nav-section-chevron:           #64748b;
+
+  /* Items del menú — estado inactivo */
+  --nav-item-text:                 #94a3b8;   /* slate-400 — buena legibilidad */
+  --nav-item-icon:                 #7a8fa8;   /* entre slate-400/500 — íconos claros */
+  --nav-item-hover-bg:             rgba(255, 255, 255, 0.08);
+  --nav-item-hover-text:           #f1f5f9;   /* casi blanco en hover */
+
+  /* Items del menú — estado activo */
+  --nav-item-active-bg:            rgba(103, 175, 195, 0.15);
+  --nav-item-active-text:          #67afc3;   /* acento teal */
+  --nav-item-active-icon:          #67afc3;
+  --nav-item-active-indicator:     #67afc3;
+
+  /* Bordes y separadores internos */
+  --nav-divider:                   rgba(255, 255, 255, 0.09);
+
+  /* Tooltip (sidebar colapsado) */
+  --nav-tooltip-bg:                #0f172a;
+  --nav-tooltip-text:              #e2e8f0;
+  --nav-tooltip-border:            rgba(255, 255, 255, 0.12);
+
+  /* Footer del sidebar */
+  --nav-footer-border:             rgba(255, 255, 255, 0.08);
+  --nav-footer-card-bg:            rgba(255, 255, 255, 0.05);
+  --nav-footer-card-border:        rgba(255, 255, 255, 0.09);
+  --nav-footer-text:               #64748b;   /* slate-500 — suficiente para info secundaria */
+
+  /* Botones de acción en el header (toggle, search, help) */
+  --nav-btn-text:                  #94a3b8;   /* slate-400 — íconos bien visibles */
+  --nav-btn-hover-bg:              rgba(255, 255, 255, 0.08);
+  --nav-btn-hover-text:            #f1f5f9;
+
+  /* Breadcrumbs */
+  --nav-breadcrumb-home:           #94a3b8;   /* ícono home visible */
+  --nav-breadcrumb-mid:            #64748b;   /* segmentos intermedios */
+  --nav-breadcrumb-current:        #f1f5f9;   /* página actual — prominente */
+  --nav-breadcrumb-sep:            #3d5068;   /* separadores — mínimo protagonismo */
+  --nav-page-title-mobile:         #f1f5f9;
+
+  /* Barra de búsqueda central (header lg+) */
+  --nav-search-bg:                 rgba(255, 255, 255, 0.06);
+  --nav-search-border:             rgba(255, 255, 255, 0.10);
+  --nav-search-text:               #94a3b8;   /* texto visible */
+  --nav-search-placeholder:        #64748b;   /* placeholder legible */
+  --nav-search-hover-bg:           rgba(255, 255, 255, 0.09);
+  --nav-search-hover-border:       rgba(103, 175, 195, 0.45);
+  --nav-kbd-bg:                    rgba(255, 255, 255, 0.06);
+  --nav-kbd-border:                rgba(255, 255, 255, 0.11);
+  --nav-kbd-text:                  #64748b;
+
+  /* Progress bar decorativo (header) */
+  --nav-progress-track:            rgba(255, 255, 255, 0.07);
+
+  /* Alias legacy — usado en layout.tsx y header */
+  --fondo: var(--nav-bg);
+
+  /* ────────────────────────────────────────────────────────
+     ACCENT — Color de acento global (#67afc3 por defecto)
+     ──────────────────────────────────────────────────────── */
+  --accent:                        #67afc3;
 }
 
 /* Enable dark mode variables when .dark class is present */
@@ -49,6 +132,75 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.shell-app-bg {
+  /* background:
+    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.13), transparent 36%),
+    radial-gradient(circle at 100% 0%, rgba(15, 23, 42, 0.08), transparent 28%),
+    linear-gradient(145deg, #eff4ff 0%, #f4f8fd 42%, #edf3fb 100%); */
+
+  background: white;
+}
+
+.shell-workspace {
+  border-radius: 1.05rem;
+  border: 1px solid rgba(203, 213, 225, 0.95);
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.97) 0%,
+    rgba(248, 251, 255, 0.96) 100%
+  );
+  box-shadow:
+    0 30px 60px -48px rgba(15, 23, 42, 0.75),
+    0 8px 18px -14px rgba(15, 23, 42, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.shell-grid-overlay {
+  opacity: 0.32;
+  background-image:
+    linear-gradient(to right, rgba(148, 163, 184, 0.2) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.2) 1px, transparent 1px);
+  background-size: 3rem 3rem;
+}
+
+.shell-content-frame {
+  width: 100%;
+  /* max-width: var(--shell-max-width); */
+  margin-inline: auto;
+  min-height: 100%;
+  padding-top: 0.5rem;
+  padding-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  padding-left: var(--shell-gutter);
+  padding-right: var(--shell-gutter);
+}
+
+.shell-status-bar {
+  height: var(--shell-status-height);
+}
+
+@media (max-width: 768px) {
+  :root {
+    --shell-header-height: 3.25rem;
+    --shell-status-height: 2rem;
+    --shell-gutter: 0.75rem;
+  }
+
+  .shell-workspace {
+    border-radius: 0.9rem;
+  }
+
+  .shell-grid-overlay {
+    background-size: 2.5rem 2.5rem;
+  }
+
+  .shell-content-frame {
+    padding-top: 0.25rem;
+    padding-bottom: 0.5rem;
+  }
 }
 
 /* Scrollbar para el sidebar */

@@ -6,7 +6,7 @@ import {
   Spinner,
   addToast,
 } from "@heroui/react";
-import { ChevronDown, Check } from "lucide-react";
+import { ChevronDown, Check, MapPin } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -90,8 +90,8 @@ export default function SucursalSelector({
         className={`group relative
           ${
             isCollapsed
-              ? "min-w-[50px] w-[55px] h-[50px] p-0 justify-center text-slate-300 bg-transparent rounded-xl hover:bg-slate-700/50 mx-auto"
-              : "w-full gap-2 text-white bg-transparent border border-slate-600/50 px-4 py-5 rounded-xl hover:bg-slate-700/50"
+              ? "min-w-[50px] w-[55px] h-[50px] p-0 justify-center text-(--nav-item-icon) bg-transparent rounded-xl hover:bg-(--nav-item-hover-bg) hover:text-(--nav-item-hover-text) mx-auto"
+              : "w-full gap-2 text-(--nav-item-text) bg-transparent border border-(--nav-divider) px-4 py-5 rounded-xl hover:bg-(--nav-item-hover-bg) hover:text-(--nav-item-hover-text)"
           }
         `}
         startContent={
@@ -104,7 +104,7 @@ export default function SucursalSelector({
             <Spinner size="sm" />
           ) : (
             <ChevronDown
-              className={`h-4 w-4 group-hover:text-[#5fa7b8] transition-transform duration-300 ${isOpen ? "rotate-180 text-[#5fa7b8]" : "text-slate-400"}`}
+              className={`h-4 w-4 group-hover:text-[#5fa7b8] transition-transform duration-300 ${isOpen ? "rotate-180 text-[#5fa7b8]" : "text-(--nav-item-icon)"}`}
             />
           )
         }
@@ -128,7 +128,7 @@ export default function SucursalSelector({
             transition={{ duration: 0.25, ease: "easeInOut" }}
             className={`overflow-hidden ${isCollapsed ? "px-0" : "px-0"} pt-1`}
           >
-            <div className="flex flex-col gap-1 mt-1 bg-slate-800/40 rounded-xl p-1 border border-slate-700/50">
+            <div className="flex flex-col gap-1 mt-1 bg-white rounded-xl p-1 border border-slate-200 shadow-sm">
               {sucursales.map((sucursal) => {
                 const isSelected = sucursalActiva?.Id === sucursal.Id;
                 return (
@@ -140,7 +140,7 @@ export default function SucursalSelector({
                       ${
                         isSelected
                           ? "bg-[#5fa7b8]/10 text-[#5fa7b8]"
-                          : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
                       }
                     `}
                     title={isCollapsed ? sucursal.Nombre : ""}
@@ -150,7 +150,7 @@ export default function SucursalSelector({
                         {isSelected ? (
                           <Check className="h-4 w-4 text-[#5fa7b8]" />
                         ) : (
-                          <IconSucursal className="w-4 h-4 text-slate-500 opacity-50" />
+                          <IconSucursal className="w-4 h-4 text-slate-400 opacity-60" />
                         )}
                       </div>
                     )}
@@ -181,20 +181,5 @@ export default function SucursalSelector({
 }
 
 function IconSucursal({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={2}
-      stroke="currentColor"
-      className={`w-5 h-5 ${className}`}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z"
-      />
-    </svg>
-  );
+  return <MapPin className={`w-4 h-4 ${className}`} strokeWidth={2} />;
 }

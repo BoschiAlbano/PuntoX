@@ -3,6 +3,7 @@
 import { HeroUIProvider } from "@heroui/react";
 import { ToastProvider } from "@heroui/toast";
 import { I18nProvider } from "@react-aria/i18n";
+import { Suspense } from "react";
 
 import React from "react";
 import QueryProvider from "../tanstack/QueryProvider";
