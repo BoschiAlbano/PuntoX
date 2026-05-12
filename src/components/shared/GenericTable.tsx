@@ -47,7 +47,7 @@ function getPrintPageStyle(orientation?: "portrait" | "landscape"): string {
     }
     .table-print-header {
       margin-bottom: 20px; padding: 16px 20px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-      border-left: 4px solid #67afc3; border-radius: 4px;
+      border-left: 4px solid var(--crud-accent); border-radius: 4px;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .table-print-header h1 { font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 6px 0; letter-spacing: -0.02em; }
@@ -60,9 +60,9 @@ function getPrintPageStyle(orientation?: "portrait" | "landscape"): string {
     .table-print-source table { width: 100%; border-collapse: collapse; font-size: 10px; }
     .table-print-source thead { display: table-header-group; }
     .table-print-source th {
-      background: linear-gradient(180deg, #67afc3 0%, #5a9db0 100%) !important;
+      background: linear-gradient(180deg, var(--crud-accent) 0%, var(--crud-accent-hover) 100%) !important;
       color: white !important; font-weight: 600; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em;
-      padding: 10px 12px; border: none; border-bottom: 2px solid #4a8a9a;
+      padding: 10px 12px; border: none; border-bottom: 2px solid var(--crud-accent-print-dark);
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .table-print-source th[data-align="right"] { text-align: right; }
@@ -286,15 +286,15 @@ export default function GenericTable<T extends { Id: number | string }>({
   const ICON_STROKE = 2;
 
   return (
-    <section className="w-full h-full flex flex-col gap-4 overflow-hidden">
-      <div className="rounded-lg flex flex-col gap-4 bg-white flex-1 w-full h-full shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
+    <section className="w-full flex flex-col gap-4 flex-1">
+      <div className="rounded-lg flex flex-col gap-4 bg-white w-full shadow-[0_1px_3px_rgba(15,23,42,0.06)] flex-1">
         {/* Barra de herramientas: Búsqueda+Filtro | Botones - grilla 8px */}
-        <section className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
+        <section className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-2 sm:p-4 rounded-xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
           {/* Búsqueda - más protagonista: ancho mayor, placeholder claro */}
-          <div className="w-full sm:flex-1 sm:min-w-0 order-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-            <div className="flex items-center gap-2 w-full min-w-0 sm:max-w-[400px]">
+          <div className="w-full sm:flex-1 sm:min-w-0 order-1 flex flex-row flex-wrap items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 flex-1 min-w-0 sm:max-w-[400px]">
               <div className="flex-1 min-w-0">
-                <div className="group flex items-center gap-2 border border-slate-300 rounded-lg px-3 sm:px-4 h-10 sm:h-9 bg-slate-50/50 transition-all duration-150 hover:border-[#67afc3] hover:bg-white focus-within:border-[#67afc3] focus-within:ring-2 focus-within:ring-[#67afc3]/35 focus-within:bg-white">
+                <div className="group flex items-center gap-2 border border-slate-300 rounded-lg px-3 sm:px-4 h-10 sm:h-9 bg-slate-50/50 transition-all duration-150 hover:border-[var(--crud-accent)] hover:bg-white focus-within:border-[var(--crud-accent)] focus-within:ring-2 focus-within:ring-[var(--crud-accent)]/35 focus-within:bg-white">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
@@ -323,11 +323,11 @@ export default function GenericTable<T extends { Id: number | string }>({
           </div>
 
           {/* Acciones - a la derecha, grilla 8px */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap sm:flex-shrink-0 order-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2 sm:gap-3 sm:flex-shrink-0 order-2 w-full sm:w-auto">
             {onNewClick && (
               <button
                 onClick={onNewClick}
-                className="flex-1 sm:flex-none px-4 h-10 sm:h-9 rounded-lg bg-[#67afc3] hover:bg-[#5a9db0] text-white font-medium text-sm shadow-sm transition-all duration-150 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center whitespace-nowrap"
+                className="flex-1 sm:flex-none px-4 h-10 sm:h-9 rounded-lg bg-[var(--crud-accent)] hover:bg-[var(--crud-accent-hover)] text-white font-medium text-sm shadow-sm transition-all duration-150 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center whitespace-nowrap"
                 aria-label={newButtonText}
               >
                 {newButtonText}
@@ -339,14 +339,14 @@ export default function GenericTable<T extends { Id: number | string }>({
               aria-hidden
             />
 
-            <div className="flex items-center gap-2 flex-1 sm:flex-none justify-end sm:justify-start">
+            <div className="flex items-center gap-2 flex-shrink-0 justify-end sm:justify-start">
               <Dropdown>
                 <DropdownTrigger>
                   {/* Wrapper relativo para el badge de selección */}
                   <div className="relative inline-flex flex-shrink-0">
                     <button
                       type="button"
-                      className="flex items-center justify-center sm:justify-start gap-2 px-3 w-auto h-10 sm:h-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[#67afc3] text-slate-700 hover:text-[#67afc3] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40 transition-all duration-150"
+                      className="flex items-center justify-center sm:justify-start gap-2 px-3 w-auto h-10 sm:h-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[var(--crud-accent)] text-slate-700 hover:text-[var(--crud-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--crud-accent)]/40 transition-all duration-150"
                       title={
                         selectedCount > 0
                           ? `Más opciones (${selectedCount} seleccionados)`
@@ -370,7 +370,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                     {/* Badge de selección activa */}
                     {selectedCount > 0 && (
                       <span
-                        className="pointer-events-none absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-[#67afc3] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 shadow-sm ring-2 ring-white"
+                        className="pointer-events-none absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-[var(--crud-accent)] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 shadow-sm ring-2 ring-white"
                         aria-hidden="true"
                       >
                         {selectedCount > 99 ? "99+" : selectedCount}
@@ -411,7 +411,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                             : "Exportar como CSV",
                         icon: <Download size={16} strokeWidth={2} />,
                         className:
-                          "rounded-md px-3 py-2 data-[hover=true]:bg-[#67afc3]/10 data-[focus=true]:bg-[#67afc3]/10",
+                          "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
                         onPress: csvPressHandler,
                       });
                     }
@@ -428,7 +428,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                             : "Exportar como XLS",
                         icon: <FileSpreadsheet size={16} strokeWidth={2} />,
                         className:
-                          "rounded-md px-3 py-2 data-[hover=true]:bg-[#67afc3]/10 data-[focus=true]:bg-[#67afc3]/10",
+                          "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
                         onPress: () => handlePrint(),
                       });
                     }
@@ -440,7 +440,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                           : "Imprimir",
                       icon: <Printer size={16} strokeWidth={2} />,
                       className:
-                        "rounded-md px-3 py-2 data-[hover=true]:bg-[#67afc3]/10 data-[focus=true]:bg-[#67afc3]/10",
+                        "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
                       onPress: () => handlePrint(),
                     });
 
@@ -463,7 +463,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                           key: a.key,
                           label: a.label,
                           className:
-                            "rounded-md px-3 py-2 data-[hover=true]:bg-[#67afc3]/10",
+                            "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10",
                           onPress: a.onClick,
                         });
                       });
@@ -527,7 +527,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                   <DropdownTrigger>
                     <button
                       type="button"
-                      className="p-2 h-10 w-10 sm:h-9 sm:w-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[#67afc3] text-slate-700 hover:text-[#67afc3] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40 transition-all duration-150 flex items-center justify-center flex-shrink-0"
+                      className="p-2 h-10 w-10 sm:h-9 sm:w-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[var(--crud-accent)] text-slate-700 hover:text-[var(--crud-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--crud-accent)]/40 transition-all duration-150 flex items-center justify-center flex-shrink-0"
                       title="Columnas visibles"
                       aria-label="Mostrar u ocultar columnas"
                     >
@@ -554,7 +554,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                             <Check
                               size={16}
                               strokeWidth={2}
-                              className="text-[#67afc3] flex-shrink-0"
+                              className="text-[var(--crud-accent)] flex-shrink-0"
                             />
                           ) : (
                             <span className="w-4 inline-block" aria-hidden />
@@ -572,7 +572,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                             return next;
                           });
                         }}
-                        className="rounded-md px-3 py-2 data-[hover=true]:bg-[#67afc3]/10 data-[focus=true]:bg-[#67afc3]/10 data-[selected=true]:bg-[#67afc3]/15"
+                        className="rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10 data-[selected=true]:bg-[var(--crud-accent)]/15"
                       >
                         {col.name}
                       </DropdownItem>
@@ -587,7 +587,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                     onClick={() => onViewModeChange("table")}
                     className={`p-2 h-10 w-10 sm:h-9 sm:w-9 flex items-center justify-center transition-colors ${
                       viewMode === "table"
-                        ? "bg-[#67afc3] text-white"
+                        ? "bg-[var(--crud-accent)] text-white"
                         : "bg-white text-slate-600 hover:bg-slate-50"
                     }`}
                     title="Vista tabla"
@@ -600,7 +600,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                     onClick={() => onViewModeChange("cards")}
                     className={`p-2 h-10 w-10 sm:h-9 sm:w-9 flex items-center justify-center transition-colors ${
                       viewMode === "cards"
-                        ? "bg-[#67afc3] text-white"
+                        ? "bg-[var(--crud-accent)] text-white"
                         : "bg-white text-slate-600 hover:bg-slate-50"
                     }`}
                     title="Vista cards"
@@ -614,7 +614,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                 <button
                   onClick={onRefresh}
                   disabled={isRefreshing}
-                  className="p-2 h-10 w-10 sm:h-9 sm:w-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[#67afc3] text-slate-700 hover:text-[#67afc3] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 flex items-center justify-center"
+                  className="p-2 h-10 w-10 sm:h-9 sm:w-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[var(--crud-accent)] text-slate-700 hover:text-[var(--crud-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--crud-accent)]/40 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 flex items-center justify-center"
                   title="Actualizar datos"
                   aria-label="Actualizar datos de la tabla"
                 >
@@ -633,8 +633,8 @@ export default function GenericTable<T extends { Id: number | string }>({
         {/* Barra de selección masiva eliminada — acciones movidas al menú "Más opciones" */}
 
         {/* Table/Cards + Pagination */}
-        <div className="w-full overflow-hidden flex-1 flex flex-col h-full rounded-xl border border-slate-200/80 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
-          <div className="flex-1 min-h-0 overflow-auto overflow-x-auto">
+        <div className="w-full flex flex-col rounded-xl border border-slate-200/80 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] flex-1">
+          <div className="overflow-x-auto flex-1">
             {viewMode === "cards" && renderCards ? (
               isLoading ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
@@ -699,11 +699,11 @@ export default function GenericTable<T extends { Id: number | string }>({
                 className="bg-white rounded-lg border-none"
                 classNames={{
                   wrapper:
-                    "bg-white h-full shadow-none rounded-xl border-none sm:p-4 p-2",
-                  th: "bg-[#67afc3] text-white text-[13px] font-semibold border-b border-slate-200/60",
-                  base: "bg-transparent h-full shadow-none rounded-xl border-none",
-                  td: "border-b border-slate-200/80 text-slate-800",
-                  tr: "group transition-all duration-200 data-[hover=true]:bg-slate-50 data-[hover=true]:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] data-[hover=true]:relative data-[hover=true]:z-10 data-[selected=true]:bg-[#67afc3]/15",
+                    "bg-white shadow-none rounded-xl border-none sm:p-4 p-1",
+                  th: "bg-[var(--crud-accent)] text-white text-[11px] sm:text-[13px] font-semibold border-b border-slate-200/60 px-2 sm:px-4",
+                  base: "bg-transparent shadow-none rounded-xl border-none",
+                  td: "border-b border-slate-200/80 text-slate-800 text-[12px] sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2.5",
+                  tr: "group transition-all duration-200 data-[hover=true]:bg-slate-50 data-[hover=true]:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] data-[hover=true]:relative data-[hover=true]:z-10 data-[selected=true]:bg-[var(--crud-accent)]/15",
                 }}
               >
                 <TableHeader columns={visibleColumns}>
@@ -830,7 +830,7 @@ export default function GenericTable<T extends { Id: number | string }>({
               </Table>
             )}
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-3 sm:p-4 border-t border-slate-200/80 bg-slate-50/50 rounded-b-xl print:hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-2 sm:p-4 border-t border-slate-200/80 bg-slate-50/50 rounded-b-xl print:hidden">
             {isLoading ? (
               <section className="relative w-full flex flex-col sm:gap-0 gap-2 items-center">
                 <div className="flex gap-2">
@@ -844,7 +844,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                     <div className="h-9 w-9 rounded-medium bg-default-200" />
                   </Skeleton>
                 </div>
-                <span className="text-[#67afc3]/90 w-full sm:text-start text-center sm:pl-2 pl-0 text-sm sm:absolute relative bottom-0 flex flex-col sm:items-start items-center">
+                <span className="text-[var(--crud-accent)]/90 w-full sm:text-start text-center sm:pl-2 pl-0 text-sm sm:absolute relative bottom-0 flex flex-col sm:items-start items-center">
                   {/* {`${paginationMeta.limit} de ${paginationMeta.total} registros totales`} */}
                   <Skeleton className="rounded-medium w-[120px] h-4 opacity-50 ">
                     <div className="h-4 w-[120px] rounded-medium bg-default-200" />
@@ -853,20 +853,20 @@ export default function GenericTable<T extends { Id: number | string }>({
               </section>
             ) : !isLoading && !isError ? (
               <>
-                <span className="text-slate-700 font-medium text-sm">
+                <span className="text-slate-700 font-medium text-xs sm:text-sm">
                   {`${data.length} de ${paginationMeta.total} registros`}
                 </span>
-                <div className="flex flex-col-reverse sm:flex-row items-center gap-4 sm:gap-3 w-full sm:w-auto">
+                <div className="flex flex-col-reverse sm:flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
                   {onLimitChange && (
-                    <label className="flex items-center justify-center gap-2 text-sm text-slate-600 w-full sm:w-auto">
-                      <span>Filas:</span>
+                    <label className="flex items-center justify-center gap-2 text-xs sm:text-sm text-slate-600 w-full sm:w-auto">
+                      <span className="whitespace-nowrap">Filas:</span>
                       <select
                         value={limit}
                         onChange={(e) => {
                           const v = e.target.value;
                           onLimitChange(v === "all" ? 9999 : Number(v));
                         }}
-                        className="rounded-lg border border-slate-300 bg-white px-3 h-10 sm:h-9 text-sm text-slate-800 focus:border-[#67afc3] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/35 transition-all duration-150"
+                        className="rounded-lg border border-slate-300 bg-white px-2 sm:px-3 h-9 text-xs sm:text-sm text-slate-800 focus:border-[var(--crud-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--crud-accent)]/35 transition-all duration-150"
                         aria-label="Cantidad de filas por página"
                       >
                         {limitOptions.map((n) => (
@@ -883,18 +883,14 @@ export default function GenericTable<T extends { Id: number | string }>({
                     page={page}
                     total={paginationMeta.totalPages}
                     onChange={onPageChange}
-                    size={
-                      typeof window !== "undefined" && window.innerWidth < 640
-                        ? "sm"
-                        : "md"
-                    }
+                    size="sm"
                     classNames={{
                       base: "w-full flex justify-center sm:w-auto",
-                      cursor: "bg-[#67afc3]/90 text-white shadow-none ",
-                      item: "bg-transparent shadow-none cursor-pointer text-sm sm:text-md",
+                      cursor: "bg-[var(--crud-accent)]/90 text-white shadow-none",
+                      item: "bg-transparent shadow-none cursor-pointer text-xs sm:text-sm",
                       next: "cursor-pointer",
                       prev: "cursor-pointer",
-                      wrapper: "gap-1",
+                      wrapper: "gap-0.5 sm:gap-1",
                     }}
                   />
                 </div>

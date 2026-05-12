@@ -4,14 +4,15 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import GenericCrud from "@/components/shared/GenericCrud";
 import UnidadMedidaForm, { UnidadMedida } from "./UnidadMedidaForm";
-import { Chip, addToast } from "@heroui/react";
+import StatusBadge from "@/components/shared/StatusBadge";
+import DetailField from "@/components/shared/DetailField";
+import DetailPanel from "@/components/shared/DetailPanel";
 import { DeleteButton, EditButton } from "@/components/shared/TableActions";
 import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
 
-
 async function bulkPatchUnidadesMedidas(
   ids: (number | string)[],
-  data: { EstaEliminado?: boolean; Descripcion?: string }
+  data: { EstaEliminado?: boolean; Descripcion?: string },
 ) {
   for (const id of ids) {
     const res = await fetch("/api/unidades-medidas", {
@@ -34,7 +35,6 @@ export default function UnidadMedidaCRUD() {
     clearSelection?: () => void;
   }>({ open: false, items: [] });
 
-
   const invalidateUnidadesMedidas = () => {
     queryClient.invalidateQueries({ queryKey: ["unidades-medidas-generic"] });
   };
@@ -42,102 +42,85 @@ export default function UnidadMedidaCRUD() {
   return (
     <>
       <GenericCrud<UnidadMedida>
-      apiPath="/api/unidades-medidas"
-      queryKey="unidades-medidas-generic"
-      title="Gestión de Unidades de Medida"
-      searchPlaceholder="Buscar unidades de medida..."
-      FormComponent={UnidadMedidaForm}
-      renderRowPreview={(item) => (
-        <div className="space-y-4 text-sm">
-          <div>
-            <p className="text-slate-500 text-xs mb-0.5">Descripción</p>
-            <p className="font-medium text-slate-800">{item.Descripcion}</p>
-          </div>
-          <div>
-            <p className="text-slate-500 text-xs mb-0.5">Estado</p>
-            <span
-              className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                item.EstaEliminado ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
-              }`}
-            >
-              {item.EstaEliminado ? "Inactivo" : "Activo"}
-            </span>
-          </div>
-        </div>
-      )}
-      getRowPreviewTitle={(item) => item.Descripcion || "Unidad de medida"}
-      enableBulkActions
-      exportConfig={{
-        filename: "unidades-medida",
-        columns: [
-          { key: "Id", header: "ID" },
-          { key: "Descripcion", header: "Descripción" },
-          { key: "Estado", header: "Estado" },
-        ],
-        mapItem: (u) => ({
-          Id: u.Id,
-          Descripcion: u.Descripcion ?? "",
-          Estado: u.EstaEliminado ? "Inactivo" : "Activo",
-        }),
-      }}
-      bulkActionsDropdown={[
-        {
-          key: "cambiar-estado",
-          label: "Cambiar estado",
-          onAction: (ctx) => {
-            setBulkEstadoModal({ open: true, items: ctx.items, clearSelection: ctx.clearSelection });
+        apiPath="/api/unidades-medidas"
+        queryKey="unidades-medidas-generic"
+        title="Gestión de Unidades de Medida"
+        searchPlaceholder="Buscar unidades de medida..."
+        FormComponent={UnidadMedidaForm}
+        renderRowPreview={(item) => (
+          <DetailPanel>
+            <DetailField label="Descripción">{item.Descripcion}</DetailField>
+            <DetailField label="Estado">
+              <StatusBadge estaEliminado={item.EstaEliminado} />
+            </DetailField>
+          </DetailPanel>
+        )}
+        getRowPreviewTitle={(item) => item.Descripcion || "Unidad de medida"}
+        enableBulkActions
+        exportConfig={{
+          filename: "unidades-medida",
+          columns: [
+            { key: "Id", header: "ID" },
+            { key: "Descripcion", header: "Descripción" },
+            { key: "Estado", header: "Estado" },
+          ],
+          mapItem: (u) => ({
+            Id: u.Id,
+            Descripcion: u.Descripcion ?? "",
+            Estado: u.EstaEliminado ? "Inactivo" : "Activo",
+          }),
+        }}
+        bulkActionsDropdown={[
+          {
+            key: "cambiar-estado",
+            label: "Cambiar estado",
+            onAction: (ctx) => {
+              setBulkEstadoModal({
+                open: true,
+                items: ctx.items,
+                clearSelection: ctx.clearSelection,
+              });
+            },
           },
-        },
-      ]}
-      columns={[
-        {
-          uid: "Descripcion",
-          name: "DESCRIPCIÓN",
-          sortable: true,
-          align: "start",
-        },
-        { uid: "Estado", name: "ESTADO" },
-        { uid: "acciones", name: "ACCIONES" },
-      ]}
-      // Función para renderizar celdas personalizadas
-      renderCell={(item, columnKey, actions) => {
-        switch (columnKey) {
-          case "Id":
-            return item.Id;
-          case "Descripcion":
-            return (
-              <span className="font-medium text-gray-700">
-                {item.Descripcion}
-              </span>
-            );
-          case "Estado":
-            return (
-              <Chip
-                color={item.EstaEliminado ? "danger" : "success"}
-                variant="flat"
-                size="sm"
-              >
-                {item.EstaEliminado ? "Inactivo" : "Activo"}
-              </Chip>
-            );
-          case "acciones":
-            return (
-              <div className="flex gap-2 w-full justify-center items-center">
-                <EditButton
-                  onPress={() => actions.onEdit(item)}
-                  label={`Editar ${item.Descripcion || "unidad de medida"}`}
-                />
-                <DeleteButton
-                  onPress={() => actions.onDelete(item)}
-                  label={`Eliminar ${item.Descripcion || "unidad de medida"}`}
-                />
-              </div>
-            );
-          default:
-            return null;
-        }
-      }}
-    />
+        ]}
+        columns={[
+          {
+            uid: "Descripcion",
+            name: "DESCRIPCIÓN",
+            sortable: true,
+            align: "start",
+          },
+          { uid: "Estado", name: "ESTADO" },
+          { uid: "acciones", name: "ACCIONES" },
+        ]}
+        renderCell={(item, columnKey, actions) => {
+          switch (columnKey) {
+            case "Descripcion":
+              return (
+                <span className="font-medium text-gray-700">
+                  {item.Descripcion}
+                </span>
+              );
+            case "Estado":
+              return <StatusBadge estaEliminado={item.EstaEliminado} />;
+            case "acciones":
+              return (
+                <div className="flex gap-2 w-full justify-center items-center">
+                  <EditButton
+                    onPress={() => actions.onEdit(item)}
+                    label={`Editar ${item.Descripcion || "unidad de medida"}`}
+                  />
+                  <DeleteButton
+                    onPress={() => actions.onDelete(item)}
+                    label={`Eliminar ${item.Descripcion || "unidad de medida"}`}
+                  />
+                </div>
+              );
+            default:
+              return null;
+          }
+        }}
+      />
 
       <BulkCambiarEstadoModal<UnidadMedida>
         isOpen={bulkEstadoModal.open}
@@ -153,7 +136,6 @@ export default function UnidadMedidaCRUD() {
           invalidateUnidadesMedidas();
         }}
       />
-
     </>
   );
 }

@@ -7,6 +7,7 @@ import { Clock, DollarSign } from "lucide-react";
 import { TIPO_COMPROBANTE_VENTA_LABELS } from "@/lib/constants/comprobantes";
 import { CobrarModal } from "./CobrarModal";
 import GenericTable, { Column } from "@/components/shared/GenericTable";
+import { useConfiguracion } from "@/hooks/useConfiguracion";
 
 interface ComprobantePendiente {
   id: number;
@@ -54,10 +55,14 @@ export function CobrosScreen() {
   const [selectedComprobante, setSelectedComprobante] =
     useState<ComprobantePendienteRow | null>(null);
 
+  const { configuracion } = useConfiguracion({ enableConfiguracion: true });
+  const cobroDiferidoActivo = !!configuracion?.puestoCajaSeparado;
+
   const { data, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ["cobros-pendientes", page],
     queryFn: () => fetchCobros(page),
-    refetchInterval: 5000,
+    enabled: cobroDiferidoActivo,
+    refetchInterval: cobroDiferidoActivo ? 5000 : false,
     refetchIntervalInBackground: false,
   });
 

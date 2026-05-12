@@ -19,6 +19,7 @@ import {
 } from "@heroui/react";
 import { AlertTriangle } from "lucide-react";
 import GenericTable, { Column } from "./GenericTable";
+import ConfirmModal from "./ConfirmModal";
 import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
 import { useGenericApi } from "@/hooks/useGenericApi";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -674,7 +675,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
   };
 
   return (
-    <div className="w-full h-full relative">
+    <div className="w-full relative flex flex-col flex-1">
       {/* Botón flotante para crear (opcional, o se puede integrar en la tabla) */}
       {/* Por ahora, asumimos que la tabla tiene el botón o se pasa */}
       {/* Vamos a poner un botón de crear flotante simple o header si se desea */}
@@ -817,10 +818,10 @@ export default function GenericCrud<T extends { Id: number | string }>({
                     ? "Mostrar todos los productos"
                     : "Filtrar solo productos con bajo stock"
                 }
-                className={`flex items-center justify-center gap-2 px-3 h-10 sm:h-9 w-full sm:w-auto rounded-lg text-sm font-medium transition-all duration-150 border whitespace-nowrap ${
+                className={`flex items-center justify-center gap-1.5 px-3 h-10 sm:h-9 rounded-lg text-xs sm:text-sm font-medium transition-all duration-150 border whitespace-nowrap ${
                   lowStockOnly
                     ? "bg-amber-500/20 border-amber-500/50 text-amber-800"
-                    : "bg-white border-slate-300 text-slate-600 hover:bg-slate-50 hover:border-[#67afc3] hover:text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40"
+                    : "bg-white border-slate-300 text-slate-600 hover:bg-slate-50 hover:border-[var(--crud-accent)] hover:text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[var(--crud-accent)]/40"
                 }`}
                 title={lowStockOnly ? "Mostrar todos" : "Solo bajo stock"}
               >
@@ -869,11 +870,12 @@ export default function GenericCrud<T extends { Id: number | string }>({
           isOpen={!!previewItem}
           onClose={() => setPreviewItem(null)}
           size="md"
+          placement="center"
           scrollBehavior="inside"
           hideCloseButton
           classNames={{
             backdrop: "bg-black/40",
-            base: "rounded-xl shadow-xl",
+            base: "rounded-xl shadow-xl mx-3 sm:mx-auto",
           }}
         >
           <ModalContent>
@@ -889,7 +891,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
               </Button>
               {showEditInPreview && (
                 <Button
-                  className="bg-[#67afc3] hover:bg-[#5a9db0] text-white"
+                  className="bg-[var(--crud-accent)] hover:bg-[var(--crud-accent-hover)] text-white"
                   onPress={() => {
                     handleEdit(previewItem);
                     setPreviewItem(null);
@@ -904,72 +906,38 @@ export default function GenericCrud<T extends { Id: number | string }>({
       )}
 
       {/* Modal de Eliminación Genérico */}
-      <Modal isOpen={isDeleteOpen} onClose={onDeleteClose}>
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                Confirmar Eliminación
-              </ModalHeader>
-              <ModalBody>
-                <p>
-                  ¿Estás seguro de que deseas eliminar este registro? Esta
-                  acción no se puede deshacer.
-                </p>
-              </ModalBody>
-              <ModalFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
-                  Cancelar
-                </Button>
-                <Button
-                  color="primary"
-                  onPress={handleConfirmDelete}
-                  isLoading={isSaving}
-                >
-                  Eliminar
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        onClose={onDeleteClose}
+        onConfirm={handleConfirmDelete}
+        title="Confirmar Eliminación"
+        description="¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        variant="danger"
+        isLoading={isSaving}
+      />
 
       {/* Modal de confirmación eliminación masiva */}
-      <Modal isOpen={isBulkDeleteOpen} onClose={onBulkDeleteClose}>
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                Confirmar eliminación masiva
-              </ModalHeader>
-              <ModalBody>
-                <p>
-                  ¿Estás seguro de que deseas eliminar{" "}
-                  <strong>{effectiveSelectedCount}</strong> registro
-                  {effectiveSelectedCount !== 1 ? "s" : ""}? Esta acción no se
-                  puede deshacer.
-                </p>
-              </ModalBody>
-              <ModalFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
-                  Cancelar
-                </Button>
-                <Button
-                  color="danger"
-                  onPress={async () => {
-                    await handleBulkDelete();
-                    onClose();
-                  }}
-                  isLoading={isSaving}
-                >
-                  Eliminar {effectiveSelectedCount} registro
-                  {effectiveSelectedCount !== 1 ? "s" : ""}
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+      <ConfirmModal
+        isOpen={isBulkDeleteOpen}
+        onClose={onBulkDeleteClose}
+        onConfirm={async () => {
+          await handleBulkDelete();
+          onBulkDeleteClose();
+        }}
+        title="Confirmar eliminación masiva"
+        description={
+          <p className="text-sm text-slate-600">
+            ¿Estás seguro de que deseas eliminar{" "}
+            <strong>{effectiveSelectedCount}</strong> registro
+            {effectiveSelectedCount !== 1 ? "s" : ""}? Esta acción no se puede
+            deshacer.
+          </p>
+        }
+        confirmLabel={`Eliminar ${effectiveSelectedCount} registro${effectiveSelectedCount !== 1 ? "s" : ""}`}
+        variant="danger"
+        isLoading={isSaving}
+      />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { PuntoXLogo } from "@/components/ui/PuntoXLogo";
 import { Tooltip } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
+import { useConfiguracion } from "@/hooks/useConfiguracion";
 
 interface MenuItem {
   icon: React.ReactNode;
@@ -581,7 +582,11 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
   // Use global store
   const { canAccessRoute } = useUserStore();
 
-  // Poll cobros pendientes count for badge
+  // Leer configuración para saber si cobro diferido está habilitado
+  const { configuracion } = useConfiguracion({ enableConfiguracion: true });
+  const cobroDiferidoActivo = !!configuracion?.puestoCajaSeparado;
+
+  // Poll cobros pendientes count para el badge — solo si cobro diferido está activo
   const { data: cobrosData } = useQuery({
     queryKey: ["cobros-pendientes", "count"],
     queryFn: async () => {
@@ -591,7 +596,8 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
       if (!res.ok) return { count: 0 };
       return res.json() as Promise<{ count: number }>;
     },
-    refetchInterval: 5000,
+    enabled: cobroDiferidoActivo,
+    refetchInterval: cobroDiferidoActivo ? 5000 : false,
     refetchIntervalInBackground: false,
     staleTime: 4000,
   });
@@ -660,7 +666,7 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
       }}
     >
       <motion.aside
-        className="fixed flex h-screen flex-col rounded-br-4xl bg-(--nav-bg)"
+        className="fixed flex h-screen flex-col bg-(--nav-bg)"
         initial={false}
         animate={{
           width: isCollapsed ? "80px" : "280px",
@@ -825,7 +831,8 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                                   }}
                                   whileTap={{ scale: 0.98 }}
                                   className={`
-                                      relative group flex h-11 w-full cursor-pointer items-center gap-3 overflow-hidden rounded-lg px-3 py-2
+                                      relative group flex h-11 w-full cursor-pointer items-center overflow-hidden rounded-lg
+                                      ${isCollapsed ? "justify-center p-2" : "gap-3 px-3 py-2"}
                                       ${
                                         isActive
                                           ? "bg-(--nav-item-active-bg) text-(--nav-item-active-text) shadow-[inset_0_0_0_1px_rgba(103,175,195,0.2)]"

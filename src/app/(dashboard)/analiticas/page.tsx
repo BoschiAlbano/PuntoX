@@ -161,7 +161,7 @@ function AnaliticasContent() {
     kpisLoading || ingresosLoading || pagosLoading || productosLoading;
 
   return (
-    <div className="   flex flex-col items-stretch h-full relative space-y-4 sm:space-y-6 print:p-0 print:m-0 print:block">
+    <div className="   flex flex-col items-stretch min-h-full relative space-y-4 sm:space-y-6 print:p-0 print:m-0 print:block">
       <div className="print:hidden">
         <PageHeader
           title="Gestión de"

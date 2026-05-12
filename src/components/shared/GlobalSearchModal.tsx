@@ -18,12 +18,21 @@ import {
   PieChart,
   Settings,
   ChevronRight,
-  MonitorPlay,
   FileText,
   UserCircle,
   Tag,
   Building2,
   Box,
+  History,
+  Clock,
+  Ruler,
+  TrendingUp,
+  Truck,
+  CreditCard,
+  Shield,
+  Bell,
+  Receipt,
+  Scale,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -47,24 +56,46 @@ interface SearchItem {
 }
 
 const STATIC_PAGES: SearchItem[] = [
-  { id: "p-dash", type: "page", title: "Dashboard", subtitle: "Inicio", icon: Home, href: "/dashboard" },
-  { id: "p-pos", type: "page", title: "Punto de Venta (POS)", subtitle: "Nueva Venta", icon: ShoppingCart, href: "/ventas" },
-  { id: "p-caja", type: "page", title: "Caja Activa", subtitle: "Operaciones de caja", icon: DollarSign, href: "/caja" },
-  { id: "p-prod", type: "page", title: "Productos", subtitle: "Gestión de inventario", icon: Package, href: "/productos" },
-  { id: "p-marcas", type: "page", title: "Marcas", subtitle: "Gestión de marcas", icon: Tag, href: "/productos/marcas" },
-  { id: "p-rubros", type: "page", title: "Rubros", subtitle: "Categorías de productos", icon: Box, href: "/productos/rubros" },
-  { id: "p-listas", type: "page", title: "Listas de Precios", subtitle: "Gestión de listas de precios", icon: DollarSign, href: "/productos/listas-precios" },
-  { id: "p-client", type: "page", title: "Clientes", subtitle: "Gestión de clientes y Cta. Cte.", icon: Users, href: "/clientes" },
-  { id: "p-analit", type: "page", title: "Analíticas", subtitle: "Métricas y reportes", icon: PieChart, href: "/analiticas" },
-  { id: "p-empleados", type: "page", title: "Empleados", subtitle: "Personal y Roles", icon: UserCircle, href: "/empleados" },
-  { id: "p-sucursal", type: "page", title: "Sucursales", subtitle: "Gestión de locales", icon: Building2, href: "/sucursales" },
-  { id: "p-config", type: "page", title: "Configuración", subtitle: "Ajustes del sistema", icon: Settings, href: "/configuracion" },
+  // Principal
+  { id: "p-dash",             type: "page", title: "Dashboard",                    subtitle: "Inicio y resumen",                          icon: Home,        href: "/dashboard" },
+  // Ventas
+  { id: "p-pos",              type: "page", title: "Punto de Venta",               subtitle: "Nueva venta / POS",                         icon: ShoppingCart, href: "/ventas" },
+  { id: "p-caja",             type: "page", title: "Caja Actual",                  subtitle: "Operaciones de caja del día",               icon: DollarSign,  href: "/caja" },
+  { id: "p-caja-hist",        type: "page", title: "Historial de Cajas",           subtitle: "Cajas anteriores cerradas",                 icon: History,     href: "/caja/historial" },
+  { id: "p-cobros",           type: "page", title: "Cobros Pendientes",            subtitle: "Cobros diferidos sin saldar",               icon: Clock,       href: "/caja/cobros" },
+  // Artículos
+  { id: "p-prod",             type: "page", title: "Productos",                    subtitle: "Inventario y stock",                        icon: Package,     href: "/productos" },
+  { id: "p-marcas",           type: "page", title: "Marcas",                       subtitle: "Gestión de marcas de productos",            icon: Tag,         href: "/productos/marcas" },
+  { id: "p-rubros",           type: "page", title: "Rubros",                       subtitle: "Categorías y rubros de productos",          icon: Box,         href: "/productos/rubros" },
+  { id: "p-unidades",         type: "page", title: "Unidades de Medida",           subtitle: "Kg, litros, unidades, etc.",                icon: Ruler,       href: "/productos/unidades" },
+  { id: "p-listas",           type: "page", title: "Listas de Precios",            subtitle: "Gestión de listas de precios",              icon: Receipt,     href: "/productos/listas-precios" },
+  { id: "p-precios",          type: "page", title: "Actualizar Precios",           subtitle: "Actualización masiva de precios",           icon: TrendingUp,  href: "/productos/actualizar-precios" },
+  { id: "p-compras",          type: "page", title: "Compras",                      subtitle: "Órdenes de compra a proveedores",           icon: Truck,       href: "/compras" },
+  // Clientes
+  { id: "p-client",           type: "page", title: "Clientes",                     subtitle: "Gestión de clientes",                       icon: Users,       href: "/clientes" },
+  { id: "p-cta-cte-cli",      type: "page", title: "Cuentas Corrientes Clientes",  subtitle: "Saldos y movimientos de clientes",          icon: CreditCard,  href: "/clientes/cuentas-corrientes" },
+  // Proveedores
+  { id: "p-prov",             type: "page", title: "Proveedores",                  subtitle: "Gestión de proveedores",                    icon: Truck,       href: "/proveedores" },
+  { id: "p-cta-cte-prov",     type: "page", title: "Cuentas Corrientes Proveedores", subtitle: "Saldos y movimientos de proveedores",    icon: CreditCard,  href: "/proveedores/cuentas-corrientes" },
+  // Analíticas
+  { id: "p-analit",           type: "page", title: "Analíticas",                   subtitle: "Métricas, gráficos y reportes",             icon: PieChart,    href: "/analiticas" },
+  // Gestión
+  { id: "p-empleados",        type: "page", title: "Empleados",                    subtitle: "Personal y gestión de usuarios",            icon: UserCircle,  href: "/empleados" },
+  { id: "p-roles",            type: "page", title: "Roles y Permisos",             subtitle: "Roles de acceso para empleados",            icon: Shield,      href: "/empleados/roles" },
+  { id: "p-auditoria",        type: "page", title: "Auditoría de Empleados",       subtitle: "Registro de actividad del personal",        icon: FileText,    href: "/empleados/auditoria" },
+  // Sistema
+  { id: "p-sucursal",         type: "page", title: "Sucursales",                   subtitle: "Gestión de locales y sucursales",           icon: Building2,   href: "/sucursales" },
+  { id: "p-config",           type: "page", title: "Configuración",                subtitle: "Perfil del negocio",                        icon: Settings,    href: "/configuracion" },
+  { id: "p-config-ventas",    type: "page", title: "Preferencias de Venta",        subtitle: "Configuración del proceso de venta",        icon: ShoppingCart, href: "/configuracion/ventas" },
+  { id: "p-config-fiscal",    type: "page", title: "Facturación y Región",         subtitle: "Datos fiscales, AFIP y región",             icon: Scale,       href: "/configuracion/fiscal" },
+  { id: "p-config-notif",     type: "page", title: "Notificaciones",               subtitle: "Alertas y configuración de avisos",         icon: Bell,        href: "/configuracion/notificaciones" },
+  { id: "p-config-seg",       type: "page", title: "Seguridad y Acceso",           subtitle: "Contraseñas, sesiones y dispositivos",      icon: Shield,      href: "/configuracion/seguridad" },
 ];
 
 export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const debouncedQuery = useDebounce(query, 300);
+  const debouncedQuery = useDebounce(query, 500);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -116,7 +147,7 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
         p.title.toLowerCase().includes(lowerQ) ||
         p.subtitle?.toLowerCase().includes(lowerQ)
     );
-    result.push(...filteredPages.slice(0, 5)); // max 5 pages
+    result.push(...filteredPages); // all matching pages
 
     // Format and append products
     if (productsData && productsData.length > 0) {
@@ -144,9 +175,9 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
       result.push(...clientItems);
     }
 
-    // Give some default results if query is empty
+    // Default (empty query): show the 8 most-used pages
     if (!debouncedQuery) {
-      result = STATIC_PAGES.slice(0, 5);
+      result = STATIC_PAGES.slice(0, 8);
     }
 
     return result;

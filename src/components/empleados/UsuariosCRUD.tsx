@@ -7,11 +7,6 @@ import {
   Button,
   Tooltip,
   addToast,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
 } from "@heroui/react";
 import { LockKeyhole, LockKeyholeOpen } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { EditButton, DeleteButton } from "../shared/TableActions";
 import UsuarioForm from "./UsuarioForm";
 import ChangePasswordModal from "./ChangePasswordModal";
+import ConfirmModal from "@/components/shared/ConfirmModal";
 import { PerfilTipo } from "../../../prisma/generated/prisma";
 import { useUserStore } from "@/store/useUserStore";
 import { TIPO_PERFIL } from "@/lib/constants/comprobantes";
@@ -490,63 +486,36 @@ export default function UsuariosCRUD() {
       )}
 
       {/* Modal de confirmación para bloquear/desbloquear */}
-      <Modal
+      <ConfirmModal
         isOpen={!!lockConfirm}
-        onClose={() => !isLocking && setLockConfirm(null)}
-        placement="center"
-        backdrop="opaque"
-        size="sm"
-      >
-        <ModalContent>
-          {() => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                {lockConfirm?.bloquear
-                  ? "Bloquear cuenta"
-                  : "Desbloquear cuenta"}
-              </ModalHeader>
-              <ModalBody>
-                <p className="text-sm text-slate-600">
-                  {lockConfirm?.bloquear ? (
-                    <>
-                      ¿Estás seguro de que querés bloquear la cuenta de{" "}
-                      <span className="font-semibold">
-                        {lockConfirm.item.nombreCompleto}
-                      </span>
-                      ? El usuario no podrá iniciar sesión hasta que sea
-                      desbloqueado.
-                    </>
-                  ) : (
-                    <>
-                      ¿Querés desbloquear la cuenta de{" "}
-                      <span className="font-semibold">
-                        {lockConfirm?.item.nombreCompleto}
-                      </span>
-                      ? El usuario podrá volver a iniciar sesión.
-                    </>
-                  )}
-                </p>
-              </ModalBody>
-              <ModalFooter>
-                <Button
-                  variant="light"
-                  onPress={() => setLockConfirm(null)}
-                  isDisabled={isLocking}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  color={lockConfirm?.bloquear ? "danger" : "success"}
-                  onPress={handleLockToggle}
-                  isLoading={isLocking}
-                >
-                  {lockConfirm?.bloquear ? "Bloquear" : "Desbloquear"}
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+        onClose={() => setLockConfirm(null)}
+        onConfirm={handleLockToggle}
+        title={lockConfirm?.bloquear ? "Bloquear cuenta" : "Desbloquear cuenta"}
+        description={
+          <p className="text-sm text-slate-600">
+            {lockConfirm?.bloquear ? (
+              <>
+                ¿Estás seguro de que querés bloquear la cuenta de{" "}
+                <span className="font-semibold">
+                  {lockConfirm.item.nombreCompleto}
+                </span>
+                ? El usuario no podrá iniciar sesión hasta que sea desbloqueado.
+              </>
+            ) : (
+              <>
+                ¿Querés desbloquear la cuenta de{" "}
+                <span className="font-semibold">
+                  {lockConfirm?.item.nombreCompleto}
+                </span>
+                ? El usuario podrá volver a iniciar sesión.
+              </>
+            )}
+          </p>
+        }
+        confirmLabel={lockConfirm?.bloquear ? "Bloquear" : "Desbloquear"}
+        variant={lockConfirm?.bloquear ? "danger" : "success"}
+        isLoading={isLocking}
+      />
     </>
   );
 }

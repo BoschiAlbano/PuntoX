@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 
 export default function CajaPage() {
   return (
-    <div className=" flex flex-col items-stretch h-full relative space-y-4 sm:space-y-6">
+    <div className=" flex flex-col items-stretch min-h-full relative space-y-4 sm:space-y-6">
       <PageHeader
         title="Caja"
         accentTitle="Actual"

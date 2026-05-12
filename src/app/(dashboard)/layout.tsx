@@ -78,7 +78,7 @@ export default function DashboardLayout({
           <div className="relative flex min-h-0 flex-1 print:p-0 overflow-y-auto overflow-x-hidden">
             <div className=" relative flex min-h-0 flex-1 flex-col">
               <div className="relative z-10 flex min-h-0 flex-1 flex-col print:overflow-visible print:h-auto">
-                <main className=" bg-white rounded-tl-4xl  relative z-10 flex w-full min-h-0 flex-1 print:m-0 print:bg-white print:p-0">
+                <main className=" bg-white overflow-hidden rounded-tl-4xl  relative z-10 flex w-full min-h-0 flex-1 print:m-0 print:bg-white print:p-0">
                   <div className="shell-content-frame min-h-full w-full overflow-y-auto ">
                     <ProgressProvider
                       height="3px"

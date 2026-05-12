@@ -12,6 +12,7 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
+  Skeleton,
   Table,
   TableBody,
   TableCell,
@@ -504,9 +505,52 @@ export default function CajaActual() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-full min-h-[400px]">
-        {/* <Spinner size="lg" /> */}
-        <LoadingComponent message="Cargando caja..." />
+      <div className="flex flex-col gap-6 pb-4">
+        {/* Entradas del día — skeleton */}
+        <Skeleton className="h-6 w-52 rounded-lg" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="rounded-xl h-28" />
+          ))}
+        </div>
+
+        {/* Salidas del día — skeleton */}
+        <Skeleton className="h-6 w-48 rounded-lg" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="rounded-xl h-28" />
+          ))}
+        </div>
+
+        {/* Movimientos — skeleton de tabla */}
+        <Skeleton className="h-6 w-40 rounded-lg" />
+        <GenericTable
+          data={[]}
+          columns={movimientosColumns}
+          isLoading={true}
+          isError={false}
+          search=""
+          onSearchChange={() => {}}
+          page={1}
+          onPageChange={() => {}}
+          paginationMeta={{ total: 0, page: 1, limit: 10, totalPages: 1 }}
+          renderCell={() => null}
+        />
+
+        {/* Gastos — skeleton de tabla */}
+        <Skeleton className="h-6 w-32 rounded-lg" />
+        <GenericTable
+          data={[]}
+          columns={gastosColumns}
+          isLoading={true}
+          isError={false}
+          search=""
+          onSearchChange={() => {}}
+          page={1}
+          onPageChange={() => {}}
+          paginationMeta={{ total: 0, page: 1, limit: 10, totalPages: 1 }}
+          renderCell={() => null}
+        />
       </div>
     );
   }

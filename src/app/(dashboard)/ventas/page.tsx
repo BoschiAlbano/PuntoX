@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 
 export default function VentasPage() {
   return (
-    <div className="flex flex-col items-stretch h-full relative space-y-4 sm:space-y-6">
+    <div className="flex flex-col items-stretch min-h-full relative space-y-4 sm:space-y-6">
       <PageHeader
         title="Gestión de"
         accentTitle="Ventas"
@@ -20,7 +20,7 @@ export default function VentasPage() {
         transition={{ duration: 0.35, delay: 0.08, ease: "easeOut" }}
         className="flex-1 relative flex flex-col"
       >
-        <div className="relative z-10 flex-1 flex flex-col h-full">
+        <div className="relative z-10 flex-1 flex flex-col">
           <VentasScreen />
         </div>
       </motion.div>

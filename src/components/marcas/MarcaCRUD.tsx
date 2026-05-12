@@ -4,14 +4,15 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import GenericCrud from "@/components/shared/GenericCrud";
 import MarcaForm, { Marca } from "./MarcaForm";
-import { Chip, addToast } from "@heroui/react";
+import StatusBadge from "@/components/shared/StatusBadge";
+import DetailField from "@/components/shared/DetailField";
+import DetailPanel from "@/components/shared/DetailPanel";
 import { DeleteButton, EditButton } from "../shared/TableActions";
 import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
 
-
 async function bulkPatchMarcas(
   ids: (number | string)[],
-  data: { EstaEliminado?: boolean; Descripcion?: string }
+  data: { EstaEliminado?: boolean; Descripcion?: string },
 ) {
   for (const id of ids) {
     const res = await fetch("/api/marcas", {
@@ -47,29 +48,16 @@ export default function MarcaCRUD() {
         searchPlaceholder="Buscar marcas..."
         FormComponent={MarcaForm}
         renderRowPreview={(item) => (
-        <div className="space-y-4 text-sm">
-          <div>
-            <p className="text-slate-500 text-xs mb-0.5">Descripción</p>
-            <p className="font-medium text-slate-800">{item.Descripcion}</p>
-          </div>
-          <div>
-            <p className="text-slate-500 text-xs mb-0.5">Productos</p>
-            <p className="font-medium text-slate-800">
+          <DetailPanel>
+            <DetailField label="Descripción">{item.Descripcion}</DetailField>
+            <DetailField label="Productos">
               {(item.CantidadProductos ?? 0).toLocaleString()}
-            </p>
-          </div>
-          <div>
-            <p className="text-slate-500 text-xs mb-0.5">Estado</p>
-            <span
-              className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                item.EstaEliminado ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
-              }`}
-            >
-              {item.EstaEliminado ? "Inactivo" : "Activo"}
-            </span>
-          </div>
-        </div>
-      )}
+            </DetailField>
+            <DetailField label="Estado">
+              <StatusBadge estaEliminado={item.EstaEliminado} />
+            </DetailField>
+          </DetailPanel>
+        )}
         getRowPreviewTitle={(item) => item.Descripcion || "Marca"}
         enableBulkActions
         exportConfig={{
@@ -88,71 +76,67 @@ export default function MarcaCRUD() {
           }),
         }}
         bulkActionsDropdown={[
-        {
-          key: "cambiar-estado",
-          label: "Cambiar estado",
-          onAction: (ctx) => {
-            setBulkEstadoModal({ open: true, items: ctx.items, clearSelection: ctx.clearSelection });
+          {
+            key: "cambiar-estado",
+            label: "Cambiar estado",
+            onAction: (ctx) => {
+              setBulkEstadoModal({
+                open: true,
+                items: ctx.items,
+                clearSelection: ctx.clearSelection,
+              });
+            },
           },
-        },
         ]}
         columns={[
-        {
-          uid: "Descripcion",
-          name: "DESCRIPCIÓN",
-          sortable: true,
-          align: "start",
-        },
-        {
-          uid: "CantidadProductos",
-          name: "PRODUCTOS",
-          align: "center",
-        },
-        { uid: "Estado", name: "ESTADO" },
-        { uid: "acciones", name: "ACCIONES" },
+          {
+            uid: "Descripcion",
+            name: "DESCRIPCIÓN",
+            sortable: true,
+            align: "start",
+          },
+          {
+            uid: "CantidadProductos",
+            name: "PRODUCTOS",
+            align: "center",
+          },
+          { uid: "Estado", name: "ESTADO" },
+          { uid: "acciones", name: "ACCIONES" },
         ]}
         renderCell={(item, columnKey, actions) => {
-        switch (columnKey) {
-          case "Descripcion":
-            return (
-              <span className="font-medium text-gray-700">
-                {item.Descripcion}
-              </span>
-            );
-          case "CantidadProductos":
-            return (
-              <span className="text-gray-600 tabular-nums">
-                {(item.CantidadProductos ?? 0).toLocaleString()}
-              </span>
-            );
-          case "Estado":
-            return (
-              <Chip
-                color={item.EstaEliminado ? "danger" : "success"}
-                variant="flat"
-                size="sm"
-              >
-                {item.EstaEliminado ? "Inactivo" : "Activo"}
-              </Chip>
-            );
-          case "acciones":
-            return (
-              <div className="flex gap-2 w-full justify-center items-center">
-                <EditButton
-                  onPress={() => actions.onEdit(item)}
-                  label={`Editar ${item.Descripcion || "marca"}`}
-                />
-                <DeleteButton
-                  onPress={() => actions.onDelete(item)}
-                  label={`Eliminar ${item.Descripcion || "marca"}`}
-                />
-              </div>
-            );
-          default:
-            return null;
-        }
-      }}
-    />
+          switch (columnKey) {
+            case "Descripcion":
+              return (
+                <span className="font-medium text-gray-700">
+                  {item.Descripcion}
+                </span>
+              );
+            case "CantidadProductos":
+              return (
+                <span className="text-gray-600 tabular-nums">
+                  {(item.CantidadProductos ?? 0).toLocaleString()}
+                </span>
+              );
+            case "Estado":
+              return <StatusBadge estaEliminado={item.EstaEliminado} />;
+            case "acciones":
+              return (
+                <div className="flex gap-2 w-full justify-center items-center">
+                  <EditButton
+                    onPress={() => actions.onEdit(item)}
+                    label={`Editar ${item.Descripcion || "marca"}`}
+                  />
+                  <DeleteButton
+                    onPress={() => actions.onDelete(item)}
+                    label={`Eliminar ${item.Descripcion || "marca"}`}
+                  />
+                </div>
+              );
+            default:
+              return null;
+          }
+        }}
+      />
 
       <BulkCambiarEstadoModal<Marca>
         isOpen={bulkEstadoModal.open}
@@ -168,7 +152,6 @@ export default function MarcaCRUD() {
           invalidateMarcas();
         }}
       />
-
     </>
   );
 }
