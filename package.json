@@ -1,8 +1,20 @@
 {
   "name": "punto-x",
   "version": "0.1.0",
+  "packageManager": "pnpm@11.1.1",
   "type": "module",
   "private": true,
+  "pnpm": {
+    "approvedBuilds": [
+      "@heroui/shared-utils",
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma",
+      "sharp",
+      "unrs-resolver"
+    ]
+  },
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
@@ -12,13 +24,13 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "postinstall": "prisma generate",
-    "prisma:generate": "npx prisma generate",
-    "prisma:migrate": "npx prisma migrate dev",
-    "prisma:pull": "npx prisma db pull",
-    "prisma:reset": "npx prisma migrate reset",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:pull": "prisma db pull",
+    "prisma:reset": "prisma migrate reset",
     "check-env": "node scripts/check-env.js",
-    "db-seed": "npx prisma db seed",
-    "db-seed:articulos": "npx tsx scripts/prisma/seed-catalogo-tenant.ts --tenantId=1",
+    "db-seed": "prisma db seed",
+    "db-seed:articulos": "tsx scripts/prisma/seed-catalogo-tenant.ts --tenantId=1",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },
