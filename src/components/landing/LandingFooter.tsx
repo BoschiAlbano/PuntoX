@@ -21,19 +21,19 @@ export const LandingFooter = () => {
             <div className="flex gap-4">
               <a
                 href="#"
-                className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center hover:bg-[#67afc3] hover:text-slate-900 transition-all"
+                className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center hover:bg-[#1d293d] hover:text-white transition-all"
               >
                 <Facebook className="w-5 h-5" />
               </a>
               <a
                 href="#"
-                className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center hover:bg-[#67afc3] hover:text-slate-900 transition-all"
+                className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center hover:bg-[#1d293d] hover:text-white transition-all"
               >
                 <Twitter className="w-5 h-5" />
               </a>
               <a
                 href="#"
-                className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center hover:bg-[#67afc3] hover:text-slate-900 transition-all"
+                className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center hover:bg-[#1d293d] hover:text-white transition-all"
               >
                 <Instagram className="w-5 h-5" />
               </a>
@@ -46,7 +46,7 @@ export const LandingFooter = () => {
               <li>
                 <Link
                   href="#"
-                  className="hover:text-[#67afc3] transition-colors"
+                  className="hover:text-[#1d293d] transition-colors"
                 >
                   Características
                 </Link>
@@ -54,7 +54,7 @@ export const LandingFooter = () => {
               <li>
                 <Link
                   href="#"
-                  className="hover:text-[#67afc3] transition-colors"
+                  className="hover:text-[#1d293d] transition-colors"
                 >
                   Precios
                 </Link>
@@ -62,7 +62,7 @@ export const LandingFooter = () => {
               <li>
                 <Link
                   href="#"
-                  className="hover:text-[#67afc3] transition-colors"
+                  className="hover:text-[#1d293d] transition-colors"
                 >
                   Testimonios
                 </Link>
@@ -70,7 +70,7 @@ export const LandingFooter = () => {
               <li>
                 <Link
                   href="#"
-                  className="hover:text-[#67afc3] transition-colors"
+                  className="hover:text-[#1d293d] transition-colors"
                 >
                   API
                 </Link>
@@ -84,7 +84,7 @@ export const LandingFooter = () => {
               <li>
                 <Link
                   href="#"
-                  className="hover:text-[#67afc3] transition-colors"
+                  className="hover:text-[#1d293d] transition-colors"
                 >
                   Sobre Nosotros
                 </Link>
@@ -92,7 +92,7 @@ export const LandingFooter = () => {
               <li>
                 <Link
                   href="#"
-                  className="hover:text-[#67afc3] transition-colors"
+                  className="hover:text-[#1d293d] transition-colors"
                 >
                   Contacto
                 </Link>
@@ -100,7 +100,7 @@ export const LandingFooter = () => {
               <li>
                 <Link
                   href="#"
-                  className="hover:text-[#67afc3] transition-colors"
+                  className="hover:text-[#1d293d] transition-colors"
                 >
                   Privacidad
                 </Link>
@@ -108,7 +108,7 @@ export const LandingFooter = () => {
               <li>
                 <Link
                   href="#"
-                  className="hover:text-[#67afc3] transition-colors"
+                  className="hover:text-[#1d293d] transition-colors"
                 >
                   Términos
                 </Link>

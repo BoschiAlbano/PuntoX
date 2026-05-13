@@ -12,6 +12,7 @@ import {
 } from "@heroui/react";
 import { useState } from "react";
 import { addToast } from "@heroui/react";
+import { modalMotionProps } from "@/lib/motionConfig";
 
 export interface BulkEstadoItem {
   Id: number | string;
@@ -23,10 +24,7 @@ interface BulkCambiarEstadoModalProps<T extends BulkEstadoItem> {
   items: T[];
   entityLabel: string;
   getCurrentEstado: (item: T) => boolean;
-  onConfirm: (
-    ids: (number | string)[],
-    nuevoEstado: boolean
-  ) => Promise<void>;
+  onConfirm: (ids: (number | string)[], nuevoEstado: boolean) => Promise<void>;
   onSuccess?: () => void;
 }
 
@@ -49,7 +47,7 @@ export function BulkCambiarEstadoModal<T extends BulkEstadoItem>({
       const nuevoEstado = estado === "activo";
       await onConfirm(
         items.map((i) => i.Id),
-        nuevoEstado
+        nuevoEstado,
       );
       addToast({
         title: "Estado actualizado",
@@ -70,7 +68,17 @@ export function BulkCambiarEstadoModal<T extends BulkEstadoItem>({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="md"
+      scrollBehavior="inside"
+      motionProps={modalMotionProps}
+      classNames={{
+        wrapper: "items-end sm:items-center",
+        base: "rounded-t-2xl rounded-b-none sm:rounded-2xl w-full sm:w-auto m-0 sm:m-auto max-h-[90vh]",
+      }}
+    >
       <ModalContent>
         <ModalHeader className="border-b border-gray-200">
           Cambiar estado

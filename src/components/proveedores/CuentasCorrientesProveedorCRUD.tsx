@@ -20,7 +20,11 @@ import {
 } from "@heroui/react";
 import { RefreshCcw, CreditCard, Banknote, Wallet } from "lucide-react";
 import { TIPO_PAGO } from "@/lib/constants/comprobantes";
-import { useCtaCteProveedor, ProveedorCtaCte, MovimientoCtaCteProveedor } from "@/hooks/useCtaCteProveedor";
+import {
+  useCtaCteProveedor,
+  ProveedorCtaCte,
+  MovimientoCtaCteProveedor,
+} from "@/hooks/useCtaCteProveedor";
 import GenericTable, { Column } from "@/components/shared/GenericTable";
 
 export default function CuentasCorrientesProveedorCRUD() {
@@ -40,9 +44,8 @@ export default function CuentasCorrientesProveedorCRUD() {
   } = useBuscarProveedores(query);
   const proveedores = proveedoresData || [];
 
-  const [selectedProveedor, setSelectedProveedor] = useState<ProveedorCtaCte | null>(
-    null,
-  );
+  const [selectedProveedor, setSelectedProveedor] =
+    useState<ProveedorCtaCte | null>(null);
 
   // Auto-seleccionar proveedor si viene desde la página de proveedores
   useEffect(() => {
@@ -56,7 +59,7 @@ export default function CuentasCorrientesProveedorCRUD() {
         CUIT: cuitParam ?? undefined,
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const { data: movementsData, isLoading: isLoadingMovements } =
@@ -162,7 +165,10 @@ export default function CuentasCorrientesProveedorCRUD() {
     { uid: "saldo", name: "SALDO (A PAGAR)", align: "center" },
   ];
 
-  const renderTableCell = (item: MovimientoCtaCteProveedor, columnKey: React.Key) => {
+  const renderTableCell = (
+    item: MovimientoCtaCteProveedor,
+    columnKey: React.Key,
+  ) => {
     switch (columnKey) {
       case "fecha":
         return (
@@ -216,7 +222,7 @@ export default function CuentasCorrientesProveedorCRUD() {
   };
 
   return (
-    <div className="w-full h-full relative flex flex-col gap-4">
+    <div className="w-full flex-1 relative flex flex-col gap-4">
       {selectedProveedor && (
         <Card className="bg-white border border-slate-200/60 shadow-lg shadow-slate-200/40 rounded-xl sm:rounded-2xl mx-1 sm:mx-4 overflow-hidden relative">
           <div className="absolute top-0 left-0 w-1 sm:w-1.5 h-full bg-linear-to-b from-[#67afc3] to-[#2dd4bf]" />
@@ -253,7 +259,7 @@ export default function CuentasCorrientesProveedorCRUD() {
       )}
 
       <div
-        className="flex-1 w-full px-1 sm:px-4 pb-4 focus:outline-none focus:ring-0"
+        className="flex-1 flex flex-col min-h-0 w-full px-1 sm:px-4 pb-4 focus:outline-none focus:ring-0"
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();

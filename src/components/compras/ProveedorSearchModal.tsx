@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { modalMotionProps } from "@/lib/motionConfig";
 import {
   Input,
   Button,
@@ -48,7 +49,10 @@ export default function ProveedorSearchModal({
   const { isLoading, isFetching } = useQuery({
     queryKey: ["proveedores_modal", debouncedSearch],
     queryFn: async ({ signal }) => {
-      const res = await fetch(`/api/proveedores?q=${encodeURIComponent(debouncedSearch)}&limit=50`, { signal });
+      const res = await fetch(
+        `/api/proveedores?q=${encodeURIComponent(debouncedSearch)}&limit=50`,
+        { signal },
+      );
       if (!res.ok) return [];
       const data = await res.json();
       setItems(data.data || []);
@@ -65,7 +69,9 @@ export default function ProveedorSearchModal({
       <div className="p-3 bg-slate-50 rounded-full">
         <Search className="w-6 h-6 text-slate-300" />
       </div>
-      <p className="text-sm font-medium text-center">No se encontraron proveedores</p>
+      <p className="text-sm font-medium text-center">
+        No se encontraron proveedores
+      </p>
     </div>
   );
 
@@ -74,19 +80,16 @@ export default function ProveedorSearchModal({
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       size="3xl"
-      backdrop="blur"
+      backdrop="opaque"
+      motionProps={modalMotionProps}
       classNames={{
-        base: "bg-white/95 backdrop-blur-3xl shadow-2xl border border-white/60 sm:rounded-[24px] rounded-none m-0 sm:m-auto h-full sm:h-auto sm:max-h-[85vh]",
-        header: "border-b border-slate-100/60 pb-3 pt-4 sm:pb-4 sm:pt-6 px-4 sm:px-8",
+        base: "bg-white shadow-2xl border border-slate-200 sm:rounded-[24px] rounded-none m-0 sm:m-auto h-full sm:h-auto sm:max-h-[85vh]",
+        header:
+          "border-b border-slate-100/60 pb-3 pt-4 sm:pb-4 sm:pt-6 px-4 sm:px-8",
         body: "py-3 sm:py-6 px-3 sm:px-8 flex-1 overflow-hidden flex flex-col",
         footer: "border-t border-slate-100/60 py-3 sm:py-4 px-4 sm:px-8",
-        closeButton: "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
-      }}
-      motionProps={{
-        variants: {
-          enter: { y: 0, opacity: 1, scale: 1, transition: { duration: 0.3, ease: "easeOut" } },
-          exit: { y: -20, opacity: 0, scale: 0.95, transition: { duration: 0.2, ease: "easeIn" } },
-        },
+        closeButton:
+          "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
       }}
     >
       <ModalContent>
@@ -111,7 +114,9 @@ export default function ProveedorSearchModal({
             <ModalBody>
               <Input
                 placeholder="Buscar por Razón Social, CUIT..."
-                startContent={<Search className="text-slate-400 mr-1 sm:mr-2" size={16} />}
+                startContent={
+                  <Search className="text-slate-400 mr-1 sm:mr-2" size={16} />
+                }
                 value={searchQuery}
                 onValueChange={setSearchQuery}
                 onClear={() => setSearchQuery("")}
@@ -138,7 +143,10 @@ export default function ProveedorSearchModal({
                         <button
                           key={item.Id}
                           onClick={() => {
-                            handleSelect({ Id: Number(item.Id), RazonSocial: item.RazonSocial });
+                            handleSelect({
+                              Id: Number(item.Id),
+                              RazonSocial: item.RazonSocial,
+                            });
                             onClose();
                           }}
                           className="w-full px-3 py-3 flex items-center gap-3 hover:bg-[#67afc3]/5 active:bg-[#67afc3]/10 transition-colors text-left"
@@ -150,7 +158,9 @@ export default function ProveedorSearchModal({
                             <span className="font-semibold text-slate-700 text-xs leading-snug line-clamp-1">
                               {item.RazonSocial}
                             </span>
-                            <span className="text-[10px] text-slate-400 font-mono">CUIT: {item.CUIT || "-"}</span>
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              CUIT: {item.CUIT || "-"}
+                            </span>
                           </div>
                           <div className="shrink-0 w-8 h-8 rounded-lg bg-[#67afc3]/10 flex items-center justify-center">
                             <Plus size={16} className="text-[#67afc3]" />
@@ -165,9 +175,14 @@ export default function ProveedorSearchModal({
                       removeWrapper
                       selectionMode="single"
                       onRowAction={(key) => {
-                        const selectedItem = items.find((item: any) => item.Id == key);
+                        const selectedItem = items.find(
+                          (item: any) => item.Id == key,
+                        );
                         if (selectedItem) {
-                          handleSelect({ Id: Number(selectedItem.Id), RazonSocial: selectedItem.RazonSocial });
+                          handleSelect({
+                            Id: Number(selectedItem.Id),
+                            RazonSocial: selectedItem.RazonSocial,
+                          });
                           onClose();
                         }
                       }}
@@ -186,7 +201,12 @@ export default function ProveedorSearchModal({
                         <TableColumn>CONTACTO</TableColumn>
                         <TableColumn align="center">ACCIÓN</TableColumn>
                       </TableHeader>
-                      <TableBody items={items} loadingState={isLoading || isFetching ? "loading" : "idle"}>
+                      <TableBody
+                        items={items}
+                        loadingState={
+                          isLoading || isFetching ? "loading" : "idle"
+                        }
+                      >
                         {(item: any) => (
                           <TableRow key={item.Id}>
                             <TableCell>
@@ -200,7 +220,9 @@ export default function ProveedorSearchModal({
                               </div>
                             </TableCell>
                             <TableCell>
-                              <span className="text-slate-600 tabular-nums">{item.CUIT || "-"}</span>
+                              <span className="text-slate-600 tabular-nums">
+                                {item.CUIT || "-"}
+                              </span>
                             </TableCell>
                             <TableCell>
                               <span className="truncate max-w-[150px] inline-block text-slate-500 text-xs">
@@ -212,7 +234,10 @@ export default function ProveedorSearchModal({
                                 size="sm"
                                 className="bg-slate-100 text-slate-600 font-semibold group-hover:bg-[#67afc3] group-hover:text-white transition-all shadow-sm w-full"
                                 onPress={() => {
-                                  handleSelect({ Id: Number(item.Id), RazonSocial: item.RazonSocial });
+                                  handleSelect({
+                                    Id: Number(item.Id),
+                                    RazonSocial: item.RazonSocial,
+                                  });
                                   onClose();
                                 }}
                               >

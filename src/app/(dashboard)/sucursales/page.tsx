@@ -58,7 +58,7 @@ export default function SucursalesPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="p-6 h-full flex flex-col"
+        className="p-6 flex-1 flex flex-col"
       >
         <GenericCrud<Sucursal>
           apiPath="/api/sucursales"

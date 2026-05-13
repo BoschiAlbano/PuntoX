@@ -11,8 +11,8 @@ export const LandingHero = () => {
       {/* Background Gradients & Grid Pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#f8fafc_2px,transparent_1px),linear-gradient(to_bottom,#f8fafc_2px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] z-0" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#67afc3]/15 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#1d293d]/8 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#2d3f5c]/6 rounded-full blur-[100px]" />
       </div>
 
       <div className="container mx-auto px-6 relative z-10 text-center">
@@ -22,17 +22,17 @@ export const LandingHero = () => {
           transition={{ type: "spring", stiffness: 100, damping: 20 }}
           className="max-w-4xl mx-auto"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 backdrop-blur-sm text-[#67afc3] text-sm font-medium mb-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 backdrop-blur-sm text-[#1d293d] text-sm font-medium mb-8">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#67afc3] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#67afc3]"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#1d293d] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#1d293d]"></span>
             </span>
             La solución definitiva para tu negocio
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold text-slate-900 mb-6 leading-tight tracking-tight">
             Control total de tu <br />
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-[#67afc3] to-[#2dd4bf]">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-[#1d293d] to-[#4a6fa5]">
               Negocio
             </span>
           </h1>
@@ -45,7 +45,7 @@ export const LandingHero = () => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/signin"
-              className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#67afc3] text-white font-bold text-lg hover:bg-[#5fa7b8] transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(103,175,195,0.4)] flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#1d293d] text-white font-bold text-lg hover:bg-[#2d3f5c] transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(29,41,61,0.3)] flex items-center justify-center gap-2"
             >
               Comenzar Ahora
               <ArrowRight className="w-5 h-5" />

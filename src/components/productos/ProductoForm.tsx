@@ -1,3 +1,4 @@
+import { modalMotionProps } from "@/lib/motionConfig";
 import { useState, useEffect } from "react";
 import {
   Modal,
@@ -437,19 +438,20 @@ export default function ProductoForm({
       isOpen={isOpen}
       onClose={onClose}
       size="2xl"
-      placement="center"
       backdrop="opaque"
       isDismissable={!isSaving}
       scrollBehavior="inside"
+      motionProps={modalMotionProps}
       classNames={{
         backdrop: "bg-black/50 backdrop-blur-sm",
-        base: "font-sans bg-white rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.08)] border border-[#e5e7eb] max-w-[820px] max-h-[90vh] overflow-hidden",
+        wrapper: "items-end sm:items-center",
+        base: "font-sans bg-white rounded-t-[20px] rounded-b-none sm:rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.08)] border border-[#e5e7eb] max-w-full sm:max-w-[820px] max-h-[92vh] overflow-hidden w-full sm:w-auto m-0 sm:m-auto",
         header:
-          "border-t-[3px] border-t-[#67afc3] border-b border-[#e5e7eb] bg-[#67afc3]/5 rounded-t-2xl",
+          "border-t-[3px] border-t-[var(--crud-accent)] border-b border-[#e5e7eb] bg-[var(--crud-accent)]/5",
         body: "py-0 overflow-y-auto overflow-x-hidden",
-        footer: "border-t border-[#e5e7eb] bg-[#f8fafc] rounded-b-2xl",
+        footer: "border-t border-[#e5e7eb] bg-[#f8fafc]",
         closeButton:
-          "hover:bg-[#67afc3]/10 hover:text-[#67afc3] rounded-full p-1.5 transition-colors text-[#6b7280]",
+          "hover:bg-[var(--crud-accent)]/10 hover:text-[var(--crud-accent)] rounded-full p-1.5 transition-colors text-[#6b7280]",
       }}
     >
       <ModalContent>

@@ -6,6 +6,7 @@
  * @see docs/ui/crud-tablas-genericas.md
  */
 import { useState, Key, useMemo, useEffect, useCallback } from "react";
+import { modalMotionProps } from "@/lib/motionConfig";
 import {
   useDisclosure,
   addToast,
@@ -870,12 +871,13 @@ export default function GenericCrud<T extends { Id: number | string }>({
           isOpen={!!previewItem}
           onClose={() => setPreviewItem(null)}
           size="md"
-          placement="center"
           scrollBehavior="inside"
           hideCloseButton
+          motionProps={modalMotionProps}
           classNames={{
             backdrop: "bg-black/40",
-            base: "rounded-xl shadow-xl mx-3 sm:mx-auto",
+            wrapper: "items-end sm:items-center",
+            base: "rounded-t-xl rounded-b-none sm:rounded-xl shadow-xl w-full sm:w-auto m-0 sm:m-auto",
           }}
         >
           <ModalContent>

@@ -61,7 +61,7 @@ export const LandingNavbar = () => {
 
         <Link
           href="/signin"
-          className="px-6 py-2.5 rounded-full bg-[#67afc3] text-white font-semibold text-sm hover:bg-[#5fa7b8] transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(103,175,195,0.3)]"
+          className="px-6 py-2.5 rounded-full bg-[#1d293d] text-white font-semibold text-sm hover:bg-[#2d3f5c] transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(29,41,61,0.25)]"
         >
           Iniciar Sesión
         </Link>

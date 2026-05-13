@@ -1,5 +1,6 @@
 "use client";
 
+import { modalMotionProps } from "@/lib/motionConfig";
 import { useEffect, useState } from "react";
 import {
   Modal,
@@ -256,13 +257,14 @@ export default function ClienteForm({
       isOpen={isOpen}
       onClose={onClose}
       size="2xl"
-      placement="center"
       backdrop="opaque"
       isDismissable={!isSaving}
       scrollBehavior="inside"
+      motionProps={modalMotionProps}
       classNames={{
         backdrop: "bg-slate-900/40 backdrop-blur-md",
-        base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 max-w-[820px] max-h-[90vh] overflow-hidden",
+        wrapper: "items-end sm:items-center",
+        base: "font-sans bg-white/95 backdrop-blur-2xl rounded-t-[20px] rounded-b-none sm:rounded-[24px] shadow-2xl border border-white/60 max-w-full sm:max-w-[820px] max-h-[92vh] overflow-hidden w-full sm:w-auto m-0 sm:m-auto",
         header: "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8 bg-transparent",
         body: "py-0 px-4 sm:px-8 overflow-y-auto overflow-x-hidden",
         footer: "border-t border-slate-100/60 py-4 px-4 sm:px-8 bg-transparent",

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { modalMotionProps } from "@/lib/motionConfig";
 import {
   Input,
   Button,
@@ -38,7 +39,12 @@ interface Props {
   handleSelect: (product: Producto, cantidad?: number) => void;
 }
 
-export default function ProductSearchComprasModal({ isOpen, onOpenChange, initialSearch, handleSelect }: Props) {
+export default function ProductSearchComprasModal({
+  isOpen,
+  onOpenChange,
+  initialSearch,
+  handleSelect,
+}: Props) {
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const debouncedSearch = useDebounceValue(searchQuery, 300);
 
@@ -46,11 +52,20 @@ export default function ProductSearchComprasModal({ isOpen, onOpenChange, initia
     if (isOpen) setSearchQuery(initialSearch);
   }, [isOpen, initialSearch]);
 
-  const { data: queryResult, isLoading, isFetching } = useQuery({
+  const {
+    data: queryResult,
+    isLoading,
+    isFetching,
+  } = useQuery({
     queryKey: ["productos_compras_modal", debouncedSearch],
     queryFn: async ({ signal }) => {
       if (!debouncedSearch.trim()) return { data: [], meta: { total: 0 } };
-      return fetchProductosCompras({ signal, search: debouncedSearch.trim(), page: 1, limit: 50 });
+      return fetchProductosCompras({
+        signal,
+        search: debouncedSearch.trim(),
+        page: 1,
+        limit: 50,
+      });
     },
     enabled: isOpen && debouncedSearch.trim().length > 0,
     staleTime: 10_000,
@@ -64,7 +79,9 @@ export default function ProductSearchComprasModal({ isOpen, onOpenChange, initia
         <Search className="w-6 h-6 text-slate-300" />
       </div>
       <p className="text-sm font-medium text-center">
-        {searchQuery.length < 2 ? "Ingresa al menos 2 caracteres para buscar" : "No se encontraron productos"}
+        {searchQuery.length < 2
+          ? "Ingresa al menos 2 caracteres para buscar"
+          : "No se encontraron productos"}
       </p>
     </div>
   );
@@ -74,19 +91,16 @@ export default function ProductSearchComprasModal({ isOpen, onOpenChange, initia
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       size="4xl"
-      backdrop="blur"
+      backdrop="opaque"
+      motionProps={modalMotionProps}
       classNames={{
-        base: "bg-white/95 backdrop-blur-3xl shadow-2xl border border-white/60 sm:rounded-[24px] rounded-none m-0 sm:m-auto h-full sm:h-auto sm:max-h-[85vh]",
-        header: "border-b border-slate-100/60 pb-3 pt-4 sm:pb-4 sm:pt-6 px-4 sm:px-8",
+        base: "bg-white shadow-2xl border border-slate-200 sm:rounded-[24px] rounded-none m-0 sm:m-auto h-full sm:h-auto sm:max-h-[85vh]",
+        header:
+          "border-b border-slate-100/60 pb-3 pt-4 sm:pb-4 sm:pt-6 px-4 sm:px-8",
         body: "py-3 sm:py-6 px-3 sm:px-8 flex-1 overflow-hidden flex flex-col",
         footer: "border-t border-slate-100/60 py-3 sm:py-4 px-4 sm:px-8",
-        closeButton: "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
-      }}
-      motionProps={{
-        variants: {
-          enter: { y: 0, opacity: 1, scale: 1, transition: { duration: 0.3, ease: "easeOut" } },
-          exit: { y: -20, opacity: 0, scale: 0.95, transition: { duration: 0.2, ease: "easeIn" } },
-        },
+        closeButton:
+          "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
       }}
     >
       <ModalContent>
@@ -111,13 +125,16 @@ export default function ProductSearchComprasModal({ isOpen, onOpenChange, initia
             <ModalBody>
               <Input
                 placeholder="Buscar por Nombre, Código..."
-                startContent={<Search className="text-slate-400 mr-1 sm:mr-2" size={16} />}
+                startContent={
+                  <Search className="text-slate-400 mr-1 sm:mr-2" size={16} />
+                }
                 value={searchQuery}
                 onValueChange={setSearchQuery}
                 onClear={() => setSearchQuery("")}
                 autoFocus
                 classNames={{
-                  inputWrapper: "bg-slate-50 hover:bg-slate-100 focus-within:!bg-white border-2 border-transparent focus-within:!border-[#67afc3]/40 transition-all shadow-sm rounded-xl h-11 sm:h-14",
+                  inputWrapper:
+                    "bg-slate-50 hover:bg-slate-100 focus-within:!bg-white border-2 border-transparent focus-within:!border-[#67afc3]/40 transition-all shadow-sm rounded-xl h-11 sm:h-14",
                   input: "text-slate-700 font-medium text-sm sm:text-[15px]",
                   clearButton: "text-slate-400",
                 }}
@@ -128,25 +145,40 @@ export default function ProductSearchComprasModal({ isOpen, onOpenChange, initia
                   <div className="flex-1 flex flex-col items-center justify-center h-full bg-slate-50/50">
                     <LoadingComponent message="Buscando productos..." />
                   </div>
-                ) : items.length === 0 ? emptyState : (
+                ) : items.length === 0 ? (
+                  emptyState
+                ) : (
                   <>
                     {/* ── MOBILE ── */}
                     <div className="sm:hidden flex-1 overflow-auto scrollbar-hide divide-y divide-slate-50">
                       {items.map((item: Producto) => (
                         <button
                           key={item.Id}
-                          onClick={() => { handleSelect(item); onClose(); }}
+                          onClick={() => {
+                            handleSelect(item);
+                            onClose();
+                          }}
                           className="w-full px-3 py-3 flex items-center gap-3 hover:bg-[#67afc3]/5 active:bg-[#67afc3]/10 transition-colors text-left"
                         >
                           <div className="flex-1 min-w-0 flex flex-col gap-1">
-                            <span className="font-semibold text-slate-700 text-xs leading-snug line-clamp-2">{item.Descripcion}</span>
-                            <span className="text-[10px] text-slate-400 font-mono">Cód: {item.Codigo}</span>
+                            <span className="font-semibold text-slate-700 text-xs leading-snug line-clamp-2">
+                              {item.Descripcion}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              Cód: {item.Codigo}
+                            </span>
                           </div>
                           <div className="shrink-0 flex flex-col items-end gap-1">
                             <span className="text-xs font-bold text-amber-600">
-                              Costo: ${Number(item.PrecioCosto ?? 0).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                              Costo: $
+                              {Number(item.PrecioCosto ?? 0).toLocaleString(
+                                "es-AR",
+                                { minimumFractionDigits: 2 },
+                              )}
                             </span>
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${item.Stock <= 0 ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}`}>
+                            <span
+                              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${item.Stock <= 0 ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}`}
+                            >
                               Stock: {item.Stock}
                             </span>
                           </div>
@@ -163,8 +195,13 @@ export default function ProductSearchComprasModal({ isOpen, onOpenChange, initia
                       removeWrapper
                       selectionMode="single"
                       onRowAction={(key) => {
-                        const selected = items.find((item: Producto) => item.Id == key);
-                        if (selected) { handleSelect(selected); onClose(); }
+                        const selected = items.find(
+                          (item: Producto) => item.Id == key,
+                        );
+                        if (selected) {
+                          handleSelect(selected);
+                          onClose();
+                        }
                       }}
                       classNames={{
                         base: "h-full flex-col overflow-auto scrollbar-hide hidden sm:flex",
@@ -182,7 +219,12 @@ export default function ProductSearchComprasModal({ isOpen, onOpenChange, initia
                         <TableColumn align="center">STOCK</TableColumn>
                         <TableColumn align="center">ACCIÓN</TableColumn>
                       </TableHeader>
-                      <TableBody items={items} loadingState={isLoading || isFetching ? "loading" : "idle"}>
+                      <TableBody
+                        items={items}
+                        loadingState={
+                          isLoading || isFetching ? "loading" : "idle"
+                        }
+                      >
                         {(item: Producto) => (
                           <TableRow key={item.Id}>
                             <TableCell>
@@ -192,20 +234,30 @@ export default function ProductSearchComprasModal({ isOpen, onOpenChange, initia
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-col">
-                                <span className="text-slate-600 text-[11px] font-mono">Cód: {item.Codigo}</span>
+                                <span className="text-slate-600 text-[11px] font-mono">
+                                  Cód: {item.Codigo}
+                                </span>
                                 {item.CodigoBarra && (
-                                  <span className="text-slate-400 text-[10px] font-mono">CB: {item.CodigoBarra}</span>
+                                  <span className="text-slate-400 text-[10px] font-mono">
+                                    CB: {item.CodigoBarra}
+                                  </span>
                                 )}
                               </div>
                             </TableCell>
                             <TableCell>
                               <span className="font-bold text-amber-600 text-sm">
-                                ${Number(item.PrecioCosto ?? 0).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                                $
+                                {Number(item.PrecioCosto ?? 0).toLocaleString(
+                                  "es-AR",
+                                  { minimumFractionDigits: 2 },
+                                )}
                               </span>
                             </TableCell>
                             <TableCell>
                               <div className="flex justify-center">
-                                <span className={`text-[12px] font-bold px-2 py-1 rounded-md ${item.Stock <= 0 ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}`}>
+                                <span
+                                  className={`text-[12px] font-bold px-2 py-1 rounded-md ${item.Stock <= 0 ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}`}
+                                >
                                   {item.Stock}
                                 </span>
                               </div>
@@ -214,7 +266,10 @@ export default function ProductSearchComprasModal({ isOpen, onOpenChange, initia
                               <Button
                                 size="sm"
                                 className="bg-slate-100 text-slate-600 font-semibold group-hover:bg-[#67afc3] group-hover:text-white transition-all shadow-sm w-full"
-                                onPress={() => { handleSelect(item); onClose(); }}
+                                onPress={() => {
+                                  handleSelect(item);
+                                  onClose();
+                                }}
                               >
                                 Agregar
                               </Button>
@@ -229,7 +284,11 @@ export default function ProductSearchComprasModal({ isOpen, onOpenChange, initia
             </ModalBody>
 
             <ModalFooter>
-              <Button className="text-slate-500 font-medium hover:bg-slate-100" variant="light" onPress={onClose}>
+              <Button
+                className="text-slate-500 font-medium hover:bg-slate-100"
+                variant="light"
+                onPress={onClose}
+              >
                 Cerrar
               </Button>
             </ModalFooter>

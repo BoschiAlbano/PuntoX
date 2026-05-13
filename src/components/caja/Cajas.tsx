@@ -110,7 +110,7 @@ export default function Cajas() {
   }, []);
 
   return (
-    <div className="w-full h-full flex flex-col gap-4 p-4">
+    <div className="w-full flex-1 flex flex-col gap-4 p-4">
       <div className="flex flex-wrap gap-4 items-end bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-gray-100 shadow-sm">
         <h1 className="text-2xl font-bold text-gray-800 mr-auto">Cajas</h1>
 
@@ -167,7 +167,7 @@ export default function Cajas() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0">
         <GenericTable
           data={data?.data || []}
           columns={columns}

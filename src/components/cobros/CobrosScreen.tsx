@@ -40,7 +40,12 @@ const columns: Column[] = [
 
 async function fetchCobros(page: number): Promise<{
   data: ComprobantePendiente[];
-  pagination: { total: number; page: number; limit: number; totalPages: number };
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }> {
   const res = await fetch(`/api/cobros?page=${page}&limit=20`, {
     credentials: "include",
@@ -168,7 +173,7 @@ export function CobrosScreen() {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 flex-1 min-h-0">
       {/* Chip de total pendiente alineado a la derecha */}
       {pagination && pagination.total > 0 && (
         <div className="flex justify-end">

@@ -1,5 +1,6 @@
 "use client";
 
+import { modalMotionProps } from "@/lib/motionConfig";
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   Button,
@@ -310,10 +311,12 @@ export function CobrarModal({ isOpen, onClose, comprobante }: CobrarModalProps) 
         isOpen={isOpen}
         onOpenChange={handleClose}
         size="lg"
-        placement="center"
         backdrop="opaque"
+        scrollBehavior="inside"
+        motionProps={modalMotionProps}
         classNames={{
-          base: "bg-white shadow-2xl rounded-2xl",
+          wrapper: "items-end sm:items-center",
+          base: "bg-white shadow-2xl rounded-t-2xl rounded-b-none sm:rounded-2xl w-full sm:w-auto m-0 sm:m-auto max-h-[92vh]",
           header: "border-b border-slate-100 pb-4",
           footer: "border-t border-slate-100 pt-3",
         }}

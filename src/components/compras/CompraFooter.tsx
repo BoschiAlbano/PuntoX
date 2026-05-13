@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { modalMotionProps } from "@/lib/motionConfig";
 import {
   Button,
   Input,
@@ -451,9 +452,10 @@ export default function CompraFooter({
         isOpen={isCancelModalOpen}
         onOpenChange={setIsCancelModalOpen}
         size="md"
-        backdrop="blur"
+        backdrop="opaque"
+        motionProps={modalMotionProps}
         classNames={{
-          base: "bg-white/95 backdrop-blur-3xl shadow-2xl border border-white/60 rounded-[24px]",
+          base: "bg-white shadow-2xl border border-slate-200 rounded-[24px]",
           header: "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8",
           body: "py-6 px-4 sm:px-8 text-center",
           footer: "border-t border-slate-100/60 py-4 px-4 sm:px-8",

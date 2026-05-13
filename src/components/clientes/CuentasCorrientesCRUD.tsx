@@ -243,7 +243,7 @@ export default function CuentasCorrientesCRUD() {
   };
 
   return (
-    <div className="w-full h-full relative flex flex-col gap-4">
+    <div className="w-full flex-1 relative flex flex-col gap-4">
       {selectedClient && (
         <Card className="bg-white border border-slate-200/60 shadow-lg shadow-slate-200/40 rounded-xl sm:rounded-2xl mx-1 sm:mx-4 overflow-hidden relative">
           <div className="absolute top-0 left-0 w-1 sm:w-1.5 h-full bg-linear-to-b from-[#67afc3] to-[#2dd4bf]" />
@@ -281,7 +281,7 @@ export default function CuentasCorrientesCRUD() {
       )}
 
       <div
-        className="flex-1 w-full px-1 sm:px-4 pb-4 focus:outline-none focus:ring-0"
+        className="flex-1 flex flex-col min-h-0 w-full px-1 sm:px-4 pb-4 focus:outline-none focus:ring-0"
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();

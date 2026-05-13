@@ -1,3 +1,4 @@
+import { modalMotionProps } from "@/lib/motionConfig";
 import {
   Modal,
   ModalContent,
@@ -61,7 +62,16 @@ export default function AddStockModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} placement="center">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      scrollBehavior="inside"
+      motionProps={modalMotionProps}
+      classNames={{
+        wrapper: "items-end sm:items-center",
+        base: "rounded-t-2xl rounded-b-none sm:rounded-2xl w-full sm:w-auto m-0 sm:m-auto max-h-[90vh]",
+      }}
+    >
       <ModalContent>
         {(onClose) => (
           <>

@@ -1,3 +1,4 @@
+import { modalMotionProps } from "@/lib/motionConfig";
 import { useState, useEffect } from "react";
 import {
   Modal,
@@ -44,15 +45,17 @@ export default function ListaPrecioForm({
       isOpen={isOpen}
       onClose={onClose}
       size="md"
-      placement="center"
       backdrop="opaque"
+      scrollBehavior="inside"
+      motionProps={modalMotionProps}
       classNames={{
         backdrop: "bg-black/50 backdrop-blur-sm",
-        base: "font-sans bg-white rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.08)] border border-[#e5e7eb]",
-        header: "border-t-[3px] border-t-[#67afc3] border-b border-[#e5e7eb] bg-[#67afc3]/5 rounded-t-2xl",
+        wrapper: "items-end sm:items-center",
+        base: "font-sans bg-white rounded-t-[20px] rounded-b-none sm:rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.08)] border border-[#e5e7eb] w-full sm:w-auto m-0 sm:m-auto max-h-[92vh]",
+        header: "border-t-[3px] border-t-[var(--crud-accent)] border-b border-[#e5e7eb] bg-[var(--crud-accent)]/5",
         body: "py-6",
-        footer: "border-t border-[#e5e7eb] bg-[#f8fafc] rounded-b-2xl",
-        closeButton: "hover:bg-[#67afc3]/10 hover:text-[#67afc3] rounded-full p-1.5 transition-colors text-[#6b7280]",
+        footer: "border-t border-[#e5e7eb] bg-[#f8fafc]",
+        closeButton: "hover:bg-[var(--crud-accent)]/10 hover:text-[var(--crud-accent)] rounded-full p-1.5 transition-colors text-[#6b7280]",
       }}
     >
       <ModalContent>

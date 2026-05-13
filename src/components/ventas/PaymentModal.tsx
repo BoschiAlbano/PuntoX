@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { modalMotionProps } from "@/lib/motionConfig";
 import {
   Modal,
   ModalContent,
@@ -133,7 +134,17 @@ export default function PaymentModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="lg"
+      scrollBehavior="inside"
+      motionProps={modalMotionProps}
+      classNames={{
+        wrapper: "items-end sm:items-center",
+        base: "rounded-t-2xl rounded-b-none sm:rounded-2xl w-full sm:w-auto m-0 sm:m-auto max-h-[92vh]",
+      }}
+    >
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1">
           Confirmar Pago
@@ -153,8 +164,8 @@ export default function PaymentModal({
                   restante > 0.01
                     ? "text-warning"
                     : restante < -0.01
-                    ? "text-success"
-                    : "text-success"
+                      ? "text-success"
+                      : "text-success"
                 }`}
               >
                 ${Math.abs(restante).toFixed(2)}

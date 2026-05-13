@@ -1,5 +1,6 @@
 "use client";
 
+import { modalMotionProps } from "@/lib/motionConfig";
 import { useState, useEffect } from "react";
 import {
   Modal,
@@ -144,9 +145,11 @@ export default function SucursalForm({
       onClose={onClose}
       size="lg"
       backdrop="blur"
-      placement="center"
+      scrollBehavior="inside"
+      motionProps={modalMotionProps}
       classNames={{
-        base: "bg-white/90 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-3xl",
+        wrapper: "items-end sm:items-center",
+        base: "bg-white/90 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-t-[20px] rounded-b-none sm:rounded-3xl w-full sm:w-auto m-0 sm:m-auto max-h-[92vh]",
         header: "border-b border-slate-100/60 pb-4",
         footer: "border-t border-slate-100/60 pt-4",
       }}

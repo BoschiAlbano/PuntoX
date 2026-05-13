@@ -25,6 +25,7 @@ import {
   ModalFooter,
   Button,
 } from "@heroui/react";
+import { modalMotionProps } from "@/lib/motionConfig";
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -56,10 +57,13 @@ export default function ConfirmModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      placement="center"
       size={size}
       isDismissable={!isLoading}
-      classNames={{ base: "mx-3 sm:mx-auto rounded-xl" }}
+      motionProps={modalMotionProps}
+      classNames={{
+        wrapper: "items-end sm:items-center",
+        base: "rounded-t-2xl rounded-b-none sm:rounded-xl w-full sm:w-auto m-0 sm:m-auto",
+      }}
     >
       <ModalContent>
         {(closeModal) => (
@@ -82,11 +86,7 @@ export default function ConfirmModal({
               >
                 {cancelLabel}
               </Button>
-              <Button
-                color={variant}
-                onPress={onConfirm}
-                isLoading={isLoading}
-              >
+              <Button color={variant} onPress={onConfirm} isLoading={isLoading}>
                 {confirmLabel}
               </Button>
             </ModalFooter>

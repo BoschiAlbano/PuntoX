@@ -56,7 +56,7 @@ export const LandingFeatures = () => {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Todo lo que necesitas para{" "}
-            <span className="text-[#67afc3]">crecer</span>
+            <span className="text-[#1d293d]">crecer</span>
           </h2>
           <p className="text-slate-500">
             Herramientas diseñadas específicamente para potenciar la eficiencia
@@ -88,12 +88,12 @@ export const LandingFeatures = () => {
                   damping: 15,
                   mass: 1,
                 }}
-                className={`p-8 rounded-3xl bg-white border border-slate-200 hover:border-[#67afc3]/40 transition-all duration-500 ease-out group hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#67afc3]/10 flex flex-col justify-start overflow-hidden relative ${bentoClasses[index]}`}
+                className={`p-8 rounded-3xl bg-white border border-slate-200 hover:border-[#1d293d]/25 transition-all duration-500 ease-out group hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#1d293d]/8 flex flex-col justify-start overflow-hidden relative ${bentoClasses[index]}`}
               >
                 {/* Decorative background glow on hover (GPU Optimized) */}
-                <div className="absolute -right-20 -top-20 w-40 h-40 bg-[#67afc3] opacity-0 rounded-full blur-3xl group-hover:opacity-15 transition-opacity duration-300 pointer-events-none will-change-transform" />
+                <div className="absolute -right-20 -top-20 w-40 h-40 bg-[#1d293d] opacity-0 rounded-full blur-3xl group-hover:opacity-10 transition-opacity duration-300 pointer-events-none will-change-transform" />
                 
-                <div className="w-12 h-12 rounded-xl bg-[#67afc3]/10 flex items-center justify-center text-[#67afc3] mb-6 group-hover:bg-[#67afc3] group-hover:text-white transition-all duration-500 shadow-sm group-hover:scale-110 group-hover:-rotate-3 group-hover:shadow-md">
+                <div className="w-12 h-12 rounded-xl bg-[#1d293d]/10 flex items-center justify-center text-[#1d293d] mb-6 group-hover:bg-[#1d293d] group-hover:text-white transition-all duration-500 shadow-sm group-hover:scale-110 group-hover:-rotate-3 group-hover:shadow-md">
                   {feature.icon}
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-slate-800 z-10">{feature.title}</h3>

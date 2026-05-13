@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 
 export default function CobrosPage() {
   return (
-    <div className="   flex flex-col items-stretch min-h-full relative space-y-4 sm:space-y-6">
+    <div className="flex flex-col min-h-full relative gap-4 sm:gap-6">
       <PageHeader
         title="Cobros"
         accentTitle="Pendientes"

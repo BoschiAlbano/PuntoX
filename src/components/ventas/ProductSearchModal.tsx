@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { modalMotionProps } from "@/lib/motionConfig";
 import {
   Input,
   Button,
@@ -59,7 +60,11 @@ export default function ProductSearchModal({
     }
   }, [isOpen, initialSearch]);
 
-  const { data: queryResult, isLoading, isFetching } = useQuery({
+  const {
+    data: queryResult,
+    isLoading,
+    isFetching,
+  } = useQuery({
     queryKey: ["productos_ventas_modal", debouncedSearch],
     queryFn: async ({ signal }) => {
       if (!debouncedSearch.trim()) return { data: [], meta: { total: 0 } };
@@ -94,29 +99,16 @@ export default function ProductSearchModal({
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       size="4xl"
-      backdrop="blur"
+      backdrop="opaque"
+      motionProps={modalMotionProps}
       classNames={{
-        base: "bg-white/95 backdrop-blur-3xl shadow-2xl border border-white/60 sm:rounded-[24px] rounded-none m-0 sm:m-auto h-full sm:h-auto sm:max-h-[85vh]",
-        header: "border-b border-slate-100/60 pb-3 pt-4 sm:pb-4 sm:pt-6 px-4 sm:px-8",
+        base: "bg-white shadow-2xl border border-slate-200 sm:rounded-[24px] rounded-none m-0 sm:m-auto h-full sm:h-auto sm:max-h-[85vh]",
+        header:
+          "border-b border-slate-100/60 pb-3 pt-4 sm:pb-4 sm:pt-6 px-4 sm:px-8",
         body: "py-3 sm:py-6 px-3 sm:px-8 flex-1 overflow-hidden flex flex-col",
         footer: "border-t border-slate-100/60 py-3 sm:py-4 px-4 sm:px-8",
-        closeButton: "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
-      }}
-      motionProps={{
-        variants: {
-          enter: {
-            y: 0,
-            opacity: 1,
-            scale: 1,
-            transition: { duration: 0.3, ease: "easeOut" },
-          },
-          exit: {
-            y: -20,
-            opacity: 0,
-            scale: 0.95,
-            transition: { duration: 0.2, ease: "easeIn" },
-          },
-        },
+        closeButton:
+          "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
       }}
     >
       <ModalContent>
@@ -141,7 +133,9 @@ export default function ProductSearchModal({
               {/* Buscador */}
               <Input
                 placeholder="Buscar por Nombre, Código..."
-                startContent={<Search className="text-slate-400 mr-1 sm:mr-2" size={16} />}
+                startContent={
+                  <Search className="text-slate-400 mr-1 sm:mr-2" size={16} />
+                }
                 value={searchQuery}
                 onValueChange={setSearchQuery}
                 onClear={() => setSearchQuery("")}
@@ -195,7 +189,18 @@ export default function ProductSearchModal({
                           {/* Price + Stock */}
                           <div className="shrink-0 flex flex-col items-end gap-1">
                             <span className="text-sm font-bold text-slate-800">
-                              ${(item.PreciosLista?.find(p => Number(p.ListaPrecioId) === Number(listaPrecios))?.PrecioFinal || item.PrecioCosto || 0).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                              $
+                              {(
+                                item.PreciosLista?.find(
+                                  (p) =>
+                                    Number(p.ListaPrecioId) ===
+                                    Number(listaPrecios),
+                                )?.PrecioFinal ||
+                                item.PrecioCosto ||
+                                0
+                              ).toLocaleString("es-AR", {
+                                minimumFractionDigits: 2,
+                              })}
                             </span>
                             <span
                               className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
@@ -218,7 +223,8 @@ export default function ProductSearchModal({
                       {items.length > 40 && (
                         <div className="flex w-full justify-center p-3 bg-slate-50/50">
                           <span className="text-[10px] font-semibold text-slate-400">
-                            Mostrando los primeros resultados. Afina tu búsqueda.
+                            Mostrando los primeros resultados. Afina tu
+                            búsqueda.
                           </span>
                         </div>
                       )}
@@ -230,7 +236,9 @@ export default function ProductSearchModal({
                       removeWrapper
                       selectionMode="single"
                       onRowAction={(key) => {
-                        const selectedItem = items.find((item: Producto) => item.Id == key);
+                        const selectedItem = items.find(
+                          (item: Producto) => item.Id == key,
+                        );
                         if (selectedItem) {
                           handleSelect(selectedItem);
                           onClose();
@@ -249,7 +257,8 @@ export default function ProductSearchModal({
                         items?.length > 40 && (
                           <div className="flex w-full justify-center p-3 border-t border-slate-100 bg-slate-50/50">
                             <span className="text-xs font-semibold text-slate-400">
-                              Mostrando los primeros resultados. Afina tu búsqueda.
+                              Mostrando los primeros resultados. Afina tu
+                              búsqueda.
                             </span>
                           </div>
                         )
@@ -264,7 +273,9 @@ export default function ProductSearchModal({
                       </TableHeader>
                       <TableBody
                         items={items}
-                        loadingState={isLoading || isFetching ? "loading" : "idle"}
+                        loadingState={
+                          isLoading || isFetching ? "loading" : "idle"
+                        }
                       >
                         {(item: Producto) => (
                           <TableRow key={item.Id}>
@@ -288,13 +299,25 @@ export default function ProductSearchModal({
                             <TableCell>
                               <div className="flex flex-col items-end">
                                 <span className="text-slate-800 font-semibold text-sm">
-                                  ${(item.PreciosLista?.find(p => Number(p.ListaPrecioId) === Number(listaPrecios))?.PrecioFinal || item.PrecioCosto || 0).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                                  $
+                                  {(
+                                    item.PreciosLista?.find(
+                                      (p) =>
+                                        Number(p.ListaPrecioId) ===
+                                        Number(listaPrecios),
+                                    )?.PrecioFinal ||
+                                    item.PrecioCosto ||
+                                    0
+                                  ).toLocaleString("es-AR", {
+                                    minimumFractionDigits: 2,
+                                  })}
                                 </span>
-                                {item.PreciosLista && item.PreciosLista.length > 1 && (
-                                  <span className="text-[11px] text-slate-400">
-                                    {item.PreciosLista.length} precios disp.
-                                  </span>
-                                )}
+                                {item.PreciosLista &&
+                                  item.PreciosLista.length > 1 && (
+                                    <span className="text-[11px] text-slate-400">
+                                      {item.PreciosLista.length} precios disp.
+                                    </span>
+                                  )}
                               </div>
                             </TableCell>
                             <TableCell>
