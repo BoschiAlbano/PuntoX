@@ -32,8 +32,8 @@
      ──────────────────────────────────────────────────────── */
 
   /* Fondo principal del sidebar y header */
-  /* --nav-bg: #1d293d; */
-  --nav-bg: #191d32;
+  /* --nav-bg: #0f2233; */
+  --nav-bg: #0f2233;
 
   /* Logo */
   --nav-logo-title: #f1f5f9; /* blanco suave — título prominente */
@@ -108,7 +108,7 @@
      Cambiá --crud-accent para re-tematizar toda la tabla/crud sin
      tocar el código de los componentes.
      ──────────────────────────────────────────────────────── */
-  --crud-accent: #1d293d; /* botones, headers de tabla, badges  */
+  --crud-accent: #0f2233; /* botones, headers de tabla, badges  */
   --crud-accent-hover: #2d3f5c; /* hover de botones y bordes          */
   --crud-accent-muted: rgba(
     29,

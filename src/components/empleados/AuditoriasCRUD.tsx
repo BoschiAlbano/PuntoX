@@ -202,16 +202,41 @@ export default function AuditoriasCRUD() {
             );
           }
           case "detalles":
-            return (
-              <span className="text-xs text-slate-500 font-medium truncate max-w-[150px] inline-block">
-                {item.detalles || "-"}
-              </span>
+            return item.detalles ? (
+              <Tooltip
+                content={item.detalles}
+                classNames={{
+                  content:
+                    "bg-[#0F2233] text-white text-xs max-w-[320px] whitespace-pre-wrap shadow-lg",
+                }}
+                placement="top-start"
+                delay={300}
+              >
+                <span className="text-xs text-slate-500 font-medium truncate max-w-[150px] inline-block cursor-help">
+                  {item.detalles}
+                </span>
+              </Tooltip>
+            ) : (
+              <span className="text-xs text-slate-400">—</span>
             );
           case "fechaHora":
             return (
               <Tooltip
-                content={new Date(item.fechaHora).toLocaleString()}
-                classNames={{ base: "bg-slate-800 text-white text-xs" }}
+                content={new Date(item.fechaHora).toLocaleString("es-AR", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                })}
+                classNames={{
+                  content:
+                    "bg-[#0F2233] text-white text-xs shadow-lg capitalize",
+                }}
+                placement="top"
+                delay={300}
               >
                 <span className="text-xs text-slate-500 font-medium bg-slate-50 px-2 py-1.5 rounded-md cursor-help border border-slate-100">
                   {formatTiempoRelativo(item.fechaHora)}

@@ -833,17 +833,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
             {toolbarExtraContent}
           </>
         }
-        onRowClick={
-          hasRowPreview
-            ? (item) => {
-                if (renderRowPreview) {
-                  setPreviewItem(item);
-                } else if (onRowClick) {
-                  onRowClick(item, () => handleEdit(item));
-                }
-              }
-            : undefined
-        }
+        onRowClick={undefined}
         onRowKeyDown={(item, key) => {
           if (key === "Enter") handleEdit(item);
         }}

@@ -24,24 +24,24 @@ interface StatCardProps {
 
 const colorClasses: Record<string, { bg: string; chartColor: string }> = {
   red: {
-    bg: "bg-gradient-to-br from-[#f87171] to-[#fca5a5]",
-    chartColor: "rgba(255,255,255,0.4)",
+    bg: "bg-gradient-to-br from-[#C8806E] to-[#A36068]",
+    chartColor: "rgba(255,255,255,0.35)",
   },
   orange: {
-    bg: "bg-gradient-to-br from-[#f97316] to-[#fb923c]",
-    chartColor: "rgba(255,255,255,0.4)",
+    bg: "bg-gradient-to-br from-[#D4A356] to-[#B4864A]",
+    chartColor: "rgba(255,255,255,0.35)",
   },
   green: {
-    bg: "bg-gradient-to-br from-[#4ade80] to-[#86efac]",
-    chartColor: "rgba(255,255,255,0.5)",
+    bg: "bg-gradient-to-br from-[#6B9B87] to-[#4E7E70]",
+    chartColor: "rgba(255,255,255,0.4)",
   },
   emerald: {
-    bg: "bg-gradient-to-br from-[#4ade80] to-[#86efac]",
-    chartColor: "rgba(255,255,255,0.5)",
+    bg: "bg-gradient-to-br from-[#6B9B87] to-[#4E7E70]",
+    chartColor: "rgba(255,255,255,0.4)",
   },
   blue: {
-    bg: "bg-gradient-to-br from-[#38bdf8] to-[#7dd3fc]",
-    chartColor: "rgba(255,255,255,0.4)",
+    bg: "bg-gradient-to-br from-[#6B9BC1] to-[#4E7AAE]",
+    chartColor: "rgba(255,255,255,0.35)",
   },
   purple: {
     bg: "bg-gradient-to-br from-[#a855f7] to-[#d8b4fe]",

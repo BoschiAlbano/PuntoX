@@ -22,7 +22,7 @@ Configuración reginal: pendiente implementar 🦴
 AFIP: Pendiente 🦴
 
 Errores: 
-1- El usuario administrador no deberia bloquearse por intentos fallidos al ingresar la contraseña en login.
+1- El usuario administrador no deberia bloquearse por intentos fallidos al ingresar la contraseña en login. ✔️
 
 Implementaciones Futuras:
 1- AFIP

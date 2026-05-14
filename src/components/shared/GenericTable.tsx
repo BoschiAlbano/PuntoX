@@ -287,14 +287,14 @@ export default function GenericTable<T extends { Id: number | string }>({
 
   return (
     <section className="w-full flex flex-col gap-4 flex-1">
-      <div className="rounded-lg flex flex-col gap-4 bg-white w-full shadow-[0_1px_3px_rgba(15,23,42,0.06)] flex-1">
+      <div className="rounded-lg flex flex-col gap-4 bg-[#F5F8FD] w-full flex-1">
         {/* Barra de herramientas: Búsqueda+Filtro | Botones - grilla 8px */}
-        <section className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-2 sm:p-4 rounded-xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
+        <section className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-2 sm:p-4 rounded-xl bg-[#F5F8FD]">
           {/* Búsqueda - más protagonista: ancho mayor, placeholder claro */}
           <div className="w-full sm:flex-1 sm:min-w-0 order-1 flex flex-row flex-wrap items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-2 flex-1 min-w-0 sm:max-w-[400px]">
               <div className="flex-1 min-w-0">
-                <div className="group flex items-center gap-2 border border-slate-300 rounded-lg px-3 sm:px-4 h-10 sm:h-9 bg-slate-50/50 transition-all duration-150 hover:border-[var(--crud-accent)] hover:bg-white focus-within:border-[var(--crud-accent)] focus-within:ring-2 focus-within:ring-[var(--crud-accent)]/35 focus-within:bg-white">
+                <div className="group flex items-center gap-2 border border-slate-300 rounded-lg px-3 sm:px-4 h-10 sm:h-9 bg-white transition-all duration-150 hover:border-[var(--crud-accent)] hover:bg-white focus-within:border-[var(--crud-accent)] focus-within:ring-2 focus-within:ring-[var(--crud-accent)]/35 focus-within:bg-white">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
@@ -633,7 +633,7 @@ export default function GenericTable<T extends { Id: number | string }>({
         {/* Barra de selección masiva eliminada — acciones movidas al menú "Más opciones" */}
 
         {/* Table/Cards + Pagination */}
-        <div className="w-full flex flex-col rounded-xl border border-slate-200/80 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] flex-1">
+          <div className="w-full flex flex-col rounded-xl bg-[#F5F8FD] flex-1">
           <div className="overflow-x-auto flex-1">
             {viewMode === "cards" && renderCards ? (
               isLoading ? (
@@ -696,14 +696,14 @@ export default function GenericTable<T extends { Id: number | string }>({
                     // Disable row-click selection: only the checkbox should trigger it
                     onRowAction: () => {},
                   })}
-                className="bg-white rounded-lg border-none"
+                className="bg-[#F5F8FD] rounded-lg border-none"
                 classNames={{
                   wrapper:
-                    "bg-white shadow-none rounded-xl border-none sm:p-4 p-1",
+                    "bg-[#F5F8FD] shadow-none rounded-xl border-none sm:p-4 p-1",
                   th: "bg-[var(--crud-accent)] text-white text-[11px] sm:text-[13px] font-semibold border-b border-slate-200/60 px-2 sm:px-4",
                   base: "bg-transparent shadow-none rounded-xl border-none",
                   td: "border-b border-slate-200/80 text-slate-800 text-[12px] sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2.5",
-                  tr: "group transition-all duration-200 data-[hover=true]:bg-slate-50 data-[hover=true]:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] data-[hover=true]:relative data-[hover=true]:z-10 data-[selected=true]:bg-[var(--crud-accent)]/15",
+                  tr: "group transition-all duration-200 data-[hover=true]:bg-[#FFF3EA] data-[hover=true]:relative data-[hover=true]:z-10 data-[selected=true]:bg-[var(--crud-accent)]/15",
                 }}
               >
                 <TableHeader columns={visibleColumns}>
@@ -830,7 +830,7 @@ export default function GenericTable<T extends { Id: number | string }>({
               </Table>
             )}
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-2 sm:p-4 border-t border-slate-200/80 bg-slate-50/50 rounded-b-xl print:hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-2 sm:p-4 bg-[#F5F8FD] rounded-b-xl print:hidden">
             {isLoading ? (
               <section className="relative w-full flex flex-col sm:gap-0 gap-2 items-center">
                 <div className="flex gap-2">

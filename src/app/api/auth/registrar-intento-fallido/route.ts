@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
+import { PerfilTipo } from "../../../../../prisma/generated/prisma";
 
 const RESET_MINUTOS = 30;
 
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     const usernameNormalized = username.trim().toLowerCase();
 
-    // Buscar usuario en DB
+    // Buscar usuario en DB (incluyendo rol para verificar si es privilegiado)
     const usuario = await prisma.usuario.findFirst({
       where: {
         Nombre: usernameNormalized,
@@ -41,6 +42,11 @@ export async function POST(req: NextRequest) {
         Persona_Empleado: {
           select: { Id: true },
         },
+        PerfilUsuario: {
+          select: {
+            Perfiles: { select: { Tipo: true } },
+          },
+        },
       },
     });
 
@@ -52,6 +58,44 @@ export async function POST(req: NextRequest) {
     // Si ya está bloqueado, no seguir incrementando
     if (usuario.EstaBloqueado) {
       return NextResponse.json({ ok: true, bloqueado: true });
+    }
+
+    // Verificar si el usuario tiene rol privilegiado (ADMINISTRADOR o SUPERADMIN)
+    // Estos roles nunca se bloquean automáticamente por intentos fallidos
+    const esRolPrivilegiado = usuario.PerfilUsuario.some(
+      (pu) =>
+        pu.Perfiles.Tipo === PerfilTipo.SUPERADMIN ||
+        pu.Perfiles.Tipo === PerfilTipo.ADMINISTRADOR,
+    );
+
+    if (esRolPrivilegiado) {
+      // Registrar el intento pero nunca bloquear la cuenta
+      await prisma.usuario.update({
+        where: { Id: usuario.Id },
+        data: {
+          IntentosFallidos: { increment: 1 },
+          FechaUltimoIntento: new Date(),
+        },
+      });
+
+      // Auditoría: dejar trazabilidad del intento fallido sin bloqueo
+      try {
+        await registrarAuditoria({
+          tenantId: usuario.TenantId,
+          usuarioId: usuario.Id,
+          accion: "INTENTO_FALLIDO_ROL_PRIVILEGIADO",
+          empleadoId: usuario.Persona_Empleado?.Id ?? null,
+          usuarioAfectadoId: usuario.Id,
+          detalle: `Intento de inicio de sesión fallido para usuario con rol privilegiado (sin bloqueo automático). Total acumulado: ${usuario.IntentosFallidos + 1}`,
+          valorAnterior: { intentosFallidos: usuario.IntentosFallidos },
+          valorNuevo: { intentosFallidos: usuario.IntentosFallidos + 1 },
+          req,
+        });
+      } catch {
+        // La auditoría no debe interrumpir el flujo principal
+      }
+
+      return NextResponse.json({ ok: true });
     }
 
     // Leer umbral de bloqueo del tenant
