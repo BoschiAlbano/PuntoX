@@ -15,6 +15,7 @@ import { handleError } from "@/lib/errors/handler";
 import { createError } from "@/lib/errors/types";
 import { fotoDefault } from "@/utilities/fotoDefault";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
+import { resolveStockNotifications } from "@/lib/services/notificaciones";
 
 export async function GET(req: NextRequest) {
   try {
@@ -546,6 +547,15 @@ export async function PATCH(req: NextRequest) {
 
       return articuloUpdate;
     });
+
+    // Resolver notificaciones de stock bajo si se actualizó el stock
+    if (sucursalId && validarProducto.Stock !== undefined) {
+      resolveStockNotifications(
+        BigInt(tenantId),
+        BigInt(sucursalId),
+        [BigInt(validarProducto.Id)],
+      ).catch((e) => console.error("resolveStockNotifications error:", e));
+    }
 
     return NextResponse.json(
       {

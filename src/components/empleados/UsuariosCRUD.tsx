@@ -4,14 +4,11 @@ import { useState } from "react";
 import GenericCrud from "@/components/shared/GenericCrud";
 import {
   Chip,
-  Button,
   Tooltip,
   addToast,
 } from "@heroui/react";
-import { LockKeyhole, LockKeyholeOpen } from "lucide-react";
+import { EditButton, DeleteButton, PasswordButton, LockButton } from "../shared/TableActions";
 import { useQueryClient } from "@tanstack/react-query";
-
-import { EditButton, DeleteButton } from "../shared/TableActions";
 import UsuarioForm from "./UsuarioForm";
 import ChangePasswordModal from "./ChangePasswordModal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
@@ -399,35 +396,10 @@ export default function UsuariosCRUD() {
 
               return (
                 <div className="flex gap-2 w-full justify-center items-center">
-                  <Tooltip
-                    content="Cambiar contraseña"
-                    placement="top"
+                  <PasswordButton
+                    onPress={() => setPasswordModalUser(item)}
                     isDisabled={!canEditOrPass}
-                  >
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      color="secondary"
-                      onPress={() => setPasswordModalUser(item)}
-                      isDisabled={!canEditOrPass}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                        className="size-5"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
-                        />
-                      </svg>
-                    </Button>
-                  </Tooltip>
+                  />
 
                   <EditButton
                     onPress={() => actions.onEdit(item)}
@@ -436,28 +408,12 @@ export default function UsuariosCRUD() {
                   />
 
                   {canBlock && (
-                    <Tooltip
-                      content={
-                        estaActivo ? "Bloquear acceso" : "Desbloquear acceso"
+                    <LockButton
+                      isLocked={!estaActivo}
+                      onPress={() =>
+                        setLockConfirm({ item, bloquear: estaActivo })
                       }
-                      placement="top"
-                    >
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        color={estaActivo ? "danger" : "success"}
-                        onPress={() =>
-                          setLockConfirm({ item, bloquear: estaActivo })
-                        }
-                      >
-                        {estaActivo ? (
-                          <LockKeyhole className="size-4" />
-                        ) : (
-                          <LockKeyholeOpen className="size-4" />
-                        )}
-                      </Button>
-                    </Tooltip>
+                    />
                   )}
 
                   <DeleteButton

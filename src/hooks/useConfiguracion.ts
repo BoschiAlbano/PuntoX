@@ -58,7 +58,6 @@ export interface PreferenciasVenta {
 }
 
 export interface Notificaciones {
-  push: boolean;
   resumenDiario: boolean;
   stockBajo: boolean;
 }
@@ -312,20 +311,17 @@ const fetchNotificaciones = async ({
 
   if (!response.ok) {
     return {
-      push: true,
       resumenDiario: false,
       stockBajo: true,
     };
   }
 
   const data = await response.json();
-  return (
-    data?.notificaciones || {
-      push: true,
-      resumenDiario: false,
-      stockBajo: true,
-    }
-  );
+  const notifs = data?.notificaciones || {};
+  return {
+    resumenDiario: notifs.resumenDiario ?? false,
+    stockBajo: notifs.stockBajo ?? true,
+  };
 };
 
 const fetchSeguridad = async ({
@@ -667,7 +663,7 @@ export function useConfiguracion(options?: {
   });
 
   const notificacionesQuery = useQuery({
-    queryKey: ["notificaciones"],
+    queryKey: ["configuracion-notificaciones"],
     queryFn: ({ signal }) => fetchNotificaciones({ signal }),
     enabled: enableNotificaciones,
     retry: 2,
@@ -773,7 +769,7 @@ export function useConfiguracion(options?: {
   const saveNotificacionesMutation = useMutation({
     mutationFn: saveNotificaciones,
     onSuccess: (data) => {
-      queryClient.setQueryData(["notificaciones"], data);
+      queryClient.setQueryData(["configuracion-notificaciones"], data);
       if (silentCount === 0) {
         addToast({
           title: "Notificaciones guardadas",

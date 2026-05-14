@@ -19,6 +19,7 @@ import {
   ensureConsumerFinal,
 } from "@/lib/services/comprobantes";
 import { getNextNumeroComprobante } from "@/lib/services/contadores";
+import { triggerStockBajoNotifications } from "@/lib/services/notificaciones";
 
 // POST: Crear comprobante (venta)
 export async function POST(req: NextRequest) {
@@ -424,6 +425,26 @@ export async function POST(req: NextRequest) {
           throw new Error("Tipo de comprobante no soportado");
       }
     });
+
+    // Post-transacción: verificar stock bajo y emitir notificaciones (fire-and-forget)
+    // Solo si el comprobante descontó stock y la preferencia está habilitada
+    if (descuentaStock && configuracion?.NotificacionesStockBajo !== false) {
+      const affectedArticuloIds = data.detalles
+        .filter((d) =>
+          articulos.find((a) => Number(a.Id) === d.articuloId)?.DescuentaStock,
+        )
+        .map((d) => BigInt(d.articuloId));
+
+      if (affectedArticuloIds.length > 0) {
+        triggerStockBajoNotifications(
+          tenantIdBigInt,
+          sucursalId,
+          affectedArticuloIds,
+        ).catch((err) =>
+          console.error("[stockBajo] Error al verificar notificaciones:", err),
+        );
+      }
+    }
 
     return NextResponse.json(
       {

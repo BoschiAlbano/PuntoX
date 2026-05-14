@@ -9,6 +9,7 @@ import {
   TIPO_PAGO,
 } from "@/lib/constants/comprobantes";
 import { getNextNumeroComprobante } from "@/lib/services/contadores";
+import { resolveStockNotifications } from "@/lib/services/notificaciones";
 import { z } from "zod";
 
 const detalleCompraSchema = z.object({
@@ -391,6 +392,21 @@ export async function POST(req: NextRequest) {
         return comprobante;
       },
       { timeout: 30000 },
+    );
+
+    // Post-transacción: resolver notificaciones de stock bajo para artículos repuestos (fire-and-forget)
+    const articuloIdsAfectados = data.detalles.map((d) =>
+      BigInt(d.articuloId),
+    );
+    resolveStockNotifications(
+      BigInt(tenantId),
+      sucursalId,
+      articuloIdsAfectados,
+    ).catch((err) =>
+      console.error(
+        "[stockBajo] Error al resolver notificaciones de stock:",
+        err,
+      ),
     );
 
     return NextResponse.json(

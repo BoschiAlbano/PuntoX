@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS, GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
+import { GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { handleError } from "@/lib/errors/handler";
 
 const saveNotificacionesSchema = z.object({
-  push: z.boolean(),
   resumenDiario: z.boolean(),
   stockBajo: z.boolean(),
 });
@@ -27,7 +26,6 @@ export async function GET(req: NextRequest) {
         EstaEliminado: false,
       },
       select: {
-        NotificacionesPush: true,
         NotificacionesResumenDiario: true,
         NotificacionesStockBajo: true,
       },
@@ -40,7 +38,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(
         {
           notificaciones: {
-            push: true,
             resumenDiario: false,
             stockBajo: true,
           },
@@ -52,7 +49,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       {
         notificaciones: {
-          push: config.NotificacionesPush ?? true,
           resumenDiario: config.NotificacionesResumenDiario ?? false,
           stockBajo: config.NotificacionesStockBajo ?? true,
         },
@@ -107,12 +103,10 @@ export async function PUT(req: NextRequest) {
     const updated = await prisma.configuracion.update({
       where: { Id: config.Id, TenantId: BigInt(tenantId) },
       data: {
-        NotificacionesPush: data.push,
         NotificacionesResumenDiario: data.resumenDiario,
         NotificacionesStockBajo: data.stockBajo,
       },
       select: {
-        NotificacionesPush: true,
         NotificacionesResumenDiario: true,
         NotificacionesStockBajo: true,
       },
@@ -121,7 +115,6 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json(
       {
         notificaciones: {
-          push: updated.NotificacionesPush,
           resumenDiario: updated.NotificacionesResumenDiario,
           stockBajo: updated.NotificacionesStockBajo,
         },

@@ -22,6 +22,7 @@ import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import Link from "next/link";
 import { useState } from "react";
+import { statusColors, type StatusType } from "@/lib/ui/colors";
 
 export function NotificacionesDropdown() {
   const {
@@ -38,17 +39,24 @@ export function NotificacionesDropdown() {
   const unreadCount = data?.pagination?.unreadCount || 0;
 
   const getIcon = (tipo: string) => {
-    switch (tipo) {
-      case "SUCCESS":
-        return <CheckCircle2 className="text-green-500" size={20} />;
-      case "WARNING":
-        return <AlertTriangle className="text-amber-500" size={20} />;
-      case "ERROR":
-        return <XCircle className="text-red-500" size={20} />;
-      case "INFO":
-      default:
-        return <Info className="text-blue-500" size={20} />;
-    }
+    const c = statusColors[tipo as StatusType] ?? statusColors.INFO;
+    const iconClass = `${c.iconText} shrink-0`;
+    const iconNode = (() => {
+      switch (tipo) {
+        case "SUCCESS":
+          return <CheckCircle2 className={iconClass} size={18} />;
+        case "WARNING":
+          return <AlertTriangle className={iconClass} size={18} />;
+        case "ERROR":
+          return <XCircle className={iconClass} size={18} />;
+        case "INFO":
+        default:
+          return <Info className={iconClass} size={18} />;
+      }
+    })();
+    return (
+      <div className={`p-2 rounded-full ${c.iconBg} shrink-0`}>{iconNode}</div>
+    );
   };
 
   return (
@@ -125,55 +133,63 @@ export function NotificacionesDropdown() {
               </div>
             ) : (
               <div className="flex flex-col">
-                {notifications.map((notif) => (
-                  <div
-                    key={notif.Id}
-                    className={`flex items-start gap-4 p-4 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors ${notif.Leida ? "opacity-60" : "bg-[#67afc3]/5"}`}
-                  >
-                    <div className="shrink-0 mt-1">{getIcon(notif.Tipo)}</div>
-                    <div className="flex-1 min-w-0 flex flex-col gap-1">
-                      <div className="flex justify-between items-start gap-2">
-                        <p
-                          className={`text-sm ${notif.Leida ? "font-medium text-slate-700" : "font-semibold text-slate-900"}`}
-                        >
-                          {notif.Titulo}
+                {notifications.map((notif) => {
+                  const c =
+                    statusColors[notif.Tipo as StatusType] ?? statusColors.INFO;
+                  return (
+                    <div
+                      key={notif.Id}
+                      className={`flex items-start gap-3 p-4 border-b border-slate-50 last:border-0 transition-colors hover:bg-slate-50 ${
+                        notif.Leida ? "opacity-60" : c.rowBg
+                      }`}
+                    >
+                      <div className="shrink-0 mt-0.5">{getIcon(notif.Tipo)}</div>
+                      <div className="flex-1 min-w-0 flex flex-col gap-1">
+                        <div className="flex justify-between items-start gap-2">
+                          <p
+                            className={`text-sm ${notif.Leida ? "font-medium text-slate-700" : "font-semibold text-slate-900"}`}
+                          >
+                            {notif.Titulo}
+                          </p>
+                          <span className="text-[10px] text-slate-400 whitespace-nowrap pt-1">
+                            {formatDistanceToNow(new Date(notif.Fecha), {
+                              addSuffix: true,
+                              locale: es,
+                            })}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          {notif.Mensaje}
                         </p>
-                        <span className="text-[10px] text-slate-400 whitespace-nowrap pt-1">
-                          {formatDistanceToNow(new Date(notif.Fecha), {
-                            addSuffix: true,
-                            locale: es,
-                          })}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-600 leading-relaxed">
-                        {notif.Mensaje}
-                      </p>
 
-                      <div className="flex items-center gap-3 mt-2">
-                        {notif.AccionUrl && (
-                          <Link
-                            href={notif.AccionUrl}
-                            className="text-xs font-semibold text-[#67afc3] hover:underline"
-                            onClick={() => setIsOpen(false)}
-                          >
-                            Ver detalle
-                          </Link>
-                        )}
-                        {!notif.Leida && (
-                          <button
-                            onClick={() => markAsRead(notif.Id)}
-                            className="text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors"
-                          >
-                            Marcar leída
-                          </button>
-                        )}
+                        <div className="flex items-center gap-3 mt-2">
+                          {notif.AccionUrl && (
+                            <Link
+                              href={notif.AccionUrl}
+                              className="text-xs font-semibold text-[#67afc3] hover:underline"
+                              onClick={() => setIsOpen(false)}
+                            >
+                              Ver detalle
+                            </Link>
+                          )}
+                          {!notif.Leida && (
+                            <button
+                              onClick={() => markAsRead(notif.Id)}
+                              className="text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors"
+                            >
+                              Marcar leída
+                            </button>
+                          )}
+                        </div>
                       </div>
+                      {!notif.Leida && (
+                        <div
+                          className={`w-2 h-2 rounded-full ${c.dot} shrink-0 mt-2`}
+                        />
+                      )}
                     </div>
-                    {!notif.Leida && (
-                      <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-2" />
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </ScrollShadow>

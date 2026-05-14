@@ -14,7 +14,6 @@ export function NotificacionesTab() {
   } = useConfiguracion({ enableNotificaciones: true });
 
   const [notificaciones, setNotificaciones] = useState<Notificaciones>({
-    push: true,
     resumenDiario: false,
     stockBajo: true,
   });
@@ -24,8 +23,7 @@ export function NotificacionesTab() {
   }, [notificacionesData]);
 
   const hasChanges = notificacionesData
-    ? notificaciones.push !== notificacionesData.push ||
-      notificaciones.resumenDiario !== notificacionesData.resumenDiario ||
+    ? notificaciones.resumenDiario !== notificacionesData.resumenDiario ||
       notificaciones.stockBajo !== notificacionesData.stockBajo
     : false;
 
@@ -33,16 +31,8 @@ export function NotificacionesTab() {
     <div className="space-y-5 pt-4 pb-6">
       <VentasSection title="Canales de notificación" icon={Bell}>
         <ToggleRow
-          icon={Bell}
-          title="Notificaciones push"
-          description="Recibí alertas en tiempo real directamente en el navegador, sin necesidad de recargar la página"
-          isSelected={notificaciones.push}
-          onValueChange={(v) => setNotificaciones((p) => ({ ...p, push: v }))}
-          isDisabled={isSavingNotificaciones}
-        />
-        <ToggleRow
           icon={Mail}
-          title="Resumen diario por correo"
+          title="Resumen diario"
           description="Recibí un informe consolidado de la actividad del día: ventas, movimientos de caja y novedades"
           isSelected={notificaciones.resumenDiario}
           onValueChange={(v) => setNotificaciones((p) => ({ ...p, resumenDiario: v }))}
