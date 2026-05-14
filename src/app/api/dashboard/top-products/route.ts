@@ -106,6 +106,7 @@ export async function GET(req: NextRequest) {
       select: {
         Id: true,
         Descripcion: true,
+        Foto: true,
       },
     });
 
@@ -113,6 +114,14 @@ export async function GET(req: NextRequest) {
     const articuloMap = articulos.reduce(
       (acc, articulo) => {
         acc[articulo.Id.toString()] = articulo.Descripcion;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+
+    const fotoMap = articulos.reduce(
+      (acc, articulo) => {
+        if (articulo.Foto) acc[articulo.Id.toString()] = articulo.Foto;
         return acc;
       },
       {} as Record<string, string>,
@@ -128,7 +137,7 @@ export async function GET(req: NextRequest) {
         name: articuloMap[articuloId] || "Artículo desconocido",
         uds,
         pct: Number(pct.toFixed(1)),
-        imageUrl: `/api/productos/${articuloId}?foto=1`,
+        imageUrl: fotoMap[articuloId] ?? null,
       };
     });
 

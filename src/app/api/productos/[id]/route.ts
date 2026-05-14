@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 import { createError } from "@/lib/errors/types";
-import { getArticuloFoto } from "@/lib/services/productos";
 
 /**
  * GET /api/productos/[id]
@@ -24,6 +23,18 @@ export async function GET(
 
     if (!id) {
       throw createError.validation("ID requerido");
+    }
+
+    // ?foto=1 → redirigir a la URL pública de Supabase
+    if (req.nextUrl.searchParams.get("foto") === "1") {
+      const row = await prisma.articulo.findFirst({
+        where: { Id: Number(id), TenantId: BigInt(tenantId) },
+        select: { Foto: true },
+      });
+      if (!row?.Foto) {
+        throw createError.notFound("Foto no encontrada");
+      }
+      return NextResponse.redirect(row.Foto);
     }
 
     const producto = await prisma.articulo.findFirst({
