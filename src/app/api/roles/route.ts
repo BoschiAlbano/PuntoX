@@ -38,26 +38,48 @@ export async function GET(req: NextRequest) {
       permission: GET_PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
 
-    const roles = await prisma.perfiles.findMany({
-      where: { TenantId: BigInt(tenantId), EstaEliminado: false },
-      select: {
-        Id: true,
-        Descripcion: true,
-        Tipo: true,
-        PerfilUsuario: { select: { Usuario_Id: true } },
-        PerfilPermiso: {
-          select: {
-            Permiso: {
-              select: { Clave: true, Descripcion: true, EstaEliminado: true },
+    const { searchParams } = new URL(req.url);
+    const busqueda = searchParams.get("q")?.trim() || "";
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const limit = Math.min(
+      200,
+      Math.max(1, parseInt(searchParams.get("limit") || "10", 10)),
+    );
+    const skip = (page - 1) * limit;
+
+    const whereBase = {
+      TenantId: BigInt(tenantId),
+      EstaEliminado: false,
+      ...(busqueda
+        ? { Descripcion: { contains: busqueda, mode: "insensitive" as const } }
+        : {}),
+    };
+
+    const [total, roles] = await Promise.all([
+      prisma.perfiles.count({ where: whereBase }),
+      prisma.perfiles.findMany({
+        where: whereBase,
+        select: {
+          Id: true,
+          Descripcion: true,
+          Tipo: true,
+          PerfilUsuario: { select: { Usuario_Id: true } },
+          PerfilPermiso: {
+            select: {
+              Permiso: {
+                select: { Clave: true, Descripcion: true, EstaEliminado: true },
+              },
             },
           },
         },
-      },
-      orderBy: { Descripcion: "asc" },
-    });
+        orderBy: { Descripcion: "asc" },
+        skip,
+        take: limit,
+      }),
+    ]);
 
-    const response = roles.map((rol) => ({
-      id: Number(rol.Id),
+    const data = roles.map((rol) => ({
+      Id: Number(rol.Id),
       nombre: rol.Descripcion,
       tipo: mapRolTipo(rol.Tipo as string | undefined),
       descripcion: null as string | null,
@@ -67,7 +89,15 @@ export async function GET(req: NextRequest) {
       ).map((pp) => pp.Permiso?.Clave ?? ""),
     }));
 
-    return NextResponse.json({ roles: response }, { status: 200 });
+    const pagination = {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+
+    // Retornamos tanto `data` (estándar GenericCrud) como `roles` (compat useRoles/useUsuario)
+    return NextResponse.json({ data, roles: data, pagination }, { status: 200 });
   } catch (error) {
     if (error instanceof PermisoError) {
       return NextResponse.json(
@@ -173,7 +203,7 @@ export async function POST(req: NextRequest) {
     });
 
     const rolResponse = {
-      id: Number(created.rol.Id),
+      Id: Number(created.rol.Id),
       nombre: created.rol.Descripcion,
       tipo: mapRolTipo(created.rol.Tipo as string | undefined),
       descripcion: data.descripcion ?? null,
@@ -215,8 +245,13 @@ export async function PATCH(req: NextRequest) {
     });
     const tenantIdBigInt = BigInt(tenantId);
 
+    // Leer Id del body (convención GenericCrud) o del query param ?Id= / ?id= como fallback
+    const rawBody = await req.json().catch(() => null);
     const { searchParams } = new URL(req.url);
-    const rolIdParam = searchParams.get("id");
+    const rolIdParam =
+      rawBody?.Id != null
+        ? String(rawBody.Id)
+        : (searchParams.get("Id") ?? searchParams.get("id") ?? "");
 
     if (!rolIdParam) {
       return NextResponse.json(
@@ -271,8 +306,7 @@ export async function PATCH(req: NextRequest) {
       nombreNormalizado === "admin" ||
       nombreNormalizado === "superadmin";
 
-    const json = await req.json().catch(() => null);
-    const parsed = rolSchema.safeParse(json);
+    const parsed = rolSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
     }
@@ -414,7 +448,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const rolResponse = {
-      id: Number(updated.rol.Id),
+      Id: Number(updated.rol.Id),
       nombre: updated.rol.Descripcion,
       tipo: mapRolTipo(updated.rol.Tipo as string | undefined),
       descripcion: data.descripcion ?? null,
@@ -479,7 +513,8 @@ export async function DELETE(req: NextRequest) {
     const tenantIdBigInt = BigInt(tenantId);
 
     const { searchParams } = new URL(req.url);
-    const rolIdParam = searchParams.get("id");
+    // Soportar ?Id= (convención GenericCrud) y ?id= (legado) como fallback
+    const rolIdParam = searchParams.get("Id") ?? searchParams.get("id");
 
     if (!rolIdParam) {
       return NextResponse.json(

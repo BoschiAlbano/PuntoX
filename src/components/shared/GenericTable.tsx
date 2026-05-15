@@ -146,6 +146,8 @@ interface GenericTableProps<T> {
   }>;
   /** Contenido extra al lado de la barra de búsqueda (ej: filtro Bajo stock) */
   extraSearchContent?: React.ReactNode;
+  /** Contenido extra en el lado derecho de la barra de herramientas (ej: filtros de fecha) */
+  extraRightContent?: React.ReactNode;
   /** Mostrar opción "Todas" en el selector de filas */
   showAllOption?: boolean;
   /** Configuración de impresión */
@@ -202,6 +204,7 @@ export default function GenericTable<T extends { Id: number | string }>({
   onClearSelection,
   bulkActionsDropdown,
   extraSearchContent,
+  extraRightContent,
   printConfig,
   defaultVisibleUidsMobile,
   viewMode = "table",
@@ -323,7 +326,7 @@ export default function GenericTable<T extends { Id: number | string }>({
           </div>
 
           {/* Acciones - a la derecha, grilla 8px */}
-          <div className="flex items-center gap-2 sm:gap-3 sm:flex-shrink-0 order-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2 sm:gap-3 sm:flex-shrink-0 order-2 sm:order-3 w-full sm:w-auto">
             {onNewClick && (
               <button
                 onClick={onNewClick}
@@ -628,6 +631,12 @@ export default function GenericTable<T extends { Id: number | string }>({
               )}
             </div>
           </div>
+          {/* Filtros extra — fila propia en mobile (order-3), entre search y botones en desktop (sm:order-2) */}
+          {extraRightContent && (
+            <div className="order-3 sm:order-2 sm:flex-shrink-0 w-full sm:w-auto">
+              {extraRightContent}
+            </div>
+          )}
         </section>
 
         {/* Barra de selección masiva eliminada — acciones movidas al menú "Más opciones" */}

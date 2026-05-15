@@ -4,7 +4,8 @@ import React, { useState, useCallback } from "react";
 import GenericTable, { Column } from "@/components/shared/GenericTable";
 import { useCajasQuery, CajasFilters } from "@/hooks/useCajasQuery";
 import { Caja } from "@/hooks/useCaja";
-import { Chip } from "@heroui/react";
+import { Chip, Select, SelectItem, Input, Button } from "@heroui/react";
+import { CalendarDays, X } from "lucide-react";
 
 const columns: Column[] = [
   { uid: "status", name: "Estado", sortable: false, align: "center" },
@@ -34,6 +35,12 @@ const formatDate = (dateStr: string | null) => {
   });
 };
 
+const ESTADO_OPTIONS = [
+  { key: "todas", label: "Todas" },
+  { key: "abierta", label: "Abiertas" },
+  { key: "cerrada", label: "Cerradas" },
+];
+
 export default function Cajas() {
   const [filters, setFilters] = useState<CajasFilters>({
     page: 1,
@@ -45,6 +52,8 @@ export default function Cajas() {
   const { data, isLoading, isError, refetch, isFetching } =
     useCajasQuery(filters);
 
+  const hasDateFilter = !!(filters.fechaDesde || filters.fechaHasta);
+
   const handleSearchChange = (val: string) => {
     setFilters((prev) => ({ ...prev, q: val, page: 1 }));
   };
@@ -55,7 +64,7 @@ export default function Cajas() {
 
   const renderCell = useCallback((item: Caja, columnKey: React.Key) => {
     switch (columnKey) {
-      case "status":
+      case "status": {
         const isOpen = !item.FechaCierre;
         return (
           <Chip
@@ -67,6 +76,7 @@ export default function Cajas() {
             {isOpen ? "Abierta" : "Cerrada"}
           </Chip>
         );
+      }
       case "apertura":
         return (
           <div className="flex flex-col">
@@ -109,84 +119,104 @@ export default function Cajas() {
     }
   }, []);
 
-  return (
-    <div className="w-full flex-1 flex flex-col gap-4 p-4">
-      <div className="flex flex-wrap gap-4 items-end bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-gray-100 shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-800 mr-auto">Cajas</h1>
+  const filterControls = (
+    <div className="grid grid-cols-2 sm:flex sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+      {/* Estado — fila completa en mobile */}
+      <Select
+        className="col-span-2 sm:w-[130px]"
+        selectedKeys={[filters.estado || "todas"]}
+        onSelectionChange={(keys) => {
+          const val = Array.from(keys)[0] as string;
+          setFilters((prev) => ({ ...prev, estado: val as any, page: 1 }));
+        }}
+        classNames={{
+          trigger: "bg-white border border-slate-200 shadow-none h-9 min-h-9",
+          label: "text-[11px]",
+        }}
+        size="sm"
+      >
+        {ESTADO_OPTIONS.map((opt) => (
+          <SelectItem key={opt.key}>{opt.label}</SelectItem>
+        ))}
+      </Select>
 
-        {/* Filters */}
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-gray-600">Estado</label>
-          <select
-            className="border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#67afc3] outline-none bg-white min-w-[150px]"
-            value={filters.estado || "todas"}
-            onChange={(e) =>
-              setFilters((prev) => ({
-                ...prev,
-                estado: e.target.value as any,
-                page: 1,
-              }))
-            }
-          >
-            <option value="todas">Todas</option>
-            <option value="abierta">Abiertas</option>
-            <option value="cerrada">Cerradas</option>
-          </select>
-        </div>
+      {/* Desde — mitad en mobile */}
+      <Input
+        type="date"
+        className="sm:w-[150px]"
+        value={filters.fechaDesde || ""}
+        startContent={<CalendarDays size={13} className="text-slate-400 shrink-0" />}
+        onChange={(e) =>
+          setFilters((prev) => ({ ...prev, fechaDesde: e.target.value, page: 1 }))
+        }
+        classNames={{
+          inputWrapper: "bg-white border border-slate-200 shadow-none h-9 min-h-9 px-3 rounded-lg",
+        }}
+        size="sm"
+        aria-label="Desde"
+      />
 
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-gray-600">Desde</label>
-          <input
-            type="date"
-            className="border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#67afc3] outline-none bg-white"
-            value={filters.fechaDesde || ""}
-            onChange={(e) =>
-              setFilters((prev) => ({
-                ...prev,
-                fechaDesde: e.target.value,
-                page: 1,
-              }))
-            }
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-gray-600">Hasta</label>
-          <input
-            type="date"
-            className="border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#67afc3] outline-none bg-white"
-            value={filters.fechaHasta || ""}
-            onChange={(e) =>
-              setFilters((prev) => ({
-                ...prev,
-                fechaHasta: e.target.value,
-                page: 1,
-              }))
-            }
-          />
-        </div>
-      </div>
-
-      <div className="flex-1 flex flex-col min-h-0">
-        <GenericTable
-          data={data?.data || []}
-          columns={columns}
-          isLoading={isLoading}
-          isError={isError}
-          search={filters.q || ""}
-          onSearchChange={handleSearchChange}
-          page={filters.page || 1}
-          onPageChange={handlePageChange}
-          paginationMeta={
-            data?.meta || { total: 0, page: 1, limit: 10, totalPages: 0 }
+      {/* Hasta — mitad en mobile (+ botón limpiar cuando hay filtro activo) */}
+      <div className="flex items-center gap-2">
+        <Input
+          type="date"
+          className="flex-1 sm:w-[150px]"
+          value={filters.fechaHasta || ""}
+          startContent={<CalendarDays size={13} className="text-slate-400 shrink-0" />}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, fechaHasta: e.target.value, page: 1 }))
           }
-          isRefreshing={isFetching}
-          onRefresh={refetch}
-          renderCell={renderCell}
-          emptyText="No se encontraron cajas con los filtros seleccionados"
-          searchPlaceholder="Buscar por usuario..."
+          classNames={{
+            inputWrapper: "bg-white border border-slate-200 shadow-none h-9 min-h-9 px-3 rounded-lg",
+          }}
+          size="sm"
+          aria-label="Hasta"
         />
+        {hasDateFilter && (
+          <Button
+            size="sm"
+            variant="flat"
+            isIconOnly
+            onPress={() =>
+              setFilters((prev) => ({
+                ...prev,
+                fechaDesde: undefined,
+                fechaHasta: undefined,
+                page: 1,
+              }))
+            }
+            className="h-9 w-9 text-slate-500 bg-white border border-slate-200 shrink-0"
+            aria-label="Limpiar fechas"
+          >
+            <X size={14} />
+          </Button>
+        )}
       </div>
+    </div>
+  );
+
+  return (
+    <div className="w-full flex-1 flex flex-col">
+      <GenericTable
+        data={data?.data || []}
+        columns={columns}
+        isLoading={isLoading}
+        isError={isError}
+        search={filters.q || ""}
+        onSearchChange={handleSearchChange}
+        page={filters.page || 1}
+        onPageChange={handlePageChange}
+        paginationMeta={
+          data?.meta || { total: 0, page: 1, limit: 10, totalPages: 0 }
+        }
+        isRefreshing={isFetching}
+        onRefresh={refetch}
+        renderCell={renderCell}
+        emptyText="No se encontraron cajas con los filtros seleccionados"
+        searchPlaceholder="Buscar por usuario..."
+        extraRightContent={filterControls}
+        defaultVisibleUidsMobile={["status", "apertura", "cierre"]}
+      />
     </div>
   );
 }

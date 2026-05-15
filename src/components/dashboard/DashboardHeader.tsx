@@ -18,7 +18,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Search,
-  HelpCircle,
 } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
 import Link from "next/link";
@@ -344,17 +343,6 @@ function DashboardHeaderComponent({
 
           {/* Notificaciones */}
           {hasUserSession ? <NotificacionesDropdown /> : null}
-
-          {/* Help / Support */}
-          <button
-            aria-label="Centro de ayuda"
-            className="hidden sm:flex items-center justify-center h-8 w-8 rounded-lg cursor-pointer
-                       text-(--nav-btn-text) hover:text-(--nav-btn-hover-text) hover:bg-(--nav-btn-hover-bg)
-                       transition-all duration-200 shrink-0 focus-visible:outline-none
-                       focus-visible:ring-2 focus-visible:ring-[#67afc3]/40"
-          >
-            <HelpCircle size={16} strokeWidth={1.8} />
-          </button>
 
           {/* Separador */}
           <div

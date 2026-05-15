@@ -12,7 +12,10 @@ import SessionProviderComponent from "../auth/sessionProvider";
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <ToastProvider />
+      <ToastProvider
+        placement="bottom-right"
+        regionProps={{ className: "!z-[99999]" }}
+      />
       <HeroUIProvider disableAnimation={false}>
         <QueryProvider>
           <I18nProvider locale="es-AR">

@@ -5,7 +5,9 @@ import { handleError } from "@/lib/auth/errorHandler";
 import { type TipoPerfil } from "@/lib/constants/comprobantes";
 
 export type Rol = {
+  // Mantener id (minúscula) para compatibilidad con useUsuario y otros consumidores
   id: number;
+  Id?: number; // alias mayúscula que devuelve la API nueva
   nombre: string;
   usuarios: number;
   tipo: TipoPerfil;
@@ -27,9 +29,16 @@ export type UpdateRolData = {
 
 // Fetchers
 const fetchRoles = async () => {
-  const response = await fetch("/api/roles");
+  const response = await fetch("/api/roles?limit=200");
   if (!response.ok) throw new Error("Error al cargar roles");
-  return await response.json();
+  const json = await response.json();
+  // La API devuelve { data: [...], roles: [...], pagination: {...} }
+  // Normalizamos cada rol para incluir `id` (minúscula) para backward compat
+  const list: Rol[] = (json.roles || json.data || []).map((r: any) => ({
+    ...r,
+    id: r.id ?? r.Id,
+  }));
+  return { roles: list };
 };
 
 const createRol = async (data: CreateRolData) => {
@@ -46,10 +55,11 @@ const createRol = async (data: CreateRolData) => {
 };
 
 const updateRol = async ({ id, data }: UpdateRolData) => {
-  const response = await fetch(`/api/roles?id=${id}`, {
+  // La API ahora lee Id del body (convención GenericCrud)
+  const response = await fetch(`/api/roles`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify({ ...data, Id: id }),
   });
   if (!response.ok) {
     const error = await response.json();
@@ -59,7 +69,8 @@ const updateRol = async ({ id, data }: UpdateRolData) => {
 };
 
 const deleteRol = async (id: number) => {
-  const response = await fetch(`/api/roles?id=${id}`, {
+  // La API ahora usa ?Id= (mayúscula, convención GenericCrud)
+  const response = await fetch(`/api/roles?Id=${id}`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
   });

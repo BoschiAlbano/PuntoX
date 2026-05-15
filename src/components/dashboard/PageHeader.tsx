@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { motion } from "framer-motion";
 
 interface PageHeaderProps {
@@ -9,19 +10,22 @@ interface PageHeaderProps {
   accentTitle?: string;
   /** Descripción secundaria */
   description?: string;
+  /** Contenido a renderizar a la derecha del header */
+  actions?: React.ReactNode;
 }
 
 export function PageHeader({
   title,
   accentTitle,
   description,
+  actions,
 }: PageHeaderProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
-      className="flex items-center gap-3 px-4 sm:px-6 pt-3 sm:pt-4 shrink-0"
+      className="flex items-center justify-between gap-x-3 gap-y-2 flex-wrap px-4 sm:px-6 pt-3 sm:pt-4 shrink-0"
     >
       <div className="flex flex-col">
         <h1 className="text-lg sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">
@@ -38,6 +42,7 @@ export function PageHeader({
           </p>
         )}
       </div>
+      {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
     </motion.div>
   );
 }

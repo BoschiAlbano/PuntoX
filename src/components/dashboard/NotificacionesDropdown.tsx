@@ -79,8 +79,6 @@ export function NotificacionesDropdown() {
           {unreadCount > 0 ? (
             <Badge
               content={unreadCount > 99 ? "99+" : unreadCount}
-              color="danger"
-              shape="circle"
               placement="top-right"
               size="sm"
             >
@@ -143,7 +141,9 @@ export function NotificacionesDropdown() {
                         notif.Leida ? "opacity-60" : c.rowBg
                       }`}
                     >
-                      <div className="shrink-0 mt-0.5">{getIcon(notif.Tipo)}</div>
+                      <div className="shrink-0 mt-0.5">
+                        {getIcon(notif.Tipo)}
+                      </div>
                       <div className="flex-1 min-w-0 flex flex-col gap-1">
                         <div className="flex justify-between items-start gap-2">
                           <p

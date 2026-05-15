@@ -1,5 +1,4 @@
 import { useCaja } from "@/hooks/useCaja";
-import { useGastos } from "@/hooks/useGastos";
 import { ModalAbrirCaja } from "@/components/caja/ModalAbrirCaja";
 import {
   Button,
@@ -20,20 +19,15 @@ import {
   TableHeader,
   TableRow,
   useDisclosure,
-  Select,
-  SelectItem,
   addToast,
 } from "@heroui/react";
 import {
   Eye,
   FileText,
   Lock,
-  Plus,
   TrendingDown,
   TrendingUp,
   Unlock,
-  Pencil,
-  Trash2,
   DollarSign,
   Banknote,
   CreditCard,
@@ -43,13 +37,12 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { LoadingComponent } from "../loading/loading";
 import { handleNumberInput } from "@/lib/input/number";
 import {
   TIPO_MOVIMIENTO,
   TIPO_PAGO,
-  TIPO_PAGO_LABELS,
 } from "@/lib/constants/comprobantes";
 import { useReactToPrint } from "react-to-print";
 import { TicketImpresion } from "../ventas/TicketImpresion";
@@ -71,22 +64,19 @@ const movimientosColumns: Column[] = [
   { uid: "acciones", name: "Acciones", sortable: false, align: "center" },
 ];
 
-const gastosColumns: Column[] = [
-  { uid: "descripcion", name: "Descripción", sortable: false },
-  { uid: "concepto", name: "Concepto", sortable: false },
-  { uid: "formaPago", name: "Forma de Pago", sortable: false },
-  { uid: "fecha", name: "Fecha", sortable: false },
-  {
-    uid: "monto",
-    name: "Monto",
-    sortable: false,
-    align: "end",
-    printAlign: "right",
-  },
-  { uid: "acciones", name: "Acciones", sortable: false, align: "center" },
-];
-
-export default function CajaActual() {
+export default function CajaActual({
+  isCerrarOpen: propIsCerrarOpen,
+  onCerrarChange: propOnCerrarChange,
+  isAbrirOpen: propIsAbrirOpen,
+  onAbrirChange: propOnAbrirChange,
+  onCajaStatusChange,
+}: {
+  isCerrarOpen?: boolean;
+  onCerrarChange?: () => void;
+  isAbrirOpen?: boolean;
+  onAbrirChange?: () => void;
+  onCajaStatusChange?: (isAbierta: boolean) => void;
+}) {
   const {
     cajaActual,
     isLoading,
@@ -103,84 +93,30 @@ export default function CajaActual() {
     enableResumen: true,
   });
 
-  const {
-    conceptosGasto,
-    agregarGasto,
-    editarGasto,
-    eliminarGasto,
-    agregarConceptoGasto,
-    isAddingGasto,
-    isEditingGasto,
-    isDeletingGasto,
-    isAddingConcepto,
-  } = useGastos({ enableConceptos: true });
-
   const { configuracion } = useConfiguracion({
     enableConfiguracion: true,
   });
 
   const {
-    isOpen: isAbrirOpen,
-    onOpen: onAbrirOpen,
-    onOpenChange: onAbrirChange,
+    isOpen: _isAbrirOpen,
+    onOpenChange: _onAbrirChange,
   } = useDisclosure();
+  const isAbrirOpen = propIsAbrirOpen ?? _isAbrirOpen;
+  const onAbrirChange = propOnAbrirChange ?? _onAbrirChange;
 
-  // Gastos
-  const {
-    isOpen: isGastoOpen,
-    onOpen: onGastoOpen,
-    onOpenChange: onGastoChange,
-  } = useDisclosure();
-  const [nuevoGasto, setNuevoGasto] = useState<{
-    conceptoId: string;
-    descripcion: string;
-    pagos: { tipoPago: number; monto: string }[];
-  }>({
-    conceptoId: "",
-    descripcion: "",
-    pagos: [],
-  });
-  const [editingGastoId, setEditingGastoId] = useState<number | null>(null);
+  // Notificar al padre cuando cambia el estado de la caja
+  useEffect(() => {
+    onCajaStatusChange?.(!!isCajaAbierta);
+  }, [isCajaAbierta, onCajaStatusChange]);
 
-  // Nuevo concepto
+  // Cerrar caja — controlado desde el padre si se pasan props
   const {
-    isOpen: isConceptoOpen,
-    onOpen: onConceptoOpen,
-    onOpenChange: onConceptoChange,
+    isOpen: _isCerrarOpen,
+    onOpenChange: _onCerrarChange,
   } = useDisclosure();
-  const [nuevoConcepto, setNuevoConcepto] = useState("");
-
-  // Cerrar caja
-  const {
-    isOpen: isCerrarOpen,
-    onOpen: onCerrarOpen,
-    onOpenChange: onCerrarChange,
-  } = useDisclosure();
+  const isCerrarOpen = propIsCerrarOpen ?? _isCerrarOpen;
+  const onCerrarChange = propOnCerrarChange ?? _onCerrarChange;
   const [montoCierre, setMontoCierre] = useState("");
-
-  // Eliminar Gasto Confirmation
-  const {
-    isOpen: isDeleteOpen,
-    onOpen: onDeleteOpen,
-    onOpenChange: onDeleteChange,
-  } = useDisclosure();
-  const [gastoToDelete, setGastoToDelete] = useState<number | null>(null);
-
-  const handleAgregarConcepto = async () => {
-    if (!nuevoConcepto) return;
-    try {
-      await agregarConceptoGasto(nuevoConcepto);
-      onConceptoChange();
-      setNuevoConcepto("");
-      addToast({ title: "Concepto creado", color: "success" });
-    } catch (err) {
-      addToast({
-        title: "Error",
-        description: "No se pudo crear el concepto",
-        color: "danger",
-      });
-    }
-  };
 
   // Detalle Comprobante Modal
   const {
@@ -200,7 +136,6 @@ export default function CajaActual() {
   });
 
   const movimientos = cajaActual?.Movimiento || [];
-  const gastos = cajaActual?.Gasto || [];
 
   // Movimientos: búsqueda y paginación local
   const [movSearch, setMovSearch] = useState("");
@@ -235,110 +170,44 @@ export default function CajaActual() {
     [filteredMovimientos.length, movPage],
   );
 
-  // Gastos: búsqueda y paginación local
-  const [gastoSearch, setGastoSearch] = useState("");
-  const [gastoPage, setGastoPage] = useState(1);
-  const GASTO_LIMIT = 10;
-
-  const filteredGastos = useMemo(() => {
-    if (!gastoSearch.trim()) return gastos;
-    const q = gastoSearch.toLowerCase();
-    return gastos.filter(
-      (g: any) =>
-        g.Descripcion?.toLowerCase().includes(q) ||
-        g.ConceptoGastos?.Descripcion?.toLowerCase().includes(q),
+  // Cálculos para el cierre de caja
+  const totalEntradasDia = useMemo(() => {
+    if (!cajaActual) return 0;
+    return (
+      Number(cajaActual.TotalEntradaEfectivo || 0) +
+      Number(cajaActual.TotalEntradaTarjeta || 0) +
+      Number(cajaActual.TotalEntradaTransf || 0) +
+      Number(cajaActual.TotalEntradaCheque || 0) +
+      Number(cajaActual.TotalEntradaCtaCte || 0)
     );
-  }, [gastos, gastoSearch]);
+  }, [cajaActual]);
 
-  const paginatedGastos = useMemo(() => {
-    const start = (gastoPage - 1) * GASTO_LIMIT;
-    return filteredGastos.slice(start, start + GASTO_LIMIT);
-  }, [filteredGastos, gastoPage]);
+  const totalSalidasDia = useMemo(() => {
+    if (!cajaActual) return 0;
+    return (
+      Number(cajaActual.TotalSalidaEfectivo || 0) +
+      Number(cajaActual.TotalSalidaTarjeta || 0) +
+      Number(cajaActual.TotalSalidaTransf || 0) +
+      Number(cajaActual.TotalSalidaCheque || 0) +
+      Number(cajaActual.TotalSalidaCtaCte || 0)
+    );
+  }, [cajaActual]);
 
-  const gastoPaginationMeta = useMemo(
-    () => ({
-      total: filteredGastos.length,
-      page: gastoPage,
-      limit: GASTO_LIMIT,
-      totalPages: Math.max(1, Math.ceil(filteredGastos.length / GASTO_LIMIT)),
-    }),
-    [filteredGastos.length, gastoPage],
+  // Ganancia neta del día = total entradas - total salidas
+  const gananciaDelDia = useMemo(
+    () => totalEntradasDia - totalSalidasDia,
+    [totalEntradasDia, totalSalidasDia],
   );
 
-  const handleAgregarGasto = async () => {
-    try {
-      const pagosFormatted = nuevoGasto.pagos.map((p) => ({
-        tipoPago: p.tipoPago,
-        monto: parseFloat(p.monto.replace(",", ".")),
-      }));
-
-      if (editingGastoId) {
-        await editarGasto({
-          id: editingGastoId,
-          conceptoId: Number(nuevoGasto.conceptoId),
-          descripcion: nuevoGasto.descripcion,
-          pagos: pagosFormatted,
-        });
-        addToast({ title: "Gasto actualizado", color: "success" });
-      } else {
-        await agregarGasto({
-          conceptoId: Number(nuevoGasto.conceptoId),
-          descripcion: nuevoGasto.descripcion,
-          pagos: pagosFormatted,
-        });
-        addToast({ title: "Gasto registrado", color: "success" });
-      }
-
-      onGastoChange();
-      setNuevoGasto({ conceptoId: "", descripcion: "", pagos: [] });
-      setEditingGastoId(null);
-    } catch (error) {
-      console.error(error);
-      addToast({
-        title: "Error",
-        description: editingGastoId
-          ? "No se pudo actualizar el gasto"
-          : "No se pudo registrar el gasto",
-        color: "danger",
-      });
-    }
-  };
-
-  const prepareEditGasto = (gasto: any) => {
-    setEditingGastoId(gasto.Id);
-
-    // Mapeamos los pagos si existen
-    const pagos =
-      gasto.FormaPago?.map((fp: any) => ({
-        tipoPago: fp.TipoPago,
-        // Convertimos el monto a string y reemplazamos punto por coma para el input
-        monto: fp.Monto.toString().replace(".", ","),
-      })) || [];
-
-    setNuevoGasto({
-      conceptoId: String(gasto.ConceptoGastoId),
-      descripcion: gasto.Descripcion,
-      pagos: pagos,
-    });
-    onGastoOpen();
-  };
-
-  const handleEliminarGasto = async () => {
-    if (!gastoToDelete) return;
-    try {
-      await eliminarGasto(gastoToDelete);
-      addToast({ title: "Gasto eliminado", color: "success" });
-      onDeleteChange();
-      setGastoToDelete(null);
-    } catch (error) {
-      console.error(error);
-      addToast({
-        title: "Error",
-        description: "No se pudo eliminar el gasto",
-        color: "danger",
-      });
-    }
-  };
+  // Efectivo esperado en el cajón = apertura + entradas efectivo - salidas efectivo
+  const efectivoEsperado = useMemo(() => {
+    if (!cajaActual) return 0;
+    return (
+      Number(cajaActual.MontoInicial || 0) +
+      Number(cajaActual.TotalEntradaEfectivo || 0) -
+      Number(cajaActual.TotalSalidaEfectivo || 0)
+    );
+  }, [cajaActual]);
 
   const handleViewTicket = async (comprobanteId: number) => {
     setIsLoadingTicket(true);
@@ -422,72 +291,6 @@ export default function CajaActual() {
     [handleViewTicket],
   );
 
-  const renderGastoCell = useCallback(
-    (gasto: any, columnKey: React.Key) => {
-      switch (columnKey) {
-        case "descripcion":
-          return (
-            <span className="text-sm font-medium text-gray-800">
-              {gasto.Descripcion}
-            </span>
-          );
-        case "concepto":
-          return (
-            <Chip size="sm" variant="flat" color="danger" className="text-xs">
-              {gasto.ConceptoGastos?.Descripcion || "Gasto"}
-            </Chip>
-          );
-        case "formaPago":
-          return (
-            <div className="flex flex-wrap gap-1">
-              {gasto.FormaPago?.map((p: any) => (
-                <Chip key={p.Id} size="sm" variant="flat" className="text-xs">
-                  {TIPO_PAGO_LABELS[p.TipoPago]}
-                </Chip>
-              ))}
-            </div>
-          );
-        case "fecha":
-          return formatDate(gasto.Fecha);
-        case "monto":
-          return (
-            <span className="font-semibold text-danger">
-              -{formatMoney(gasto.Monto)}
-            </span>
-          );
-        case "acciones":
-          return (
-            <div className="flex gap-1 justify-center">
-              <Button
-                isIconOnly
-                size="sm"
-                variant="light"
-                color="warning"
-                onPress={() => prepareEditGasto(gasto)}
-              >
-                <Pencil size={16} />
-              </Button>
-              <Button
-                isIconOnly
-                size="sm"
-                variant="light"
-                color="danger"
-                onPress={() => {
-                  setGastoToDelete(gasto.Id);
-                  onDeleteOpen();
-                }}
-              >
-                <Trash2 size={16} />
-              </Button>
-            </div>
-          );
-        default:
-          return null;
-      }
-    },
-    [prepareEditGasto],
-  );
-
   const formatMoney = (val: number) =>
     val.toLocaleString("es-AR", {
       style: "currency",
@@ -537,20 +340,6 @@ export default function CajaActual() {
           renderCell={() => null}
         />
 
-        {/* Gastos — skeleton de tabla */}
-        <Skeleton className="h-6 w-32 rounded-lg" />
-        <GenericTable
-          data={[]}
-          columns={gastosColumns}
-          isLoading={true}
-          isError={false}
-          search=""
-          onSearchChange={() => {}}
-          page={1}
-          onPageChange={() => {}}
-          paginationMeta={{ total: 0, page: 1, limit: 10, totalPages: 1 }}
-          renderCell={() => null}
-        />
       </div>
     );
   }
@@ -600,15 +389,6 @@ export default function CajaActual() {
             Debés abrir la caja para comenzar a registrar operaciones.
           </p>
         </div>
-        <Button
-          color="primary"
-          size="lg"
-          endContent={<Unlock className="w-4 h-4" />}
-          onPress={onAbrirOpen}
-          className="font-semibold"
-        >
-          Abrir Caja
-        </Button>
 
         <ModalAbrirCaja open={isAbrirOpen} onClose={onAbrirChange} />
       </div>
@@ -669,8 +449,6 @@ export default function CajaActual() {
 
   return (
     <div className="flex flex-col gap-6 pb-4">
-      {/* ... Entradas/Salidas/Tables code preserved ... */}
-
       {/* Entradas del dia */}
       <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
         <TrendingUp size={18} className="text-green-500" />
@@ -680,46 +458,46 @@ export default function CajaActual() {
         <StatCard
           title="Efectivo"
           value={formatMoney(cajaActual.TotalEntradaEfectivo)}
-          subtitle="Entradas del día"
           icon={Banknote}
-          colorScheme="white"
-          delay={0.1}
+          colorScheme="green"
+          chartType="bar"
+          delay={0.05}
         />
 
         <StatCard
           title="Tarjeta"
           value={formatMoney(cajaActual.TotalEntradaTarjeta)}
-          subtitle="Entradas del día"
           icon={CreditCard}
-          colorScheme="white"
+          colorScheme="green"
+          chartType="bar"
           delay={0.1}
         />
 
         <StatCard
           title="Transferencia"
           value={formatMoney(cajaActual.TotalEntradaTransf)}
-          subtitle="Entradas del día"
           icon={ArrowRightLeft}
-          colorScheme="white"
-          delay={0.1}
+          colorScheme="green"
+          chartType="bar"
+          delay={0.15}
         />
 
         <StatCard
           title="Cheque"
           value={formatMoney(cajaActual.TotalEntradaCheque)}
-          subtitle="Entradas del día"
           icon={Wallet}
-          colorScheme="white"
-          delay={0.1}
+          colorScheme="green"
+          chartType="bar"
+          delay={0.2}
         />
 
         <StatCard
           title="Cta. Corriente"
           value={formatMoney(cajaActual.TotalEntradaCtaCte)}
-          subtitle="Entradas del día"
           icon={Wallet}
-          colorScheme="white"
-          delay={0.1}
+          colorScheme="green"
+          chartType="bar"
+          delay={0.25}
         />
       </div>
 
@@ -732,46 +510,46 @@ export default function CajaActual() {
         <StatCard
           title="Efectivo"
           value={formatMoney(cajaActual.TotalSalidaEfectivo)}
-          subtitle="Salidas del día"
           icon={Banknote}
-          colorScheme="white"
-          delay={0.1}
+          colorScheme="red"
+          chartType="line"
+          delay={0.05}
         />
 
         <StatCard
           title="Tarjeta"
           value={formatMoney(cajaActual.TotalSalidaTarjeta)}
-          subtitle="Salidas del día"
           icon={CreditCard}
-          colorScheme="white"
+          colorScheme="red"
+          chartType="line"
           delay={0.1}
         />
 
         <StatCard
           title="Transferencia"
           value={formatMoney(cajaActual.TotalSalidaTransf)}
-          subtitle="Salidas del día"
           icon={ArrowRightLeft}
-          colorScheme="white"
-          delay={0.1}
+          colorScheme="red"
+          chartType="line"
+          delay={0.15}
         />
 
         <StatCard
           title="Cheque"
           value={formatMoney(cajaActual.TotalSalidaCheque)}
-          subtitle="Salidas del día"
           icon={Wallet}
-          colorScheme="white"
-          delay={0.1}
+          colorScheme="red"
+          chartType="line"
+          delay={0.2}
         />
 
         <StatCard
           title="Cta. Corriente"
           value={formatMoney(cajaActual.TotalSalidaCtaCte)}
-          subtitle="Salidas del día"
           icon={Wallet}
-          colorScheme="white"
-          delay={0.1}
+          colorScheme="red"
+          chartType="line"
+          delay={0.25}
         />
       </div>
 
@@ -801,488 +579,228 @@ export default function CajaActual() {
         renderCell={renderMovCell}
         emptyText="No hay movimientos registrados."
         printConfig={{ title: "Movimientos de Caja" }}
-        extraSearchContent={
-          <Button
-            size="sm"
-            onPress={onCerrarOpen}
-            className="bg-[#69b0c3] text-white border border-[#69b0c3] font-bold px-4 h-9 rounded-xl gap-2 hover:bg-[#69b0c3]/80 hover:border-[#69b0c3] transition-all"
-            startContent={<Lock size={15} strokeWidth={2.5} />}
-          >
-            Cerrar Caja
-          </Button>
-        }
       />
-
-      {/* Gastos Table Section */}
-      <div className="flex flex-col gap-2">
-        <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
-          <TrendingDown size={18} className="text-[#69b0c3]" />
-          Gastos
-        </h2>
-      </div>
-      <GenericTable
-        data={paginatedGastos}
-        columns={gastosColumns}
-        isLoading={false}
-        isError={false}
-        search={gastoSearch}
-        onSearchChange={(val) => {
-          setGastoSearch(val);
-          setGastoPage(1);
-        }}
-        searchPlaceholder="Buscar gasto..."
-        page={gastoPage}
-        onPageChange={setGastoPage}
-        paginationMeta={gastoPaginationMeta}
-        isRefreshing={isFetching}
-        onRefresh={refetch}
-        renderCell={renderGastoCell}
-        emptyText="No hay gastos registrados."
-        printConfig={{ title: "Gastos de Caja" }}
-        onNewClick={() => {
-          setEditingGastoId(null);
-          setNuevoGasto({ conceptoId: "", descripcion: "", pagos: [] });
-          onGastoOpen();
-        }}
-        newButtonText="Nuevo Gasto"
-      />
-
-      {/* Modal Nuevo Gasto */}
-      <Modal
-        isOpen={isGastoOpen}
-        onOpenChange={onGastoChange}
-        size="2xl"
-        classNames={{
-          backdrop: "bg-black/50 backdrop-blur-sm z-[999]",
-          wrapper: "z-[1000]",
-        }}
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader>
-                {editingGastoId ? "Editar Gasto" : "Registrar Gasto"}
-              </ModalHeader>
-              <ModalBody>
-                <div className="flex gap-2 items-end">
-                  <Select
-                    label="Concepto"
-                    placeholder="Seleccione un concepto"
-                    selectedKeys={
-                      nuevoGasto.conceptoId ? [nuevoGasto.conceptoId] : []
-                    }
-                    onChange={(e) =>
-                      setNuevoGasto({
-                        ...nuevoGasto,
-                        conceptoId: e.target.value,
-                      })
-                    }
-                    className="flex-1"
-                  >
-                    {conceptosGasto?.map((c) => (
-                      <SelectItem key={c.Id.toString()}>
-                        {c.Descripcion}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                  <Button
-                    isIconOnly
-                    color="primary"
-                    variant="flat"
-                    onPress={onConceptoOpen}
-                  >
-                    <Plus size={20} />
-                  </Button>
-                </div>
-                <Input
-                  label="Descripción"
-                  placeholder="Detalle del gasto"
-                  value={nuevoGasto.descripcion}
-                  onValueChange={(val) =>
-                    setNuevoGasto({ ...nuevoGasto, descripcion: val })
-                  }
-                />
-
-                <div className="border p-4 rounded-xl border-gray-200 bg-gray-50 flex flex-col gap-3">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold text-gray-600">
-                      Formas de Pago
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="light"
-                      color="primary"
-                      startContent={<Plus size={16} />}
-                      onPress={() => {
-                        const usedTypes = new Set(
-                          nuevoGasto.pagos.map((p) => p.tipoPago),
-                        );
-                        const allTypes = Object.values(TIPO_PAGO);
-                        const nextType = allTypes.find(
-                          (t) => !usedTypes.has(t),
-                        );
-
-                        if (nextType) {
-                          setNuevoGasto({
-                            ...nuevoGasto,
-                            pagos: [
-                              ...nuevoGasto.pagos,
-                              { tipoPago: nextType, monto: "" },
-                            ],
-                          });
-                        }
-                      }}
-                      isDisabled={
-                        nuevoGasto.pagos.length >= Object.keys(TIPO_PAGO).length
-                      }
-                    >
-                      Agregar Pago
-                    </Button>
-                  </div>
-
-                  {nuevoGasto.pagos.map((pago, index) => (
-                    <div key={index} className="flex gap-2 items-center">
-                      <Select
-                        label="Tipo"
-                        className="w-1/3"
-                        size="sm"
-                        selectedKeys={[pago.tipoPago.toString()]}
-                        onChange={(e) => {
-                          const newPagos = [...nuevoGasto.pagos];
-                          newPagos[index].tipoPago = Number(e.target.value);
-                          setNuevoGasto({ ...nuevoGasto, pagos: newPagos });
-                        }}
-                      >
-                        {Object.entries(TIPO_PAGO_LABELS).map(
-                          ([key, label]) => {
-                            const value = Number(key);
-                            const isSelected = nuevoGasto.pagos.some(
-                              (p) => p.tipoPago === value,
-                            );
-                            const isCurrentValue = pago.tipoPago === value;
-
-                            return (
-                              <SelectItem
-                                key={key}
-                                isDisabled={isSelected && !isCurrentValue}
-                              >
-                                {label}
-                              </SelectItem>
-                            );
-                          },
-                        )}
-                      </Select>
-                      <Input
-                        label="Monto"
-                        size="sm"
-                        placeholder="0.00"
-                        value={pago.monto}
-                        onValueChange={(val) => {
-                          const newPagos = [...nuevoGasto.pagos];
-                          handleNumberInput(val, (v) => {
-                            newPagos[index].monto = v;
-                            setNuevoGasto({ ...nuevoGasto, pagos: newPagos });
-                          });
-                        }}
-                        className="flex-1"
-                      />
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        color="danger"
-                        variant="light"
-                        onPress={() => {
-                          const newPagos = nuevoGasto.pagos.filter(
-                            (_, i) => i !== index,
-                          );
-                          setNuevoGasto({ ...nuevoGasto, pagos: newPagos });
-                        }}
-                      >
-                        <TrendingDown size={16} />
-                      </Button>
-                    </div>
-                  ))}
-
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                    <span className="font-semibold">Total:</span>
-                    <span className="font-bold text-lg text-primary">
-                      {formatMoney(
-                        nuevoGasto.pagos.reduce(
-                          (acc, p) =>
-                            acc + (parseFloat(p.monto.replace(",", ".")) || 0),
-                          0,
-                        ),
-                      )}
-                    </span>
-                  </div>
-                </div>
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" color="danger" onPress={onClose}>
-                  Cancelar
-                </Button>
-                <Button
-                  color="primary"
-                  onPress={handleAgregarGasto}
-                  isLoading={isAddingGasto || isEditingGasto}
-                  isDisabled={
-                    nuevoGasto.pagos.length === 0 ||
-                    !nuevoGasto.conceptoId ||
-                    !nuevoGasto.descripcion ||
-                    nuevoGasto.pagos.some(
-                      (p) =>
-                        !p.monto || parseFloat(p.monto.replace(",", ".")) <= 0,
-                    )
-                  }
-                >
-                  {editingGastoId ? "Actualizar" : "Guardar"}
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
-
-      {/* Modal Nuevo Concepto */}
-      <Modal
-        isOpen={isConceptoOpen}
-        onOpenChange={onConceptoChange}
-        size="sm"
-        classNames={{
-          backdrop: "bg-black/50 backdrop-blur-sm z-[999]",
-          wrapper: "z-[1000]",
-        }}
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader>Nuevo Concepto de Gasto</ModalHeader>
-              <ModalBody>
-                <Input
-                  label="Descripción"
-                  placeholder="Ej: Limpieza, Insumos..."
-                  value={nuevoConcepto}
-                  onValueChange={setNuevoConcepto}
-                />
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  Cancelar
-                </Button>
-                <Button
-                  color="primary"
-                  onPress={handleAgregarConcepto}
-                  isLoading={isAddingConcepto}
-                >
-                  Guardar
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={isDeleteOpen}
-        onOpenChange={onDeleteChange}
-        size="sm"
-        classNames={{
-          backdrop: "bg-black/50 backdrop-blur-sm z-[999]",
-          wrapper: "z-[1000]",
-        }}
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader>Eliminar Gasto</ModalHeader>
-              <ModalBody>
-                <p>¿Estás seguro de que deseas eliminar este gasto?</p>
-                <p className="text-xs text-gray-500">
-                  Esta acción revertirá los movimientos en la caja.
-                </p>
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  Cancelar
-                </Button>
-                <Button
-                  color="danger"
-                  onPress={handleEliminarGasto}
-                  isLoading={isDeletingGasto}
-                >
-                  Eliminar
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
 
       {/* Modal Cerrar Caja */}
       <Modal
         isOpen={isCerrarOpen}
         onOpenChange={onCerrarChange}
         backdrop="opaque"
+        placement="center"
         classNames={{
-          backdrop: "bg-slate-900/40 backdrop-blur-md z-[999]",
+          backdrop: "bg-slate-900/50 backdrop-blur-md z-[999]",
           wrapper: "z-[1000]",
-          base: "font-sans bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 max-w-md",
-          header: "border-b border-slate-100/60 pb-4 pt-6 px-6",
+          base: "font-sans bg-white rounded-[24px] shadow-2xl border border-slate-100 max-w-md",
+          header: "border-b border-slate-100 pb-4 pt-5 px-6",
           body: "py-5 px-6",
-          footer: "border-t border-slate-100/60 py-4 px-6",
-          closeButton: "hover:bg-slate-100 text-slate-400 mt-2 mr-2",
+          footer: "border-t border-slate-100 py-4 px-6",
+          closeButton:
+            "hover:bg-slate-100 text-slate-400 mt-2 mr-2 rounded-xl",
         }}
       >
         <ModalContent>
-          {(onClose) => (
-            <>
-              {/* ─── Header ──────────────────────────────────────────── */}
-              <ModalHeader className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-linear-to-br from-rose-50 to-rose-100 border border-rose-200 text-rose-500">
-                  <Lock size={18} strokeWidth={2.5} />
-                </div>
-                <div>
-                  <span className="text-lg font-extrabold text-slate-800 leading-none">
-                    Cierre de Caja
-                  </span>
-                  <p className="text-[10px] text-slate-400 font-medium mt-0.5">
-                    {new Date().toLocaleDateString("es-AR", {
-                      weekday: "long",
-                      day: "2-digit",
-                      month: "long",
-                    })}
-                  </p>
-                </div>
-              </ModalHeader>
+          {(onClose) => {
+            const montoIngresado =
+              parseFloat(montoCierre.replace(",", ".")) || 0;
+            const diferencia = montoCierre.trim()
+              ? montoIngresado - efectivoEsperado
+              : null;
 
-              {/* ─── Body ────────────────────────────────────────────── */}
-              <ModalBody>
-                <div className="space-y-4">
-                  {/* Métricas del día */}
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {/* Monto Inicial */}
-                    <div className="flex items-center gap-3 p-3.5 bg-slate-50 border border-slate-100 rounded-2xl">
-                      <div className="p-2 rounded-xl bg-slate-100 text-slate-500 shrink-0">
-                        <Coins size={15} strokeWidth={2} />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">
-                          Apertura
-                        </p>
+            return (
+              <>
+                {/* ─── Header ──────────────────────────────────────────── */}
+                <ModalHeader className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-[#67afc3]/10 border border-[#67afc3]/20 text-[#67afc3] shrink-0">
+                    <Lock size={18} strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <span className="text-lg font-extrabold text-slate-800 leading-none">
+                      Cierre de Caja
+                    </span>
+                    <p className="text-[11px] text-slate-400 font-medium mt-0.5 capitalize">
+                      {new Date().toLocaleDateString("es-AR", {
+                        weekday: "long",
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                </ModalHeader>
+
+                {/* ─── Body ────────────────────────────────────────────── */}
+                <ModalBody>
+                  <div className="space-y-4">
+                    {/* Resumen del día — 3 tarjetas */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="flex flex-col gap-1 p-3 bg-slate-50 border border-slate-200 rounded-2xl">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <Coins
+                            size={12}
+                            className="text-slate-400"
+                            strokeWidth={2}
+                          />
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                            Apertura
+                          </p>
+                        </div>
                         <p className="text-sm font-extrabold text-slate-700 truncate">
                           {formatMoney(cajaActual?.MontoInicial || 0)}
                         </p>
                       </div>
-                    </div>
 
-                    {/* Efectivo Neto */}
-                    <div className="flex items-center gap-3 p-3.5 bg-[#67afc3]/5 border border-[#67afc3]/15 rounded-2xl">
-                      <div className="p-2 rounded-xl bg-[#67afc3]/15 text-[#67afc3] shrink-0">
-                        <Banknote size={15} strokeWidth={2} />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">
-                          Efect. neto
-                        </p>
-                        <p className="text-sm font-extrabold text-[#67afc3] truncate">
-                          {formatMoney(
-                            (cajaActual?.TotalEntradaEfectivo || 0) -
-                              (cajaActual?.TotalSalidaEfectivo || 0),
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Ganancia destacada */}
-                  <div className="relative overflow-hidden rounded-2xl p-4 bg-linear-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/20">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
-                    <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full translate-y-6 -translate-x-6" />
-                    <div className="relative z-10 flex items-center justify-between">
-                      <div>
-                        <p className="text-[9px] font-bold text-emerald-100 uppercase tracking-widest">
-                          Ganancia del día
-                        </p>
-                        <p className="text-3xl font-black text-white leading-tight mt-0.5">
-                          {formatMoney(cajaActual?.Ganancia || 0)}
-                        </p>
-                      </div>
-                      <div className="p-3 rounded-2xl bg-white/20">
-                        <CheckCircle2
-                          size={24}
-                          className="text-white"
-                          strokeWidth={2}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Input dinero físico */}
-                  <div className="space-y-1.5">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-0.5">
-                      Conteo de caja
-                    </p>
-                    <Input
-                      label="Dinero físico en el cajón"
-                      placeholder="0,00"
-                      variant="bordered"
-                      value={montoCierre}
-                      onValueChange={(val) =>
-                        handleNumberInput(val, setMontoCierre)
-                      }
-                      classNames={{
-                        label:
-                          "text-slate-500 font-bold uppercase text-[10px] tracking-widest",
-                        inputWrapper:
-                          "h-13 border-slate-200 bg-slate-50/50 hover:border-[#67afc3]/60 focus-within:!border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/20 transition-all rounded-xl",
-                        input: "text-xl text-slate-700 font-black",
-                      }}
-                      startContent={
-                        <div className="p-1.5 rounded-lg bg-slate-100 text-slate-500 mr-1 shrink-0">
-                          <DollarSign size={15} />
+                      <div className="flex flex-col gap-1 p-3 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <TrendingUp
+                            size={12}
+                            className="text-emerald-500"
+                            strokeWidth={2}
+                          />
+                          <p className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">
+                            Entradas
+                          </p>
                         </div>
-                      }
-                    />
-                  </div>
+                        <p className="text-sm font-extrabold text-emerald-600 truncate">
+                          {formatMoney(totalEntradasDia)}
+                        </p>
+                      </div>
 
-                  {/* Advertencia */}
-                  <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-100">
-                    <AlertTriangle
-                      size={14}
-                      className="text-amber-500 mt-0.5 shrink-0"
-                      strokeWidth={2.5}
-                    />
-                    <p className="text-xs text-amber-700 leading-relaxed font-medium">
-                      Contá el dinero físico en el cajón antes de confirmar. El
-                      sistema registrará cualquier diferencia.
-                    </p>
-                  </div>
-                </div>
-              </ModalBody>
+                      <div className="flex flex-col gap-1 p-3 bg-rose-50 border border-rose-100 rounded-2xl">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <TrendingDown
+                            size={12}
+                            className="text-rose-400"
+                            strokeWidth={2}
+                          />
+                          <p className="text-[9px] font-bold text-rose-400 uppercase tracking-widest">
+                            Salidas
+                          </p>
+                        </div>
+                        <p className="text-sm font-extrabold text-rose-500 truncate">
+                          {formatMoney(totalSalidasDia)}
+                        </p>
+                      </div>
+                    </div>
 
-              {/* ─── Footer ──────────────────────────────────────────── */}
-              <ModalFooter>
-                <Button
-                  variant="light"
-                  className="font-bold text-slate-500"
-                  onPress={onClose}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onPress={handleCerrarCaja}
-                  isLoading={isClosing}
-                  className="bg-linear-to-r from-rose-500 to-rose-600 text-white font-bold px-6 rounded-xl shadow-md shadow-rose-500/20"
-                  startContent={
-                    !isClosing && <Lock size={15} strokeWidth={2.5} />
-                  }
-                >
-                  Confirmar Cierre
-                </Button>
-              </ModalFooter>
-            </>
-          )}
+                    {/* Ganancia del día destacada */}
+                    <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-[#67afc3] to-[#4899b0] shadow-lg shadow-[#67afc3]/25">
+                      <div className="absolute top-0 right-0 w-28 h-28 bg-white/10 rounded-full -translate-y-10 translate-x-10" />
+                      <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/10 rounded-full translate-y-8 -translate-x-8" />
+                      <div className="relative z-10 flex items-center justify-between">
+                        <div>
+                          <p className="text-[9px] font-bold text-white/70 uppercase tracking-widest">
+                            Ganancia neta del día
+                          </p>
+                          <p
+                            className={`text-[2rem] font-black leading-tight mt-1 ${
+                              gananciaDelDia >= 0
+                                ? "text-white"
+                                : "text-rose-200"
+                            }`}
+                          >
+                            {formatMoney(gananciaDelDia)}
+                          </p>
+                          <p className="text-[10px] text-white/60 mt-1">
+                            Efect. esperado:{" "}
+                            <span className="font-bold text-white/90">
+                              {formatMoney(efectivoEsperado)}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="p-3 rounded-2xl bg-white/20 shrink-0">
+                          <DollarSign
+                            size={26}
+                            className="text-white"
+                            strokeWidth={2}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Input dinero físico */}
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        Conteo de caja
+                      </p>
+                      <Input
+                        autoFocus
+                        placeholder="0,00"
+                        variant="bordered"
+                        size="lg"
+                        value={montoCierre}
+                        onValueChange={(val) =>
+                          handleNumberInput(val, setMontoCierre)
+                        }
+                        classNames={{
+                          label: "text-slate-500 font-semibold text-xs",
+                          inputWrapper:
+                            "h-16 border-2 border-slate-200 bg-white hover:border-[#67afc3]/50 focus-within:!border-[#67afc3] focus-within:ring-2 focus-within:ring-[#67afc3]/15 transition-all rounded-xl",
+                          input: "text-2xl text-slate-800 font-black pl-1",
+                        }}
+                        startContent={
+                          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#67afc3]/10 border border-[#67afc3]/20 text-[#67afc3] mr-1 shrink-0">
+                            <DollarSign size={17} strokeWidth={2.5} />
+                          </div>
+                        }
+                      />
+
+                      {/* Indicador de diferencia en tiempo real */}
+                      {diferencia !== null && (
+                        <div
+                          className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                            diferencia === 0
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : diferencia > 0
+                                ? "bg-sky-50 text-sky-700 border border-sky-200"
+                                : "bg-rose-50 text-rose-700 border border-rose-200"
+                          }`}
+                        >
+                          {diferencia === 0 ? (
+                            <CheckCircle2 size={15} strokeWidth={2.5} />
+                          ) : (
+                            <AlertTriangle size={15} strokeWidth={2.5} />
+                          )}
+                          <span>
+                            Diferencia:{" "}
+                            <span className="font-black">
+                              {diferencia >= 0 ? "+" : ""}
+                              {formatMoney(diferencia)}
+                            </span>
+                            {diferencia < 0 && " — falta dinero en el cajón"}
+                            {diferencia > 0 && " — hay dinero de más"}
+                            {diferencia === 0 && " — cuadra perfecto"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Advertencia */}
+                  </div>
+                </ModalBody>
+
+                {/* ─── Footer ──────────────────────────────────────────── */}
+                <ModalFooter className="gap-2">
+                  <Button
+                    variant="flat"
+                    className="font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl"
+                    onPress={onClose}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onPress={handleCerrarCaja}
+                    isLoading={isClosing}
+                    className="flex-1 bg-[#67afc3] hover:bg-[#4899b0] text-white font-bold px-6 rounded-xl shadow-md shadow-[#67afc3]/30 transition-all"
+                    startContent={
+                      !isClosing && <Lock size={15} strokeWidth={2.5} />
+                    }
+                  >
+                    Confirmar Cierre
+                  </Button>
+                </ModalFooter>
+              </>
+            );
+          }}
         </ModalContent>
       </Modal>
 
