@@ -45,13 +45,14 @@ export type Usuario = {
   sucursales?: SucursalUsuario[];
   estado: "Activo" | "Invitado" | "Suspendido";
   legajo: string | null;
+  foto: string | null;
   dni: string | null;
   ultimaActividad: string | null;
   intentosFallidos?: number;
 };
 
 export default function UsuariosCRUD() {
-  const { user, roles } = useUserStore();
+  const { user, roles, updateUserFoto } = useUserStore();
   const queryClient = useQueryClient();
   const [passwordModalUser, setPasswordModalUser] = useState<Usuario | null>(
     null,
@@ -118,6 +119,17 @@ export default function UsuariosCRUD() {
         transformer={transformer}
         additionalInvalidateQueryKeys={["roles-select"]}
         enableBulkActions
+        onSaveSuccess={(result, _payload, isEdit) => {
+          // Si editamos al empleado que corresponde al usuario logueado, actualizar su foto en el store
+          if (!isEdit) return;
+          const fotoNueva = result?.empleado?.foto;
+          if (fotoNueva === undefined) return; // La API no devolvió foto → nada que hacer
+          // Verificar si el empleado editado es el usuario actual
+          const editedUsuarioId = result?.empleado?.id ?? result?.empleado?.usuarioId;
+          if (editedUsuarioId && Number(editedUsuarioId) === Number(user?.Id)) {
+            updateUserFoto(fotoNueva ?? null);
+          }
+        }}
         exportConfig={{
           filename: "usuarios",
           columns: [

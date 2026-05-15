@@ -179,7 +179,7 @@ export async function registerTenant(formData: FormData) {
         data: {
           Id: persona.Id,
           Legajo: 1,
-          Foto: Buffer.alloc(0),
+          Foto: null,
         },
       });
 

@@ -940,7 +940,7 @@ model Persona_Empleado {
   Id                 BigInt              @id
   /// Hereda TenantId desde Persona (Id es PK y FK)
   Legajo             Int
-  Foto               Bytes
+  Foto               String?             @db.VarChar(8000)
   AuditoriaEmpleados AuditoriaEmpleado[]
   Comprobante        Comprobante[]
   Persona            Persona             @relation(fields: [Id], references: [Id], onUpdate: NoAction)

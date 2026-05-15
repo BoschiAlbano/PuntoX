@@ -4,7 +4,8 @@ import { useUserStore } from "@/store/useUserStore";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   Dropdown,
   DropdownTrigger,
@@ -23,10 +24,17 @@ export function UserDropdown() {
   const router = useRouter();
 
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [fotoError, setFotoError] = useState(false);
 
   // User details
   const email = typeof user?.Email === "string" ? user.Email : "";
   const usuario = typeof user?.Usuario === "string" ? user.Usuario : "";
+  const fotoUrl = typeof user?.Foto === "string" && user.Foto.length > 0 ? user.Foto : null;
+
+  // Resetear error de foto cuando la URL cambia
+  useEffect(() => {
+    setFotoError(false);
+  }, [fotoUrl]);
   const displayName = email.trim() || usuario || "Usuario";
   const displayRol = roles.map((r) => r.Descripcion).join(" · ") || "Operador";
   const userInitials =
@@ -87,11 +95,22 @@ export function UserDropdown() {
           <div
             className="relative flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold text-white
                         shrink-0 shadow-sm ring-2 ring-white/10 group-hover:ring-[#67afc3]/30
-                        transition-all duration-200"
-            style={{ backgroundColor: ACCENT }}
+                        transition-all duration-200 overflow-hidden"
+            style={!fotoUrl || fotoError ? { backgroundColor: ACCENT } : {}}
             aria-hidden="true"
           >
-            {userInitials}
+            {fotoUrl && !fotoError ? (
+              <Image
+                src={fotoUrl}
+                alt="Avatar"
+                fill
+                className="object-cover rounded-lg"
+                unoptimized
+                onError={() => setFotoError(true)}
+              />
+            ) : (
+              userInitials
+            )}
             {/* Online indicator */}
             <span
               className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400

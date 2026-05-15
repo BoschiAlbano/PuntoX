@@ -85,6 +85,8 @@ interface GenericCrudProps<T> {
     columns: { key: string; header: string }[];
     mapItem: (item: T) => Record<string, unknown>;
   };
+  /** Callback que recibe la respuesta cruda de la API después de un save exitoso */
+  onSaveSuccess?: (result: any, payload: Partial<T>, isEdit: boolean) => void;
   /** @deprecated Use renderRowPreview instead */
   onRowClick?: (item: T, openEdit: () => void) => void;
   /** Contenido del modal de vista previa al hacer click en la fila */
@@ -147,6 +149,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
   viewMode = "table",
   onViewModeChange,
   renderCard,
+  onSaveSuccess,
 }: GenericCrudProps<T>) {
   // Estados de UI
   const { isOpen, onOpen, onClose } = useDisclosure(); // Modal Form
@@ -585,7 +588,8 @@ export default function GenericCrud<T extends { Id: number | string }>({
     saveMutation.mutate(
       { data: payload, isEdit },
       {
-        onSuccess: () => {
+        onSuccess: (result) => {
+          onSaveSuccess?.(result, formData, isEdit);
           addToast({
             title: "Éxito",
             description: `Registro ${

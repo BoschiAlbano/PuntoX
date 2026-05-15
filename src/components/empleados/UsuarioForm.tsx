@@ -1,7 +1,8 @@
 "use client";
 
 import { modalMotionProps } from "@/lib/motionConfig";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import {
   Modal,
   ModalContent,
@@ -19,7 +20,9 @@ import {
 import { GenericFormProps } from "@/components/shared/GenericCrud";
 import { Usuario, SucursalUsuario } from "./UsuariosCRUD";
 import { useUsuario } from "@/hooks/useUsuario";
-import { User, MapPin, UserCog } from "lucide-react";
+import { User, MapPin, UserCog, Camera, X } from "lucide-react";
+
+const ACCENT = "#67afc3";
 
 interface UsuarioFormData {
   nombre: string;
@@ -36,6 +39,7 @@ interface UsuarioFormData {
   rolId?: number | string | null;
   sucursales?: SucursalUsuario[] | null;
   personaId?: number | string;
+  foto?: string | null; // base64, URL existente o null
 }
 
 const defaultFormData: UsuarioFormData = {
@@ -52,6 +56,7 @@ const defaultFormData: UsuarioFormData = {
   password: "",
   rolId: null,
   sucursales: null,
+  foto: null,
 };
 
 export default function UsuarioForm({
@@ -62,6 +67,8 @@ export default function UsuarioForm({
   isSaving,
 }: GenericFormProps<Usuario>) {
   const [formData, setFormData] = useState<UsuarioFormData>(defaultFormData);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const isEdit = !!initialData;
 
   // Hook useUsuario para la gestión de estados y datos
@@ -100,9 +107,12 @@ export default function UsuarioForm({
           sucursales: initialData.sucursales || null,
           personaId: initialData.personaId || initialData.id,
           nombreUsuario: initialData.username || "", // Aunque no se edite, para mantener consistencia
+          foto: initialData.foto || null,
         });
+        setFotoPreview(initialData.foto || null);
       } else {
         setFormData(defaultFormData);
+        setFotoPreview(null);
       }
     }
   }, [initialData, isOpen]);
@@ -121,6 +131,32 @@ export default function UsuarioForm({
 
       return newData;
     });
+  };
+
+  const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const result = ev.target?.result as string;
+      setFotoPreview(result);
+      setFormData((prev) => ({ ...prev, foto: result }));
+    };
+    reader.readAsDataURL(file);
+    // Reset para poder seleccionar el mismo archivo de nuevo
+    e.target.value = "";
+  };
+
+  const handleQuitarFoto = () => {
+    setFotoPreview(null);
+    setFormData((prev) => ({ ...prev, foto: null }));
+  };
+
+  /** Genera iniciales a partir del nombre y apellido del formulario */
+  const getInitials = () => {
+    const n = formData.nombre?.trim()[0]?.toUpperCase() ?? "";
+    const a = formData.apellido?.trim()[0]?.toUpperCase() ?? "";
+    return n + a || "?";
   };
 
   const inputClassNames = {
@@ -193,6 +229,8 @@ export default function UsuarioForm({
       if (formData.rolId !== undefined) payload.rolId = formData.rolId;
       if (formData.sucursales !== undefined)
         payload.sucursalId = formData.sucursales?.map((s: any) => s.Id || s.id);
+      // Foto: enviar siempre (puede ser base64 nueva, URL existente o null para quitar)
+      payload.foto = formData.foto ?? null;
 
       onSubmit(payload);
     } else {
@@ -212,6 +250,7 @@ export default function UsuarioForm({
         payload.departamentoId = formData.departamentoId;
       if (formData.provinciaId) payload.provinciaId = formData.provinciaId;
       if (formData.rolId) payload.rolId = formData.rolId;
+      if (formData.foto) payload.foto = formData.foto;
 
       if (formData.sucursales && formData.sucursales.length > 0) {
         payload.sucursalId = formData.sucursales.map((s: any) => s.Id || s.id);
@@ -258,6 +297,74 @@ export default function UsuarioForm({
         </ModalHeader>
         <ModalBody className="p-0">
           <div className="py-6">
+            {/* ── Foto de perfil ── */}
+            <div className="flex flex-col items-center gap-3 mb-6 px-1">
+              <div className="relative group">
+                {/* Avatar: foto o iniciales */}
+                <button
+                  type="button"
+                  onClick={() => !isSaving && fileInputRef.current?.click()}
+                  disabled={isSaving}
+                  className="relative flex h-20 w-20 items-center justify-center rounded-2xl
+                             overflow-hidden shadow-md ring-2 ring-white focus-visible:outline-none
+                             focus-visible:ring-2 focus-visible:ring-[#67afc3]/50
+                             transition-all duration-200 hover:ring-[#67afc3]/40 cursor-pointer"
+                  aria-label="Cambiar foto de empleado"
+                >
+                  {fotoPreview ? (
+                    <Image
+                      src={fotoPreview}
+                      alt="Foto del empleado"
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <div
+                      className="flex h-full w-full items-center justify-center text-xl font-bold text-white"
+                      style={{ backgroundColor: ACCENT }}
+                    >
+                      {getInitials()}
+                    </div>
+                  )}
+                  {/* Overlay con icono cámara */}
+                  <div className="absolute inset-0 flex items-center justify-center
+                                  bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <Camera className="w-5 h-5 text-white" />
+                  </div>
+                </button>
+
+                {/* Botón quitar foto */}
+                {fotoPreview && (
+                  <button
+                    type="button"
+                    onClick={handleQuitarFoto}
+                    disabled={isSaving}
+                    className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center
+                               rounded-full bg-rose-500 text-white shadow-sm
+                               hover:bg-rose-600 transition-colors focus-visible:outline-none
+                               focus-visible:ring-2 focus-visible:ring-rose-400/50"
+                    aria-label="Quitar foto"
+                  >
+                    <X className="w-3 h-3" strokeWidth={3} />
+                  </button>
+                )}
+              </div>
+
+              <p className="text-xs text-slate-400 font-medium">
+                {fotoPreview ? "Click para cambiar · PNG, JPG · máx. 5 MB" : "Click para agregar foto (opcional)"}
+              </p>
+
+              {/* Input file oculto */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".png,.jpg,.jpeg"
+                className="hidden"
+                onChange={handleFotoChange}
+                disabled={isSaving}
+              />
+            </div>
             <Accordion
               aria-label="Opciones del empleado"
               defaultSelectedKeys={["personal"]}

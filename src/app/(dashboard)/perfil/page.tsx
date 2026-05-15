@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { MfaSetup } from "@/components/auth/MfaSetup";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { FotoPerfilSection } from "@/components/perfil/FotoPerfilSection";
 
 export default function PerfilPersonalPage() {
   return (
@@ -21,6 +22,7 @@ export default function PerfilPersonalPage() {
       >
         <div className="relative z-10 flex-1 flex flex-col h-full overflow-y-auto pb-10">
           <div className="max-w-2xl w-full mx-auto space-y-6">
+            <FotoPerfilSection />
             {/* Aquí a futuro se pueden poner más opciones como "Cambiar contraseña" */}
             <MfaSetup />
           </div>

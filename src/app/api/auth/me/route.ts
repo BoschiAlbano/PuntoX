@@ -44,6 +44,7 @@ export async function GET() {
         },
         Persona_Empleado: {
           select: {
+            Foto: true,
             Persona: {
               select: {
                 Nombre: true,
@@ -70,6 +71,7 @@ export async function GET() {
       Apellido: userSafe.Persona_Empleado.Persona.Apellido,
       Email: userSafe.Persona_Empleado.Persona.Mail,
       Usuario: userSafe.Nombre,
+      Foto: userSafe.Persona_Empleado.Foto ?? null,
     };
 
     // Extract branches
@@ -126,4 +128,5 @@ interface UserDto {
   Apellido: string;
   Email: string;
   Usuario: string;
+  Foto: string | null;
 }

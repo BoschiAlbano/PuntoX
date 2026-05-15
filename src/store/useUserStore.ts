@@ -8,6 +8,7 @@ interface User {
   Id: string;
   Nombre: string;
   Email: string;
+  Foto?: string | null;
   [key: string]: any;
 }
 
@@ -45,6 +46,7 @@ interface UserState {
   pushBranch: (branch: UserBranch) => void;
   removeBranch: (branchId: string) => void;
   updateBranch: (branch: UserBranch) => void;
+  updateUserFoto: (foto: string | null) => void;
 }
 
 export const useUserStore = create<UserState>()(
@@ -172,6 +174,12 @@ export const useUserStore = create<UserState>()(
         }
 
         set({ branches: updatedBranches, currentBranch: newCurrent });
+      },
+
+      updateUserFoto: (foto) => {
+        const { user } = get();
+        if (!user) return;
+        set({ user: { ...user, Foto: foto } }, false, "updateUserFoto");
       },
     }),
     { name: "UserStore" },

@@ -297,7 +297,7 @@ async function seedSuperAdmin() {
         data: {
           Id: persona.Id,
           Legajo: 1,
-          Foto: Buffer.alloc(0),
+          Foto: null,
         },
       });
       console.log("✅ Empleado creado");

@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
         data: {
           Id: persona.Id,
           Legajo: Math.floor(Math.random() * 10000) + 1000,
-          Foto: Buffer.alloc(0),
+          Foto: null,
         },
       });
 

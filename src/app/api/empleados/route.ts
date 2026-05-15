@@ -4,6 +4,40 @@ import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { PermisoError } from "@/lib/requirePermiso";
 
+const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg"] as const;
+const MAX_FOTO_BYTES = 5 * 1024 * 1024; // 5 MB
+
+/** Extrae el mime type desde un data-URL base64. Retorna null si no hay prefijo. */
+function parseFotoMime(b64: string): string | null {
+  const match = b64.match(/^data:([^;]+);base64,/);
+  return match ? match[1].toLowerCase() : null;
+}
+
+/** Obtiene el Buffer a partir de un string base64 (con o sin prefijo data-URL). */
+function fotoToBuffer(b64: string): Buffer {
+  const raw = b64.includes("base64,") ? b64.split("base64,")[1] : b64;
+  return Buffer.from(raw, "base64");
+}
+
+/** Determina la extensión del archivo según el mime type detectado. */
+function extFromMime(mime: string | null): string {
+  if (mime === "image/png") return "png";
+  if (mime === "image/jpeg" || mime === "image/jpg") return "jpg";
+  return "jpg";
+}
+
+/** Elimina la foto de Supabase Storage si la URL pertenece al bucket "empleados". */
+async function deleteEmpleadoFotoFromStorage(fotoUrl: string | null) {
+  if (!fotoUrl || !fotoUrl.includes("/empleados/")) return;
+  try {
+    const supabase = getSupabaseServiceClient();
+    const path = fotoUrl.split("/empleados/")[1];
+    if (path) await supabase.storage.from("empleados").remove([path]);
+  } catch (e) {
+    console.warn("No se pudo eliminar foto de empleado del storage:", e);
+  }
+}
+
 const createEmpleadoSchema = z.object({
   nombre: z.string().min(1),
   apellido: z.string().min(1),
@@ -21,6 +55,7 @@ const createEmpleadoSchema = z.object({
     .array(z.union([z.number(), z.string()]))
     .optional()
     .nullable(), // Sucursales a las que pertenece el empleado
+  foto: z.string().optional().nullable(), // Base64 de la foto (data-URL o raw base64)
 });
 const updateEstadoSchema = z.object({
   usuarioId: z.union([z.number(), z.string()]),
@@ -41,6 +76,7 @@ const updateEmpleadoSchema = z.object({
     .array(z.union([z.number(), z.string()]))
     .optional()
     .nullable(), // Sucursales a las que pertenece el empleado
+  foto: z.string().optional().nullable(), // Base64 o URL existente (null = eliminar foto)
 });
 const deleteEmpleadoSchema = z.object({
   personaId: z.union([z.number(), z.string()]),
@@ -215,6 +251,7 @@ export async function GET(req: NextRequest) {
         Persona_Empleado: {
           select: {
             Legajo: true,
+            Foto: true,
             Usuario: {
               where: { EstaEliminado: false },
               select: {
@@ -268,6 +305,7 @@ export async function GET(req: NextRequest) {
     try {
       response = empleados.map((persona) => {
         const legajo = persona.Persona_Empleado?.Legajo ?? null;
+        const foto = persona.Persona_Empleado?.Foto ?? null;
         const usuario = persona.Persona_Empleado?.Usuario?.[0] ?? null;
         const perfil = usuario?.PerfilUsuario?.[0]?.Perfiles ?? null;
         const sucursales = usuario?.Sucursales ?? [];
@@ -319,6 +357,7 @@ export async function GET(req: NextRequest) {
           sucursalNombre: sucursalDefault?.Sucursal?.Nombre ?? null,
           estado,
           legajo: legajo ? `PX-${legajo}` : null,
+          foto: foto ?? null,
           dni: persona.Dni,
           ultimaActividad: "Pendiente",
           intentosFallidos: usuario ? Number(usuario.IntentosFallidos ?? 0) : 0,
@@ -562,6 +601,41 @@ export async function POST(req: NextRequest) {
       counter++;
     }
 
+    // Subir foto a Supabase Storage si se proporcionó
+    let fotoUrl: string | null = null;
+    if (data.foto && typeof data.foto === "string" && data.foto.length > 0 && !data.foto.startsWith("http")) {
+      try {
+        const mime = parseFotoMime(data.foto);
+        if (!mime || !ALLOWED_IMAGE_TYPES.includes(mime as (typeof ALLOWED_IMAGE_TYPES)[number])) {
+          return NextResponse.json(
+            { error: "Formato de imagen no válido. Use PNG, JPG o JPEG." },
+            { status: 400 },
+          );
+        }
+        const buffer = fotoToBuffer(data.foto);
+        if (buffer.length > MAX_FOTO_BYTES) {
+          return NextResponse.json(
+            { error: "La imagen no puede superar los 5 MB." },
+            { status: 400 },
+          );
+        }
+        const ext = extFromMime(mime);
+        const supabase = getSupabaseServiceClient();
+        const fileName = `${tenantId}/emp-${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("empleados")
+          .upload(fileName, buffer, { contentType: mime, upsert: true });
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage.from("empleados").getPublicUrl(fileName);
+          fotoUrl = urlData.publicUrl;
+        } else {
+          console.error("Supabase upload error (POST empleado):", uploadError);
+        }
+      } catch (e) {
+        console.error("Error procesando foto (POST empleado):", e);
+      }
+    }
+
     const supabaseService = getSupabaseServiceClient();
     const { data: authUser, error: authError } =
       await supabaseService.auth.admin.createUser({
@@ -612,7 +686,7 @@ export async function POST(req: NextRequest) {
         data: {
           Id: persona.Id,
           Legajo: Math.floor(Math.random() * 9000) + 1000,
-          Foto: Buffer.alloc(0),
+          Foto: fotoUrl,
         },
       });
 
@@ -671,6 +745,7 @@ export async function POST(req: NextRequest) {
       rolTipo,
       estado: "Activo" as EstadoEmpleado,
       legajo: `PX-${created.personaEmpleado.Legajo}`,
+      foto: fotoUrl,
       dni: created.persona.Dni,
       ultimaActividad: "Pendiente",
     };
@@ -848,6 +923,57 @@ export async function PUT(req: NextRequest) {
       }
     }
 
+    // Manejar foto: subir nueva, eliminar anterior o limpiar
+    let nuevaFotoUrl: string | null | undefined = undefined; // undefined = no tocar, string/null = actualizar
+    if (data.foto !== undefined) {
+      if (data.foto && !data.foto.startsWith("http")) {
+        // Es un nuevo base64: validar, subir y obtener URL
+        const mime = parseFotoMime(data.foto);
+        if (!mime || !ALLOWED_IMAGE_TYPES.includes(mime as (typeof ALLOWED_IMAGE_TYPES)[number])) {
+          return NextResponse.json(
+            { error: "Formato de imagen no válido. Use PNG, JPG o JPEG." },
+            { status: 400 },
+          );
+        }
+        const buffer = fotoToBuffer(data.foto);
+        if (buffer.length > MAX_FOTO_BYTES) {
+          return NextResponse.json(
+            { error: "La imagen no puede superar los 5 MB." },
+            { status: 400 },
+          );
+        }
+        // Eliminar foto anterior si existe
+        const fotoActual = await prisma.persona_Empleado.findUnique({
+          where: { Id: personaId },
+          select: { Foto: true },
+        });
+        await deleteEmpleadoFotoFromStorage(fotoActual?.Foto ?? null);
+
+        const ext = extFromMime(mime);
+        const supabase = getSupabaseServiceClient();
+        const empleadoIdForPath = personaId.toString();
+        const fileName = `${tenantId}/emp-${empleadoIdForPath}-${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("empleados")
+          .upload(fileName, buffer, { contentType: mime, upsert: true });
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage.from("empleados").getPublicUrl(fileName);
+          nuevaFotoUrl = urlData.publicUrl;
+        } else {
+          console.error("Supabase upload error (PUT empleado):", uploadError);
+        }
+      } else if (data.foto === null) {
+        // Eliminar foto explícitamente
+        const fotoActual = await prisma.persona_Empleado.findUnique({
+          where: { Id: personaId },
+          select: { Foto: true },
+        });
+        await deleteEmpleadoFotoFromStorage(fotoActual?.Foto ?? null);
+        nuevaFotoUrl = null;
+      }
+      // Si data.foto es una URL existente (empieza con http), no se modifica
+    }
+
     // Actualizar datos
     const updated = await prisma.$transaction(async (tx) => {
       // Actualizar Persona
@@ -927,6 +1053,14 @@ export async function PUT(req: NextRequest) {
             });
           }
         }
+      }
+
+      // Actualizar foto en Persona_Empleado si corresponde
+      if (nuevaFotoUrl !== undefined) {
+        await tx.persona_Empleado.update({
+          where: { Id: personaId },
+          data: { Foto: nuevaFotoUrl },
+        });
       }
 
       return { persona, rolIdNuevo };
@@ -1011,6 +1145,7 @@ export async function PUT(req: NextRequest) {
           ? Number(updated.persona.LocalidadId)
           : null,
         rolId: updated.rolIdNuevo,
+        foto: nuevaFotoUrl !== undefined ? nuevaFotoUrl : undefined,
       },
     });
   } catch (error) {
@@ -1168,15 +1303,23 @@ export async function DELETE(req: NextRequest) {
       .map((u) => u.AuthUserId)
       .filter(Boolean) as string[];
 
-    // Obtener datos del empleado para la auditoría ANTES de borrar
+    // Obtener datos del empleado para la auditoría ANTES de borrar (incluye foto para limpiar storage)
     const personaCompleta = await prisma.persona.findFirst({
       where: { Id: personaId, TenantId: tenantIdBig },
-      select: { Nombre: true, Apellido: true, Mail: true },
+      select: {
+        Nombre: true,
+        Apellido: true,
+        Mail: true,
+        Persona_Empleado: { select: { Foto: true } },
+      },
     });
 
     const empleadoId = persona.Persona_Empleado?.Id || null;
     const usuarioAfectadoId =
       persona.Persona_Empleado?.Usuario?.[0]?.Id || null;
+
+    // Limpiar foto del bucket antes de borrar registros en BD
+    await deleteEmpleadoFotoFromStorage(personaCompleta?.Persona_Empleado?.Foto ?? null);
 
     await prisma.$transaction(async (tx) => {
       if (usuarioIds.length) {
