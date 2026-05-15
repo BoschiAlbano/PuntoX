@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../../../prisma/generated/prisma";
 import {
   TIPO_COMPROBANTE_VENTA,
   TIPO_PAGO,
