@@ -20,7 +20,8 @@ type AccionAuditoria =
   | "EDITAR_ROL"
   | "ELIMINAR_ROL"
   | "CAMBIAR_CONFIG_SEGURIDAD"
-  | "BLOQUEO_AUTOMATICO";
+  | "BLOQUEO_AUTOMATICO"
+  | "INTENTO_FALLIDO_ROL_PRIVILEGIADO";
 
 type SeveridadAuditoria = "INFO" | "WARNING" | "CRITICAL";
 
@@ -52,6 +53,7 @@ function inferirSeveridad(accion: AccionAuditoria): SeveridadAuditoria {
     accion === "EDITAR_ROL" ||
     accion === "SUSPENDER_USUARIO" ||
     accion === "BLOQUEO_AUTOMATICO" ||
+    accion === "INTENTO_FALLIDO_ROL_PRIVILEGIADO" ||
     accion === "CAMBIAR_CONFIG_SEGURIDAD"
   ) {
     return "WARNING";
