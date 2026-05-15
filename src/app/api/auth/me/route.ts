@@ -65,13 +65,14 @@ export async function GET() {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { Password, ...userSafe } = dbUser as any;
 
+    const empleado = userSafe.Persona_Empleado;
     const usuarioDTO: UserDto = {
       Id: userSafe.Id,
-      Nombre: userSafe.Persona_Empleado.Persona.Nombre,
-      Apellido: userSafe.Persona_Empleado.Persona.Apellido,
-      Email: userSafe.Persona_Empleado.Persona.Mail,
+      Nombre: empleado?.Persona?.Nombre ?? "",
+      Apellido: empleado?.Persona?.Apellido ?? "",
+      Email: empleado?.Persona?.Mail ?? "",
       Usuario: userSafe.Nombre,
-      Foto: userSafe.Persona_Empleado.Foto ?? null,
+      Foto: empleado?.Foto ?? null,
     };
 
     // Extract branches
