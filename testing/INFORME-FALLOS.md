@@ -10,7 +10,7 @@ Este documento lista los tests que **no se ejecutaron** o **fallaron** según el
 |-----------|----------|---------|
 | **Tests fallidos** | **0** | Todos corregidos. |
 | **Archivos de test ausentes** | **0** | permisos y empleados route.test.ts existen. |
-| **Suite** | 436 tests, 97 archivos | `npm test` pasa. |
+| **Suite** | 436 tests, 97 archivos | `pnpm test` pasa. |
 
 ---
 
@@ -29,7 +29,7 @@ Los fallos ya solucionados (10 tests de validación, 2 archivos referenciados co
 ## 4. Cómo verificar
 
 ```bash
-npm test
+pnpm test
 # o solo validaciones:
 npx vitest run src/test/validation --reporter=verbose
 ```

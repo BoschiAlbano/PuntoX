@@ -179,7 +179,7 @@ Se usó `999_999_999_999` (≈ 1 billón) como tope máximo en todos los campos 
 
 ```bash
 # Ejecutar toda la suite
-npm test
+pnpm test
 
 # Solo tests de validación
 npx vitest run src/test/validation --reporter=verbose

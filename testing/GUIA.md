@@ -18,11 +18,11 @@ Guía única de testing: cómo ejecutar, qué está implementado, infraestructur
 
 | Comando | Descripción |
 |--------|-------------|
-| `npm test` | Ejecuta toda la suite de tests unitarios una vez |
-| `npm run test:watch` | Modo watch (desarrollo) |
-| `npm run test:coverage` | Ejecuta tests con reporte de cobertura (V8) |
-| `npm run test:e2e` | Ejecuta tests E2E con Playwright |
-| `npm run test:e2e:ui` | Ejecuta tests E2E con interfaz visual (modo debug) |
+| `pnpm test` | Ejecuta toda la suite de tests unitarios una vez |
+| `pnpm test:watch` | Modo watch (desarrollo) |
+| `pnpm test:coverage` | Ejecuta tests con reporte de cobertura (V8) |
+| `pnpm test:e2e` | Ejecuta tests E2E con Playwright |
+| `pnpm test:e2e:ui` | Ejecuta tests E2E con interfaz visual (modo debug) |
 
 ### Ejecutar tests concretos
 
@@ -132,16 +132,16 @@ Incluye `configuracion` subrutas, `admin/*`, `empleados/cambiar-password`, etc.
 **Ejecutar tests E2E:**
 
 ```bash
-npm run test:e2e
+pnpm test:e2e
 # Solo Chromium (más rápido)
-npm run test:e2e -- --project=chromium
+pnpm test:e2e -- --project=chromium
 # Interfaz visual para depuración
-npm run test:e2e:ui
+pnpm test:e2e:ui
 ```
 
-Playwright arranca automáticamente el servidor de desarrollo (`npm run dev`) si no está corriendo.
+Playwright arranca automáticamente el servidor de desarrollo (`pnpm dev`) si no está corriendo.
 
-**Forma recomendada de ejecutar E2E:** Si los tests fallan en modo headless (timeouts en login, `ERR_ABORTED`, elementos no visibles), usar `npm run test:e2e:ui` — la UI suele pasar porque reduce paralelismo y da más margen a la carga de la app.
+**Forma recomendada de ejecutar E2E:** Si los tests fallan en modo headless (timeouts en login, `ERR_ABORTED`, elementos no visibles), usar `pnpm test:e2e:ui` — la UI suele pasar porque reduce paralelismo y da más margen a la carga de la app.
 
 **Tests con login real:** Los archivos `auth/login-*.spec.ts` usan el fixture `e2e/fixtures/auth.ts` que hace login con usuario de Supabase. Credenciales por defecto: `E2E_USER` (default: Agucho), `E2E_PASSWORD` (default: 12345678). Para CI u otro usuario, definir las variables de entorno. Ver `.env.e2e.example`.
 

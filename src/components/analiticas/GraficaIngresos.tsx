@@ -93,13 +93,11 @@ export default function GraficaIngresos({
             />
             <Tooltip
               contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-              formatter={(value: number | undefined) =>
-                value !== undefined
-                  ? new Intl.NumberFormat("es-AR", {
-                      style: "currency",
-                      currency: "ARS",
-                    }).format(value)
-                  : ""
+              formatter={(value) =>
+                new Intl.NumberFormat("es-AR", {
+                  style: "currency",
+                  currency: "ARS",
+                }).format(Number(value))
               }
             />
             <Legend iconType="circle" wrapperStyle={{ paddingTop: "20px", fontSize: "12px" }} />

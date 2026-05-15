@@ -14,25 +14,25 @@ d
 ## Inicio rápido
 
 ```bash
-npm install
+pnpm install
 # Configurar .env (DATABASE_URL, NEXT_PUBLIC_SUPABASE_*)
-npm run prisma:generate
-npm run prisma:migrate
-npm run dev
+pnpm prisma:generate
+pnpm prisma:migrate
+pnpm dev
 ```
 
 ## Scripts
 
-| Comando                   | Descripción            |
-| ------------------------- | ---------------------- |
-| `npm run dev`             | Servidor de desarrollo |
-| `npm run build`           | Build de producción    |
-| `npm run start`           | Servidor de producción |
-| `npm run lint`            | Ejecutar ESLint        |
-| `npm run test`            | Tests con Vitest       |
-| `npm run prisma:generate` | Generar Prisma Client  |
-| `npm run prisma:migrate`  | Ejecutar migraciones   |
-| `npm run db-seed`         | Seed de base de datos  |
+| Comando                    | Descripción            |
+| -------------------------- | ---------------------- |
+| `pnpm dev`                 | Servidor de desarrollo |
+| `pnpm build`               | Build de producción    |
+| `pnpm start`               | Servidor de producción |
+| `pnpm lint`                | Ejecutar ESLint        |
+| `pnpm test`                | Tests con Vitest       |
+| `pnpm prisma:generate`     | Generar Prisma Client  |
+| `pnpm prisma:migrate`      | Ejecutar migraciones   |
+| `pnpm db-seed`             | Seed de base de datos  |
 
 ## Estructura del proyecto
 

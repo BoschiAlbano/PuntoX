@@ -81,14 +81,14 @@ lib/services/comprobantes, lib/sucursal/verifyUserBranch, lib/utils/barcode, lib
 
 ```bash
 # Unitarios
-npm test
-npm run test:watch
-npm run test:coverage
+pnpm test
+pnpm test:watch
+pnpm test:coverage
 
 # E2E
-npm run test:e2e
-npm run test:e2e -- --project=chromium
-npm run test:e2e:ui
+pnpm test:e2e
+pnpm test:e2e -- --project=chromium
+pnpm test:e2e:ui
 
 # Solo validación
 npx vitest run src/test/validation

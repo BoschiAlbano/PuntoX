@@ -80,16 +80,11 @@ export default function GraficaPagos({ datos }: GraficaPagosProps) {
                 border: "none",
                 boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
               }}
-              formatter={(
-                value: number | undefined,
-                name: string | undefined,
-              ) => [
-                value !== undefined
-                  ? new Intl.NumberFormat("es-AR", {
-                      style: "currency",
-                      currency: "ARS",
-                    }).format(value)
-                  : "",
+              formatter={(value, name) => [
+                new Intl.NumberFormat("es-AR", {
+                  style: "currency",
+                  currency: "ARS",
+                }).format(Number(value)),
                 name ?? "",
               ]}
             />

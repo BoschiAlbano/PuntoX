@@ -79,7 +79,7 @@ if (hasErrors) {
   console.log("  Revisa tu archivo .env.local o .env");
 } else {
   console.log("  Configuracion correcta");
-  console.log("  Puedes iniciar el servidor con: npm run dev");
+  console.log("  Puedes iniciar el servidor con: pnpm dev");
 }
 
 console.log("\nCONSEJOS:");

@@ -20,9 +20,9 @@
 ## Uso rápido
 
 ```bash
-npm test                    # Ejecutar suite
-npm run test:watch          # Modo watch
-npm run test:coverage       # Con cobertura
+pnpm test                   # Ejecutar suite
+pnpm test:watch             # Modo watch
+pnpm test:coverage          # Con cobertura
 ```
 
 Para detalles, ejemplos y convenciones → [GUIA.md](GUIA.md).
