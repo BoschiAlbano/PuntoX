@@ -678,7 +678,7 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
       >
         {/* Header del Sidebar */}
         <div className="w-full flex items-center justify-center px-4 py-4">
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             {!isCollapsed ? (
               <motion.div
                 key="logo-expanded"
@@ -714,17 +714,9 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
         </div>
 
         {/* Selector de Sucursal */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="group cursor-pointer space-y-2 px-3 py-4"
-          >
-            <SucursalSelector hideIfSingle={false} isCollapsed={isCollapsed} />
-          </motion.div>
-        </AnimatePresence>
+        <div className="group cursor-pointer space-y-2 px-3 py-4">
+          <SucursalSelector hideIfSingle={false} isCollapsed={isCollapsed} />
+        </div>
 
         {/* Menu Items por Secciones */}
         <nav
@@ -741,7 +733,7 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                 className={sectionIndex > 0 ? "pt-3" : ""}
               >
                 {/* Título de la sección (clickeable para colapsar/expandir) */}
-                <AnimatePresence mode="wait">
+                <AnimatePresence>
                   {!isCollapsed ? (
                     <motion.button
                       key={`section-label-${section.title}`}
@@ -785,18 +777,17 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                   )}
                 </AnimatePresence>
 
-                {/* Items de la sección (animados al colapsar/expandir) */}
-                <AnimatePresence initial={false}>
-                  {!isSectionCollapsed && (
-                    <motion.div
-                      key={`section-items-${section.title}`}
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: "easeInOut" }}
-                      className="overflow-hidden px-1 -mx-1"
-                    >
-                      <div className="space-y-1">
+                {/* Items de la sección — CSS grid 0fr→1fr evita el flash de height:"auto" */}
+                <motion.div
+                  animate={{
+                    gridTemplateRows: isSectionCollapsed ? "0fr" : "1fr",
+                  }}
+                  initial={false}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                  className="grid overflow-hidden"
+                >
+                  <div className="min-h-0 overflow-hidden">
+                    <div className="space-y-1 px-1 -mx-1 pt-0.5">
                         {section.items.map((item) => {
                           const isActive = pathname === item.href;
 
@@ -869,14 +860,14 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                                     )}
                                   </div>
 
-                                  <AnimatePresence mode="wait">
+                                  <AnimatePresence>
                                     {!isCollapsed && (
                                       <motion.div
-                                        initial={{ opacity: 0, width: 0 }}
-                                        animate={{ opacity: 1, width: "auto" }}
-                                        exit={{ opacity: 0, width: 0 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="flex-1 whitespace-nowrap"
+                                        initial={{ opacity: 0, x: -6 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -6 }}
+                                        transition={{ duration: 0.18 }}
+                                        className="flex-1 overflow-hidden whitespace-nowrap"
                                       >
                                         <span className="relative z-10 text-[13px] font-semibold tracking-tight">
                                           {item.label}
@@ -884,23 +875,22 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                                       </motion.div>
                                     )}
                                   </AnimatePresence>
-                                </motion.div>
+                                 </motion.div>
                               </Tooltip>
                             </Link>
                           );
                         })}
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+                    </div>
+                  </motion.div>
+                </div>
             );
           })}
         </nav>
 
         {/* Footer del Sidebar */}
         <div className="flex w-full flex-col items-center gap-2 border-t border-(--nav-footer-border) p-3">
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             {!isCollapsed ? (
               <motion.div
                 initial={{ opacity: 0 }}
