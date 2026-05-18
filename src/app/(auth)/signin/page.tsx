@@ -8,14 +8,14 @@ export default function SignIn() {
       {/* Efectos de fondo decorativos */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Gradiente radial principal */}
-        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-[#67afc3]/15 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-[#0284c7]/10 rounded-full blur-[120px]" />
+        <div className="absolute top-[-20%] left-[-10%] w-150 h-150 bg-[#67afc3]/15 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-125 h-125 bg-[#0284c7]/10 rounded-full blur-[120px]" />
         {/* Líneas decorativas sutiles */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-32 bg-linear-to-b from-transparent via-[#67afc3]/20 to-transparent" />
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-32 bg-linear-to-t from-transparent via-[#67afc3]/20 to-transparent" />
       </div>
 
-      <div className="relative z-10 max-w-[420px] w-full space-y-6">
+      <div className="relative z-10 max-w-105 w-full space-y-6">
         {/* Header con logo */}
         <div className="text-center flex flex-col items-center">
           <div className="mb-6 relative">

@@ -1,11 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Button,
-  Spinner,
-  addToast,
-} from "@heroui/react";
+import { Button, Spinner, addToast } from "@heroui/react";
 import { ChevronDown, Check, MapPin } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
 import { motion, AnimatePresence } from "framer-motion";
@@ -90,13 +86,15 @@ export default function SucursalSelector({
         className={`group relative
           ${
             isCollapsed
-              ? "min-w-[50px] w-[55px] h-[50px] p-0 justify-center text-(--nav-item-icon) bg-transparent rounded-xl hover:bg-(--nav-item-hover-bg) hover:text-(--nav-item-hover-text) mx-auto"
+              ? "min-w-[56px] w-[56px] h-[44px] p-0 justify-center text-(--nav-item-icon) bg-transparent rounded-xl hover:bg-(--nav-item-hover-bg) hover:text-(--nav-item-hover-text) mx-auto"
               : "w-full gap-2 text-(--nav-item-text) bg-transparent border border-(--nav-divider) px-4 py-5 rounded-xl hover:bg-(--nav-item-hover-bg) hover:text-(--nav-item-hover-text)"
           }
         `}
         startContent={
           isCollapsed ? null : (
-            <IconSucursal className={`group-hover:text-[#5fa7b8] transition-colors ${isOpen ? "text-[#5fa7b8]" : ""}`} />
+            <IconSucursal
+              className={`group-hover:text-[#5fa7b8] transition-colors ${isOpen ? "text-[#5fa7b8]" : ""}`}
+            />
           )
         }
         endContent={
@@ -111,7 +109,9 @@ export default function SucursalSelector({
         disabled={isChanging}
       >
         {isCollapsed ? (
-          <IconSucursal className={`group-hover:text-[#5fa7b8] transition-colors ${isOpen ? "text-[#5fa7b8]" : ""}`} />
+          <IconSucursal
+            className={`group-hover:text-[#5fa7b8] transition-colors ${isOpen ? "text-[#5fa7b8]" : ""}`}
+          />
         ) : (
           <span className="truncate flex-1 text-left font-medium">
             {sucursalActiva?.Nombre || "Seleccionar sucursal"}
@@ -128,7 +128,7 @@ export default function SucursalSelector({
             transition={{ duration: 0.25, ease: "easeInOut" }}
             className={`overflow-hidden ${isCollapsed ? "px-0" : "px-0"} pt-1`}
           >
-            <div className="flex flex-col gap-1 mt-1 bg-white rounded-xl p-1 border border-slate-200 shadow-sm">
+            <div className="flex flex-col gap-1 bg-[#1D2F3F] rounded-xl border">
               {sucursales.map((sucursal) => {
                 const isSelected = sucursalActiva?.Id === sucursal.Id;
                 return (
@@ -136,7 +136,7 @@ export default function SucursalSelector({
                     key={sucursal.Id}
                     onClick={() => handleChangeBranch(sucursal.Id.toString())}
                     className={`flex items-center gap-3 w-full text-left rounded-lg transition-all
-                      ${isCollapsed ? "justify-center p-2" : "px-3 py-2.5"}
+                      ${isCollapsed ? "justify-center w-11 h-11" : "px-3 py-1.5"}
                       ${
                         isSelected
                           ? "bg-[#5fa7b8]/10 text-[#5fa7b8]"
@@ -154,18 +154,22 @@ export default function SucursalSelector({
                         )}
                       </div>
                     )}
-                    
+
                     {isCollapsed ? (
                       <span className="text-[10px] font-bold truncate max-w-[40px] uppercase">
                         {sucursal.Nombre.substring(0, 3)}
                       </span>
                     ) : (
                       <div className="flex flex-col min-w-0 flex-1">
-                        <span className={`text-[13px] truncate ${isSelected ? "font-semibold" : "font-medium"}`}>
+                        <span
+                          className={`text-[13px] truncate ${isSelected ? "font-semibold" : "font-medium"}`}
+                        >
                           {sucursal.Nombre}
                         </span>
                         <span className="text-[10px] text-slate-500 truncate">
-                          {sucursal.EsPrincipal ? "Casa Central" : sucursal.Direccion || "Sin dirección"}
+                          {sucursal.EsPrincipal
+                            ? "Casa Central"
+                            : sucursal.Direccion || "Sin dirección"}
                         </span>
                       </div>
                     )}

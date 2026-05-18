@@ -79,7 +79,7 @@ export const EditButton = ({
       isDisabled={isDisabled}
       aria-label={label}
       {...props}
-      className={`${baseButtonClass} bg-sky-50 text-sky-500 hover:bg-sky-100 ${className ?? ""}`}
+      className={`${baseButtonClass}  text-yellow-500 bg-transparent ${className ?? ""}`}
     >
       <Pencil size={ICON_SIZE} strokeWidth={ICON_STROKE} />
     </Button>
@@ -106,7 +106,7 @@ export const DeleteButton = ({
       isDisabled={isDisabled}
       aria-label={label}
       {...props}
-      className={`${baseButtonClass} bg-rose-50 text-rose-500 hover:bg-rose-100 ${className ?? ""}`}
+      className={`${baseButtonClass} bg-transparent text-rose-500  ${className ?? ""}`}
     >
       <Trash2 size={ICON_SIZE} strokeWidth={ICON_STROKE} />
     </Button>
@@ -133,7 +133,7 @@ export const AddStockButton = ({
       isDisabled={isDisabled}
       aria-label={label}
       {...props}
-      className={`${baseButtonClass} bg-emerald-50 text-emerald-500 hover:bg-emerald-100 ${className ?? ""}`}
+      className={`${baseButtonClass} bg-transparent text-emerald-500 ${className ?? ""}`}
     >
       <Plus size={ICON_SIZE} strokeWidth={ICON_STROKE} />
     </Button>
@@ -160,7 +160,7 @@ export const ViewButton = ({
       isDisabled={isDisabled}
       aria-label={label}
       {...props}
-      className={`${baseButtonClass} bg-violet-50 text-violet-500 hover:bg-violet-100 ${className ?? ""}`}
+      className={`${baseButtonClass} bg-transparent text-violet-500 ${className ?? ""}`}
     >
       <Eye size={ICON_SIZE} strokeWidth={ICON_STROKE} />
     </Button>
@@ -195,8 +195,8 @@ export const CreditCardButton = ({
       {...props}
       className={`${baseButtonClass} ${
         hasDebt
-          ? "bg-red-50 text-red-500 hover:bg-red-100"
-          : "bg-[#67afc3]/10 text-[#67afc3] hover:bg-[#67afc3]/25"
+          ? "bg-transparent text-red-500 "
+          : "bg-transparent text-[#67afc3]"
       } ${className ?? ""}`}
     >
       <CreditCard size={ICON_SIZE} strokeWidth={ICON_STROKE} />
@@ -224,7 +224,7 @@ export const PasswordButton = ({
       isDisabled={isDisabled}
       aria-label={label}
       {...props}
-      className={`${baseButtonClass} bg-violet-50 text-violet-500 hover:bg-violet-100 ${className ?? ""}`}
+      className={`${baseButtonClass} bg-transparent text-violet-500 ${className ?? ""}`}
     >
       <KeyRound size={ICON_SIZE} strokeWidth={ICON_STROKE} />
     </Button>

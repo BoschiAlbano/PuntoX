@@ -642,7 +642,7 @@ export default function GenericTable<T extends { Id: number | string }>({
         {/* Barra de selección masiva eliminada — acciones movidas al menú "Más opciones" */}
 
         {/* Table/Cards + Pagination */}
-          <div className="w-full flex flex-col rounded-xl bg-[#F5F8FD] flex-1">
+        <div className="w-full flex flex-col rounded-xl bg-[#F5F8FD] flex-1">
           <div className="overflow-x-auto flex-1">
             {viewMode === "cards" && renderCards ? (
               isLoading ? (
@@ -895,7 +895,8 @@ export default function GenericTable<T extends { Id: number | string }>({
                     size="sm"
                     classNames={{
                       base: "w-full flex justify-center sm:w-auto",
-                      cursor: "bg-[var(--crud-accent)]/90 text-white shadow-none",
+                      cursor:
+                        "bg-[var(--crud-accent)]/90 text-white shadow-none",
                       item: "bg-transparent shadow-none cursor-pointer text-xs sm:text-sm",
                       next: "cursor-pointer",
                       prev: "cursor-pointer",

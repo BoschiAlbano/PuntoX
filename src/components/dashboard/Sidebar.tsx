@@ -697,40 +697,24 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
         }}
       >
         {/* Header del Sidebar */}
-        <div className="w-full flex items-center justify-center px-4 py-4">
-          <AnimatePresence>
-            {!isCollapsed ? (
-              <motion.div
-                key="logo-expanded"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.3 }}
-                className="flex h-7.5 w-full flex-row items-center gap-2"
-              >
-                <PuntoXLogo className="h-11 w-11 rounded-lg border border-[#67afc3]/40 p-1.5 shadow-sm shadow-[#67afc3]/30 transition-all duration-300 hover:rotate-345" />
-                <div className="flex flex-col items-start truncate">
-                  <span className="text-lg font-bold tracking-tight text-(--nav-logo-title)">
-                    Punto X
-                  </span>
-                  <span className="text-xs font-semibold uppercase tracking-wide text-(--nav-logo-subtitle)">
-                    Software de gestión
-                  </span>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="logo-collapsed"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.3 }}
-                className="flex items-center justify-center h-7.5"
-              >
-                <PuntoXLogo className="h-11 w-11 rounded-lg border border-[#67afc3]/40 p-1.5 shadow-sm shadow-[#67afc3]/30 transition-all duration-300 hover:rotate-345" />
-              </motion.div>
-            )}
-          </AnimatePresence>
+
+        <div className="w-full flex items-center justify-center px-4 py-4 h-15.5">
+          <div className="flex h-7.5 w-full flex-row items-center gap-2">
+            <img
+              src="/logo.svg"
+              className="w-11 rounded-lg border border-[#67afc3]/40 p-1.5 shadow-sm shadow-[#67afc3]/30 transition-all duration-300 hover:rotate-345"
+              alt="logo.svg"
+            />
+
+            <div className="flex flex-col items-start truncate">
+              <span className="text-lg font-bold tracking-tight text-(--nav-logo-title)">
+                Punto X
+              </span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-(--nav-logo-subtitle)">
+                Software de gestión
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Selector de Sucursal */}
@@ -808,40 +792,40 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                 >
                   <div className="min-h-0 overflow-hidden">
                     <div className="space-y-1 px-1 -mx-1 pt-0.5">
-                        {section.items.map((item) => {
-                          const isActive = pathname === item.href;
+                      {section.items.map((item) => {
+                        const isActive = pathname === item.href;
 
-                          // Manejador extra para responsive
-                          const handleNavigationTrigger = () => {
-                            if (window.innerWidth < 768 && onClose) {
-                              onClose();
-                            }
-                          };
+                        // Manejador extra para responsive
+                        const handleNavigationTrigger = () => {
+                          if (window.innerWidth < 768 && onClose) {
+                            onClose();
+                          }
+                        };
 
-                          return (
-                            <Link
-                              key={item.href}
-                              href={item.href}
-                              onClick={handleNavigationTrigger}
-                              className="block"
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={handleNavigationTrigger}
+                            className="block"
+                          >
+                            <Tooltip
+                              content={item.label}
+                              placement="right"
+                              isDisabled={!isCollapsed}
+                              offset={20}
+                              classNames={{
+                                content:
+                                  "bg-(--nav-tooltip-bg) text-(--nav-tooltip-text) font-semibold text-xs border border-(--nav-tooltip-border) shadow-lg",
+                              }}
                             >
-                              <Tooltip
-                                content={item.label}
-                                placement="right"
-                                isDisabled={!isCollapsed}
-                                offset={20}
-                                classNames={{
-                                  content:
-                                    "bg-(--nav-tooltip-bg) text-(--nav-tooltip-text) font-semibold text-xs border border-(--nav-tooltip-border) shadow-lg",
+                              <motion.div
+                                whileHover={{
+                                  x: isCollapsed ? 0 : 2,
+                                  scale: isCollapsed ? 1 : 1.01,
                                 }}
-                              >
-                                <motion.div
-                                  whileHover={{
-                                    x: isCollapsed ? 0 : 2,
-                                    scale: isCollapsed ? 1 : 1.01,
-                                  }}
-                                  whileTap={{ scale: 0.98 }}
-                                  className={`
+                                whileTap={{ scale: 0.98 }}
+                                className={`
                                       relative group flex h-11 w-full cursor-pointer items-center overflow-hidden rounded-lg
                                       ${isCollapsed ? "justify-center p-2" : "gap-3 px-3 py-2"}
                                       ${
@@ -850,60 +834,60 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                                           : "text-(--nav-item-text) hover:bg-(--nav-item-hover-bg) hover:text-(--nav-item-hover-text)"
                                       }
                                     `}
+                              >
+                                {isActive && (
+                                  <motion.div
+                                    layoutId="activeIndicator"
+                                    className="absolute left-1.5 h-5 w-[3px] rounded-full bg-[#67afc3]"
+                                    transition={{
+                                      type: "spring",
+                                      stiffness: 300,
+                                      damping: 30,
+                                    }}
+                                  />
+                                )}
+
+                                <div
+                                  className={`relative ${
+                                    isActive
+                                      ? "text-(--nav-item-active-icon)"
+                                      : "text-(--nav-item-icon)"
+                                  }`}
                                 >
-                                  {isActive && (
-                                    <motion.div
-                                      layoutId="activeIndicator"
-                                      className="absolute left-1.5 h-5 w-[3px] rounded-full bg-[#67afc3]"
-                                      transition={{
-                                        type: "spring",
-                                        stiffness: 300,
-                                        damping: 30,
-                                      }}
-                                    />
-                                  )}
-
-                                  <div
-                                    className={`relative ${
-                                      isActive
-                                        ? "text-(--nav-item-active-icon)"
-                                        : "text-(--nav-item-icon)"
-                                    }`}
-                                  >
-                                    <div className="transition-colors group-hover:text-[#67afc3]">
-                                      {item.icon}
-                                    </div>
-                                    {item.badge && (
-                                      <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-linear-to-b from-blue-500 to-[#90c472] px-1 text-[10px] text-white">
-                                        {item.badge}
-                                      </span>
-                                    )}
+                                  <div className="transition-colors group-hover:text-[#67afc3]">
+                                    {item.icon}
                                   </div>
+                                  {item.badge && (
+                                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-linear-to-b from-blue-500 to-[#90c472] px-1 text-[10px] text-white">
+                                      {item.badge}
+                                    </span>
+                                  )}
+                                </div>
 
-                                  <AnimatePresence>
-                                    {!isCollapsed && (
-                                      <motion.div
-                                        initial={{ opacity: 0, x: -6 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -6 }}
-                                        transition={{ duration: 0.18 }}
-                                        className="flex-1 overflow-hidden whitespace-nowrap"
-                                      >
-                                        <span className="relative z-10 text-[13px] font-semibold tracking-tight">
-                                          {item.label}
-                                        </span>
-                                      </motion.div>
-                                    )}
-                                  </AnimatePresence>
-                                 </motion.div>
-                              </Tooltip>
-                            </Link>
-                          );
-                        })}
-                      </div>
+                                <AnimatePresence>
+                                  {!isCollapsed && (
+                                    <motion.div
+                                      initial={{ opacity: 0, x: -6 }}
+                                      animate={{ opacity: 1, x: 0 }}
+                                      exit={{ opacity: 0, x: -6 }}
+                                      transition={{ duration: 0.18 }}
+                                      className="flex-1 overflow-hidden whitespace-nowrap"
+                                    >
+                                      <span className="relative z-10 text-[13px] font-semibold tracking-tight">
+                                        {item.label}
+                                      </span>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </motion.div>
+                            </Tooltip>
+                          </Link>
+                        );
+                      })}
                     </div>
-                  </motion.div>
-                </div>
+                  </div>
+                </motion.div>
+              </div>
             );
           })}
         </nav>
