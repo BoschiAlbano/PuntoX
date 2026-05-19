@@ -2,18 +2,11 @@
 
 import { motion } from "framer-motion";
 import { MfaSetup } from "@/components/auth/MfaSetup";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { FotoPerfilSection } from "@/components/perfil/FotoPerfilSection";
 
 export default function PerfilPersonalPage() {
   return (
-    <div className="   flex flex-col items-stretch min-h-full relative space-y-4 sm:space-y-6">
-      <PageHeader
-        title="Mi"
-        accentTitle="Perfil"
-        description="Gestioná tu seguridad personal y métodos de inicio de sesión."
-      />
-
+    <div className="flex flex-col items-stretch min-h-full relative">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -23,7 +16,6 @@ export default function PerfilPersonalPage() {
         <div className="relative z-10 flex-1 flex flex-col h-full overflow-y-auto pb-10">
           <div className="max-w-2xl w-full mx-auto space-y-6">
             <FotoPerfilSection />
-            {/* Aquí a futuro se pueden poner más opciones como "Cambiar contraseña" */}
             <MfaSetup />
           </div>
         </div>

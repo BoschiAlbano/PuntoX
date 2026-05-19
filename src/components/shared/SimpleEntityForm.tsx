@@ -140,6 +140,7 @@ export function SimpleEntityForm<T extends SimpleEntity>({
             <Input
               label="Descripción"
               placeholder={placeholder}
+              autoFocus
               value={formData.Descripcion ?? ""}
               onChange={(e) =>
                 setFormData((prev) => ({

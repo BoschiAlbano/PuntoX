@@ -19,9 +19,10 @@ export default function ComprobanteSelector({
   setNumeroComprobanteAsociado,
 }: ComprobanteSelectorProps) {
   return (
-    <div className="flex gap-2 w-full items-end rounded-lg">
+    <div className="flex gap-2 w-full items-center">
       <Select
-        label="Comprobante"
+        aria-label="Comprobante"
+        placeholder="Comprobante"
         size="sm"
         className="w-full"
         selectedKeys={[tipoComprobante.toString()]}
@@ -29,7 +30,7 @@ export default function ComprobanteSelector({
         onChange={(e) => setTipoComprobante(Number(e.target.value))}
         classNames={{
           trigger:
-            "h-10 min-h-10 rounded-lg shadow-none bg-transparent text-black hover:bg-white",
+            "h-10 min-h-10 rounded-lg shadow-none bg-white border border-slate-300 hover:border-[#67afc3] hover:bg-slate-50 text-black transition-colors",
         }}
       >
         <SelectItem

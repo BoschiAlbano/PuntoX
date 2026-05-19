@@ -73,6 +73,7 @@ export default function ListaPrecioForm({
           <Input
             label="Nombre"
             placeholder="Ej: Mayorista, Lista VIP"
+            autoFocus
             value={formData.Nombre || ""}
             onChange={(e) =>
               setFormData({ ...formData, Nombre: e.target.value })

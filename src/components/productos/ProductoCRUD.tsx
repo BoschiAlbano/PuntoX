@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import GenericCrud from "@/components/shared/GenericCrud";
 import ProductoForm from "./ProductoForm";
 import { Producto } from "@/lib/validations/producto.schema";
@@ -20,7 +19,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
 import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
 import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
-import { ShoppingCart, Copy, Check } from "lucide-react";
+import { Copy, Check } from "lucide-react";
 import { ProductoCard } from "./ProductoCard";
 
 function ProductoPreviewContent({ item }: { item: Producto }) {
@@ -298,15 +297,6 @@ export default function ProductoCRUD() {
             onClick={actions.onPreview}
           />
         )}
-        toolbarExtraContent={
-          <Link
-            href="/compras"
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-slate-300 bg-white text-slate-700 hover:bg-[#67afc3]/10 hover:border-[#67afc3] hover:text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40 transition-all duration-150"
-          >
-            <ShoppingCart size={18} strokeWidth={2} />
-            Solicitar reposición
-          </Link>
-        }
         lowStockFilterFn={(item) => {
           const min = item.StockMinimo ?? 0;
           const stock = item.Stock ?? 0;

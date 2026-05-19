@@ -82,6 +82,33 @@ export default function VentaFooter({
 
   const [openModalAbrirCaja, setOpenModalAbrirCaja] = useState(false);
 
+  // ── Keyboard shortcuts (F10 → confirmar, Escape → cancelar) ──
+  const handleFinalizeSaleRef = React.useRef<() => void>(() => {});
+  const itemsLengthRef = React.useRef(items.length);
+  itemsLengthRef.current = items.length;
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const tag = target?.tagName;
+      const isProductSearch = target?.id === 'product-search-input';
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) && !isProductSearch) return;
+      if (document.querySelector('[data-slot="backdrop"]')) return;
+
+      if (e.key === 'F10') {
+        e.preventDefault();
+        handleFinalizeSaleRef.current();
+      }
+      if (e.key === 'Escape' && itemsLengthRef.current > 0) {
+        e.preventDefault();
+        setIsCancelModalOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Ticket Printing
   const [lastSaleData, setLastSaleData] = useState<any>(null);
   const ticketRef = React.useRef<HTMLDivElement>(null);
@@ -325,6 +352,8 @@ export default function VentaFooter({
     };
     createSaleMutation.mutate(payload);
   };
+  // keep ref in sync with the latest closure
+  handleFinalizeSaleRef.current = handleFinalizeSale;
 
   const getTipoLabel = (tipo: number) => {
     switch (tipo) {
@@ -387,9 +416,9 @@ export default function VentaFooter({
   }, [paymentOptions, currentTipo]);
 
   return (
-    <section className="flex-1 flex flex-col gap-2">
+    <section className="flex-1 min-h-0 flex flex-col gap-2">
       {/* Payment Methods Section */}
-      <div className="bg-white/90 backdrop-blur-xl border border-slate-100 rounded-[20px] shadow-sm overflow-hidden flex-1 flex flex-col">
+      <div className="bg-white border border-slate-300 rounded-lg overflow-hidden flex-1 min-h-0 flex flex-col">
         {/* Section header */}
         <div className="px-4 py-3 border-b border-slate-100/60 bg-slate-50/50 flex items-center gap-2.5 shrink-0">
           <div className="p-1.5 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 text-[#67afc3]">
@@ -455,7 +484,7 @@ export default function VentaFooter({
                 </div>
               )}
 
-            <div className="p-3 flex flex-col gap-3 flex-1">
+            <div className="p-3 flex flex-col gap-3 flex-1 min-h-0">
               {/* Payment Input Group */}
               <div className="flex gap-2 items-end shrink-0">
                 <Select
@@ -623,7 +652,7 @@ export default function VentaFooter({
       </div>
 
       {/* Totals & Actions Card */}
-      <div className="bg-white/90 backdrop-blur-xl border border-slate-100 rounded-[20px] shadow-sm overflow-hidden shrink-0 relative z-10">
+      <div className="bg-white border border-slate-300 rounded-lg overflow-hidden shrink-0 relative z-10">
         {/* Section header */}
         <div className="px-4 py-3 border-b border-slate-100/60 bg-slate-50/50 flex items-center gap-2.5 shrink-0">
           <div className="p-1.5 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 text-[#67afc3]">

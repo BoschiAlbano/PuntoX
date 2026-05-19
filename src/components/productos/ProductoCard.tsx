@@ -34,7 +34,7 @@ export function ProductoCard({
 
   return (
     <Card
-      className="overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+      className="overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 shadow-none"
       isPressable={false}
     >
       <CardBody className="p-0">
@@ -54,7 +54,7 @@ export function ProductoCard({
           }
           className={onClick ? "cursor-pointer" : ""}
         >
-          <div className="aspect-square bg-slate-100 relative">
+          <div className="aspect-square bg-white relative">
             <img
               src={item.Foto || PLACEHOLDER_IMG}
               alt={item.Descripcion}
@@ -99,9 +99,11 @@ export function ProductoCard({
             <div className="flex justify-between items-center text-sm">
               <span className="text-slate-600">
                 {formatCurrency(
-                item.PreciosLista?.length ? Number(item.PreciosLista[0].PrecioFinal) : 0,
-                currency,
-              )}
+                  item.PreciosLista?.length
+                    ? Number(item.PreciosLista[0].PrecioFinal)
+                    : 0,
+                  currency,
+                )}
               </span>
             </div>
           </div>

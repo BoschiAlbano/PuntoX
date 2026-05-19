@@ -389,6 +389,13 @@ export default function CajaActual({
             Debés abrir la caja para comenzar a registrar operaciones.
           </p>
         </div>
+        <Button
+          onPress={() => onAbrirChange()}
+          className="bg-[#0F2233] text-white font-semibold px-5 h-10 rounded-xl gap-2 hover:bg-[#0F2233]/80 transition-all shadow-sm text-sm"
+          startContent={<Unlock size={15} strokeWidth={2.5} />}
+        >
+          Abrir Caja
+        </Button>
 
         <ModalAbrirCaja open={isAbrirOpen} onClose={onAbrirChange} />
       </div>
@@ -450,10 +457,19 @@ export default function CajaActual({
   return (
     <div className="flex flex-col gap-6 pb-4">
       {/* Entradas del dia */}
-      <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
-        <TrendingUp size={18} className="text-green-500" />
-        Entradas del día
-      </h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+          <TrendingUp size={18} className="text-green-500" />
+          Entradas del día
+        </h2>
+        <Button
+          onPress={() => onCerrarChange()}
+          className="bg-[#0F2233] text-white font-semibold px-4 h-9 rounded-xl gap-2 hover:bg-[#0F2233]/80 transition-all shadow-sm text-sm"
+          startContent={<Lock size={14} strokeWidth={2.5} />}
+        >
+          Cerrar Caja
+        </Button>
+      </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <StatCard
           title="Efectivo"

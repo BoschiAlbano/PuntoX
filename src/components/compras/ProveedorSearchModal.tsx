@@ -120,6 +120,7 @@ export default function ProveedorSearchModal({
                 value={searchQuery}
                 onValueChange={setSearchQuery}
                 onClear={() => setSearchQuery("")}
+                autoFocus
                 classNames={{
                   inputWrapper:
                     "bg-slate-50 hover:bg-slate-100 focus-within:!bg-white border-2 border-transparent focus-within:!border-[#67afc3]/40 transition-all shadow-sm rounded-xl h-11 sm:h-14",

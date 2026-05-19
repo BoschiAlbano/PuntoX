@@ -319,6 +319,7 @@ export default function ClienteForm({
                     <Input
                       label="Nombre *"
                       placeholder="Juan"
+                      autoFocus
                       value={formData.Nombre}
                       onChange={(e) => handleChange("Nombre", e.target.value)}
                       isRequired

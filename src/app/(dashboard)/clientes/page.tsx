@@ -2,17 +2,10 @@
 
 import { motion } from "framer-motion";
 import ClienteCRUD from "@/components/clientes/ClienteCRUD";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 
 export default function ClientesPage() {
   return (
-    <div className="   flex flex-col items-stretch min-h-full relative space-y-4 sm:space-y-6">
-      <PageHeader
-        title="Gestión de"
-        accentTitle="Clientes"
-        description="Aquí puedes observar un panorama rápido del rendimiento actual."
-      />
-
+    <div className="flex flex-col items-stretch min-h-full relative">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}

@@ -16,7 +16,6 @@ import { useUserStore } from "@/store/useUserStore";
 import { useQueryClient } from "@tanstack/react-query";
 import SucursalForm from "@/components/sucursales/SucursalForm";
 import { motion } from "framer-motion";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 
 export interface Sucursal {
   Id: number;
@@ -47,13 +46,7 @@ export default function SucursalesPage() {
   };
 
   return (
-    <div className="   flex flex-col items-stretch min-h-full relative space-y-4 sm:space-y-6">
-      <PageHeader
-        title="Gestión de"
-        accentTitle="Sucursales"
-        description="Aquí puedes observar un panorama rápido del rendimiento actual."
-      />
-
+    <div className="flex flex-col items-stretch min-h-full relative">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

@@ -1,7 +1,7 @@
 "use client";
 
 import { addToast } from "@heroui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShoppingCart, CreditCard } from "lucide-react";
 
 import ProductSearch from "./ProductSearch";
@@ -42,7 +42,8 @@ export default function VentasScreen() {
   } = useVentaStore();
 
   const { configuracion } = useConfiguracion({ enableConfiguracion: true });
-  const unificarRenglones = configuracion?.unificarRenglonesIngresarMismoProducto ?? true;
+  const unificarRenglones =
+    configuracion?.unificarRenglonesIngresarMismoProducto ?? true;
 
   // Business Logic Helpers
   const checkProductRules = (product: Producto | Item, newQuantity: number) => {
@@ -101,7 +102,12 @@ export default function VentasScreen() {
   };
 
   // Handlers
-  const handleAddItem = (producto: Producto, cantidad: number = 1, precioOverride?: number, origenPrecio?: OrigenPrecio) => {
+  const handleAddItem = (
+    producto: Producto,
+    cantidad: number = 1,
+    precioOverride?: number,
+    origenPrecio?: OrigenPrecio,
+  ) => {
     try {
       // Sumar todas las cantidades de productos con el mismo código
       // (necesario cuando no se unifica y hay múltiples renglones del mismo producto)
@@ -112,7 +118,14 @@ export default function VentasScreen() {
 
       checkProductRules(producto, totalQty);
 
-      addItem(producto, cantidad, listaPrecios, precioOverride, origenPrecio, unificarRenglones);
+      addItem(
+        producto,
+        cantidad,
+        listaPrecios,
+        precioOverride,
+        origenPrecio,
+        unificarRenglones,
+      );
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Error desconocido";
@@ -135,7 +148,7 @@ export default function VentasScreen() {
       const totalOtherItems = items
         .filter((i) => i.CodigoBarra === item.CodigoBarra && i.Id !== id)
         .reduce((sum, i) => sum + i.cantidad, 0);
-      const totalQty = (cantidad - currentItemQty) + totalOtherItems + cantidad;
+      const totalQty = cantidad - currentItemQty + totalOtherItems + cantidad;
 
       // Validar contra la cantidad total en lugar de solo este renglón
       const productForCheck = { ...item, cantidad: cantidad + totalOtherItems };
@@ -162,10 +175,34 @@ export default function VentasScreen() {
   const total = calculateTotal();
   const subtotal = items.reduce((acc, item) => acc + item.subtotal, 0);
 
+  // ── Keyboard shortcuts ──
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // No activar si el usuario está escribiendo en un campo
+      const target = e.target as HTMLElement;
+      const tag = target?.tagName;
+      const isProductSearch = target?.id === 'product-search-input';
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) && !isProductSearch) return;
+      // No activar si hay un modal/overlay abierto
+      if (document.querySelector('[data-slot="backdrop"]')) return;
+
+      if (e.key === 'F2') {
+        e.preventDefault();
+        document.getElementById('product-search-input')?.focus();
+      }
+      if (e.key === 'F6') {
+        e.preventDefault();
+        document.querySelector<HTMLElement>('[data-shortcut="cliente-trigger"]')?.click();
+      }
+    };
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
+  }, []);
+
   return (
-    <div className="h-full w-full flex flex-col gap-0">
+    <div className="flex-1 min-h-0 w-full flex flex-col gap-0">
       {/* ── MOBILE TABS ── solo visible en pantallas < lg */}
-      <div className="lg:hidden flex items-center bg-white border-b border-slate-100 shrink-0 px-3 pt-1">
+      <div className="lg:hidden flex items-center shrink-0 px-0 pt-1">
         <button
           onClick={() => setMobileTab("productos")}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold border-b-2 transition-all duration-200 ${
@@ -194,22 +231,26 @@ export default function VentasScreen() {
           <span>Pago</span>
           {total > 0 && (
             <span className="ml-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
-              ${total.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              $
+              {total.toLocaleString("es-AR", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              })}
             </span>
           )}
         </button>
       </div>
 
       {/* ── MAIN LAYOUT ── */}
-      <div className="flex flex-col lg:flex-row flex-1 gap-2 overflow-auto lg:overflow-hidden p-2">
+      <div className="flex flex-col lg:flex-row flex-1 gap-2 overflow-auto lg:overflow-hidden p-2 px-0">
         {/* ── LEFT PANEL: PRODUCTS ── */}
         <div
-          className={`flex-1 flex flex-col gap-2 lg:overflow-hidden rounded-xl ${
+          className={`flex-1 flex flex-col gap-2 lg:overflow-hidden ${
             mobileTab === "productos" ? "flex" : "hidden lg:flex"
           }`}
         >
           {/* Toolbar */}
-          <div className="bg-white p-2 rounded-xl border border-slate-100 flex flex-col sm:flex-row gap-2 sm:gap-0 items-stretch sm:items-center shrink-0 relative shadow-sm">
+          <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center shrink-0">
             {/* Buscador */}
             <div className="flex-1">
               <ProductSearch onProductSelect={handleAddItem} />
@@ -244,21 +285,15 @@ export default function VentasScreen() {
           {/* Cliente y Comprobante */}
           <div className="flex flex-col sm:flex-row lg:flex-col gap-2">
             {/* Cliente */}
-            <div className="bg-white rounded-xl border border-slate-100 flex flex-col shrink-0 overflow-hidden w-full shadow-sm">
-              <ClienteSearch selected={cliente} onSelect={setCliente} />
-            </div>
+            <ClienteSearch selected={cliente} onSelect={setCliente} />
 
             {/* Comprobante */}
-            <div className="bg-white rounded-xl border border-slate-100 flex flex-col shrink-0 overflow-hidden w-full shadow-sm">
-              <div className="p-2">
-                <ComprobanteSelector
-                  tipoComprobante={tipoComprobante}
-                  setTipoComprobante={setTipoComprobante}
-                  numeroComprobanteAsociado={numeroComprobanteAsociado}
-                  setNumeroComprobanteAsociado={setNumeroComprobanteAsociado}
-                />
-              </div>
-            </div>
+            <ComprobanteSelector
+              tipoComprobante={tipoComprobante}
+              setTipoComprobante={setTipoComprobante}
+              numeroComprobanteAsociado={numeroComprobanteAsociado}
+              setNumeroComprobanteAsociado={setNumeroComprobanteAsociado}
+            />
           </div>
 
           {/* Footer / Totales */}

@@ -2,17 +2,10 @@
 
 import { motion } from "framer-motion";
 import ProveedoresCrud from "@/components/proveedores/ProveedoresCrud";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 
 export default function ProveedoresPage() {
   return (
-    <div className="   flex flex-col items-stretch min-h-full relative space-y-4 sm:space-y-6">
-      <PageHeader
-        title="Gestión de"
-        accentTitle="Proveedores"
-        description="Aquí puedes administrar la lista de proveedores del sistema."
-      />
-
+    <div className="flex flex-col items-stretch min-h-full relative">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}

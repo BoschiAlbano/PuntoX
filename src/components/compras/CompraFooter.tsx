@@ -124,6 +124,15 @@ export default function CompraFooter({
     [pagos, proveedor],
   );
 
+  useEffect(() => {
+    if (
+      paymentOptions.length > 0 &&
+      !paymentOptions.find((op) => op.key === currentTipo)
+    ) {
+      setCurrentTipo(paymentOptions[0].key);
+    }
+  }, [paymentOptions, currentTipo]);
+
   const handleAddPayment = () => {
     const montoVal = parseFloat(currentMonto);
     if (isNaN(montoVal) || montoVal <= 0) return;
@@ -218,13 +227,45 @@ export default function CompraFooter({
     }
   };
 
+  // ── Keyboard shortcuts (F10 → confirmar, Escape → cancelar, F6 → proveedor) ──
+  const handleFinalizeCompraRef = React.useRef<() => void>(() => {});
+  handleFinalizeCompraRef.current = handleFinalizeCompra;
+  const itemsLengthRef = React.useRef(items.length);
+  itemsLengthRef.current = items.length;
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const tag = target?.tagName;
+      const isProductSearch = target?.id === 'product-search-compras-input';
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) && !isProductSearch) return;
+      if (document.querySelector('[data-slot="backdrop"]')) return;
+
+      if (e.key === 'F10') {
+        e.preventDefault();
+        handleFinalizeCompraRef.current();
+      }
+      if (e.key === 'Escape' && itemsLengthRef.current > 0) {
+        e.preventDefault();
+        setIsCancelModalOpen(true);
+      }
+      if (e.key === 'F6') {
+        e.preventDefault();
+        setIsProveedorModalOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <section className="flex-1 flex flex-col gap-2">
+    <section className="flex-1 min-h-0 flex flex-col gap-2">
       {/* Proveedor */}
-      <div className="flex flex-col gap-1.5 h-[58px]">
+      <div className="flex flex-col h-10 shrink-0">
         {proveedor ? (
-          <div className="flex  bg-white rounded-xl border border-slate-100 shrink-0 overflow-hidden shadow-sm items-center justify-between px-3 py-3 ">
-            <div className="flex items-center gap-2.5">
+          <div className="flex bg-white rounded-lg border border-slate-300 items-center justify-between px-3 h-10">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
               <div className="w-7 h-7 rounded-lg bg-[#67afc3]/15 border border-[#67afc3]/20 flex items-center justify-center text-[#67afc3] font-bold text-sm shrink-0">
                 {proveedor.RazonSocial.charAt(0).toUpperCase()}
               </div>
@@ -234,7 +275,7 @@ export default function CompraFooter({
             </div>
             <button
               onClick={() => setProveedor(null)}
-              className="text-slate-300 hover:text-red-400 transition-colors p-1 rounded-lg hover:bg-red-50"
+              className="text-slate-300 hover:text-red-400 transition-colors p-1 rounded-lg hover:bg-red-50 shrink-0"
               aria-label="Quitar proveedor"
             >
               <X size={14} />
@@ -243,11 +284,11 @@ export default function CompraFooter({
         ) : (
           <Button
             variant="flat"
-            className="bg-white rounded-xl border border-slate-100 shrink-0 overflow-hidden shadow-sm justify-start gap-2 p-3 h-full "
+            className="bg-white rounded-lg border border-slate-300 justify-start gap-2 px-3 h-10 min-h-10 hover:border-[#67afc3] hover:bg-slate-50 transition-colors"
             onPress={() => setIsProveedorModalOpen(true)}
             startContent={<Building2 size={15} className="text-[#67afc3]" />}
           >
-            <span className="text-xs font-medium">Buscar proveedor...</span>
+            <span className="text-xs font-medium text-slate-500">Buscar proveedor...</span>
           </Button>
         )}
       </div>
@@ -262,8 +303,8 @@ export default function CompraFooter({
       />
 
       {/* Formas de pago */}
-      <div className="bg-white flex-1 rounded-xl border border-slate-100 flex flex-col shadow-sm overflow-hidden">
-        <div className="p-3 flex flex-col gap-3 flex-1">
+      <div className="bg-white flex-1 min-h-0 rounded-lg border border-slate-300 flex flex-col overflow-hidden">
+        <div className="p-3 flex flex-col gap-3 flex-1 min-h-0">
           <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
             Formas de pago
           </p>
@@ -388,7 +429,7 @@ export default function CompraFooter({
       </div>
 
       {/* Totales y acción */}
-      <div className="bg-white rounded-xl border border-slate-100 p-3 shrink-0 flex flex-col gap-3 shadow-sm">
+      <div className="bg-white rounded-lg border border-slate-300 p-3 shrink-0 flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
           <div className="flex justify-between items-center text-xs text-slate-500">
             <span className="font-medium">Subtotal</span>

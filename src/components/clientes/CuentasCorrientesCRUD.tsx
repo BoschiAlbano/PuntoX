@@ -10,22 +10,13 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  User,
   Chip,
   useDisclosure,
-  Card,
-  CardBody,
   Select,
   SelectItem,
   addToast,
 } from "@heroui/react";
-import { RefreshCcw, CreditCard, Banknote, Wallet, Search } from "lucide-react";
+import { RefreshCcw, CreditCard, Banknote, Wallet } from "lucide-react";
 import { TIPO_PAGO } from "@/lib/constants/comprobantes";
 import { LoadingComponent } from "../loading/loading";
 import { useCtaCte, ClienteCtaCte, MovimientoCtaCte } from "@/hooks/useCtaCte";
@@ -79,12 +70,17 @@ export default function CuentasCorrientesCRUD() {
         Dni: dniParam ?? "",
         Mail: "",
       });
+      setQuery(nombreParam);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const { data: movementsData, isLoading: isLoadingMovements } =
-    useMovimientosCliente(selectedClient?.Id);
+  const {
+    data: movementsData,
+    isLoading: isLoadingMovements,
+    refetch: refetchMovements,
+  } = useMovimientosCliente(selectedClient?.Id);
   const movements = movementsData || [];
+  const reversedMovements = [...movements].reverse();
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
@@ -109,6 +105,7 @@ export default function CuentasCorrientesCRUD() {
 
   const handleSelectClient = (client: ClienteCtaCte) => {
     setSelectedClient(client);
+    setQuery(`${client.Nombre} ${client.Apellido}`);
     onOpenChange();
   };
 
@@ -244,42 +241,6 @@ export default function CuentasCorrientesCRUD() {
 
   return (
     <div className="w-full flex-1 relative flex flex-col gap-4">
-      {selectedClient && (
-        <Card className="bg-white border border-slate-200/60 shadow-lg shadow-slate-200/40 rounded-xl sm:rounded-2xl mx-1 sm:mx-4 overflow-hidden relative">
-          <div className="absolute top-0 left-0 w-1 sm:w-1.5 h-full bg-linear-to-b from-[#67afc3] to-[#2dd4bf]" />
-          <CardBody className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-6 py-3 sm:py-5 px-3 sm:px-6">
-            <div className="flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
-              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/30 flex items-center justify-center font-bold text-base sm:text-xl text-[#67afc3] shadow-sm shrink-0">
-                {selectedClient.Nombre?.[0] || ""}
-                {selectedClient.Apellido?.[0] || ""}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-base sm:text-xl font-bold text-slate-800 tracking-tight truncate leading-tight">
-                  {selectedClient.Nombre} {selectedClient.Apellido}
-                </h3>
-                <p className="text-[11px] sm:text-sm font-medium text-slate-500 mt-[1px] truncate">
-                  DNI: {selectedClient.Dni || "N/A"}
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-row sm:flex-col justify-between items-center sm:items-end bg-slate-50 sm:bg-transparent border border-slate-200/60 sm:border-transparent rounded-lg sm:rounded-xl px-3 py-2 sm:p-0 w-full sm:w-auto">
-              <span className="text-[9px] sm:text-[11px] uppercase tracking-wider font-bold text-slate-500 sm:mb-0.5">
-                Saldo Actual
-              </span>
-              <span
-                className={`text-lg sm:text-2xl font-extrabold ${
-                  (movements[movements.length - 1]?.saldo || 0) > 0
-                    ? "text-rose-500"
-                    : "text-emerald-500"
-                }`}
-              >
-                {formatCurrency(movements[movements.length - 1]?.saldo || 0)}
-              </span>
-            </div>
-          </CardBody>
-        </Card>
-      )}
-
       <div
         className="flex-1 flex flex-col min-h-0 w-full px-1 sm:px-4 pb-4 focus:outline-none focus:ring-0"
         onKeyDown={(e) => {
@@ -290,7 +251,7 @@ export default function CuentasCorrientesCRUD() {
         }}
       >
         <GenericTable
-          data={movements.map((m) => ({ ...m, Id: m.id }))}
+          data={reversedMovements.map((m) => ({ ...m, Id: m.id }))}
           columns={baseColumns}
           defaultVisibleUidsMobile={["debe", "haber", "saldo"]}
           renderCell={renderTableCell as any}
@@ -298,18 +259,21 @@ export default function CuentasCorrientesCRUD() {
           isError={false}
           emptyText="Sin movimientos registrados"
           search={query}
-          onSearchChange={setQuery}
+          onSearchChange={(val) => {
+            setQuery(val);
+            if (selectedClient) setSelectedClient(null);
+          }}
           searchPlaceholder="Buscar por nombre o DNI (Presione Entrar)..."
           page={1}
           onPageChange={() => {}}
           paginationMeta={{
             totalPages: 1,
             limit: 1000,
-            total: movements.length,
+            total: reversedMovements.length,
             page: 1,
           }}
-          onRefresh={handleSearch}
-          isRefreshing={isLoadingClients}
+          onRefresh={selectedClient ? () => refetchMovements() : handleSearch}
+          isRefreshing={selectedClient ? isLoadingMovements : isLoadingClients}
           onNewClick={selectedClient ? handleNewPago : undefined}
           newButtonText="Nuevo Pago"
         />

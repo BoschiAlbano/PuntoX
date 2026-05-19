@@ -1,19 +1,11 @@
 "use client";
 
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import UnidadMedidaCRUD from "@/components/unidad-medida/UnidadMedidaCRUD";
 import { motion } from "framer-motion";
 
 export default function UnidadesPage() {
   return (
-    <div className="   flex flex-col items-stretch min-h-full relative space-y-4 sm:space-y-6">
-      <PageHeader
-        title="Unidades de"
-        accentTitle="Medida"
-        description="Define y administra las diferentes formas en las que se miden tus productos."
-      />
-
-      {/* Main App Container */}
+    <div className="flex flex-col items-stretch min-h-full relative">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}

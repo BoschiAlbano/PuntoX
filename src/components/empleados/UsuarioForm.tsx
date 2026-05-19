@@ -395,6 +395,7 @@ export default function UsuarioForm({
                     <Input
                   label="Nombre"
                   placeholder="Ingrese el nombre"
+                  autoFocus
                   value={formData.nombre}
                   onValueChange={(value) => handleChange("nombre", value)}
                   isRequired

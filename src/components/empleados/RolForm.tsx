@@ -282,6 +282,7 @@ export default function RolForm({
             <Input
               label="Nombre"
               placeholder="Ej: Supervisor de turno"
+              autoFocus
               value={formData.nombre ?? ""}
               onChange={(e) => handleChange("nombre", e.target.value)}
               isRequired

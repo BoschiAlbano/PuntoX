@@ -2,17 +2,10 @@
 
 import { motion } from "framer-motion";
 import AuditoriasCRUD from "@/components/empleados/AuditoriasCRUD";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 
 export default function AuditoriaPage() {
   return (
-    <div className="  flex flex-col items-stretch min-h-full relative space-y-4 sm:space-y-6">
-      <PageHeader
-        title="Gestión de"
-        accentTitle="Auditoría"
-        description="Aquí puedes observar un panorama rápido de acciones realizadas sobre empleados y roles."
-      />
-
+    <div className="flex flex-col items-stretch min-h-full relative">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}

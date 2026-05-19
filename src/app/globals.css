@@ -1,4 +1,5 @@
 @import "tailwindcss";
+
 @plugin "../components/heroUi/hero.ts";
 @source '../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
 
@@ -135,6 +136,14 @@
     0.9
   ); /* cursor activo de paginación        */
   --crud-accent-print-dark: #141e2d; /* gradiente más oscuro en impresión  */
+
+  /* ── Table rows ──────────────────────────────────────────────────────────
+     Modificá estos valores para cambiar hover, selección y checkbox
+     de GenericTable sin tocar el código del componente.
+     ──────────────────────────────────────────────────────────────────── */
+  --table-row-hover-bg: #ffffff; /* fondo hover de fila              */
+  --table-row-selected-bg: #ffffff;
+  --table-checkbox-accent: #0f2233; /* color del checkbox al marcar     */
 }
 
 /* Enable dark mode variables when .dark class is present */
@@ -301,6 +310,16 @@ body {
   transition-duration: 150ms;
 } */
 
+/* ── HeroUI Table: color del checkbox seleccionado ────────────────────── */
+/* Clase aplicada directamente al [data-slot="wrapper"] del checkbox via    */
+/* checkboxesProps.classNames.wrapper en GenericTable.tsx                   */
+.table-cb-accent::after {
+  background-color: var(--table-checkbox-accent) !important;
+}
+.table-cb-accent::before {
+  border-color: var(--table-checkbox-accent) !important;
+}
+
 .config-action-module {
   display: flex;
   justify-content: space-between;
@@ -321,8 +340,14 @@ body {
   transform: translateY(-2px);
 }
 
+/* ── Focus ring global — reemplaza el azul del navegador ─────────────────── */
+*:focus-visible {
+  outline-color: #67afc3 !important;
+}
+
+/* config-action-module usa focus-visible con azul fijo → corregir */
 .config-action-module:focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid #67afc3;
   outline-offset: 2px;
 }
 

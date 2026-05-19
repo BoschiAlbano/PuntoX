@@ -1,19 +1,11 @@
 "use client";
 
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import RubroCRUD from "@/components/rubros/RubroCRUD";
 import { motion } from "framer-motion";
 
 export default function RubrosPage() {
   return (
-    <div className="   flex flex-col items-stretch min-h-full relative space-y-4 sm:space-y-6">
-      <PageHeader
-        title="Gestión de"
-        accentTitle="Rubros"
-        description="Organiza y clasifica tus productos en diferentes rubros y categorías."
-      />
-
-      {/* Main App Container */}
+    <div className="flex flex-col items-stretch min-h-full relative">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}

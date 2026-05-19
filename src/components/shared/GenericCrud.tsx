@@ -803,40 +803,28 @@ export default function GenericCrud<T extends { Id: number | string }>({
           filters:
             lowStockFilterFn && lowStockOnly ? "Solo bajo stock" : undefined,
         }}
-        extraSearchContent={
-          <>
-            {lowStockFilterFn ? (
-              <button
-                type="button"
-                onClick={() => setLowStockOnly((v) => !v)}
-                onMouseEnter={() => {
-                  if (!lowStockOnly && lowStockApiParam && prefetchWithParams) {
-                    prefetchWithParams({
-                      page: 1,
-                      extraParams: { bajoStock: true },
-                    });
-                  }
-                }}
-                aria-pressed={lowStockOnly}
-                aria-label={
-                  lowStockOnly
-                    ? "Mostrar todos los productos"
-                    : "Filtrar solo productos con bajo stock"
-                }
-                className={`flex items-center justify-center gap-1.5 px-3 h-10 sm:h-9 rounded-lg text-xs sm:text-sm font-medium transition-all duration-150 border whitespace-nowrap ${
-                  lowStockOnly
-                    ? "bg-amber-500/20 border-amber-500/50 text-amber-800"
-                    : "bg-white border-slate-300 text-slate-600 hover:bg-slate-50 hover:border-[var(--crud-accent)] hover:text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[var(--crud-accent)]/40"
-                }`}
-                title={lowStockOnly ? "Mostrar todos" : "Solo bajo stock"}
-              >
-                <AlertTriangle size={18} strokeWidth={2} />
-                Bajo stock
-              </button>
-            ) : null}
-            {toolbarExtraContent}
-          </>
+        extraMenuItems={
+          lowStockFilterFn
+            ? [
+                {
+                  key: "bajo-stock",
+                  label: lowStockOnly ? "Mostrar todos" : "Solo bajo stock",
+                  icon: <AlertTriangle size={16} strokeWidth={2} />,
+                  isActive: lowStockOnly,
+                  onPress: () => {
+                    if (!lowStockOnly && lowStockApiParam && prefetchWithParams) {
+                      prefetchWithParams({
+                        page: 1,
+                        extraParams: { bajoStock: true },
+                      });
+                    }
+                    setLowStockOnly((v) => !v);
+                  },
+                },
+              ]
+            : undefined
         }
+        extraSearchContent={toolbarExtraContent ? <>{toolbarExtraContent}</> : undefined}
         onRowClick={undefined}
         onRowKeyDown={(item, key) => {
           if (key === "Enter") handleEdit(item);

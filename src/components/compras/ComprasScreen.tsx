@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShoppingCart, CreditCard } from "lucide-react";
 import { addToast } from "@heroui/react";
 
@@ -87,8 +87,26 @@ export default function ComprasScreen() {
   const total = items.reduce((acc, item) => acc + item.subtotal, 0);
   const subtotal = total;
 
+  // ── Keyboard shortcuts ──
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const tag = target?.tagName;
+      const isProductSearch = target?.id === 'product-search-compras-input';
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) && !isProductSearch) return;
+      if (document.querySelector('[data-slot="backdrop"]')) return;
+
+      if (e.key === 'F2') {
+        e.preventDefault();
+        document.getElementById('product-search-compras-input')?.focus();
+      }
+    };
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
+  }, []);
+
   return (
-    <div className="h-full w-full flex flex-col gap-0">
+    <div className="flex-1 min-h-0 w-full flex flex-col gap-0">
       {/* ── MOBILE TABS ── */}
       <div className="lg:hidden flex items-center bg-white border-b border-slate-100 shrink-0 px-3 pt-1">
         <button
@@ -128,9 +146,9 @@ export default function ComprasScreen() {
       {/* ── MAIN LAYOUT ── */}
       <div className="flex flex-col lg:flex-row flex-1 gap-2 overflow-auto lg:overflow-hidden p-2">
         {/* ── LEFT: PRODUCTS ── */}
-        <div className={`flex-1 flex flex-col gap-2 lg:overflow-hidden rounded-xl ${mobileTab === "productos" ? "flex" : "hidden lg:flex"}`}>
+        <div className={`flex-1 flex flex-col gap-2 lg:overflow-hidden ${mobileTab === "productos" ? "flex" : "hidden lg:flex"}`}>
           {/* Toolbar */}
-          <div className="bg-white p-2 rounded-xl border border-slate-100 flex flex-col sm:flex-row gap-2 sm:gap-0 items-stretch sm:items-center shrink-0 relative shadow-sm">
+          <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center shrink-0">
             <div className="flex-1">
               <ProductSearchCompras onProductSelect={handleAddItem} />
             </div>

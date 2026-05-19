@@ -56,7 +56,7 @@ export default function PriceListSelector({
         size="sm"
         startContent={<Tag size={14} className="text-slate-400" />}
         classNames={{
-          trigger: "bg-slate-100/70 border-none hover:bg-slate-200/70 shadow-none",
+          trigger: "h-10 min-h-10 bg-white border border-slate-300 hover:border-[#67afc3] hover:bg-slate-50 rounded-lg shadow-none transition-colors",
           value: "font-semibold text-slate-700 text-[13px]"
         }}
       >

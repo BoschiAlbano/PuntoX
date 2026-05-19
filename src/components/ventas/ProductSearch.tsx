@@ -289,18 +289,20 @@ export default function ProductSearch({
   };
 
   return (
-    <div className="flex-1 rounded-lg border-none h-10 relative">
+    <div className="flex-1 h-10 relative">
       <Input
         ref={inputRef}
+        id="product-search-input"
         classNames={{
-          base: "w-full h-10 border-none",
-          mainWrapper: "h-full border-none",
-          input: "text-xs border-none",
+          base: "w-full h-10",
+          mainWrapper: "h-full",
+          input: "text-xs",
           inputWrapper:
-            "h-10 min-h-[40px] font-normal text-default-500 bg-transparent outline-none hover:bg-white focus-within:bg-white data-[hover=true]:bg-white rounded-lg border-none shadow-none",
+            "h-10 min-h-[40px] font-normal text-default-500 bg-white outline-none hover:border-[#67afc3] focus-within:border-[#67afc3] data-[hover=true]:bg-white rounded-lg border border-slate-300 shadow-none transition-colors",
         }}
         placeholder="Código, nombre o código*precio (ej: 2*350)"
         size="sm"
+        autoFocus
         value={inputValue}
         onValueChange={setInputValue}
         onKeyDown={handleInputKeyDown}

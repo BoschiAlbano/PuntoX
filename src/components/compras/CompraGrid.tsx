@@ -28,19 +28,38 @@ export default function CompraGrid({
   onRemoveItem,
 }: CompraGridProps) {
   return (
-    <div className="bg-white flex-1 overflow-hidden rounded-xl border border-slate-100 flex flex-col justify-start shadow-sm min-h-[150px]">
+    <div className="bg-white flex-1 overflow-hidden rounded-lg border border-slate-300 flex flex-col justify-start min-h-[150px]">
       {items.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center gap-3 text-slate-400 pointer-events-none select-none">
-          <div className="p-5 bg-slate-50 rounded-2xl">
-            <ShoppingBag size={28} className="text-slate-300" />
+        /* ── Empty State ── */
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 select-none px-4">
+          <div className="p-4 bg-slate-50 rounded-2xl">
+            <ShoppingBag size={26} className="text-slate-300" />
           </div>
-          <div className="flex flex-col items-center gap-1">
-            <p className="text-sm font-semibold text-slate-500">
-              Sin productos
-            </p>
-            <p className="text-xs text-slate-400 text-center max-w-[220px] leading-relaxed">
+          <div className="flex flex-col items-center gap-1 text-center">
+            <p className="text-sm font-semibold text-slate-500">Sin productos</p>
+            <p className="text-xs text-slate-400 max-w-[200px] leading-relaxed">
               Busca un producto para agregar a la compra
             </p>
+          </div>
+
+          {/* Keyboard shortcuts reference — only desktop */}
+          <div className="hidden sm:flex flex-col gap-1.5 border-t border-slate-100 pt-3 w-full max-w-[220px]">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-300 text-center mb-0.5">
+              Atajos de teclado
+            </p>
+            {[
+              { key: "F2",  label: "Buscar producto" },
+              { key: "F6",  label: "Buscar proveedor" },
+              { key: "F10", label: "Confirmar compra" },
+              { key: "Esc", label: "Cancelar compra" },
+            ].map(({ key, label }) => (
+              <div key={key} className="flex items-center gap-2">
+                <kbd className="min-w-[34px] text-center px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono font-semibold text-slate-400 shadow-[0_1px_0_rgba(0,0,0,0.07)] shrink-0">
+                  {key}
+                </kbd>
+                <span className="text-[11px] text-slate-400">{label}</span>
+              </div>
+            ))}
           </div>
         </div>
       ) : (

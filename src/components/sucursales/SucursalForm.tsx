@@ -174,6 +174,7 @@ export default function SucursalForm({
               <Input
                 label="Nombre de la sucursal"
                 placeholder="Ej: Sede Central"
+                autoFocus
                 variant="bordered"
                 labelPlacement="outside"
                 value={formData.nombre}

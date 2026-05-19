@@ -1,18 +1,11 @@
 "use client";
 
 import Cajas from "@/components/caja/Cajas";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { motion } from "framer-motion";
 
 export default function HistorialCajasPage() {
   return (
-    <div className="flex flex-col items-stretch min-h-full relative space-y-4 sm:space-y-6">
-      <PageHeader
-        title="Historial de"
-        accentTitle="Cajas"
-        description="Consultá el registro histórico de aperturas y cierres de caja."
-      />
-
+    <div className="flex flex-col items-stretch min-h-full relative">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}

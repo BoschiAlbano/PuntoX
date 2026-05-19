@@ -498,6 +498,7 @@ export default function ProductoForm({
                     <Input
                       label="Código"
                       placeholder="Ingrese el código"
+                      autoFocus
                       type="number"
                       value={formData.Codigo?.toString() || ""}
                       max={Number(process.env.MAX_ARTICLE_CODE || 999)}

@@ -29,7 +29,9 @@ import {
   Menu,
   Printer,
   RefreshCcw,
+  Search,
   Table as TableIcon,
+  X,
 } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import { PaginationMeta } from "@/hooks/useProductos";
@@ -144,6 +146,14 @@ interface GenericTableProps<T> {
     label: string;
     onClick: () => void;
   }>;
+  /** Ítems extra en el dropdown "Más opciones" (siempre visibles, al inicio) */
+  extraMenuItems?: Array<{
+    key: string;
+    label: string;
+    icon?: React.ReactNode;
+    isActive?: boolean;
+    onPress: () => void;
+  }>;
   /** Contenido extra al lado de la barra de búsqueda (ej: filtro Bajo stock) */
   extraSearchContent?: React.ReactNode;
   /** Contenido extra en el lado derecho de la barra de herramientas (ej: filtros de fecha) */
@@ -203,6 +213,7 @@ export default function GenericTable<T extends { Id: number | string }>({
   onBulkDelete,
   onClearSelection,
   bulkActionsDropdown,
+  extraMenuItems,
   extraSearchContent,
   extraRightContent,
   printConfig,
@@ -293,34 +304,54 @@ export default function GenericTable<T extends { Id: number | string }>({
       <div className="rounded-lg flex flex-col gap-4 bg-[#F5F8FD] w-full flex-1">
         {/* Barra de herramientas: Búsqueda+Filtro | Botones - grilla 8px */}
         <section className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-2 sm:p-4 rounded-xl bg-[#F5F8FD]">
-          {/* Búsqueda - más protagonista: ancho mayor, placeholder claro */}
+          {/* Búsqueda + Refresh */}
           <div className="w-full sm:flex-1 sm:min-w-0 order-1 flex flex-row flex-wrap items-center gap-2 sm:gap-3">
-            <div className="flex items-center gap-2 flex-1 min-w-0 sm:max-w-[400px]">
-              <div className="flex-1 min-w-0">
-                <div className="group flex items-center gap-2 border border-slate-300 rounded-lg px-3 sm:px-4 h-10 sm:h-9 bg-white transition-all duration-150 hover:border-[var(--crud-accent)] hover:bg-white focus-within:border-[var(--crud-accent)] focus-within:ring-2 focus-within:ring-[var(--crud-accent)]/35 focus-within:bg-white">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    className="size-5 text-slate-500 shrink-0"
-                    aria-hidden
+            <div className="flex items-center gap-2 flex-1 min-w-0 sm:max-w-[480px]">
+              {/* Input de búsqueda */}
+              <div className="relative flex items-center flex-1 min-w-0">
+                <Search
+                  size={15}
+                  strokeWidth={2}
+                  className="absolute left-3 text-slate-500 pointer-events-none shrink-0"
+                  aria-hidden
+                />
+                <input
+                  type="text"
+                  placeholder={searchPlaceholder}
+                  className="w-full pl-9 pr-8 h-10 sm:h-9 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 placeholder:text-slate-500 focus:outline-none focus:border-[var(--crud-accent)] hover:border-[var(--crud-accent)] focus:ring-2 focus:ring-[var(--crud-accent)]/40 transition-all duration-150"
+                  value={search}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  aria-label="Buscar en la tabla"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => onSearchChange("")}
+                    className="absolute right-2.5 text-slate-400 hover:text-slate-600 transition-colors"
+                    aria-label="Limpiar búsqueda"
                   >
-                    <path
-                      fillRule="evenodd"
-                      d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <input
-                    type="text"
-                    placeholder={searchPlaceholder}
-                    className="outline-none w-full bg-transparent text-slate-800 placeholder:text-slate-500 placeholder:font-normal text-sm"
-                    value={search}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                    aria-label="Buscar en la tabla"
-                  />
-                </div>
+                    <X size={14} strokeWidth={2.5} />
+                  </button>
+                )}
               </div>
+
+              {/* Refresh — a la derecha del buscador */}
+              {onRefresh && (
+                <button
+                  onClick={onRefresh}
+                  disabled={isRefreshing}
+                  className="h-10 w-10 sm:h-9 sm:w-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[var(--crud-accent)] text-slate-700 hover:text-[var(--crud-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--crud-accent)]/40 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 flex items-center justify-center"
+                  title="Actualizar datos"
+                  aria-label="Actualizar datos de la tabla"
+                >
+                  <RefreshCcw
+                    size={ICON_SIZE}
+                    strokeWidth={ICON_STROKE}
+                    className={`transition-transform duration-300 ${isRefreshing ? "animate-spin" : ""}`}
+                    aria-hidden="true"
+                  />
+                </button>
+              )}
             </div>
             {extraSearchContent}
           </div>
@@ -399,6 +430,29 @@ export default function GenericTable<T extends { Id: number | string }>({
                       textValue?: string;
                     };
                     const items: MenuItem[] = [];
+
+                    // ── Ítems extra (ej: filtro Bajo stock) ──
+                    if (extraMenuItems && extraMenuItems.length > 0) {
+                      extraMenuItems.forEach((item) => {
+                        items.push({
+                          key: item.key,
+                          label: item.label,
+                          icon: item.icon,
+                          className: item.isActive
+                            ? "rounded-md px-3 py-2 bg-amber-500/15 text-amber-800 data-[hover=true]:bg-amber-500/25 data-[focus=true]:bg-amber-500/25 font-medium"
+                            : "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
+                          onPress: item.onPress,
+                        });
+                      });
+                      items.push({
+                        key: "sep-extra",
+                        label: " ",
+                        textValue: "separador",
+                        isSeparator: true,
+                        className:
+                          "h-px bg-slate-200 rounded-none my-1 p-0 data-[hover=true]:bg-slate-200",
+                      });
+                    }
 
                     // ── Exportar / Imprimir (always visible, smart) ──
                     const csvPressHandler =
@@ -613,22 +667,6 @@ export default function GenericTable<T extends { Id: number | string }>({
                   </button>
                 </div>
               )}
-              {onRefresh && (
-                <button
-                  onClick={onRefresh}
-                  disabled={isRefreshing}
-                  className="p-2 h-10 w-10 sm:h-9 sm:w-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[var(--crud-accent)] text-slate-700 hover:text-[var(--crud-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--crud-accent)]/40 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 flex items-center justify-center"
-                  title="Actualizar datos"
-                  aria-label="Actualizar datos de la tabla"
-                >
-                  <RefreshCcw
-                    size={ICON_SIZE}
-                    strokeWidth={ICON_STROKE}
-                    className={`transition-transform duration-150 ${isRefreshing ? "animate-spin" : ""}`}
-                    aria-hidden="true"
-                  />
-                </button>
-              )}
             </div>
           </div>
           {/* Filtros extra — fila propia en mobile (order-3), entre search y botones en desktop (sm:order-2) */}
@@ -666,7 +704,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                   {emptyText}
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 sm:p-4 p-0">
                   {data.map((item) => (
                     <div key={String(item.Id)}>{renderCards(item)}</div>
                   ))}
@@ -705,14 +743,16 @@ export default function GenericTable<T extends { Id: number | string }>({
                     // Disable row-click selection: only the checkbox should trigger it
                     onRowAction: () => {},
                   })}
-                className="bg-[#F5F8FD] rounded-lg border-none"
+                className="bg-[#F5F8FD] border-none"
+                checkboxesProps={{
+                  classNames: { wrapper: "table-cb-accent" },
+                }}
                 classNames={{
-                  wrapper:
-                    "bg-[#F5F8FD] shadow-none rounded-xl border-none sm:p-4 p-1",
+                  wrapper: "bg-[#F5F8FD] shadow-none  border-none sm:p-4 p-1",
                   th: "bg-[var(--crud-accent)] text-white text-[11px] sm:text-[13px] font-semibold border-b border-slate-200/60 px-2 sm:px-4",
-                  base: "bg-transparent shadow-none rounded-xl border-none",
+                  base: "bg-transparent shadow-none border-none",
                   td: "border-b border-slate-200/80 text-slate-800 text-[12px] sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2.5",
-                  tr: "group transition-all duration-200 data-[hover=true]:bg-[#FFF3EA] data-[hover=true]:relative data-[hover=true]:z-10 data-[selected=true]:bg-[var(--crud-accent)]/15",
+                  tr: "group transition-all duration-200 data-[hover=true]:relative data-[hover=true]:z-10 data-[selected=true]:bg-[var(--table-row-selected-bg)]",
                 }}
               >
                 <TableHeader columns={visibleColumns}>
@@ -802,7 +842,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                     return (
                       <TableRow
                         key={String(item.Id)}
-                        className="transition-colors duration-150 focus-within:bg-slate-50/80"
+                        className="hover:bg-(--table-row-hover-bg)"
                         tabIndex={0}
                         aria-label={`Fila ${item.Id}`}
                         onClick={
@@ -822,7 +862,6 @@ export default function GenericTable<T extends { Id: number | string }>({
                       >
                         {(columnKey) => (
                           <TableCell
-                            className=""
                             onClick={
                               columnKey === "acciones"
                                 ? (e) => e.stopPropagation()

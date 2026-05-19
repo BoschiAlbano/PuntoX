@@ -276,6 +276,7 @@ export default function FormularioProveedor({
                     <Input
                       label="Razón Social *"
                       placeholder="Empresa S.A."
+                      autoFocus
                       value={formData.RazonSocial}
                       onChange={(e) => handleChange("RazonSocial", e.target.value)}
                       isRequired

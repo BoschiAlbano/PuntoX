@@ -1,7 +1,7 @@
 "use client";
 
 import { useDisclosure } from "@heroui/react";
-import { User, UserCheck, ChevronDown } from "lucide-react";
+import { User, X } from "lucide-react";
 import ClienteSearchModal from "./ClienteSearchModal";
 import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
 
@@ -37,61 +37,59 @@ export default function ClienteSearch({
     onClose();
   };
 
+  const handleClear = () => {
+    onSelect({
+      Id: 0,
+      Nombre: consumidorFinalSchema.Nombre,
+      Apellido: consumidorFinalSchema.Apellido,
+      Dni: consumidorFinalSchema.Dni,
+      Mail: consumidorFinalSchema.Mail,
+      Direccion: consumidorFinalSchema.Direccion,
+      ListaPrecioId: null,
+      Persona_Cliente: {
+        ActivarCtaCte: false,
+        TieneLimiteCompra: false,
+        MontoMaximoCtaCte: 0,
+        SaldoActual: 0,
+        MargenDisponible: 0,
+      },
+    });
+  };
+
   const isConsumidorFinal = selected.Id === 0;
-
-  const displayName = isConsumidorFinal
-    ? "Consumidor Final"
-    : `${selected.Nombre} ${selected.Apellido}`;
-
-  const displayDni = isConsumidorFinal
-    ? consumidorFinalSchema.Dni
-    : selected.Dni || "Sin DNI";
+  const displayName = `${selected.Nombre} ${selected.Apellido}`;
 
   return (
     <div className="w-full">
-      <button
-        onClick={onOpen}
-        className="w-full rounded-xl px-3 py-2.5 flex items-center gap-3 transition-colors hover:bg-slate-50 active:bg-slate-100 cursor-pointer group"
-        aria-label="Seleccionar cliente"
-      >
-        {/* Avatar icon */}
-        <div
-          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-            isConsumidorFinal
-              ? "bg-slate-100 text-slate-400"
-              : "bg-[#67afc3]/10 text-[#67afc3]"
-          }`}
+      {isConsumidorFinal ? (
+        <button
+          onClick={onOpen}
+          data-shortcut="cliente-trigger"
+          className="w-full h-10 bg-white rounded-lg border border-slate-300 flex items-center justify-start gap-2 px-3 hover:border-[#67afc3] hover:bg-slate-50 transition-colors cursor-pointer"
+          aria-label="Seleccionar cliente"
         >
-          {isConsumidorFinal ? (
-            <User size={16} />
-          ) : (
-            <UserCheck size={16} />
-          )}
-        </div>
-
-        {/* Info */}
-        <div className="flex flex-col items-start flex-1 min-w-0">
-          <span
-            className={`font-semibold text-xs truncate w-full text-left leading-tight transition-colors ${
-              isConsumidorFinal ? "text-slate-500" : "text-slate-700"
-            }`}
+          <User size={15} className="text-[#67afc3] shrink-0" />
+          <span className="text-xs font-medium text-slate-500">Buscar cliente...</span>
+        </button>
+      ) : (
+        <div className="flex bg-white rounded-lg border border-slate-300 items-center justify-between px-3 h-10">
+          <div className="flex items-center gap-2.5 min-w-0 cursor-pointer flex-1" onClick={onOpen} data-shortcut="cliente-trigger">
+            <div className="w-7 h-7 rounded-lg bg-[#67afc3]/15 border border-[#67afc3]/20 flex items-center justify-center text-[#67afc3] font-bold text-sm shrink-0">
+              {selected.Nombre.charAt(0).toUpperCase()}
+            </div>
+            <span className="text-xs font-semibold text-slate-800 truncate">
+              {displayName}
+            </span>
+          </div>
+          <button
+            onClick={handleClear}
+            className="text-slate-300 hover:text-red-400 transition-colors p-1 rounded-lg hover:bg-red-50 shrink-0"
+            aria-label="Quitar cliente"
           >
-            {displayName}
-          </span>
-          <span className="text-slate-400 text-[10px] leading-tight font-mono">
-            {displayDni}
-          </span>
+            <X size={14} />
+          </button>
         </div>
-
-        {/* Cta */}
-        <span className="text-[9px] font-semibold text-slate-400 group-hover:text-[#67afc3] uppercase tracking-wide transition-colors hidden sm:block shrink-0">
-          Cambiar
-        </span>
-        <ChevronDown
-          size={14}
-          className="text-slate-400 shrink-0 group-hover:text-[#67afc3] transition-colors"
-        />
-      </button>
+      )}
 
       <ClienteSearchModal
         isOpen={isOpen}

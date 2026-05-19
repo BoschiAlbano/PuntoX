@@ -2,19 +2,10 @@
 
 import ListaPrecioCRUD from "@/components/listas-precios/ListaPrecioCRUD";
 import { motion } from "framer-motion";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 
 export default function ListasPreciosPage() {
   return (
-    <div className="   flex flex-col items-stretch min-h-full relative space-y-4 sm:space-y-6">
-      {/* Premium Header */}
-      <PageHeader
-        title="Gestión de"
-        accentTitle="Listas de Precios"
-        description="Configura y administra las diferentes listas de precios (ej: Mayorista, Minorista) para asignar a tus productos."
-      />
-
-      {/* Main App Container */}
+    <div className="flex flex-col items-stretch min-h-full relative">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}

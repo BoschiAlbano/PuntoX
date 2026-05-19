@@ -706,7 +706,9 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
               alt="logo.svg"
             />
 
-            <div className="flex flex-col items-start truncate">
+            <div
+              className={` flex flex-col items-start truncate  ${isCollapsed ? "opacity-0" : "opacity-100"}`}
+            >
               <span className="text-lg font-bold tracking-tight text-(--nav-logo-title)">
                 Punto X
               </span>

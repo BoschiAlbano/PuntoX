@@ -2,19 +2,10 @@
 
 import MarcaCRUD from "@/components/marcas/MarcaCRUD";
 import { motion } from "framer-motion";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 
 export default function MarcasPage() {
   return (
-    <div className="   flex flex-col items-stretch min-h-full relative space-y-4 sm:space-y-6">
-      {/* Premium Header */}
-      <PageHeader
-        title="Gestión de"
-        accentTitle="Marcas"
-        description="Configura y administra las marcas disponibles para tus productos."
-      />
-
-      {/* Main App Container */}
+    <div className="flex flex-col items-stretch min-h-full relative">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
