@@ -405,26 +405,7 @@ export function PerfilTab() {
         </div>
       </FormSection>
 
-      {/* Datos fiscales */}
-      <FormSection title="Datos fiscales" icon={Hash}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <Input
-            label="CUIT"
-            labelPlacement="outside"
-            placeholder="20-12345678-0"
-            variant="bordered"
-            classNames={inputCls}
-            isRequired
-            value={configuracion.cuit}
-            onChange={(e) =>
-              setConfiguracion({ ...configuracion, cuit: e.target.value })
-            }
-            startContent={
-              <Hash size={15} className="text-slate-400 mr-1 shrink-0" />
-            }
-          />
-        </div>
-      </FormSection>
+      {/* Datos fiscales eliminados (CUIT fue movido a FiscalTab) */}
 
       {/* Ubicación */}
       <FormSection title="Ubicación del negocio" icon={MapPin}>

@@ -1,6 +1,8 @@
+"use client";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
 import { TIPO_PAGO } from "@/lib/constants/comprobantes";
 import React, { forwardRef, useMemo } from "react";
+import { QRCodeSVG } from "qrcode.react";
 
 interface TicketProps {
   datosVenta: {
@@ -14,6 +16,13 @@ interface TicketProps {
     tipoComprobante: string;
     formasPago: any[];
     pie: string;
+    arcaStatus?: string;
+    cae?: string;
+    caeFchVto?: string;
+    // Datos para QR AFIP
+    cuitEmisor?: string;
+    puntoVentaNum?: number;
+    cbteNro?: number;
   } | null;
 }
 
@@ -55,7 +64,6 @@ const wrapWords = (text: string, max = 25): string[] => {
   let current = "";
   for (const word of words) {
     if (current.length === 0) {
-      // Palabra más larga que MAX → partirla por fuerza
       current = word.length > max ? word.substring(0, max) : word;
     } else if (current.length + 1 + word.length <= max) {
       current += " " + word;
@@ -67,6 +75,69 @@ const wrapWords = (text: string, max = 25): string[] => {
   if (current) lines.push(current);
   return lines;
 };
+
+/**
+ * Genera la URL del QR de AFIP según RG 4291/2018
+ * https://www.afip.gob.ar/fe/qr/
+ */
+function buildAfipQrUrl(params: {
+  cuit: string;
+  puntoVenta: number;
+  cbteNro: number;
+  tipoCbte: number;
+  importe: number;
+  moneda: string;
+  cae: string;
+  caeFchVto: string; // YYYYMMDD
+}): string {
+  const { cuit, puntoVenta, cbteNro, tipoCbte, importe, moneda, cae, caeFchVto } = params;
+
+  // Parsear fecha de vencimiento YYYYMMDD → YYYY-MM-DD
+  const vto =
+    caeFchVto.length === 8
+      ? `${caeFchVto.substring(0, 4)}-${caeFchVto.substring(4, 6)}-${caeFchVto.substring(6, 8)}`
+      : caeFchVto;
+
+  const qrData = {
+    ver: 1,
+    fecha: new Date().toISOString().split("T")[0],
+    cuit: Number(cuit.replace(/[-\s]/g, "")),
+    ptoVta: puntoVenta,
+    tipoCmp: tipoCbte,
+    nroCmp: cbteNro,
+    importe,
+    moneda,
+    ctz: 1,
+    tipoDocRec: 99,
+    nroDocRec: 0,
+    tipoCodAut: "E",
+    codAut: Number(cae),
+  };
+
+  // btoa funciona en browsers; en SSR usamos Buffer
+  const encoded =
+    typeof window !== "undefined"
+      ? btoa(JSON.stringify(qrData))
+      : Buffer.from(JSON.stringify(qrData)).toString("base64");
+
+  return `https://www.afip.gob.ar/fe/qr/?p=${encoded}`;
+}
+
+/** Mapea el label del tipo de comprobante al código numérico AFIP */
+function getTipoCbteAfip(tipoComprobante: string): number {
+  const map: Record<string, number> = {
+    "Factura A": 1,
+    "Factura B": 6,
+    "Factura C": 11,
+    "Nota de Crédito A": 3,
+    "Nota de Crédito B": 8,
+    "Nota de Crédito C": 13,
+    "Nota de Débito A": 2,
+    "Nota de Débito B": 7,
+    "Nota de Débito C": 12,
+  };
+  return map[tipoComprobante] ?? 6;
+}
 
 export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
   ({ datosVenta }, ref) => {
@@ -153,7 +224,7 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
 
       if (configuracion?.direccion)
         push(addLine(`Dire: ${configuracion.direccion}`));
-      if (configuracion?.cuit) push(addLine(`Cuit: ${configuracion.cuit}`));
+      if (configuracion?.cuit) push(addLine(`CUIT: ${configuracion.cuit}`));
       if (configuracion?.telefono)
         push(addLine(`Tel: ${configuracion.telefono}`));
 
@@ -245,8 +316,23 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
       push(addSeparator());
 
       // ── Pie ────────────────────────────────────────────────────────
+      if (datosVenta.cae) {
+        push(addLine());
+        push(addCenter("** FACTURA ELECTRONICA **"));
+        push(addCenter("Autorizado por ARCA-AFIP"));
+        push(addLine(`CAE: ${datosVenta.cae}`));
+        if (datosVenta.caeFchVto) {
+          const vto = datosVenta.caeFchVto;
+          const formattedVto =
+            vto.length === 8
+              ? `${vto.substring(6, 8)}/${vto.substring(4, 6)}/${vto.substring(0, 4)}`
+              : vto;
+          push(addLine(`Vto CAE: ${formattedVto}`));
+        }
+      }
+
       push(addLine());
-      wrapWords(datosVenta.pie).forEach((l) => push(addCenter(l)));
+      wrapWords(datosVenta.pie || "").forEach((l) => push(addCenter(l)));
       push(addLine());
       push(addCenter("PuntoX Software"));
       push(addCenter("www.puntox.com.ar"));
@@ -256,6 +342,31 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
       return lines;
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [datosVenta, calculatedData, configuracion]);
+
+    // ── Generar URL del QR de AFIP ─────────────────────────────────
+    const afipQrUrl = useMemo(() => {
+      if (
+        !datosVenta?.cae ||
+        !datosVenta?.caeFchVto ||
+        !datosVenta?.cuitEmisor
+      )
+        return null;
+
+      try {
+        return buildAfipQrUrl({
+          cuit: datosVenta.cuitEmisor,
+          puntoVenta: datosVenta.puntoVentaNum ?? 1,
+          cbteNro: datosVenta.cbteNro ?? Number(datosVenta.numeroComprobante),
+          tipoCbte: getTipoCbteAfip(datosVenta.tipoComprobante),
+          importe: datosVenta.total,
+          moneda: "PES",
+          cae: datosVenta.cae,
+          caeFchVto: datosVenta.caeFchVto,
+        });
+      } catch {
+        return null;
+      }
+    }, [datosVenta]);
 
     if (!datosVenta || !calculatedData) return null;
 
@@ -280,7 +391,6 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
               justifyContent: "center",
               alignItems: "center",
               width: "75%",
-              // marginBottom: "4px",
             }}
           >
             <img
@@ -310,6 +420,52 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
         >
           {ticketLines.join("\n")}
         </pre>
+
+        {/* QR AFIP — se muestra SOLO si hay CAE (factura electrónica) */}
+        {afipQrUrl && (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              marginTop: "6px",
+              marginBottom: "4px",
+              padding: "4px 0",
+              borderTop: "1px dashed #000",
+              borderBottom: "1px dashed #000",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "9px",
+                fontFamily: "Arial",
+                margin: "0 0 4px 0",
+                textAlign: "center",
+                color: "#000",
+              }}
+            >
+              Verificá tu comprobante en AFIP
+            </p>
+            <QRCodeSVG
+              value={afipQrUrl}
+              size={90}
+              bgColor="#ffffff"
+              fgColor="#000000"
+              level="M"
+            />
+            <p
+              style={{
+                fontSize: "8px",
+                fontFamily: "Arial",
+                margin: "4px 0 0 0",
+                textAlign: "center",
+                color: "#555",
+              }}
+            >
+              afip.gob.ar/fe/qr
+            </p>
+          </div>
+        )}
       </div>
     );
   },

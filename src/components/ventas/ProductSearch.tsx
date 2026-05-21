@@ -32,14 +32,22 @@ export default function ProductSearch({
   const { listaPrecios } = useVentaStore();
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const isSearchingRef = useRef(false);
   const queryClient = useQueryClient();
 
   // Configuración para báscula
   const { configuracion } = useConfiguracion({ enableConfiguracion: true });
 
+  const setSearchingState = (value: boolean) => {
+    isSearchingRef.current = value;
+    setIsSearching(value);
+  };
+
   const handleInputKeyDown = async (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
+
+      if (isSearchingRef.current) return;
 
       if (inputValue.trim()) {
         const term = inputValue.trim();
@@ -60,7 +68,7 @@ export default function ProductSearch({
             return;
           }
 
-          setIsSearching(true);
+          setSearchingState(true);
           try {
             const result = await queryClient.fetchQuery({
               queryKey: ["productos-ventas-exact", codigo],
@@ -89,13 +97,13 @@ export default function ProductSearch({
           } catch (err) {
             console.error("Error searching product with alt price:", err);
           } finally {
-            setIsSearching(false);
+            setSearchingState(false);
           }
           setInputValue("");
           return;
         }
 
-        setIsSearching(true);
+        setSearchingState(true);
 
         try {
           // 1. Validar si es código de báscula pero está desactivada
@@ -112,7 +120,6 @@ export default function ProductSearch({
               color: "warning",
             });
             setInputValue("");
-            setIsSearching(false);
             return;
           }
 
@@ -138,7 +145,6 @@ export default function ProductSearch({
                 color: "danger",
               });
               setInputValue("");
-              setIsSearching(false);
               return;
             }
           }
@@ -168,7 +174,6 @@ export default function ProductSearch({
                   color: "danger",
                 });
                 setInputValue("");
-                setIsSearching(false);
                 return;
               }
 
@@ -184,7 +189,6 @@ export default function ProductSearch({
               }
 
               handleSelectProduct(found, cantidad);
-              setIsSearching(false);
               return;
             }
           }
@@ -236,7 +240,7 @@ export default function ProductSearch({
         } catch (err) {
           console.error("Error searching product:", err);
         } finally {
-          setIsSearching(false);
+          setSearchingState(false);
         }
       } else {
         // Input vacío -> Abrir Modal para que busque manualmente
@@ -255,7 +259,9 @@ export default function ProductSearch({
   };
 
   const handleCameraScan = async (decodedText: string) => {
-    setIsSearching(true);
+    if (isSearchingRef.current) return;
+
+    setSearchingState(true);
     try {
       const term = decodedText.trim();
       const result = await queryClient.fetchQuery({
@@ -284,7 +290,7 @@ export default function ProductSearch({
         color: "danger"
       });
     } finally {
-      setIsSearching(false);
+      setSearchingState(false);
     }
   };
 
@@ -303,14 +309,19 @@ export default function ProductSearch({
         placeholder="Código, nombre o código*precio (ej: 2*350)"
         size="sm"
         autoFocus
+        isDisabled={isSearching}
         value={inputValue}
-        onValueChange={setInputValue}
+        onValueChange={(value) => {
+          if (isSearchingRef.current) return;
+          setInputValue(value);
+        }}
         onKeyDown={handleInputKeyDown}
         startContent={
           <Button 
             isIconOnly 
             variant="light" 
             size="sm"
+            isDisabled={isSearching}
             onPress={() => {
               setSearchTermForModal(inputValue);
               setIsSearchModalOpen(true);
@@ -329,6 +340,7 @@ export default function ProductSearch({
             isIconOnly 
             variant="light" 
             size="sm" 
+            isDisabled={isSearching}
             onPress={() => setIsScannerOpen(true)}
             title="Escanear con cámara"
           >

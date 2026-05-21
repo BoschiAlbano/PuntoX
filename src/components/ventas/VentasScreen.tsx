@@ -293,6 +293,8 @@ export default function VentasScreen() {
               setTipoComprobante={setTipoComprobante}
               numeroComprobanteAsociado={numeroComprobanteAsociado}
               setNumeroComprobanteAsociado={setNumeroComprobanteAsociado}
+              clienteCondicionIvaId={cliente?.CondicionIvaId}
+              configuracionCondicionIvaId={configuracion?.CondicionIvaId}
             />
           </div>
 

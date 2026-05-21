@@ -20,6 +20,8 @@ import {
 import { useConfiguracion, Fiscal } from "@/hooks/useConfiguracion";
 import { useQuery } from "@tanstack/react-query";
 import { VentasSection } from "./ventas/VentasPrimitives";
+import { ArcaSettings } from "./ArcaSettings";
+import { PuntosVentaSettings } from "./PuntosVentaSettings";
 
 const monedas = [
   { value: "ARS", label: "🇦🇷  Peso Argentino (ARS)" },
@@ -70,13 +72,18 @@ export function FiscalTab() {
     puntoVenta: "",
     inicioActividades: "",
     ingresosBrutos: "",
+    afipHabilitado: false,
+    afipEntornoProduccion: false,
+    afipCertificadoCargado: false,
+    afipCertificadoVence: null,
+    cuit: "",
   });
 
   const { data: condicionesIva = [], isLoading: isLoadingCondiciones, error: errorCondiciones } =
     useQuery({
       queryKey: ["condiciones-iva"],
       queryFn: async () => {
-        const res = await fetch("/api/afip/condicion-iva");
+        const res = await fetch("/api/condiciones-iva");
         if (!res.ok) throw new Error("Error al cargar condiciones de IVA");
         return res.json();
       },
@@ -192,7 +199,21 @@ export function FiscalTab() {
           />
 
           <Input
-            label="Ingresos Brutos"
+            label="CUIT del negocio"
+            labelPlacement="outside"
+            placeholder="Ej: 20-12345678-0"
+            variant="bordered"
+            classNames={inputCls}
+            isRequired
+            value={regional.cuit}
+            onChange={(e) => setRegional({ ...regional, cuit: e.target.value })}
+            startContent={
+              <Hash size={15} className="text-slate-400 mr-1 shrink-0" />
+            }
+          />
+
+          <Input
+            label="Número de ingresos brutos"
             labelPlacement="outside"
             placeholder="Ej: 12-34567890-1"
             variant="bordered"
@@ -231,6 +252,12 @@ export function FiscalTab() {
           {hasChanges ? "Guardar datos fiscales" : "Sin cambios pendientes"}
         </Button>
       </div>
+
+      {/* Facturación Electrónica ARCA */}
+      <ArcaSettings />
+
+      {/* Puntos de Venta por Sucursal */}
+      <PuntosVentaSettings />
     </div>
   );
 }

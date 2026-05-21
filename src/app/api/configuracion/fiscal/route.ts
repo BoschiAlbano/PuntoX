@@ -14,6 +14,10 @@ const fiscalSchema = z
     puntoVenta: z.string().optional(),
     inicioActividades: z.string().optional(), // ISO date string
     tipoIva: z.string().optional(), // Campo informativo, se ignora al guardar
+    ingresosBrutos: z.string().max(50).optional(),
+    afipHabilitado: z.boolean().optional(),
+    afipEntornoProduccion: z.boolean().optional(),
+    cuit: z.string().max(20).optional(),
   })
   .passthrough(); // Permite campos adicionales que se ignoran
 
@@ -39,6 +43,13 @@ export async function GET(req: NextRequest) {
         CondicionIvaId: true,
         PuntoVenta: true,
         InicioActividades: true,
+        IngresosBrutos: true,
+        AfipHabilitado: true,
+        AfipEntornoProduccion: true,
+        AfipCertificadoVence: true,
+        AfipCertificado: true,
+        AfipClavePrivada: true,
+        Cuit: true,
         CondicionIva: {
           select: {
             Id: true,
@@ -63,6 +74,12 @@ export async function GET(req: NextRequest) {
             condicionIvaId: null,
             puntoVenta: "",
             inicioActividades: "",
+            ingresosBrutos: "",
+            afipHabilitado: false,
+            afipEntornoProduccion: false,
+            afipCertificadoCargado: false,
+            afipCertificadoVence: null,
+            cuit: "",
           },
         },
         { status: 200 },
@@ -83,6 +100,14 @@ export async function GET(req: NextRequest) {
           inicioActividades: config.InicioActividades
             ? new Date(config.InicioActividades).toISOString().split("T")[0]
             : "",
+          ingresosBrutos: config.IngresosBrutos ?? "",
+          afipHabilitado: config.AfipHabilitado ?? false,
+          afipEntornoProduccion: config.AfipEntornoProduccion ?? false,
+          afipCertificadoCargado: !!(config.AfipCertificado && config.AfipClavePrivada),
+          afipCertificadoVence: config.AfipCertificadoVence
+            ? new Date(config.AfipCertificadoVence).toISOString().split("T")[0]
+            : null,
+          cuit: config.Cuit ?? "",
         },
       },
       { status: 200 },
@@ -145,6 +170,10 @@ export async function PUT(req: NextRequest) {
       CondicionIvaId?: bigint | null;
       PuntoVenta?: string;
       InicioActividades?: Date | null;
+      IngresosBrutos?: string;
+      AfipHabilitado?: boolean;
+      AfipEntornoProduccion?: boolean;
+      Cuit?: string;
     } = {};
 
     if (data.moneda !== undefined) {
@@ -176,6 +205,18 @@ export async function PUT(req: NextRequest) {
         updateData.InicioActividades = null;
       }
     }
+    if (data.ingresosBrutos !== undefined) {
+      updateData.IngresosBrutos = data.ingresosBrutos;
+    }
+    if (data.afipHabilitado !== undefined) {
+      updateData.AfipHabilitado = data.afipHabilitado;
+    }
+    if (data.afipEntornoProduccion !== undefined) {
+      updateData.AfipEntornoProduccion = data.afipEntornoProduccion;
+    }
+    if (data.cuit !== undefined) {
+      updateData.Cuit = data.cuit;
+    }
 
     await prisma.configuracion.update({
       where: { Id: config.Id, TenantId: BigInt(tenantId) },
@@ -192,6 +233,13 @@ export async function PUT(req: NextRequest) {
         CondicionIvaId: true,
         PuntoVenta: true,
         InicioActividades: true,
+        IngresosBrutos: true,
+        AfipHabilitado: true,
+        AfipEntornoProduccion: true,
+        AfipCertificadoVence: true,
+        AfipCertificado: true,
+        AfipClavePrivada: true,
+        Cuit: true,
         CondicionIva: {
           select: {
             Id: true,
@@ -218,6 +266,14 @@ export async function PUT(req: NextRequest) {
                 .toISOString()
                 .split("T")[0]
             : "",
+          ingresosBrutos: updatedConfig?.IngresosBrutos ?? "",
+          afipHabilitado: updatedConfig?.AfipHabilitado ?? false,
+          afipEntornoProduccion: updatedConfig?.AfipEntornoProduccion ?? false,
+          afipCertificadoCargado: !!(updatedConfig?.AfipCertificado && updatedConfig?.AfipClavePrivada),
+          afipCertificadoVence: updatedConfig?.AfipCertificadoVence
+            ? new Date(updatedConfig.AfipCertificadoVence).toISOString().split("T")[0]
+            : null,
+          cuit: updatedConfig?.Cuit ?? "",
         },
       },
       { status: 200 },

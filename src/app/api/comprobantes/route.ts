@@ -20,6 +20,8 @@ import {
 } from "@/lib/services/comprobantes";
 import { getNextNumeroComprobante } from "@/lib/services/contadores";
 import { triggerStockBajoNotifications } from "@/lib/services/notificaciones";
+import { isFacturacionElectronicaHabilitada, autorizarComprobante } from "@/lib/services/facturacion.service";
+import { requiereAutorizacionAfip } from "@/lib/constants/afip";
 
 // POST: Crear comprobante (venta)
 export async function POST(req: NextRequest) {
@@ -446,6 +448,30 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Integración con ARCA (Facturación Electrónica)
+    let arcaResult = null;
+    if (
+      !esDiferido &&
+      requiereAutorizacionAfip(data.tipoComprobante)
+    ) {
+      try {
+        const arcaHabilitada = await isFacturacionElectronicaHabilitada(tenantIdBigInt);
+        if (arcaHabilitada) {
+          arcaResult = await autorizarComprobante(resultado.Id, tenantIdBigInt, sucursalId);
+          if (!arcaResult.success) {
+            console.warn(
+              `[ARCA] Comprobante ${resultado.Id} rechazado:`,
+              `\n  Errores: ${arcaResult.errores}`,
+              `\n  Observaciones: ${arcaResult.observaciones}`,
+              `\n  Resultado: ${arcaResult.resultado}`,
+            );
+          }
+        }
+      } catch (err) {
+        console.error("[ARCA] Error no manejado al autorizar comprobante:", err);
+      }
+    }
+
     return NextResponse.json(
       {
         comprobante: {
@@ -455,6 +481,12 @@ export async function POST(req: NextRequest) {
           total: Number(resultado.Total),
           fecha: resultado.Fecha.toISOString(),
           esDiferido,
+          arcaStatus: arcaResult ? (arcaResult.success ? 'AUTORIZADO' : 'RECHAZADO') : null,
+          cae: arcaResult?.cae,
+          caeFchVto: arcaResult?.caeFchVto,
+          arcaErrores: arcaResult?.success === false
+            ? [arcaResult.errores, arcaResult.observaciones].filter(Boolean).join(' | ')
+            : undefined,
         },
       },
       { status: 201 },
@@ -492,6 +524,7 @@ export async function GET(req: NextRequest) {
         ...(detalle && {
           DetalleComprobante: true,
           FormaPago: true,
+          FacturaElectronica: true,
           Comprobante_Factura: {
             include: {
               Persona_Cliente: { include: { Persona: true } },

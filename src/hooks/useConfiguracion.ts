@@ -80,6 +80,11 @@ export interface Fiscal {
   puntoVenta: string;
   inicioActividades: string;
   ingresosBrutos: string;
+  afipHabilitado: boolean;
+  afipEntornoProduccion: boolean;
+  afipCertificadoCargado: boolean;
+  afipCertificadoVence: string | null;
+  cuit: string;
 }
 
 export interface CondicionIva {
@@ -381,6 +386,10 @@ const fetchFiscal = async ({
       puntoVenta: "",
       inicioActividades: "",
       ingresosBrutos: "",
+      afipHabilitado: false,
+      afipEntornoProduccion: false,
+      afipCertificadoCargado: false,
+      afipCertificadoVence: null,
     };
   }
 
@@ -395,6 +404,11 @@ const fetchFiscal = async ({
       puntoVenta: "",
       inicioActividades: "",
       ingresosBrutos: "",
+      afipHabilitado: false,
+      afipEntornoProduccion: false,
+      afipCertificadoCargado: false,
+      afipCertificadoVence: null,
+      cuit: "",
     }
   );
 };

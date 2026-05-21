@@ -61,8 +61,9 @@ export default function VentaFooter({
 }: VentaFooterProps) {
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
-  const { configuracion } = useConfiguracion({
+  const { configuracion, fiscal } = useConfiguracion({
     enableConfiguracion: true,
+    enableFiscal: true,
   });
   const { cajaActual, abrirCaja, isLoading } = useCaja({
     enableCaja: true,
@@ -250,16 +251,41 @@ export default function VentaFooter({
         tipoComprobante: getTipoComprobanteLabel(tipoComprobante),
         formasPago: [...pagos],
         pie: configuracion?.observacionPieFactura,
+        arcaStatus: data.comprobante.arcaStatus,
+        cae: data.comprobante.cae,
+        caeFchVto: data.comprobante.caeFchVto,
+        cuitEmisor: fiscal?.cuit || configuracion?.cuit || "",
+        puntoVentaNum: fiscal?.puntoVenta ? Number(fiscal.puntoVenta) : 1,
+        cbteNro: data.comprobante.numero,
       };
 
       setLastSaleData(ticketData);
 
+      if (data.comprobante.arcaStatus === 'RECHAZADO') {
+        // ARCA rechazó: mostrar error detallado, NO imprimir, NO limpiar pantalla
+        addToast({
+          title: "⚠️ AFIP rechazó el comprobante",
+          description: data.comprobante.arcaErrores
+            ? `Error ARCA: ${data.comprobante.arcaErrores}`
+            : "La factura fue rechazada por AFIP. Revisá la consola del servidor para más detalles.",
+          color: "danger",
+          timeout: 10000,
+        });
+        // La venta se guardó en el sistema pero sin CAE — el cajero debe revisarla
+        queryClient.invalidateQueries({ queryKey: ["productos"] });
+        setIsSaving(false);
+        // No limpiar, no imprimir
+        return;
+      }
+
       addToast({
-        title: "Venta registrada",
-        description: `Venta #${data.comprobante.numero} registrada con éxito`,
+        title: "✅ Venta registrada",
+        description: data.comprobante.cae
+          ? `Factura #${data.comprobante.numero} autorizada por ARCA. CAE: ${data.comprobante.cae}`
+          : `Venta #${data.comprobante.numero} registrada con éxito`,
       });
 
-      // Trigger print with a small delay to ensure state update
+      // Solo imprime si fue autorizado (o si no requería ARCA)
       setTimeout(() => {
         handlePrint();
       }, 500);
