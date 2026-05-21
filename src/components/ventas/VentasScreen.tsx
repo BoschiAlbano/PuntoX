@@ -41,7 +41,10 @@ export default function VentasScreen() {
     clearVenta,
   } = useVentaStore();
 
-  const { configuracion } = useConfiguracion({ enableConfiguracion: true });
+  const { configuracion, fiscal } = useConfiguracion({
+    enableConfiguracion: true,
+    enableFiscal: true,
+  });
   const unificarRenglones =
     configuracion?.unificarRenglonesIngresarMismoProducto ?? true;
 
@@ -181,22 +184,25 @@ export default function VentasScreen() {
       // No activar si el usuario está escribiendo en un campo
       const target = e.target as HTMLElement;
       const tag = target?.tagName;
-      const isProductSearch = target?.id === 'product-search-input';
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) && !isProductSearch) return;
+      const isProductSearch = target?.id === "product-search-input";
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(tag) && !isProductSearch)
+        return;
       // No activar si hay un modal/overlay abierto
       if (document.querySelector('[data-slot="backdrop"]')) return;
 
-      if (e.key === 'F2') {
+      if (e.key === "F2") {
         e.preventDefault();
-        document.getElementById('product-search-input')?.focus();
+        document.getElementById("product-search-input")?.focus();
       }
-      if (e.key === 'F6') {
+      if (e.key === "F6") {
         e.preventDefault();
-        document.querySelector<HTMLElement>('[data-shortcut="cliente-trigger"]')?.click();
+        document
+          .querySelector<HTMLElement>('[data-shortcut="cliente-trigger"]')
+          ?.click();
       }
     };
-    window.addEventListener('keydown', handler, true);
-    return () => window.removeEventListener('keydown', handler, true);
+    window.addEventListener("keydown", handler, true);
+    return () => window.removeEventListener("keydown", handler, true);
   }, []);
 
   return (
@@ -294,7 +300,7 @@ export default function VentasScreen() {
               numeroComprobanteAsociado={numeroComprobanteAsociado}
               setNumeroComprobanteAsociado={setNumeroComprobanteAsociado}
               clienteCondicionIvaId={cliente?.CondicionIvaId}
-              configuracionCondicionIvaId={configuracion?.CondicionIvaId}
+              configuracionCondicionIvaId={fiscal?.condicionIvaId}
             />
           </div>
 

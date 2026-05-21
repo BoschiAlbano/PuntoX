@@ -44,21 +44,29 @@ export default function ComprobanteSelector({
   ];
 
   if (condicionesIva.length > 0 && configuracionCondicionIvaId) {
-    const issuerCondicion = condicionesIva.find((c: any) => String(c.id) === String(configuracionCondicionIvaId));
-    const clientCondicion = clienteCondicionIvaId 
-      ? condicionesIva.find((c: any) => String(c.id) === String(clienteCondicionIvaId))
+    const issuerCondicion = condicionesIva.find(
+      (c: any) => String(c.id) === String(configuracionCondicionIvaId),
+    );
+    const clientCondicion = clienteCondicionIvaId
+      ? condicionesIva.find(
+          (c: any) => String(c.id) === String(clienteCondicionIvaId),
+        )
       : null;
 
     if (issuerCondicion) {
       const issuerStr = issuerCondicion.descripcion.toLowerCase();
-      const clientStr = clientCondicion ? clientCondicion.descripcion.toLowerCase() : "consumidor final";
-      
+      const clientStr = clientCondicion
+        ? clientCondicion.descripcion.toLowerCase()
+        : "consumidor final";
+
       const isIssuerRI = issuerStr.includes("responsable inscripto");
       const isClientRI = clientStr.includes("responsable inscripto");
 
       if (isIssuerRI) {
         allowedTipos = [
-          isClientRI ? TIPO_COMPROBANTE_VENTA.FACTURA_A : TIPO_COMPROBANTE_VENTA.FACTURA_B,
+          isClientRI
+            ? TIPO_COMPROBANTE_VENTA.FACTURA_A
+            : TIPO_COMPROBANTE_VENTA.FACTURA_B,
           TIPO_COMPROBANTE_VENTA.PRESUPUESTO,
           TIPO_COMPROBANTE_VENTA.REMITO,
           TIPO_COMPROBANTE_VENTA.NOTA_CREDITO,
@@ -89,51 +97,51 @@ export default function ComprobanteSelector({
             "h-10 min-h-10 rounded-lg shadow-none bg-white border border-slate-300 hover:border-[#67afc3] hover:bg-slate-50 text-black transition-colors",
         }}
       >
-        {allowedTipos.includes(TIPO_COMPROBANTE_VENTA.FACTURA_A) && (
+        {allowedTipos.includes(TIPO_COMPROBANTE_VENTA.FACTURA_A) ? (
           <SelectItem
             key={TIPO_COMPROBANTE_VENTA.FACTURA_A}
             textValue={"Factura A"}
           >
             Factura A
           </SelectItem>
-        )}
-        {allowedTipos.includes(TIPO_COMPROBANTE_VENTA.FACTURA_B) && (
+        ) : null}
+        {allowedTipos.includes(TIPO_COMPROBANTE_VENTA.FACTURA_B) ? (
           <SelectItem
             key={TIPO_COMPROBANTE_VENTA.FACTURA_B}
             textValue={"Factura B"}
           >
             Factura B
           </SelectItem>
-        )}
-        {allowedTipos.includes(TIPO_COMPROBANTE_VENTA.FACTURA_C) && (
+        ) : null}
+        {allowedTipos.includes(TIPO_COMPROBANTE_VENTA.FACTURA_C) ? (
           <SelectItem
             key={TIPO_COMPROBANTE_VENTA.FACTURA_C}
             textValue={"Factura C"}
           >
             Factura C
           </SelectItem>
-        )}
-        {allowedTipos.includes(TIPO_COMPROBANTE_VENTA.PRESUPUESTO) && (
+        ) : null}
+        {allowedTipos.includes(TIPO_COMPROBANTE_VENTA.PRESUPUESTO) ? (
           <SelectItem
             key={TIPO_COMPROBANTE_VENTA.PRESUPUESTO}
             textValue={"Presupuesto"}
           >
             Presupuesto
           </SelectItem>
-        )}
-        {allowedTipos.includes(TIPO_COMPROBANTE_VENTA.REMITO) && (
+        ) : null}
+        {allowedTipos.includes(TIPO_COMPROBANTE_VENTA.REMITO) ? (
           <SelectItem key={TIPO_COMPROBANTE_VENTA.REMITO} textValue={"Remito"}>
             Remito
           </SelectItem>
-        )}
-        {allowedTipos.includes(TIPO_COMPROBANTE_VENTA.NOTA_CREDITO) && (
+        ) : null}
+        {allowedTipos.includes(TIPO_COMPROBANTE_VENTA.NOTA_CREDITO) ? (
           <SelectItem
             key={TIPO_COMPROBANTE_VENTA.NOTA_CREDITO}
             textValue={"Nota de Credito"}
           >
             Nota de Credito
           </SelectItem>
-        )}
+        ) : null}
       </Select>
 
       {tipoComprobante === TIPO_COMPROBANTE_VENTA.NOTA_CREDITO && (

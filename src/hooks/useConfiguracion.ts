@@ -390,6 +390,7 @@ const fetchFiscal = async ({
       afipEntornoProduccion: false,
       afipCertificadoCargado: false,
       afipCertificadoVence: null,
+      cuit: "",
     };
   }
 
