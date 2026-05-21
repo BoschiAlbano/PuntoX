@@ -16,7 +16,8 @@ import {
   addToast,
   useDisclosure,
 } from "@heroui/react";
-import { Pencil, Plus, Trash2, TrendingDown } from "lucide-react";
+import { modalMotionProps } from "@/lib/motionConfig";
+import { Pencil, Plus, Receipt, Tag, Trash2, TrendingDown } from "lucide-react";
 import React, { useState, useCallback, useMemo } from "react";
 import { handleNumberInput } from "@/lib/input/number";
 import { TIPO_PAGO, TIPO_PAGO_LABELS } from "@/lib/constants/comprobantes";
@@ -341,18 +342,40 @@ export default function GastosView() {
         onOpenChange={onGastoChange}
         size="2xl"
         placement="center"
+        backdrop="opaque"
+        scrollBehavior="inside"
+        motionProps={modalMotionProps}
         classNames={{
-          backdrop: "bg-black/50 backdrop-blur-sm z-[999]",
           wrapper: "z-[1000]",
+          base: "bg-white shadow-2xl border border-slate-200",
+          closeButton: "hover:bg-slate-100 text-slate-400 mt-2 mr-2 rounded-xl",
         }}
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader>
-                {editingGastoId ? "Editar Gasto" : "Registrar Gasto"}
+              <ModalHeader className="flex flex-col gap-1 pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-3 pr-8">
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: "#67afc3" }}
+                  >
+                    <Receipt size={18} className="text-white" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-base font-bold text-slate-800 leading-tight">
+                      {editingGastoId ? "Editar Gasto" : "Registrar Gasto"}
+                    </span>
+                    <span className="text-xs text-slate-400 font-normal">
+                      {editingGastoId
+                        ? "Modificá los datos del gasto"
+                        : "Registrá un nuevo gasto de caja"}
+                    </span>
+                  </div>
+                </div>
               </ModalHeader>
-              <ModalBody>
+
+              <ModalBody className="py-5 gap-4">
                 <div className="flex gap-2 items-end">
                   <Select
                     label="Concepto"
@@ -376,8 +399,8 @@ export default function GastosView() {
                   </Select>
                   <Button
                     isIconOnly
-                    color="primary"
                     variant="flat"
+                    className="bg-[#67afc3]/10 text-[#67afc3] hover:bg-[#67afc3]/20"
                     onPress={onConceptoOpen}
                   >
                     <Plus size={20} />
@@ -393,16 +416,16 @@ export default function GastosView() {
                   }
                 />
 
-                <div className="border p-4 rounded-xl border-gray-200 bg-gray-50 flex flex-col gap-3">
+                <div className="border border-slate-100 bg-slate-50/60 p-4 rounded-2xl flex flex-col gap-3">
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold text-gray-600">
+                    <span className="text-sm font-semibold text-slate-600">
                       Formas de Pago
                     </span>
                     <Button
                       size="sm"
                       variant="light"
-                      color="primary"
-                      startContent={<Plus size={16} />}
+                      startContent={<Plus size={14} />}
+                      className="text-[#67afc3] hover:bg-[#67afc3]/10 font-medium"
                       onPress={() => {
                         const usedTypes = new Set(
                           nuevoGasto.pagos.map((p) => p.tipoPago),
@@ -491,9 +514,9 @@ export default function GastosView() {
                     </div>
                   ))}
 
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                    <span className="font-semibold">Total:</span>
-                    <span className="font-bold text-lg text-primary">
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-200">
+                    <span className="text-sm font-semibold text-slate-600">Total:</span>
+                    <span className="font-bold text-lg" style={{ color: "#67afc3" }}>
                       {formatMoney(
                         nuevoGasto.pagos.reduce(
                           (acc, p) =>
@@ -505,12 +528,17 @@ export default function GastosView() {
                   </div>
                 </div>
               </ModalBody>
-              <ModalFooter>
-                <Button variant="light" color="danger" onPress={onClose}>
+
+              <ModalFooter className="border-t border-slate-100 gap-2">
+                <Button
+                  variant="light"
+                  className="font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl"
+                  onPress={onClose}
+                >
                   Cancelar
                 </Button>
                 <Button
-                  className="bg-[#67afc3] text-white font-semibold"
+                  className="bg-[#67afc3] hover:bg-[#4899b0] text-white font-bold rounded-xl shadow-md shadow-[#67afc3]/30"
                   onPress={handleAgregarGasto}
                   isLoading={isAddingGasto || isEditingGasto}
                   isDisabled={
@@ -537,16 +565,37 @@ export default function GastosView() {
         onOpenChange={onConceptoChange}
         size="sm"
         placement="center"
+        backdrop="opaque"
+        motionProps={modalMotionProps}
         classNames={{
-          backdrop: "bg-black/50 backdrop-blur-sm z-[999]",
           wrapper: "z-[1000]",
+          base: "bg-white shadow-2xl border border-slate-200",
+          closeButton: "hover:bg-slate-100 text-slate-400 mt-2 mr-2 rounded-xl",
         }}
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader>Nuevo Concepto de Gasto</ModalHeader>
-              <ModalBody>
+              <ModalHeader className="flex flex-col gap-1 pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-3 pr-8">
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: "#67afc3" }}
+                  >
+                    <Tag size={18} className="text-white" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-base font-bold text-slate-800 leading-tight">
+                      Nuevo Concepto
+                    </span>
+                    <span className="text-xs text-slate-400 font-normal">
+                      Agregá una categoría de gasto
+                    </span>
+                  </div>
+                </div>
+              </ModalHeader>
+
+              <ModalBody className="py-5">
                 <Input
                   label="Descripción"
                   placeholder="Ej: Limpieza, Insumos..."
@@ -554,12 +603,17 @@ export default function GastosView() {
                   onValueChange={setNuevoConcepto}
                 />
               </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
+
+              <ModalFooter className="border-t border-slate-100 gap-2">
+                <Button
+                  variant="light"
+                  className="font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl"
+                  onPress={onClose}
+                >
                   Cancelar
                 </Button>
                 <Button
-                  className="bg-[#67afc3] text-white font-semibold"
+                  className="bg-[#67afc3] hover:bg-[#4899b0] text-white font-bold rounded-xl shadow-md shadow-[#67afc3]/30"
                   onPress={handleAgregarConcepto}
                   isLoading={isAddingConcepto}
                 >
@@ -577,27 +631,54 @@ export default function GastosView() {
         onOpenChange={onDeleteChange}
         size="sm"
         placement="center"
+        backdrop="opaque"
+        motionProps={modalMotionProps}
         classNames={{
-          backdrop: "bg-black/50 backdrop-blur-sm z-[999]",
           wrapper: "z-[1000]",
+          base: "bg-white shadow-2xl border border-slate-200",
+          closeButton: "hover:bg-slate-100 text-slate-400 mt-2 mr-2 rounded-xl",
         }}
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader>Eliminar Gasto</ModalHeader>
-              <ModalBody>
-                <p>¿Estás seguro de que deseas eliminar este gasto?</p>
-                <p className="text-xs text-gray-500">
-                  Esta acción revertirá los movimientos en la caja.
-                </p>
+              <ModalHeader className="flex flex-col gap-1 pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-3 pr-8">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-rose-100">
+                    <Trash2 size={18} className="text-rose-600" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-base font-bold text-slate-800 leading-tight">
+                      Eliminar Gasto
+                    </span>
+                    <span className="text-xs text-slate-400 font-normal">
+                      Esta acción no se puede deshacer
+                    </span>
+                  </div>
+                </div>
+              </ModalHeader>
+
+              <ModalBody className="py-5">
+                <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 flex flex-col gap-1">
+                  <p className="text-sm font-semibold text-rose-700">
+                    ¿Estás seguro de que deseas eliminar este gasto?
+                  </p>
+                  <p className="text-xs text-rose-500">
+                    Se revertirán los movimientos registrados en la caja.
+                  </p>
+                </div>
               </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
+
+              <ModalFooter className="border-t border-slate-100 gap-2">
+                <Button
+                  variant="light"
+                  className="font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl"
+                  onPress={onClose}
+                >
                   Cancelar
                 </Button>
                 <Button
-                  color="danger"
+                  className="bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-md shadow-rose-500/30"
                   onPress={handleEliminarGasto}
                   isLoading={isDeletingGasto}
                 >

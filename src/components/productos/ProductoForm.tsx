@@ -1122,8 +1122,9 @@ export default function ProductoForm({
         backdrop="opaque"
         isDismissable={!isSaving}
         scrollBehavior="inside"
+        motionProps={modalMotionProps}
         classNames={{
-          backdrop: "bg-black/50 backdrop-blur-sm",
+          backdrop: "bg-slate-900/40",
           base: "bg-white",
         }}
       >
@@ -1145,8 +1146,9 @@ export default function ProductoForm({
         backdrop="opaque"
         isDismissable={!isSaving}
         scrollBehavior="inside"
+        motionProps={modalMotionProps}
         classNames={{
-          backdrop: "bg-black/50 backdrop-blur-sm",
+          backdrop: "bg-slate-900/40",
           base: "bg-white",
         }}
       >
@@ -1168,8 +1170,9 @@ export default function ProductoForm({
         backdrop="opaque"
         isDismissable={!isSaving}
         scrollBehavior="inside"
+        motionProps={modalMotionProps}
         classNames={{
-          backdrop: "bg-black/50 backdrop-blur-sm",
+          backdrop: "bg-slate-900/40",
           base: "bg-white",
         }}
       >

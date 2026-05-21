@@ -144,7 +144,7 @@ export default function SucursalForm({
       isOpen={isOpen}
       onClose={onClose}
       size="lg"
-      backdrop="blur"
+      backdrop="opaque"
       scrollBehavior="inside"
       motionProps={modalMotionProps}
       classNames={{
