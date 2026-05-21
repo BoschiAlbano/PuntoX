@@ -3,8 +3,26 @@ import { persist } from "zustand/middleware";
 import { Producto } from "@/lib/validations/producto.schema";
 import { Cliente } from "@/lib/validations/cliente.schema";
 import { TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
+import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
 
 export type OrigenPrecio = "normal" | "alternativo";
+
+const CLIENTE_CONSUMIDOR_FINAL = {
+  Id: 0,
+  Nombre: consumidorFinalSchema.Nombre,
+  Apellido: consumidorFinalSchema.Apellido,
+  Dni: consumidorFinalSchema.Dni,
+  Mail: consumidorFinalSchema.Mail,
+  Direccion: consumidorFinalSchema.Direccion,
+  ListaPrecioId: null,
+  Persona_Cliente: {
+    ActivarCtaCte: false,
+    TieneLimiteCompra: false,
+    MontoMaximoCtaCte: 0,
+    SaldoActual: 0,
+    MargenDisponible: 0,
+  },
+} as Partial<Cliente>;
 
 export interface Item extends Producto {
   cantidad: number;
@@ -49,10 +67,7 @@ export const useVentaStore = create<VentaState>()(
   persist(
     (set, get) => ({
       items: [],
-      cliente: {
-        Id: 0,
-        Nombre: "Consumidor Final",
-      },
+      cliente: CLIENTE_CONSUMIDOR_FINAL,
       tipoComprobante: TIPO_COMPROBANTE_VENTA.FACTURA_B,
       listaPrecios: null,
       descuentoPorcentaje: 0,
@@ -205,7 +220,7 @@ export const useVentaStore = create<VentaState>()(
       clearVenta: () =>
         set({
           items: [],
-          cliente: { Id: 0, Nombre: "Consumidor Final" },
+          cliente: CLIENTE_CONSUMIDOR_FINAL,
           tipoComprobante: TIPO_COMPROBANTE_VENTA.FACTURA_B,
           listaPrecios: null,
           descuentoPorcentaje: 0,

@@ -60,102 +60,100 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // Calcular Saldos
-    const clienteIds = clientes.map((c) => c.Id);
+    // Solo calcular saldos para clientes con cuenta corriente activa
+    const ctaCteClientes = clientes.filter(
+      (c) => c.Persona_Cliente?.ActivarCtaCte,
+    );
+    const ctaCteClientIds = ctaCteClientes.map((c) => c.Id);
 
-    // Traemos todos los movimientos relevantes para estos 50 clientes concurrentemente:
-    const [ventasCtaCte, pagosCtaCte, notasCreditoCtaCte] = await Promise.all([
-      // 1. Débitos (Ventas en Cta Cte)
-      prisma.formaPago.findMany({
-        where: {
-          TenantId: tenantIdBigInt,
-          TipoPago: TIPO_PAGO.CUENTA_CORRIENTE,
-          OR: [
-            { FormaPago_CtaCte: { ClienteId: { in: clienteIds } } },
-            {
-              Comprobante: {
-                Comprobante_Factura: { ClienteId: { in: clienteIds } },
+    // Traemos movimientos solo si hay clientes con CtaCte activa (optimización)
+    const [ventasCtaCte, pagosCtaCte, notasCreditoCtaCte] =
+      ctaCteClientIds.length > 0
+        ? await Promise.all([
+            // 1. Débitos (Ventas en Cta Cte)
+            prisma.formaPago.findMany({
+              where: {
+                TenantId: tenantIdBigInt,
+                TipoPago: TIPO_PAGO.CUENTA_CORRIENTE,
+                OR: [
+                  { FormaPago_CtaCte: { ClienteId: { in: ctaCteClientIds } } },
+                  {
+                    Comprobante: {
+                      Comprobante_Factura: { ClienteId: { in: ctaCteClientIds } },
+                    },
+                  },
+                  {
+                    Comprobante: {
+                      Comprobante_Presupuesto: { ClienteId: { in: ctaCteClientIds } },
+                    },
+                  },
+                  {
+                    Comprobante: {
+                      Comprobante_Remito: { ClienteId: { in: ctaCteClientIds } },
+                    },
+                  },
+                ],
+                Comprobante: {
+                  TipoComprobante: {
+                    in: [
+                      TIPO_COMPROBANTE_VENTA.FACTURA_A,
+                      TIPO_COMPROBANTE_VENTA.FACTURA_B,
+                      TIPO_COMPROBANTE_VENTA.FACTURA_C,
+                      TIPO_COMPROBANTE_VENTA.REMITO,
+                    ],
+                  },
+                  EstaEliminado: false,
+                },
+                EstaEliminado: false,
               },
-            },
-            {
-              Comprobante: {
-                Comprobante_Presupuesto: { ClienteId: { in: clienteIds } },
+              select: {
+                Monto: true,
+                FormaPago_CtaCte: { select: { ClienteId: true } },
+                Comprobante: {
+                  select: {
+                    Comprobante_Factura: { select: { ClienteId: true } },
+                    Comprobante_Presupuesto: { select: { ClienteId: true } },
+                    Comprobante_Remito: { select: { ClienteId: true } },
+                  },
+                },
               },
-            },
-            {
-              Comprobante: {
-                Comprobante_Remito: { ClienteId: { in: clienteIds } },
-              },
-            },
-          ],
-          Comprobante: {
-            TipoComprobante: {
-              in: [
-                TIPO_COMPROBANTE_VENTA.FACTURA_A,
-                TIPO_COMPROBANTE_VENTA.FACTURA_B,
-                TIPO_COMPROBANTE_VENTA.FACTURA_C,
-                TIPO_COMPROBANTE_VENTA.REMITO,
-              ],
-            },
-            EstaEliminado: false,
-          },
-          EstaEliminado: false,
-        },
-        select: {
-          Monto: true,
-          FormaPago_CtaCte: {
-            select: { ClienteId: true },
-          },
-          Comprobante: {
-            select: {
-              Comprobante_Factura: { select: { ClienteId: true } },
-              Comprobante_Presupuesto: { select: { ClienteId: true } },
-              Comprobante_Remito: { select: { ClienteId: true } },
-            },
-          },
-        },
-      }),
+            }),
 
-      // 2. Créditos (Pagos/Cobranzas)
-      prisma.comprobante.findMany({
-        where: {
-          TenantId: tenantIdBigInt,
-          TipoComprobante: TIPO_COMPROBANTE_VENTA.CUENTA_CORRIENTE_CLIENTE,
-          Comprobante_CuentaCorriente: {
-            ClienteId: { in: clienteIds },
-          },
-          EstaEliminado: false,
-        },
-        select: {
-          Total: true,
-          Comprobante_CuentaCorriente: {
-            select: { ClienteId: true },
-          },
-        },
-      }),
+            // 2. Créditos (Pagos/Cobranzas)
+            prisma.comprobante.findMany({
+              where: {
+                TenantId: tenantIdBigInt,
+                TipoComprobante: TIPO_COMPROBANTE_VENTA.CUENTA_CORRIENTE_CLIENTE,
+                Comprobante_CuentaCorriente: {
+                  ClienteId: { in: ctaCteClientIds },
+                },
+                EstaEliminado: false,
+              },
+              select: {
+                Total: true,
+                Comprobante_CuentaCorriente: { select: { ClienteId: true } },
+              },
+            }),
 
-      // 3. Créditos (Notas de Crédito a Cta Cte)
-      prisma.formaPago.findMany({
-        where: {
-          TenantId: tenantIdBigInt,
-          TipoPago: TIPO_PAGO.CUENTA_CORRIENTE,
-          FormaPago_CtaCte: {
-            ClienteId: { in: clienteIds },
-          },
-          Comprobante: {
-            TipoComprobante: TIPO_COMPROBANTE_VENTA.NOTA_CREDITO,
-            EstaEliminado: false,
-          },
-          EstaEliminado: false,
-        },
-        select: {
-          Monto: true,
-          FormaPago_CtaCte: {
-            select: { ClienteId: true },
-          },
-        },
-      }),
-    ]);
+            // 3. Créditos (Notas de Crédito a Cta Cte)
+            prisma.formaPago.findMany({
+              where: {
+                TenantId: tenantIdBigInt,
+                TipoPago: TIPO_PAGO.CUENTA_CORRIENTE,
+                FormaPago_CtaCte: { ClienteId: { in: ctaCteClientIds } },
+                Comprobante: {
+                  TipoComprobante: TIPO_COMPROBANTE_VENTA.NOTA_CREDITO,
+                  EstaEliminado: false,
+                },
+                EstaEliminado: false,
+              },
+              select: {
+                Monto: true,
+                FormaPago_CtaCte: { select: { ClienteId: true } },
+              },
+            }),
+          ])
+        : [[], [], []];
     // Procesar datos en memoria
     const saldosMap = new Map<string, number>();
 

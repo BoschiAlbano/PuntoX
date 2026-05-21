@@ -173,7 +173,8 @@ export async function getUltimoComprobanteAutorizado(
     });
 
     const result = await arca.electronicBillingService.getLastVoucher(puntoVenta, cbteTipo);
-    return typeof result === 'number' ? result : 0;
+    // El SDK retorna { cbteNro, cbteTipo, ptoVta }, no un número directo
+    return (result as any)?.cbteNro ?? 0;
   } catch (error: any) {
     console.error('[ARCA] Error al consultar último comprobante:', error.message);
     throw new Error(`Error al consultar último comprobante ARCA: ${error.message}`);

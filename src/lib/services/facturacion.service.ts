@@ -15,6 +15,7 @@ import {
 } from './arca.service';
 import {
   TIPO_COMPROBANTE_LOCAL_A_AFIP,
+  CBTE_TIPO_AFIP,
   CONCEPTO_AFIP,
   MONEDA_LOCAL_A_AFIP,
   PORCENTAJE_IVA_A_AFIP,
@@ -324,6 +325,17 @@ function prepararDatosAfip(
   // ImpTotal viene del comprobante (precio con IVA incluido)
   const total = Math.round(Number(comprobante.Total) * 100) / 100;
 
+  /**
+   * Factura C (CbteTipo 11, 12, 13): el emisor es monotributista.
+   * AFIP exige ImpIVA = 0, ImpNeto = ImpTotal y sin array Iva.
+   * Factura A/B: se discrimina IVA normalmente.
+   */
+  const esComprobanteC = [
+    CBTE_TIPO_AFIP.FACTURA_C,
+    CBTE_TIPO_AFIP.NOTA_DEBITO_C,
+    CBTE_TIPO_AFIP.NOTA_CREDITO_C,
+  ].includes(cbteTipoAfip as any);
+
   const data: VoucherData = {
     CantReg: 1,
     PtoVta: puntoVenta,
@@ -336,17 +348,17 @@ function prepararDatosAfip(
     CbteFch: cbteFch,
     ImpTotal: total,
     ImpTotConc: 0,
-    ImpNeto: impNeto,
+    ImpNeto: esComprobanteC ? total : impNeto,
     ImpOpEx: 0,
-    ImpIVA: impIvaTotal,
+    ImpIVA: esComprobanteC ? 0 : impIvaTotal,
     ImpTrib: 0,
     MonId: 'PES',
     MonCotiz: 1,
     CondicionIVAReceptorId: condicionIva,
   };
 
-  // Solo agregar array de IVA si hay alícuotas (requerido para Factura A)
-  if (ivaArray.length > 0) {
+  // Array Iva solo para Factura A/B (comprobantes con IVA discriminado)
+  if (!esComprobanteC && ivaArray.length > 0) {
     data.Iva = ivaArray;
   }
 

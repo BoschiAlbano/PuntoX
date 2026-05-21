@@ -12,7 +12,7 @@ import {
   Select,
   SelectItem,
 } from "@heroui/react";
-import { Trash2, Minus, Plus, ShoppingBag, DollarSign, PenLine, Scale, Tag, Check, X, Percent } from "lucide-react";
+import { Trash2, Minus, Plus, ShoppingBag, DollarSign, PenLine, Scale, Tag, Check, X, Percent, AlertTriangle } from "lucide-react";
 import { TiposVenta } from "../../../prisma/generated/prisma";
 import { OrigenPrecio } from "@/store/ventaStore";
 import { useQuery } from "@tanstack/react-query";
@@ -24,6 +24,33 @@ interface VentaGridProps {
   onChangeListaPrecios: (ids: number[], listaPrecioId: number) => void;
   onRemoveItems: (ids: number[]) => void;
   onApplyDiscount: (ids: number[], porcentaje: number) => void;
+}
+
+// ─── Item Warning Helper ────────────────────────────────────────────────────────
+
+type WarningType = "stock" | "limit" | null;
+
+interface ItemWarning {
+  type: WarningType;
+  message: string;
+}
+
+function getItemWarning(item: any): ItemWarning {
+  if (item.DescuentaStock && !item.PermiteStockNegativo && item.Stock !== null) {
+    const stock = parseFloat(item.Stock);
+    if (!isNaN(stock)) {
+      if (item.cantidad > stock) {
+        return { type: "stock", message: `Sin stock suficiente (disponible: ${stock})` };
+      }
+      if (item.cantidad >= stock && stock > 0) {
+        return { type: "stock", message: `Último stock disponible (${stock})` };
+      }
+    }
+  }
+  if (item.ActivarLimiteVenta && item.LimiteVenta > 0 && item.cantidad >= item.LimiteVenta) {
+    return { type: "limit", message: `Límite de venta alcanzado (máx. ${item.LimiteVenta})` };
+  }
+  return { type: null, message: "" };
 }
 
 export default function VentaGrid({
@@ -265,10 +292,17 @@ export default function VentaGrid({
           <div className="sm:hidden flex-1 overflow-auto scrollbar-hide divide-y divide-slate-50">
             {items.map((item) => {
               const isSelected = selectedIds.has(item.Id);
+              const warning = getItemWarning(item);
               return (
                 <div
                   key={item.Id}
-                  className={`px-3 py-2.5 flex flex-col gap-1.5 transition-colors cursor-pointer ${isSelected ? "bg-[#67afc3]/8" : "hover:bg-slate-50/50"}`}
+                  className={`px-3 py-2.5 flex flex-col gap-1.5 transition-colors cursor-pointer ${
+                    isSelected
+                      ? "bg-[#67afc3]/8"
+                      : warning.type
+                      ? "bg-red-50/40"
+                      : "hover:bg-slate-50/50"
+                  }`}
                   onClick={() => toggleSelectOne(item.Id)}
                 >
                   {/* Row 1: Checkbox + Icon + Description + Delete */}
@@ -281,9 +315,17 @@ export default function VentaGrid({
                       className="mt-0.5 shrink-0 h-3.5 w-3.5 rounded accent-[#67afc3] cursor-pointer"
                     />
                     <PriceOriginIcon origenPrecio={item.origenPrecio} tipoVenta={item.TipoVenta} />
-                    <span className="flex-1 font-medium text-slate-700 text-xs leading-snug line-clamp-2">
-                      {item.Descripcion}
-                    </span>
+                    <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+                      <span className="font-medium text-slate-700 text-xs leading-snug line-clamp-2">
+                        {item.Descripcion}
+                      </span>
+                      {warning.type && (
+                        <span className="flex items-center gap-1 text-[10px] font-semibold text-red-500">
+                          <AlertTriangle size={10} strokeWidth={2.5} />
+                          {warning.message}
+                        </span>
+                      )}
+                    </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); onRemoveItem(item.Id); }}
                       aria-label={`Eliminar ${item.Descripcion}`}
@@ -305,6 +347,8 @@ export default function VentaGrid({
                         tipoVenta={item.TipoVenta}
                         descuentaStock={item.DescuentaStock}
                         permiteStockNegativo={item.PermiteStockNegativo}
+                        activarLimiteVenta={item.ActivarLimiteVenta}
+                        limiteVenta={item.LimiteVenta}
                         onChange={(val) => onUpdateQuantity(item.Id, val)}
                         compact
                       />
@@ -354,12 +398,19 @@ export default function VentaGrid({
               </TableColumn>
             </TableHeader>
             <TableBody>
-              {items.map((item) => {
+            {items.map((item) => {
                 const isSelected = selectedIds.has(item.Id);
+                const warning = getItemWarning(item);
                 return (
                   <TableRow
                     key={item.Id}
-                    className={isSelected ? "!bg-[#67afc3]/8" : ""}
+                    className={
+                      isSelected
+                        ? "!bg-[#67afc3]/8"
+                        : warning.type
+                        ? "!bg-red-50/40"
+                        : ""
+                    }
                   >
                     <TableCell>
                       <input
@@ -387,6 +438,12 @@ export default function VentaGrid({
                               {item.CodigoBarra}
                             </span>
                           )}
+                          {warning.type && (
+                            <span className="flex items-center gap-1 text-[10px] font-semibold text-red-500 leading-none mt-0.5">
+                              <AlertTriangle size={10} strokeWidth={2.5} />
+                              {warning.message}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </TableCell>
@@ -398,6 +455,8 @@ export default function VentaGrid({
                         tipoVenta={item.TipoVenta}
                         descuentaStock={item.DescuentaStock}
                         permiteStockNegativo={item.PermiteStockNegativo}
+                        activarLimiteVenta={item.ActivarLimiteVenta}
+                        limiteVenta={item.LimiteVenta}
                         onChange={(val) => onUpdateQuantity(item.Id, val)}
                       />
                     </TableCell>
@@ -446,6 +505,8 @@ interface QuantitySelectorProps {
   tipoVenta: string;
   descuentaStock: boolean;
   permiteStockNegativo: boolean;
+  activarLimiteVenta?: boolean;
+  limiteVenta?: number;
   onChange: (value: number) => void;
   compact?: boolean;
 }
@@ -456,10 +517,26 @@ function QuantitySelector({
   tipoVenta,
   descuentaStock,
   permiteStockNegativo,
+  activarLimiteVenta,
+  limiteVenta,
   onChange,
   compact = false,
 }: QuantitySelectorProps) {
   const [localValue, setLocalValue] = React.useState(value.toString());
+
+  // Máximo efectivo para este ítem
+  const stockMax =
+    descuentaStock && !permiteStockNegativo && stock !== null
+      ? parseFloat(stock)
+      : null;
+  const limitMax =
+    activarLimiteVenta && limiteVenta && limiteVenta > 0 ? limiteVenta : null;
+  const effectiveMax =
+    stockMax !== null && limitMax !== null
+      ? Math.min(stockMax, limitMax)
+      : stockMax ?? limitMax ?? null;
+  const atMax = effectiveMax !== null && value >= effectiveMax;
+  const showStockLabel = descuentaStock && !permiteStockNegativo && stock !== null && !isNaN(parseFloat(stock));
 
   React.useEffect(() => {
     const parsedLocal = parseFloat(localValue);
@@ -493,7 +570,7 @@ function QuantitySelector({
   const handlePlus = () => {
     const step = tipoVenta === TiposVenta.PESO ? 0.001 : 1;
     const max =
-      descuentaStock && !permiteStockNegativo ? parseFloat(stock) : 999999;
+      effectiveMax !== null ? effectiveMax : 999999;
     let val = Number(value) + step;
     if (tipoVenta === TiposVenta.PESO) {
       val = parseFloat(val.toFixed(3));
@@ -509,34 +586,40 @@ function QuantitySelector({
   const fontSize = compact ? "text-[10px]" : "text-[11px]";
 
   return (
-    <div className="flex items-center justify-center">
-      <div className={`flex flex-row items-center border border-slate-200 rounded-lg overflow-hidden bg-white ${height}`}>
+    <div className="flex flex-col items-center gap-0.5">
+      <div className={`flex flex-row items-center border rounded-lg overflow-hidden ${height} transition-colors ${atMax ? "border-red-300 bg-red-50/40" : "border-slate-200 bg-white"}`}>
         <button
           onClick={handleMinus}
           aria-label="Reducir cantidad"
-          className={`${btnSize} h-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200 transition-colors`}
+          className={`${btnSize} h-full flex items-center justify-center transition-colors ${atMax ? "text-red-300 hover:text-red-500 hover:bg-red-100 active:bg-red-200" : "text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200"}`}
         >
           <Minus size={iconSize} strokeWidth={2.5} />
         </button>
-        <div className="h-4 w-px bg-slate-200" />
+        <div className={`h-4 w-px ${atMax ? "bg-red-200" : "bg-slate-200"}`} />
         <input
           type="number"
-          className={`${inputWidth} h-full text-center ${fontSize} font-semibold focus:ring-0 focus:bg-blue-50/50 p-0 outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none text-slate-700 placeholder:text-slate-300 bg-transparent border-none transition-colors`}
+          className={`${inputWidth} h-full text-center ${fontSize} font-semibold focus:ring-0 p-0 outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-300 bg-transparent border-none transition-colors ${atMax ? "text-red-600 focus:bg-red-50/50" : "text-slate-700 focus:bg-blue-50/50"}`}
           value={localValue}
           onChange={handleInputChange}
           step={tipoVenta === TiposVenta.PESO ? "0.001" : "1"}
           min={0}
           placeholder="0"
         />
-        <div className="h-4 w-px bg-slate-200" />
+        <div className={`h-4 w-px ${atMax ? "bg-red-200" : "bg-slate-200"}`} />
         <button
           onClick={handlePlus}
+          disabled={atMax}
           aria-label="Aumentar cantidad"
-          className={`${btnSize} h-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200 transition-colors`}
+          className={`${btnSize} h-full flex items-center justify-center transition-colors ${atMax ? "text-red-200 cursor-not-allowed" : "text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200"}`}
         >
           <Plus size={iconSize} strokeWidth={2.5} />
         </button>
       </div>
+      {showStockLabel && (
+        <span className={`text-[9px] font-semibold leading-none ${atMax ? "text-red-400" : "text-slate-400"}`}>
+          Stock: {parseFloat(stock).toLocaleString("es-AR")}
+        </span>
+      )}
     </div>
   );
 }

@@ -37,6 +37,7 @@ export default function ClienteSearch({
     onClose();
   };
 
+  // Vuelve al estado por defecto: Consumidor Final con datos completos
   const handleClear = () => {
     onSelect({
       Id: 0,
@@ -56,12 +57,17 @@ export default function ClienteSearch({
     });
   };
 
-  const isConsumidorFinal = selected.Id === 0;
-  const displayName = `${selected.Nombre} ${selected.Apellido}`;
+  // "Sin selección" = estado inicial del store (solo Id y Nombre, sin Dni)
+  // "CF seleccionado" = tiene Dni poblado (viene del botón Consumidor Final del modal)
+  // "Cliente real" = Id !== 0
+  const isNotSelected = selected.Id === 0 && !selected.Dni;
+  const displayName = selected.Id === 0
+    ? "Consumidor Final"
+    : `${selected.Nombre ?? ""} ${selected.Apellido ?? ""}`.trim();
 
   return (
     <div className="w-full">
-      {isConsumidorFinal ? (
+      {isNotSelected ? (
         <button
           onClick={onOpen}
           data-shortcut="cliente-trigger"
