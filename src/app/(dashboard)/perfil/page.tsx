@@ -13,7 +13,7 @@ export default function PerfilPersonalPage() {
         transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
         className="flex-1 relative flex flex-col pt-2"
       >
-        <div className="relative z-10 flex-1 flex flex-col h-full overflow-y-auto pb-10">
+        <div className="relative z-10 flex-1 flex flex-col justify-center items-center h-full overflow-y-auto pb-10">
           <div className="max-w-2xl w-full mx-auto space-y-6">
             <FotoPerfilSection />
             <MfaSetup />

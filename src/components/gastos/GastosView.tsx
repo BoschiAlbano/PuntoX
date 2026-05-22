@@ -2,6 +2,7 @@
 
 import { useCaja } from "@/hooks/useCaja";
 import { useGastos } from "@/hooks/useGastos";
+import { ModalAbrirCaja } from "@/components/caja/ModalAbrirCaja";
 import {
   Button,
   Chip,
@@ -17,7 +18,7 @@ import {
   useDisclosure,
 } from "@heroui/react";
 import { modalMotionProps } from "@/lib/motionConfig";
-import { Pencil, Plus, Receipt, Tag, Trash2, TrendingDown } from "lucide-react";
+import { Lock, Pencil, Plus, Receipt, Tag, Trash2, TrendingDown, Unlock } from "lucide-react";
 import React, { useState, useCallback, useMemo } from "react";
 import { handleNumberInput } from "@/lib/input/number";
 import { TIPO_PAGO, TIPO_PAGO_LABELS } from "@/lib/constants/comprobantes";
@@ -77,6 +78,11 @@ export default function GastosView() {
   } = useGastos({ enableConceptos: true });
 
   // ── Modales ──────────────────────────────────────────────────────────────
+  const {
+    isOpen: isAbrirOpen,
+    onOpenChange: onAbrirChange,
+  } = useDisclosure();
+
   const {
     isOpen: isGastoOpen,
     onOpen: onGastoOpen,
@@ -297,11 +303,26 @@ export default function GastosView() {
   // ── Caja cerrada ──────────────────────────────────────────────────────────
   if (!isCajaAbierta || !cajaActual) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-20 text-slate-400">
-        <TrendingDown size={48} strokeWidth={1} />
-        <p className="text-base font-medium">
-          No hay una caja abierta. Abrí la caja para registrar gastos.
-        </p>
+      <div className="flex-1 flex flex-col items-center justify-center gap-6 text-gray-500 px-4">
+        <div className="p-6 rounded-full bg-gray-50 border border-gray-200">
+          <Lock className="w-10 h-10 sm:w-16 sm:h-16 text-gray-300" />
+        </div>
+        <div className="text-center max-w-xs">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-700">
+            La caja está cerrada
+          </h2>
+          <p className="text-sm mt-1">
+            Debés abrir la caja para comenzar a registrar operaciones.
+          </p>
+        </div>
+        <Button
+          onPress={() => onAbrirChange()}
+          className="bg-[#0F2233] text-white font-semibold px-5 h-10 rounded-xl gap-2 hover:bg-[#0F2233]/80 transition-all shadow-sm text-sm"
+          startContent={<Unlock size={15} strokeWidth={2.5} />}
+        >
+          Abrir Caja
+        </Button>
+        <ModalAbrirCaja open={isAbrirOpen} onClose={onAbrirChange} />
       </div>
     );
   }
@@ -515,8 +536,13 @@ export default function GastosView() {
                   ))}
 
                   <div className="flex justify-between items-center pt-2 border-t border-slate-200">
-                    <span className="text-sm font-semibold text-slate-600">Total:</span>
-                    <span className="font-bold text-lg" style={{ color: "#67afc3" }}>
+                    <span className="text-sm font-semibold text-slate-600">
+                      Total:
+                    </span>
+                    <span
+                      className="font-bold text-lg"
+                      style={{ color: "#67afc3" }}
+                    >
                       {formatMoney(
                         nuevoGasto.pagos.reduce(
                           (acc, p) =>

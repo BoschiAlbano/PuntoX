@@ -2,12 +2,14 @@
 
 import React, { useState, useMemo, Key } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Chip } from "@heroui/react";
-import { Clock, DollarSign } from "lucide-react";
+import { Button, Chip, useDisclosure } from "@heroui/react";
+import { Clock, DollarSign, Lock, Unlock } from "lucide-react";
 import { TIPO_COMPROBANTE_VENTA_LABELS } from "@/lib/constants/comprobantes";
 import { CobrarModal } from "./CobrarModal";
+import { ModalAbrirCaja } from "@/components/caja/ModalAbrirCaja";
 import GenericTable, { Column } from "@/components/shared/GenericTable";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
+import { useCaja } from "@/hooks/useCaja";
 
 interface ComprobantePendiente {
   id: number;
@@ -59,6 +61,10 @@ export function CobrosScreen() {
   const [search, setSearch] = useState("");
   const [selectedComprobante, setSelectedComprobante] =
     useState<ComprobantePendienteRow | null>(null);
+
+  const { isCajaAbierta } = useCaja({ enableCaja: true });
+
+  const { isOpen: isAbrirOpen, onOpenChange: onAbrirChange } = useDisclosure();
 
   const { configuracion } = useConfiguracion({ enableConfiguracion: true });
   const cobroDiferidoActivo = !!configuracion?.puestoCajaSeparado;
@@ -171,6 +177,32 @@ export function CobrosScreen() {
         return null;
     }
   };
+
+  if (!isCajaAbierta) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-6 text-gray-500 px-4">
+        <div className="p-6 rounded-full bg-gray-50 border border-gray-200">
+          <Lock className="w-10 h-10 sm:w-16 sm:h-16 text-gray-300" />
+        </div>
+        <div className="text-center max-w-xs">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-700">
+            La caja está cerrada
+          </h2>
+          <p className="text-sm mt-1">
+            Debés abrir la caja para comenzar a registrar operaciones.
+          </p>
+        </div>
+        <Button
+          onPress={() => onAbrirChange()}
+          className="bg-[#0F2233] text-white font-semibold px-5 h-10 rounded-xl gap-2 hover:bg-[#0F2233]/80 transition-all shadow-sm text-sm"
+          startContent={<Unlock size={15} strokeWidth={2.5} />}
+        >
+          Abrir Caja
+        </Button>
+        <ModalAbrirCaja open={isAbrirOpen} onClose={onAbrirChange} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0">

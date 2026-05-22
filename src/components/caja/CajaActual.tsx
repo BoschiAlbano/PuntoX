@@ -40,10 +40,7 @@ import {
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { LoadingComponent } from "../loading/loading";
 import { handleNumberInput } from "@/lib/input/number";
-import {
-  TIPO_MOVIMIENTO,
-  TIPO_PAGO,
-} from "@/lib/constants/comprobantes";
+import { TIPO_MOVIMIENTO, TIPO_PAGO } from "@/lib/constants/comprobantes";
 import { useReactToPrint } from "react-to-print";
 import { TicketImpresion } from "../ventas/TicketImpresion";
 import StatCard from "../dashboard/StatCard";
@@ -98,10 +95,8 @@ export default function CajaActual({
     enableConfiguracion: true,
   });
 
-  const {
-    isOpen: _isAbrirOpen,
-    onOpenChange: _onAbrirChange,
-  } = useDisclosure();
+  const { isOpen: _isAbrirOpen, onOpenChange: _onAbrirChange } =
+    useDisclosure();
   const isAbrirOpen = propIsAbrirOpen ?? _isAbrirOpen;
   const onAbrirChange = propOnAbrirChange ?? _onAbrirChange;
 
@@ -111,10 +106,8 @@ export default function CajaActual({
   }, [isCajaAbierta, onCajaStatusChange]);
 
   // Cerrar caja — controlado desde el padre si se pasan props
-  const {
-    isOpen: _isCerrarOpen,
-    onOpenChange: _onCerrarChange,
-  } = useDisclosure();
+  const { isOpen: _isCerrarOpen, onOpenChange: _onCerrarChange } =
+    useDisclosure();
   const isCerrarOpen = propIsCerrarOpen ?? _isCerrarOpen;
   const onCerrarChange = propOnCerrarChange ?? _onCerrarChange;
   const [montoCierre, setMontoCierre] = useState("");
@@ -340,7 +333,6 @@ export default function CajaActual({
           paginationMeta={{ total: 0, page: 1, limit: 10, totalPages: 1 }}
           renderCell={() => null}
         />
-
       </div>
     );
   }
@@ -378,7 +370,7 @@ export default function CajaActual({
   // Caja Cerrada State
   if (!isCajaAbierta || !cajaActual) {
     return (
-      <div className="flex flex-col items-center justify-center gap-6 h-full min-h-[400px] sm:min-h-[500px] text-gray-500 px-4">
+      <div className="flex-1 flex flex-col items-center justify-center gap-6 text-gray-500 px-4">
         <div className="p-6 rounded-full bg-gray-50 border border-gray-200">
           <Lock className="w-10 h-10 sm:w-16 sm:h-16 text-gray-300" />
         </div>
@@ -458,7 +450,10 @@ export default function CajaActual({
         arcaStatus: arcaFe?.Estado ?? undefined,
         cae: arcaFe?.CAE ?? undefined,
         caeFchVto: arcaFe?.CAEFchVto
-          ? new Date(arcaFe.CAEFchVto).toISOString().split("T")[0].replace(/-/g, "")
+          ? new Date(arcaFe.CAEFchVto)
+              .toISOString()
+              .split("T")[0]
+              .replace(/-/g, "")
           : undefined,
         cuitEmisor: configuracion?.cuit ?? undefined,
         puntoVentaNum: arcaFe?.PuntoVenta ?? undefined,
@@ -622,8 +617,7 @@ export default function CajaActual({
           header: "border-b border-slate-100 pb-4 pt-5 px-6",
           body: "py-5 px-6",
           footer: "border-t border-slate-100 py-4 px-6",
-          closeButton:
-            "hover:bg-slate-100 text-slate-400 mt-2 mr-2 rounded-xl",
+          closeButton: "hover:bg-slate-100 text-slate-400 mt-2 mr-2 rounded-xl",
         }}
       >
         <ModalContent>
@@ -887,7 +881,9 @@ export default function CajaActual({
                             color: "#3a8fa3",
                           }}
                         >
-                          {getTipoComprobanteLabel(selectedTicket.TipoComprobante)}
+                          {getTipoComprobanteLabel(
+                            selectedTicket.TipoComprobante,
+                          )}
                         </Chip>
                       </div>
                     )}
@@ -901,7 +897,6 @@ export default function CajaActual({
                     </div>
                   ) : selectedTicket ? (
                     <div className="flex flex-col gap-5">
-
                       {/* Cliente + Totales */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {/* Cliente */}
@@ -942,7 +937,9 @@ export default function CajaActual({
                             </span>
                             <div className="flex justify-between text-sm text-slate-600">
                               <span>Subtotal</span>
-                              <span>{formatMoney(selectedTicket.SubTotal)}</span>
+                              <span>
+                                {formatMoney(selectedTicket.SubTotal)}
+                              </span>
                             </div>
                             {Number(selectedTicket.Descuento) > 0 && (
                               <div className="flex justify-between text-sm text-slate-500">
@@ -952,9 +949,7 @@ export default function CajaActual({
                                 </span>
                               </div>
                             )}
-                            <div
-                              className="flex justify-between items-center pt-1 border-t border-slate-200"
-                            >
+                            <div className="flex justify-between items-center pt-1 border-t border-slate-200">
                               <span className="text-sm font-semibold text-slate-700">
                                 Total
                               </span>
@@ -976,8 +971,8 @@ export default function CajaActual({
                             feAutorizado
                               ? "bg-emerald-50 border-emerald-200"
                               : feRechazado
-                              ? "bg-red-50 border-red-200"
-                              : "bg-slate-50 border-slate-200"
+                                ? "bg-red-50 border-red-200"
+                                : "bg-slate-50 border-slate-200"
                           }`}
                         >
                           <div className="flex items-center justify-between">
@@ -986,8 +981,8 @@ export default function CajaActual({
                                 feAutorizado
                                   ? "text-emerald-600"
                                   : feRechazado
-                                  ? "text-red-500"
-                                  : "text-slate-500"
+                                    ? "text-red-500"
+                                    : "text-slate-500"
                               }`}
                             >
                               Factura electrónica ARCA
@@ -999,8 +994,8 @@ export default function CajaActual({
                                 feAutorizado
                                   ? "success"
                                   : feRechazado
-                                  ? "danger"
-                                  : "default"
+                                    ? "danger"
+                                    : "default"
                               }
                             >
                               {fe.Estado}
@@ -1009,27 +1004,37 @@ export default function CajaActual({
                           {feAutorizado && fe.CAE && (
                             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                               <div className="flex flex-col">
-                                <span className="text-xs text-slate-500">CAE</span>
+                                <span className="text-xs text-slate-500">
+                                  CAE
+                                </span>
                                 <span className="font-mono font-semibold text-slate-800 text-xs tracking-wide">
                                   {fe.CAE}
                                 </span>
                               </div>
                               {fe.CAEFchVto && (
                                 <div className="flex flex-col">
-                                  <span className="text-xs text-slate-500">Vence</span>
+                                  <span className="text-xs text-slate-500">
+                                    Vence
+                                  </span>
                                   <span className="font-semibold text-slate-700 text-xs">
-                                    {new Date(fe.CAEFchVto).toLocaleDateString("es-AR")}
+                                    {new Date(fe.CAEFchVto).toLocaleDateString(
+                                      "es-AR",
+                                    )}
                                   </span>
                                 </div>
                               )}
                               <div className="flex flex-col">
-                                <span className="text-xs text-slate-500">PtoVta</span>
+                                <span className="text-xs text-slate-500">
+                                  PtoVta
+                                </span>
                                 <span className="font-semibold text-slate-700 text-xs">
                                   {String(fe.PuntoVenta).padStart(4, "0")}
                                 </span>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-xs text-slate-500">Nro. Cbte.</span>
+                                <span className="text-xs text-slate-500">
+                                  Nro. Cbte.
+                                </span>
                                 <span className="font-semibold text-slate-700 text-xs">
                                   {String(fe.CbteNumero).padStart(8, "0")}
                                 </span>
@@ -1075,7 +1080,9 @@ export default function CajaActual({
                                     </TableCell>
                                     <TableCell>
                                       <div className="flex flex-col">
-                                        <span className="text-slate-800">{item.Descripcion}</span>
+                                        <span className="text-slate-800">
+                                          {item.Descripcion}
+                                        </span>
                                         {item.Codigo && (
                                           <span className="text-[11px] text-slate-400">
                                             SKU: {item.Codigo}

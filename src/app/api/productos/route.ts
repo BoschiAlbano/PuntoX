@@ -98,6 +98,7 @@ export async function GET(req: NextRequest) {
         StockMinimo: true,
         PrecioCosto: true,
         Foto: true,
+        TipoVenta: true,
 
         Marca: { select: { Descripcion: true } },
         Rubro: { select: { Descripcion: true } },
@@ -151,6 +152,7 @@ export async function GET(req: NextRequest) {
         Descripcion: producto.Descripcion,
         EstaEliminado: producto.EstaEliminado,
         Foto: producto.Foto,
+        TipoVenta: producto.TipoVenta,
 
         Marca: producto.Marca
           ? { Descripcion: producto.Marca.Descripcion }

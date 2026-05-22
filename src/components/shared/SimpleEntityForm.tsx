@@ -1,16 +1,5 @@
 "use client";
 
-/**
- * Formulario genérico para entidades simples con Descripcion + EstaEliminado.
- * Reemplaza MarcaForm, RubroForm, UnidadMedidaForm (son character-for-character idénticos).
- *
- * Uso directo:
- *   <SimpleEntityForm entityName="Marca" descriptionPlaceholder="Nombre de la marca" {...props} />
- *
- * Uso vía factory (para pasarlo como FormComponent a GenericCrud):
- *   const MarcaForm = createSimpleEntityForm<Marca>({ entityName: "Marca", ... });
- */
-
 import { useState, useEffect } from "react";
 import {
   Modal,
@@ -22,10 +11,10 @@ import {
   Input,
   Switch,
 } from "@heroui/react";
+import { Tag, X } from "lucide-react";
 import { modalMotionProps } from "@/lib/motionConfig";
 import { GenericFormProps } from "@/components/shared/GenericCrud";
 
-/** Forma mínima que debe tener la entidad para usar este formulario */
 export interface SimpleEntity {
   Id: number | string;
   Descripcion: string;
@@ -33,23 +22,14 @@ export interface SimpleEntity {
 }
 
 export interface SimpleEntityFormConfig {
-  /** Nombre de la entidad, e.g. "Marca", "Rubro", "Unidad de Medida" */
   entityName: string;
-  /**
-   * Texto de artículo para subtítulo: "la marca", "el rubro", "la unidad de medida".
-   * Si se omite, se genera como `"la ${entityName.toLowerCase()}"`.
-   */
   entityArticle?: string;
-  /** Etiqueta del título al crear. Default: `"Nueva ${entityName}"` */
   newLabel?: string;
-  /** Etiqueta del título al editar. Default: `"Editar ${entityName}"` */
   editLabel?: string;
-  /** Placeholder del input de descripción. Default: `"Nombre de ${entityArticle}"` */
   descriptionPlaceholder?: string;
-  /** Texto del switch cuando está activo. Default: `"${entityName} Activo"` */
   switchActiveLabel?: string;
-  /** Texto del switch cuando está inactivo. Default: `"${entityName} Inactivo"` */
   switchInactiveLabel?: string;
+  icon?: React.ComponentType<{ size?: number; className?: string }>;
 }
 
 export type SimpleEntityFormProps<T extends SimpleEntity> =
@@ -57,20 +37,8 @@ export type SimpleEntityFormProps<T extends SimpleEntity> =
 
 const inputClassNames = {
   inputWrapper:
-    "bg-white border border-[#e5e7eb] shadow-none hover:border-[#e0e0e0] " +
-    "focus-within:!border-[var(--crud-accent)] focus-within:ring-1 focus-within:ring-[var(--crud-accent)]/20",
-};
-
-const modalClassNames = {
-  backdrop: "bg-black/50 backdrop-blur-sm",
-  wrapper: "items-end sm:items-center",
-  base: "font-sans bg-white rounded-t-[20px] rounded-b-none sm:rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.08)] border border-[#e5e7eb] max-w-full sm:max-w-[500px] max-h-[92vh] overflow-hidden w-full sm:w-auto m-0 sm:m-auto",
-  header:
-    "border-t-[3px] border-t-[var(--crud-accent)] border-b border-[#e5e7eb] bg-[var(--crud-accent)]/5",
-  body: "py-0 overflow-y-auto overflow-x-hidden",
-  footer: "border-t border-[#e5e7eb] bg-[#f8fafc]",
-  closeButton:
-    "hover:bg-[var(--crud-accent)]/10 hover:text-[var(--crud-accent)] rounded-full p-1.5 transition-colors text-[#6b7280]",
+    "bg-white border border-slate-200 shadow-none hover:border-slate-300 " +
+    "focus-within:!border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/20",
 };
 
 export function SimpleEntityForm<T extends SimpleEntity>({
@@ -86,6 +54,7 @@ export function SimpleEntityForm<T extends SimpleEntity>({
   descriptionPlaceholder,
   switchActiveLabel,
   switchInactiveLabel,
+  icon: Icon = Tag,
 }: SimpleEntityFormProps<T>) {
   const [formData, setFormData] = useState<Partial<SimpleEntity>>({
     Descripcion: "",
@@ -116,76 +85,99 @@ export function SimpleEntityForm<T extends SimpleEntity>({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size="md"
-      backdrop="opaque"
+      hideCloseButton
       isDismissable={!isSaving}
-      scrollBehavior="inside"
       motionProps={modalMotionProps}
-      classNames={modalClassNames}
+      classNames={{
+        backdrop: "bg-slate-900/60 backdrop-blur-sm",
+        wrapper: "items-end sm:items-center",
+        base: "font-sans bg-white shadow-2xl border-0 sm:border border-slate-200 rounded-none sm:rounded-2xl w-full sm:max-w-[460px] m-0 sm:m-auto",
+      }}
     >
       <ModalContent>
-        <ModalHeader className="flex flex-col gap-1 py-6 px-6">
-          <h3 className="text-[28px] font-bold text-[#0f172a] leading-tight">
-            {isEdit ? updateLabel : createLabel}
-          </h3>
-          {!isEdit && (
-            <p className="text-sm text-[#6b7280] mt-1">
-              Completa la información de {article}
-            </p>
-          )}
+        {/* ── Header ── */}
+        <ModalHeader className="flex items-center gap-3 py-4 px-5 border-b border-slate-100">
+          <div
+            className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+            style={{ backgroundColor: "#67afc3" }}
+          >
+            <Icon size={17} className="text-white" />
+          </div>
+          <div className="flex flex-col flex-1 min-w-0">
+            <span className="text-base font-bold text-slate-800 leading-tight">
+              {isEdit ? updateLabel : createLabel}
+            </span>
+            <span className="text-xs text-slate-400 font-normal">
+              {isEdit
+                ? `Modificá los datos de ${article}`
+                : `Completá la información de ${article}`}
+            </span>
+          </div>
+          <Button
+            isIconOnly
+            size="sm"
+            variant="light"
+            onPress={onClose}
+            isDisabled={isSaving}
+            className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl shrink-0"
+          >
+            <X size={16} />
+          </Button>
         </ModalHeader>
 
-        <ModalBody className="p-0">
-          <div className="px-6 py-6 space-y-4">
-            <Input
-              label="Descripción"
-              placeholder={placeholder}
-              autoFocus
-              value={formData.Descripcion ?? ""}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  Descripcion: e.target.value,
-                }))
+        {/* ── Body ── */}
+        <ModalBody className="px-5 py-5 space-y-4">
+          <Input
+            label="Descripción"
+            placeholder={placeholder}
+            autoFocus
+            value={formData.Descripcion ?? ""}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, Descripcion: e.target.value }))
+            }
+            isRequired
+            isDisabled={isSaving}
+            maxLength={250}
+            description={`${formData.Descripcion?.length ?? 0}/250`}
+            classNames={inputClassNames}
+          />
+          <div className="flex items-center gap-2 px-1">
+            <Switch
+              isSelected={!formData.EstaEliminado}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, EstaEliminado: !value }))
               }
-              isRequired
+              color={formData.EstaEliminado ? "danger" : "success"}
               isDisabled={isSaving}
-              maxLength={250}
-              description={`${formData.Descripcion?.length ?? 0}/250 caracteres`}
-              classNames={inputClassNames}
-            />
-            <div className="flex items-center gap-2">
-              <Switch
-                isSelected={!formData.EstaEliminado}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, EstaEliminado: !value }))
-                }
-                color={formData.EstaEliminado ? "danger" : "success"}
-                isDisabled={isSaving}
+              size="sm"
+            >
+              <span
+                className={`text-sm font-medium ${
+                  formData.EstaEliminado ? "text-rose-600" : "text-emerald-600"
+                }`}
               >
-                {formData.EstaEliminado
-                  ? inactiveLabel
-                  : activeLabel}
-              </Switch>
-            </div>
+                {formData.EstaEliminado ? inactiveLabel : activeLabel}
+              </span>
+            </Switch>
           </div>
         </ModalBody>
 
-        <ModalFooter className="py-5 px-6 gap-3">
+        {/* ── Footer ── */}
+        <ModalFooter className="flex items-center justify-between py-3.5 px-5 border-t border-slate-100 bg-white gap-3">
           <Button
             variant="light"
             onPress={onClose}
             isDisabled={isSaving}
-            className="font-medium text-[#6b7280] hover:bg-[#f1f5f9] h-11 px-5 rounded-[10px]"
+            className="font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl h-10 px-5"
           >
             Cancelar
           </Button>
           <Button
             onPress={() => onSubmit(formData as Partial<T>)}
             isLoading={isSaving}
-            className="bg-[var(--crud-accent)] hover:bg-[var(--crud-accent-hover)] text-white font-semibold h-11 px-6 rounded-[10px] shadow-sm hover:shadow transition-shadow focus-visible:ring-2 focus-visible:ring-[var(--crud-accent)]/40"
+            className="bg-[#67afc3] hover:bg-[#4899b0] text-white font-bold rounded-xl shadow-md shadow-[#67afc3]/30 h-10 px-6"
           >
-            {isEdit ? "Actualizar" : "Crear"}
+            {isEdit ? "Guardar Cambios" : "Crear"}
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -193,16 +185,6 @@ export function SimpleEntityForm<T extends SimpleEntity>({
   );
 }
 
-/**
- * Factory: devuelve un componente pre-configurado para usar como `FormComponent` en GenericCrud.
- *
- * @example
- * const MarcaForm = createSimpleEntityForm<Marca>({
- *   entityName: "Marca",
- *   entityArticle: "la marca",
- *   descriptionPlaceholder: "Nombre de la marca",
- * });
- */
 export function createSimpleEntityForm<T extends SimpleEntity>(
   config: SimpleEntityFormConfig,
 ) {

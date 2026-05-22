@@ -10,8 +10,15 @@ import {
   Input,
   Switch,
 } from "@heroui/react";
+import { DollarSign, X } from "lucide-react";
 import { ListaPrecio } from "@/lib/validations/lista-precio.schema";
 import { GenericFormProps } from "@/components/shared/GenericCrud";
+
+const inputClassNames = {
+  inputWrapper:
+    "bg-white border border-slate-200 shadow-none hover:border-slate-300 " +
+    "focus-within:!border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/20",
+};
 
 export default function ListaPrecioForm({
   isOpen,
@@ -31,101 +38,112 @@ export default function ListaPrecioForm({
     if (initialData) {
       setFormData(initialData);
     } else {
-      setFormData({
-        Nombre: "",
-        PorDefecto: false,
-        Activa: true,
-        EstaEliminado: false,
-      });
+      setFormData({ Nombre: "", PorDefecto: false, Activa: true, EstaEliminado: false });
     }
   }, [initialData, isOpen]);
+
+  const isEdit = !!initialData;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size="md"
-      backdrop="opaque"
-      scrollBehavior="inside"
+      hideCloseButton
+      isDismissable={!isSaving}
       motionProps={modalMotionProps}
       classNames={{
-        backdrop: "bg-black/50 backdrop-blur-sm",
+        backdrop: "bg-slate-900/60 backdrop-blur-sm",
         wrapper: "items-end sm:items-center",
-        base: "font-sans bg-white rounded-t-[20px] rounded-b-none sm:rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.08)] border border-[#e5e7eb] w-full sm:w-auto m-0 sm:m-auto max-h-[92vh]",
-        header: "border-t-[3px] border-t-[var(--crud-accent)] border-b border-[#e5e7eb] bg-[var(--crud-accent)]/5",
-        body: "py-6",
-        footer: "border-t border-[#e5e7eb] bg-[#f8fafc]",
-        closeButton: "hover:bg-[var(--crud-accent)]/10 hover:text-[var(--crud-accent)] rounded-full p-1.5 transition-colors text-[#6b7280]",
+        base: "font-sans bg-white shadow-2xl border-0 sm:border border-slate-200 rounded-none sm:rounded-2xl w-full sm:max-w-[460px] m-0 sm:m-auto",
       }}
     >
       <ModalContent>
-        <ModalHeader className="flex flex-col gap-1 py-4 px-6">
-          <h3 className="text-xl font-bold text-[#0f172a]">
-            {initialData ? "Editar Lista de Precio" : "Nueva Lista de Precio"}
-          </h3>
-          <p className="text-sm text-[#6b7280] font-normal">
-            {initialData
-              ? "Modifica los datos de la lista de precio"
-              : "Ingresa los datos para la nueva lista de precio"}
-          </p>
+        {/* ── Header ── */}
+        <ModalHeader className="flex items-center gap-3 py-4 px-5 border-b border-slate-100">
+          <div
+            className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+            style={{ backgroundColor: "#67afc3" }}
+          >
+            <DollarSign size={17} className="text-white" />
+          </div>
+          <div className="flex flex-col flex-1 min-w-0">
+            <span className="text-base font-bold text-slate-800 leading-tight">
+              {isEdit ? "Editar Lista de Precio" : "Nueva Lista de Precio"}
+            </span>
+            <span className="text-xs text-slate-400 font-normal">
+              {isEdit
+                ? "Modificá los datos de la lista"
+                : "Completá los datos de la nueva lista"}
+            </span>
+          </div>
+          <Button
+            isIconOnly
+            size="sm"
+            variant="light"
+            onPress={onClose}
+            isDisabled={isSaving}
+            className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl shrink-0"
+          >
+            <X size={16} />
+          </Button>
         </ModalHeader>
-        <ModalBody className="px-6 space-y-6">
+
+        {/* ── Body ── */}
+        <ModalBody className="px-5 py-5 space-y-4">
           <Input
             label="Nombre"
             placeholder="Ej: Mayorista, Lista VIP"
             autoFocus
             value={formData.Nombre || ""}
-            onChange={(e) =>
-              setFormData({ ...formData, Nombre: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, Nombre: e.target.value })}
             isRequired
             isDisabled={isSaving}
-            classNames={{
-              inputWrapper:
-                "bg-white border border-[#e5e7eb] shadow-none hover:border-[#e0e0e0] focus-within:!border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/20",
-            }}
+            classNames={inputClassNames}
           />
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 px-1">
             <Switch
               isSelected={formData.Activa}
-              onValueChange={(checked) =>
-                setFormData({ ...formData, Activa: checked })
-              }
+              onValueChange={(checked) => setFormData({ ...formData, Activa: checked })}
               isDisabled={isSaving}
               color="success"
               size="sm"
             >
-              <span className="text-sm text-gray-700">Lista activa</span>
+              <span
+                className={`text-sm font-medium ${formData.Activa ? "text-emerald-600" : "text-rose-600"}`}
+              >
+                {formData.Activa ? "Lista Activa" : "Lista Inactiva"}
+              </span>
             </Switch>
             <Switch
               isSelected={formData.PorDefecto}
-              onValueChange={(checked) =>
-                setFormData({ ...formData, PorDefecto: checked })
-              }
+              onValueChange={(checked) => setFormData({ ...formData, PorDefecto: checked })}
               isDisabled={isSaving}
-              color="primary"
               size="sm"
+              classNames={{ thumb: "bg-white", wrapper: "bg-[#67afc3]/30 group-data-[selected=true]:bg-[#67afc3]" }}
             >
-              <span className="text-sm text-gray-700">Lista por defecto</span>
+              <span className="text-sm font-medium text-slate-700">
+                Lista por defecto
+              </span>
             </Switch>
           </div>
         </ModalBody>
-        <ModalFooter className="px-6 py-4">
+
+        {/* ── Footer ── */}
+        <ModalFooter className="flex items-center justify-between py-3.5 px-5 border-t border-slate-100 bg-white gap-3">
           <Button
             variant="light"
             onPress={onClose}
             isDisabled={isSaving}
-            className="text-[#6b7280] font-medium"
+            className="font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl h-10 px-5"
           >
             Cancelar
           </Button>
           <Button
-            color="primary"
             onPress={() => onSubmit(formData)}
             isLoading={isSaving}
-            className="bg-[#67afc3] text-white font-medium shadow-sm hover:bg-[#5a9ab0]"
+            className="bg-[#67afc3] hover:bg-[#4899b0] text-white font-bold rounded-xl shadow-md shadow-[#67afc3]/30 h-10 px-6"
           >
-            {isSaving ? "Guardando..." : "Guardar"}
+            {isEdit ? "Guardar Cambios" : "Crear"}
           </Button>
         </ModalFooter>
       </ModalContent>

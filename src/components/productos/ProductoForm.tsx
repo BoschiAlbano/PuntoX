@@ -13,8 +13,6 @@ import {
   Select,
   SelectItem,
   NumberInput,
-  Accordion,
-  AccordionItem,
   Chip,
   addToast,
   Autocomplete,
@@ -30,6 +28,7 @@ import {
   DollarSign,
   Package,
   Settings,
+  X,
 } from "lucide-react";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
 import MarcaGenericForm from "../marcas/MarcaForm";
@@ -40,12 +39,10 @@ import { LoadingComponent } from "../loading/loading";
 
 const inputClassNames = {
   inputWrapper:
-    "bg-white border border-[#e5e7eb] shadow-none hover:border-[#e0e0e0] focus-within:!border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/20",
+    "bg-white border border-slate-200 shadow-none hover:border-slate-300 focus-within:!border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/20",
 };
 
-// Detecta si los campos obligatorios (*) de cada sección están completos.
-// Los chips pasan a "Completo" en tiempo real cuando el usuario carga la info.
-function getSectionStatus(formData: Partial<Producto>) {
+function getSectionStatus(formData: Partial<Produto>) {
   const general =
     (formData.Codigo ?? 0) > 0 &&
     (formData.CodigoBarra?.trim() ?? "").length > 0 &&
@@ -68,7 +65,7 @@ function getSectionStatus(formData: Partial<Producto>) {
   };
 }
 
-const defaultProducto: Producto = {
+const defaultProducto: Produto = {
   Id: 0,
   MarcaId: 0,
   RubroId: 0,
@@ -96,7 +93,6 @@ const defaultProducto: Producto = {
   Stock: 0,
 };
 
-// Funciones de fetch para los selects
 const fetchMarcas = async () => {
   const res = await fetch("/api/marcas");
   if (!res.ok) throw new Error("Error fetching marcas");
@@ -139,14 +135,17 @@ const fetchListasPrecios = async () => {
   return data.data;
 };
 
+type SectionKey = "general" | "categorizacion" | "precios" | "stock" | "configuracion";
+
 export default function ProductoForm({
   isOpen,
   onClose,
   initialData,
   onSubmit,
   isSaving,
-}: GenericFormProps<Producto>) {
-  const [formData, setFormData] = useState<Partial<Producto>>(defaultProducto);
+}: GenericFormProps<Produto>) {
+  const [formData, setFormData] = useState<Partial<Produto>>(defaultProducto);
+  const [activeSection, setActiveSection] = useState<SectionKey>("general");
 
   const queryClient = useQueryClient();
   const [isMarcaModalOpen, setIsMarcaModalOpen] = useState(false);
@@ -172,20 +171,10 @@ export default function ProductoForm({
       queryClient.invalidateQueries({ queryKey: ["marcas-generic"] });
       setFormData((prev) => ({ ...prev, MarcaId: data.Id }));
       setIsMarcaModalOpen(false);
-      addToast({
-        title: "Éxito",
-        description: "Marca creada correctamente",
-        color: "success",
-        timeout: 3000,
-      });
+      addToast({ title: "Éxito", description: "Marca creada correctamente", color: "success", timeout: 3000 });
     },
     onError: (error: any) => {
-      addToast({
-        title: "Error",
-        description: error.message || "Error al crear marca",
-        color: "danger",
-        timeout: 3000,
-      });
+      addToast({ title: "Error", description: error.message || "Error al crear marca", color: "danger", timeout: 3000 });
     },
   });
 
@@ -206,20 +195,10 @@ export default function ProductoForm({
       queryClient.invalidateQueries({ queryKey: ["rubros-generic"] });
       setFormData((prev) => ({ ...prev, RubroId: data.Id }));
       setIsRubroModalOpen(false);
-      addToast({
-        title: "Éxito",
-        description: "Rubro creado correctamente",
-        color: "success",
-        timeout: 3000,
-      });
+      addToast({ title: "Éxito", description: "Rubro creado correctamente", color: "success", timeout: 3000 });
     },
     onError: (error: any) => {
-      addToast({
-        title: "Error",
-        description: error.message || "Error al crear rubro",
-        color: "danger",
-        timeout: 3000,
-      });
+      addToast({ title: "Error", description: error.message || "Error al crear rubro", color: "danger", timeout: 3000 });
     },
   });
 
@@ -240,24 +219,13 @@ export default function ProductoForm({
       queryClient.invalidateQueries({ queryKey: ["unidades-medidas-generic"] });
       setFormData((prev) => ({ ...prev, UnidadMedidaId: data.Id }));
       setIsUnidadModalOpen(false);
-      addToast({
-        title: "Éxito",
-        description: "Unidad creada correctamente",
-        color: "success",
-        timeout: 3000,
-      });
+      addToast({ title: "Éxito", description: "Unidad creada correctamente", color: "success", timeout: 3000 });
     },
     onError: (error: any) => {
-      addToast({
-        title: "Error",
-        description: error.message || "Error al crear unidad",
-        color: "danger",
-        timeout: 3000,
-      });
+      addToast({ title: "Error", description: error.message || "Error al crear unidad", color: "danger", timeout: 3000 });
     },
   });
 
-  // Queries para llenar los selects
   const { data: marcas = [], isLoading: isLoadingMarcas } = useQuery({
     queryKey: ["marcas-generic"],
     queryFn: fetchMarcas,
@@ -277,6 +245,8 @@ export default function ProductoForm({
   const { data: listasPrecios = [], isLoading: isLoadingListas } = useQuery({
     queryKey: ["listas-precios-generic"],
     queryFn: fetchListasPrecios,
+    refetchOnMount: true,
+    staleTime: 0,
   });
 
   const { data: nextCodeData } = useQuery({
@@ -286,7 +256,6 @@ export default function ProductoForm({
     refetchOnMount: "always",
   });
 
-  // Query para obtener datos completos del producto en edición
   const { data: fullProduct, isLoading: isLoadingFullProduct } = useQuery({
     queryKey: ["producto-detail", initialData?.Id],
     queryFn: async () => {
@@ -312,216 +281,190 @@ export default function ProductoForm({
 
   useEffect(() => {
     if (!initialData && nextCodeData?.ultimoCodigo && isOpen) {
-      setFormData((prev) => ({
-        ...prev,
-        Codigo: nextCodeData.ultimoCodigo,
-      }));
+      setFormData((prev) => ({ ...prev, Codigo: nextCodeData.ultimoCodigo }));
     }
   }, [nextCodeData, initialData, isOpen]);
 
   const handleSubmit = () => {
     const dataToSubmit = { ...formData };
-    if (fotoPreview) {
-      dataToSubmit.Foto = fotoPreview;
-    }
+    if (fotoPreview) dataToSubmit.Foto = fotoPreview;
     onSubmit(dataToSubmit);
   };
 
-  const isEdit = !!initialData;
-  const sectionStatus = getSectionStatus(formData);
-
-  const SectionTitle = ({
-    icon: Icon,
-    label,
-    isComplete,
-  }: {
-    icon: React.ComponentType<{ className?: string }>;
-    label: string;
-    isComplete: boolean;
-  }) => (
-    <div className="flex items-center justify-between w-full gap-2 pr-2">
-      <div className="flex items-center gap-2 min-w-0">
-        <Icon className="w-4 h-4 text-[#67afc3] shrink-0" />
-        <span>{label}</span>
-      </div>
-      <Chip
-        size="sm"
-        variant="flat"
-        className={
-          isComplete
-            ? "bg-[#90c472]/15 text-[#90c472] border-0 shrink-0"
-            : "bg-[#f59e0b]/15 text-[#f59e0b] border-0 shrink-0"
-        }
-      >
-        {isComplete ? "Completo" : "Pendiente"}
-      </Chip>
-    </div>
-  );
-
-  const updatePrecio = (
-    listaId: number | null,
-    field: string,
-    value: number,
-  ) => {
+  const updatePrecio = (listaId: number | null, field: string, value: number) => {
     setFormData((prev) => {
-      // Cambio en el precio de costo general
       if (listaId === null && field === "PrecioCosto") {
         const newCosto = value;
-        const newPreciosLista = (prev.PreciosLista || []).map((p) => {
-          const ganancia = p.PorcentajeGanancia || 0;
-          return {
-            ...p,
-            PrecioFinal: parseFloat(
-              (newCosto * (1 + ganancia / 100)).toFixed(2),
-            ),
-          };
-        });
-        return {
-          ...prev,
-          PrecioCosto: newCosto,
-          PreciosLista: newPreciosLista,
-        };
+        const newPreciosLista = (prev.PreciosLista || []).map((p) => ({
+          ...p,
+          PrecioFinal: parseFloat((newCosto * (1 + (p.PorcentajeGanancia || 0) / 100)).toFixed(2)),
+        }));
+        return { ...prev, PrecioCosto: newCosto, PreciosLista: newPreciosLista };
       }
 
-      // Cambio en una lista específica
       const prevCosto = prev.PrecioCosto || 0;
       const currentListas = [...(prev.PreciosLista || [])];
-      const listaIndex = currentListas.findIndex(
-        (p) => p.ListaPrecioId === listaId,
-      );
+      const listaIndex = currentListas.findIndex((p) => p.ListaPrecioId === listaId);
 
       const currentLista =
         listaIndex >= 0
           ? currentListas[listaIndex]
-          : {
-              ListaPrecioId: listaId as number,
-              PorcentajeGanancia: 0,
-              PrecioFinal: 0,
-            };
+          : { ListaPrecioId: listaId as number, PorcentajeGanancia: 0, PrecioFinal: 0 };
 
       if (field === "PorcentajeGanancia") {
         currentLista.PorcentajeGanancia = value;
-        currentLista.PrecioFinal = parseFloat(
-          (prevCosto * (1 + value / 100)).toFixed(2),
-        );
+        currentLista.PrecioFinal = parseFloat((prevCosto * (1 + value / 100)).toFixed(2));
       } else if (field === "PrecioFinal") {
         currentLista.PrecioFinal = value;
         if (prevCosto > 0) {
-          currentLista.PorcentajeGanancia = parseFloat(
-            ((value / prevCosto - 1) * 100).toFixed(2),
-          );
+          currentLista.PorcentajeGanancia = parseFloat(((value / prevCosto - 1) * 100).toFixed(2));
         }
       }
 
       if (listaIndex >= 0) {
-        currentListas[listaIndex] = {
-          ...currentLista,
-          ListaPrecioId: currentLista.ListaPrecioId as number,
-        };
+        currentListas[listaIndex] = { ...currentLista, ListaPrecioId: currentLista.ListaPrecioId as number };
       } else {
-        currentListas.push({
-          ...currentLista,
-          ListaPrecioId: currentLista.ListaPrecioId as number,
-        });
+        currentListas.push({ ...currentLista, ListaPrecioId: currentLista.ListaPrecioId as number });
       }
 
       return { ...prev, PreciosLista: currentListas };
     });
   };
 
-  const handleExportExcel = () => {};
+  const isEdit = !!initialData;
+  const sectionStatus = getSectionStatus(formData);
 
-  const handleImportExcel = () => {};
+  const navSections: { key: SectionKey; label: string; icon: React.ComponentType<any>; isComplete: boolean }[] = [
+    { key: "general", label: "General", icon: FileText, isComplete: sectionStatus.general },
+    { key: "categorizacion", label: "Categorización", icon: Tags, isComplete: sectionStatus.categorizacion },
+    { key: "precios", label: "Precios", icon: DollarSign, isComplete: sectionStatus.precios },
+    { key: "stock", label: "Stock", icon: Package, isComplete: sectionStatus.stock },
+    { key: "configuracion", label: "Configuración", icon: Settings, isComplete: sectionStatus.configuracion },
+  ];
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size="2xl"
-      backdrop="opaque"
-      isDismissable={!isSaving}
-      scrollBehavior="inside"
-      motionProps={modalMotionProps}
-      classNames={{
-        backdrop: "bg-black/50 backdrop-blur-sm",
-        wrapper: "items-end sm:items-center",
-        base: "font-sans bg-white rounded-t-[20px] rounded-b-none sm:rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.08)] border border-[#e5e7eb] max-w-full sm:max-w-[820px] max-h-[92vh] overflow-hidden w-full sm:w-auto m-0 sm:m-auto",
-        header:
-          "border-t-[3px] border-t-[var(--crud-accent)] border-b border-[#e5e7eb] bg-[var(--crud-accent)]/5",
-        body: "py-0 overflow-y-auto overflow-x-hidden",
-        footer: "border-t border-[#e5e7eb] bg-[#f8fafc]",
-        closeButton:
-          "hover:bg-[var(--crud-accent)]/10 hover:text-[var(--crud-accent)] rounded-full p-1.5 transition-colors text-[#6b7280]",
-      }}
-    >
-      <ModalContent>
-        <ModalHeader className="flex flex-col gap-1 py-6 px-6">
-          <h3 className="text-[28px] font-bold text-[#0f172a] leading-tight">
-            {isEdit ? "Editar Producto" : "Nuevo Producto"}
-          </h3>
-          {!isEdit && (
-            <p className="text-sm text-[#6b7280] mt-1">
-              Completa la información del producto
-            </p>
-          )}
-        </ModalHeader>
-        <ModalBody className="p-0 relative">
-          {isLoadingFullProduct && (
-            <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/50">
-              <LoadingComponent message="Cargando detalles..." />
-            </div>
-          )}
-          <div className="px-6 py-6">
-            <Accordion
-              aria-label="Opciones del producto"
-              defaultSelectedKeys={["general"]}
-              selectionMode="single"
-              variant="bordered"
-              motionProps={{
-                transition: { duration: 0.18, ease: "easeInOut" },
-              }}
-              className="gap-3 overflow-visible"
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        hideCloseButton
+        isDismissable={!isSaving}
+        motionProps={modalMotionProps}
+        classNames={{
+          backdrop: "bg-slate-900/60 backdrop-blur-sm",
+          wrapper: "items-end sm:items-center",
+          base: "font-sans bg-white shadow-2xl border-0 sm:border border-slate-200 rounded-none sm:rounded-2xl w-full sm:max-w-[920px] h-[100dvh] sm:h-[84vh] m-0 sm:m-auto",
+        }}
+      >
+        <ModalContent className="flex flex-col h-full overflow-hidden">
+
+          {/* ── Header ─────────────────────────────────────────────── */}
+          <ModalHeader className="flex items-center gap-3 py-4 px-5 border-b border-slate-100 flex-none">
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "#67afc3" }}
             >
-              <AccordionItem
-                key="general"
-                aria-label="Información general"
-                title={
-                  <SectionTitle
-                    icon={FileText}
-                    label="Información general"
-                    isComplete={sectionStatus.general}
-                  />
-                }
-              >
-                <div className="space-y-5 pt-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Package size={18} className="text-white" />
+            </div>
+            <div className="flex flex-col flex-1 min-w-0">
+              <span className="text-base font-bold text-slate-800 leading-tight">
+                {isEdit ? "Editar Producto" : "Nuevo Producto"}
+              </span>
+              <span className="text-xs text-slate-400 font-normal truncate">
+                {isEdit
+                  ? formData.Descripcion || "Sin nombre"
+                  : "Completá la información del producto"}
+              </span>
+            </div>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              onPress={onClose}
+              isDisabled={isSaving}
+              className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl shrink-0"
+            >
+              <X size={16} />
+            </Button>
+          </ModalHeader>
+
+          {/* ── Body ───────────────────────────────────────────────── */}
+          <ModalBody className="p-0 flex flex-col sm:flex-row flex-1 overflow-hidden relative">
+            {isLoadingFullProduct && (
+              <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+                <LoadingComponent message="Cargando detalles..." />
+              </div>
+            )}
+
+            {/* Nav — horizontal scrollable en mobile, sidebar en desktop */}
+            <nav className="flex-none
+              flex flex-row sm:flex-col
+              border-b sm:border-b-0 sm:border-r border-slate-100
+              bg-slate-50/60
+              overflow-x-auto sm:overflow-x-hidden overflow-y-hidden sm:overflow-y-auto
+              py-2 sm:py-3 px-2 gap-0.5
+              sm:w-44 scrollbar-none">
+              {navSections.map(({ key, label, icon: Icon, isComplete }) => {
+                const isActive = activeSection === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setActiveSection(key)}
+                    disabled={isSaving}
+                    className={`flex items-center gap-2 px-3 py-2 sm:py-2.5 rounded-xl text-left transition-all shrink-0 sm:w-full ${
+                      isActive
+                        ? "bg-[#67afc3]/10 text-[#67afc3]"
+                        : "text-slate-500 hover:bg-white hover:text-slate-700"
+                    }`}
+                  >
+                    <Icon
+                      size={14}
+                      className={`shrink-0 ${isActive ? "text-[#67afc3]" : "text-slate-400"}`}
+                    />
+                    <span className={`text-xs sm:text-sm whitespace-nowrap leading-none ${isActive ? "font-semibold" : "font-medium"}`}>
+                      {label}
+                    </span>
+                    <div
+                      className={`hidden sm:block w-1.5 h-1.5 rounded-full shrink-0 ml-auto transition-colors ${
+                        isComplete ? "bg-emerald-400" : "bg-slate-200"
+                      }`}
+                    />
+                  </button>
+                );
+              })}
+            </nav>
+
+            {/* Right Content */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-5 space-y-4">
+
+              {/* ── GENERAL ──────────────────────────────────────── */}
+              {activeSection === "general" && (
+                <>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-1">
+                    Información General
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Input
                       label="Código"
-                      placeholder="Ingrese el código"
+                      placeholder="Ej: 1"
                       autoFocus
                       type="number"
                       value={formData.Codigo?.toString() || ""}
                       max={Number(process.env.MAX_ARTICLE_CODE || 999)}
                       min={1}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          Codigo: parseInt(e.target.value) || 0,
-                        })
+                        setFormData({ ...formData, Codigo: parseInt(e.target.value) || 0 })
                       }
                       isRequired
-                      isDisabled={isLoadingFullProduct}
+                      isDisabled={isLoadingFullProduct || isSaving}
                       classNames={inputClassNames}
                     />
                     <Input
                       label="Código de Barras"
-                      placeholder="Ingrese el código de barras"
+                      placeholder="Ej: 7790001234567"
                       value={formData.CodigoBarra || ""}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          CodigoBarra: e.target.value,
-                        })
+                        setFormData({ ...formData, CodigoBarra: e.target.value })
                       }
                       type="number"
                       isRequired
@@ -533,10 +476,7 @@ export default function ProductoForm({
                       placeholder="Ej: PROD-001"
                       value={formData.Abreviatura || ""}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          Abreviatura: e.target.value,
-                        })
+                        setFormData({ ...formData, Abreviatura: e.target.value })
                       }
                       isDisabled={isSaving}
                       classNames={inputClassNames}
@@ -546,10 +486,7 @@ export default function ProductoForm({
                       placeholder="Nombre del producto"
                       value={formData.Descripcion || ""}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          Descripcion: e.target.value,
-                        })
+                        setFormData({ ...formData, Descripcion: e.target.value })
                       }
                       isRequired
                       isDisabled={isSaving}
@@ -560,91 +497,68 @@ export default function ProductoForm({
                     label="Detalle"
                     placeholder="Descripción detallada del producto"
                     value={formData.Detalle || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, Detalle: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, Detalle: e.target.value })}
                     minRows={2}
                     isDisabled={isSaving}
-                    classNames={{
-                      ...inputClassNames,
-                      input: "resize-none",
-                    }}
+                    classNames={{ ...inputClassNames, input: "resize-none" }}
                   />
-                  <Input
-                    label="Ubicación"
-                    placeholder="Ej: Pasillo 2, Estante B"
-                    value={formData.Ubicacion || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, Ubicacion: e.target.value })
-                    }
-                    isDisabled={isSaving}
-                    classNames={inputClassNames}
-                  />
-                  <div className="md:col-span-2">
-                    <ImageUploadField
-                      existingImageUrl={formData.Foto || null}
-                      previewUrl={fotoPreview}
-                      onChange={(file, base64) => {
-                        setFotoFile(file);
-                        setFotoPreview(base64);
-                      }}
-                      disabled={isSaving}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Input
+                      label="Ubicación"
+                      placeholder="Ej: Pasillo 2, Estante B"
+                      value={formData.Ubicacion || ""}
+                      onChange={(e) => setFormData({ ...formData, Ubicacion: e.target.value })}
+                      isDisabled={isSaving}
+                      classNames={inputClassNames}
                     />
                   </div>
-                </div>
-              </AccordionItem>
-
-              <AccordionItem
-                key="categorizacion"
-                aria-label="Categorización"
-                title={
-                  <SectionTitle
-                    icon={Tags}
-                    label="Categorización"
-                    isComplete={sectionStatus.categorizacion}
+                  <ImageUploadField
+                    existingImageUrl={formData.Foto || null}
+                    previewUrl={fotoPreview}
+                    onChange={(file, base64) => {
+                      setFotoFile(file);
+                      setFotoPreview(base64);
+                    }}
+                    disabled={isSaving}
                   />
-                }
-              >
-                <div className="space-y-5 pt-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                </>
+              )}
+
+              {/* ── CATEGORIZACIÓN ───────────────────────────────── */}
+              {activeSection === "categorizacion" && (
+                <>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-1">
+                    Categorización
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="flex items-center gap-2">
                       <Autocomplete
                         label="Marca"
                         placeholder="Seleccione una marca"
-                        selectedKey={
-                          formData.MarcaId ? formData.MarcaId.toString() : null
-                        }
+                        selectedKey={formData.MarcaId ? formData.MarcaId.toString() : null}
                         onSelectionChange={(key) =>
-                          setFormData({
-                            ...formData,
-                            MarcaId: key ? parseInt(key.toString()) : 0,
-                          })
+                          setFormData({ ...formData, MarcaId: key ? parseInt(key.toString()) : 0 })
                         }
                         isRequired
                         isDisabled={isSaving}
                       >
                         {isLoadingMarcas ? (
-                          <AutocompleteItem key="0" textValue="Cargando...">
-                            Cargando...
-                          </AutocompleteItem>
+                          <AutocompleteItem key="0" textValue="Cargando...">Cargando...</AutocompleteItem>
                         ) : (
                           marcas?.map((marca: any) => (
-                            <AutocompleteItem
-                              key={marca.Id.toString()}
-                              textValue={marca.Descripcion}
-                            >
+                            <AutocompleteItem key={marca.Id.toString()} textValue={marca.Descripcion}>
                               {marca.Descripcion}
                             </AutocompleteItem>
                           ))
                         )}
                       </Autocomplete>
                       <Button
-                        color="primary"
+                        isIconOnly
                         variant="flat"
                         onPress={() => setIsMarcaModalOpen(true)}
-                        className="h-full min-w-9 bg-[#67afc3]/15 text-[#67afc3] hover:bg-[#67afc3]/25"
+                        className="h-full min-w-9 bg-[#67afc3]/10 text-[#67afc3] hover:bg-[#67afc3]/20 border border-[#67afc3]/20"
                       >
-                        <PlusIcon />
+                        <PlusIcon size={16} />
                       </Button>
                     </div>
 
@@ -652,40 +566,30 @@ export default function ProductoForm({
                       <Autocomplete
                         label="Rubro"
                         placeholder="Seleccione un rubro"
-                        selectedKey={
-                          formData.RubroId ? formData.RubroId.toString() : null
-                        }
+                        selectedKey={formData.RubroId ? formData.RubroId.toString() : null}
                         onSelectionChange={(key) =>
-                          setFormData({
-                            ...formData,
-                            RubroId: key ? parseInt(key.toString()) : 0,
-                          })
+                          setFormData({ ...formData, RubroId: key ? parseInt(key.toString()) : 0 })
                         }
                         isRequired
                         isDisabled={isSaving}
                       >
                         {isLoadingRubros ? (
-                          <AutocompleteItem key="0" textValue="Cargando...">
-                            Cargando...
-                          </AutocompleteItem>
+                          <AutocompleteItem key="0" textValue="Cargando...">Cargando...</AutocompleteItem>
                         ) : (
                           rubros?.map((rubro: any) => (
-                            <AutocompleteItem
-                              key={rubro.Id.toString()}
-                              textValue={rubro.Descripcion}
-                            >
+                            <AutocompleteItem key={rubro.Id.toString()} textValue={rubro.Descripcion}>
                               {rubro.Descripcion}
                             </AutocompleteItem>
                           ))
                         )}
                       </Autocomplete>
                       <Button
-                        color="primary"
+                        isIconOnly
                         variant="flat"
                         onPress={() => setIsRubroModalOpen(true)}
-                        className="h-full min-w-9 bg-[#67afc3]/15 text-[#67afc3] hover:bg-[#67afc3]/25"
+                        className="h-full min-w-9 bg-[#67afc3]/10 text-[#67afc3] hover:bg-[#67afc3]/20 border border-[#67afc3]/20"
                       >
-                        <PlusIcon />
+                        <PlusIcon size={16} />
                       </Button>
                     </div>
 
@@ -693,221 +597,180 @@ export default function ProductoForm({
                       <Autocomplete
                         label="Unidad de Medida"
                         placeholder="Seleccione unidad"
-                        selectedKey={
-                          formData.UnidadMedidaId
-                            ? formData.UnidadMedidaId.toString()
-                            : null
-                        }
+                        selectedKey={formData.UnidadMedidaId ? formData.UnidadMedidaId.toString() : null}
                         onSelectionChange={(key) =>
-                          setFormData({
-                            ...formData,
-                            UnidadMedidaId: key ? parseInt(key.toString()) : 0,
-                          })
+                          setFormData({ ...formData, UnidadMedidaId: key ? parseInt(key.toString()) : 0 })
                         }
                         isRequired
                         isDisabled={isSaving}
                       >
                         {isLoadingUnidades ? (
-                          <AutocompleteItem key="0" textValue="Cargando...">
-                            Cargando...
-                          </AutocompleteItem>
+                          <AutocompleteItem key="0" textValue="Cargando...">Cargando...</AutocompleteItem>
                         ) : (
                           unidades?.map((unidad: any) => (
-                            <AutocompleteItem
-                              key={unidad.Id.toString()}
-                              textValue={unidad.Descripcion}
-                            >
+                            <AutocompleteItem key={unidad.Id.toString()} textValue={unidad.Descripcion}>
                               {unidad.Descripcion}
                             </AutocompleteItem>
                           ))
                         )}
                       </Autocomplete>
-
                       <Button
-                        color="primary"
+                        isIconOnly
                         variant="flat"
                         onPress={() => setIsUnidadModalOpen(true)}
-                        className="h-full min-w-9 bg-[#67afc3]/15 text-[#67afc3] hover:bg-[#67afc3]/25"
+                        className="h-full min-w-9 bg-[#67afc3]/10 text-[#67afc3] hover:bg-[#67afc3]/20 border border-[#67afc3]/20"
                       >
-                        <PlusIcon />
+                        <PlusIcon size={16} />
                       </Button>
                     </div>
 
                     <Select
                       label="IVA"
                       placeholder="Seleccione IVA"
-                      selectedKeys={
-                        formData.IvaId ? [formData.IvaId.toString()] : []
-                      }
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          IvaId: parseInt(e.target.value),
-                        })
-                      }
+                      selectedKeys={formData.IvaId ? [formData.IvaId.toString()] : []}
+                      onChange={(e) => setFormData({ ...formData, IvaId: parseInt(e.target.value) })}
                       isRequired
                       isDisabled={isSaving}
                     >
                       {isLoadingIvas ? (
-                        <SelectItem key="0" textValue="Cargando...">
-                          Cargando...
-                        </SelectItem>
+                        <SelectItem key="0" textValue="Cargando...">Cargando...</SelectItem>
                       ) : (
                         ivas?.map((iva: any) => (
-                          <SelectItem
-                            key={iva.Id.toString()}
-                            textValue={iva.Descripcion}
-                          >
+                          <SelectItem key={iva.Id.toString()} textValue={iva.Descripcion}>
                             {iva.Descripcion}
                           </SelectItem>
                         ))
                       )}
                     </Select>
+
                     <Select
                       label="Tipo de Venta"
                       placeholder="Seleccione tipo"
-                      selectedKeys={
-                        formData.TipoVenta ? [formData.TipoVenta] : []
-                      }
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          TipoVenta: e.target.value as TiposVenta,
-                        })
-                      }
+                      selectedKeys={formData.TipoVenta ? [formData.TipoVenta] : []}
+                      onChange={(e) => setFormData({ ...formData, TipoVenta: e.target.value as TiposVenta })}
                       isDisabled={isSaving}
                     >
-                      <SelectItem
-                        key={TiposVenta.PESO}
-                        textValue={TiposVenta.PESO}
-                      >
+                      <SelectItem key={TiposVenta.PESO} textValue={TiposVenta.PESO}>
                         {TiposVenta.PESO}
                       </SelectItem>
-
-                      <SelectItem
-                        key={TiposVenta.UNIDAD}
-                        textValue={TiposVenta.UNIDAD}
-                      >
+                      <SelectItem key={TiposVenta.UNIDAD} textValue={TiposVenta.UNIDAD}>
                         {TiposVenta.UNIDAD}
                       </SelectItem>
                     </Select>
                   </div>
-                </div>
-              </AccordionItem>
+                </>
+              )}
 
-              <AccordionItem
-                key="precios"
-                aria-label="Precios"
-                title={
-                  <SectionTitle
-                    icon={DollarSign}
-                    label="Precios"
-                    isComplete={sectionStatus.precios}
-                  />
-                }
-              >
-                <div className="space-y-5 pt-5">
-                  {/* Costo Base */}
-                  <div className="bg-[#f1f5f9] p-5 rounded-xl border border-[#e5e7eb] shadow-sm">
+              {/* ── PRECIOS ──────────────────────────────────────── */}
+              {activeSection === "precios" && (
+                <>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-1">
+                    Precios
+                  </p>
+                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/60">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+                      Precio de Costo
+                    </p>
                     <NumberInput
-                      label="Precio Costo"
+                      label="Costo"
                       classNames={inputClassNames}
                       placeholder="0,00"
                       value={Number(formData.PrecioCosto) || 0}
-                      onValueChange={(value) =>
-                        updatePrecio(null, "PrecioCosto", value)
-                      }
+                      onValueChange={(value) => updatePrecio(null, "PrecioCosto", value)}
                       isRequired
                       isDisabled={isSaving}
                       min={0}
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {isLoadingListas ? (
-                      <div className="col-span-1 md:col-span-2 text-center text-sm text-slate-500 py-4">
-                        Cargando listas de precios...
-                      </div>
-                    ) : listasPrecios.length === 0 ? (
-                      <div className="col-span-1 md:col-span-2 text-center text-sm text-slate-500 py-4">
-                        No hay listas de precios activas.
-                      </div>
-                    ) : (
-                      listasPrecios.map((lista: any) => {
-                        const isDefault = lista.PorDefecto;
-                        const listaData = formData.PreciosLista?.find(
-                          (p) => Number(p.ListaPrecioId) === Number(lista.Id),
-                        ) || { PorcentajeGanancia: 0, PrecioFinal: 0 };
+                  {isLoadingListas ? (
+                    <div className="text-center text-sm text-slate-400 py-6">
+                      Cargando listas de precios...
+                    </div>
+                  ) : listasPrecios.length === 0 ? (
+                    <div className="text-center text-sm text-slate-400 py-6">
+                      No hay listas de precios activas.
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Listas de Precio
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {listasPrecios.map((lista: any) => {
+                          const isDefault = lista.PorDefecto;
+                          const listaData = formData.PreciosLista?.find(
+                            (p) => Number(p.ListaPrecioId) === Number(lista.Id),
+                          ) || { PorcentajeGanancia: 0, PrecioFinal: 0 };
 
-                        return (
-                          <div
-                            key={lista.Id}
-                            className="space-y-4 p-5 rounded-xl border border-[#e5e7eb] bg-white shadow-sm relative"
-                          >
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-semibold text-[#0f172a] text-sm uppercase tracking-wide">
-                                {lista.Nombre}
-                              </h4>
-                              {isDefault && (
-                                <Chip
-                                  size="sm"
-                                  color="primary"
-                                  variant="flat"
-                                  className="h-5 text-[10px]"
-                                >
-                                  Por Defecto
-                                </Chip>
-                              )}
+                          return (
+                            <div
+                              key={lista.Id}
+                              className={`space-y-3 p-4 rounded-xl border bg-white shadow-sm ${
+                                isDefault
+                                  ? "border-[#67afc3]/40 shadow-[#67afc3]/10"
+                                  : "border-slate-200"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`w-1 h-4 rounded-full shrink-0 ${
+                                    isDefault ? "bg-[#67afc3]" : "bg-slate-200"
+                                  }`}
+                                />
+                                <h4 className="font-semibold text-slate-700 text-sm flex-1 truncate">
+                                  {lista.Nombre}
+                                </h4>
+                                {isDefault && (
+                                  <Chip
+                                    size="sm"
+                                    variant="flat"
+                                    className="h-4 text-[10px] bg-[#67afc3]/10 text-[#67afc3]"
+                                  >
+                                    Defecto
+                                  </Chip>
+                                )}
+                              </div>
+                              <NumberInput
+                                label="% Ganancia"
+                                placeholder="0"
+                                value={Number(listaData.PorcentajeGanancia) || 0}
+                                onValueChange={(value) =>
+                                  updatePrecio(lista.Id, "PorcentajeGanancia", value)
+                                }
+                                isRequired
+                                isDisabled={isSaving}
+                                classNames={inputClassNames}
+                              />
+                              <NumberInput
+                                label="Precio de Venta"
+                                placeholder="0.00"
+                                value={Number(listaData.PrecioFinal) || 0}
+                                onValueChange={(value) =>
+                                  updatePrecio(lista.Id, "PrecioFinal", value)
+                                }
+                                isDisabled={isSaving}
+                                classNames={{
+                                  ...inputClassNames,
+                                  input: `font-bold ${isDefault ? "text-[#67afc3]" : "text-slate-700"}`,
+                                }}
+                              />
                             </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
 
-                            <NumberInput
-                              label="% Ganancia"
-                              placeholder="0"
-                              value={Number(listaData.PorcentajeGanancia) || 0}
-                              onValueChange={(value) =>
-                                updatePrecio(
-                                  lista.Id,
-                                  "PorcentajeGanancia",
-                                  value,
-                                )
-                              }
-                              isRequired
-                              isDisabled={isSaving}
-                              classNames={inputClassNames}
-                            />
-                            <NumberInput
-                              label="Precio de Venta ($)"
-                              placeholder="0.00"
-                              value={Number(listaData.PrecioFinal) || 0}
-                              onValueChange={(value) =>
-                                updatePrecio(lista.Id, "PrecioFinal", value)
-                              }
-                              isDisabled={isSaving}
-                              classNames={{
-                                input: `font-bold ${isDefault ? "text-[#67afc3]" : "text-slate-700"}`,
-                              }}
-                            />
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-              </AccordionItem>
-
-              <AccordionItem
-                key="stock"
-                aria-label="Stock"
-                title={
-                  <SectionTitle
-                    icon={Package}
-                    label="Stock"
-                    isComplete={sectionStatus.stock}
-                  />
-                }
-              >
-                <div className="space-y-5 pt-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 rounded-xl border border-[#e5e7eb] bg-[#f8fafc]">
+              {/* ── STOCK ────────────────────────────────────────── */}
+              {activeSection === "stock" && (
+                <>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-1">
+                    Stock
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/60">
                     <Input
                       label="Stock Mínimo"
                       classNames={inputClassNames}
@@ -916,10 +779,7 @@ export default function ProductoForm({
                       step="0.01"
                       value={formData.StockMinimo?.toString() || ""}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          StockMinimo: parseFloat(e.target.value) || 0,
-                        })
+                        setFormData({ ...formData, StockMinimo: parseFloat(e.target.value) || 0 })
                       }
                       isDisabled={isSaving}
                     />
@@ -930,10 +790,7 @@ export default function ProductoForm({
                       type="number"
                       value={formData.VencimientoDias?.toString() || ""}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          VencimientoDias: parseInt(e.target.value) || 0,
-                        })
+                        setFormData({ ...formData, VencimientoDias: parseInt(e.target.value) || 0 })
                       }
                       isDisabled={isSaving}
                     />
@@ -945,139 +802,107 @@ export default function ProductoForm({
                       step="0.01"
                       value={formData.Stock?.toString() || ""}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          Stock: parseFloat(e.target.value) || 0,
-                        })
+                        setFormData({ ...formData, Stock: parseFloat(e.target.value) || 0 })
                       }
                       isDisabled={isSaving}
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 rounded-xl border border-[#e5e7eb] bg-white">
+                  <div className="flex flex-col gap-4 p-4 rounded-xl border border-slate-200 bg-white">
                     <Switch
                       isSelected={formData.DescuentaStock}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, DescuentaStock: value })
-                      }
+                      onValueChange={(value) => setFormData({ ...formData, DescuentaStock: value })}
                       isDisabled={isSaving}
                     >
-                      Descuenta Stock
+                      <span className="text-sm text-slate-700">Descuenta Stock</span>
                     </Switch>
                     <Switch
                       isSelected={formData.PermiteStockNegativo}
                       onValueChange={(value) =>
-                        setFormData({
-                          ...formData,
-                          PermiteStockNegativo: value,
-                        })
+                        setFormData({ ...formData, PermiteStockNegativo: value })
                       }
                       isDisabled={isSaving}
                     >
-                      Permite Stock Negativo
+                      <span className="text-sm text-slate-700">Permite Stock Negativo</span>
                     </Switch>
                   </div>
-                </div>
-              </AccordionItem>
+                </>
+              )}
 
-              <AccordionItem
-                key="configuracion"
-                aria-label="Configuración"
-                title={
-                  <SectionTitle
-                    icon={Settings}
-                    label="Configuración"
-                    isComplete={sectionStatus.configuracion}
-                  />
-                }
-              >
-                <div className="space-y-6 pt-5">
-                  <div className="p-5 rounded-xl border border-[#e5e7eb] bg-[#f8fafc]">
-                    <h4 className="text-sm font-semibold text-[#0f172a] uppercase tracking-wide mb-4">
+              {/* ── CONFIGURACIÓN ────────────────────────────────── */}
+              {activeSection === "configuracion" && (
+                <>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-1">
+                    Configuración
+                  </p>
+                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 space-y-4">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                       Límites de Venta
-                    </h4>
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-4">
-                        <Switch
-                          isSelected={formData.ActivarLimiteVenta}
+                    </p>
+                    <div className="flex items-center gap-4 flex-wrap">
+                      <Switch
+                        isSelected={formData.ActivarLimiteVenta}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, ActivarLimiteVenta: value })
+                        }
+                        isDisabled={isSaving}
+                      >
+                        <span className="text-sm text-slate-700">Activar Límite de Venta</span>
+                      </Switch>
+                      {formData.ActivarLimiteVenta && (
+                        <NumberInput
+                          label="Límite"
+                          classNames={inputClassNames}
+                          placeholder="0.00"
+                          value={Number(formData.LimiteVenta) || 0}
                           onValueChange={(value) =>
-                            setFormData({
-                              ...formData,
-                              ActivarLimiteVenta: value,
-                            })
+                            setFormData({ ...formData, LimiteVenta: Number(value) })
                           }
+                          className="max-w-xs"
                           isDisabled={isSaving}
-                        >
-                          Activar Límite de Venta
-                        </Switch>
-                        {formData.ActivarLimiteVenta && (
-                          <NumberInput
-                            label="Límite"
+                        />
+                      )}
+                    </div>
+                    <div className="space-y-3">
+                      <Switch
+                        isSelected={formData.ActivarHoraVenta}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, ActivarHoraVenta: value })
+                        }
+                        isDisabled={isSaving}
+                      >
+                        <span className="text-sm text-slate-700">Activar Horario de Venta</span>
+                      </Switch>
+                      {formData.ActivarHoraVenta && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                          <Input
+                            label="Hora Desde"
                             classNames={inputClassNames}
-                            placeholder="0.00"
-                            value={Number(formData.LimiteVenta) || Number(0)}
-                            onValueChange={(value) =>
-                              setFormData({
-                                ...formData,
-                                LimiteVenta: Number(value),
-                              })
+                            type="time"
+                            value={formData.HoraLimiteVentaDesde || ""}
+                            onChange={(e) =>
+                              setFormData({ ...formData, HoraLimiteVentaDesde: e.target.value })
                             }
-                            className="max-w-xs"
                             isDisabled={isSaving}
                           />
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Switch
-                          isSelected={formData.ActivarHoraVenta}
-                          onValueChange={(value) =>
-                            setFormData({
-                              ...formData,
-                              ActivarHoraVenta: value,
-                            })
-                          }
-                          isDisabled={isSaving}
-                        >
-                          Activar Horario de Venta
-                        </Switch>
-                        {formData.ActivarHoraVenta && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                            <Input
-                              label="Hora Desde"
-                              classNames={inputClassNames}
-                              type="time"
-                              value={formData.HoraLimiteVentaDesde || ""}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  HoraLimiteVentaDesde: e.target.value,
-                                })
-                              }
-                              isDisabled={isSaving}
-                            />
-                            <Input
-                              label="Hora Hasta"
-                              classNames={inputClassNames}
-                              type="time"
-                              value={formData.HoraLimiteVentaHasta || ""}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  HoraLimiteVentaHasta: e.target.value,
-                                })
-                              }
-                              isDisabled={isSaving}
-                            />
-                          </div>
-                        )}
-                      </div>
+                          <Input
+                            label="Hora Hasta"
+                            classNames={inputClassNames}
+                            type="time"
+                            value={formData.HoraLimiteVentaHasta || ""}
+                            onChange={(e) =>
+                              setFormData({ ...formData, HoraLimiteVentaHasta: e.target.value })
+                            }
+                            isDisabled={isSaving}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="p-5 rounded-xl border border-[#e5e7eb] bg-white">
-                    <h4 className="text-sm font-semibold text-[#0f172a] uppercase tracking-wide mb-4">
-                      Estado
-                    </h4>
+                  <div className="p-4 rounded-xl border border-slate-200 bg-white">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+                      Estado del Producto
+                    </p>
                     <Switch
                       isSelected={!formData.EstaEliminado}
                       onValueChange={(value) =>
@@ -1086,35 +911,42 @@ export default function ProductoForm({
                       color={formData.EstaEliminado ? "danger" : "success"}
                       isDisabled={isSaving}
                     >
-                      {formData.EstaEliminado
-                        ? "Producto Inactivo"
-                        : "Producto Activo"}
+                      <span
+                        className={`text-sm font-medium ${
+                          formData.EstaEliminado ? "text-rose-600" : "text-emerald-600"
+                        }`}
+                      >
+                        {formData.EstaEliminado ? "Producto Inactivo" : "Producto Activo"}
+                      </span>
                     </Switch>
                   </div>
-                </div>
-              </AccordionItem>
-            </Accordion>
-          </div>
-        </ModalBody>
-        <ModalFooter className="py-5 px-6 gap-3 border-t border-[#e5e7eb]">
-          <Button
-            variant="light"
-            onPress={onClose}
-            isDisabled={isSaving}
-            className="font-medium text-[#6b7280] hover:bg-[#f1f5f9] h-11 px-5 rounded-[10px]"
-          >
-            Cancelar
-          </Button>
-          <Button
-            onPress={handleSubmit}
-            isLoading={isSaving}
-            className="bg-[#67afc3] hover:bg-[#4a8d9e] text-white font-semibold h-11 px-6 rounded-[10px] shadow-sm hover:shadow transition-shadow focus-visible:ring-2 focus-visible:ring-[#67afc3]/40"
-          >
-            {isEdit ? "Actualizar" : "Crear producto"}
-          </Button>
-        </ModalFooter>
-      </ModalContent>
+                </>
+              )}
+            </div>
+          </ModalBody>
 
+          {/* ── Footer ─────────────────────────────────────────────── */}
+          <ModalFooter className="flex items-center justify-between py-3.5 px-5 border-t border-slate-100 flex-none bg-white gap-3">
+            <Button
+              variant="light"
+              onPress={onClose}
+              isDisabled={isSaving}
+              className="font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl h-10 px-5"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onPress={handleSubmit}
+              isLoading={isSaving}
+              className="bg-[#67afc3] hover:bg-[#4899b0] text-white font-bold rounded-xl shadow-md shadow-[#67afc3]/30 h-10 px-6"
+            >
+              {isEdit ? "Guardar Cambios" : "Crear Producto"}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* ── Sub-modales ────────────────────────────────────────────── */}
       <Modal
         isOpen={isMarcaModalOpen}
         onClose={() => setIsMarcaModalOpen(false)}
@@ -1123,18 +955,13 @@ export default function ProductoForm({
         isDismissable={!isSaving}
         scrollBehavior="inside"
         motionProps={modalMotionProps}
-        classNames={{
-          backdrop: "bg-slate-900/40",
-          base: "bg-white",
-        }}
+        classNames={{ backdrop: "bg-slate-900/50", base: "bg-white" }}
       >
         <MarcaGenericForm
           isOpen={isMarcaModalOpen}
           onClose={() => setIsMarcaModalOpen(false)}
           initialData={null}
-          onSubmit={(data) => {
-            createMarcaMutation.mutate(data);
-          }}
+          onSubmit={(data) => { createMarcaMutation.mutate(data); }}
           isSaving={createMarcaMutation.isPending}
         />
       </Modal>
@@ -1147,18 +974,13 @@ export default function ProductoForm({
         isDismissable={!isSaving}
         scrollBehavior="inside"
         motionProps={modalMotionProps}
-        classNames={{
-          backdrop: "bg-slate-900/40",
-          base: "bg-white",
-        }}
+        classNames={{ backdrop: "bg-slate-900/50", base: "bg-white" }}
       >
         <RubroGenericForm
           isOpen={isRubroModalOpen}
           onClose={() => setIsRubroModalOpen(false)}
           initialData={null}
-          onSubmit={(data) => {
-            createRubroMutation.mutate(data);
-          }}
+          onSubmit={(data) => { createRubroMutation.mutate(data); }}
           isSaving={createRubroMutation.isPending}
         />
       </Modal>
@@ -1171,21 +993,16 @@ export default function ProductoForm({
         isDismissable={!isSaving}
         scrollBehavior="inside"
         motionProps={modalMotionProps}
-        classNames={{
-          backdrop: "bg-slate-900/40",
-          base: "bg-white",
-        }}
+        classNames={{ backdrop: "bg-slate-900/50", base: "bg-white" }}
       >
         <UnidadMedidaGenericForm
           isOpen={isUnidadModalOpen}
           onClose={() => setIsUnidadModalOpen(false)}
           initialData={null}
-          onSubmit={(data) => {
-            createUnidadMutation.mutate(data);
-          }}
+          onSubmit={(data) => { createUnidadMutation.mutate(data); }}
           isSaving={createUnidadMutation.isPending}
         />
       </Modal>
-    </Modal>
+    </>
   );
 }

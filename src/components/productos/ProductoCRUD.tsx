@@ -3,7 +3,7 @@
 import GenericCrud from "@/components/shared/GenericCrud";
 import ProductoForm from "./ProductoForm";
 import { Producto } from "@/lib/validations/producto.schema";
-import { Chip, Skeleton } from "@heroui/react";
+import { Chip, Skeleton, Tooltip } from "@heroui/react";
 import { productoListAdapter } from "@/lib/adapters/producto.adapter";
 import {
   AddStockButton,
@@ -108,10 +108,15 @@ function ProductoPreviewContent({ item }: { item: Producto }) {
           </div>
           {p?.PreciosLista?.slice(0, 2).map((pl: any, idx: number) => (
             <div key={pl.Id || idx}>
-              <p className="text-slate-400 text-xs truncate" title={pl.ListaPrecio?.Nombre}>
+              <p
+                className="text-slate-400 text-xs truncate"
+                title={pl.ListaPrecio?.Nombre}
+              >
                 {pl.ListaPrecio?.Nombre || `Lista ${idx + 1}`}
               </p>
-              <p className={`font-semibold ${idx === 0 ? 'text-green-700' : 'text-blue-700'}`}>
+              <p
+                className={`font-semibold ${idx === 0 ? "text-green-700" : "text-blue-700"}`}
+              >
                 {formatCurrency(Number(pl.PrecioFinal ?? 0), currency)}
               </p>
             </div>
@@ -119,11 +124,17 @@ function ProductoPreviewContent({ item }: { item: Producto }) {
         </div>
         {(() => {
           const costo = Number(p?.Precio?.PrecioCosto ?? 0);
-          const venta = p?.PreciosLista?.[0] ? Number(p.PreciosLista[0].PrecioFinal) : 0;
+          const venta = p?.PreciosLista?.[0]
+            ? Number(p.PreciosLista[0].PrecioFinal)
+            : 0;
           const margen =
-            costo > 0 && venta > 0 ? ((venta / costo - 1) * 100).toFixed(1) : null;
+            costo > 0 && venta > 0
+              ? ((venta / costo - 1) * 100).toFixed(1)
+              : null;
           return margen != null ? (
-            <p className="text-slate-400 text-xs mt-1">Margen princ.: {margen}%</p>
+            <p className="text-slate-400 text-xs mt-1">
+              Margen princ.: {margen}%
+            </p>
           ) : null;
         })()}
       </div>
@@ -342,7 +353,10 @@ export default function ProductoCRUD() {
             Stock: p.Stock ?? 0,
             StockMinimo: p.StockMinimo ?? 0,
             Costo: p.PrecioCosto ?? 0,
-            Precios: p.PreciosLista?.map((pl: any) => `${pl.ListaPrecio?.Nombre}: $${pl.PrecioFinal}`).join(' | ') || "",
+            Precios:
+              p.PreciosLista?.map(
+                (pl: any) => `${pl.ListaPrecio?.Nombre}: $${pl.PrecioFinal}`,
+              ).join(" | ") || "",
           }),
         }}
         columns={[
@@ -400,36 +414,42 @@ export default function ProductoCRUD() {
               const stock = item.Stock ?? 0;
               const stockMinimo = item.StockMinimo ?? 0;
               const isLowStock = stockMinimo > 0 && stock <= stockMinimo;
-              // Barra visual: stock vs ref (stockMinimo*2 o 10 si no hay mínimo)
-              const ref = stockMinimo > 0 ? Math.max(stockMinimo * 2, 10) : 10;
-              const pct = Math.min(100, Math.round((stock / ref) * 100));
+              const fmt = (v: number) => parseFloat(v.toFixed(3)).toString();
+
               return (
-                <div className="flex flex-col gap-1 min-w-[64px]">
-                  <span
-                    className={
-                      isLowStock
-                        ? "font-semibold text-red-600"
-                        : "font-medium text-gray-700"
+                <div className="flex flex-col gap-0.5 min-w-[80px]">
+                  <Tooltip
+                    content={
+                      <div className="text-xs px-1 py-0.5">
+                        <p>
+                          <span className="text-slate-400">Mínimo:</span>{" "}
+                          {fmt(stockMinimo)}
+                        </p>
+                        <p>
+                          <span className="text-slate-400">Actual:</span>{" "}
+                          {fmt(stock)}
+                        </p>
+                      </div>
                     }
+                    placement="top"
+                    delay={300}
+                    classNames={{
+                      base: "before:bg-[#0F2233]",
+                      content: "bg-[#0F2233] text-white text-xs font-medium",
+                    }}
                   >
-                    {item.Stock}
-                  </span>
-                  <div
-                    className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden"
-                    role="progressbar"
-                    aria-valuenow={stock}
-                    aria-valuemin={0}
-                    aria-valuemax={ref}
-                  >
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ease-out ${
-                        isLowStock ? "bg-red-500" : "bg-[#67afc3]"
-                      }`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
+                    <span
+                      className={
+                        isLowStock
+                          ? "font-semibold text-red-600 cursor-default"
+                          : "font-medium text-gray-700 cursor-default"
+                      }
+                    >
+                      {fmt(stockMinimo)} / {fmt(stock)}
+                    </span>
+                  </Tooltip>
                   {item.SucursalNombre && (
-                    <span className="text-xs text-gray-500 mt-0.5">
+                    <span className="text-[10px] text-slate-400">
                       {item.SucursalNombre}
                     </span>
                   )}
@@ -445,14 +465,29 @@ export default function ProductoCRUD() {
             case "Precios":
               return (
                 <div className="flex flex-col gap-0.5">
-                  {item.PreciosLista?.slice(0, 2).map((pl: any, idx: number) => (
-                    <span key={pl.Id || idx} className="text-xs text-gray-700 truncate max-w-[120px]" title={`${pl.ListaPrecio?.Nombre}: ${pl.PrecioFinal}`}>
-                      <span className="text-gray-400 mr-1">{pl.ListaPrecio?.Nombre?.substring(0,3)}:</span>
-                      <span className="font-medium">{formatCurrency(Number(pl.PrecioFinal ?? 0), currency)}</span>
-                    </span>
-                  ))}
+                  {item.PreciosLista?.slice(0, 2).map(
+                    (pl: any, idx: number) => (
+                      <span
+                        key={pl.Id || idx}
+                        className="text-xs text-gray-700 truncate max-w-[120px]"
+                        title={`${pl.ListaPrecio?.Nombre}: ${pl.PrecioFinal}`}
+                      >
+                        <span className="text-gray-400 mr-1">
+                          {pl.ListaPrecio?.Nombre?.substring(0, 3)}:
+                        </span>
+                        <span className="font-medium">
+                          {formatCurrency(
+                            Number(pl.PrecioFinal ?? 0),
+                            currency,
+                          )}
+                        </span>
+                      </span>
+                    ),
+                  )}
                   {(item.PreciosLista?.length || 0) > 2 && (
-                    <span className="text-[10px] text-gray-400">+{item.PreciosLista!.length - 2} más</span>
+                    <span className="text-[10px] text-gray-400">
+                      +{item.PreciosLista!.length - 2} más
+                    </span>
                   )}
                 </div>
               );
