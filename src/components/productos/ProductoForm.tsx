@@ -42,7 +42,7 @@ const inputClassNames = {
     "bg-white border border-slate-200 shadow-none hover:border-slate-300 focus-within:!border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/20",
 };
 
-function getSectionStatus(formData: Partial<Produto>) {
+function getSectionStatus(formData: Partial<Producto>) {
   const general =
     (formData.Codigo ?? 0) > 0 &&
     (formData.CodigoBarra?.trim() ?? "").length > 0 &&
@@ -65,7 +65,7 @@ function getSectionStatus(formData: Partial<Produto>) {
   };
 }
 
-const defaultProducto: Produto = {
+const defaultProducto: Producto = {
   Id: 0,
   MarcaId: 0,
   RubroId: 0,
@@ -143,8 +143,8 @@ export default function ProductoForm({
   initialData,
   onSubmit,
   isSaving,
-}: GenericFormProps<Produto>) {
-  const [formData, setFormData] = useState<Partial<Produto>>(defaultProducto);
+}: GenericFormProps<Producto>) {
+  const [formData, setFormData] = useState<Partial<Producto>>(defaultProducto);
   const [activeSection, setActiveSection] = useState<SectionKey>("general");
 
   const queryClient = useQueryClient();

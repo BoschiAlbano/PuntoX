@@ -10,16 +10,16 @@ import {
 } from "@heroui/react";
 import { Package, X, TrendingUp, Minus, Plus } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { Produto } from "@/lib/validations/producto.schema";
+import { Producto } from "@/lib/validations/producto.schema";
 
 interface AddStockModalProps {
   isOpen: boolean;
   onClose: () => void;
-  product: Produto | null;
+  product: Producto | null;
   onConfirm: (quantity: number) => Promise<void>;
 }
 
-const isPesoProduct = (product: Produto | null) =>
+const isPesoProduct = (product: Producto | null) =>
   product?.TipoVenta?.toUpperCase() === "PESO";
 
 export default function AddStockModal({
