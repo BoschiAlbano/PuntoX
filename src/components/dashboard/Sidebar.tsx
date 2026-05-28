@@ -790,10 +790,10 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                   }}
                   initial={false}
                   transition={{ duration: 0.25, ease: "easeInOut" }}
-                  className="grid overflow-hidden"
+                  className="grid overflow-hidden -mx-2 px-2"
                 >
-                  <div className="min-h-0 overflow-hidden">
-                    <div className="space-y-1 px-1 -mx-1 pt-0.5">
+                  <div className="min-h-0 overflow-hidden -mx-2 px-2">
+                    <div className="space-y-1 pt-0.5">
                       {section.items.map((item) => {
                         const isActive = pathname === item.href;
 

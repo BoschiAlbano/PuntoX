@@ -187,16 +187,7 @@ export function FiscalTab() {
             </p>
           )}
 
-          <Input
-            label="Número de punto de venta"
-            labelPlacement="outside"
-            placeholder="Ej: 0001"
-            variant="bordered"
-            classNames={inputCls}
-            value={regional.puntoVenta || ""}
-            onChange={(e) => setRegional({ ...regional, puntoVenta: e.target.value })}
-            startContent={<Hash size={14} className="text-slate-400 shrink-0" />}
-          />
+
 
           <Input
             label="CUIT del negocio"

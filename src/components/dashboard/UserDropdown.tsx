@@ -111,12 +111,7 @@ export function UserDropdown() {
             ) : (
               userInitials
             )}
-            {/* Online indicator */}
-            <span
-              className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400
-                         rounded-full border-2 border-(--nav-bg)"
-              aria-hidden="true"
-            />
+
           </div>
 
           {/* Info usuario — md+ */}

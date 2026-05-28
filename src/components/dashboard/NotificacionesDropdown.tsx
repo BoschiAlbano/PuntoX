@@ -38,6 +38,25 @@ export function NotificacionesDropdown() {
   const notifications = data?.data || [];
   const unreadCount = data?.pagination?.unreadCount || 0;
 
+  // Filtrar: no mostrar más de 7 días de antigüedad
+  // Mostrar todas las no leídas (hasta 7 días), pero máximo 5 leídas recientes
+  let readCount = 0;
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const displayNotifications = notifications.filter((notif) => {
+    const notifDate = new Date(notif.Fecha);
+    // Ignorar si tiene más de 7 días
+    if (notifDate < sevenDaysAgo) return false;
+
+    if (!notif.Leida) return true;
+    if (readCount < 5) {
+      readCount++;
+      return true;
+    }
+    return false;
+  });
+
   const getIcon = (tipo: string) => {
     const c = statusColors[tipo as StatusType] ?? statusColors.INFO;
     const iconClass = `${c.iconText} shrink-0`;
@@ -117,7 +136,7 @@ export function NotificacionesDropdown() {
               <div className="text-center p-6 text-sm text-slate-500">
                 No se pudieron cargar las notificaciones.
               </div>
-            ) : notifications.length === 0 ? (
+            ) : displayNotifications.length === 0 ? (
               <div className="text-center p-8 flex flex-col items-center gap-2">
                 <div className="p-3 bg-slate-50 rounded-full">
                   <Bell className="text-slate-300" size={24} />
@@ -131,7 +150,7 @@ export function NotificacionesDropdown() {
               </div>
             ) : (
               <div className="flex flex-col">
-                {notifications.map((notif) => {
+                {displayNotifications.map((notif) => {
                   const c =
                     statusColors[notif.Tipo as StatusType] ?? statusColors.INFO;
                   return (

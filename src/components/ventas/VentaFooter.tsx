@@ -35,6 +35,7 @@ import {
 import { useConfiguracion } from "@/hooks/useConfiguracion";
 import { useCaja } from "@/hooks/useCaja";
 import { useVentaStore } from "@/store/ventaStore";
+import { useUserStore } from "@/store/useUserStore";
 import { useReactToPrint } from "react-to-print";
 import { TicketImpresion } from "./TicketImpresion";
 
@@ -72,6 +73,7 @@ export default function VentaFooter({
   // Global Store
   const { pagos, addPago, removePago, setPagos, numeroComprobanteAsociado } =
     useVentaStore();
+  const { currentBranch } = useUserStore();
 
   // Payment Logic State
   const [currentTipo, setCurrentTipo] = useState<number>(
@@ -255,7 +257,9 @@ export default function VentaFooter({
         cae: data.comprobante.cae,
         caeFchVto: data.comprobante.caeFchVto,
         cuitEmisor: fiscal?.cuit || configuracion?.cuit || "",
-        puntoVentaNum: fiscal?.puntoVenta ? Number(fiscal.puntoVenta) : 1,
+        puntoVentaNum: currentBranch?.PuntoVentaAfip 
+          ? Number(currentBranch.PuntoVentaAfip) 
+          : (fiscal?.puntoVenta ? Number(fiscal.puntoVenta) : 1),
         cbteNro: data.comprobante.numero,
       };
 

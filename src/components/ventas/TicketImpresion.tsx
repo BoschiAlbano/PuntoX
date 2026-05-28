@@ -232,9 +232,12 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
 
       // ── Datos del comprobante ──────────────────────────────────────
       push(addLine(`Fecha: ${new Date(datosVenta.fecha).toLocaleString()}`));
+      const pdvStr = datosVenta.puntoVentaNum
+        ? `${datosVenta.puntoVentaNum.toString().padStart(4, "0")}-`
+        : "";
       push(
         addLine(
-          `Comp: ${datosVenta.tipoComprobante} N° ${datosVenta.numeroComprobante.toString().padStart(8, "0")}`,
+          `Comp: ${datosVenta.tipoComprobante} N° ${pdvStr}${datosVenta.numeroComprobante.toString().padStart(8, "0")}`,
         ),
       );
       const clienteNombre = datosVenta.cliente?.Nombre
