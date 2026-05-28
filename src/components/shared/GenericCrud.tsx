@@ -262,11 +262,10 @@ export default function GenericCrud<T extends { Id: number | string }>({
     search: debouncedSearch,
     page,
     limit,
-    extraParams: getApiExtraParams
-      ? getApiExtraParams({ lowStockOnly })
-      : lowStockApiParam && lowStockOnly
-        ? { bajoStock: true }
-        : undefined,
+    extraParams: {
+      ...(getApiExtraParams ? getApiExtraParams({ lowStockOnly }) : (lowStockApiParam && lowStockOnly ? { bajoStock: true } : {})),
+      ...(editId ? { editId } : {})
+    },
     transformer,
     additionalInvalidateQueryKeys,
   });

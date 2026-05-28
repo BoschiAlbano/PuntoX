@@ -28,6 +28,8 @@ export async function GET(req: NextRequest) {
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
     const bajoStock =
       req.nextUrl.searchParams.get("bajoStock")?.toLowerCase() === "true";
+    const editIdParam = req.nextUrl.searchParams.get("editId");
+    const editId = editIdParam ? Number(editIdParam) : null;
 
     // Construir where clause
     const where: {
@@ -86,8 +88,32 @@ export async function GET(req: NextRequest) {
       ? articuloIdsBajoStock.length
       : await prisma.articulo.count({ where });
 
+    let exactEditMatch: any[] = [];
+    if (editId) {
+      exactEditMatch = await prisma.articulo.findMany({
+        where: { TenantId: BigInt(tenantId), Id: editId },
+        select: {
+          Id: true, Codigo: true, CodigoBarra: true, Descripcion: true, EstaEliminado: true, StockMinimo: true, PrecioCosto: true, Foto: true, TipoVenta: true,
+          Marca: { select: { Descripcion: true } },
+          Rubro: { select: { Descripcion: true } },
+          Precios: { select: { ListaPrecioId: true, PorcentajeGanancia: true, PrecioFinal: true, ListaPrecio: { select: { Nombre: true } } } },
+          ArticuloStock: { where: { SucursalId: BigInt(sucursalId) }, take: 1, select: { Stock: true, StockMinimo: true, Sucursal: { select: { Nombre: true } } } },
+        },
+      });
+    }
+
+    const exactIds = exactEditMatch.map(p => p.Id);
+    if (exactIds.length > 0) {
+      (where as any).AND = [
+        ...((where as any).AND || []),
+        { Id: { notIn: exactIds } }
+      ];
+    }
+
+    const restLimit = Math.max(0, (pagination.limit ?? 20) - exactIds.length);
+
     // Obtener productos paginados
-    const productos = await prisma.articulo.findMany({
+    const restProductos = await prisma.articulo.findMany({
       where,
       select: {
         Id: true,
@@ -133,9 +159,11 @@ export async function GET(req: NextRequest) {
       orderBy: {
         Descripcion: "asc",
       },
-      skip: pagination.skip,
-      take: pagination.limit,
+      skip: exactIds.length > 0 && pagination.skip === 0 ? 0 : pagination.skip,
+      take: restLimit,
     });
+
+    const productos = [...exactEditMatch, ...restProductos];
 
     // Mapear productos
     const productosConStock = productos.map((producto) => {
@@ -170,7 +198,7 @@ export async function GET(req: NextRequest) {
         SucursalNombre: stockSucursal?.Sucursal.Nombre || null,
         // Precios
         PrecioCosto: Number(producto.PrecioCosto || 0),
-        PreciosLista: producto.Precios.map((p) => ({
+        PreciosLista: producto.Precios.map((p: any) => ({
           ListaPrecioId: Number(p.ListaPrecioId),
           PorcentajeGanancia: Number(p.PorcentajeGanancia),
           PrecioFinal: Number(p.PrecioFinal),

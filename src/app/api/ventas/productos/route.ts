@@ -16,6 +16,8 @@ export async function GET(req: NextRequest) {
     const limit = Number(searchParams.get("limit")) || 20;
     const page = Number(searchParams.get("page")) || 1;
     const skip = (page - 1) * limit;
+    const editIdParam = searchParams.get("editId");
+    const editId = editIdParam ? Number(editIdParam) : null;
 
     const where: any = {
       TenantId: BigInt(tenantId),
@@ -48,14 +50,17 @@ export async function GET(req: NextRequest) {
     }
 
     // Para búsquedas numéricas, primero buscar coincidencia exacta por código
-    // para garantizar que aparezca primero en los resultados
+    // para garantizar que aparezca primero en los resultados, así como el editId si existe
     let exactCodeMatch: any[] = [];
-    if (isValidInt) {
+    if (isValidInt || editId) {
       exactCodeMatch = await prisma.articulo.findMany({
         where: {
           TenantId: BigInt(tenantId),
           EstaEliminado: false,
-          Codigo: codeNum,
+          OR: [
+            ...(isValidInt ? [{ Codigo: codeNum }] : []),
+            ...(editId ? [{ Id: editId }] : []),
+          ],
         },
         select: {
           Id: true,
