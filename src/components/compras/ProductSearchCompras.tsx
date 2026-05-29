@@ -29,12 +29,7 @@ export default function ProductSearchCompras({
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
-  const handleInputKeyDown = async (e: React.KeyboardEvent) => {
-    if (e.key !== "Enter") return;
-    e.preventDefault();
-
-    const term = inputValue.trim();
-
+  const processSearchTerm = async (term: string) => {
     if (!term) {
       setSearchTermForModal("");
       setIsSearchModalOpen(true);
@@ -71,12 +66,20 @@ export default function ProductSearchCompras({
       // Si no puede resolver directamente → abrir modal
       setSearchTermForModal(term);
       setIsSearchModalOpen(true);
-      setInputValue("");
     } catch (err) {
       console.error("Error al buscar producto:", err);
     } finally {
       setIsSearching(false);
     }
+  };
+
+  const handleInputKeyDown = async (e: React.KeyboardEvent) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    const term = inputValue.trim();
+    await processSearchTerm(term);
+    if (term) setInputValue("");
   };
 
   const handleSelectProduct = (product: Producto, cantidad: number = 1) => {
@@ -86,29 +89,7 @@ export default function ProductSearchCompras({
   };
 
   const handleCameraScan = async (decodedText: string) => {
-    setIsSearching(true);
-    try {
-      const result = await queryClient.fetchQuery({
-        queryKey: ["productos-compras-exact", decodedText],
-        queryFn: ({ signal }) =>
-          fetchProductosCompras({ signal, search: decodedText, page: 1, limit: 5 }),
-        staleTime: 10_000,
-      });
-
-      if (result.data && result.data.length > 0) {
-        handleSelectProduct(result.data[0]);
-      } else {
-        addToast({
-          title: "Código no encontrado",
-          description: `No se encontró el producto ${decodedText}`,
-          color: "warning",
-        });
-      }
-    } catch {
-      addToast({ title: "Error", description: "Error al buscar el producto escaneado", color: "danger" });
-    } finally {
-      setIsSearching(false);
-    }
+    await processSearchTerm(decodedText.trim());
   };
 
   return (

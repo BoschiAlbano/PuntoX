@@ -51,17 +51,28 @@ const features = [
 
 export const LandingFeatures = () => {
   return (
-    <section id="features" className="py-24 bg-slate-50 text-slate-900">
-      <div className="container mx-auto px-6">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+    <section id="features" className="py-24 bg-slate-50 text-slate-900 relative">
+      <div className="container mx-auto px-6 relative z-10">
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-4xl md:text-5xl font-extrabold mb-6"
+          >
             Todo lo que necesitas para{" "}
-            <span className="text-[#1d293d]">crecer</span>
-          </h2>
-          <p className="text-slate-500">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-[#67afc3] to-[#4a6fa5]">crecer</span>
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-lg text-slate-500"
+          >
             Herramientas diseñadas específicamente para potenciar la eficiencia
-            y rentabilidad de tu negocio.
-          </p>
+            y rentabilidad de tu negocio, todas en una sola plataforma.
+          </motion.p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 auto-rows-[280px] gap-6">
@@ -88,18 +99,22 @@ export const LandingFeatures = () => {
                   damping: 15,
                   mass: 1,
                 }}
-                className={`p-8 rounded-3xl bg-white border border-slate-200 hover:border-[#1d293d]/25 transition-all duration-500 ease-out group hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#1d293d]/8 flex flex-col justify-start overflow-hidden relative ${bentoClasses[index]}`}
+                className={`p-8 rounded-3xl bg-white/70 backdrop-blur-xl border border-slate-200/60 hover:border-[#67afc3]/40 transition-all duration-500 ease-out group hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(103,175,195,0.2)] flex flex-col justify-start overflow-hidden relative ${bentoClasses[index]}`}
               >
-                {/* Decorative background glow on hover (GPU Optimized) */}
-                <div className="absolute -right-20 -top-20 w-40 h-40 bg-[#1d293d] opacity-0 rounded-full blur-3xl group-hover:opacity-10 transition-opacity duration-300 pointer-events-none will-change-transform" />
+                {/* Decorative background glow on hover */}
+                <div className="absolute -right-20 -top-20 w-56 h-56 bg-linear-to-br from-[#67afc3] to-[#4a6fa5] opacity-0 rounded-full blur-3xl group-hover:opacity-10 transition-opacity duration-700 pointer-events-none will-change-transform" />
                 
-                <div className="w-12 h-12 rounded-xl bg-[#1d293d]/10 flex items-center justify-center text-[#1d293d] mb-6 group-hover:bg-[#1d293d] group-hover:text-white transition-all duration-500 shadow-sm group-hover:scale-110 group-hover:-rotate-3 group-hover:shadow-md">
+                <div className="w-14 h-14 rounded-2xl bg-[#67afc3]/10 flex items-center justify-center text-[#67afc3] mb-6 group-hover:bg-linear-to-br group-hover:from-[#67afc3] group-hover:to-[#4a6fa5] group-hover:text-white transition-all duration-500 shadow-sm group-hover:scale-110 group-hover:-rotate-6 group-hover:shadow-md relative z-10">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-slate-800 z-10">{feature.title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed z-10">
+                
+                <h3 className="text-2xl font-bold mb-3 text-slate-800 z-10 group-hover:text-[#1d293d] transition-colors">{feature.title}</h3>
+                <p className="text-slate-500 text-base leading-relaxed z-10 group-hover:text-slate-600 transition-colors">
                   {feature.description}
                 </p>
+                
+                {/* Subtle inner border to enhance glass effect */}
+                <div className="absolute inset-0 rounded-3xl border border-white/40 pointer-events-none" />
               </motion.div>
             );
           })}

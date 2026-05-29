@@ -3,6 +3,7 @@ export interface ScaleBarcodeResult {
   value: number; // Peso o Precio
   type: "weight" | "price";
   originalBarcode: string;
+  valueRaw: number;
 }
 
 interface ScaleConfig {
@@ -71,6 +72,7 @@ export function parseScaleBarcode(
     value,
     type: config.isWeight ? "weight" : "price",
     originalBarcode: barcode,
+    valueRaw,
   };
 }
 

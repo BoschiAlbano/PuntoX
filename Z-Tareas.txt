@@ -25,6 +25,4 @@ Errores:
 1- El usuario administrador no deberia bloquearse por intentos fallidos al ingresar la contraseña en login. ✔️
 
 Implementaciones Futuras:
-1- AFIP
-2- Implementar guardado en cache para luego sincronizar con la base de datos en caso de que no hubiera internet en el momento.
-3- Crear aplicacion de escritorio usando electron, quizas cambiar de base de datos local como sql server, para no depender de supabase ni internet. 
+1- AFIP ✔️

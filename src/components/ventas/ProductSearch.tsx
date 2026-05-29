@@ -35,6 +35,7 @@ export default function ProductSearch({
   const isSearchingRef = useRef(false);
   const queryClient = useQueryClient();
 
+
   // Configuración para báscula
   const { configuracion } = useConfiguracion({ enableConfiguracion: true });
 
@@ -43,210 +44,203 @@ export default function ProductSearch({
     setIsSearching(value);
   };
 
+  const processSearchTerm = async (rawTerm: string) => {
+    const term = rawTerm.trim();
+    if (!term) {
+      setSearchTermForModal("");
+      setIsSearchModalOpen(true);
+      return;
+    }
+
+    if (isSearchingRef.current) return;
+
+    // ── Parsear sintaxis código*precio ──
+    const altPriceMatch = term.match(/^(\d+)\*(\d+\.?\d*)$/);
+    if (altPriceMatch) {
+      const codigo = altPriceMatch[1];
+      const precioAlternativo = parseFloat(altPriceMatch[2]);
+
+      if (precioAlternativo <= 0) {
+        addToast({
+          title: "Precio inválido",
+          description: "El precio alternativo debe ser mayor a 0.",
+          color: "warning",
+        });
+        return;
+      }
+
+      setSearchingState(true);
+      try {
+        const result = await queryClient.fetchQuery({
+          queryKey: ["productos-ventas-exact", codigo],
+          queryFn: ({ signal }) =>
+            fetchProductosVentas({
+              signal,
+              search: codigo,
+              page: 1,
+              limit: 5,
+            }),
+          staleTime: 10 * 1000,
+        });
+
+        const codigoNum = parseInt(codigo, 10);
+        const found = result.data.find((p) => p.Codigo === codigoNum);
+
+        if (found) {
+          handleSelectProduct(found, 1, precioAlternativo, "alternativo");
+        } else {
+          addToast({
+            title: "Producto no encontrado",
+            description: `No se encontró un producto con código ${codigo}.`,
+            color: "warning",
+          });
+        }
+      } catch (err) {
+        console.error("Error searching product with alt price:", err);
+      } finally {
+        setSearchingState(false);
+      }
+      return;
+    }
+
+    setSearchingState(true);
+
+    try {
+      // 1. Validar si es código de báscula pero está desactivada
+      if (
+        configuracion?.codigoBascula &&
+        term.length === 13 &&
+        term.startsWith(configuracion.codigoBascula) &&
+        !configuracion.activarBascula
+      ) {
+        addToast({
+          title: "Báscula desactivada",
+          description:
+            "Se detectó un código de báscula, pero la función está desactivada en la configuración.",
+          color: "warning",
+        });
+        return;
+      }
+
+      // 2. Intentar parsear como código de balanza
+      let scaleResult = null;
+      if (
+        configuracion?.activarBascula &&
+        configuracion.codigoBascula &&
+        term.length === 13 &&
+        term.startsWith(configuracion.codigoBascula)
+      ) {
+        scaleResult = parseScaleBarcode(term, {
+          active: true,
+          prefix: configuracion.codigoBascula,
+          isWeight: configuracion.etiquetaPorPeso ?? false,
+          priceDecimals: configuracion.precioDecimales ?? 0,
+        });
+
+        if (!scaleResult) {
+          addToast({
+            title: "Error al leer código",
+            description: "No se pudo leer el código de báscula.",
+            color: "danger",
+          });
+          return;
+        }
+      }
+
+      if (scaleResult) {
+        // Buscar producto por PLU (usando el código parseado)
+        const result = await queryClient.fetchQuery({
+          queryKey: ["productos-ventas-scale", scaleResult.plu],
+          queryFn: ({ signal }) =>
+            fetchProductosVentas({
+              signal,
+              search: scaleResult.plu,
+              page: 1,
+              limit: 5,
+            }),
+          staleTime: 0,
+        });
+
+        const pluInt = parseInt(scaleResult.plu, 10);
+        const found = result.data.find((p) => p.Codigo === pluInt);
+
+        if (found) {
+          let cantidad = 1;
+          
+          if (found.TipoVenta === "UNIDAD") {
+            // Si el producto se vende por unidad, usamos el valor original (sin decimales) como cantidad de unidades
+            cantidad = scaleResult.valueRaw;
+            if (cantidad === 0) cantidad = 1;
+          } else {
+            if (scaleResult.type === "weight") {
+              cantidad = scaleResult.value;
+            } else if (scaleResult.type === "price") {
+              const pl = found.PreciosLista?.find(p => Number(p.ListaPrecioId) === Number(listaPrecios));
+              const price = pl ? Number(pl.PrecioFinal) : Number(found.PrecioCosto || 0);
+              if (price > 0) {
+                cantidad = Number((scaleResult.value / price).toFixed(3));
+              }
+            }
+          }
+
+          handleSelectProduct(found, cantidad);
+          return;
+        }
+      }
+
+      // 3. Búsqueda normal si no es báscula o no se encontró
+      // Verificar si el término contiene solo números
+      const isNumeric = /^\d+$/.test(term);
+
+      if (isNumeric) {
+        const result = await queryClient.fetchQuery({
+          queryKey: ["productos-ventas-exact", term],
+          queryFn: ({ signal }) =>
+            fetchProductosVentas({
+              signal,
+              search: term,
+              page: 1,
+              limit: 5,
+            }),
+          staleTime: 10 * 1000,
+        });
+
+        if (result.data && result.data.length === 1) {
+          // Producto exacto encontrado (ej. código exacto o código de barras)
+          handleSelectProduct(result.data[0]);
+        } else if (result.data && result.data.length > 1) {
+          // Verificar si el primer resultado es coincidencia exacta por código
+          const codeNum = parseInt(term, 10);
+          const exactMatch = result.data.find((p) => p.Codigo === codeNum);
+          if (exactMatch) {
+            handleSelectProduct(exactMatch);
+          } else {
+            // Múltiples coincidencias sin código exacto -> Abrir Modal
+            setSearchTermForModal(term);
+            setIsSearchModalOpen(true);
+          }
+        } else {
+          // Sin coincidencias -> Abrir Modal
+          setSearchTermForModal(term);
+          setIsSearchModalOpen(true);
+        }
+      } else {
+        // Contiene letras u otros caracteres, abrir el modal directamente
+        setSearchTermForModal(term);
+        setIsSearchModalOpen(true);
+      }
+    } catch (err) {
+      console.error("Error searching product:", err);
+    } finally {
+      setSearchingState(false);
+    }
+  };
+
   const handleInputKeyDown = async (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
-
-      if (isSearchingRef.current) return;
-
-      if (inputValue.trim()) {
-        const term = inputValue.trim();
-
-        // ── Parsear sintaxis código*precio ──
-        const altPriceMatch = term.match(/^(\d+)\*(\d+\.?\d*)$/);
-        if (altPriceMatch) {
-          const codigo = altPriceMatch[1];
-          const precioAlternativo = parseFloat(altPriceMatch[2]);
-
-          if (precioAlternativo <= 0) {
-            addToast({
-              title: "Precio inválido",
-              description: "El precio alternativo debe ser mayor a 0.",
-              color: "warning",
-            });
-            setInputValue("");
-            return;
-          }
-
-          setSearchingState(true);
-          try {
-            const result = await queryClient.fetchQuery({
-              queryKey: ["productos-ventas-exact", codigo],
-              queryFn: ({ signal }) =>
-                fetchProductosVentas({
-                  signal,
-                  search: codigo,
-                  page: 1,
-                  limit: 5,
-                }),
-              staleTime: 10 * 1000,
-            });
-
-            const codigoNum = parseInt(codigo, 10);
-            const found = result.data.find((p) => p.Codigo === codigoNum);
-
-            if (found) {
-              handleSelectProduct(found, 1, precioAlternativo, "alternativo");
-            } else {
-              addToast({
-                title: "Producto no encontrado",
-                description: `No se encontró un producto con código ${codigo}.`,
-                color: "warning",
-              });
-            }
-          } catch (err) {
-            console.error("Error searching product with alt price:", err);
-          } finally {
-            setSearchingState(false);
-          }
-          setInputValue("");
-          return;
-        }
-
-        setSearchingState(true);
-
-        try {
-          // 1. Validar si es código de báscula pero está desactivada
-          if (
-            configuracion?.codigoBascula &&
-            term.length === 13 &&
-            term.startsWith(configuracion.codigoBascula) &&
-            !configuracion.activarBascula
-          ) {
-            addToast({
-              title: "Báscula desactivada",
-              description:
-                "Se detectó un código de báscula, pero la función está desactivada en la configuración.",
-              color: "warning",
-            });
-            setInputValue("");
-            return;
-          }
-
-          // 2. Intentar parsear como código de balanza
-          let scaleResult = null;
-          if (
-            configuracion?.activarBascula &&
-            configuracion.codigoBascula &&
-            term.length === 13 &&
-            term.startsWith(configuracion.codigoBascula)
-          ) {
-            scaleResult = parseScaleBarcode(term, {
-              active: true,
-              prefix: configuracion.codigoBascula,
-              isWeight: configuracion.etiquetaPorPeso ?? false,
-              priceDecimals: configuracion.precioDecimales ?? 0,
-            });
-
-            if (!scaleResult) {
-              addToast({
-                title: "Error al leer código",
-                description: "No se pudo leer el código de báscula.",
-                color: "danger",
-              });
-              setInputValue("");
-              return;
-            }
-          }
-
-          if (scaleResult) {
-            // Buscar producto por PLU (usando el código parseado)
-            const result = await queryClient.fetchQuery({
-              queryKey: ["productos-ventas-scale", scaleResult.plu],
-              queryFn: ({ signal }) =>
-                fetchProductosVentas({
-                  signal,
-                  search: scaleResult.plu,
-                  page: 1,
-                  limit: 5,
-                }),
-              staleTime: 0,
-            });
-
-            const pluInt = parseInt(scaleResult.plu, 10);
-            const found = result.data.find((p) => p.Codigo === pluInt);
-
-            if (found) {
-              if (found.TipoVenta === "UNIDAD") {
-                addToast({
-                  title: "Producto no pesable",
-                  description: `El producto "${found.Descripcion}" se vende por unidad. No se puede ingresar por balanza.`,
-                  color: "danger",
-                });
-                setInputValue("");
-                return;
-              }
-
-              let cantidad = 1;
-              if (scaleResult.type === "weight") {
-                cantidad = scaleResult.value;
-              } else if (scaleResult.type === "price") {
-                const pl = found.PreciosLista?.find(p => Number(p.ListaPrecioId) === Number(listaPrecios));
-                const price = pl ? Number(pl.PrecioFinal) : Number(found.PrecioCosto || 0);
-                if (price > 0) {
-                  cantidad = Number((scaleResult.value / price).toFixed(3));
-                }
-              }
-
-              handleSelectProduct(found, cantidad);
-              return;
-            }
-          }
-
-          // 3. Búsqueda normal si no es báscula o no se encontró
-          // Verificar si el término contiene solo números
-          const isNumeric = /^\d+$/.test(term);
-
-          if (isNumeric) {
-            const result = await queryClient.fetchQuery({
-              queryKey: ["productos-ventas-exact", term],
-              queryFn: ({ signal }) =>
-                fetchProductosVentas({
-                  signal,
-                  search: term,
-                  page: 1,
-                  limit: 5,
-                }),
-              staleTime: 10 * 1000,
-            });
-
-            if (result.data && result.data.length === 1) {
-              // Producto exacto encontrado (ej. código exacto o código de barras)
-              handleSelectProduct(result.data[0]);
-            } else if (result.data && result.data.length > 1) {
-              // Verificar si el primer resultado es coincidencia exacta por código
-              const codeNum = parseInt(term, 10);
-              const exactMatch = result.data.find((p) => p.Codigo === codeNum);
-              if (exactMatch) {
-                handleSelectProduct(exactMatch);
-              } else {
-                // Múltiples coincidencias sin código exacto -> Abrir Modal
-                setSearchTermForModal(term);
-                setIsSearchModalOpen(true);
-                setInputValue("");
-              }
-            } else {
-              // Sin coincidencias -> Abrir Modal
-              setSearchTermForModal(term);
-              setIsSearchModalOpen(true);
-              setInputValue("");
-            }
-          } else {
-            // Contiene letras u otros caracteres, abrir el modal directamente
-            setSearchTermForModal(term);
-            setIsSearchModalOpen(true);
-            setInputValue("");
-          }
-        } catch (err) {
-          console.error("Error searching product:", err);
-        } finally {
-          setSearchingState(false);
-        }
-      } else {
-        // Input vacío -> Abrir Modal para que busque manualmente
-        setSearchTermForModal("");
-        setIsSearchModalOpen(true);
-      }
+      await processSearchTerm(inputValue);
+      setInputValue("");
     }
   };
 
@@ -259,39 +253,7 @@ export default function ProductSearch({
   };
 
   const handleCameraScan = async (decodedText: string) => {
-    if (isSearchingRef.current) return;
-
-    setSearchingState(true);
-    try {
-      const term = decodedText.trim();
-      const result = await queryClient.fetchQuery({
-        queryKey: ["productos-ventas-exact", term],
-        queryFn: ({ signal }) => fetchProductosVentas({
-          signal, search: term, page: 1, limit: 5
-        }),
-        staleTime: 10 * 1000
-      });
-
-      if (result.data && result.data.length > 0) {
-        // Enviar el primer producto coincidente
-        handleSelectProduct(result.data[0]);
-      } else {
-        addToast({
-          title: "Código no encontrado",
-          description: `No se encontró el producto ${term}`,
-          color: "warning"
-        });
-      }
-    } catch (err) {
-      console.error("Error al buscar producto escaneado:", err);
-      addToast({
-        title: "Error",
-        description: "Error al buscar el producto escaneado",
-        color: "danger"
-      });
-    } finally {
-      setSearchingState(false);
-    }
+    await processSearchTerm(decodedText);
   };
 
   return (
