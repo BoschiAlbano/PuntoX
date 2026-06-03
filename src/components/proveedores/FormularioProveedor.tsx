@@ -12,14 +12,11 @@ import {
   Input,
   Select,
   SelectItem,
-  Accordion,
-  AccordionItem,
-  Chip,
 } from "@heroui/react";
 import { GenericFormProps } from "../shared/GenericCrud";
 import { useQuery } from "@tanstack/react-query";
 import { Proveedor } from "@/lib/validations/proveedor.schema";
-import { Truck, MapPin } from "lucide-react";
+import { Truck, MapPin, X } from "lucide-react";
 
 // Fetchers
 const fetchCondicionesIva = async () => {
@@ -88,6 +85,7 @@ export default function FormularioProveedor({
   isSaving,
 }: GenericFormProps<Proveedor>) {
   const [formData, setFormData] = useState<Partial<Proveedor>>(proveedorPorDefecto);
+  const [activeSection, setActiveSection] = useState<"datos" | "ubicacion">("datos");
 
   // Queries
   const { data: condicionesIva = [], isLoading: isLoadingCondiciones } =
@@ -179,276 +177,272 @@ export default function FormularioProveedor({
   const isEdit = !!initialData;
   const sectionStatus = getProveedorSectionStatus(formData);
 
-  const SectionTitle = ({
-    icon: Icon,
-    label,
-    isComplete,
-  }: {
-    icon: React.ComponentType<{ className?: string }>;
-    label: string;
-    isComplete: boolean;
-  }) => (
-    <div className="flex items-center justify-between w-full gap-2 pr-2">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="p-2 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 shadow-sm shrink-0">
-          <Icon className="w-4 h-4 text-[#67afc3]" />
-        </div>
-        <span className="font-semibold text-slate-800 tracking-tight">{label}</span>
-      </div>
-      <Chip
-        size="sm"
-        variant="flat"
-        className={
-          isComplete
-            ? "bg-emerald-50 text-emerald-600 font-bold uppercase tracking-wider text-[10px] border-0 shrink-0"
-            : "bg-warning-50 text-warning-600 font-bold uppercase tracking-wider text-[10px] border-0 shrink-0"
-        }
-      >
-        {isComplete ? "Completo" : "Pendiente"}
-      </Chip>
-    </div>
-  );
+  const navSections: { key: "datos" | "ubicacion"; label: string; icon: any; isComplete: boolean }[] = [
+    { key: "datos", label: "Datos de la empresa", icon: Truck, isComplete: sectionStatus.datosPersonales },
+    { key: "ubicacion", label: "Ubicación y Fiscalidad", icon: MapPin, isComplete: sectionStatus.ubicacion },
+  ];
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size="2xl"
-      backdrop="opaque"
+      hideCloseButton
       isDismissable={!isSaving}
-      scrollBehavior="inside"
       motionProps={modalMotionProps}
       classNames={{
-        backdrop: "bg-slate-900/40 backdrop-blur-md",
+        backdrop: "bg-slate-900/60 backdrop-blur-sm",
         wrapper: "items-end sm:items-center",
-        base: "font-sans bg-white/95 backdrop-blur-2xl rounded-t-[20px] rounded-b-none sm:rounded-[24px] shadow-2xl border border-white/60 max-w-full sm:max-w-[820px] max-h-[92vh] overflow-hidden w-full sm:w-auto m-0 sm:m-auto",
-        header: "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8 bg-transparent",
-        body: "py-0 px-4 sm:px-8 overflow-y-auto overflow-x-hidden",
-        footer: "border-t border-slate-100/60 py-4 px-4 sm:px-8 bg-transparent",
-        closeButton: "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
+        base: "font-sans bg-white shadow-2xl border-0 sm:border border-slate-200 rounded-none sm:rounded-2xl w-full sm:max-w-[920px] h-[100dvh] sm:h-[84vh] m-0 sm:m-auto",
       }}
     >
-      <ModalContent>
-        <ModalHeader className="flex flex-col gap-1">
-          <div className="flex items-center gap-4">
-            <div className="p-2.5 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 shadow-sm">
-              <Truck className="w-5 h-5 text-[#67afc3]" />
-            </div>
-            <div>
-              <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">
-                {isEdit ? "Editar Proveedor" : "Nuevo Proveedor"}
-              </h2>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">
-                {isEdit ? "Modifica los datos del proveedor seleccionado" : "Completa la información del proveedor"}
-              </p>
-            </div>
+      <ModalContent className="flex flex-col h-full overflow-hidden">
+        {/* ── Header ─────────────────────────────────────────────── */}
+        <ModalHeader className="flex items-center gap-3 py-4 px-5 border-b border-slate-100 flex-none">
+          <div
+            className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+            style={{ backgroundColor: "#67afc3" }}
+          >
+            <Truck size={18} className="text-white" />
           </div>
+          <div className="flex flex-col flex-1 min-w-0">
+            <span className="text-base font-bold text-slate-800 leading-tight">
+              {isEdit ? "Editar Proveedor" : "Nuevo Proveedor"}
+            </span>
+            <span className="text-xs text-slate-400 font-normal truncate">
+              {isEdit
+                ? (formData.RazonSocial || "Sin nombre")
+                : "Completa la información del proveedor"}
+            </span>
+          </div>
+          <Button
+            isIconOnly
+            size="sm"
+            variant="light"
+            onPress={onClose}
+            isDisabled={isSaving}
+            className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl shrink-0"
+          >
+            <X size={16} />
+          </Button>
         </ModalHeader>
-        <ModalBody className="p-0">
-          <div className="py-6">
-            <Accordion
-              aria-label="Opciones del proveedor"
-              defaultSelectedKeys={["datos"]}
-              selectionMode="single"
-              variant="bordered"
-              itemClasses={{
-                base: "border-slate-200 shadow-sm bg-white hover:bg-slate-50/50 transition-colors rounded-xl",
-                titleWrapper: "py-3",
-              }}
-              motionProps={{
-                transition: { duration: 0.18, ease: "easeInOut" },
-              }}
-              className="gap-3 overflow-visible px-1"
-            >
-              <AccordionItem
-                key="datos"
-                aria-label="Datos de la empresa"
-                title={
-                  <SectionTitle
-                    icon={Truck}
-                    label="Datos de la empresa"
-                    isComplete={sectionStatus.datosPersonales}
-                  />
-                }
-              >
-                <div className="space-y-5 pt-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                      label="Razón Social *"
-                      placeholder="Empresa S.A."
-                      autoFocus
-                      value={formData.RazonSocial}
-                      onChange={(e) => handleChange("RazonSocial", e.target.value)}
-                      isRequired
-                      classNames={inputClassNames}
-                    />
-                    <Input
-                      label="CUIT *"
-                      placeholder="30-12345678-9"
-                      value={formData.CUIT}
-                      onChange={(e) => handleChange("CUIT", e.target.value)}
-                      isRequired
-                      maxLength={15}
-                      classNames={inputClassNames}
-                    />
-                    <Input
-                      label="Email *"
-                      type="email"
-                      placeholder="contacto@empresa.com"
-                      value={formData?.Mail}
-                      onChange={(e) => handleChange("Mail", e.target.value)}
-                      isRequired
-                      classNames={inputClassNames}
-                    />
-                    <Input
-                      label="Teléfono"
-                      placeholder="+54 11 1234-5678"
-                      value={formData?.Telefono || ""}
-                      maxLength={25}
-                      onChange={(e) => handleChange("Telefono", e.target.value)}
-                      classNames={inputClassNames}
-                    />
-                    <Input
-                      label="Dirección *"
-                      placeholder="Calle 123"
-                      value={formData.Direccion}
-                      onChange={(e) =>
-                        handleChange("Direccion", e.target.value)
-                      }
-                      isRequired
-                      classNames={inputClassNames}
-                    />
-                  </div>
-                </div>
-              </AccordionItem>
 
-              <AccordionItem
-                key="ubicacion"
-                aria-label="Ubicación y Fiscalidad"
-                title={
-                  <SectionTitle
-                    icon={MapPin}
-                    label="Ubicación y Fiscalidad"
-                    isComplete={sectionStatus.ubicacion}
+        {/* ── Body ───────────────────────────────────────────────── */}
+        <ModalBody className="p-0 flex flex-col sm:flex-row flex-1 overflow-hidden relative">
+          {/* Nav — horizontal scrollable en mobile, sidebar en desktop */}
+          <nav className="flex-none
+            flex flex-row sm:flex-col
+            border-b sm:border-b-0 sm:border-r border-slate-100
+            bg-slate-50/60
+            overflow-x-auto sm:overflow-x-hidden overflow-y-hidden sm:overflow-y-auto
+            py-2 sm:py-3 px-2 gap-0.5
+            sm:w-44 scrollbar-none">
+            {navSections.map(({ key, label, icon: Icon, isComplete }) => {
+              const isActive = activeSection === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setActiveSection(key)}
+                  disabled={isSaving}
+                  className={`flex items-center gap-2 px-3 py-2 sm:py-2.5 rounded-xl text-left transition-all shrink-0 sm:w-full ${
+                    isActive
+                      ? "bg-[#67afc3]/10 text-[#67afc3]"
+                      : "text-slate-500 hover:bg-white hover:text-slate-700"
+                  }`}
+                >
+                  <Icon
+                    size={14}
+                    className={`shrink-0 ${isActive ? "text-[#67afc3]" : "text-slate-400"}`}
                   />
-                }
-              >
-                <div className="space-y-5 pt-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Select
-                      label="Provincia"
-                      selectedKeys={
-                        formData.ProvinciaId
-                          ? [String(formData.ProvinciaId)]
-                          : []
-                      }
-                      onSelectionChange={(keys) => {
-                        const val = Array.from(keys)[0];
-                        if (val) handleChange("ProvinciaId", Number(val));
-                      }}
-                      placeholder="Selecciona una provincia"
-                      isLoading={isLoadingProvincias}
-                    >
-                      {provincias.map((prov: any) => (
-                        <SelectItem
-                          key={String(prov.Id)}
-                          textValue={prov.Descripcion}
-                        >
-                          {prov.Descripcion}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                    <Select
-                      label="Departamento"
-                      selectedKeys={
-                        formData.DepartamentoId
-                          ? [String(formData.DepartamentoId)]
-                          : []
-                      }
-                      onSelectionChange={(keys) => {
-                        const val = Array.from(keys)[0];
-                        if (val) handleChange("DepartamentoId", Number(val));
-                      }}
-                      placeholder="Selecciona un departamento"
-                      isDisabled={!formData.ProvinciaId}
-                      isLoading={isLoadingDepartamentos}
-                    >
-                      {departamentos.map((dept: any) => (
-                        <SelectItem
-                          key={String(dept.Id)}
-                          textValue={dept.Descripcion}
-                        >
-                          {dept.Descripcion}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                    <Select
-                      label="Localidad *"
-                      selectedKeys={
-                        formData.LocalidadId
-                          ? [String(formData.LocalidadId)]
-                          : []
-                      }
-                      onSelectionChange={(keys) => {
-                        const val = Array.from(keys)[0];
-                        if (val) handleChange("LocalidadId", Number(val));
-                      }}
-                      placeholder="Selecciona una localidad"
-                      isDisabled={!formData.DepartamentoId}
-                      isLoading={isLoadingLocalidades}
-                    >
-                      {localidades.map((loc: any) => (
-                        <SelectItem
-                          key={String(loc.Id)}
-                          textValue={loc.Descripcion}
-                        >
-                          {loc.Descripcion}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                    <Select
-                      label="Condición IVA *"
-                      selectedKeys={
-                        formData.CondicionIvaId
-                          ? [String(formData.CondicionIvaId)]
-                          : []
-                      }
-                      onSelectionChange={(keys) => {
-                        const val = Array.from(keys)[0];
-                        if (val) handleChange("CondicionIvaId", Number(val));
-                      }}
-                      placeholder="Condición frente al IVA"
-                      isRequired
-                      isLoading={isLoadingCondiciones}
-                    >
-                      {condicionesIva.map((cond: any) => (
-                        <SelectItem
-                          key={String(cond.id ?? cond.Id)}
-                          textValue={cond.descripcion ?? cond.Descripcion}
-                        >
-                          {cond.descripcion ?? cond.Descripcion}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                  </div>
+                  <span className={`text-xs sm:text-sm whitespace-nowrap leading-none ${isActive ? "font-semibold" : "font-medium"}`}>
+                    {label}
+                  </span>
+                  <div
+                    className={`hidden sm:block w-1.5 h-1.5 rounded-full shrink-0 ml-auto transition-colors ${
+                      isComplete ? "bg-emerald-400" : "bg-slate-200"
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Right Content */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-5 space-y-4">
+            
+            {/* ── DATOS DE LA EMPRESA ──────────────────────────────────────── */}
+            {activeSection === "datos" && (
+              <>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-1">
+                  Datos de la empresa
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="Razón Social *"
+                    placeholder="Empresa S.A."
+                    autoFocus
+                    value={formData.RazonSocial}
+                    onChange={(e) => handleChange("RazonSocial", e.target.value)}
+                    isRequired
+                    classNames={inputClassNames}
+                  />
+                  <Input
+                    label="CUIT *"
+                    placeholder="30-12345678-9"
+                    value={formData.CUIT}
+                    onChange={(e) => handleChange("CUIT", e.target.value)}
+                    isRequired
+                    maxLength={15}
+                    classNames={inputClassNames}
+                  />
+                  <Input
+                    label="Email *"
+                    type="email"
+                    placeholder="contacto@empresa.com"
+                    value={formData?.Mail}
+                    onChange={(e) => handleChange("Mail", e.target.value)}
+                    isRequired
+                    classNames={inputClassNames}
+                  />
+                  <Input
+                    label="Teléfono"
+                    placeholder="+54 11 1234-5678"
+                    value={formData?.Telefono || ""}
+                    maxLength={25}
+                    onChange={(e) => handleChange("Telefono", e.target.value)}
+                    classNames={inputClassNames}
+                  />
+                  <Input
+                    label="Dirección *"
+                    placeholder="Calle 123"
+                    value={formData.Direccion}
+                    onChange={(e) => handleChange("Direccion", e.target.value)}
+                    isRequired
+                    classNames={inputClassNames}
+                  />
                 </div>
-              </AccordionItem>
-            </Accordion>
+              </>
+            )}
+
+            {/* ── UBICACIÓN Y FISCALIDAD ──────────────────────────────────────── */}
+            {activeSection === "ubicacion" && (
+              <>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-1">
+                  Ubicación y Fiscalidad
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Select
+                    label="Provincia"
+                    selectedKeys={
+                      formData.ProvinciaId
+                        ? [String(formData.ProvinciaId)]
+                        : []
+                    }
+                    onSelectionChange={(keys) => {
+                      const val = Array.from(keys)[0];
+                      if (val) handleChange("ProvinciaId", Number(val));
+                    }}
+                    placeholder="Selecciona una provincia"
+                    isLoading={isLoadingProvincias}
+                  >
+                    {provincias.map((prov: any) => (
+                      <SelectItem
+                        key={String(prov.Id)}
+                        textValue={prov.Descripcion}
+                      >
+                        {prov.Descripcion}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                  <Select
+                    label="Departamento"
+                    selectedKeys={
+                      formData.DepartamentoId
+                        ? [String(formData.DepartamentoId)]
+                        : []
+                    }
+                    onSelectionChange={(keys) => {
+                      const val = Array.from(keys)[0];
+                      if (val) handleChange("DepartamentoId", Number(val));
+                    }}
+                    placeholder="Selecciona un departamento"
+                    isDisabled={!formData.ProvinciaId}
+                    isLoading={isLoadingDepartamentos}
+                  >
+                    {departamentos.map((dept: any) => (
+                      <SelectItem
+                        key={String(dept.Id)}
+                        textValue={dept.Descripcion}
+                      >
+                        {dept.Descripcion}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                  <Select
+                    label="Localidad *"
+                    selectedKeys={
+                      formData.LocalidadId
+                        ? [String(formData.LocalidadId)]
+                        : []
+                    }
+                    onSelectionChange={(keys) => {
+                      const val = Array.from(keys)[0];
+                      if (val) handleChange("LocalidadId", Number(val));
+                    }}
+                    placeholder="Selecciona una localidad"
+                    isDisabled={!formData.DepartamentoId}
+                    isLoading={isLoadingLocalidades}
+                  >
+                    {localidades.map((loc: any) => (
+                      <SelectItem
+                        key={String(loc.Id)}
+                        textValue={loc.Descripcion}
+                      >
+                        {loc.Descripcion}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                  <Select
+                    label="Condición IVA *"
+                    selectedKeys={
+                      formData.CondicionIvaId
+                        ? [String(formData.CondicionIvaId)]
+                        : []
+                    }
+                    onSelectionChange={(keys) => {
+                      const val = Array.from(keys)[0];
+                      if (val) handleChange("CondicionIvaId", Number(val));
+                    }}
+                    placeholder="Condición frente al IVA"
+                    isRequired
+                    isLoading={isLoadingCondiciones}
+                  >
+                    {condicionesIva.map((cond: any) => (
+                      <SelectItem
+                        key={String(cond.id ?? cond.Id)}
+                        textValue={cond.descripcion ?? cond.Descripcion}
+                      >
+                        {cond.descripcion ?? cond.Descripcion}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                </div>
+              </>
+            )}
           </div>
         </ModalBody>
-        <ModalFooter className="py-5 px-6 gap-3">
+        <ModalFooter className="py-4 px-5 border-t border-slate-100 flex-none gap-3">
           <Button
             variant="light"
             onPress={onClose}
             isDisabled={isSaving}
-            className="font-medium text-[#6b7280] hover:bg-[#f1f5f9] h-11 px-5 rounded-[10px]"
+            className="font-medium text-[#6b7280] hover:bg-[#f1f5f9] h-10 px-5 rounded-[10px]"
           >
             Cancelar
           </Button>
           <Button
             onPress={handleSubmit}
             isLoading={isSaving}
-            className="bg-[#67afc3] hover:bg-[#4a8d9e] text-white font-semibold h-11 px-6 rounded-[10px] shadow-sm hover:shadow transition-shadow focus-visible:ring-2 focus-visible:ring-[#67afc3]/40"
+            className="bg-[#67afc3] hover:bg-[#4a8d9e] text-white font-semibold h-10 px-6 rounded-[10px] shadow-sm hover:shadow transition-shadow focus-visible:ring-2 focus-visible:ring-[#67afc3]/40"
           >
             {isEdit ? "Actualizar" : "Crear"}
           </Button>
