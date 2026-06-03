@@ -13,7 +13,7 @@ import {
   SelectItem,
   Switch,
 } from "@heroui/react";
-import { Trash2, Minus, Plus, ShoppingBag, DollarSign, PenLine, Scale, Tag, Check, X, Percent, AlertTriangle } from "lucide-react";
+import { Trash2, Minus, Plus, ShoppingBag, DollarSign, PenLine, Scale, Tag, Check, X, Percent, AlertTriangle, ScanBarcode } from "lucide-react";
 import { TiposVenta } from "../../../prisma/generated/prisma";
 import { OrigenPrecio } from "@/store/ventaStore";
 import { useQuery } from "@tanstack/react-query";
@@ -676,9 +676,17 @@ function QuantitySelector({
 function ItemIcons({ item, warning }: { item: any; warning: ReturnType<typeof getItemWarning> }) {
   const icons = [];
 
-  if (item.ingresadoPorBalanza || item.TipoVenta === TiposVenta.PESO) {
+  if (item.ingresadoPorBalanza) {
     icons.push(
-      <div key="scale" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-violet-50 text-violet-500 border border-violet-200" title={item.ingresadoPorBalanza ? "Ingresado por balanza" : "Venta por peso"}>
+      <div key="scale-scan" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-indigo-50 text-indigo-500 border border-indigo-200" title="Ingresado desde escáner de balanza">
+        <ScanBarcode size={11} strokeWidth={2.5} />
+      </div>
+    );
+  }
+
+  if (item.TipoVenta === TiposVenta.PESO) {
+    icons.push(
+      <div key="scale-weight" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-violet-50 text-violet-500 border border-violet-200" title="Venta por peso">
         <Scale size={11} strokeWidth={2.5} />
       </div>
     );
