@@ -112,6 +112,7 @@ export default function VentasScreen() {
     cantidad: number = 1,
     precioOverride?: number,
     origenPrecio?: OrigenPrecio,
+    ingresadoPorBalanza?: boolean,
   ) => {
     try {
       // Sumar todas las cantidades de productos con el mismo código
@@ -130,6 +131,7 @@ export default function VentasScreen() {
         precioOverride,
         origenPrecio,
         unificarRenglones,
+        ingresadoPorBalanza
       );
     } catch (error) {
       const message =

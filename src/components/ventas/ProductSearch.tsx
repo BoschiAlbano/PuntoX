@@ -20,7 +20,7 @@ import { useVentaStore, OrigenPrecio } from "@/store/ventaStore";
 export default function ProductSearch({
   onProductSelect,
 }: {
-  onProductSelect: (p: Producto, cantidad?: number, precioOverride?: number, origenPrecio?: OrigenPrecio) => void;
+  onProductSelect: (p: Producto, cantidad?: number, precioOverride?: number, origenPrecio?: OrigenPrecio, ingresadoPorBalanza?: boolean) => void;
 }) {
   const [inputValue, setInputValue] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -183,7 +183,7 @@ export default function ProductSearch({
             }
           }
 
-          handleSelectProduct(found, cantidad);
+          handleSelectProduct(found, cantidad, undefined, undefined, true);
           return;
         }
       }
@@ -244,8 +244,8 @@ export default function ProductSearch({
     }
   };
 
-  const handleSelectProduct = (product: Producto, cantidad: number = 1, precioOverride?: number, origenPrecio?: OrigenPrecio) => {
-    onProductSelect(product, cantidad, precioOverride, origenPrecio);
+  const handleSelectProduct = (product: Producto, cantidad: number = 1, precioOverride?: number, origenPrecio?: OrigenPrecio, ingresadoPorBalanza?: boolean) => {
+    onProductSelect(product, cantidad, precioOverride, origenPrecio, ingresadoPorBalanza);
     setInputValue("");
     if (!isScannerOpen) {
       inputRef.current?.focus();

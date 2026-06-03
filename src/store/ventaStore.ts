@@ -31,7 +31,8 @@ export interface Item extends Producto {
   origenPrecio: OrigenPrecio;
   esPromo?: boolean;
   porcentajeDescuentoAplicado?: number;
-  precioOverride?: number;
+  precioOverride?: number; // Precio fijado manualmente o congelado al deshabilitar promo
+  ingresadoPorBalanza?: boolean;
 }
 
 export interface Pago {
@@ -49,7 +50,7 @@ interface VentaState {
   numeroComprobanteAsociado: number | null;
 
   // Actions
-  addItem: (producto: Producto, cantidad: number, listaPrecios: number | null, precioOverride?: number, origenPrecio?: OrigenPrecio, unificarRenglones?: boolean) => void;
+  addItem: (producto: Producto, cantidad: number, listaPrecios: number | null, precioOverride?: number, origenPrecio?: OrigenPrecio, unificarRenglones?: boolean, ingresadoPorBalanza?: boolean) => void;
   updateItemQuantity: (id: number, cantidad: number) => void;
   updateItemDiscount: (id: number, discountPercent: number) => void;
   toggleItemPromo: (id: number, enablePromo: boolean) => void;
@@ -104,7 +105,15 @@ export const useVentaStore = create<VentaState>()(
 
       pagos: [],
 
-      addItem: (producto, cantidad = 1, listaPrecios, precioOverride, origenPrecio = "normal", unificarRenglones = true) => {
+      addItem: (
+        producto,
+        cantidad,
+        listaPrecios,
+        precioOverride,
+        origenPrecio = "normal",
+        unificarRenglones = true,
+        ingresadoPorBalanza = false
+      ) => {
         const { items } = get();
         const existing = items.find((i) => i.Id === producto.Id);
 
@@ -116,20 +125,23 @@ export const useVentaStore = create<VentaState>()(
                 ...items,
                 {
                   ...producto,
-                  // Usar un ID único para no colisionar con el existente
                   Id: producto.Id + Date.now(),
                   cantidad,
                   precio: precioOverride,
                   subtotal: precioOverride * cantidad,
                   origenPrecio,
+                  precioOverride,
+                  esPromo: false,
+                  porcentajeDescuentoAplicado: 0,
+                  ingresadoPorBalanza
                 },
               ],
             });
           } else {
             const newCantidad = existing.cantidad + cantidad;
             // Recalcular precio con promociones si no hay override manual
-            if (precioOverride == null) {
-              const { precioFinal, esPromo, porcentajeDescuentoAplicado } = calcularPrecio(producto, newCantidad, listaPrecios);
+            if (precioOverride == null && existing.precioOverride == null) {
+              const { precioFinal, esPromo, porcentajeDescuentoAplicado } = calcularPrecio(existing, newCantidad, listaPrecios);
               set({
                 items: items.map((i) =>
                   i.Id === existing.Id
@@ -140,6 +152,7 @@ export const useVentaStore = create<VentaState>()(
                         subtotal: newCantidad * precioFinal,
                         esPromo,
                         porcentajeDescuentoAplicado,
+                        ingresadoPorBalanza: i.ingresadoPorBalanza || ingresadoPorBalanza
                       }
                     : i,
                 ),
@@ -152,6 +165,7 @@ export const useVentaStore = create<VentaState>()(
                         ...i,
                         cantidad: newCantidad,
                         subtotal: newCantidad * i.precio,
+                        ingresadoPorBalanza: i.ingresadoPorBalanza || ingresadoPorBalanza
                       }
                     : i,
                 ),
@@ -176,8 +190,10 @@ export const useVentaStore = create<VentaState>()(
                 precio: precioFinal,
                 subtotal: precioFinal * cantidad,
                 origenPrecio: usePromo ? origenPrecio : (origenPrecio || "normal"),
+                precioOverride,
                 esPromo,
                 porcentajeDescuentoAplicado,
+                ingresadoPorBalanza
               },
             ],
           });

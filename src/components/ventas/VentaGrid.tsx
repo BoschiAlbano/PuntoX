@@ -319,7 +319,7 @@ export default function VentaGrid({
                       onClick={(e) => e.stopPropagation()}
                       className="mt-0.5 shrink-0 h-3.5 w-3.5 rounded accent-[#67afc3] cursor-pointer"
                     />
-                    <PriceOriginIcon origenPrecio={item.origenPrecio} tipoVenta={item.TipoVenta} esPromo={item.esPromo} />
+                    <ItemIcons item={item} warning={warning} />
                     <div className="flex-1 flex flex-col gap-0.5 min-w-0">
                       <span className="font-medium text-slate-700 text-xs leading-snug line-clamp-2">
                         {item.Descripcion}
@@ -329,12 +329,6 @@ export default function VentaGrid({
                           </span>
                         ) : null}
                       </span>
-                      {warning.type && (
-                        <span className="flex items-center gap-1 text-[10px] font-semibold text-red-500">
-                          <AlertTriangle size={10} strokeWidth={2.5} />
-                          {warning.message}
-                        </span>
-                      )}
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); onRemoveItem(item.Id); }}
@@ -438,21 +432,15 @@ export default function VentaGrid({
                     </TableCell>
 
                     <TableCell>
-                      <div className="flex items-start gap-1.5">
-                        <PriceOriginIcon origenPrecio={item.origenPrecio} tipoVenta={item.TipoVenta} esPromo={item.esPromo} />
+                      <div className="flex items-start gap-2">
+                        <ItemIcons item={item} warning={warning} />
                         <div className="flex flex-col gap-0.5">
-                          <span className="font-medium text-slate-700 text-xs leading-snug">
+                          <span className="font-medium text-slate-700 text-xs leading-snug mt-0.5">
                             {item.Descripcion}
                           </span>
                           {item.CodigoBarra && (
                             <span className="text-[9px] text-slate-400 font-mono tracking-wide leading-none">
                               {item.CodigoBarra}
-                            </span>
-                          )}
-                          {warning.type && (
-                            <span className="flex items-center gap-1 text-[10px] font-semibold text-red-500 leading-none mt-0.5">
-                              <AlertTriangle size={10} strokeWidth={2.5} />
-                              {warning.message}
                             </span>
                           )}
                         </div>
@@ -683,39 +671,55 @@ function QuantitySelector({
   );
 }
 
-// ─── Price Origin Icon ──────────────────────────────────────────────────────────
+// ─── Item Status Icons ──────────────────────────────────────────────────────────
 
-function PriceOriginIcon({ origenPrecio, tipoVenta, esPromo }: { origenPrecio?: OrigenPrecio; tipoVenta?: string; esPromo?: boolean }) {
-  // Prioridad: promo > precio alternativo > tipo de venta por peso > normal
-  if (esPromo) {
-    return (
-      <div className="mt-0.5 flex-shrink-0" title="Promoción Activa">
-        <div className="w-5 h-5 rounded-full bg-pink-100 flex items-center justify-center border border-pink-200">
-          <Tag size={10} className="text-pink-600" />
-        </div>
+function ItemIcons({ item, warning }: { item: any; warning: ReturnType<typeof getItemWarning> }) {
+  const icons = [];
+
+  if (item.ingresadoPorBalanza || item.TipoVenta === TiposVenta.PESO) {
+    icons.push(
+      <div key="scale" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-violet-50 text-violet-500 border border-violet-200" title={item.ingresadoPorBalanza ? "Ingresado por balanza" : "Venta por peso"}>
+        <Scale size={11} strokeWidth={2.5} />
       </div>
     );
   }
 
-  if (origenPrecio === "alternativo") {
-    return (
-      <span className="shrink-0 mt-[2px] text-amber-500" title="Precio alternativo">
-        <PenLine size={12} strokeWidth={2} />
-      </span>
+  if (item.precioOverride != null) {
+    icons.push(
+      <div key="override" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-amber-50 text-amber-500 border border-amber-200" title="Descuento/Precio fijado manualmente">
+        <PenLine size={11} strokeWidth={2.5} />
+      </div>
     );
   }
 
-  if (tipoVenta === TiposVenta.PESO) {
-    return (
-      <span className="shrink-0 mt-[2px] text-violet-500" title="Producto por peso">
-        <Scale size={12} strokeWidth={2} />
-      </span>
+  if (item.esPromo) {
+    icons.push(
+      <div key="promo" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-pink-50 text-pink-500 border border-pink-200" title={`Promoción automática aplicada (-${item.porcentajeDescuentoAplicado}%)`}>
+        <Tag size={11} strokeWidth={2.5} />
+      </div>
+    );
+  }
+
+  if (warning.type) {
+    icons.push(
+      <div key="warning" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-red-50 text-red-500 border border-red-200" title={warning.message}>
+        <AlertTriangle size={11} strokeWidth={2.5} />
+      </div>
+    );
+  }
+
+  // If no icons, show a default standard price icon
+  if (icons.length === 0) {
+    icons.push(
+      <div key="normal" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-slate-50 text-slate-400 border border-slate-200" title="Precio estándar de lista">
+        <DollarSign size={11} strokeWidth={2.5} />
+      </div>
     );
   }
 
   return (
-    <span className="shrink-0 mt-[2px] text-emerald-500" title="Precio de lista">
-      <DollarSign size={12} strokeWidth={2} />
-    </span>
+    <div className="flex flex-col gap-1 shrink-0">
+      {icons}
+    </div>
   );
 }
