@@ -61,6 +61,7 @@ model Tenant {
   UsuariosSucursales    UsuarioSucursal[]
   Notificaciones        Notificacion[]
   FacturasElectronicas  FacturaElectronica[]
+  PromocionesCantidad   PromocionCantidad[]
 
   @@index([PlanId])
 }
@@ -208,12 +209,28 @@ model Articulo {
   BajaArticulo         BajaArticulo[]
   DetalleComprobante   DetalleComprobante[]
   Precios              PrecioLista[]
+  PromocionesCantidad  PromocionCantidad[]
 
   @@index([TenantId])
   @@index([IvaId])
   @@index([MarcaId])
   @@index([RubroId])
   @@index([UnidadMedidaId])
+}
+
+/// Promociones por cantidad para un artículo específico.
+model PromocionCantidad {
+  Id           BigInt   @id @default(autoincrement())
+  ArticuloId   BigInt
+  Cantidad     Int
+  DescuentoPorcentaje  Decimal  @db.Decimal(18, 2)
+  EstaActiva   Boolean  @default(true)
+  TenantId     BigInt
+  Articulo     Articulo @relation(fields: [ArticuloId], references: [Id], onDelete: Cascade)
+  Tenant       Tenant   @relation(fields: [TenantId], references: [Id])
+
+  @@index([ArticuloId])
+  @@index([TenantId])
 }
 
 /// Bajas de artÃ­culos (ajustes de stock por pÃ©rdida, rotura, etc.).

@@ -48,6 +48,9 @@ export async function GET(
             ListaPrecio: { select: { Nombre: true } },
           },
         },
+        PromocionesCantidad: {
+          select: { Id: true, Cantidad: true, DescuentoPorcentaje: true, EstaActiva: true },
+        },
         Marca: { select: { Descripcion: true } },
         Rubro: { select: { Descripcion: true } },
         UnidadMedida: { select: { Descripcion: true } },
@@ -88,6 +91,13 @@ export async function GET(
         ListaPrecio: {
           Nombre: pl.ListaPrecio?.Nombre,
         }
+      })) || [],
+
+      PromocionesCantidad: producto.PromocionesCantidad?.map((pc: any) => ({
+        Id: Number(pc.Id),
+        Cantidad: pc.Cantidad,
+        DescuentoPorcentaje: Number(pc.DescuentoPorcentaje),
+        EstaActiva: pc.EstaActiva,
       })) || [],
 
       // Hora en formato HH:mm:ss

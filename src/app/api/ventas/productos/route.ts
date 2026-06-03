@@ -92,6 +92,9 @@ export async function GET(req: NextRequest) {
               Descripcion: true,
             },
           },
+          PromocionesCantidad: {
+            select: { Id: true, Cantidad: true, DescuentoPorcentaje: true, EstaActiva: true },
+          },
           ArticuloStock: {
             where: { SucursalId: BigInt(sucursalId) },
             select: { Stock: true, StockMinimo: true, Ubicacion: true },
@@ -149,6 +152,9 @@ export async function GET(req: NextRequest) {
               Descripcion: true,
             },
           },
+          PromocionesCantidad: {
+            select: { Id: true, Cantidad: true, DescuentoPorcentaje: true, EstaActiva: true },
+          },
           ArticuloStock: {
             where: { SucursalId: BigInt(sucursalId) },
             select: { Stock: true, StockMinimo: true, Ubicacion: true },
@@ -196,6 +202,12 @@ export async function GET(req: NextRequest) {
           PrecioFinal: Number(pl.PrecioFinal),
         })),
         Iva: p.Iva,
+        PromocionesCantidad: p.PromocionesCantidad?.map((pc: any) => ({
+          Id: Number(pc.Id),
+          Cantidad: pc.Cantidad,
+          DescuentoPorcentaje: Number(pc.DescuentoPorcentaje),
+          EstaActiva: pc.EstaActiva,
+        })) || [],
         TipoVenta: p.TipoVenta,
       };
     });

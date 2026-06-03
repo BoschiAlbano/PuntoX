@@ -29,6 +29,8 @@ import {
   Package,
   Settings,
   X,
+  Percent,
+  Trash2,
 } from "lucide-react";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
 import MarcaGenericForm from "../marcas/MarcaForm";
@@ -55,11 +57,13 @@ function getSectionStatus(formData: Partial<Producto>) {
   const precios = (formData.PreciosLista ?? []).some(
     (p) => (p.PrecioFinal ?? 0) > 0,
   );
+  const promociones = true;
   const stock = (formData.Stock ?? 0) > 0;
   return {
     general,
     categorizacion,
     precios,
+    promociones,
     stock,
     configuracion: true,
   };
@@ -90,6 +94,7 @@ const defaultProducto: Producto = {
   EstaEliminado: false,
   PrecioCosto: 0,
   PreciosLista: [],
+  PromocionesCantidad: [],
   Stock: 0,
 };
 
@@ -135,7 +140,13 @@ const fetchListasPrecios = async () => {
   return data.data;
 };
 
-type SectionKey = "general" | "categorizacion" | "precios" | "stock" | "configuracion";
+type SectionKey =
+  | "general"
+  | "categorizacion"
+  | "precios"
+  | "promociones"
+  | "stock"
+  | "configuracion";
 
 export default function ProductoForm({
   isOpen,
@@ -171,10 +182,20 @@ export default function ProductoForm({
       queryClient.invalidateQueries({ queryKey: ["marcas-generic"] });
       setFormData((prev) => ({ ...prev, MarcaId: data.Id }));
       setIsMarcaModalOpen(false);
-      addToast({ title: "Éxito", description: "Marca creada correctamente", color: "success", timeout: 3000 });
+      addToast({
+        title: "Éxito",
+        description: "Marca creada correctamente",
+        color: "success",
+        timeout: 3000,
+      });
     },
     onError: (error: any) => {
-      addToast({ title: "Error", description: error.message || "Error al crear marca", color: "danger", timeout: 3000 });
+      addToast({
+        title: "Error",
+        description: error.message || "Error al crear marca",
+        color: "danger",
+        timeout: 3000,
+      });
     },
   });
 
@@ -195,10 +216,20 @@ export default function ProductoForm({
       queryClient.invalidateQueries({ queryKey: ["rubros-generic"] });
       setFormData((prev) => ({ ...prev, RubroId: data.Id }));
       setIsRubroModalOpen(false);
-      addToast({ title: "Éxito", description: "Rubro creado correctamente", color: "success", timeout: 3000 });
+      addToast({
+        title: "Éxito",
+        description: "Rubro creado correctamente",
+        color: "success",
+        timeout: 3000,
+      });
     },
     onError: (error: any) => {
-      addToast({ title: "Error", description: error.message || "Error al crear rubro", color: "danger", timeout: 3000 });
+      addToast({
+        title: "Error",
+        description: error.message || "Error al crear rubro",
+        color: "danger",
+        timeout: 3000,
+      });
     },
   });
 
@@ -219,10 +250,20 @@ export default function ProductoForm({
       queryClient.invalidateQueries({ queryKey: ["unidades-medidas-generic"] });
       setFormData((prev) => ({ ...prev, UnidadMedidaId: data.Id }));
       setIsUnidadModalOpen(false);
-      addToast({ title: "Éxito", description: "Unidad creada correctamente", color: "success", timeout: 3000 });
+      addToast({
+        title: "Éxito",
+        description: "Unidad creada correctamente",
+        color: "success",
+        timeout: 3000,
+      });
     },
     onError: (error: any) => {
-      addToast({ title: "Error", description: error.message || "Error al crear unidad", color: "danger", timeout: 3000 });
+      addToast({
+        title: "Error",
+        description: error.message || "Error al crear unidad",
+        color: "danger",
+        timeout: 3000,
+      });
     },
   });
 
@@ -291,40 +332,66 @@ export default function ProductoForm({
     onSubmit(dataToSubmit);
   };
 
-  const updatePrecio = (listaId: number | null, field: string, value: number) => {
+  const updatePrecio = (
+    listaId: number | null,
+    field: string,
+    value: number,
+  ) => {
     setFormData((prev) => {
       if (listaId === null && field === "PrecioCosto") {
         const newCosto = value;
         const newPreciosLista = (prev.PreciosLista || []).map((p) => ({
           ...p,
-          PrecioFinal: parseFloat((newCosto * (1 + (p.PorcentajeGanancia || 0) / 100)).toFixed(2)),
+          PrecioFinal: parseFloat(
+            (newCosto * (1 + (p.PorcentajeGanancia || 0) / 100)).toFixed(2),
+          ),
         }));
-        return { ...prev, PrecioCosto: newCosto, PreciosLista: newPreciosLista };
+        return {
+          ...prev,
+          PrecioCosto: newCosto,
+          PreciosLista: newPreciosLista,
+        };
       }
 
       const prevCosto = prev.PrecioCosto || 0;
       const currentListas = [...(prev.PreciosLista || [])];
-      const listaIndex = currentListas.findIndex((p) => p.ListaPrecioId === listaId);
+      const listaIndex = currentListas.findIndex(
+        (p) => p.ListaPrecioId === listaId,
+      );
 
       const currentLista =
         listaIndex >= 0
           ? currentListas[listaIndex]
-          : { ListaPrecioId: listaId as number, PorcentajeGanancia: 0, PrecioFinal: 0 };
+          : {
+              ListaPrecioId: listaId as number,
+              PorcentajeGanancia: 0,
+              PrecioFinal: 0,
+            };
 
       if (field === "PorcentajeGanancia") {
         currentLista.PorcentajeGanancia = value;
-        currentLista.PrecioFinal = parseFloat((prevCosto * (1 + value / 100)).toFixed(2));
+        currentLista.PrecioFinal = parseFloat(
+          (prevCosto * (1 + value / 100)).toFixed(2),
+        );
       } else if (field === "PrecioFinal") {
         currentLista.PrecioFinal = value;
         if (prevCosto > 0) {
-          currentLista.PorcentajeGanancia = parseFloat(((value / prevCosto - 1) * 100).toFixed(2));
+          currentLista.PorcentajeGanancia = parseFloat(
+            ((value / prevCosto - 1) * 100).toFixed(2),
+          );
         }
       }
 
       if (listaIndex >= 0) {
-        currentListas[listaIndex] = { ...currentLista, ListaPrecioId: currentLista.ListaPrecioId as number };
+        currentListas[listaIndex] = {
+          ...currentLista,
+          ListaPrecioId: currentLista.ListaPrecioId as number,
+        };
       } else {
-        currentListas.push({ ...currentLista, ListaPrecioId: currentLista.ListaPrecioId as number });
+        currentListas.push({
+          ...currentLista,
+          ListaPrecioId: currentLista.ListaPrecioId as number,
+        });
       }
 
       return { ...prev, PreciosLista: currentListas };
@@ -334,12 +401,48 @@ export default function ProductoForm({
   const isEdit = !!initialData;
   const sectionStatus = getSectionStatus(formData);
 
-  const navSections: { key: SectionKey; label: string; icon: React.ComponentType<any>; isComplete: boolean }[] = [
-    { key: "general", label: "General", icon: FileText, isComplete: sectionStatus.general },
-    { key: "categorizacion", label: "Categorización", icon: Tags, isComplete: sectionStatus.categorizacion },
-    { key: "precios", label: "Precios", icon: DollarSign, isComplete: sectionStatus.precios },
-    { key: "stock", label: "Stock", icon: Package, isComplete: sectionStatus.stock },
-    { key: "configuracion", label: "Configuración", icon: Settings, isComplete: sectionStatus.configuracion },
+  const navSections: {
+    key: SectionKey;
+    label: string;
+    icon: React.ComponentType<any>;
+    isComplete: boolean;
+  }[] = [
+    {
+      key: "general",
+      label: "General",
+      icon: FileText,
+      isComplete: sectionStatus.general,
+    },
+    {
+      key: "categorizacion",
+      label: "Categorización",
+      icon: Tags,
+      isComplete: sectionStatus.categorizacion,
+    },
+    {
+      key: "precios",
+      label: "Precios",
+      icon: DollarSign,
+      isComplete: sectionStatus.precios,
+    },
+    {
+      key: "promociones",
+      label: "Promos Cantidad",
+      icon: Percent,
+      isComplete: sectionStatus.promociones,
+    },
+    {
+      key: "stock",
+      label: "Stock",
+      icon: Package,
+      isComplete: sectionStatus.stock,
+    },
+    {
+      key: "configuracion",
+      label: "Configuración",
+      icon: Settings,
+      isComplete: sectionStatus.configuracion,
+    },
   ];
 
   return (
@@ -357,7 +460,6 @@ export default function ProductoForm({
         }}
       >
         <ModalContent className="flex flex-col h-full overflow-hidden">
-
           {/* ── Header ─────────────────────────────────────────────── */}
           <ModalHeader className="flex items-center gap-3 py-4 px-5 border-b border-slate-100 flex-none">
             <div
@@ -397,13 +499,15 @@ export default function ProductoForm({
             )}
 
             {/* Nav — horizontal scrollable en mobile, sidebar en desktop */}
-            <nav className="flex-none
+            <nav
+              className="flex-none
               flex flex-row sm:flex-col
               border-b sm:border-b-0 sm:border-r border-slate-100
               bg-slate-50/60
               overflow-x-auto sm:overflow-x-hidden overflow-y-hidden sm:overflow-y-auto
               py-2 sm:py-3 px-2 gap-0.5
-              sm:w-44 scrollbar-none">
+              sm:w-44 scrollbar-none"
+            >
               {navSections.map(({ key, label, icon: Icon, isComplete }) => {
                 const isActive = activeSection === key;
                 return (
@@ -421,7 +525,9 @@ export default function ProductoForm({
                       size={14}
                       className={`shrink-0 ${isActive ? "text-[#67afc3]" : "text-slate-400"}`}
                     />
-                    <span className={`text-xs sm:text-sm whitespace-nowrap leading-none ${isActive ? "font-semibold" : "font-medium"}`}>
+                    <span
+                      className={`text-xs sm:text-sm whitespace-nowrap leading-none ${isActive ? "font-semibold" : "font-medium"}`}
+                    >
                       {label}
                     </span>
                     <div
@@ -436,7 +542,6 @@ export default function ProductoForm({
 
             {/* Right Content */}
             <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-5 space-y-4">
-
               {/* ── GENERAL ──────────────────────────────────────── */}
               {activeSection === "general" && (
                 <>
@@ -453,7 +558,10 @@ export default function ProductoForm({
                       max={Number(process.env.MAX_ARTICLE_CODE || 999)}
                       min={1}
                       onChange={(e) =>
-                        setFormData({ ...formData, Codigo: parseInt(e.target.value) || 0 })
+                        setFormData({
+                          ...formData,
+                          Codigo: parseInt(e.target.value) || 0,
+                        })
                       }
                       isRequired
                       isDisabled={isLoadingFullProduct || isSaving}
@@ -464,7 +572,10 @@ export default function ProductoForm({
                       placeholder="Ej: 7790001234567"
                       value={formData.CodigoBarra || ""}
                       onChange={(e) =>
-                        setFormData({ ...formData, CodigoBarra: e.target.value })
+                        setFormData({
+                          ...formData,
+                          CodigoBarra: e.target.value,
+                        })
                       }
                       type="number"
                       isRequired
@@ -476,7 +587,10 @@ export default function ProductoForm({
                       placeholder="Ej: PROD-001"
                       value={formData.Abreviatura || ""}
                       onChange={(e) =>
-                        setFormData({ ...formData, Abreviatura: e.target.value })
+                        setFormData({
+                          ...formData,
+                          Abreviatura: e.target.value,
+                        })
                       }
                       isDisabled={isSaving}
                       classNames={inputClassNames}
@@ -486,7 +600,10 @@ export default function ProductoForm({
                       placeholder="Nombre del producto"
                       value={formData.Descripcion || ""}
                       onChange={(e) =>
-                        setFormData({ ...formData, Descripcion: e.target.value })
+                        setFormData({
+                          ...formData,
+                          Descripcion: e.target.value,
+                        })
                       }
                       isRequired
                       isDisabled={isSaving}
@@ -497,7 +614,9 @@ export default function ProductoForm({
                     label="Detalle"
                     placeholder="Descripción detallada del producto"
                     value={formData.Detalle || ""}
-                    onChange={(e) => setFormData({ ...formData, Detalle: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, Detalle: e.target.value })
+                    }
                     minRows={2}
                     isDisabled={isSaving}
                     classNames={{ ...inputClassNames, input: "resize-none" }}
@@ -507,7 +626,9 @@ export default function ProductoForm({
                       label="Ubicación"
                       placeholder="Ej: Pasillo 2, Estante B"
                       value={formData.Ubicacion || ""}
-                      onChange={(e) => setFormData({ ...formData, Ubicacion: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, Ubicacion: e.target.value })
+                      }
                       isDisabled={isSaving}
                       classNames={inputClassNames}
                     />
@@ -535,18 +656,28 @@ export default function ProductoForm({
                       <Autocomplete
                         label="Marca"
                         placeholder="Seleccione una marca"
-                        selectedKey={formData.MarcaId ? formData.MarcaId.toString() : null}
+                        selectedKey={
+                          formData.MarcaId ? formData.MarcaId.toString() : null
+                        }
                         onSelectionChange={(key) =>
-                          setFormData({ ...formData, MarcaId: key ? parseInt(key.toString()) : 0 })
+                          setFormData({
+                            ...formData,
+                            MarcaId: key ? parseInt(key.toString()) : 0,
+                          })
                         }
                         isRequired
                         isDisabled={isSaving}
                       >
                         {isLoadingMarcas ? (
-                          <AutocompleteItem key="0" textValue="Cargando...">Cargando...</AutocompleteItem>
+                          <AutocompleteItem key="0" textValue="Cargando...">
+                            Cargando...
+                          </AutocompleteItem>
                         ) : (
                           marcas?.map((marca: any) => (
-                            <AutocompleteItem key={marca.Id.toString()} textValue={marca.Descripcion}>
+                            <AutocompleteItem
+                              key={marca.Id.toString()}
+                              textValue={marca.Descripcion}
+                            >
                               {marca.Descripcion}
                             </AutocompleteItem>
                           ))
@@ -566,18 +697,28 @@ export default function ProductoForm({
                       <Autocomplete
                         label="Rubro"
                         placeholder="Seleccione un rubro"
-                        selectedKey={formData.RubroId ? formData.RubroId.toString() : null}
+                        selectedKey={
+                          formData.RubroId ? formData.RubroId.toString() : null
+                        }
                         onSelectionChange={(key) =>
-                          setFormData({ ...formData, RubroId: key ? parseInt(key.toString()) : 0 })
+                          setFormData({
+                            ...formData,
+                            RubroId: key ? parseInt(key.toString()) : 0,
+                          })
                         }
                         isRequired
                         isDisabled={isSaving}
                       >
                         {isLoadingRubros ? (
-                          <AutocompleteItem key="0" textValue="Cargando...">Cargando...</AutocompleteItem>
+                          <AutocompleteItem key="0" textValue="Cargando...">
+                            Cargando...
+                          </AutocompleteItem>
                         ) : (
                           rubros?.map((rubro: any) => (
-                            <AutocompleteItem key={rubro.Id.toString()} textValue={rubro.Descripcion}>
+                            <AutocompleteItem
+                              key={rubro.Id.toString()}
+                              textValue={rubro.Descripcion}
+                            >
                               {rubro.Descripcion}
                             </AutocompleteItem>
                           ))
@@ -597,18 +738,30 @@ export default function ProductoForm({
                       <Autocomplete
                         label="Unidad de Medida"
                         placeholder="Seleccione unidad"
-                        selectedKey={formData.UnidadMedidaId ? formData.UnidadMedidaId.toString() : null}
+                        selectedKey={
+                          formData.UnidadMedidaId
+                            ? formData.UnidadMedidaId.toString()
+                            : null
+                        }
                         onSelectionChange={(key) =>
-                          setFormData({ ...formData, UnidadMedidaId: key ? parseInt(key.toString()) : 0 })
+                          setFormData({
+                            ...formData,
+                            UnidadMedidaId: key ? parseInt(key.toString()) : 0,
+                          })
                         }
                         isRequired
                         isDisabled={isSaving}
                       >
                         {isLoadingUnidades ? (
-                          <AutocompleteItem key="0" textValue="Cargando...">Cargando...</AutocompleteItem>
+                          <AutocompleteItem key="0" textValue="Cargando...">
+                            Cargando...
+                          </AutocompleteItem>
                         ) : (
                           unidades?.map((unidad: any) => (
-                            <AutocompleteItem key={unidad.Id.toString()} textValue={unidad.Descripcion}>
+                            <AutocompleteItem
+                              key={unidad.Id.toString()}
+                              textValue={unidad.Descripcion}
+                            >
                               {unidad.Descripcion}
                             </AutocompleteItem>
                           ))
@@ -627,16 +780,28 @@ export default function ProductoForm({
                     <Select
                       label="IVA"
                       placeholder="Seleccione IVA"
-                      selectedKeys={formData.IvaId ? [formData.IvaId.toString()] : []}
-                      onChange={(e) => setFormData({ ...formData, IvaId: parseInt(e.target.value) })}
+                      selectedKeys={
+                        formData.IvaId ? [formData.IvaId.toString()] : []
+                      }
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          IvaId: parseInt(e.target.value),
+                        })
+                      }
                       isRequired
                       isDisabled={isSaving}
                     >
                       {isLoadingIvas ? (
-                        <SelectItem key="0" textValue="Cargando...">Cargando...</SelectItem>
+                        <SelectItem key="0" textValue="Cargando...">
+                          Cargando...
+                        </SelectItem>
                       ) : (
                         ivas?.map((iva: any) => (
-                          <SelectItem key={iva.Id.toString()} textValue={iva.Descripcion}>
+                          <SelectItem
+                            key={iva.Id.toString()}
+                            textValue={iva.Descripcion}
+                          >
                             {iva.Descripcion}
                           </SelectItem>
                         ))
@@ -646,14 +811,27 @@ export default function ProductoForm({
                     <Select
                       label="Tipo de Venta"
                       placeholder="Seleccione tipo"
-                      selectedKeys={formData.TipoVenta ? [formData.TipoVenta] : []}
-                      onChange={(e) => setFormData({ ...formData, TipoVenta: e.target.value as TiposVenta })}
+                      selectedKeys={
+                        formData.TipoVenta ? [formData.TipoVenta] : []
+                      }
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          TipoVenta: e.target.value as TiposVenta,
+                        })
+                      }
                       isDisabled={isSaving}
                     >
-                      <SelectItem key={TiposVenta.PESO} textValue={TiposVenta.PESO}>
+                      <SelectItem
+                        key={TiposVenta.PESO}
+                        textValue={TiposVenta.PESO}
+                      >
                         {TiposVenta.PESO}
                       </SelectItem>
-                      <SelectItem key={TiposVenta.UNIDAD} textValue={TiposVenta.UNIDAD}>
+                      <SelectItem
+                        key={TiposVenta.UNIDAD}
+                        textValue={TiposVenta.UNIDAD}
+                      >
                         {TiposVenta.UNIDAD}
                       </SelectItem>
                     </Select>
@@ -676,7 +854,9 @@ export default function ProductoForm({
                       classNames={inputClassNames}
                       placeholder="0,00"
                       value={Number(formData.PrecioCosto) || 0}
-                      onValueChange={(value) => updatePrecio(null, "PrecioCosto", value)}
+                      onValueChange={(value) =>
+                        updatePrecio(null, "PrecioCosto", value)
+                      }
                       isRequired
                       isDisabled={isSaving}
                       min={0}
@@ -734,9 +914,15 @@ export default function ProductoForm({
                               <NumberInput
                                 label="% Ganancia"
                                 placeholder="0"
-                                value={Number(listaData.PorcentajeGanancia) || 0}
+                                value={
+                                  Number(listaData.PorcentajeGanancia) || 0
+                                }
                                 onValueChange={(value) =>
-                                  updatePrecio(lista.Id, "PorcentajeGanancia", value)
+                                  updatePrecio(
+                                    lista.Id,
+                                    "PorcentajeGanancia",
+                                    value,
+                                  )
                                 }
                                 isRequired
                                 isDisabled={isSaving}
@@ -779,7 +965,10 @@ export default function ProductoForm({
                       step="0.01"
                       value={formData.StockMinimo?.toString() || ""}
                       onChange={(e) =>
-                        setFormData({ ...formData, StockMinimo: parseFloat(e.target.value) || 0 })
+                        setFormData({
+                          ...formData,
+                          StockMinimo: parseFloat(e.target.value) || 0,
+                        })
                       }
                       isDisabled={isSaving}
                     />
@@ -790,7 +979,10 @@ export default function ProductoForm({
                       type="number"
                       value={formData.VencimientoDias?.toString() || ""}
                       onChange={(e) =>
-                        setFormData({ ...formData, VencimientoDias: parseInt(e.target.value) || 0 })
+                        setFormData({
+                          ...formData,
+                          VencimientoDias: parseInt(e.target.value) || 0,
+                        })
                       }
                       isDisabled={isSaving}
                     />
@@ -802,7 +994,10 @@ export default function ProductoForm({
                       step="0.01"
                       value={formData.Stock?.toString() || ""}
                       onChange={(e) =>
-                        setFormData({ ...formData, Stock: parseFloat(e.target.value) || 0 })
+                        setFormData({
+                          ...formData,
+                          Stock: parseFloat(e.target.value) || 0,
+                        })
                       }
                       isDisabled={isSaving}
                     />
@@ -810,21 +1005,156 @@ export default function ProductoForm({
                   <div className="flex flex-col gap-4 p-4 rounded-xl border border-slate-200 bg-white">
                     <Switch
                       isSelected={formData.DescuentaStock}
-                      onValueChange={(value) => setFormData({ ...formData, DescuentaStock: value })}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, DescuentaStock: value })
+                      }
                       isDisabled={isSaving}
                     >
-                      <span className="text-sm text-slate-700">Descuenta Stock</span>
+                      <span className="text-sm text-slate-700">
+                        Descuenta Stock
+                      </span>
                     </Switch>
                     <Switch
                       isSelected={formData.PermiteStockNegativo}
                       onValueChange={(value) =>
-                        setFormData({ ...formData, PermiteStockNegativo: value })
+                        setFormData({
+                          ...formData,
+                          PermiteStockNegativo: value,
+                        })
                       }
                       isDisabled={isSaving}
                     >
-                      <span className="text-sm text-slate-700">Permite Stock Negativo</span>
+                      <span className="text-sm text-slate-700">
+                        Permite Stock Negativo
+                      </span>
                     </Switch>
                   </div>
+                </>
+              )}
+
+              {/* ── PROMOCIONES ──────────────────────────────────────── */}
+              {activeSection === "promociones" && (
+                <>
+                  <div className="flex items-center justify-between pb-1 border-b border-slate-100 mb-4">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      Promociones por Cantidad
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      className="bg-[#67afc3]/10 text-[#67afc3] font-semibold h-8 rounded-lg"
+                      startContent={<PlusIcon size={14} />}
+                      onPress={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          PromocionesCantidad: [
+                            ...(prev.PromocionesCantidad || []),
+                            { Cantidad: 2, DescuentoPorcentaje: 0, EstaActiva: true },
+                          ],
+                        }));
+                      }}
+                    >
+                      Añadir Escala
+                    </Button>
+                  </div>
+
+                  {(formData.PromocionesCantidad || []).length === 0 ? (
+                    <div className="text-center py-10 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                      <Percent
+                        size={32}
+                        className="mx-auto text-slate-300 mb-3"
+                      />
+                      <p className="text-sm text-slate-500 font-medium">
+                        No hay promociones configuradas
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Añadí escalas para aplicar descuentos por volumen
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {(formData.PromocionesCantidad || []).map(
+                        (promo, index) => (
+                          <div
+                            key={index}
+                            className="flex flex-col sm:flex-row gap-3 items-end bg-white p-3 rounded-xl border border-slate-200 shadow-sm relative group"
+                          >
+                            <div className="flex-1 w-full">
+                              <NumberInput
+                                label="A partir de (cantidad)"
+                                value={promo.Cantidad}
+                                onValueChange={(val) => {
+                                  const newPromos = [
+                                    ...(formData.PromocionesCantidad || []),
+                                  ];
+                                  newPromos[index].Cantidad = val;
+                                  setFormData({
+                                    ...formData,
+                                    PromocionesCantidad: newPromos,
+                                  });
+                                }}
+                                minValue={2}
+                                classNames={inputClassNames}
+                              />
+                            </div>
+                            <div className="flex-1 w-full">
+                              <NumberInput
+                                label="% de Descuento"
+                                value={promo.DescuentoPorcentaje}
+                                onValueChange={(val) => {
+                                  const newPromos = [
+                                    ...(formData.PromocionesCantidad || []),
+                                  ];
+                                  newPromos[index].DescuentoPorcentaje = val;
+                                  setFormData({
+                                    ...formData,
+                                    PromocionesCantidad: newPromos,
+                                  });
+                                }}
+                                minValue={0}
+                                classNames={inputClassNames}
+                              />
+                            </div>
+                            <div className="flex items-center gap-2 pb-1">
+                              <Switch
+                                size="sm"
+                                isSelected={promo.EstaActiva}
+                                onValueChange={(val) => {
+                                  const newPromos = [
+                                    ...(formData.PromocionesCantidad || []),
+                                  ];
+                                  newPromos[index].EstaActiva = val;
+                                  setFormData({
+                                    ...formData,
+                                    PromocionesCantidad: newPromos,
+                                  });
+                                }}
+                              />
+                              <Button
+                                isIconOnly
+                                size="sm"
+                                color="danger"
+                                variant="light"
+                                className="text-red-400 hover:bg-red-50"
+                                onPress={() => {
+                                  const newPromos = [
+                                    ...(formData.PromocionesCantidad || []),
+                                  ];
+                                  newPromos.splice(index, 1);
+                                  setFormData({
+                                    ...formData,
+                                    PromocionesCantidad: newPromos,
+                                  });
+                                }}
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                            </div>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  )}
                 </>
               )}
 
@@ -842,11 +1172,16 @@ export default function ProductoForm({
                       <Switch
                         isSelected={formData.ActivarLimiteVenta}
                         onValueChange={(value) =>
-                          setFormData({ ...formData, ActivarLimiteVenta: value })
+                          setFormData({
+                            ...formData,
+                            ActivarLimiteVenta: value,
+                          })
                         }
                         isDisabled={isSaving}
                       >
-                        <span className="text-sm text-slate-700">Activar Límite de Venta</span>
+                        <span className="text-sm text-slate-700">
+                          Activar Límite de Venta
+                        </span>
                       </Switch>
                       {formData.ActivarLimiteVenta && (
                         <NumberInput
@@ -855,7 +1190,10 @@ export default function ProductoForm({
                           placeholder="0.00"
                           value={Number(formData.LimiteVenta) || 0}
                           onValueChange={(value) =>
-                            setFormData({ ...formData, LimiteVenta: Number(value) })
+                            setFormData({
+                              ...formData,
+                              LimiteVenta: Number(value),
+                            })
                           }
                           className="max-w-xs"
                           isDisabled={isSaving}
@@ -870,7 +1208,9 @@ export default function ProductoForm({
                         }
                         isDisabled={isSaving}
                       >
-                        <span className="text-sm text-slate-700">Activar Horario de Venta</span>
+                        <span className="text-sm text-slate-700">
+                          Activar Horario de Venta
+                        </span>
                       </Switch>
                       {formData.ActivarHoraVenta && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
@@ -880,7 +1220,10 @@ export default function ProductoForm({
                             type="time"
                             value={formData.HoraLimiteVentaDesde || ""}
                             onChange={(e) =>
-                              setFormData({ ...formData, HoraLimiteVentaDesde: e.target.value })
+                              setFormData({
+                                ...formData,
+                                HoraLimiteVentaDesde: e.target.value,
+                              })
                             }
                             isDisabled={isSaving}
                           />
@@ -890,7 +1233,10 @@ export default function ProductoForm({
                             type="time"
                             value={formData.HoraLimiteVentaHasta || ""}
                             onChange={(e) =>
-                              setFormData({ ...formData, HoraLimiteVentaHasta: e.target.value })
+                              setFormData({
+                                ...formData,
+                                HoraLimiteVentaHasta: e.target.value,
+                              })
                             }
                             isDisabled={isSaving}
                           />
@@ -913,10 +1259,14 @@ export default function ProductoForm({
                     >
                       <span
                         className={`text-sm font-medium ${
-                          formData.EstaEliminado ? "text-rose-600" : "text-emerald-600"
+                          formData.EstaEliminado
+                            ? "text-rose-600"
+                            : "text-emerald-600"
                         }`}
                       >
-                        {formData.EstaEliminado ? "Producto Inactivo" : "Producto Activo"}
+                        {formData.EstaEliminado
+                          ? "Producto Inactivo"
+                          : "Producto Activo"}
                       </span>
                     </Switch>
                   </div>
@@ -961,7 +1311,9 @@ export default function ProductoForm({
           isOpen={isMarcaModalOpen}
           onClose={() => setIsMarcaModalOpen(false)}
           initialData={null}
-          onSubmit={(data) => { createMarcaMutation.mutate(data); }}
+          onSubmit={(data) => {
+            createMarcaMutation.mutate(data);
+          }}
           isSaving={createMarcaMutation.isPending}
         />
       </Modal>
@@ -980,7 +1332,9 @@ export default function ProductoForm({
           isOpen={isRubroModalOpen}
           onClose={() => setIsRubroModalOpen(false)}
           initialData={null}
-          onSubmit={(data) => { createRubroMutation.mutate(data); }}
+          onSubmit={(data) => {
+            createRubroMutation.mutate(data);
+          }}
           isSaving={createRubroMutation.isPending}
         />
       </Modal>
@@ -999,7 +1353,9 @@ export default function ProductoForm({
           isOpen={isUnidadModalOpen}
           onClose={() => setIsUnidadModalOpen(false)}
           initialData={null}
-          onSubmit={(data) => { createUnidadMutation.mutate(data); }}
+          onSubmit={(data) => {
+            createUnidadMutation.mutate(data);
+          }}
           isSaving={createUnidadMutation.isPending}
         />
       </Modal>

@@ -46,6 +46,12 @@ export const productoAdapter = (data: any): Producto => {
       Porcentaje: Number(data.Iva?.Porcentaje || 0),
       Descripcion: data.Iva?.Descripcion || "",
     },
+    PromocionesCantidad: Array.isArray(data.PromocionesCantidad) ? data.PromocionesCantidad.map((pc: any) => ({
+      Id: Number(pc.Id),
+      Cantidad: Number(pc.Cantidad),
+      DescuentoPorcentaje: Number(pc.DescuentoPorcentaje),
+      EstaActiva: Boolean(pc.EstaActiva),
+    })) : [],
   };
 };
 

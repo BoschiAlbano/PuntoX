@@ -29,6 +29,9 @@ export interface Item extends Producto {
   precio: number;
   subtotal: number;
   origenPrecio: OrigenPrecio;
+  esPromo?: boolean;
+  porcentajeDescuentoAplicado?: number;
+  precioOverride?: number;
 }
 
 export interface Pago {
@@ -48,6 +51,8 @@ interface VentaState {
   // Actions
   addItem: (producto: Producto, cantidad: number, listaPrecios: number | null, precioOverride?: number, origenPrecio?: OrigenPrecio, unificarRenglones?: boolean) => void;
   updateItemQuantity: (id: number, cantidad: number) => void;
+  updateItemDiscount: (id: number, discountPercent: number) => void;
+  toggleItemPromo: (id: number, enablePromo: boolean) => void;
   removeItem: (id: number) => void;
   setCliente: (cliente: Partial<Cliente>) => void;
   setTipoComprobante: (tipo: number) => void;
@@ -62,6 +67,29 @@ interface VentaState {
   setPagos: (pagos: Pago[]) => void;
   clearVenta: () => void;
 }
+
+
+const calcularPrecio = (producto: Producto, cantidad: number, listaPrecios: number | null) => {
+  let precioBase = (() => {
+    const pl = producto.PreciosLista?.find(p => Number(p.ListaPrecioId) === Number(listaPrecios));
+    return pl ? Number(pl.PrecioFinal) : Number(producto.PrecioCosto || 0);
+  })();
+
+  let promoActiva = null;
+  if (producto.PromocionesCantidad && producto.PromocionesCantidad.length > 0) {
+    const validPromos = producto.PromocionesCantidad.filter(p => p.EstaActiva && p.Cantidad <= cantidad);
+    if (validPromos.length > 0) {
+      validPromos.sort((a, b) => b.Cantidad - a.Cantidad);
+      promoActiva = validPromos[0];
+    }
+  }
+
+  return {
+    precioFinal: promoActiva ? parseFloat((precioBase * (1 - Number(promoActiva.DescuentoPorcentaje) / 100)).toFixed(2)) : precioBase,
+    esPromo: !!promoActiva,
+    porcentajeDescuentoAplicado: promoActiva ? Number(promoActiva.DescuentoPorcentaje) : 0
+  };
+};
 
 export const useVentaStore = create<VentaState>()(
   persist(
@@ -80,13 +108,6 @@ export const useVentaStore = create<VentaState>()(
         const { items } = get();
         const existing = items.find((i) => i.Id === producto.Id);
 
-        const precioUnitario = precioOverride != null
-          ? precioOverride
-          : (() => {
-              const pl = producto.PreciosLista?.find(p => Number(p.ListaPrecioId) === Number(listaPrecios));
-              return pl ? Number(pl.PrecioFinal) : Number(producto.PrecioCosto || 0);
-            })();
-
         if (existing && unificarRenglones) {
           // Si el precio override es diferente al existente, se agrega como nueva línea
           if (precioOverride != null && existing.precio !== precioOverride) {
@@ -98,26 +119,52 @@ export const useVentaStore = create<VentaState>()(
                   // Usar un ID único para no colisionar con el existente
                   Id: producto.Id + Date.now(),
                   cantidad,
-                  precio: precioUnitario,
-                  subtotal: precioUnitario * cantidad,
+                  precio: precioOverride,
+                  subtotal: precioOverride * cantidad,
                   origenPrecio,
                 },
               ],
             });
           } else {
-            set({
-              items: items.map((i) =>
-                i.Id === existing.Id
-                  ? {
-                      ...i,
-                      cantidad: i.cantidad + cantidad,
-                      subtotal: (i.cantidad + cantidad) * i.precio,
-                    }
-                  : i,
-              ),
-            });
+            const newCantidad = existing.cantidad + cantidad;
+            // Recalcular precio con promociones si no hay override manual
+            if (precioOverride == null) {
+              const { precioFinal, esPromo, porcentajeDescuentoAplicado } = calcularPrecio(producto, newCantidad, listaPrecios);
+              set({
+                items: items.map((i) =>
+                  i.Id === existing.Id
+                    ? {
+                        ...i,
+                        cantidad: newCantidad,
+                        precio: precioFinal,
+                        subtotal: newCantidad * precioFinal,
+                        esPromo,
+                        porcentajeDescuentoAplicado,
+                      }
+                    : i,
+                ),
+              });
+            } else {
+              set({
+                items: items.map((i) =>
+                  i.Id === existing.Id
+                    ? {
+                        ...i,
+                        cantidad: newCantidad,
+                        subtotal: newCantidad * i.precio,
+                      }
+                    : i,
+                ),
+              });
+            }
           }
         } else {
+          // Nuevo renglón: calcular precio con promociones
+          const usePromo = precioOverride == null;
+          const { precioFinal, esPromo, porcentajeDescuentoAplicado } = usePromo
+            ? calcularPrecio(producto, cantidad, listaPrecios)
+            : { precioFinal: precioOverride!, esPromo: false, porcentajeDescuentoAplicado: 0 };
+
           set({
             items: [
               ...items,
@@ -126,21 +173,96 @@ export const useVentaStore = create<VentaState>()(
                 // Si ya existe el producto y no se unifica, generar ID único
                 Id: existing && !unificarRenglones ? producto.Id + Date.now() : producto.Id,
                 cantidad,
-                precio: precioUnitario,
-                subtotal: precioUnitario * cantidad,
-                origenPrecio,
+                precio: precioFinal,
+                subtotal: precioFinal * cantidad,
+                origenPrecio: usePromo ? origenPrecio : (origenPrecio || "normal"),
+                esPromo,
+                porcentajeDescuentoAplicado,
               },
             ],
           });
         }
       },
 
-      updateItemQuantity: (id, cantidad) => {
-        const { items } = get();
+      updateItemDiscount: (id, discountPercent) => {
+        const { items, listaPrecios } = get();
         set({
           items: items.map((item) => {
             if (item.Id === id) {
-              return { ...item, cantidad, subtotal: item.precio * cantidad };
+              // Recalcular precio base y aplicar descuento manual
+              const pl = item.PreciosLista?.find(p => Number(p.ListaPrecioId) === Number(listaPrecios));
+              const precioBase = pl ? Number(pl.PrecioFinal) : Number(item.PrecioCosto || 0);
+              const precioConDescuento = parseFloat((precioBase * (1 - discountPercent / 100)).toFixed(2));
+
+              return {
+                ...item,
+                precioOverride: precioConDescuento,
+                precio: precioConDescuento,
+                subtotal: precioConDescuento * item.cantidad,
+                porcentajeDescuentoAplicado: discountPercent,
+                esPromo: false
+              };
+            }
+            return item;
+          }),
+        });
+      },
+
+      updateItemQuantity: (id, cantidad) => {
+        const { items, listaPrecios } = get();
+        set({
+          items: items.map((item) => {
+            if (item.Id === id) {
+              // Si el item tiene un precioOverride manual, no recalcular la promo
+              if (item.precioOverride != null) {
+                return { ...item, cantidad, subtotal: item.precio * cantidad };
+              }
+              // Recalcular precio con promociones de cantidad
+              const { precioFinal, esPromo, porcentajeDescuentoAplicado } = calcularPrecio(item, cantidad, listaPrecios);
+              return {
+                ...item,
+                cantidad,
+                precio: precioFinal,
+                subtotal: precioFinal * cantidad,
+                esPromo,
+                porcentajeDescuentoAplicado,
+              };
+            }
+            return item;
+          }),
+        });
+      },
+
+      toggleItemPromo: (id, enablePromo) => {
+        const { items, listaPrecios } = get();
+        set({
+          items: items.map((item) => {
+            if (item.Id === id) {
+              if (enablePromo) {
+                // Remove override and let calcularPrecio decide
+                const { precioFinal, esPromo, porcentajeDescuentoAplicado } = calcularPrecio(item, item.cantidad, listaPrecios);
+                return {
+                  ...item,
+                  precioOverride: undefined,
+                  precio: precioFinal,
+                  subtotal: precioFinal * item.cantidad,
+                  esPromo,
+                  porcentajeDescuentoAplicado
+                };
+              } else {
+                // Disable promo, revert to base price as manual override
+                const pl = item.PreciosLista?.find(p => Number(p.ListaPrecioId) === Number(listaPrecios));
+                const precioBase = pl ? Number(pl.PrecioFinal) : Number(item.PrecioCosto || 0);
+                
+                return {
+                  ...item,
+                  precioOverride: precioBase,
+                  precio: precioBase,
+                  subtotal: precioBase * item.cantidad,
+                  esPromo: false,
+                  porcentajeDescuentoAplicado: 0
+                };
+              }
             }
             return item;
           }),
@@ -194,20 +316,25 @@ export const useVentaStore = create<VentaState>()(
       },
 
       applyDiscountToItems: (ids, porcentaje) => {
-        set((state) => ({
-          items: state.items.map((item) => {
+        const { items, listaPrecios } = get();
+        set({
+          items: items.map((item) => {
             if (!ids.includes(item.Id)) return item;
-            const newPrecio = parseFloat(
-              (item.precio * (1 - porcentaje / 100)).toFixed(2),
-            );
+            
+            const pl = item.PreciosLista?.find(p => Number(p.ListaPrecioId) === Number(listaPrecios));
+            const precioBase = pl ? Number(pl.PrecioFinal) : Number(item.PrecioCosto || 0);
+            const precioConDescuento = parseFloat((precioBase * (1 - porcentaje / 100)).toFixed(2));
+
             return {
               ...item,
-              precio: newPrecio,
-              subtotal: newPrecio * item.cantidad,
-              origenPrecio: "alternativo" as OrigenPrecio,
+              precioOverride: precioConDescuento,
+              precio: precioConDescuento,
+              subtotal: precioConDescuento * item.cantidad,
+              porcentajeDescuentoAplicado: porcentaje,
+              esPromo: false
             };
           }),
-        }));
+        });
       },
 
       addPago: (pago) => set((state) => ({ pagos: [...state.pagos, pago] })),

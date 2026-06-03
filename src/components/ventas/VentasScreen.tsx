@@ -28,6 +28,8 @@ export default function VentasScreen() {
     descuentoPorcentaje,
     addItem,
     updateItemQuantity,
+    updateItemDiscount,
+    toggleItemPromo,
     removeItem,
     updateItemsListaPrecios,
     removeItems,
@@ -275,6 +277,8 @@ export default function VentasScreen() {
           <VentaGrid
             items={items}
             onUpdateQuantity={handleUpdateQuantity}
+            onUpdateDiscount={updateItemDiscount}
+            onTogglePromo={toggleItemPromo}
             onRemoveItem={removeItem}
             onChangeListaPrecios={updateItemsListaPrecios}
             onRemoveItems={removeItems}

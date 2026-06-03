@@ -70,6 +70,14 @@ export const createProductoSchema = z.object({
       PrecioFinal: z.number().min(0),
     })
   ).default([]),
+  PromocionesCantidad: z.array(
+    z.object({
+      Id: z.number().optional(),
+      Cantidad: z.number().int().min(2),
+      DescuentoPorcentaje: z.number().min(0).max(100).default(0),
+      EstaActiva: z.boolean().default(true),
+    })
+  ).optional().default([]),
 });
 
 export const updateProductoSchema = z.object({
@@ -138,6 +146,15 @@ export const updateProductoSchema = z.object({
 
   // Imagen (Opcional, puede ser base64)
   Foto: z.any().optional(), // Se valida aparte o se procesa como Buffer
+
+  PromocionesCantidad: z.array(
+    z.object({
+      Id: z.number().optional(),
+      Cantidad: z.number().int().min(2),
+      DescuentoPorcentaje: z.number().min(0).max(100).default(0),
+      EstaActiva: z.boolean().default(true),
+    })
+  ).optional(),
 });
 
 export type CreateProductoInput = z.infer<typeof createProductoSchema>;
@@ -184,4 +201,10 @@ export interface Producto {
     Porcentaje?: number;
     Descripcion?: string;
   };
+  PromocionesCantidad?: {
+    Id?: number;
+    Cantidad: number;
+    DescuentoPorcentaje: number;
+    EstaActiva: boolean;
+  }[];
 }

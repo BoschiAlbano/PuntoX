@@ -11,6 +11,7 @@ import {
   Button,
   Select,
   SelectItem,
+  Switch,
 } from "@heroui/react";
 import { Trash2, Minus, Plus, ShoppingBag, DollarSign, PenLine, Scale, Tag, Check, X, Percent, AlertTriangle } from "lucide-react";
 import { TiposVenta } from "../../../prisma/generated/prisma";
@@ -20,6 +21,8 @@ import { useQuery } from "@tanstack/react-query";
 interface VentaGridProps {
   items: any[];
   onUpdateQuantity: (id: number, qty: number) => void;
+  onUpdateDiscount: (id: number, discountPercent: number) => void;
+  onTogglePromo: (id: number, enablePromo: boolean) => void;
   onRemoveItem: (id: number) => void;
   onChangeListaPrecios: (ids: number[], listaPrecioId: number) => void;
   onRemoveItems: (ids: number[]) => void;
@@ -56,6 +59,8 @@ function getItemWarning(item: any): ItemWarning {
 export default function VentaGrid({
   items,
   onUpdateQuantity,
+  onUpdateDiscount,
+  onTogglePromo,
   onRemoveItem,
   onChangeListaPrecios,
   onRemoveItems,
@@ -314,10 +319,15 @@ export default function VentaGrid({
                       onClick={(e) => e.stopPropagation()}
                       className="mt-0.5 shrink-0 h-3.5 w-3.5 rounded accent-[#67afc3] cursor-pointer"
                     />
-                    <PriceOriginIcon origenPrecio={item.origenPrecio} tipoVenta={item.TipoVenta} />
+                    <PriceOriginIcon origenPrecio={item.origenPrecio} tipoVenta={item.TipoVenta} esPromo={item.esPromo} />
                     <div className="flex-1 flex flex-col gap-0.5 min-w-0">
                       <span className="font-medium text-slate-700 text-xs leading-snug line-clamp-2">
                         {item.Descripcion}
+                        {item.porcentajeDescuentoAplicado ? (
+                          <span className="ml-1.5 inline-flex items-center rounded bg-pink-100 px-1.5 py-0.5 text-[9px] font-bold text-pink-700">
+                            {item.porcentajeDescuentoAplicado}% OFF
+                          </span>
+                        ) : null}
                       </span>
                       {warning.type && (
                         <span className="flex items-center gap-1 text-[10px] font-semibold text-red-500">
@@ -392,6 +402,7 @@ export default function VentaGrid({
               <TableColumn>DESCRIPCIÓN</TableColumn>
               <TableColumn width={115} align="center">CANT.</TableColumn>
               <TableColumn width={90} align="end">PRECIO</TableColumn>
+              <TableColumn width={70} align="end">DTO %</TableColumn>
               <TableColumn width={90} align="end">SUBTOTAL</TableColumn>
               <TableColumn width={40} align="center">
                 <span className="sr-only">ACCIONES</span>
@@ -428,7 +439,7 @@ export default function VentaGrid({
 
                     <TableCell>
                       <div className="flex items-start gap-1.5">
-                        <PriceOriginIcon origenPrecio={item.origenPrecio} tipoVenta={item.TipoVenta} />
+                        <PriceOriginIcon origenPrecio={item.origenPrecio} tipoVenta={item.TipoVenta} esPromo={item.esPromo} />
                         <div className="flex flex-col gap-0.5">
                           <span className="font-medium text-slate-700 text-xs leading-snug">
                             {item.Descripcion}
@@ -465,6 +476,55 @@ export default function VentaGrid({
                       <span className="font-medium text-slate-600 text-xs">
                         ${item.precio.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
                       </span>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <div
+                          className={`flex items-center border rounded-md px-1 transition-colors ${
+                            item.precioOverride == null
+                              ? "bg-cyan-50 border-[#67afc3]/30"
+                              : "bg-white border-slate-200"
+                          }`}
+                        >
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={item.porcentajeDescuentoAplicado || ''}
+                            placeholder="0"
+                            onChange={(e) => {
+                              let val = parseFloat(e.target.value);
+                              if (isNaN(val) || val < 0) val = 0;
+                              if (val > 100) val = 100;
+                              onUpdateDiscount(item.Id, val);
+                            }}
+                            className={`w-10 h-7 text-right text-[11px] font-bold outline-none bg-transparent ${
+                              item.precioOverride == null ? "text-[#5293a5]" : "text-slate-700"
+                            }`}
+                          />
+                          <span className={`text-[10px] font-bold ml-0.5 ${
+                            item.precioOverride == null ? "text-[#67afc3]/70" : "text-slate-400"
+                          }`}>
+                            %
+                          </span>
+                        </div>
+                        
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="flat"
+                          className={`w-7 h-7 min-w-7 rounded-md transition-all ${
+                            item.precioOverride == null
+                              ? "bg-[#67afc3] text-white hover:bg-[#5293a5]"
+                              : "bg-slate-100 text-slate-400 hover:bg-slate-200"
+                          }`}
+                          title={item.precioOverride == null ? "Promo Automática (Click para fijar manual)" : "Descuento Manual (Click para usar promo automática)"}
+                          onPress={() => onTogglePromo(item.Id, item.precioOverride != null)}
+                        >
+                          {item.precioOverride == null ? <Tag size={13} /> : <PenLine size={13} />}
+                        </Button>
+                      </div>
                     </TableCell>
 
                     <TableCell>
@@ -569,8 +629,7 @@ function QuantitySelector({
 
   const handlePlus = () => {
     const step = tipoVenta === TiposVenta.PESO ? 0.001 : 1;
-    const max =
-      effectiveMax !== null ? effectiveMax : 999999;
+    const max = effectiveMax !== null ? effectiveMax : 999999;
     let val = Number(value) + step;
     if (tipoVenta === TiposVenta.PESO) {
       val = parseFloat(val.toFixed(3));
@@ -626,8 +685,18 @@ function QuantitySelector({
 
 // ─── Price Origin Icon ──────────────────────────────────────────────────────────
 
-function PriceOriginIcon({ origenPrecio, tipoVenta }: { origenPrecio?: OrigenPrecio; tipoVenta?: string }) {
-  // Prioridad: precio alternativo > tipo de venta por peso > normal
+function PriceOriginIcon({ origenPrecio, tipoVenta, esPromo }: { origenPrecio?: OrigenPrecio; tipoVenta?: string; esPromo?: boolean }) {
+  // Prioridad: promo > precio alternativo > tipo de venta por peso > normal
+  if (esPromo) {
+    return (
+      <div className="mt-0.5 flex-shrink-0" title="Promoción Activa">
+        <div className="w-5 h-5 rounded-full bg-pink-100 flex items-center justify-center border border-pink-200">
+          <Tag size={10} className="text-pink-600" />
+        </div>
+      </div>
+    );
+  }
+
   if (origenPrecio === "alternativo") {
     return (
       <span className="shrink-0 mt-[2px] text-amber-500" title="Precio alternativo">

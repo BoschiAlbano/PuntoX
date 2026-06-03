@@ -97,6 +97,7 @@ export async function GET(req: NextRequest) {
           Marca: { select: { Descripcion: true } },
           Rubro: { select: { Descripcion: true } },
           Precios: { select: { ListaPrecioId: true, PorcentajeGanancia: true, PrecioFinal: true, ListaPrecio: { select: { Nombre: true } } } },
+          PromocionesCantidad: { select: { Id: true, Cantidad: true, DescuentoPorcentaje: true, EstaActiva: true } },
           ArticuloStock: { where: { SucursalId: BigInt(sucursalId) }, take: 1, select: { Stock: true, StockMinimo: true, Sucursal: { select: { Nombre: true } } } },
         },
       });
@@ -136,6 +137,14 @@ export async function GET(req: NextRequest) {
             PorcentajeGanancia: true,
             PrecioFinal: true,
             ListaPrecio: { select: { Nombre: true } },
+          },
+        },
+        PromocionesCantidad: {
+          select: {
+            Id: true,
+            Cantidad: true,
+            DescuentoPorcentaje: true,
+            EstaActiva: true,
           },
         },
 
@@ -204,6 +213,12 @@ export async function GET(req: NextRequest) {
           PrecioFinal: Number(p.PrecioFinal),
           ListaPrecio: p.ListaPrecio ? { Nombre: p.ListaPrecio.Nombre } : undefined,
         })),
+        PromocionesCantidad: producto.PromocionesCantidad?.map((p: any) => ({
+          Id: Number(p.Id),
+          Cantidad: Number(p.Cantidad),
+          PrecioFinal: Number(p.PrecioFinal),
+          EstaActiva: Boolean(p.EstaActiva)
+        })) || [],
       };
     });
 
@@ -298,6 +313,14 @@ export async function POST(req: NextRequest) {
               PorcentajeGanancia: pl.PorcentajeGanancia,
               PrecioFinal: pl.PrecioFinal,
             })),
+          },
+          PromocionesCantidad: {
+            create: validarProducto.PromocionesCantidad?.map((pc) => ({
+              TenantId: BigInt(tenantId),
+              Cantidad: pc.Cantidad,
+              DescuentoPorcentaje: pc.DescuentoPorcentaje,
+              EstaActiva: pc.EstaActiva,
+            })) || [],
           },
           Marca: {
             connect: {
@@ -421,6 +444,23 @@ export async function PATCH(req: NextRequest) {
             ListaPrecioId: BigInt(pl.ListaPrecioId),
             PorcentajeGanancia: pl.PorcentajeGanancia,
             PrecioFinal: pl.PrecioFinal,
+          }))
+        });
+      }
+
+      // Update PromocionesCantidad
+      if (validarProducto.PromocionesCantidad) {
+        await tx.promocionCantidad.deleteMany({
+          where: { ArticuloId: articulo.Id, TenantId: tenantIdBigInt },
+        });
+        
+        await tx.promocionCantidad.createMany({
+          data: validarProducto.PromocionesCantidad.map(pc => ({
+            ArticuloId: articulo.Id,
+            TenantId: tenantIdBigInt,
+            Cantidad: pc.Cantidad,
+            DescuentoPorcentaje: pc.DescuentoPorcentaje,
+            EstaActiva: pc.EstaActiva,
           }))
         });
       }
