@@ -985,7 +985,9 @@ export default function ProductoForm({
                         })
                       }
                       isDisabled={isSaving || formData.EsCombo}
-                      description={formData.EsCombo ? "No aplicable en combos." : undefined}
+                      description={
+                        formData.EsCombo ? "No aplicable en combos." : undefined
+                      }
                     />
                     <Input
                       label="Días de Vencimiento"
@@ -1015,7 +1017,11 @@ export default function ProductoForm({
                         })
                       }
                       isDisabled={isSaving || formData.EsCombo}
-                      description={formData.EsCombo ? "El stock se calcula dinámicamente según los componentes." : undefined}
+                      description={
+                        formData.EsCombo
+                          ? "El stock se calcula dinámicamente según los componentes."
+                          : undefined
+                      }
                     />
                   </div>
                   <div className="flex flex-col gap-4 p-4 rounded-xl border border-slate-200 bg-white">
@@ -1061,11 +1067,16 @@ export default function ProductoForm({
                       className="bg-[#67afc3]/10 text-[#67afc3] font-semibold h-8 rounded-lg"
                       startContent={<PlusIcon size={14} />}
                       onPress={() => {
+                        const isPeso = formData.TipoVenta === TiposVenta.PESO;
                         setFormData((prev) => ({
                           ...prev,
                           PromocionesCantidad: [
                             ...(prev.PromocionesCantidad || []),
-                            { Cantidad: 2, DescuentoPorcentaje: 0, EstaActiva: true },
+                            {
+                              Cantidad: isPeso ? 0.001 : 2,
+                              DescuentoPorcentaje: 0,
+                              EstaActiva: true,
+                            },
                           ],
                         }));
                       }}
@@ -1097,7 +1108,11 @@ export default function ProductoForm({
                           >
                             <div className="flex-1 w-full">
                               <NumberInput
-                                label="A partir de (cantidad)"
+                                label={
+                                  formData.TipoVenta === TiposVenta.PESO
+                                    ? "A partir de (kg)"
+                                    : "A partir de (cantidad)"
+                                }
                                 value={promo.Cantidad}
                                 onValueChange={(val) => {
                                   const newPromos = [
@@ -1109,8 +1124,33 @@ export default function ProductoForm({
                                     PromocionesCantidad: newPromos,
                                   });
                                 }}
-                                minValue={2}
+                                minValue={
+                                  formData.TipoVenta === TiposVenta.PESO
+                                    ? 0.001
+                                    : 1
+                                }
+                                step={
+                                  formData.TipoVenta === TiposVenta.PESO
+                                    ? 0.001
+                                    : 1
+                                }
+                                formatOptions={
+                                  formData.TipoVenta === TiposVenta.PESO
+                                    ? {
+                                        minimumFractionDigits: 3,
+                                        maximumFractionDigits: 3,
+                                      }
+                                    : {
+                                        minimumFractionDigits: 0,
+                                        maximumFractionDigits: 0,
+                                      }
+                                }
                                 classNames={inputClassNames}
+                                // description={
+                                //   formData.TipoVenta === TiposVenta.PESO
+                                //     ? "Ingresá el peso mínimo en kg (ej: 0,500)"
+                                //     : "Ingresá la cantidad mínima de unidades"
+                                // }
                               />
                             </div>
                             <div className="flex-1 w-full">
@@ -1268,7 +1308,11 @@ export default function ProductoForm({
                     <Switch
                       isSelected={!formData.EstaEliminado}
                       onValueChange={(value) =>
-                        setFormData({ ...formData, EstaEliminado: !value, EsCombo: false })
+                        setFormData({
+                          ...formData,
+                          EstaEliminado: !value,
+                          EsCombo: false,
+                        })
                       }
                       color={formData.EstaEliminado ? "danger" : "success"}
                       isDisabled={isSaving}
@@ -1288,7 +1332,6 @@ export default function ProductoForm({
                   </div>
                 </>
               )}
-
             </div>
           </ModalBody>
 
