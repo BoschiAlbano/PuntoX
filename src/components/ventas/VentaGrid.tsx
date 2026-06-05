@@ -13,7 +13,7 @@ import {
   SelectItem,
   Switch,
 } from "@heroui/react";
-import { Trash2, Minus, Plus, ShoppingBag, DollarSign, PenLine, Scale, Tag, Check, X, Percent, AlertTriangle, ScanBarcode } from "lucide-react";
+import { Trash2, Minus, Plus, ShoppingBag, DollarSign, PenLine, Scale, Tag, Check, X, Percent, AlertTriangle, ScanBarcode, Gift, Package } from "lucide-react";
 import { TiposVenta } from "../../../prisma/generated/prisma";
 import { OrigenPrecio } from "@/store/ventaStore";
 import { useQuery } from "@tanstack/react-query";
@@ -305,7 +305,7 @@ export default function VentaGrid({
                     isSelected
                       ? "bg-[#67afc3]/8"
                       : warning.type
-                      ? "bg-red-50/40"
+                      ? "bg-yellow-50/40"
                       : "hover:bg-slate-50/50"
                   }`}
                   onClick={() => toggleSelectOne(item.Id)}
@@ -413,7 +413,7 @@ export default function VentaGrid({
                       isSelected
                         ? "!bg-[#67afc3]/8"
                         : warning.type
-                        ? "!bg-red-50/40"
+                        ? "!bg-yellow-50/40"
                         : ""
                     }
                   >
@@ -634,36 +634,36 @@ function QuantitySelector({
 
   return (
     <div className="flex flex-col items-center gap-0.5">
-      <div className={`flex flex-row items-center border rounded-lg overflow-hidden ${height} transition-colors ${atMax ? "border-red-300 bg-red-50/40" : "border-slate-200 bg-white"}`}>
+      <div className={`flex flex-row items-center border rounded-lg overflow-hidden ${height} transition-colors ${atMax ? "border-yellow-300 bg-yellow-50/40" : "border-slate-200 bg-white"}`}>
         <button
           onClick={handleMinus}
           aria-label="Reducir cantidad"
-          className={`${btnSize} h-full flex items-center justify-center transition-colors ${atMax ? "text-red-300 hover:text-red-500 hover:bg-red-100 active:bg-red-200" : "text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200"}`}
+          className={`${btnSize} h-full flex items-center justify-center transition-colors ${atMax ? "text-yellow-400 hover:text-yellow-600 hover:bg-yellow-100 active:bg-yellow-200" : "text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200"}`}
         >
           <Minus size={iconSize} strokeWidth={2.5} />
         </button>
-        <div className={`h-4 w-px ${atMax ? "bg-red-200" : "bg-slate-200"}`} />
+        <div className={`h-4 w-px ${atMax ? "bg-yellow-200" : "bg-slate-200"}`} />
         <input
           type="number"
-          className={`${inputWidth} h-full text-center ${fontSize} font-semibold focus:ring-0 p-0 outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-300 bg-transparent border-none transition-colors ${atMax ? "text-red-600 focus:bg-red-50/50" : "text-slate-700 focus:bg-blue-50/50"}`}
+          className={`${inputWidth} h-full text-center ${fontSize} font-semibold focus:ring-0 p-0 outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-300 bg-transparent border-none transition-colors ${atMax ? "text-yellow-600 focus:bg-yellow-50/50" : "text-slate-700 focus:bg-blue-50/50"}`}
           value={localValue}
           onChange={handleInputChange}
           step={tipoVenta === TiposVenta.PESO ? "0.001" : "1"}
           min={0}
           placeholder="0"
         />
-        <div className={`h-4 w-px ${atMax ? "bg-red-200" : "bg-slate-200"}`} />
+        <div className={`h-4 w-px ${atMax ? "bg-yellow-200" : "bg-slate-200"}`} />
         <button
           onClick={handlePlus}
           disabled={atMax}
           aria-label="Aumentar cantidad"
-          className={`${btnSize} h-full flex items-center justify-center transition-colors ${atMax ? "text-red-200 cursor-not-allowed" : "text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200"}`}
+          className={`${btnSize} h-full flex items-center justify-center transition-colors ${atMax ? "text-yellow-400 cursor-not-allowed" : "text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200"}`}
         >
           <Plus size={iconSize} strokeWidth={2.5} />
         </button>
       </div>
       {showStockLabel && (
-        <span className={`text-[9px] font-semibold leading-none ${atMax ? "text-red-400" : "text-slate-400"}`}>
+        <span className={`text-[9px] font-semibold leading-none ${atMax ? "text-yellow-500" : "text-slate-400"}`}>
           Stock: {parseFloat(stock).toLocaleString("es-AR")}
         </span>
       )}
@@ -708,9 +708,25 @@ function ItemIcons({ item, warning }: { item: any; warning: ReturnType<typeof ge
     );
   }
 
+  if (item.esParteDeCombo) {
+    icons.push(
+      <div key="combo" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-emerald-50 text-emerald-500 border border-emerald-200" title={`Promoción Combo aplicada: ${item.nombreCombo}`}>
+        <Gift size={11} strokeWidth={2.5} />
+      </div>
+    );
+  }
+
+  if (item.EsCombo) {
+    icons.push(
+      <div key="es-combo" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-blue-50 text-blue-500 border border-blue-200" title="Artículo Combo (Kit)">
+        <Package size={11} strokeWidth={2.5} />
+      </div>
+    );
+  }
+
   if (warning.type) {
     icons.push(
-      <div key="warning" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-red-50 text-red-500 border border-red-200" title={warning.message}>
+      <div key="warning" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-yellow-50 text-yellow-600 border border-yellow-200" title={warning.message}>
         <AlertTriangle size={11} strokeWidth={2.5} />
       </div>
     );

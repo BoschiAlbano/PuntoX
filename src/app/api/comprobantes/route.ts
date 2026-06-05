@@ -107,6 +107,17 @@ export async function POST(req: NextRequest) {
               SucursalId: sucursalId,
             },
           },
+          ArticulosCombo: {
+            include: {
+              Componente: {
+                include: {
+                  ArticuloStock: {
+                    where: { SucursalId: sucursalId },
+                  },
+                },
+              },
+            },
+          },
         },
       }),
       prisma.configuracion.findFirst({
@@ -124,26 +135,58 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validar stock si corresponde
+    // Validar stock si corresponde (acumulado)
+    const stockRequerido = new Map<number, { required: number; available: number; permitsNegative: boolean; name: string; comboNames: string[] }>();
+
     for (const detalle of data.detalles) {
-      const articulo = articulos.find(
-        (a) => Number(a.Id) === detalle.articuloId,
-      );
-      if (!articulo) continue;
+      const articulo = articulos.find((a) => Number(a.Id) === detalle.articuloId);
+      if (!articulo || !articulo.DescuentaStock) continue;
 
-      if (articulo.DescuentaStock) {
-        const stockActual = articulo.ArticuloStock[0]?.Stock
-          ? Number(articulo.ArticuloStock[0].Stock)
-          : 0;
+      if (articulo.EsCombo && articulo.ArticulosCombo && articulo.ArticulosCombo.length > 0) {
+        for (const item of articulo.ArticulosCombo) {
+          const componente = item.Componente;
+          if (!componente) continue;
 
-        if (stockActual < detalle.cantidad && !articulo.PermiteStockNegativo) {
-          return NextResponse.json(
-            {
-              error: `Stock insuficiente para ${articulo.Descripcion}. Stock disponible: ${stockActual}`,
-            },
-            { status: 400 },
-          );
+          const compId = Number(componente.Id);
+          const reqQty = detalle.cantidad * Number(item.CantidadRequerida);
+          const available = componente.ArticuloStock[0]?.Stock ? Number(componente.ArticuloStock[0].Stock) : 0;
+
+          if (!stockRequerido.has(compId)) {
+            stockRequerido.set(compId, { required: 0, available, permitsNegative: componente.PermiteStockNegativo, name: componente.Descripcion, comboNames: [] });
+          }
+
+          const entry = stockRequerido.get(compId)!;
+          entry.required += reqQty;
+          entry.comboNames.push(articulo.Descripcion);
         }
+      } else {
+        const artId = Number(articulo.Id);
+        const reqQty = detalle.cantidad;
+        const available = articulo.ArticuloStock[0]?.Stock ? Number(articulo.ArticuloStock[0].Stock) : 0;
+
+        if (!stockRequerido.has(artId)) {
+          stockRequerido.set(artId, { required: 0, available, permitsNegative: articulo.PermiteStockNegativo, name: articulo.Descripcion, comboNames: [] });
+        }
+
+        const entry = stockRequerido.get(artId)!;
+        entry.required += reqQty;
+      }
+    }
+
+    // Ejecutar la validación real con los totales consolidados
+    for (const [_, req] of stockRequerido.entries()) {
+      if (req.available < req.required && !req.permitsNegative) {
+        // Formatear mensaje para que sea claro si el componente es parte de un combo
+        const comboContext = req.comboNames.length > 0 
+          ? ` (requerido por: ${Array.from(new Set(req.comboNames)).join(", ")})` 
+          : "";
+
+        return NextResponse.json(
+          {
+            error: `Stock insuficiente para ${req.name}${comboContext}. Requerido: ${req.required}, Disponible: ${req.available}`,
+          },
+          { status: 400 },
+        );
       }
     }
 

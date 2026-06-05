@@ -56,7 +56,7 @@ export default function VentasScreen() {
     if (product.DescuentaStock && !product.PermiteStockNegativo) {
       if (product.Stock < newQuantity) {
         throw new Error(
-          `No hay suficiente stock disponible. Stock actual: ${product.Stock}`,
+          `"${product.Descripcion || 'El artículo'}" no tiene suficiente stock disponible. (Stock actual: ${product.Stock})`,
         );
       }
     }

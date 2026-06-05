@@ -62,6 +62,7 @@ model Tenant {
   Notificaciones        Notificacion[]
   FacturasElectronicas  FacturaElectronica[]
   PromocionesCantidad   PromocionCantidad[]
+  ArticulosComboItems   ArticuloComboItem[]
 
   @@index([PlanId])
 }
@@ -70,39 +71,39 @@ model Tenant {
 /// Cada tenant puede tener mÃºltiples sucursales.
 /// Una sucursal debe ser marcada como "Principal" (EsPrincipal=true).
 model Sucursal {
-  Id                 BigInt              @id @default(autoincrement())
-  TenantId           BigInt
+  Id                   BigInt               @id @default(autoincrement())
+  TenantId             BigInt
   /// Nombre identificador de la sucursal (ej: "Casa Central", "Sucursal Norte")
-  Nombre             String              @db.VarChar(250)
+  Nombre               String               @db.VarChar(250)
   /// DirecciÃ³n fÃ­sica de la sucursal (opcional)
-  Direccion          String?             @db.VarChar(400)
+  Direccion            String?              @db.VarChar(400)
   /// TelÃ©fono de contacto de la sucursal
-  Telefono           String?             @db.VarChar(25)
+  Telefono             String?              @db.VarChar(25)
   /// Indica si es la sucursal principal/casa central del tenant
   /// Solo una sucursal por tenant puede tener EsPrincipal=true
-  EsPrincipal        Boolean             @default(false)
+  EsPrincipal          Boolean              @default(false)
   /// Indica si la sucursal estÃ¡ activa para operaciones
-  EstaActiva         Boolean             @default(true)
-  EstaEliminado      Boolean             @default(false)
-  FechaCreacion      DateTime            @default(now())
-  FechaActualizacion DateTime            @updatedAt
+  EstaActiva           Boolean              @default(true)
+  EstaEliminado        Boolean              @default(false)
+  FechaCreacion        DateTime             @default(now())
+  FechaActualizacion   DateTime             @updatedAt
   // Relaciones
-  Tenant             Tenant              @relation(fields: [TenantId], references: [Id])
-  ArticulosStock     ArticuloStock[]
-  AuditoriaEmpleados AuditoriaEmpleado[]
-  BajaArticulos      BajaArticulo[]
-  Cajas              Caja[]
-  Cheques            Cheque[]
-  Comprobantes       Comprobante[]
-  Contadores         Contador[]
-  DepositosCheques   DepositoCheques[]
-  Gastos             Gasto[]
-  Movimientos        Movimiento[]
-  UsuariosSucursales UsuarioSucursal[]
+  Tenant               Tenant               @relation(fields: [TenantId], references: [Id])
+  ArticulosStock       ArticuloStock[]
+  AuditoriaEmpleados   AuditoriaEmpleado[]
+  BajaArticulos        BajaArticulo[]
+  Cajas                Caja[]
+  Cheques              Cheque[]
+  Comprobantes         Comprobante[]
+  Contadores           Contador[]
+  DepositosCheques     DepositoCheques[]
+  Gastos               Gasto[]
+  Movimientos          Movimiento[]
+  UsuariosSucursales   UsuarioSucursal[]
   /// Número de Punto de Venta AFIP asignado a esta sucursal (1-9998)
-  PuntoVentaAfip     Int?
+  PuntoVentaAfip       Int?
   /// Domicilio fiscal registrado en AFIP para este punto de venta
-  DomicilioFiscal    String?             @db.VarChar(400)
+  DomicilioFiscal      String?              @db.VarChar(400)
   FacturasElectronicas FacturaElectronica[]
 
   // Ã ndices y constraints
@@ -195,6 +196,7 @@ model Articulo {
   VencimientoDias      Int
   TipoVenta            TiposVenta           @default(UNIDAD)
   EstaEliminado        Boolean
+  EsCombo              Boolean              @default(false)
   /// Tenant dueÃ±o de este artÃ­culo
   TenantId             BigInt
   /// Stock global (DEPRECADO: usar ArticuloStock para stock por sucursal)
@@ -210,6 +212,8 @@ model Articulo {
   DetalleComprobante   DetalleComprobante[]
   Precios              PrecioLista[]
   PromocionesCantidad  PromocionCantidad[]
+  ArticulosCombo       ArticuloComboItem[]  @relation("ComboParent")
+  CombosQueIntegra     ArticuloComboItem[]  @relation("ComboComponent")
 
   @@index([TenantId])
   @@index([IvaId])
@@ -220,16 +224,33 @@ model Articulo {
 
 /// Promociones por cantidad para un artículo específico.
 model PromocionCantidad {
-  Id           BigInt   @id @default(autoincrement())
-  ArticuloId   BigInt
-  Cantidad     Int
-  DescuentoPorcentaje  Decimal  @db.Decimal(18, 2)
-  EstaActiva   Boolean  @default(true)
-  TenantId     BigInt
-  Articulo     Articulo @relation(fields: [ArticuloId], references: [Id], onDelete: Cascade)
-  Tenant       Tenant   @relation(fields: [TenantId], references: [Id])
+  Id                  BigInt   @id @default(autoincrement())
+  ArticuloId          BigInt
+  Cantidad            Int
+  DescuentoPorcentaje Decimal  @db.Decimal(18, 2)
+  EstaActiva          Boolean  @default(true)
+  TenantId            BigInt
+  Articulo            Articulo @relation(fields: [ArticuloId], references: [Id], onDelete: Cascade)
+  Tenant              Tenant   @relation(fields: [TenantId], references: [Id])
 
   @@index([ArticuloId])
+  @@index([TenantId])
+}
+
+/// Ítems requeridos para que se aplique un Artículo Combo
+model ArticuloComboItem {
+  Id                BigInt   @id @default(autoincrement())
+  ComboId           BigInt
+  ComponenteId      BigInt
+  CantidadRequerida Decimal  @db.Decimal(18, 3)
+  TenantId          BigInt
+  
+  Combo             Articulo @relation("ComboParent", fields: [ComboId], references: [Id], onDelete: Cascade)
+  Componente        Articulo @relation("ComboComponent", fields: [ComponenteId], references: [Id], onDelete: Restrict)
+  Tenant            Tenant   @relation(fields: [TenantId], references: [Id])
+
+  @@index([ComboId])
+  @@index([ComponenteId])
   @@index([TenantId])
 }
 
@@ -565,17 +586,17 @@ model Configuracion {
   Tenant                                 Tenant        @relation(fields: [TenantId], references: [Id])
 
   /// Número de Ingresos Brutos del comercio
-  IngresosBrutos                         String?       @db.VarChar(50)
+  IngresosBrutos        String?   @db.VarChar(50)
   /// Certificado digital AFIP (.crt) almacenado encriptado con AES-256-GCM
-  AfipCertificado                        String?       @db.Text
+  AfipCertificado       String?   @db.Text
   /// Clave privada AFIP (.key) almacenada encriptada con AES-256-GCM
-  AfipClavePrivada                       String?       @db.Text
+  AfipClavePrivada      String?   @db.Text
   /// true = entorno de producción, false = homologación (testing)
-  AfipEntornoProduccion                  Boolean       @default(false)
+  AfipEntornoProduccion Boolean   @default(false)
   /// Fecha de vencimiento del certificado digital AFIP
-  AfipCertificadoVence                   DateTime?
+  AfipCertificadoVence  DateTime?
   /// Master switch: habilita/deshabilita facturación electrónica ARCA
-  AfipHabilitado                         Boolean       @default(false)
+  AfipHabilitado        Boolean   @default(false)
 
   @@index([TenantId])
   @@index([LocalidadId])
@@ -1336,70 +1357,70 @@ model Notificacion {
 /// Relación 1:1 con Comprobante — solo comprobantes fiscales (Factura A/B/C).
 /// Almacena datos de autorización (CAE), XML request/response para auditoría.
 model FacturaElectronica {
-  Id                 BigInt    @id @default(autoincrement())
-  TenantId           BigInt
+  Id            BigInt @id @default(autoincrement())
+  TenantId      BigInt
   /// FK al comprobante local (relación 1:1)
-  ComprobanteId      BigInt    @unique
-  SucursalId         BigInt
+  ComprobanteId BigInt @unique
+  SucursalId    BigInt
 
   /// Código tipo comprobante AFIP (1=Factura A, 6=Factura B, 11=Factura C, etc.)
-  CbteTipo           Int
+  CbteTipo   Int
   /// Número secuencial autorizado por AFIP
-  CbteNumero         Int
+  CbteNumero Int
   /// Punto de venta AFIP utilizado
-  PuntoVenta         Int
+  PuntoVenta Int
   /// 1=Productos, 2=Servicios, 3=Productos y Servicios
-  Concepto           Int
+  Concepto   Int
 
   /// Tipo de documento del receptor (80=CUIT, 96=DNI, 99=Consumidor Final)
-  DocTipo            Int
+  DocTipo Int
   /// Número de documento del receptor
-  DocNro             String    @db.VarChar(20)
+  DocNro  String @db.VarChar(20)
 
   /// Importes (redundantes respecto a Comprobante para auditoría fiscal)
-  ImpTotal           Decimal   @db.Decimal(18, 2)
-  ImpNeto            Decimal   @db.Decimal(18, 2)
-  ImpIva             Decimal   @db.Decimal(18, 2)
-  ImpTrib            Decimal   @db.Decimal(18, 2) @default(0)
-  ImpOpEx            Decimal   @db.Decimal(18, 2) @default(0)
-  ImpTotConc         Decimal   @db.Decimal(18, 2) @default(0)
+  ImpTotal   Decimal @db.Decimal(18, 2)
+  ImpNeto    Decimal @db.Decimal(18, 2)
+  ImpIva     Decimal @db.Decimal(18, 2)
+  ImpTrib    Decimal @default(0) @db.Decimal(18, 2)
+  ImpOpEx    Decimal @default(0) @db.Decimal(18, 2)
+  ImpTotConc Decimal @default(0) @db.Decimal(18, 2)
   /// Código de moneda AFIP (PES=Peso Argentino, DOL=Dólar)
-  MonId              String    @db.VarChar(5) @default("PES")
+  MonId      String  @default("PES") @db.VarChar(5)
   /// Tipo de cambio (1 para ARS)
-  MonCotiz           Decimal   @db.Decimal(18, 6) @default(1)
+  MonCotiz   Decimal @default(1) @db.Decimal(18, 6)
 
   /// CAE otorgado por ARCA (14 dígitos cuando autorizado)
-  CAE                String?   @db.VarChar(20)
+  CAE       String?   @db.VarChar(20)
   /// Fecha de vencimiento del CAE
-  CAEFchVto          DateTime?
+  CAEFchVto DateTime?
   /// Estado: PENDIENTE, AUTORIZADO, RECHAZADO
-  Estado             String    @db.VarChar(20) @default("PENDIENTE")
+  Estado    String    @default("PENDIENTE") @db.VarChar(20)
   /// Resultado AFIP: A=Aprobado, R=Rechazado, P=Parcial
-  Resultado          String?   @db.VarChar(5)
+  Resultado String?   @db.VarChar(5)
 
   /// XML/JSON de request enviado a ARCA (para auditoría)
-  RequestXml         String?   @db.Text
+  RequestXml    String? @db.Text
   /// XML/JSON de response recibido de ARCA (para auditoría)
-  ResponseXml        String?   @db.Text
+  ResponseXml   String? @db.Text
   /// Observaciones o errores de ARCA
-  Observaciones      String?   @db.Text
+  Observaciones String? @db.Text
   /// Indica si fue reprocesado tras un rechazo
-  Reprocesado        Boolean   @default(false)
+  Reprocesado   Boolean @default(false)
 
   /// Campos para comprobantes de servicios (Concepto 2 o 3)
-  FchServDesde       DateTime?
-  FchServHasta       DateTime?
-  FchVtoPago         DateTime?
+  FchServDesde DateTime?
+  FchServHasta DateTime?
+  FchVtoPago   DateTime?
 
-  FechaEmision       DateTime  @default(now())
-  FechaCreacion      DateTime  @default(now())
-  FechaActualizacion DateTime  @updatedAt
+  FechaEmision       DateTime @default(now())
+  FechaCreacion      DateTime @default(now())
+  FechaActualizacion DateTime @updatedAt
 
   // Relaciones
-  Tenant             Tenant      @relation(fields: [TenantId], references: [Id])
-  Comprobante        Comprobante @relation(fields: [ComprobanteId], references: [Id])
-  Sucursal           Sucursal    @relation(fields: [SucursalId], references: [Id])
-  Detalles           FacturaElectronicaIva[]
+  Tenant      Tenant                  @relation(fields: [TenantId], references: [Id])
+  Comprobante Comprobante             @relation(fields: [ComprobanteId], references: [Id])
+  Sucursal    Sucursal                @relation(fields: [SucursalId], references: [Id])
+  Detalles    FacturaElectronicaIva[]
 
   /// Constraint de unicidad: un número de comprobante por PDV + tipo por tenant
   @@unique([TenantId, PuntoVenta, CbteTipo, CbteNumero])
@@ -1413,16 +1434,16 @@ model FacturaElectronica {
 /// Detalle de IVA por alícuota de una factura electrónica.
 /// Requerido por ARCA para discriminar IVA en Facturas A.
 model FacturaElectronicaIva {
-  Id                    BigInt             @id @default(autoincrement())
-  FacturaElectronicaId  BigInt
+  Id                   BigInt  @id @default(autoincrement())
+  FacturaElectronicaId BigInt
   /// ID de alícuota AFIP (3=0%, 4=10.5%, 5=21%, 6=27%, 8=5%, 9=2.5%)
-  IvaAfipId             Int
+  IvaAfipId            Int
   /// Base imponible gravada a esta alícuota
-  BaseImponible         Decimal            @db.Decimal(18, 2)
+  BaseImponible        Decimal @db.Decimal(18, 2)
   /// Importe de IVA calculado
-  Importe               Decimal            @db.Decimal(18, 2)
+  Importe              Decimal @db.Decimal(18, 2)
 
-  FacturaElectronica    FacturaElectronica @relation(fields: [FacturaElectronicaId], references: [Id], onDelete: Cascade)
+  FacturaElectronica FacturaElectronica @relation(fields: [FacturaElectronicaId], references: [Id], onDelete: Cascade)
 
   @@index([FacturaElectronicaId])
 }

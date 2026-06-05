@@ -184,7 +184,17 @@ async function createBaseComprobante(
   const articleIds = data.detalles.map((d) => BigInt(d.articuloId));
   const articulos = await tx.articulo.findMany({
     where: { Id: { in: articleIds }, TenantId: tenantId },
-    select: { Id: true, DescuentaStock: true },
+    select: { 
+      Id: true, 
+      DescuentaStock: true,
+      EsCombo: true,
+      ArticulosCombo: {
+        select: {
+          ComponenteId: true,
+          CantidadRequerida: true,
+        }
+      }
+    },
   });
 
   // Create Details & Update Stock
@@ -207,32 +217,59 @@ async function createBaseComprobante(
 
     if (descuentaStock) {
       const art = articulos.find(
-        (a: { Id: bigint; DescuentaStock: boolean }) =>
+        (a: any) =>
           a.Id === BigInt(detalle.articuloId),
       );
       if (art && art.DescuentaStock) {
         const isNotaCredito =
           data.tipoComprobante === TIPO_COMPROBANTE_VENTA.NOTA_CREDITO;
 
-        await tx.articuloStock.upsert({
-          where: {
-            ArticuloId_SucursalId: {
+        if (art.EsCombo && art.ArticulosCombo && art.ArticulosCombo.length > 0) {
+          // Si es combo, descontar stock a sus componentes
+          for (const componente of art.ArticulosCombo) {
+            const cantidadDescontar = detalle.cantidad * Number(componente.CantidadRequerida);
+            await tx.articuloStock.upsert({
+              where: {
+                ArticuloId_SucursalId: {
+                  ArticuloId: componente.ComponenteId,
+                  SucursalId: sucursalId,
+                },
+              },
+              update: {
+                Stock: {
+                  [isNotaCredito ? "increment" : "decrement"]: cantidadDescontar,
+                },
+              },
+              create: {
+                ArticuloId: componente.ComponenteId,
+                SucursalId: sucursalId,
+                TenantId: tenantId,
+                Stock: isNotaCredito ? cantidadDescontar : -cantidadDescontar,
+              },
+            });
+          }
+        } else {
+          // Si no es combo, descontar normalmente
+          await tx.articuloStock.upsert({
+            where: {
+              ArticuloId_SucursalId: {
+                ArticuloId: art.Id,
+                SucursalId: sucursalId,
+              },
+            },
+            update: {
+              Stock: {
+                [isNotaCredito ? "increment" : "decrement"]: detalle.cantidad,
+              },
+            },
+            create: {
               ArticuloId: art.Id,
               SucursalId: sucursalId,
+              TenantId: tenantId,
+              Stock: isNotaCredito ? detalle.cantidad : -detalle.cantidad,
             },
-          },
-          update: {
-            Stock: {
-              [isNotaCredito ? "increment" : "decrement"]: detalle.cantidad,
-            },
-          },
-          create: {
-            ArticuloId: art.Id,
-            SucursalId: sucursalId,
-            TenantId: tenantId,
-            Stock: isNotaCredito ? detalle.cantidad : -detalle.cantidad,
-          },
-        });
+          });
+        }
       }
     }
   }

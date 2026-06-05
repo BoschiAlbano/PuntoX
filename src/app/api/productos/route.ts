@@ -93,12 +93,26 @@ export async function GET(req: NextRequest) {
       exactEditMatch = await prisma.articulo.findMany({
         where: { TenantId: BigInt(tenantId), Id: editId },
         select: {
-          Id: true, Codigo: true, CodigoBarra: true, Descripcion: true, EstaEliminado: true, StockMinimo: true, PrecioCosto: true, Foto: true, TipoVenta: true,
+          Id: true, Codigo: true, CodigoBarra: true, Descripcion: true, EstaEliminado: true, StockMinimo: true, PrecioCosto: true, Foto: true, TipoVenta: true, EsCombo: true,
           Marca: { select: { Descripcion: true } },
           Rubro: { select: { Descripcion: true } },
           Precios: { select: { ListaPrecioId: true, PorcentajeGanancia: true, PrecioFinal: true, ListaPrecio: { select: { Nombre: true } } } },
           PromocionesCantidad: { select: { Id: true, Cantidad: true, DescuentoPorcentaje: true, EstaActiva: true } },
           ArticuloStock: { where: { SucursalId: BigInt(sucursalId) }, take: 1, select: { Stock: true, StockMinimo: true, Sucursal: { select: { Nombre: true } } } },
+          ArticulosCombo: {
+            select: {
+              CantidadRequerida: true,
+              Componente: {
+                select: {
+                  ArticuloStock: {
+                    where: { SucursalId: BigInt(sucursalId) },
+                    take: 1,
+                    select: { Stock: true }
+                  }
+                }
+              }
+            }
+          }
         },
       });
     }
@@ -126,6 +140,7 @@ export async function GET(req: NextRequest) {
         PrecioCosto: true,
         Foto: true,
         TipoVenta: true,
+        EsCombo: true,
 
         Marca: { select: { Descripcion: true } },
         Rubro: { select: { Descripcion: true } },
@@ -164,6 +179,20 @@ export async function GET(req: NextRequest) {
             },
           },
         },
+        ArticulosCombo: {
+          select: {
+            CantidadRequerida: true,
+            Componente: {
+              select: {
+                ArticuloStock: {
+                  where: { SucursalId: BigInt(sucursalId) },
+                  take: 1,
+                  select: { Stock: true }
+                }
+              }
+            }
+          }
+        }
       },
       orderBy: {
         Descripcion: "asc",
@@ -181,6 +210,25 @@ export async function GET(req: NextRequest) {
           ? producto.ArticuloStock[0]
           : null;
 
+      let stockCalculado = stockSucursal ? Number(stockSucursal.Stock) : Number(0);
+
+      // Si es combo, calcular el stock en base a los componentes
+      if (producto.EsCombo && producto.ArticulosCombo && producto.ArticulosCombo.length > 0) {
+        let minStock = Infinity;
+        for (const item of producto.ArticulosCombo) {
+          const compStock = item.Componente?.ArticuloStock?.[0]?.Stock ? Number(item.Componente.ArticuloStock[0].Stock) : 0;
+          const req = Number(item.CantidadRequerida);
+          if (req > 0) {
+            const possible = Math.floor(compStock / req);
+            if (possible < minStock) {
+              minStock = possible;
+            }
+          }
+        }
+        if (minStock === Infinity) minStock = 0;
+        stockCalculado = minStock;
+      }
+
       return {
         // Campos basicos
         Id: Number(producto.Id),
@@ -190,6 +238,7 @@ export async function GET(req: NextRequest) {
         EstaEliminado: producto.EstaEliminado,
         Foto: producto.Foto,
         TipoVenta: producto.TipoVenta,
+        EsCombo: producto.EsCombo,
 
         Marca: producto.Marca
           ? { Descripcion: producto.Marca.Descripcion }
@@ -199,7 +248,7 @@ export async function GET(req: NextRequest) {
           : null,
 
         // Stock logic (StockMinimo: sucursal o valor global)
-        Stock: stockSucursal ? Number(stockSucursal.Stock) : Number(0),
+        Stock: stockCalculado,
         StockMinimo:
           stockSucursal?.StockMinimo != null
             ? Number(stockSucursal.StockMinimo)
@@ -304,6 +353,14 @@ export async function POST(req: NextRequest) {
             connect: {
               Id: validarProducto.IvaId,
             },
+          },
+          EsCombo: validarProducto.EsCombo ?? false,
+          ArticulosCombo: {
+            create: validarProducto.EsCombo && validarProducto.ComponentesCombo ? validarProducto.ComponentesCombo.map(c => ({
+              TenantId: BigInt(tenantId),
+              ComponenteId: BigInt(c.ComponenteId),
+              CantidadRequerida: c.CantidadRequerida,
+            })) : [],
           },
           Foto: fotoUrl,
           Precios: {
@@ -461,7 +518,26 @@ export async function PATCH(req: NextRequest) {
             Cantidad: pc.Cantidad,
             DescuentoPorcentaje: pc.DescuentoPorcentaje,
             EstaActiva: pc.EstaActiva,
-          }))
+          })),
+        });
+      }
+
+      // Update ArticulosCombo
+      if (validarProducto.EsCombo && validarProducto.ComponentesCombo) {
+        await tx.articuloComboItem.deleteMany({
+          where: { ComboId: articulo.Id, TenantId: tenantIdBigInt },
+        });
+        await tx.articuloComboItem.createMany({
+          data: validarProducto.ComponentesCombo.map((c) => ({
+            ComboId: articulo.Id,
+            TenantId: tenantIdBigInt,
+            ComponenteId: BigInt(c.ComponenteId),
+            CantidadRequerida: c.CantidadRequerida,
+          })),
+        });
+      } else if (validarProducto.EsCombo === false) {
+        await tx.articuloComboItem.deleteMany({
+          where: { ComboId: articulo.Id, TenantId: tenantIdBigInt },
         });
       }
 
@@ -485,6 +561,7 @@ export async function PATCH(req: NextRequest) {
         "VencimientoDias",
         "TipoVenta",
         "EstaEliminado",
+        "EsCombo",
       ] as const;
 
       directFields.forEach((field) => {

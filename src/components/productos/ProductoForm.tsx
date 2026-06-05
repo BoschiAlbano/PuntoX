@@ -96,6 +96,15 @@ const defaultProducto: Producto = {
   PreciosLista: [],
   PromocionesCantidad: [],
   Stock: 0,
+  EsCombo: false,
+  ComponentesCombo: [],
+};
+
+const fetchProductos = async () => {
+  const res = await fetch("/api/productos");
+  if (!res.ok) throw new Error("Error fetching productos");
+  const data = await res.json();
+  return data.data;
 };
 
 const fetchMarcas = async () => {
@@ -146,7 +155,8 @@ type SectionKey =
   | "precios"
   | "promociones"
   | "stock"
-  | "configuracion";
+  | "configuracion"
+  | "componentes";
 
 export default function ProductoForm({
   isOpen,
@@ -267,6 +277,10 @@ export default function ProductoForm({
     },
   });
 
+  const { data: productos = [], isLoading: isLoadingProductos } = useQuery({
+    queryKey: ["productos-generic"],
+    queryFn: fetchProductos,
+  });
   const { data: marcas = [], isLoading: isLoadingMarcas } = useQuery({
     queryKey: ["marcas-generic"],
     queryFn: fetchMarcas,
@@ -442,6 +456,12 @@ export default function ProductoForm({
       label: "Configuración",
       icon: Settings,
       isComplete: sectionStatus.configuracion,
+    },
+    {
+      key: "componentes",
+      label: "Componentes (Combo)",
+      icon: Package,
+      isComplete: true,
     },
   ];
 
@@ -970,7 +990,8 @@ export default function ProductoForm({
                           StockMinimo: parseFloat(e.target.value) || 0,
                         })
                       }
-                      isDisabled={isSaving}
+                      isDisabled={isSaving || formData.EsCombo}
+                      description={formData.EsCombo ? "No aplicable en combos." : undefined}
                     />
                     <Input
                       label="Días de Vencimiento"
@@ -999,7 +1020,8 @@ export default function ProductoForm({
                           Stock: parseFloat(e.target.value) || 0,
                         })
                       }
-                      isDisabled={isSaving}
+                      isDisabled={isSaving || formData.EsCombo}
+                      description={formData.EsCombo ? "El stock se calcula dinámicamente según los componentes." : undefined}
                     />
                   </div>
                   <div className="flex flex-col gap-4 p-4 rounded-xl border border-slate-200 bg-white">
@@ -1270,6 +1292,155 @@ export default function ProductoForm({
                       </span>
                     </Switch>
                   </div>
+                </>
+              )}
+
+              {/* ── COMPONENTES ────────────────────────────────── */}
+              {activeSection === "componentes" && (
+                <>
+                  <div className="flex items-center justify-between pb-1 border-b border-slate-100 mb-4">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      Componentes del Combo
+                    </p>
+                    <Switch
+                      isSelected={formData.EsCombo}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, EsCombo: value })
+                      }
+                      isDisabled={isSaving}
+                      color="secondary"
+                    >
+                      <span className="text-sm font-semibold text-purple-600">
+                        Este producto es un Combo
+                      </span>
+                    </Switch>
+                  </div>
+
+                  {formData.EsCombo && (
+                    <>
+                      <div className="flex items-center justify-end mb-4">
+                        <Button
+                          size="sm"
+                          variant="flat"
+                          className="bg-purple-100 text-purple-600 font-semibold h-8 rounded-lg"
+                          startContent={<PlusIcon size={14} />}
+                          onPress={() => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              ComponentesCombo: [
+                                ...(prev.ComponentesCombo || []),
+                                { ComponenteId: 0, CantidadRequerida: 1 },
+                              ],
+                            }));
+                          }}
+                        >
+                          Añadir Artículo
+                        </Button>
+                      </div>
+
+                      {(formData.ComponentesCombo || []).length === 0 ? (
+                        <div className="text-center py-10 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                          <Package
+                            size={32}
+                            className="mx-auto text-slate-300 mb-3"
+                          />
+                          <p className="text-sm text-slate-500 font-medium">
+                            No hay componentes añadidos
+                          </p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            Añadí artículos que formarán parte de este combo
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {(formData.ComponentesCombo || []).map((comp, index) => {
+                            const selectedComp = productos?.find((p: any) => Number(p.Id) === comp.ComponenteId);
+                            const isPeso = selectedComp?.TipoVenta === "PESO";
+                            const stepValue = isPeso ? 0.001 : 1;
+
+                            return (
+                              <div
+                                key={index}
+                                className="flex flex-col sm:flex-row gap-3 items-end bg-white p-3 rounded-xl border border-slate-200 shadow-sm relative group"
+                              >
+                                <div className="flex-1 w-full">
+                                  <Autocomplete
+                                    label="Artículo Componente"
+                                    placeholder="Seleccione un artículo"
+                                    selectedKey={comp.ComponenteId ? comp.ComponenteId.toString() : null}
+                                    onSelectionChange={(key) => {
+                                      const newComps = [...(formData.ComponentesCombo || [])];
+                                      newComps[index].ComponenteId = key ? parseInt(key.toString()) : 0;
+                                      
+                                      // Al cambiar el producto, ajustar la cantidad al mínimo permitido si no cumple
+                                      const newSelectedComp = productos?.find((p: any) => Number(p.Id) === newComps[index].ComponenteId);
+                                      const newIsPeso = newSelectedComp?.TipoVenta === "PESO";
+                                      if (!newIsPeso && newComps[index].CantidadRequerida < 1) {
+                                          newComps[index].CantidadRequerida = 1;
+                                      } else if (newIsPeso && newComps[index].CantidadRequerida < 0.001) {
+                                          newComps[index].CantidadRequerida = 0.001;
+                                      }
+                                      
+                                      setFormData({ ...formData, ComponentesCombo: newComps });
+                                    }}
+                                  >
+                                    {isLoadingProductos ? (
+                                      <AutocompleteItem key="0" textValue="Cargando...">Cargando...</AutocompleteItem>
+                                    ) : (
+                                      productos?.map((p: any) => (
+                                        <AutocompleteItem key={p.Id.toString()} textValue={p.Descripcion}>
+                                          {p.Descripcion}
+                                        </AutocompleteItem>
+                                      ))
+                                    )}
+                                  </Autocomplete>
+                                </div>
+                                <div className="w-full sm:w-32 shrink-0">
+                                  <NumberInput
+                                    label="Cantidad"
+                                    value={comp.CantidadRequerida}
+                                    onValueChange={(val) => {
+                                      const newComps = [...(formData.ComponentesCombo || [])];
+                                      newComps[index].CantidadRequerida = val;
+                                      setFormData({ ...formData, ComponentesCombo: newComps });
+                                    }}
+                                    minValue={stepValue}
+                                    step={stepValue}
+                                    formatOptions={{
+                                      minimumFractionDigits: isPeso ? 3 : 0,
+                                      maximumFractionDigits: isPeso ? 3 : 0,
+                                    }}
+                                    classNames={inputClassNames}
+                                  />
+                                </div>
+                                <div className="flex items-center gap-2 pb-1">
+                                  <Button
+                                    isIconOnly
+                                    size="sm"
+                                    color="danger"
+                                    variant="light"
+                                    className="text-red-400 hover:bg-red-50"
+                                    onPress={() => {
+                                      const newComps = [...(formData.ComponentesCombo || [])];
+                                      newComps.splice(index, 1);
+                                      setFormData({ ...formData, ComponentesCombo: newComps });
+                                    }}
+                                  >
+                                    <Trash2 size={16} />
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {!formData.EsCombo && (
+                    <div className="text-center py-10">
+                      <p className="text-sm text-slate-500">Activá la opción superior para convertir este producto en un Combo compuesto por otros artículos.</p>
+                    </div>
+                  )}
                 </>
               )}
             </div>

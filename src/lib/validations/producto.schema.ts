@@ -62,6 +62,15 @@ export const createProductoSchema = z.object({
   // Imagen (Opcional, puede ser base64)
   Foto: z.any().optional(), // Se valida aparte o se procesa como Buffer
 
+  EsCombo: z.boolean().optional(),
+  ComponentesCombo: z.array(
+    z.object({
+      Id: z.number().optional(),
+      ComponenteId: z.number().int(),
+      CantidadRequerida: z.number().positive(),
+    })
+  ).optional(),
+
   PrecioCosto: z.number({ message: "El precio de costo debe ser un número" }).min(0).default(0),
   PreciosLista: z.array(
     z.object({
@@ -147,6 +156,15 @@ export const updateProductoSchema = z.object({
   // Imagen (Opcional, puede ser base64)
   Foto: z.any().optional(), // Se valida aparte o se procesa como Buffer
 
+  EsCombo: z.boolean().optional(),
+  ComponentesCombo: z.array(
+    z.object({
+      Id: z.number().optional(),
+      ComponenteId: z.number().int(),
+      CantidadRequerida: z.number().positive(),
+    })
+  ).optional(),
+
   PromocionesCantidad: z.array(
     z.object({
       Id: z.number().optional(),
@@ -206,5 +224,10 @@ export interface Producto {
     Cantidad: number;
     DescuentoPorcentaje: number;
     EstaActiva: boolean;
+  }[];
+  EsCombo?: boolean;
+  ComponentesCombo?: {
+    ComponenteId: number;
+    CantidadRequerida: number;
   }[];
 }

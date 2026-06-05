@@ -51,6 +51,9 @@ export async function GET(
         PromocionesCantidad: {
           select: { Id: true, Cantidad: true, DescuentoPorcentaje: true, EstaActiva: true },
         },
+        ArticulosCombo: {
+          select: { Id: true, ComponenteId: true, CantidadRequerida: true },
+        },
         Marca: { select: { Descripcion: true } },
         Rubro: { select: { Descripcion: true } },
         UnidadMedida: { select: { Descripcion: true } },
@@ -98,6 +101,13 @@ export async function GET(
         Cantidad: pc.Cantidad,
         DescuentoPorcentaje: Number(pc.DescuentoPorcentaje),
         EstaActiva: pc.EstaActiva,
+      })) || [],
+
+      EsCombo: producto.EsCombo,
+      ComponentesCombo: producto.ArticulosCombo?.map((ac: any) => ({
+        Id: Number(ac.Id),
+        ComponenteId: Number(ac.ComponenteId),
+        CantidadRequerida: Number(ac.CantidadRequerida),
       })) || [],
 
       // Hora en formato HH:mm:ss

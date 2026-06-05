@@ -1,5 +1,5 @@
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { PERMISSIONS, GET_PERMISSIONS } from "@/lib/constants/comprobantes";
+import { GET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
@@ -28,7 +28,8 @@ export async function GET(req: NextRequest) {
     // Además verificamos que no exceda el límite de un entero de 32 bits para Prisma (max 2147483647)
     const isNumericSearch = q && /^\d+$/.test(q);
     const codeNum = isNumericSearch ? parseInt(q, 10) : NaN;
-    const isValidInt = isNumericSearch && !isNaN(codeNum) && codeNum <= 2147483647;
+    const isValidInt =
+      isNumericSearch && !isNaN(codeNum) && codeNum <= 2147483647;
 
     if (q) {
       if (isNumericSearch) {
@@ -78,6 +79,21 @@ export async function GET(req: NextRequest) {
           TipoVenta: true,
           Stock: true,
           PrecioCosto: true,
+          EsCombo: true,
+          ArticulosCombo: {
+            select: {
+              CantidadRequerida: true,
+              Componente: {
+                select: {
+                  ArticuloStock: {
+                    where: { SucursalId: BigInt(sucursalId) },
+                    take: 1,
+                    select: { Stock: true },
+                  },
+                },
+              },
+            },
+          },
           Precios: {
             select: {
               ListaPrecioId: true,
@@ -93,7 +109,12 @@ export async function GET(req: NextRequest) {
             },
           },
           PromocionesCantidad: {
-            select: { Id: true, Cantidad: true, DescuentoPorcentaje: true, EstaActiva: true },
+            select: {
+              Id: true,
+              Cantidad: true,
+              DescuentoPorcentaje: true,
+              EstaActiva: true,
+            },
           },
           ArticuloStock: {
             where: { SucursalId: BigInt(sucursalId) },
@@ -111,10 +132,7 @@ export async function GET(req: NextRequest) {
     // Ajustar where para excluir coincidencias exactas ya encontradas
     const restWhere = { ...where };
     if (exactIds.length > 0) {
-      restWhere.AND = [
-        ...(restWhere.AND || []),
-        { Id: { notIn: exactIds } },
-      ];
+      restWhere.AND = [...(restWhere.AND || []), { Id: { notIn: exactIds } }];
     }
 
     const restLimit = Math.max(0, limit - exactIds.length);
@@ -138,6 +156,21 @@ export async function GET(req: NextRequest) {
           TipoVenta: true,
           Stock: true,
           PrecioCosto: true,
+          EsCombo: true,
+          ArticulosCombo: {
+            select: {
+              CantidadRequerida: true,
+              Componente: {
+                select: {
+                  ArticuloStock: {
+                    where: { SucursalId: BigInt(sucursalId) },
+                    take: 1,
+                    select: { Stock: true },
+                  },
+                },
+              },
+            },
+          },
           Precios: {
             select: {
               ListaPrecioId: true,
@@ -153,7 +186,12 @@ export async function GET(req: NextRequest) {
             },
           },
           PromocionesCantidad: {
-            select: { Id: true, Cantidad: true, DescuentoPorcentaje: true, EstaActiva: true },
+            select: {
+              Id: true,
+              Cantidad: true,
+              DescuentoPorcentaje: true,
+              EstaActiva: true,
+            },
           },
           ArticuloStock: {
             where: { SucursalId: BigInt(sucursalId) },
@@ -173,15 +211,34 @@ export async function GET(req: NextRequest) {
 
     const data = productos.map((p) => {
       const stockSucursal = p.ArticuloStock[0];
-      // Prioridad: Stock Sucursal -> Stock Global -> 0
-      const stockReal = stockSucursal ? stockSucursal.Stock : 0;
+      let stockReal = stockSucursal ? Number(stockSucursal.Stock) : 0;
+
+      // Si es combo, calcular el stock dinámico en base a los componentes
+      if (p.EsCombo && p.ArticulosCombo && p.ArticulosCombo.length > 0) {
+        let minStock = Infinity;
+        for (const item of p.ArticulosCombo) {
+          const compStock = item.Componente?.ArticuloStock?.[0]?.Stock
+            ? Number(item.Componente.ArticuloStock[0].Stock)
+            : 0;
+          const req = Number(item.CantidadRequerida);
+          if (req > 0) {
+            const possible = Math.floor(compStock / req);
+            if (possible < minStock) {
+              minStock = possible;
+            }
+          }
+        }
+        if (minStock === Infinity) minStock = 0;
+        stockReal = minStock;
+      }
 
       return {
         Id: Number(p.Id),
         Codigo: p.Codigo,
         CodigoBarra: p.CodigoBarra,
         Descripcion: p.Descripcion,
-        Stock: Number(stockReal),
+        Stock: stockReal,
+        EsCombo: p.EsCombo,
 
         DescuentaStock: p.DescuentaStock,
         PermiteStockNegativo: p.PermiteStockNegativo,
@@ -196,18 +253,25 @@ export async function GET(req: NextRequest) {
         HoraLimiteVentaHasta: formatTime(p.HoraLimiteVentaHasta),
 
         PrecioCosto: Number(p.PrecioCosto || 0),
-        PreciosLista: (p.Precios || []).map((pl: { ListaPrecioId: bigint; PorcentajeGanancia: unknown; PrecioFinal: unknown }) => ({
-          ListaPrecioId: Number(pl.ListaPrecioId),
-          PorcentajeGanancia: Number(pl.PorcentajeGanancia),
-          PrecioFinal: Number(pl.PrecioFinal),
-        })),
+        PreciosLista: (p.Precios || []).map(
+          (pl: {
+            ListaPrecioId: bigint;
+            PorcentajeGanancia: unknown;
+            PrecioFinal: unknown;
+          }) => ({
+            ListaPrecioId: Number(pl.ListaPrecioId),
+            PorcentajeGanancia: Number(pl.PorcentajeGanancia),
+            PrecioFinal: Number(pl.PrecioFinal),
+          }),
+        ),
         Iva: p.Iva,
-        PromocionesCantidad: p.PromocionesCantidad?.map((pc: any) => ({
-          Id: Number(pc.Id),
-          Cantidad: pc.Cantidad,
-          DescuentoPorcentaje: Number(pc.DescuentoPorcentaje),
-          EstaActiva: pc.EstaActiva,
-        })) || [],
+        PromocionesCantidad:
+          p.PromocionesCantidad?.map((pc: any) => ({
+            Id: Number(pc.Id),
+            Cantidad: pc.Cantidad,
+            DescuentoPorcentaje: Number(pc.DescuentoPorcentaje),
+            EstaActiva: pc.EstaActiva,
+          })) || [],
         TipoVenta: p.TipoVenta,
       };
     });
