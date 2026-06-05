@@ -1,7 +1,7 @@
 "use client";
 
 import GenericCrud from "@/components/shared/GenericCrud";
-import ProductoForm from "./ProductoForm";
+import ComboForm from "./ComboForm";
 import { Producto } from "@/lib/validations/producto.schema";
 import { Chip, Skeleton, Tooltip } from "@heroui/react";
 import { productoListAdapter } from "@/lib/adapters/producto.adapter";
@@ -49,18 +49,18 @@ function ProductoPreviewContent({ item }: { item: Producto }) {
     <div className="space-y-5 text-sm">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-slate-500 text-xs mb-0.5">Código / Barras</p>
+          <p className="text-slate-500 text-xs mb-0.5">CÃ³digo / Barras</p>
           <p className="font-medium">
             {p?.Codigo ?? "-"} / {p?.CodigoBarra ?? "-"}
           </p>
         </div>
         <div>
-          <p className="text-slate-500 text-xs mb-0.5">Categorización</p>
+          <p className="text-slate-500 text-xs mb-0.5">CategorizaciÃ³n</p>
           <p className="font-medium">
-            {p?.Marca?.Descripcion ?? "-"} · {p?.Rubro?.Descripcion ?? "-"}
+            {p?.Marca?.Descripcion ?? "-"} Â· {p?.Rubro?.Descripcion ?? "-"}
           </p>
           <p className="text-slate-400 text-xs mt-0.5">
-            {p?.UnidadMedida?.Descripcion ?? "-"} · IVA{" "}
+            {p?.UnidadMedida?.Descripcion ?? "-"} Â· IVA{" "}
             {p?.Iva?.Porcentaje ?? "-"}%
           </p>
         </div>
@@ -75,38 +75,23 @@ function ProductoPreviewContent({ item }: { item: Producto }) {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-slate-500 text-xs mb-0.5">Stock</p>
-          <p
-            className={
-              (p?.StockMinimo ?? 0) > 0 &&
-              (p?.Stock ?? 0) <= (p?.StockMinimo ?? 0)
-                ? "font-semibold text-red-600"
-                : "font-medium"
-            }
+          <p className="text-slate-500 text-xs mb-0.5">Estado</p>
+          <span
+            className={`px-2 py-0.5 rounded text-xs font-medium ${
+              p?.EstaEliminado
+                ? "bg-red-100 text-red-700"
+                : "bg-green-100 text-green-700"
+            }`}
           >
-            {p?.Stock ?? 0} unidades
-          </p>
-          <p className="text-slate-400 text-xs">
-            Mínimo: {p?.StockMinimo ?? 0}
-            {p?.SucursalNombre && ` · ${p.SucursalNombre}`}
-          </p>
-        </div>
-        <div>
-          <p className="text-slate-500 text-xs mb-0.5">Ubicación</p>
-          <p className="font-medium">{p?.Ubicacion || "—"}</p>
+            {p?.EstaEliminado ? "Inactivo" : "Activo"}
+          </span>
         </div>
       </div>
 
       <div>
-        <p className="text-slate-500 text-xs mb-1">Precios</p>
+        <p className="text-slate-500 text-xs mb-1">Precios Finales</p>
         <div className="grid grid-cols-3 gap-2 p-3 rounded-lg bg-slate-50 border border-gray-100">
-          <div>
-            <p className="text-slate-400 text-xs">Costo</p>
-            <p className="font-semibold">
-              {formatCurrency(Number(p?.Precio?.PrecioCosto ?? 0), currency)}
-            </p>
-          </div>
-          {p?.PreciosLista?.slice(0, 2).map((pl: any, idx: number) => (
+          {p?.PreciosLista?.slice(0, 3).map((pl: any, idx: number) => (
             <div key={pl.Id || idx}>
               <p
                 className="text-slate-400 text-xs truncate"
@@ -122,21 +107,6 @@ function ProductoPreviewContent({ item }: { item: Producto }) {
             </div>
           ))}
         </div>
-        {(() => {
-          const costo = Number(p?.Precio?.PrecioCosto ?? 0);
-          const venta = p?.PreciosLista?.[0]
-            ? Number(p.PreciosLista[0].PrecioFinal)
-            : 0;
-          const margen =
-            costo > 0 && venta > 0
-              ? ((venta / costo - 1) * 100).toFixed(1)
-              : null;
-          return margen != null ? (
-            <p className="text-slate-400 text-xs mt-1">
-              Margen princ.: {margen}%
-            </p>
-          ) : null;
-        })()}
       </div>
 
       <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
@@ -161,7 +131,7 @@ function ProductoPreviewContent({ item }: { item: Producto }) {
         )}
         {p?.ActivarLimiteVenta && (
           <span className="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-600">
-            Límite: {p?.LimiteVenta}
+            LÃ­mite: {p?.LimiteVenta}
           </span>
         )}
         {p?.ActivarHoraVenta && (
@@ -205,7 +175,7 @@ function CopyableCode({ value }: { value: string }) {
       setCopied(true);
       addToast({
         title: "Copiado",
-        description: "Código copiado al portapapeles",
+        description: "CÃ³digo copiado al portapapeles",
         color: "success",
         timeout: 1500,
       });
@@ -219,7 +189,7 @@ function CopyableCode({ value }: { value: string }) {
     }
   }, [value]);
 
-  if (!value) return <span className="text-slate-500">—</span>;
+  if (!value) return <span className="text-slate-500">â€”</span>;
 
   return (
     <button
@@ -245,7 +215,7 @@ function CopyableCode({ value }: { value: string }) {
   );
 }
 
-export default function ProductoCRUD() {
+export default function ComboCRUD() {
   const currency = useCurrency();
   const queryClient = useQueryClient();
   const { addStockMutation } = useProductos();
@@ -261,7 +231,7 @@ export default function ProductoCRUD() {
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
 
   const invalidateProductos = () => {
-    queryClient.invalidateQueries({ queryKey: ["productos-generic"] });
+    queryClient.invalidateQueries({ queryKey: ["combos-generic"] });
     queryClient.invalidateQueries({ queryKey: ["producto-detail"] });
   };
 
@@ -281,7 +251,7 @@ export default function ProductoCRUD() {
 
     addToast({
       title: "Stock actualizado",
-      description: `Se agregó ${qty} al stock. Nuevo total: ${newStock}`,
+      description: `Se agregÃ³ ${qty} al stock. Nuevo total: ${newStock}`,
       color: "success",
     });
   };
@@ -290,13 +260,11 @@ export default function ProductoCRUD() {
     <>
       <GenericCrud<Producto>
         apiPath="/api/productos"
-        getApiExtraParams={(state) => ({ 
-          tipo: "articulo",
-          ...(state.lowStockOnly ? { bajoStock: true } : {})
-        })}
-        queryKey="productos-generic"
-        searchPlaceholder="Buscar por nombre, código o barras..."
-        FormComponent={ProductoForm}
+        getApiExtraParams={() => ({ tipo: "combo" })}
+        queryKey="combos-generic"
+        searchPlaceholder="Buscar por nombre, cÃ³digo o barras..."
+        FormComponent={ComboForm}
+        title="Promociones y Combos"
         renderRowPreview={(item) => <ProductoPreviewContent item={item} />}
         getRowPreviewTitle={(item) => item.Descripcion || "Producto"}
         showEditInPreview={false}
@@ -340,12 +308,12 @@ export default function ProductoCRUD() {
         exportConfig={{
           filename: "productos",
           columns: [
-            { key: "CodigoBarra", header: "Código" },
-            { key: "Descripcion", header: "Descripción" },
+            { key: "CodigoBarra", header: "CÃ³digo" },
+            { key: "Descripcion", header: "DescripciÃ³n" },
             { key: "Marca", header: "Marca" },
             { key: "Rubro", header: "Rubro" },
             { key: "Stock", header: "Stock" },
-            { key: "StockMinimo", header: "Stock mínimo" },
+            { key: "StockMinimo", header: "Stock mÃ­nimo" },
             { key: "Costo", header: "Costo" },
             { key: "Precios", header: "Precios" },
           ],
@@ -364,7 +332,7 @@ export default function ProductoCRUD() {
           }),
         }}
         columns={[
-          { uid: "Codigo", name: "CODIGO", sortable: false },
+          { uid: "Codigo", name: "CÓDIGO", sortable: false },
           {
             uid: "Descripcion",
             name: "DESCRIPCIÓN",
@@ -374,12 +342,6 @@ export default function ProductoCRUD() {
           { uid: "Marca", name: "MARCA", sortable: true, align: "start" },
           { uid: "Rubro", name: "RUBRO", sortable: true, align: "start" },
           { uid: "Stock", name: "STOCK", sortable: true },
-          {
-            uid: "Costo",
-            name: "COSTO",
-            sortable: true,
-            sortKey: "Precio.PrecioCosto",
-          },
           {
             uid: "Precios",
             name: "PRECIOS",
@@ -414,57 +376,46 @@ export default function ProductoCRUD() {
                   {item.Rubro?.Descripcion ?? "—"}
                 </span>
               );
-            case "Stock": {
-              const stock = item.Stock ?? 0;
-              const stockMinimo = item.StockMinimo ?? 0;
-              const isLowStock = stockMinimo > 0 && stock <= stockMinimo;
-              const fmt = (v: number) => parseFloat(v.toFixed(3)).toString();
-
+            case "Stock":
               return (
                 <div className="flex flex-col gap-0.5 min-w-[80px]">
                   <Tooltip
                     content={
-                      <div className="text-xs px-1 py-0.5">
-                        <p>
-                          <span className="text-slate-400">Mínimo:</span>{" "}
-                          {fmt(stockMinimo)}
+                      <div className="text-xs px-2 py-1 max-w-[250px]">
+                        <p className="font-semibold text-slate-300 mb-1 border-b border-slate-600 pb-1">
+                          Disponibilidad según componentes:
                         </p>
-                        <p>
-                          <span className="text-slate-400">Actual:</span>{" "}
-                          {fmt(stock)}
-                        </p>
+                        {item.ComponentesCombo && item.ComponentesCombo.length > 0 ? (
+                          <ul className="space-y-1">
+                            {item.ComponentesCombo.map((c: any, i: number) => {
+                              const puedeArmar = c.CantidadRequerida > 0 ? Math.floor(c.Stock / c.CantidadRequerida) : 0;
+                              return (
+                                <li key={i} className="flex justify-between gap-4">
+                                  <span className="truncate max-w-[120px]">{c.CantidadRequerida}x {c.Descripcion}</span>
+                                  <span className={puedeArmar === 0 ? "text-red-400 font-bold" : "text-slate-300"}>
+                                    Stock: {c.Stock} (Arma {puedeArmar})
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        ) : (
+                          <p className="text-slate-400 italic">No tiene componentes.</p>
+                        )}
                       </div>
                     }
                     placement="top"
                     delay={300}
                     classNames={{
                       base: "before:bg-[#0F2233]",
-                      content: "bg-[#0F2233] text-white text-xs font-medium",
+                      content: "bg-[#0F2233] text-white text-xs",
                     }}
                   >
-                    <span
-                      className={
-                        isLowStock
-                          ? "font-semibold text-red-600 cursor-default"
-                          : "font-medium text-gray-700 cursor-default"
-                      }
-                    >
-                      {fmt(stockMinimo)} / {fmt(stock)}
+                    <span className="font-bold text-gray-800 cursor-help border-b border-dashed border-gray-400 pb-0.5">
+                      {item.Stock ?? 0}
                     </span>
                   </Tooltip>
-                  {item.SucursalNombre && (
-                    <span className="text-[10px] text-slate-400">
-                      {item.SucursalNombre}
-                    </span>
-                  )}
                 </div>
-              );
-            }
-            case "Costo":
-              return (
-                <span className="font-medium text-gray-700">
-                  {formatCurrency(Number(item.PrecioCosto ?? 0), currency)}
-                </span>
               );
             case "Precios":
               return (
@@ -490,7 +441,7 @@ export default function ProductoCRUD() {
                   )}
                   {(item.PreciosLista?.length || 0) > 2 && (
                     <span className="text-[10px] text-gray-400">
-                      +{item.PreciosLista!.length - 2} más
+                      +{item.PreciosLista!.length - 2} mÃ¡s
                     </span>
                   )}
                 </div>
@@ -508,10 +459,6 @@ export default function ProductoCRUD() {
             case "acciones":
               return (
                 <div className="flex gap-2 w-full justify-center items-center">
-                  <AddStockButton
-                    onPress={() => handleOpenStockModal(item)}
-                    label={`Agregar Stock ${item.Descripcion || "producto"}`}
-                  />
                   <EditButton
                     onPress={() => actions.onEdit(item)}
                     label={`Editar ${item.Descripcion || "producto"}`}

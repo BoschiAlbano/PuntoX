@@ -31,18 +31,25 @@ export async function GET(req: NextRequest) {
     const editIdParam = req.nextUrl.searchParams.get("editId");
     const editId = editIdParam ? Number(editIdParam) : null;
 
+    const tipoParam = req.nextUrl.searchParams.get("tipo");
+
     // Construir where clause
     const where: {
       TenantId: bigint;
-      // EstaEliminado: boolean;
+      EsCombo?: boolean;
       OR?: Array<{
         Descripcion?: { contains: string; mode: "insensitive" };
         CodigoBarra?: { contains: string; mode: "insensitive" };
       }>;
     } = {
       TenantId: BigInt(tenantId),
-      // EstaEliminado: false,
     };
+
+    if (tipoParam === "combo") {
+      where.EsCombo = true;
+    } else if (tipoParam === "articulo") {
+      where.EsCombo = false;
+    }
 
     // Agregar búsqueda si existe
     if (search) {
@@ -104,6 +111,7 @@ export async function GET(req: NextRequest) {
               CantidadRequerida: true,
               Componente: {
                 select: {
+                  Descripcion: true,
                   ArticuloStock: {
                     where: { SucursalId: BigInt(sucursalId) },
                     take: 1,
@@ -184,6 +192,7 @@ export async function GET(req: NextRequest) {
             CantidadRequerida: true,
             Componente: {
               select: {
+                Descripcion: true,
                 ArticuloStock: {
                   where: { SucursalId: BigInt(sucursalId) },
                   take: 1,
@@ -267,6 +276,11 @@ export async function GET(req: NextRequest) {
           Cantidad: Number(p.Cantidad),
           PrecioFinal: Number(p.PrecioFinal),
           EstaActiva: Boolean(p.EstaActiva)
+        })) || [],
+        ComponentesCombo: producto.ArticulosCombo?.map((c: any) => ({
+          CantidadRequerida: Number(c.CantidadRequerida),
+          Descripcion: c.Componente?.Descripcion || "",
+          Stock: c.Componente?.ArticuloStock?.[0]?.Stock ? Number(c.Componente.ArticuloStock[0].Stock) : 0,
         })) || [],
       };
     });

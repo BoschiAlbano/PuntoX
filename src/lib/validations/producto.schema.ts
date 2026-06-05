@@ -227,7 +227,9 @@ export interface Producto {
   }[];
   EsCombo?: boolean;
   ComponentesCombo?: {
-    ComponenteId: number;
+    ComponenteId?: number;
     CantidadRequerida: number;
+    Descripcion?: string;
+    Stock?: number;
   }[];
 }

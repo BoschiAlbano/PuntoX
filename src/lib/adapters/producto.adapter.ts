@@ -52,6 +52,13 @@ export const productoAdapter = (data: any): Producto => {
       DescuentoPorcentaje: Number(pc.DescuentoPorcentaje),
       EstaActiva: Boolean(pc.EstaActiva),
     })) : [],
+    EsCombo: Boolean(data.EsCombo),
+    ComponentesCombo: Array.isArray(data.ComponentesCombo) ? data.ComponentesCombo.map((c: any) => ({
+      ComponenteId: Number(c.ComponenteId || 0),
+      CantidadRequerida: Number(c.CantidadRequerida || 0),
+      Descripcion: c.Descripcion || "",
+      Stock: Number(c.Stock || 0),
+    })) : [],
   };
 };
 
