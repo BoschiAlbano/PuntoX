@@ -20,9 +20,12 @@ export async function GET(req: NextRequest) {
     }
 
     const searchParams = req.nextUrl.searchParams;
-    const search = searchParams.get("search") || "";
+    const search = searchParams.get("q") || searchParams.get("search") || "";
     const status = searchParams.get("status") || "todos";
     const plan = searchParams.get("plan") || "todos";
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "10")));
+    const skip = (page - 1) * limit;
 
     // Construir where clause
     const where: any = {};
@@ -48,9 +51,14 @@ export async function GET(req: NextRequest) {
       where.EstaActivo = status === "activo";
     }
 
+    // Total count for pagination (ignoring skip/take)
+    const totalTenants = await prisma.tenant.count({ where });
+
     // Obtener todos los tenants con su configuración más reciente
     const tenants = await prisma.tenant.findMany({
       where,
+      skip,
+      take: limit,
       select: {
         Id: true,
         Nombre: true,
@@ -179,7 +187,13 @@ export async function GET(req: NextRequest) {
     };
 
     return NextResponse.json({
-      tenants: filteredTenants,
+      data: filteredTenants,
+      pagination: {
+        total: totalTenants,
+        page,
+        limit,
+        totalPages: Math.ceil(totalTenants / limit),
+      },
       totals,
     });
   } catch (error) {

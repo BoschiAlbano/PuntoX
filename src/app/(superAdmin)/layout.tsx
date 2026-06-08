@@ -1,8 +1,10 @@
 import { requireSuperAdminServer } from "@/lib/requireSuperAdmin";
+import AdminShell from "./AdminShell";
 
 /**
  * Layout que protege todas las rutas de /admin
- * Solo los SuperAdmin pueden acceder
+ * Solo los SuperAdmin pueden acceder.
+ * La verificación de auth corre en el server; el shell visual es client.
  */
 export default async function AdminLayout({
   children,
@@ -15,5 +17,5 @@ export default async function AdminLayout({
     redirectUrl: "/signin",
   });
 
-  return <>{children}</>;
+  return <AdminShell>{children}</AdminShell>;
 }

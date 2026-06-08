@@ -3,7 +3,7 @@
 import { useUserStore } from "@/store/useUserStore";
 import { useSupabaseAuthContext } from "@/components/auth/sessionProvider";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import {
@@ -12,8 +12,12 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/react";
-import { ChevronDown, LogOut, Settings, User } from "lucide-react";
-import { clearAllClientState, getStoredSesionId } from "@/lib/auth/clearClientState";
+import { ChevronDown, LogOut, Settings, User, Shield } from "lucide-react";
+import {
+  clearAllClientState,
+  getStoredSesionId,
+} from "@/lib/auth/clearClientState";
+import { TIPO_PERFIL } from "@/lib/constants/comprobantes";
 
 const ACCENT = "#67afc3";
 
@@ -22,6 +26,7 @@ export function UserDropdown() {
   const { supabase } = useSupabaseAuthContext();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const pathname = usePathname();
 
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [fotoError, setFotoError] = useState(false);
@@ -29,7 +34,8 @@ export function UserDropdown() {
   // User details
   const email = typeof user?.Email === "string" ? user.Email : "";
   const usuario = typeof user?.Usuario === "string" ? user.Usuario : "";
-  const fotoUrl = typeof user?.Foto === "string" && user.Foto.length > 0 ? user.Foto : null;
+  const fotoUrl =
+    typeof user?.Foto === "string" && user.Foto.length > 0 ? user.Foto : null;
 
   // Resetear error de foto cuando la URL cambia
   useEffect(() => {
@@ -37,6 +43,7 @@ export function UserDropdown() {
   }, [fotoUrl]);
   const displayName = email.trim() || usuario || "Usuario";
   const displayRol = roles.map((r) => r.Descripcion).join(" · ") || "Operador";
+  const isSuperAdmin = roles.some((r) => r.Tipo === TIPO_PERFIL.SUPERADMIN);
   const userInitials =
     email
       .split(/[\s@.]/)
@@ -111,7 +118,6 @@ export function UserDropdown() {
             ) : (
               userInitials
             )}
-
           </div>
 
           {/* Info usuario — md+ */}
@@ -159,6 +165,16 @@ export function UserDropdown() {
           onPress={() => router.push("/perfil")}
         >
           Mi perfil
+        </DropdownItem>
+
+        <DropdownItem
+          key="superadmin_dashboard"
+          startContent={<Shield size={16} className="text-slate-500" />}
+          textValue={pathname.startsWith("/admin") ? "Dashboard Tienda" : "Panel Superadmin"}
+          onPress={() => router.push(pathname.startsWith("/admin") ? "/dashboard" : "/admin/dashboard")}
+          className={isSuperAdmin ? "" : "hidden"}
+        >
+          {pathname.startsWith("/admin") ? "Dashboard Tienda" : "Panel Superadmin"}
         </DropdownItem>
 
         <DropdownItem

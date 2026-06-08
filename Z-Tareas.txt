@@ -3,3 +3,7 @@ Nuevas implementaciones:
 1- optimización de imágenes en supabase .web (implementar).
 2- limpieza de comprobantes viejos o datos viejos que no se usen como cuentas corrientes viejas (No por analíticas)
 3- dar de baja un registro de manera física y no lógica, en opciones menú. (Implementar).
+
+1- implementar el uso de OnboardingCompleto, el mismo se encuentra en la tabla Tenant, es un campo booleano que indica si el tenant ya completó y esta listo para usar.
+prefiero usar el OnboardingCompleto para guiar al usuario y que termine de completar los datos de configuracion de tienda. luego sera completa y termitira el acceso a las demas rutas.
+con respecto a las pruebas de 14 dias voy a usar desactivar y activar tenat que creo si no recuendo mal usa el campo EstaActivo para activar o descartivar las tenats y su sucursales.
