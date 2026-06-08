@@ -216,7 +216,7 @@ function AdminTenantsContent() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 p-6 space-y-8">
+    <main className="min-h-screen sm:p-6 space-y-8">
       {/* Cards de métricas */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
@@ -257,8 +257,12 @@ function AdminTenantsContent() {
       <section className="bg-white rounded-xl shadow-lg p-4 md:p-6 overflow-hidden">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Listado de Tiendas</h2>
-            <p className="text-sm text-slate-500">Gestioná los comercios de la plataforma</p>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Listado de Tiendas
+            </h2>
+            <p className="text-sm text-slate-500">
+              Gestioná los comercios de la plataforma
+            </p>
           </div>
           <Button
             color="primary"

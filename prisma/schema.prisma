@@ -16,7 +16,8 @@ model Tenant {
   Nombre                String                 @db.VarChar(250)
   Dominio               String?                @unique @db.VarChar(400)
   EstaActivo            Boolean                @default(true)
-  PlanId                BigInt?
+  PlanId                BigInt
+  FechaVencimiento      DateTime?
   OnboardingCompleto    Boolean                @default(false)
   EstaEliminado         Boolean                @default(false)
   Articulos             Articulo[]
@@ -54,7 +55,7 @@ model Tenant {
   SesionesActivas       SesionActiva[]
   Sucursales            Sucursal[]
   Tarjetas              Tarjeta[]
-  Plan                  PlanSaaS?              @relation(fields: [PlanId], references: [Id])
+  Plan                  PlanSaaS               @relation(fields: [PlanId], references: [Id])
   TokensCsrf            TokenCsrf[]
   Unidades              UnidadMedida[]
   Usuarios              Usuario[]

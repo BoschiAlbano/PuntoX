@@ -227,6 +227,11 @@ export async function PATCH(req: NextRequest) {
 
     const updateData: any = {};
 
+    const currentTenant = await prisma.tenant.findUnique({
+      where: { Id: BigInt(tenantId) },
+      select: { FechaVencimiento: true }
+    });
+
     switch (action) {
       case "activate":
         updateData.EstaActivo = true;
@@ -236,6 +241,15 @@ export async function PATCH(req: NextRequest) {
         break;
       case "completeOnboarding":
         updateData.OnboardingCompleto = true;
+        break;
+      case "renovar":
+        if (!currentTenant) return NextResponse.json({ error: "Tenant no encontrado" }, { status: 404 });
+        const baseDate = currentTenant.FechaVencimiento && currentTenant.FechaVencimiento > new Date() 
+          ? new Date(currentTenant.FechaVencimiento) 
+          : new Date();
+        baseDate.setDate(baseDate.getDate() + 30);
+        updateData.FechaVencimiento = baseDate;
+        updateData.EstaActivo = true; // Activar si estaba inactivo por falta de pago
         break;
       default:
         return NextResponse.json(

@@ -29,6 +29,7 @@ export async function GET(
         EstaActivo: true,
         OnboardingCompleto: true,
         EstaEliminado: true,
+        FechaVencimiento: true,
         PlanId: true,
         Plan: {
           select: {
@@ -84,6 +85,7 @@ export async function GET(
       estaActivo: tenant.EstaActivo,
       onboardingCompleto: tenant.OnboardingCompleto,
       estaEliminado: tenant.EstaEliminado,
+      fechaVencimiento: tenant.FechaVencimiento ? tenant.FechaVencimiento.toISOString() : null,
       plan: tenant.Plan
         ? {
             id: Number(tenant.Plan.Id),

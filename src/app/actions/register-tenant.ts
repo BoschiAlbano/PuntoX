@@ -21,6 +21,7 @@ const registerTenantSchema = z.object({
   adminEmail: z.string().email(),
   adminUsername: emptyStringToUndefined, // Opcional: se genera desde email si no se proporciona
   adminPassword: z.string().min(6),
+  planId: z.coerce.number().positive("Debe seleccionar un plan válido"),
   // Campos alternativos del otro formulario
   storeName: z.string().min(2).optional(),
   storeEmail: z.union([z.string().email(), z.literal("")]).optional(),
@@ -59,6 +60,7 @@ export async function registerTenant(formData: FormData) {
     adminEmail: getValue("adminEmail", "email"),
     adminUsername: getValue("adminUsername", "username") || "",
     adminPassword: getValue("adminPassword", "password"),
+    planId: getValue("planId"),
     // Campos alternativos
     storeName: getValue("storeName"),
     storeEmail: getValue("storeEmail") || "",
@@ -93,6 +95,7 @@ export async function registerTenant(formData: FormData) {
     adminEmail,
     adminUsername,
     adminPassword,
+    planId,
   } = parseResult.data;
 
   // Generar username desde email si no se proporciona
@@ -130,11 +133,21 @@ export async function registerTenant(formData: FormData) {
 
     // transaccion prisma
     const tenant = await prisma.$transaction(async (tx) => {
+      // Obtener el plan para decidir si lleva fecha de vencimiento
+      const selectedPlan = await tx.planSaaS.findUnique({ where: { Id: planId } });
+      let fechaVencimiento: Date | null = null;
+      if (selectedPlan && selectedPlan.Nombre !== "Plan Ilimitado") {
+        fechaVencimiento = new Date();
+        fechaVencimiento.setDate(fechaVencimiento.getDate() + 30);
+      }
+
       // Creo todas las tablas del tenant esta relacionado
       const newTenant = await tx.tenant.create({
         data: {
           Nombre: tenantName,
           EstaActivo: true,
+          PlanId: planId,
+          FechaVencimiento: fechaVencimiento,
         },
       });
 

@@ -53,6 +53,7 @@ type TenantDetail = {
   estaActivo: boolean;
   onboardingCompleto: boolean;
   estaEliminado: boolean;
+  fechaVencimiento: string | null;
   plan: { id: number; nombre: string; costoMensual: number } | null;
   configuracion: {
     razonSocial: string;
@@ -449,6 +450,22 @@ export default function TenantDetailPage() {
                     value={`$${tenant.plan.costoMensual.toLocaleString("es-AR")}`}
                   />
                 )}
+                <InfoRow
+                  label="Vencimiento"
+                  value={tenant.fechaVencimiento ? new Date(tenant.fechaVencimiento).toLocaleDateString("es-AR") : "Sin vencimiento"}
+                  icon={<Clock className="w-3.5 h-3.5" />}
+                />
+                <Button
+                  color="primary"
+                  variant="flat"
+                  size="sm"
+                  className="w-full mt-2"
+                  onPress={() => tenantActionMutation.mutate("renovar")}
+                  isLoading={tenantActionMutation.isPending}
+                >
+                  Renovar Suscripción (+30 días)
+                </Button>
+                <Divider className="my-2" />
                 <InfoRow
                   label="Moneda"
                   value={tenant.configuracion?.moneda || "ARS"}

@@ -2,18 +2,19 @@
 
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Button,
-  Card,
-  CardBody,
-  CardHeader,
-  Divider,
-  Input,
-} from "@heroui/react";
+import { Button, Card, CardBody, CardHeader, Input } from "@heroui/react";
 import { addToast } from "@heroui/react";
 import Link from "next/link";
-import { ArrowLeft, Building2, Store, UserPlus } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  Store,
+  UserPlus,
+  CreditCard,
+} from "lucide-react";
 import { registerTenant } from "@/app/actions/register-tenant";
+import { useQuery } from "@tanstack/react-query";
+import { Select, SelectItem } from "@heroui/react";
 
 type RegisterState = {
   ok: boolean;
@@ -33,7 +34,7 @@ export default function NewTenantPage() {
   const [state, formAction, isPending] = useActionState(
     async (
       _prev: RegisterState,
-      formData: FormData
+      formData: FormData,
     ): Promise<RegisterState> => {
       const result = await registerTenant(formData);
       return {
@@ -43,8 +44,17 @@ export default function NewTenantPage() {
         tenantId: result.tenantId,
       };
     },
-    initialState
+    initialState,
   );
+
+  const { data: planes, isLoading: loadingPlanes } = useQuery({
+    queryKey: ["admin-planes"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/planes");
+      const json = await res.json();
+      return json.data || [];
+    },
+  });
 
   useEffect(() => {
     if (!state.message && !state.error) return;
@@ -68,163 +78,205 @@ export default function NewTenantPage() {
   }, [state, router]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 p-4 md:p-8">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <Link
-            href="/admin/tenants"
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 rounded-lg border border-slate-200 transition-all shadow-sm"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Volver a tiendas
-          </Link>
-        </div>
-
-        <div className="space-y-2">
+    <main className="space-y-6 pb-8">
+      <Button
+        variant="light"
+        startContent={<ArrowLeft className="w-4 h-4" />}
+        onPress={() => router.push("/admin/tenants")}
+        className="text-slate-600 px-0 hover:bg-transparent hover:text-slate-900"
+      >
+        Volver a tiendas
+      </Button>
+      <div className="max-w-6xl mx-auto space-y-6">
+        {/* Header / Nav */}
+        <div className="space-y-4 mb-8">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-gradient-to-br from-[#67afc3] to-[#4b8a9e] rounded-xl shadow-lg shadow-[#67afc3]/20">
               <Building2 className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">
+              <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
                 Nueva Tienda
               </h1>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 hidden sm:block">
                 Registrá un nuevo comercio y su administrador principal
               </p>
             </div>
           </div>
         </div>
 
-        <Card className="border-none shadow-xl bg-white/90 backdrop-blur-md">
-          <CardBody className="p-6 md:p-8 space-y-8">
-            {state.error && (
-              <Card className="border border-danger-200 bg-danger-50 shadow-none">
-                <CardBody className="text-sm text-danger-700 py-3">
-                  {state.error}
-                </CardBody>
-              </Card>
-            )}
+        {state.error && (
+          <Card className="border border-danger-200 bg-danger-50 shadow-none">
+            <CardBody className="text-sm text-danger-700 py-3">
+              {state.error}
+            </CardBody>
+          </Card>
+        )}
 
-            {state.message && state.ok && (
-              <Card className="border border-success-200 bg-success-50 shadow-none">
-                <CardBody className="text-sm text-success-700 py-3">
-                  {state.message}
-                </CardBody>
-              </Card>
-            )}
+        {state.message && state.ok && (
+          <Card className="border border-success-200 bg-success-50 shadow-none">
+            <CardBody className="text-sm text-success-700 py-3">
+              {state.message}
+            </CardBody>
+          </Card>
+        )}
 
-            <form action={formAction} className="space-y-8">
-              {/* Datos del Comercio */}
-              <section className="space-y-4">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                  <div className="p-1.5 bg-blue-50 text-blue-600 rounded-md">
-                    <Store className="w-4 h-4" />
+        <form action={formAction} className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Columna 1: Datos del Comercio */}
+            <Card className="border-none shadow-xl bg-white/90 backdrop-blur-md h-full">
+              <CardBody className="p-6 md:p-8">
+                <section className="space-y-6">
+                  <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                    <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                      <Store className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-slate-800">
+                        Datos del comercio
+                      </h2>
+                      <p className="text-xs text-slate-500">
+                        Configuración principal
+                      </p>
+                    </div>
                   </div>
-                  <h2 className="text-base font-semibold text-slate-800">
-                    Datos del comercio
-                  </h2>
-                </div>
-                <div className="grid gap-4">
-                  <Input
-                    name="tenantName"
-                    label="Nombre del comercio"
-                    placeholder="Ej: Kiosco San Martín"
-                    variant="bordered"
-                    labelPlacement="outside"
-                    classNames={{ label: "font-medium" }}
-                    isRequired
-                  />
-                  <Input
-                    name="tenantEmail"
-                    type="email"
-                    label="Email de contacto (opcional)"
-                    placeholder="kiosco@example.com"
-                    variant="bordered"
-                    labelPlacement="outside"
-                    classNames={{ label: "font-medium" }}
-                  />
-                </div>
-              </section>
 
-              {/* Usuario Administrador */}
-              <section className="space-y-4">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                  <div className="p-1.5 bg-purple-50 text-purple-600 rounded-md">
-                    <UserPlus className="w-4 h-4" />
-                  </div>
-                  <h2 className="text-base font-semibold text-slate-800">
-                    Usuario administrador
-                  </h2>
-                </div>
-                <div className="grid gap-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input
-                      name="adminNombre"
-                      label="Nombre"
-                      placeholder="Juan"
+                  <div className="grid gap-5">
+                    <Select
+                      name="planId"
+                      label="Plan asignado"
+                      placeholder="Seleccione un plan"
                       variant="bordered"
                       labelPlacement="outside"
-                      classNames={{ label: "font-medium" }}
+                      classNames={{ label: "font-medium text-slate-700" }}
                       isRequired
-                    />
+                      isLoading={loadingPlanes}
+                    >
+                      {(planes || []).map((plan: any) => (
+                        <SelectItem
+                          key={plan.id?.toString() || plan.Id?.toString()}
+                          value={plan.id?.toString() || plan.Id?.toString()}
+                        >
+                          {plan.nombre || plan.Nombre}
+                        </SelectItem>
+                      ))}
+                    </Select>
+
                     <Input
-                      name="adminApellido"
-                      label="Apellido"
-                      placeholder="Pérez"
+                      name="tenantName"
+                      label="Nombre del comercio"
+                      placeholder="Ej: Kiosco San Martín"
                       variant="bordered"
                       labelPlacement="outside"
-                      classNames={{ label: "font-medium" }}
+                      classNames={{ label: "font-medium text-slate-700" }}
+                      isRequired
+                    />
+
+                    <Input
+                      name="tenantEmail"
+                      type="email"
+                      label="Email de contacto (opcional)"
+                      placeholder="kiosco@example.com"
+                      variant="bordered"
+                      labelPlacement="outside"
+                      classNames={{ label: "font-medium text-slate-700" }}
+                    />
+                  </div>
+                </section>
+              </CardBody>
+            </Card>
+
+            {/* Columna 2: Usuario Administrador */}
+            <Card className="border-none shadow-xl bg-white/90 backdrop-blur-md h-full">
+              <CardBody className="p-6 md:p-8">
+                <section className="space-y-6">
+                  <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                    <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
+                      <UserPlus className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-slate-800">
+                        Usuario administrador
+                      </h2>
+                      <p className="text-xs text-slate-500">
+                        Credenciales de acceso
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <Input
+                        name="adminNombre"
+                        label="Nombre"
+                        placeholder="Juan"
+                        variant="bordered"
+                        labelPlacement="outside"
+                        classNames={{ label: "font-medium text-slate-700" }}
+                        isRequired
+                      />
+                      <Input
+                        name="adminApellido"
+                        label="Apellido"
+                        placeholder="Pérez"
+                        variant="bordered"
+                        labelPlacement="outside"
+                        classNames={{ label: "font-medium text-slate-700" }}
+                        isRequired
+                      />
+                    </div>
+
+                    <Input
+                      name="adminEmail"
+                      type="email"
+                      label="Email personal"
+                      placeholder="juan.perez@example.com"
+                      variant="bordered"
+                      labelPlacement="outside"
+                      classNames={{ label: "font-medium text-slate-700" }}
+                      isRequired
+                    />
+
+                    <Input
+                      name="adminUsername"
+                      label="Nombre de usuario"
+                      placeholder="jperez"
+                      description="Se genera desde el email si se omite"
+                      variant="bordered"
+                      labelPlacement="outside"
+                      classNames={{ label: "font-medium text-slate-700" }}
+                      isRequired={false}
+                    />
+
+                    <Input
+                      name="adminPassword"
+                      type="password"
+                      label="Contraseña inicial"
+                      placeholder="Mínimo 6 caracteres"
+                      variant="bordered"
+                      labelPlacement="outside"
+                      classNames={{ label: "font-medium text-slate-700" }}
+                      minLength={6}
                       isRequired
                     />
                   </div>
-                  <Input
-                    name="adminUsername"
-                    label="Nombre de usuario"
-                    placeholder="jperez"
-                    description="Si no se proporciona, se generará desde el email"
-                    variant="bordered"
-                    labelPlacement="outside"
-                    classNames={{ label: "font-medium" }}
-                    isRequired={false}
-                  />
-                  <Input
-                    name="adminEmail"
-                    type="email"
-                    label="Email personal"
-                    placeholder="juan.perez@example.com"
-                    variant="bordered"
-                    labelPlacement="outside"
-                    classNames={{ label: "font-medium" }}
-                    isRequired
-                  />
-                  <Input
-                    name="adminPassword"
-                    type="password"
-                    label="Contraseña inicial"
-                    placeholder="Mínimo 6 caracteres"
-                    variant="bordered"
-                    labelPlacement="outside"
-                    classNames={{ label: "font-medium" }}
-                    minLength={6}
-                    isRequired
-                  />
-                </div>
-              </section>
+                </section>
+              </CardBody>
+            </Card>
+          </div>
 
-              <div className="pt-4">
-                <Button
-                  type="submit"
-                  className="w-full font-medium bg-gradient-to-r from-[#67afc3] to-[#4b8a9e] text-white shadow-md"
-                  size="lg"
-                  isLoading={isPending}
-                >
-                  {isPending ? "Creando..." : "Crear comercio"}
-                </Button>
-              </div>
-            </form>
-          </CardBody>
-        </Card>
+          {/* Footer Action */}
+          <div className="flex justify-end pt-4">
+            <Button
+              type="submit"
+              className="w-full lg:w-auto px-10 font-medium bg-gradient-to-r from-[#67afc3] to-[#4b8a9e] text-white shadow-lg shadow-[#67afc3]/30"
+              size="lg"
+              isLoading={isPending}
+            >
+              {isPending ? "Creando comercio..." : "Crear comercio"}
+            </Button>
+          </div>
+        </form>
       </div>
     </main>
   );

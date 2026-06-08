@@ -243,11 +243,49 @@ async function seedSuperAdmin() {
 
     // Transacción Prisma para crear todas las entidades relacionadas
     const tenant = await db.$transaction(async (tx) => {
+      // Crear Planes SaaS Base
+      const planIlimitado = await tx.planSaaS.upsert({
+        where: { Nombre: "Plan Ilimitado" },
+        update: {},
+        create: {
+          Nombre: "Plan Ilimitado",
+          Descripcion: "Plan exclusivo para administración y uso interno con acceso ilimitado.",
+          CostoMensual: new Prisma.Decimal(0),
+          Caracteristicas: JSON.stringify({ unlimited: true }),
+        },
+      });
+      
+      await tx.planSaaS.upsert({
+        where: { Nombre: "Plan Básico" },
+        update: {},
+        create: {
+          Nombre: "Plan Básico",
+          Descripcion: "Ideal para emprendedores y pequeños comercios con 1 sucursal.",
+          CostoMensual: new Prisma.Decimal(25000), // Precio sugerido
+          Caracteristicas: JSON.stringify({ maxSucursales: 1, maxUsuarios: 3, incluyeAFIP: true }),
+        },
+      });
+      
+      await tx.planSaaS.upsert({
+        where: { Nombre: "Plan Premium" },
+        update: {},
+        create: {
+          Nombre: "Plan Premium",
+          Descripcion: "Para pymes y negocios en crecimiento con múltiples sucursales.",
+          CostoMensual: new Prisma.Decimal(45000), // Precio sugerido
+          Caracteristicas: JSON.stringify({ maxSucursales: 3, maxUsuarios: 10, incluyeAFIP: true, soportePrioritario: true }),
+        },
+      });
+
+      console.log("✅ Planes iniciales creados");
+
       // Crear Tenant
       const newTenant = await tx.tenant.create({
         data: {
           Nombre: TENANT_NAME,
           EstaActivo: true,
+          PlanId: planIlimitado.Id,
+          // La tienda SuperAdmin no tiene fecha de vencimiento (null)
         },
       });
       console.log("✅ Tenant creado");

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { UserDropdown } from "@/components/dashboard/UserDropdown";
+import { AdminNotifications } from "@/components/admin/AdminNotifications";
 
 // ─── Route map ────────────────────────────────────────────────────────────────
 const routeNames: Record<string, string> = {
@@ -249,6 +250,8 @@ function AdminHeaderComponent({
             className="h-5 w-px bg-(--nav-divider) mx-0.5 sm:mx-1 shrink-0"
             aria-hidden="true"
           />
+          
+          <AdminNotifications />
 
           <UserDropdown />
         </div>
