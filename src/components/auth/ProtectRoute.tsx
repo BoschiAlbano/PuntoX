@@ -45,8 +45,8 @@ export default function ProtectRoute({
             
             const hasTotp = factors?.totp?.some((f) => f.status === "verified");
 
-            // 1. Si no tiene 2FA y no está ya en la página de perfil, lo forzamos a configurarlo
-            if (!hasTotp && pathname !== "/perfil") {
+            // 1. Si no tiene 2FA y no está ya en la página de perfil u onboarding, lo forzamos a configurarlo
+            if (!hasTotp && pathname !== "/perfil" && pathname !== "/onboarding") {
               console.warn("MFA Forzado: Redirigiendo a configurar 2FA");
               router.push("/perfil");
               return;
@@ -97,7 +97,7 @@ export default function ProtectRoute({
     if (!isInitialized || checkingMfa) return;
 
     // Public or implicitly allowed routes (basic fallback, but store handles this too)
-    if (pathname === "/dashboard" || pathname === "/" || pathname?.startsWith("/perfil")) {
+    if (pathname === "/dashboard" || pathname === "/" || pathname?.startsWith("/perfil") || pathname === "/onboarding") {
       setAuthorized(true);
       return;
     }

@@ -31,6 +31,7 @@ interface UserState {
   user: User | null;
   branches: UserBranch[];
   currentBranch: UserBranch;
+  tenant: any | null;
   permissions: string[];
   roles: Role[];
   isSuperAdmin: boolean;
@@ -60,6 +61,7 @@ export const useUserStore = create<UserState>()(
         EsPrincipal: false,
         esDefault: false,
       },
+      tenant: null,
       permissions: [],
       roles: [],
       isSuperAdmin: false,
@@ -92,6 +94,7 @@ export const useUserStore = create<UserState>()(
             set(
               {
                 user: data.user,
+                tenant: data.tenant,
                 branches: data.branches,
                 currentBranch: branchToUse,
                 permissions: data.permissions,

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useUserStore } from "@/store/useUserStore";
 import ProtectRoute from "@/components/auth/ProtectRoute";
 import { LoadingPage } from "@/components/loading/loading";
-import { redirect } from "next/navigation";
+import { redirect, usePathname } from "next/navigation";
 import Sidebar from "@/components/dashboard/Sidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { AppProgressProvider as ProgressProvider } from "@bprogress/next";
@@ -14,10 +14,11 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { initialize, isInitialized, isLoading, branches, roles } =
+  const { initialize, isInitialized, isLoading, branches, roles, tenant, isSuperAdmin } =
     useUserStore();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [show, setShow] = useState(true);
+  const pathname = usePathname();
 
   useEffect(() => {
     initialize();
@@ -36,6 +37,11 @@ export default function DashboardLayout({
 
   if (isLoading && !isInitialized) {
     return <LoadingPage message="Verificando autenticación..." />;
+  }
+
+  // Verificar si el Onboarding está incompleto y redirigir
+  if (tenant && !tenant.OnboardingCompleto && pathname !== "/onboarding") {
+    return redirect("/onboarding");
   }
 
   if (!branches.length && roles.some((role) => role.Tipo !== "SUPERADMIN")) {

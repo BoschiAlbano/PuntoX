@@ -622,7 +622,7 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
   const router = useRouter();
 
   // Use global store
-  const { canAccessRoute } = useUserStore();
+  const { canAccessRoute, tenant, isSuperAdmin } = useUserStore();
 
   // Leer configuración para saber si cobro diferido está habilitado
   const { configuracion } = useConfiguracion({ enableConfiguracion: true });
@@ -646,7 +646,9 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
   const cobrosCount = cobrosData?.count ?? 0;
 
   // Solo una sección abierta a la vez (acordeón). Por defecto "Principal".
-  const [openSection, setOpenSection] = useState<string | null>("Principal");
+  const [openSection, setOpenSection] = useState<string | null>(null);
+  
+  const isOnboardingComplete = tenant?.OnboardingCompleto;
 
   const toggleSection = useCallback((title: string) => {
     setOpenSection((prev) => (prev === title ? null : title));
@@ -829,9 +831,15 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                         return (
                           <Link
                             key={item.href}
-                            href={item.href}
-                            onClick={handleNavigationTrigger}
-                            className="block"
+                            href={!isOnboardingComplete ? "#" : item.href}
+                            onClick={(e) => {
+                              if (!isOnboardingComplete) {
+                                e.preventDefault();
+                                return;
+                              }
+                              handleNavigationTrigger();
+                            }}
+                            className={`block ${!isOnboardingComplete ? "opacity-40 cursor-not-allowed" : ""}`}
                           >
                             <Tooltip
                               content={item.label}

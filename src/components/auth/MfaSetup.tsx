@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
 import { Shield, ShieldAlert, Smartphone, KeyRound, AlertCircle, CheckCircle2, Lock } from "lucide-react";
-import { Button, Input, Spinner } from "@heroui/react";
+import { Button, Input, Spinner, addToast } from "@heroui/react";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
+import { useUserStore } from "@/store/useUserStore";
 
 export function MfaSetup() {
   const [loading, setLoading] = useState(true);
@@ -31,8 +32,20 @@ export function MfaSetup() {
   const supabase = getSupabaseBrowserClient();
 
   // Verificar si el 2FA es obligatorio a nivel global
-  const { seguridad, isLoadingSeguridad } = useConfiguracion({ enableSeguridad: true });
+  const { seguridad, isLoadingSeguridad, saveSeguridad, isSavingSeguridad } = useConfiguracion({ enableSeguridad: true });
   const isGloballyEnforced = seguridad?.dobleFactor === true;
+  const { isSuperAdmin } = useUserStore();
+
+  const handleForceDisableGlobal2FA = async () => {
+    if (!seguridad) return;
+    try {
+      await saveSeguridad({ ...seguridad, dobleFactor: false });
+      addToast({ title: "2FA global desactivado", color: "success" });
+      window.location.reload(); // Recargar para que las protecciones reevalúen el estado
+    } catch (e) {
+      addToast({ title: "Error al desactivar 2FA global", color: "danger" });
+    }
+  };
 
   useEffect(() => {
     checkMfaStatus();
@@ -324,11 +337,25 @@ export function MfaSetup() {
 
       {/* Aviso de 2FA obligatorio por política del tenant */}
       {isGloballyEnforced && (
-        <div className="bg-blue-50 border border-blue-100 text-blue-700 px-4 py-3 rounded-xl mb-6 flex items-start gap-3">
+        <div className="bg-blue-50 border border-blue-100 text-blue-700 px-4 py-3 rounded-xl mb-6 flex flex-col sm:flex-row sm:items-start gap-3">
           <Shield size={18} className="mt-0.5 shrink-0" />
-          <p className="text-sm font-medium">
-            La autenticación de dos pasos es <strong>obligatoria</strong> en esta organización. No es posible desactivarla.
-          </p>
+          <div className="flex-1">
+            <p className="text-sm font-medium">
+              La autenticación de dos pasos es <strong>obligatoria</strong> en esta organización. No es posible desactivarla.
+            </p>
+            {isSuperAdmin && (
+              <Button
+                size="sm"
+                color="danger"
+                variant="flat"
+                className="mt-3 font-bold"
+                onPress={handleForceDisableGlobal2FA}
+                isLoading={isSavingSeguridad}
+              >
+                Cancelar 2FA Obligatorio Global (Solo SuperAdmin)
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
