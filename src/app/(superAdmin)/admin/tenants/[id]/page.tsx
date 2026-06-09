@@ -45,6 +45,7 @@ import {
   FolderOpen,
   Truck,
 } from "lucide-react";
+import ChangePasswordModal from "@/components/empleados/ChangePasswordModal";
 
 type TenantDetail = {
   id: number;
@@ -99,6 +100,11 @@ export default function TenantDetailPage() {
   const queryClient = useQueryClient();
   const tenantId = params.id as string;
   const [selectedTab, setSelectedTab] = useState("general");
+  const [passwordModal, setPasswordModal] = useState<{
+    isOpen: boolean;
+    usuarioId: number;
+    userName: string;
+  }>({ isOpen: false, usuarioId: 0, userName: "" });
 
   // Tenant detail query
   const { data: tenant, isLoading } = useQuery<TenantDetail>({
@@ -637,10 +643,18 @@ export default function TenantDetailPage() {
                                   <DropdownMenu
                                     aria-label="Acciones del usuario"
                                     onAction={(key) => {
-                                      userActionMutation.mutate({
-                                        usuarioId: user.id,
-                                        action: key as string,
-                                      });
+                                      if (key === "resetPassword") {
+                                        setPasswordModal({
+                                          isOpen: true,
+                                          usuarioId: user.id,
+                                          userName: `${user.nombre} ${user.apellido}`,
+                                        });
+                                      } else {
+                                        userActionMutation.mutate({
+                                          usuarioId: user.id,
+                                          action: key as string,
+                                        });
+                                      }
                                     }}
                                   >
                                     {user.estaBloqueado ? (
@@ -703,6 +717,13 @@ export default function TenantDetailPage() {
           </div>
         </Tab>
       </Tabs>
+
+      <ChangePasswordModal
+        isOpen={passwordModal.isOpen}
+        onClose={() => setPasswordModal((prev) => ({ ...prev, isOpen: false }))}
+        usuarioId={passwordModal.usuarioId}
+        userName={passwordModal.userName}
+      />
     </div>
   );
 }

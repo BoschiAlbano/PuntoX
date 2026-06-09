@@ -114,40 +114,41 @@ export function AdminNotifications() {
           )
         }
       >
-        {notifications.map((notif) => (
-          <DropdownItem
-            key={notif.id}
-            description={
-              <div className="flex flex-col gap-1">
-                <span className="text-xs line-clamp-2">{notif.mensaje}</span>
-                <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {new Date(notif.fecha).toLocaleString("es-AR")}
-                </span>
-              </div>
-            }
-            startContent={getIcon(notif.tipo)}
-            onPress={() => {
-              markAsReadMutation.mutate(notif.id);
-            }}
-            href={notif.accionUrl || "#"}
-            as={notif.accionUrl ? Link : undefined}
-          >
-            <span className="font-semibold text-sm">{notif.titulo}</span>
-          </DropdownItem>
-        ))}
-        {/* Usamos un DropdownItem estático si hay notificaciones para permitir marcar todas como leídas */}
-        {notifications.length > 0 ? (
-          <DropdownItem
-            key="mark-all-read"
-            className="text-center text-primary font-medium"
-            onPress={() => markAsReadMutation.mutate()}
-          >
-            Marcar todas como leídas
-          </DropdownItem>
-        ) : (
-           <DropdownItem className="hidden" key="empty" />
-        )}
+        {([
+          ...notifications.map((notif) => (
+            <DropdownItem
+              key={notif.id}
+              description={
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs line-clamp-2">{notif.mensaje}</span>
+                  <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {new Date(notif.fecha).toLocaleString("es-AR")}
+                  </span>
+                </div>
+              }
+              startContent={getIcon(notif.tipo)}
+              onPress={() => {
+                markAsReadMutation.mutate(notif.id);
+              }}
+              href={notif.accionUrl || "#"}
+              as={notif.accionUrl ? Link : undefined}
+            >
+              <span className="font-semibold text-sm">{notif.titulo}</span>
+            </DropdownItem>
+          )),
+          notifications.length > 0 ? (
+            <DropdownItem
+              key="mark-all-read"
+              className="text-center text-primary font-medium"
+              onPress={() => markAsReadMutation.mutate(undefined)}
+            >
+              Marcar todas como leídas
+            </DropdownItem>
+          ) : (
+            <DropdownItem className="hidden" key="empty" />
+          )
+        ] as any)}
       </DropdownMenu>
     </Dropdown>
   );

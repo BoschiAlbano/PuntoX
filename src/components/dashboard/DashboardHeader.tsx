@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll } from "framer-motion";
 import {
   Dispatch,
   SetStateAction,
@@ -9,7 +9,7 @@ import {
   useState,
   useEffect,
 } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Menu,
   X,
@@ -18,9 +18,11 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Search,
+  Shield,
 } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
 import Link from "next/link";
+import { Tooltip } from "@heroui/react";
 import GlobalSearchModal from "@/components/shared/GlobalSearchModal";
 import { NotificacionesDropdown } from "./NotificacionesDropdown";
 import { UserDropdown } from "./UserDropdown";
@@ -205,8 +207,11 @@ function DashboardHeaderComponent({
   isCollapsed,
   onToggle,
 }: DashboardHeaderProps) {
+  const { scrollY } = useScroll();
+  const router = useRouter();
   const pathname = usePathname();
-  const { user } = useUserStore();
+  const { user, isInitialized, isSuperAdmin } = useUserStore();
+  const hasUserSession = isInitialized && !!user;
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Global search shortcut
@@ -245,7 +250,6 @@ function DashboardHeaderComponent({
   // Datos de usuario
   const email = typeof user?.Email === "string" ? user.Email : "";
   const usuario = typeof user?.Usuario === "string" ? user.Usuario : "";
-  const hasUserSession = Boolean(email.trim() || usuario);
 
   // Página actual
   const currentPage = breadcrumbs[breadcrumbs.length - 1]?.label ?? "Inicio";
@@ -340,6 +344,21 @@ function DashboardHeaderComponent({
           >
             <Search size={16} strokeWidth={2} />
           </button>
+
+          {/* Switch to Admin (SuperAdmin only) */}
+          {/* {hasUserSession && isSuperAdmin && (
+            <Tooltip content="Panel Superadmin" placement="bottom">
+              <button
+                onClick={() => router.push("/admin/dashboard")}
+                className="flex items-center justify-center h-8 w-8 rounded-lg cursor-pointer
+                           text-amber-500 hover:text-amber-600 hover:bg-amber-500/10
+                           transition-all duration-200 shrink-0 focus-visible:outline-none
+                           focus-visible:ring-2 focus-visible:ring-amber-500/40"
+              >
+                <Shield size={18} strokeWidth={2} />
+              </button>
+            </Tooltip>
+          )} */}
 
           {/* Notificaciones */}
           {hasUserSession ? <NotificacionesDropdown /> : null}

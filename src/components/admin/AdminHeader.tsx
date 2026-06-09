@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Dispatch, SetStateAction, memo, useMemo } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Menu,
   X,
@@ -10,10 +10,12 @@ import {
   Home,
   PanelLeftClose,
   PanelLeftOpen,
+  Store,
 } from "lucide-react";
 import Link from "next/link";
 import { UserDropdown } from "@/components/dashboard/UserDropdown";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
+import { Tooltip } from "@heroui/react";
 
 // ─── Route map ────────────────────────────────────────────────────────────────
 const routeNames: Record<string, string> = {
@@ -172,6 +174,7 @@ function AdminHeaderComponent({
   onToggle,
 }: AdminHeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
 
   // Breadcrumbs from route
   const breadcrumbs = useMemo(() => {
@@ -238,6 +241,19 @@ function AdminHeaderComponent({
 
         {/* Right: user dropdown */}
         <div className="flex items-center gap-1 shrink-0 ml-auto">
+          {/* Volver a tienda */}
+          {/* <Tooltip content="Volver a la tienda" placement="bottom">
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="flex items-center justify-center h-8 w-8 rounded-lg cursor-pointer
+                         text-[#67afc3] hover:text-[#528d9d] hover:bg-[#67afc3]/10
+                         transition-all duration-200 shrink-0 focus-visible:outline-none
+                         focus-visible:ring-2 focus-visible:ring-[#67afc3]/40"
+            >
+              <Store size={18} strokeWidth={2} />
+            </button>
+          </Tooltip> */}
+
           {/* Admin badge - desktop only */}
           <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 mr-2">
             <div className="h-1.5 w-1.5 rounded-full bg-amber-400" />
@@ -250,7 +266,7 @@ function AdminHeaderComponent({
             className="h-5 w-px bg-(--nav-divider) mx-0.5 sm:mx-1 shrink-0"
             aria-hidden="true"
           />
-          
+
           <AdminNotifications />
 
           <UserDropdown />

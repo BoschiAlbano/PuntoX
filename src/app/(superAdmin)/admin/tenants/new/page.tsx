@@ -155,7 +155,6 @@ export default function NewTenantPage() {
                       {(planes || []).map((plan: any) => (
                         <SelectItem
                           key={plan.id?.toString() || plan.Id?.toString()}
-                          value={plan.id?.toString() || plan.Id?.toString()}
                         >
                           {plan.nombre || plan.Nombre}
                         </SelectItem>
