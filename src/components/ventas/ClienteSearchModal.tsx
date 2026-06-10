@@ -22,7 +22,7 @@ import { Search, Plus, User } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
 import { LoadingComponent } from "../loading/loading";
-import ClienteForm from "../clientes/ClienteForm";
+import { useRouter } from "next/navigation";
 
 interface ClienteSearchModalProps {
   isOpen: boolean;
@@ -49,8 +49,8 @@ export default function ClienteSearchModal({
 }: ClienteSearchModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounceValue(searchQuery, 400);
-  const [isCreateClientOpen, setIsCreateClientOpen] = useState(false);
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   // Resetear búsqueda cada vez que se abre el modal
   useEffect(() => {
@@ -71,39 +71,6 @@ export default function ClienteSearchModal({
     refetchOnMount: true,
     staleTime: 0,
     gcTime: 0,
-  });
-
-  const createClientMutation = useMutation({
-    mutationFn: async (newClient: any) => {
-      const res = await fetch("/api/clientes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newClient),
-      });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Error al crear cliente");
-      }
-      return res.json();
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["clientes_ventas"] });
-      const newClient = data.cliente;
-      addToast({
-        title: "Cliente creado",
-        description: `${newClient.nombre} ${newClient.apellido} ha sido creado exitosamente`,
-        color: "success",
-      });
-      setIsCreateClientOpen(false);
-      newClient.saldoActual = 0;
-      newClient.margenDisponible = newClient.tieneLimiteCompra
-        ? newClient.montoMaximoCtaCte
-        : null;
-      handleSelect(newClient);
-    },
-    onError: (err: Error) => {
-      addToast({ title: "Error", description: err.message, color: "danger" });
-    },
   });
 
   const emptyState = (
@@ -328,7 +295,10 @@ export default function ClienteSearchModal({
                   <Button
                     className="flex-1 sm:flex-none bg-[#67afc3] text-white font-semibold shadow-md shadow-[#67afc3]/20 text-sm h-11 sm:h-10 px-3"
                     startContent={<Plus size={16} strokeWidth={2.5} />}
-                    onPress={() => setIsCreateClientOpen(true)}
+                    onPress={() => {
+                      onClose();
+                      router.push('/clientes/new');
+                    }}
                   >
                     Nuevo Cliente
                   </Button>
@@ -338,14 +308,6 @@ export default function ClienteSearchModal({
           )}
         </ModalContent>
       </Modal>
-
-      <ClienteForm
-        isOpen={isCreateClientOpen}
-        onClose={() => setIsCreateClientOpen(false)}
-        initialData={null}
-        onSubmit={(data) => createClientMutation.mutate(data)}
-        isSaving={createClientMutation.isPending}
-      />
     </>
   );
 }

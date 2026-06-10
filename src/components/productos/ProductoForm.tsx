@@ -459,7 +459,7 @@ export default function ProductoForm({
           <Button
             onPress={handleSubmit}
             isLoading={isSaving}
-            className="bg-[#67afc3] hover:bg-[#4899b0] text-white font-bold rounded-xl shadow-md shadow-[#67afc3]/30 px-6 h-10"
+            className="bg-[#0F2233] hover:bg-[#0F2233]/90 text-white font-bold rounded-xl shadow-md shadow-[#0F2233]/30 px-6 h-10"
           >
             {isEdit ? "Guardar Cambios" : "Crear Producto"}
           </Button>

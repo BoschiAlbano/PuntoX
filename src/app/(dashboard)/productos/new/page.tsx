@@ -23,14 +23,17 @@ export default function NuevoProductoPage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error || err?.message || "Error al crear producto");
+        throw new Error(
+          err?.error || err?.message || "Error al crear producto",
+        );
       }
       return res.json();
     },
     onSuccess: () => {
       addToast({
         title: "Éxito",
-        description: "Producto creado correctamente. Puedes cargar el siguiente.",
+        description:
+          "Producto creado correctamente. Puedes cargar el siguiente.",
         color: "success",
         timeout: 3000,
       });
@@ -49,7 +52,7 @@ export default function NuevoProductoPage() {
           variant="light"
           startContent={<ArrowLeft className="w-4 h-4" />}
           onPress={() => router.push("/productos")}
-          className="text-slate-600 px-0 hover:bg-transparent hover:text-slate-900 ml-4 sm:ml-0"
+          className="text-slate-600 px-2 hover:bg-transparent hover:text-slate-900 ml-4 sm:ml-0"
         >
           Volver a productos
         </Button>

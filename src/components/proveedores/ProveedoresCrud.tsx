@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { Proveedor } from "@/lib/validations/proveedor.schema";
 import GenericCrud from "@/components/shared/GenericCrud";
-import FormularioProveedor from "./FormularioProveedor";
 import { addToast } from "@heroui/react";
 import {
   EditButton,
@@ -19,7 +18,8 @@ export default function ProveedoresCrud() {
       queryKey="proveedores-generic"
       title="Gestión de Proveedores"
       searchPlaceholder="Buscar por Razón Social, CUIT o Email"
-      FormComponent={FormularioProveedor}
+      onNewClick={() => router.push("/proveedores/new")}
+      newButtonText="Nuevo Proveedor"
       transformer={(item) => item}
       additionalInvalidateQueryKeys={["proveedores"]}
       renderRowPreview={(item) => (
@@ -251,7 +251,7 @@ export default function ProveedoresCrud() {
                 />
                 <EditButton
                   label="Editar Proveedor"
-                  onPress={() => actions.onEdit(item)}
+                  onPress={() => router.push(`/proveedores/${item.Id}`)}
                 />
                 <DeleteButton
                   label="Eliminar Proveedor"

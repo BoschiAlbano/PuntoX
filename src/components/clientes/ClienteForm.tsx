@@ -1,26 +1,21 @@
 "use client";
 
-import { modalMotionProps } from "@/lib/motionConfig";
 import { useEffect, useState } from "react";
 import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
   Button,
   Input,
   Select,
   SelectItem,
   Switch,
   NumberInput,
+  Card,
+  CardBody,
 } from "@heroui/react";
-import { GenericFormProps } from "../shared/GenericCrud";
 import { useQuery } from "@tanstack/react-query";
 import { Cliente } from "@/lib/validations/cliente.schema";
 import { useCurrency } from "@/hooks/useCurrency";
 import { getCurrencyFormatOptions } from "@/lib/utils/formatCurrency";
-import { User, MapPin, CreditCard, X } from "lucide-react";
+import { User, MapPin, CreditCard, Save } from "lucide-react";
 
 // Fetchers
 const fetchCondicionesIva = async () => {
@@ -63,21 +58,6 @@ const inputClassNames = {
     "bg-white border border-[#e5e7eb] shadow-none hover:border-[#e0e0e0] focus-within:!border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/20",
 };
 
-function getClienteSectionStatus(formData: Partial<Cliente>) {
-  const datosPersonales =
-    (formData.Nombre?.trim() ?? "").length > 0 &&
-    (formData.Apellido?.trim() ?? "").length > 0 &&
-    (formData.Mail?.trim() ?? "").length > 0 &&
-    (formData.Direccion?.trim() ?? "").length > 0;
-  const ubicacion =
-    (formData.LocalidadId ?? 0) > 0 && (formData.CondicionIvaId ?? 0) > 0;
-  const cuentaCorriente =
-    !formData.ActivarCtaCte ||
-    !formData.TieneLimiteCompra ||
-    (formData.MontoMaximoCtaCte ?? 0) >= 0;
-  return { datosPersonales, ubicacion, cuentaCorriente };
-}
-
 const clientePorDefecto: Partial<Cliente> = {
   Id: 0,
   Nombre: "",
@@ -96,47 +76,50 @@ const clientePorDefecto: Partial<Cliente> = {
   ListaPrecioId: null,
 };
 
+interface ClienteFormProps {
+  initialData: Cliente | null;
+  onSubmit: (data: Partial<Cliente>) => void;
+  isSaving: boolean;
+  onCancel: () => void;
+}
+
 export default function ClienteForm({
-  isOpen,
-  onClose,
   initialData,
   onSubmit,
   isSaving,
-}: GenericFormProps<Cliente>) {
+  onCancel,
+}: ClienteFormProps) {
   const [formData, setFormData] = useState<Partial<Cliente>>(clientePorDefecto);
-  const [activeSection, setActiveSection] = useState<"datos" | "ubicacion" | "cuentacte">("datos");
   const currency = useCurrency();
+
   // Queries
   const { data: condicionesIva = [], isLoading: isLoadingCondiciones } =
     useQuery({
       queryKey: ["condiciones-iva"],
       queryFn: fetchCondicionesIva,
-      enabled: isOpen,
     });
 
   const { data: listasPrecios = [], isLoading: isLoadingListas } = useQuery({
     queryKey: ["listas-precios-generic"],
     queryFn: fetchListasPrecios,
-    enabled: isOpen,
   });
 
   const { data: provincias = [], isLoading: isLoadingProvincias } = useQuery({
     queryKey: ["provincias"],
     queryFn: fetchProvincias,
-    enabled: isOpen,
   });
 
   const { data: departamentos = [], isLoading: isLoadingDepartamentos } =
     useQuery({
       queryKey: ["departamentos", formData.ProvinciaId],
       queryFn: () => fetchDepartamentos(formData.ProvinciaId?.toString() || ""),
-      enabled: isOpen && !!formData.ProvinciaId,
+      enabled: !!formData.ProvinciaId,
     });
 
   const { data: localidades = [], isLoading: isLoadingLocalidades } = useQuery({
     queryKey: ["localidades", formData.DepartamentoId],
     queryFn: () => fetchLocalidades(formData.DepartamentoId?.toString() || ""),
-    enabled: isOpen && !!formData.DepartamentoId,
+    enabled: !!formData.DepartamentoId,
   });
 
   // Initialize form data
@@ -160,25 +143,9 @@ export default function ClienteForm({
         ListaPrecioId: initialData.ListaPrecioId,
       });
     } else {
-      setFormData({
-        Id: 0,
-        Nombre: "",
-        Apellido: "",
-        Dni: "",
-        Direccion: "",
-        Telefono: "",
-        Mail: "",
-        LocalidadId: 0,
-        DepartamentoId: 0,
-        ProvinciaId: 0,
-        CondicionIvaId: 0,
-        ActivarCtaCte: false,
-        TieneLimiteCompra: false,
-        MontoMaximoCtaCte: 0,
-        ListaPrecioId: null,
-      });
+      setFormData({ ...clientePorDefecto });
     }
-  }, [initialData, isOpen]);
+  }, [initialData]);
 
   const handleChange = (field: keyof Cliente, value: any) => {
     setFormData((prev) => {
@@ -206,7 +173,9 @@ export default function ClienteForm({
       Mail: formData?.Mail?.trim(),
       LocalidadId: Number(formData?.LocalidadId),
       CondicionIvaId: Number(formData?.CondicionIvaId),
-      ListaPrecioId: formData?.ListaPrecioId ? Number(formData.ListaPrecioId) : null,
+      ListaPrecioId: formData?.ListaPrecioId
+        ? Number(formData.ListaPrecioId)
+        : null,
       ActivarCtaCte: formData?.ActivarCtaCte,
       TieneLimiteCompra: formData?.TieneLimiteCompra,
       MontoMaximoCtaCte: formData?.TieneLimiteCompra
@@ -218,353 +187,300 @@ export default function ClienteForm({
   };
 
   const isEdit = !!initialData;
-  const sectionStatus = getClienteSectionStatus(formData);
-
-  const navSections: { key: "datos" | "ubicacion" | "cuentacte"; label: string; icon: any; isComplete: boolean }[] = [
-    { key: "datos", label: "Datos Personales", icon: User, isComplete: sectionStatus.datosPersonales },
-    { key: "ubicacion", label: "Ubicación", icon: MapPin, isComplete: sectionStatus.ubicacion },
-    { key: "cuentacte", label: "Cuenta Corriente", icon: CreditCard, isComplete: sectionStatus.cuentaCorriente },
-  ];
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      hideCloseButton
-      isDismissable={!isSaving}
-      motionProps={modalMotionProps}
-      classNames={{
-        backdrop: "bg-slate-900/60 backdrop-blur-sm",
-        wrapper: "items-end sm:items-center",
-        base: "font-sans bg-white shadow-2xl border-0 sm:border border-slate-200 rounded-none sm:rounded-2xl w-full sm:max-w-[920px] h-[100dvh] sm:h-[84vh] m-0 sm:m-auto",
-      }}
-    >
-      <ModalContent className="flex flex-col h-full overflow-hidden">
-        {/* ── Header ─────────────────────────────────────────────── */}
-        <ModalHeader className="flex items-center gap-3 py-4 px-5 border-b border-slate-100 flex-none">
-          <div
-            className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-            style={{ backgroundColor: "#67afc3" }}
-          >
-            <User size={18} className="text-white" />
+    <div className="w-full max-w-7xl mx-auto flex flex-col gap-6">
+      {/* ── Header ─────────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-[#67afc3] to-[#4899b0] shadow-sm">
+            <User size={24} className="text-white" />
           </div>
-          <div className="flex flex-col flex-1 min-w-0">
-            <span className="text-base font-bold text-slate-800 leading-tight">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800 leading-tight">
               {isEdit ? "Editar Cliente" : "Nuevo Cliente"}
-            </span>
-            <span className="text-xs text-slate-400 font-normal truncate">
+            </h1>
+            <p className="text-sm text-slate-500 mt-0.5">
               {isEdit
-                ? (formData.Nombre ? formData.Nombre + " " + (formData.Apellido || "") : "Sin nombre")
+                ? `${formData.Nombre || ""} ${formData.Apellido || ""}`.trim() || "Sin nombre"
                 : "Completá la información del cliente"}
-            </span>
+            </p>
           </div>
+        </div>
+        <div className="flex items-center gap-3">
           <Button
-            isIconOnly
-            size="sm"
-            variant="light"
-            onPress={onClose}
+            variant="flat"
+            onPress={onCancel}
             isDisabled={isSaving}
-            className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl shrink-0"
-          >
-            <X size={16} />
-          </Button>
-        </ModalHeader>
-
-        {/* ── Body ───────────────────────────────────────────────── */}
-        <ModalBody className="p-0 flex flex-col sm:flex-row flex-1 overflow-hidden relative">
-          {/* Nav — horizontal scrollable en mobile, sidebar en desktop */}
-          <nav className="flex-none
-            flex flex-row sm:flex-col
-            border-b sm:border-b-0 sm:border-r border-slate-100
-            bg-slate-50/60
-            overflow-x-auto sm:overflow-x-hidden overflow-y-hidden sm:overflow-y-auto
-            py-2 sm:py-3 px-2 gap-0.5
-            sm:w-44 scrollbar-none">
-            {navSections.map(({ key, label, icon: Icon, isComplete }) => {
-              const isActive = activeSection === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => setActiveSection(key)}
-                  disabled={isSaving}
-                  className={`flex items-center gap-2 px-3 py-2 sm:py-2.5 rounded-xl text-left transition-all shrink-0 sm:w-full ${
-                    isActive
-                      ? "bg-[#67afc3]/10 text-[#67afc3]"
-                      : "text-slate-500 hover:bg-white hover:text-slate-700"
-                  }`}
-                >
-                  <Icon
-                    size={14}
-                    className={`shrink-0 ${isActive ? "text-[#67afc3]" : "text-slate-400"}`}
-                  />
-                  <span className={`text-xs sm:text-sm whitespace-nowrap leading-none ${isActive ? "font-semibold" : "font-medium"}`}>
-                    {label}
-                  </span>
-                  <div
-                    className={`hidden sm:block w-1.5 h-1.5 rounded-full shrink-0 ml-auto transition-colors ${
-                      isComplete ? "bg-emerald-400" : "bg-slate-200"
-                    }`}
-                  />
-                </button>
-              );
-            })}
-          </nav>
-
-          {/* Right Content */}
-          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-5 space-y-4">
-            
-            {/* ── DATOS PERSONALES ──────────────────────────────────────── */}
-            {activeSection === "datos" && (
-              <>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-1">
-                  Datos Personales
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Nombre *"
-                    placeholder="Juan"
-                    autoFocus
-                    value={formData.Nombre}
-                    onChange={(e) => handleChange("Nombre", e.target.value)}
-                    isRequired
-                    classNames={inputClassNames}
-                  />
-                  <Input
-                    label="Apellido *"
-                    placeholder="Pérez"
-                    value={formData.Apellido}
-                    onChange={(e) => handleChange("Apellido", e.target.value)}
-                    isRequired
-                    classNames={inputClassNames}
-                  />
-                  <Input
-                    label="DNI"
-                    placeholder="12345678"
-                    maxLength={8}
-                    value={formData?.Dni || ""}
-                    onChange={(e) => handleChange("Dni", e.target.value)}
-                    classNames={inputClassNames}
-                  />
-                  <Input
-                    label="Email *"
-                    type="email"
-                    placeholder="cliente@ejemplo.com"
-                    value={formData?.Mail}
-                    onChange={(e) => handleChange("Mail", e.target.value)}
-                    isRequired
-                    classNames={inputClassNames}
-                  />
-                  <Input
-                    label="Teléfono"
-                    placeholder="+54 11 1234-5678"
-                    value={formData?.Telefono || ""}
-                    maxLength={25}
-                    onChange={(e) => handleChange("Telefono", e.target.value)}
-                    classNames={inputClassNames}
-                  />
-                  <Input
-                    label="Dirección *"
-                    placeholder="Calle 123"
-                    value={formData.Direccion}
-                    onChange={(e) => handleChange("Direccion", e.target.value)}
-                    isRequired
-                    classNames={inputClassNames}
-                  />
-                  <Select
-                    label="Lista de Precios (Opcional)"
-                    selectedKeys={
-                      formData.ListaPrecioId
-                        ? [String(formData.ListaPrecioId)]
-                        : []
-                    }
-                    onSelectionChange={(keys) => {
-                      const val = Array.from(keys)[0];
-                      handleChange("ListaPrecioId", val ? Number(val) : null);
-                    }}
-                    placeholder="Lista por defecto (Opcional)"
-                    isLoading={isLoadingListas}
-                  >
-                    {listasPrecios.map((lista: any) => (
-                      <SelectItem
-                        key={String(lista.Id)}
-                        textValue={lista.Nombre}
-                      >
-                        {lista.Nombre}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                </div>
-              </>
-            )}
-
-            {/* ── UBICACIÓN ──────────────────────────────────────── */}
-            {activeSection === "ubicacion" && (
-              <>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-1">
-                  Ubicación
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Select
-                    label="Provincia"
-                    selectedKeys={
-                      formData.ProvinciaId
-                        ? [String(formData.ProvinciaId)]
-                        : []
-                    }
-                    onSelectionChange={(keys) => {
-                      const val = Array.from(keys)[0];
-                      if (val) handleChange("ProvinciaId", Number(val));
-                    }}
-                    placeholder="Selecciona una provincia"
-                    isLoading={isLoadingProvincias}
-                  >
-                    {provincias.map((prov: any) => (
-                      <SelectItem
-                        key={String(prov.Id)}
-                        textValue={prov.Descripcion}
-                      >
-                        {prov.Descripcion}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                  <Select
-                    label="Departamento"
-                    selectedKeys={
-                      formData.DepartamentoId
-                        ? [String(formData.DepartamentoId)]
-                        : []
-                    }
-                    onSelectionChange={(keys) => {
-                      const val = Array.from(keys)[0];
-                      if (val) handleChange("DepartamentoId", Number(val));
-                    }}
-                    placeholder="Selecciona un departamento"
-                    isDisabled={!formData.ProvinciaId}
-                    isLoading={isLoadingDepartamentos}
-                  >
-                    {departamentos.map((dept: any) => (
-                      <SelectItem
-                        key={String(dept.Id)}
-                        textValue={dept.Descripcion}
-                      >
-                        {dept.Descripcion}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                  <Select
-                    label="Localidad *"
-                    selectedKeys={
-                      formData.LocalidadId
-                        ? [String(formData.LocalidadId)]
-                        : []
-                    }
-                    onSelectionChange={(keys) => {
-                      const val = Array.from(keys)[0];
-                      if (val) handleChange("LocalidadId", Number(val));
-                    }}
-                    placeholder="Selecciona una localidad"
-                    isDisabled={!formData.DepartamentoId}
-                    isLoading={isLoadingLocalidades}
-                  >
-                    {localidades.map((loc: any) => (
-                      <SelectItem
-                        key={String(loc.Id)}
-                        textValue={loc.Descripcion}
-                      >
-                        {loc.Descripcion}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                  <Select
-                    label="Condición IVA *"
-                    selectedKeys={
-                      formData.CondicionIvaId
-                        ? [String(formData.CondicionIvaId)]
-                        : []
-                    }
-                    onSelectionChange={(keys) => {
-                      const val = Array.from(keys)[0];
-                      if (val) handleChange("CondicionIvaId", Number(val));
-                    }}
-                    placeholder="Condición frente al IVA"
-                    isRequired
-                    isLoading={isLoadingCondiciones}
-                  >
-                    {condicionesIva.map((cond: any) => (
-                      <SelectItem
-                        key={String(cond.id ?? cond.Id)}
-                        textValue={cond.descripcion ?? cond.Descripcion}
-                      >
-                        {cond.descripcion ?? cond.Descripcion}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                </div>
-              </>
-            )}
-
-            {/* ── CUENTA CORRIENTE ──────────────────────────────────────── */}
-            {activeSection === "cuentacte" && (
-              <>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-1">
-                  Cuenta Corriente
-                </p>
-                <div className="flex flex-col gap-4">
-                  <Switch
-                    isSelected={formData.ActivarCtaCte}
-                    onValueChange={(val) =>
-                      handleChange("ActivarCtaCte", val)
-                    }
-                  >
-                    Activar Cuenta Corriente
-                  </Switch>
-                  {formData.ActivarCtaCte && (
-                    <div className="flex flex-col md:flex-row gap-4">
-                      <Switch
-                        isSelected={formData.TieneLimiteCompra}
-                        onValueChange={(val) =>
-                          handleChange("TieneLimiteCompra", val)
-                        }
-                      >
-                        Limitar Compra
-                      </Switch>
-                      {formData.TieneLimiteCompra && (
-                        <NumberInput
-                          label="Monto Máximo"
-                          placeholder="0,00"
-                          value={formData?.MontoMaximoCtaCte || 0}
-                          onValueChange={(value) =>
-                            handleChange("MontoMaximoCtaCte", value)
-                          }
-                          formatOptions={getCurrencyFormatOptions(currency)}
-                          classNames={inputClassNames}
-                        />
-                      )}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        </ModalBody>
-        <ModalFooter className="py-4 px-5 border-t border-slate-100 flex-none gap-3">
-          <Button
-            variant="light"
-            onPress={onClose}
-            isDisabled={isSaving}
-            className="font-medium text-[#6b7280] hover:bg-[#f1f5f9] h-10 px-5 rounded-[10px]"
+            className="font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl px-5 h-10"
           >
             Cancelar
           </Button>
           <Button
             onPress={handleSubmit}
             isLoading={isSaving}
-            className="bg-[#67afc3] hover:bg-[#4a8d9e] text-white font-semibold h-10 px-6 rounded-[10px] shadow-sm hover:shadow transition-shadow focus-visible:ring-2 focus-visible:ring-[#67afc3]/40"
+            className="bg-[#0F2233] hover:bg-[#0F2233]/90 text-white font-bold rounded-xl shadow-md shadow-[#0F2233]/30 px-6 h-10"
           >
-            {isEdit ? "Actualizar" : "Crear"}
+            {isEdit ? "Guardar Cambios" : "Crear Cliente"}
           </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </div>
+      </div>
+
+      {/* ── GRID ─────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* DATOS PERSONALES */}
+          <Card className="shadow-sm border border-slate-200/60 bg-white">
+            <CardBody className="p-6">
+              <h3 className="text-base font-semibold text-slate-800 mb-5 flex items-center gap-2">
+                <User size={18} className="text-[#67afc3]" /> Datos Personales
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="Nombre *"
+                  placeholder="Juan"
+                  autoFocus
+                  value={formData.Nombre}
+                  onChange={(e) => handleChange("Nombre", e.target.value)}
+                  isRequired
+                  classNames={inputClassNames}
+                />
+                <Input
+                  label="Apellido *"
+                  placeholder="Pérez"
+                  value={formData.Apellido}
+                  onChange={(e) => handleChange("Apellido", e.target.value)}
+                  isRequired
+                  classNames={inputClassNames}
+                />
+                <Input
+                  label="DNI"
+                  placeholder="12345678"
+                  maxLength={8}
+                  value={formData?.Dni || ""}
+                  onChange={(e) => handleChange("Dni", e.target.value)}
+                  classNames={inputClassNames}
+                />
+                <Input
+                  label="Email *"
+                  type="email"
+                  placeholder="cliente@ejemplo.com"
+                  value={formData?.Mail}
+                  onChange={(e) => handleChange("Mail", e.target.value)}
+                  isRequired
+                  classNames={inputClassNames}
+                />
+                <Input
+                  label="Teléfono"
+                  placeholder="+54 11 1234-5678"
+                  value={formData?.Telefono || ""}
+                  maxLength={25}
+                  onChange={(e) => handleChange("Telefono", e.target.value)}
+                  classNames={inputClassNames}
+                />
+                <Select
+                  label="Lista de Precios (Opcional)"
+                  selectedKeys={
+                    formData.ListaPrecioId
+                      ? [String(formData.ListaPrecioId)]
+                      : []
+                  }
+                  onSelectionChange={(keys) => {
+                    const val = Array.from(keys)[0];
+                    handleChange("ListaPrecioId", val ? Number(val) : null);
+                  }}
+                  placeholder="Lista por defecto"
+                  isLoading={isLoadingListas}
+                  classNames={{ trigger: inputClassNames.inputWrapper }}
+                >
+                  {listasPrecios.map((lista: any) => (
+                    <SelectItem
+                      key={String(lista.Id)}
+                      textValue={lista.Nombre}
+                    >
+                      {lista.Nombre}
+                    </SelectItem>
+                  ))}
+                </Select>
+              </div>
+            </CardBody>
+          </Card>
+
+          {/* UBICACIÓN */}
+          <Card className="shadow-sm border border-slate-200/60 bg-white">
+            <CardBody className="p-6">
+              <h3 className="text-base font-semibold text-slate-800 mb-5 flex items-center gap-2">
+                <MapPin size={18} className="text-[#67afc3]" /> Ubicación
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="Dirección *"
+                  placeholder="Calle 123"
+                  value={formData.Direccion}
+                  onChange={(e) => handleChange("Direccion", e.target.value)}
+                  isRequired
+                  classNames={inputClassNames}
+                />
+                <Select
+                  label="Provincia"
+                  selectedKeys={
+                    formData.ProvinciaId ? [String(formData.ProvinciaId)] : []
+                  }
+                  onSelectionChange={(keys) => {
+                    const val = Array.from(keys)[0];
+                    if (val) handleChange("ProvinciaId", Number(val));
+                  }}
+                  placeholder="Selecciona una provincia"
+                  isLoading={isLoadingProvincias}
+                  classNames={{ trigger: inputClassNames.inputWrapper }}
+                >
+                  {provincias.map((prov: any) => (
+                    <SelectItem
+                      key={String(prov.Id)}
+                      textValue={prov.Descripcion}
+                    >
+                      {prov.Descripcion}
+                    </SelectItem>
+                  ))}
+                </Select>
+                <Select
+                  label="Departamento"
+                  selectedKeys={
+                    formData.DepartamentoId
+                      ? [String(formData.DepartamentoId)]
+                      : []
+                  }
+                  onSelectionChange={(keys) => {
+                    const val = Array.from(keys)[0];
+                    if (val) handleChange("DepartamentoId", Number(val));
+                  }}
+                  placeholder="Selecciona un departamento"
+                  isDisabled={!formData.ProvinciaId}
+                  isLoading={isLoadingDepartamentos}
+                  classNames={{ trigger: inputClassNames.inputWrapper }}
+                >
+                  {departamentos.map((dept: any) => (
+                    <SelectItem
+                      key={String(dept.Id)}
+                      textValue={dept.Descripcion}
+                    >
+                      {dept.Descripcion}
+                    </SelectItem>
+                  ))}
+                </Select>
+                <Select
+                  label="Localidad *"
+                  selectedKeys={
+                    formData.LocalidadId ? [String(formData.LocalidadId)] : []
+                  }
+                  onSelectionChange={(keys) => {
+                    const val = Array.from(keys)[0];
+                    if (val) handleChange("LocalidadId", Number(val));
+                  }}
+                  placeholder="Selecciona una localidad"
+                  isDisabled={!formData.DepartamentoId}
+                  isLoading={isLoadingLocalidades}
+                  classNames={{ trigger: inputClassNames.inputWrapper }}
+                >
+                  {localidades.map((loc: any) => (
+                    <SelectItem
+                      key={String(loc.Id)}
+                      textValue={loc.Descripcion}
+                    >
+                      {loc.Descripcion}
+                    </SelectItem>
+                  ))}
+                </Select>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+
+        {/* Right Column */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* IVA */}
+          <Card className="shadow-sm border border-slate-200/60 bg-white">
+            <CardBody className="p-6">
+              <h3 className="text-base font-semibold text-slate-800 mb-5 flex items-center gap-2">
+                <CreditCard size={18} className="text-[#67afc3]" /> Condición IVA
+              </h3>
+              <Select
+                label="Condición IVA *"
+                selectedKeys={
+                  formData.CondicionIvaId ? [String(formData.CondicionIvaId)] : []
+                }
+                onSelectionChange={(keys) => {
+                  const val = Array.from(keys)[0];
+                  if (val) handleChange("CondicionIvaId", Number(val));
+                }}
+                placeholder="Condición frente al IVA"
+                isRequired
+                isLoading={isLoadingCondiciones}
+                classNames={{ trigger: inputClassNames.inputWrapper }}
+              >
+                {condicionesIva.map((cond: any) => (
+                  <SelectItem
+                    key={String(cond.id ?? cond.Id)}
+                    textValue={cond.descripcion ?? cond.Descripcion}
+                  >
+                    {cond.descripcion ?? cond.Descripcion}
+                  </SelectItem>
+                ))}
+              </Select>
+            </CardBody>
+          </Card>
+
+          {/* CUENTA CORRIENTE */}
+          <Card className="shadow-sm border border-slate-200/60 bg-white">
+            <CardBody className="p-6">
+              <h3 className="text-base font-semibold text-slate-800 mb-5 flex items-center gap-2">
+                <CreditCard size={18} className="text-[#67afc3]" /> Cuenta Corriente
+              </h3>
+              <div className="flex flex-col gap-6">
+                <Switch
+                  isSelected={formData.ActivarCtaCte}
+                  onValueChange={(val) => handleChange("ActivarCtaCte", val)}
+                  classNames={{
+                    label: "text-sm text-slate-700 font-medium ml-2",
+                  }}
+                >
+                  Activar Cuenta Corriente
+                </Switch>
+                
+                {formData.ActivarCtaCte && (
+                  <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/80 space-y-4">
+                    <Switch
+                      isSelected={formData.TieneLimiteCompra}
+                      onValueChange={(val) =>
+                        handleChange("TieneLimiteCompra", val)
+                      }
+                      size="sm"
+                      classNames={{
+                        label: "text-sm text-slate-700 font-medium ml-2",
+                      }}
+                    >
+                      Limitar Compra
+                    </Switch>
+                    {formData.TieneLimiteCompra && (
+                      <NumberInput
+                        label="Monto Máximo"
+                        placeholder="0,00"
+                        value={formData?.MontoMaximoCtaCte || 0}
+                        onValueChange={(value) =>
+                          handleChange("MontoMaximoCtaCte", value)
+                        }
+                        formatOptions={getCurrencyFormatOptions(currency)}
+                        classNames={inputClassNames}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+      </div>
+    </div>
   );
 }

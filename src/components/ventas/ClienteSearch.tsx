@@ -61,9 +61,10 @@ export default function ClienteSearch({
   // "CF seleccionado" = tiene Dni poblado (viene del botón Consumidor Final del modal)
   // "Cliente real" = Id !== 0
   const isNotSelected = selected.Id === 0 && !selected.Dni;
-  const displayName = selected.Id === 0
-    ? "Consumidor Final"
-    : `${selected.Nombre ?? ""} ${selected.Apellido ?? ""}`.trim();
+  const displayName =
+    selected.Id === 0
+      ? "Consumidor Final"
+      : `${selected.Nombre ?? ""} ${selected.Apellido ?? ""}`.trim();
 
   return (
     <div className="w-full">
@@ -75,11 +76,17 @@ export default function ClienteSearch({
           aria-label="Seleccionar cliente"
         >
           <User size={15} className="text-[#67afc3] shrink-0" />
-          <span className="text-xs font-medium text-slate-500">Buscar cliente...</span>
+          <span className="text-xs font-medium text-slate-500">
+            Buscar cliente...
+          </span>
         </button>
       ) : (
         <div className="flex bg-white rounded-lg border border-slate-300 items-center justify-between px-3 h-10">
-          <div className="flex items-center gap-2.5 min-w-0 cursor-pointer flex-1" onClick={onOpen} data-shortcut="cliente-trigger">
+          <div
+            className="flex items-center gap-2.5 min-w-0 cursor-pointer flex-1"
+            onClick={onOpen}
+            data-shortcut="cliente-trigger"
+          >
             <div className="w-7 h-7 rounded-lg bg-[#67afc3]/15 border border-[#67afc3]/20 flex items-center justify-center text-[#67afc3] font-bold text-sm shrink-0">
               {selected.Nombre.charAt(0).toUpperCase()}
             </div>

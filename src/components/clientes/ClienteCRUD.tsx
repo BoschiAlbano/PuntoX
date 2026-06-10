@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import GenericCrud from "@/components/shared/GenericCrud";
-import ClienteForm from "./ClienteForm";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
 import { addToast } from "@heroui/react";
@@ -25,7 +24,8 @@ export default function ClienteCRUD() {
       queryKey="clientes-generic"
       title="Gestión de Clientes"
       searchPlaceholder="Buscar por nombre, email, dni"
-      FormComponent={ClienteForm}
+      onNewClick={() => router.push("/clientes/new")}
+      newButtonText="Nuevo Cliente"
       transformer={(item) => clienteListAdapter(item)}
       additionalInvalidateQueryKeys={["cliente"]}
       renderRowPreview={(item) => (
@@ -319,7 +319,7 @@ export default function ClienteCRUD() {
                     esConsumidorFinal ? "No se puede editar" : "Editar"
                   }
                   isDisabled={esConsumidorFinal}
-                  onPress={() => actions.onEdit(item)}
+                  onPress={() => router.push(`/clientes/${item.Id}`)}
                 />
                 <DeleteButton
                   tooltipContent={
