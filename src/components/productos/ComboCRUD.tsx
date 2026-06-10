@@ -1,7 +1,6 @@
 "use client";
 
 import GenericCrud from "@/components/shared/GenericCrud";
-import ComboForm from "./ComboForm";
 import { Producto } from "@/lib/validations/producto.schema";
 import { Chip, Skeleton, Tooltip } from "@heroui/react";
 import { productoListAdapter } from "@/lib/adapters/producto.adapter";
@@ -19,8 +18,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
 import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
 import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Barcode } from "lucide-react";
 import { ProductoCard } from "./ProductoCard";
+import { useRouter } from "next/navigation";
+import { BulkPrintBarcodesModal } from "./BulkPrintBarcodesModal";
 
 function ProductoPreviewContent({ item }: { item: Producto }) {
   const currency = useCurrency();
@@ -228,7 +229,13 @@ export default function ComboCRUD() {
     items: Producto[];
     clearSelection?: () => void;
   }>({ open: false, items: [] });
+  const [bulkPrintModal, setBulkPrintModal] = useState<{
+    open: boolean;
+    items: Producto[];
+    clearSelection?: () => void;
+  }>({ open: false, items: [] });
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
+  const router = useRouter();
 
   const invalidateProductos = () => {
     queryClient.invalidateQueries({ queryKey: ["combos-generic"] });
@@ -263,8 +270,9 @@ export default function ComboCRUD() {
         getApiExtraParams={() => ({ tipo: "combo" })}
         queryKey="combos-generic"
         searchPlaceholder="Buscar por nombre, cÃ³digo o barras..."
-        FormComponent={ComboForm}
         title="Promociones y Combos"
+        newButtonText="Nuevo Combo"
+        onNewClick={() => router.push("/productos/promociones-combo/new")}
         renderRowPreview={(item) => <ProductoPreviewContent item={item} />}
         getRowPreviewTitle={(item) => item.Descripcion || "Producto"}
         showEditInPreview={false}
@@ -274,23 +282,37 @@ export default function ComboCRUD() {
         renderCard={(item, actions) => (
           <ProductoCard
             item={item}
-            onEdit={actions.onEdit}
+            onEdit={() => router.push(`/productos/promociones-combo/${item.Id}`)}
             onDelete={actions.onDelete}
             onOpenStockModal={handleOpenStockModal}
             onClick={actions.onPreview}
           />
         )}
-        lowStockFilterFn={(item) => {
-          const min = item.StockMinimo ?? 0;
-          const stock = item.Stock ?? 0;
-          return min > 0 && stock <= min;
-        }}
-        lowStockApiParam
-        printConfig={{
-          title: "Listado de Productos",
-          orientation: "landscape",
-        }}
+        extraMenuItems={(currentItems) => [
+          {
+            key: "imprimir-barras-todos",
+            label: "Imprimir códigos",
+            icon: <Barcode size={16} strokeWidth={2} />,
+            onPress: () => {
+              setBulkPrintModal({
+                open: true,
+                items: currentItems,
+              });
+            },
+          },
+        ]}
         bulkActionsDropdown={[
+          {
+            key: "imprimir-barras",
+            label: "Imprimir códigos",
+            onAction: (ctx) => {
+              setBulkPrintModal({
+                open: true,
+                items: ctx.items,
+                clearSelection: ctx.clearSelection,
+              });
+            },
+          },
           {
             key: "cambiar-estado",
             label: "Cambiar estado",
@@ -303,6 +325,17 @@ export default function ComboCRUD() {
             },
           },
         ]}
+        lowStockFilterFn={(item) => {
+          const min = item.StockMinimo ?? 0;
+          const stock = item.Stock ?? 0;
+          return min > 0 && stock <= min;
+        }}
+        lowStockApiParam
+        printConfig={{
+          title: "Listado de Productos",
+          orientation: "landscape",
+        }}
+
         transformer={(item) => productoListAdapter(item)}
         additionalInvalidateQueryKeys={["producto-detail"]}
         exportConfig={{
@@ -460,7 +493,7 @@ export default function ComboCRUD() {
               return (
                 <div className="flex gap-2 w-full justify-center items-center">
                   <EditButton
-                    onPress={() => actions.onEdit(item)}
+                    onPress={() => router.push(`/productos/promociones-combo/${item.Id}`)}
                     label={`Editar ${item.Descripcion || "producto"}`}
                   />
                   <DeleteButton
@@ -486,7 +519,7 @@ export default function ComboCRUD() {
         isOpen={bulkEstadoModal.open}
         onClose={() => setBulkEstadoModal({ open: false, items: [] })}
         items={bulkEstadoModal.items}
-        entityLabel="producto"
+        entityLabel="combo"
         getCurrentEstado={(p) => !!p.EstaEliminado}
         onConfirm={async (ids, nuevoEstado) => {
           await bulkPatchProductos(ids, {
@@ -496,6 +529,15 @@ export default function ComboCRUD() {
         onSuccess={() => {
           bulkEstadoModal.clearSelection?.();
           invalidateProductos();
+        }}
+      />
+
+      <BulkPrintBarcodesModal
+        isOpen={bulkPrintModal.open}
+        onClose={() => setBulkPrintModal({ open: false, items: [] })}
+        items={bulkPrintModal.items}
+        onSuccess={() => {
+          bulkPrintModal.clearSelection?.();
         }}
       />
     </>

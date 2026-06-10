@@ -71,10 +71,12 @@ interface GenericCrudProps<T> {
   ) => React.ReactNode;
 
   // Componente de Formulario
-  FormComponent: React.ComponentType<GenericFormProps<T>>;
+  FormComponent?: React.ComponentType<GenericFormProps<T>>;
 
   // Opcionales
   title?: string; // Título de la sección
+  onNewClick?: () => void;
+  newButtonText?: string;
   searchPlaceholder?: string;
   initialLimit?: number;
   transformer?: (data: any) => T[];
@@ -111,6 +113,14 @@ interface GenericCrudProps<T> {
   getApiExtraParams?: (state: {
     lowStockOnly: boolean;
   }) => Record<string, string | number | boolean>;
+  /** Ítems extra en el menú de Más Opciones siempre visibles */
+  extraMenuItems?: (currentItems: T[]) => Array<{
+    key: string;
+    label: string;
+    icon?: React.ReactNode;
+    isActive?: boolean;
+    onPress: () => void;
+  }>;
   /** Contenido extra en la barra de herramientas (ej: botón "Solicitar reposición") */
   toolbarExtraContent?: React.ReactNode;
   /** Configuración de impresión (título, orientación, filtros) */
@@ -145,11 +155,14 @@ export default function GenericCrud<T extends { Id: number | string }>({
   lowStockApiParam = false,
   getApiExtraParams,
   toolbarExtraContent,
+  extraMenuItems,
   printConfig,
   viewMode = "table",
   onViewModeChange,
   renderCard,
   onSaveSuccess,
+  onNewClick,
+  newButtonText,
 }: GenericCrudProps<T>) {
   // Estados de UI
   const { isOpen, onOpen, onClose } = useDisclosure(); // Modal Form
@@ -565,6 +578,10 @@ export default function GenericCrud<T extends { Id: number | string }>({
   // --- Handlers ---
 
   const handleCreate = () => {
+    if (onNewClick) {
+      onNewClick();
+      return;
+    }
     setSelectedItem(null);
     onOpen();
   };
@@ -718,6 +735,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
         sortDescriptor={sortDescriptor}
         onSortChange={setSortDescriptor}
         onNewClick={handleCreate}
+        newButtonText={newButtonText}
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing}
         onExportCsv={
@@ -802,8 +820,9 @@ export default function GenericCrud<T extends { Id: number | string }>({
           filters:
             lowStockFilterFn && lowStockOnly ? "Solo bajo stock" : undefined,
         }}
-        extraMenuItems={
-          lowStockFilterFn
+        extraMenuItems={[
+          ...(extraMenuItems ? extraMenuItems(sortedItems) : []),
+          ...(lowStockFilterFn
             ? [
                 {
                   key: "bajo-stock",
@@ -821,8 +840,8 @@ export default function GenericCrud<T extends { Id: number | string }>({
                   },
                 },
               ]
-            : undefined
-        }
+            : []),
+        ]}
         extraSearchContent={toolbarExtraContent ? <>{toolbarExtraContent}</> : undefined}
         onRowClick={undefined}
         onRowKeyDown={(item, key) => {
@@ -836,7 +855,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
       />
 
       {/* Modal de Formulario */}
-      {isOpen && (
+      {isOpen && FormComponent && (
         <FormComponent
           isOpen={isOpen}
           onClose={onClose}

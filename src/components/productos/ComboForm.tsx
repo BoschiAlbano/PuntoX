@@ -6,6 +6,8 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  Card,
+  CardBody,
   Button,
   Input,
   Textarea,
@@ -17,9 +19,16 @@ import {
   addToast,
   Autocomplete,
   AutocompleteItem,
+  Tooltip,
 } from "@heroui/react";
 import { Producto } from "@/lib/validations/producto.schema";
-import { GenericFormProps } from "@/components/shared/GenericCrud";
+// import { GenericFormProps } from "@/components/shared/GenericCrud";
+export interface ProductoFormProps {
+  initialData: Producto | null;
+  onSubmit: (data: Partial<Producto>) => void;
+  isSaving: boolean;
+  onCancel: () => void;
+}
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   PlusIcon,
@@ -31,6 +40,7 @@ import {
   X,
   Percent,
   Trash2,
+  Wand2,
 } from "lucide-react";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
 import MarcaGenericForm from "../marcas/MarcaForm";
@@ -159,12 +169,11 @@ type SectionKey =
   | "componentes";
 
 export default function ComboForm({
-  isOpen,
-  onClose,
   initialData,
   onSubmit,
   isSaving,
-}: GenericFormProps<Producto>) {
+  onCancel,
+}: ProductoFormProps) {
   const [formData, setFormData] = useState<Partial<Producto>>(defaultProducto);
   const [activeSection, setActiveSection] = useState<SectionKey>("general");
 
@@ -307,7 +316,7 @@ export default function ComboForm({
   const { data: nextCodeData } = useQuery({
     queryKey: ["ultimo-codigo"],
     queryFn: fetchUltimoCodigo,
-    enabled: !initialData && isOpen,
+    enabled: !initialData,
     refetchOnMount: "always",
   });
 
@@ -318,7 +327,7 @@ export default function ComboForm({
       if (!res.ok) throw new Error("Error loading product");
       return res.json();
     },
-    enabled: !!initialData?.Id && isOpen,
+    enabled: !!initialData?.Id,
     refetchOnMount: "always",
   });
 
@@ -332,16 +341,16 @@ export default function ComboForm({
     }
     setFotoFile(null);
     setFotoPreview("");
-  }, [initialData, fullProduct, isOpen]);
+  }, [initialData, fullProduct]);
 
   useEffect(() => {
-    if (!initialData && nextCodeData?.ultimoCodigo && isOpen) {
+    if (!initialData && nextCodeData?.ultimoCodigo) {
       setFormData((prev) => ({ ...prev, Codigo: nextCodeData.ultimoCodigo }));
     }
-  }, [nextCodeData, initialData, isOpen]);
+  }, [nextCodeData, initialData]);
 
   const handleSubmit = () => {
-    const dataToSubmit = { ...formData, EsCombo: true };
+    const dataToSubmit = { ...formData, EsCombo: false, ComponentesCombo: [] };
     if (fotoPreview) dataToSubmit.Foto = fotoPreview;
     onSubmit(dataToSubmit);
   };
@@ -413,920 +422,483 @@ export default function ComboForm({
   };
 
   const isEdit = !!initialData;
-  const sectionStatus = getSectionStatus(formData);
-
-  const navSections: {
-    key: SectionKey;
-    label: string;
-    icon: React.ComponentType<any>;
-    isComplete: boolean;
-  }[] = [
-    {
-      key: "general",
-      label: "General",
-      icon: FileText,
-      isComplete: sectionStatus.general,
-    },
-    {
-      key: "categorizacion",
-      label: "Categorización",
-      icon: Tags,
-      isComplete: sectionStatus.categorizacion,
-    },
-    {
-      key: "precios",
-      label: "Precios",
-      icon: DollarSign,
-      isComplete: sectionStatus.precios,
-    },
-    {
-      key: "promociones",
-      label: "Promos Cantidad",
-      icon: Percent,
-      isComplete: sectionStatus.promociones,
-    },
-    {
-      key: "componentes",
-      label: "Componentes (Combo)",
-      icon: Package,
-      isComplete: true,
-    },
-  ];
-
   return (
-    <>
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        hideCloseButton
-        isDismissable={!isSaving}
-        motionProps={modalMotionProps}
-        classNames={{
-          backdrop: "bg-slate-900/60 backdrop-blur-sm",
-          wrapper: "items-end sm:items-center",
-          base: "font-sans bg-white shadow-2xl border-0 sm:border border-slate-200 rounded-none sm:rounded-2xl w-full sm:max-w-[920px] h-[100dvh] sm:h-[84vh] m-0 sm:m-auto",
-        }}
-      >
-        <ModalContent className="flex flex-col h-full overflow-hidden">
-          {/* ── Header ─────────────────────────────────────────────── */}
-          <ModalHeader className="flex items-center gap-3 py-4 px-5 border-b border-slate-100 flex-none">
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-              style={{ backgroundColor: "#67afc3" }}
-            >
-              <Package size={18} className="text-white" />
-            </div>
-            <div className="flex flex-col flex-1 min-w-0">
-              <span className="text-base font-bold text-slate-800 leading-tight">
-                {isEdit ? "Editar Producto" : "Nuevo Producto"}
-              </span>
-              <span className="text-xs text-slate-400 font-normal truncate">
-                {isEdit
-                  ? formData.Descripcion || "Sin nombre"
-                  : "Completá la información del producto"}
-              </span>
-            </div>
-            <Button
-              isIconOnly
-              size="sm"
-              variant="light"
-              onPress={onClose}
-              isDisabled={isSaving}
-              className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl shrink-0"
-            >
-              <X size={16} />
-            </Button>
-          </ModalHeader>
+    <div className="w-full max-w-7xl mx-auto pb-20">
+      {isLoadingFullProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <LoadingComponent message="Cargando detalles..." />
+        </div>
+      )}
 
-          {/* ── Body ───────────────────────────────────────────────── */}
-          <ModalBody className="p-0 flex flex-col sm:flex-row flex-1 overflow-hidden relative">
-            {isLoadingFullProduct && (
-              <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
-                <LoadingComponent message="Cargando detalles..." />
+      {/* ── Header ─────────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-[#67afc3] to-[#4899b0] shadow-sm">
+            <Package size={24} className="text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800 leading-tight">
+              {isEdit ? "Editar Producto" : "Nuevo Producto"}
+            </h1>
+            <p className="text-sm text-slate-500 mt-0.5">
+              {isEdit
+                ? formData.Descripcion || "Sin nombre"
+                : "Completá la información del producto"}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="flat"
+            onPress={onCancel}
+            isDisabled={isSaving}
+            className="font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl px-5 h-10"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onPress={handleSubmit}
+            isLoading={isSaving}
+            className="bg-[#67afc3] hover:bg-[#4899b0] text-white font-bold rounded-xl shadow-md shadow-[#67afc3]/30 px-6 h-10"
+          >
+            {isEdit ? "Guardar Cambios" : "Crear Producto"}
+          </Button>
+        </div>
+      </div>
+
+      {/* ── Grid Layout ───────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column (Main Content) */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* GENERAL */}
+          <Card className="shadow-sm border border-slate-200/60 bg-white overflow-visible">
+            <CardBody className="p-6">
+              <h3 className="text-base font-semibold text-slate-800 mb-5 flex items-center gap-2">
+                <FileText size={18} className="text-[#67afc3]" /> Información
+                General
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <Input
+                  label="Código"
+                  placeholder="Ej: 1"
+                  autoFocus
+                  type="number"
+                  value={formData.Codigo?.toString() || ""}
+                  max={Number(process.env.MAX_ARTICLE_CODE || 999)}
+                  min={1}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      Codigo: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  isRequired
+                  isDisabled={isLoadingFullProduct || isSaving}
+                  classNames={inputClassNames}
+                />
+                <Input
+                  label="Código de Barras"
+                  placeholder="Ej: 7790001234567"
+                  value={formData.CodigoBarra || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      CodigoBarra: e.target.value,
+                    })
+                  }
+                  type="text"
+                  isRequired
+                  isDisabled={isSaving}
+                  classNames={inputClassNames}
+                  endContent={
+                    <Tooltip
+                      content="Generar código automático"
+                      placement="top"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Generamos un código de 12 dígitos comenzando con '100'
+                          // para evitar choques con balanzas (que usan 13 dígitos y empiezan con 20-29).
+                          const randomCode =
+                            "100" +
+                            Math.floor(Math.random() * 1000000000)
+                              .toString()
+                              .padStart(9, "0");
+                          setFormData({ ...formData, CodigoBarra: randomCode });
+                        }}
+                        className="text-slate-400 hover:text-[#67afc3] transition-colors focus:outline-none"
+                        disabled={isSaving}
+                      >
+                        <Wand2 size={18} />
+                      </button>
+                    </Tooltip>
+                  }
+                />
+                <Input
+                  label="Abreviatura"
+                  placeholder="Ej: PROD-001"
+                  value={formData.Abreviatura || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      Abreviatura: e.target.value,
+                    })
+                  }
+                  isDisabled={isSaving}
+                  classNames={inputClassNames}
+                />
+                <Input
+                  label="Descripción"
+                  placeholder="Nombre del producto"
+                  value={formData.Descripcion || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      Descripcion: e.target.value,
+                    })
+                  }
+                  isRequired
+                  isDisabled={isSaving}
+                  classNames={inputClassNames}
+                />
               </div>
-            )}
+              <Textarea
+                label="Detalle"
+                placeholder="Descripción detallada del producto"
+                value={formData.Detalle || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, Detalle: e.target.value })
+                }
+                minRows={2}
+                isDisabled={isSaving}
+                classNames={{ ...inputClassNames, input: "resize-none" }}
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                <Input
+                  label="Ubicación"
+                  placeholder="Ej: Pasillo 2, Estante B"
+                  value={formData.Ubicacion || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, Ubicacion: e.target.value })
+                  }
+                  isDisabled={isSaving}
+                  classNames={inputClassNames}
+                />
+              </div>
+            </CardBody>
+          </Card>
 
-            {/* Nav — horizontal scrollable en mobile, sidebar en desktop */}
-            <nav
-              className="flex-none
-              flex flex-row sm:flex-col
-              border-b sm:border-b-0 sm:border-r border-slate-100
-              bg-slate-50/60
-              overflow-x-auto sm:overflow-x-hidden overflow-y-hidden sm:overflow-y-auto
-              py-2 sm:py-3 px-2 gap-0.5
-              sm:w-44 scrollbar-none"
-            >
-              {navSections.map(({ key, label, icon: Icon, isComplete }) => {
-                const isActive = activeSection === key;
-                return (
-                  <button
-                    key={key}
-                    onClick={() => setActiveSection(key)}
-                    disabled={isSaving}
-                    className={`flex items-center gap-2 px-3 py-2 sm:py-2.5 rounded-xl text-left transition-all shrink-0 sm:w-full ${
-                      isActive
-                        ? "bg-[#67afc3]/10 text-[#67afc3]"
-                        : "text-slate-500 hover:bg-white hover:text-slate-700"
-                    }`}
-                  >
-                    <Icon
-                      size={14}
-                      className={`shrink-0 ${isActive ? "text-[#67afc3]" : "text-slate-400"}`}
-                    />
-                    <span
-                      className={`text-xs sm:text-sm whitespace-nowrap leading-none ${isActive ? "font-semibold" : "font-medium"}`}
-                    >
-                      {label}
-                    </span>
-                    <div
-                      className={`hidden sm:block w-1.5 h-1.5 rounded-full shrink-0 ml-auto transition-colors ${
-                        isComplete ? "bg-emerald-400" : "bg-slate-200"
-                      }`}
-                    />
-                  </button>
-                );
-              })}
-            </nav>
-
-            {/* Right Content */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-5 space-y-4">
-              {/* ── GENERAL ──────────────────────────────────────── */}
-              {activeSection === "general" && (
-                <>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-1">
-                    Información General
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <Input
-                      label="Código"
-                      placeholder="Ej: 1"
-                      autoFocus
-                      type="number"
-                      value={formData.Codigo?.toString() || ""}
-                      max={Number(process.env.MAX_ARTICLE_CODE || 999)}
-                      min={1}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          Codigo: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      isRequired
-                      isDisabled={isLoadingFullProduct || isSaving}
-                      classNames={inputClassNames}
-                    />
-                    <Input
-                      label="Código de Barras"
-                      placeholder="Ej: 7790001234567"
-                      value={formData.CodigoBarra || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          CodigoBarra: e.target.value,
-                        })
-                      }
-                      type="number"
-                      isRequired
-                      isDisabled={isSaving}
-                      classNames={inputClassNames}
-                    />
-                    <Input
-                      label="Abreviatura"
-                      placeholder="Ej: PROD-001"
-                      value={formData.Abreviatura || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          Abreviatura: e.target.value,
-                        })
-                      }
-                      isDisabled={isSaving}
-                      classNames={inputClassNames}
-                    />
-                    <Input
-                      label="Descripción"
-                      placeholder="Nombre del producto"
-                      value={formData.Descripcion || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          Descripcion: e.target.value,
-                        })
-                      }
-                      isRequired
-                      isDisabled={isSaving}
-                      classNames={inputClassNames}
-                    />
-                  </div>
-                  <Textarea
-                    label="Detalle"
-                    placeholder="Descripción detallada del producto"
-                    value={formData.Detalle || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, Detalle: e.target.value })
+          {/* CATEGORIZACIÓN */}
+          <Card className="shadow-sm border border-slate-200/60 bg-white overflow-visible">
+            <CardBody className="p-6">
+              <h3 className="text-base font-semibold text-slate-800 mb-5 flex items-center gap-2">
+                <Tags size={18} className="text-[#67afc3]" /> Categorización
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  <Autocomplete
+                    label="Marca"
+                    placeholder="Seleccione una marca"
+                    selectedKey={
+                      formData.MarcaId ? formData.MarcaId.toString() : null
                     }
-                    minRows={2}
+                    onSelectionChange={(key) =>
+                      setFormData({
+                        ...formData,
+                        MarcaId: key ? parseInt(key.toString()) : 0,
+                      })
+                    }
+                    isRequired
                     isDisabled={isSaving}
-                    classNames={{ ...inputClassNames, input: "resize-none" }}
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <Input
-                      label="Ubicación"
-                      placeholder="Ej: Pasillo 2, Estante B"
-                      value={formData.Ubicacion || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, Ubicacion: e.target.value })
-                      }
-                      isDisabled={isSaving}
-                      classNames={inputClassNames}
-                    />
-                  </div>
-                  <ImageUploadField
-                    existingImageUrl={formData.Foto || null}
-                    previewUrl={fotoPreview}
-                    onChange={(file, base64) => {
-                      setFotoFile(file);
-                      setFotoPreview(base64);
-                    }}
-                    disabled={isSaving}
-                  />
-                </>
-              )}
+                  >
+                    {isLoadingMarcas ? (
+                      <AutocompleteItem key="0" textValue="Cargando...">
+                        Cargando...
+                      </AutocompleteItem>
+                    ) : (
+                      marcas?.map((marca: any) => (
+                        <AutocompleteItem
+                          key={marca.Id.toString()}
+                          textValue={marca.Descripcion}
+                        >
+                          {marca.Descripcion}
+                        </AutocompleteItem>
+                      ))
+                    )}
+                  </Autocomplete>
+                  <Button
+                    isIconOnly
+                    variant="flat"
+                    onPress={() => setIsMarcaModalOpen(true)}
+                    className="h-14 min-w-12 bg-[#67afc3]/10 text-[#67afc3] hover:bg-[#67afc3]/20 border border-[#67afc3]/20"
+                  >
+                    <PlusIcon size={18} />
+                  </Button>
+                </div>
 
-              {/* ── CATEGORIZACIÓN ───────────────────────────────── */}
-              {activeSection === "categorizacion" && (
-                <>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-1">
-                    Categorización
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="flex items-center gap-2">
-                      <Autocomplete
-                        label="Marca"
-                        placeholder="Seleccione una marca"
-                        selectedKey={
-                          formData.MarcaId ? formData.MarcaId.toString() : null
-                        }
-                        onSelectionChange={(key) =>
-                          setFormData({
-                            ...formData,
-                            MarcaId: key ? parseInt(key.toString()) : 0,
-                          })
-                        }
-                        isRequired
-                        isDisabled={isSaving}
-                      >
-                        {isLoadingMarcas ? (
-                          <AutocompleteItem key="0" textValue="Cargando...">
-                            Cargando...
-                          </AutocompleteItem>
-                        ) : (
-                          marcas?.map((marca: any) => (
-                            <AutocompleteItem
-                              key={marca.Id.toString()}
-                              textValue={marca.Descripcion}
-                            >
-                              {marca.Descripcion}
-                            </AutocompleteItem>
-                          ))
-                        )}
-                      </Autocomplete>
-                      <Button
-                        isIconOnly
-                        variant="flat"
-                        onPress={() => setIsMarcaModalOpen(true)}
-                        className="h-full min-w-9 bg-[#67afc3]/10 text-[#67afc3] hover:bg-[#67afc3]/20 border border-[#67afc3]/20"
-                      >
-                        <PlusIcon size={16} />
-                      </Button>
-                    </div>
+                <div className="flex items-center gap-2">
+                  <Autocomplete
+                    label="Rubro"
+                    placeholder="Seleccione un rubro"
+                    selectedKey={
+                      formData.RubroId ? formData.RubroId.toString() : null
+                    }
+                    onSelectionChange={(key) =>
+                      setFormData({
+                        ...formData,
+                        RubroId: key ? parseInt(key.toString()) : 0,
+                      })
+                    }
+                    isRequired
+                    isDisabled={isSaving}
+                  >
+                    {isLoadingRubros ? (
+                      <AutocompleteItem key="0" textValue="Cargando...">
+                        Cargando...
+                      </AutocompleteItem>
+                    ) : (
+                      rubros?.map((rubro: any) => (
+                        <AutocompleteItem
+                          key={rubro.Id.toString()}
+                          textValue={rubro.Descripcion}
+                        >
+                          {rubro.Descripcion}
+                        </AutocompleteItem>
+                      ))
+                    )}
+                  </Autocomplete>
+                  <Button
+                    isIconOnly
+                    variant="flat"
+                    onPress={() => setIsRubroModalOpen(true)}
+                    className="h-14 min-w-12 bg-[#67afc3]/10 text-[#67afc3] hover:bg-[#67afc3]/20 border border-[#67afc3]/20"
+                  >
+                    <PlusIcon size={18} />
+                  </Button>
+                </div>
 
-                    <div className="flex items-center gap-2">
-                      <Autocomplete
-                        label="Rubro"
-                        placeholder="Seleccione un rubro"
-                        selectedKey={
-                          formData.RubroId ? formData.RubroId.toString() : null
-                        }
-                        onSelectionChange={(key) =>
-                          setFormData({
-                            ...formData,
-                            RubroId: key ? parseInt(key.toString()) : 0,
-                          })
-                        }
-                        isRequired
-                        isDisabled={isSaving}
-                      >
-                        {isLoadingRubros ? (
-                          <AutocompleteItem key="0" textValue="Cargando...">
-                            Cargando...
-                          </AutocompleteItem>
-                        ) : (
-                          rubros?.map((rubro: any) => (
-                            <AutocompleteItem
-                              key={rubro.Id.toString()}
-                              textValue={rubro.Descripcion}
-                            >
-                              {rubro.Descripcion}
-                            </AutocompleteItem>
-                          ))
-                        )}
-                      </Autocomplete>
-                      <Button
-                        isIconOnly
-                        variant="flat"
-                        onPress={() => setIsRubroModalOpen(true)}
-                        className="h-full min-w-9 bg-[#67afc3]/10 text-[#67afc3] hover:bg-[#67afc3]/20 border border-[#67afc3]/20"
-                      >
-                        <PlusIcon size={16} />
-                      </Button>
-                    </div>
+                <div className="flex items-center gap-2">
+                  <Autocomplete
+                    label="Unidad de Medida"
+                    placeholder="Seleccione unidad"
+                    selectedKey={
+                      formData.UnidadMedidaId
+                        ? formData.UnidadMedidaId.toString()
+                        : null
+                    }
+                    onSelectionChange={(key) =>
+                      setFormData({
+                        ...formData,
+                        UnidadMedidaId: key ? parseInt(key.toString()) : 0,
+                      })
+                    }
+                    isRequired
+                    isDisabled={isSaving}
+                  >
+                    {isLoadingUnidades ? (
+                      <AutocompleteItem key="0" textValue="Cargando...">
+                        Cargando...
+                      </AutocompleteItem>
+                    ) : (
+                      unidades?.map((unidad: any) => (
+                        <AutocompleteItem
+                          key={unidad.Id.toString()}
+                          textValue={unidad.Descripcion}
+                        >
+                          {unidad.Descripcion}
+                        </AutocompleteItem>
+                      ))
+                    )}
+                  </Autocomplete>
+                  <Button
+                    isIconOnly
+                    variant="flat"
+                    onPress={() => setIsUnidadModalOpen(true)}
+                    className="h-14 min-w-12 bg-[#67afc3]/10 text-[#67afc3] hover:bg-[#67afc3]/20 border border-[#67afc3]/20"
+                  >
+                    <PlusIcon size={18} />
+                  </Button>
+                </div>
 
-                    <div className="flex items-center gap-2">
-                      <Autocomplete
-                        label="Unidad de Medida"
-                        placeholder="Seleccione unidad"
-                        selectedKey={
-                          formData.UnidadMedidaId
-                            ? formData.UnidadMedidaId.toString()
-                            : null
-                        }
-                        onSelectionChange={(key) =>
-                          setFormData({
-                            ...formData,
-                            UnidadMedidaId: key ? parseInt(key.toString()) : 0,
-                          })
-                        }
-                        isRequired
-                        isDisabled={isSaving}
-                      >
-                        {isLoadingUnidades ? (
-                          <AutocompleteItem key="0" textValue="Cargando...">
-                            Cargando...
-                          </AutocompleteItem>
-                        ) : (
-                          unidades?.map((unidad: any) => (
-                            <AutocompleteItem
-                              key={unidad.Id.toString()}
-                              textValue={unidad.Descripcion}
-                            >
-                              {unidad.Descripcion}
-                            </AutocompleteItem>
-                          ))
-                        )}
-                      </Autocomplete>
-                      <Button
-                        isIconOnly
-                        variant="flat"
-                        onPress={() => setIsUnidadModalOpen(true)}
-                        className="h-full min-w-9 bg-[#67afc3]/10 text-[#67afc3] hover:bg-[#67afc3]/20 border border-[#67afc3]/20"
-                      >
-                        <PlusIcon size={16} />
-                      </Button>
-                    </div>
+                <Select
+                  label="Tipo de Venta"
+                  placeholder="Seleccione tipo"
+                  selectedKeys={formData.TipoVenta ? [formData.TipoVenta] : []}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      TipoVenta: e.target.value as TiposVenta,
+                    })
+                  }
+                  isDisabled={isSaving}
+                >
+                  <SelectItem key={TiposVenta.PESO} textValue={TiposVenta.PESO}>
+                    {TiposVenta.PESO}
+                  </SelectItem>
+                  <SelectItem
+                    key={TiposVenta.UNIDAD}
+                    textValue={TiposVenta.UNIDAD}
+                  >
+                    {TiposVenta.UNIDAD}
+                  </SelectItem>
+                </Select>
+              </div>
+            </CardBody>
+          </Card>
 
-                    <Select
-                      label="IVA"
-                      placeholder="Seleccione IVA"
-                      selectedKeys={
-                        formData.IvaId ? [formData.IvaId.toString()] : []
-                      }
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          IvaId: parseInt(e.target.value),
-                        })
-                      }
-                      isRequired
-                      isDisabled={isSaving}
-                    >
-                      {isLoadingIvas ? (
-                        <SelectItem key="0" textValue="Cargando...">
-                          Cargando...
-                        </SelectItem>
-                      ) : (
-                        ivas?.map((iva: any) => (
-                          <SelectItem
-                            key={iva.Id.toString()}
-                            textValue={iva.Descripcion}
-                          >
-                            {iva.Descripcion}
-                          </SelectItem>
-                        ))
-                      )}
-                    </Select>
+          {/* PRECIOS E IMPUESTOS */}
+          <Card className="shadow-sm border border-slate-200/60 bg-white">
+            <CardBody className="p-6">
+              <h3 className="text-base font-semibold text-slate-800 mb-5 flex items-center gap-2">
+                <DollarSign size={18} className="text-[#67afc3]" /> Precios e
+                Impuestos
+              </h3>
 
-                    <Select
-                      label="Tipo de Venta"
-                      placeholder="Seleccione tipo"
-                      selectedKeys={
-                        formData.TipoVenta ? [formData.TipoVenta] : []
-                      }
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          TipoVenta: e.target.value as TiposVenta,
-                        })
-                      }
-                      isDisabled={isSaving}
-                    >
-                      <SelectItem
-                        key={TiposVenta.PESO}
-                        textValue={TiposVenta.PESO}
-                      >
-                        {TiposVenta.PESO}
-                      </SelectItem>
-                      <SelectItem
-                        key={TiposVenta.UNIDAD}
-                        textValue={TiposVenta.UNIDAD}
-                      >
-                        {TiposVenta.UNIDAD}
-                      </SelectItem>
-                    </Select>
-                  </div>
-                </>
-              )}
-
-              {/* ── PRECIOS ──────────────────────────────────────── */}
-              {activeSection === "precios" && (
-                <>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-1">
-                    Precios
-                  </p>
-                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/60">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
-                      Precio de Costo
-                    </p>
-                    <NumberInput
-                      label="Costo"
-                      classNames={inputClassNames}
-                      placeholder="0,00"
-                      value={Number(formData.PrecioCosto) || 0}
-                      onValueChange={(value) =>
-                        updatePrecio(null, "PrecioCosto", value)
-                      }
-                      isRequired
-                      isDisabled={isSaving}
-                      min={0}
-                    />
-                  </div>
-
-                  {isLoadingListas ? (
-                    <div className="text-center text-sm text-slate-400 py-6">
-                      Cargando listas de precios...
-                    </div>
-                  ) : listasPrecios.length === 0 ? (
-                    <div className="text-center text-sm text-slate-400 py-6">
-                      No hay listas de precios activas.
-                    </div>
+              <div className="mb-5">
+                <Select
+                  label="IVA"
+                  placeholder="Seleccione IVA"
+                  selectedKeys={
+                    formData.IvaId ? [formData.IvaId.toString()] : []
+                  }
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      IvaId: parseInt(e.target.value),
+                    })
+                  }
+                  isRequired
+                  isDisabled={isSaving}
+                  classNames={{
+                    trigger: "bg-slate-50 shadow-none border border-slate-200",
+                  }}
+                >
+                  {isLoadingIvas ? (
+                    <SelectItem key="0" textValue="Cargando...">
+                      Cargando...
+                    </SelectItem>
                   ) : (
-                    <>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        Listas de Precio
-                      </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {listasPrecios.map((lista: any) => {
-                          const isDefault = lista.PorDefecto;
-                          const listaData = formData.PreciosLista?.find(
-                            (p) => Number(p.ListaPrecioId) === Number(lista.Id),
-                          ) || { PorcentajeGanancia: 0, PrecioFinal: 0 };
-
-                          return (
-                            <div
-                              key={lista.Id}
-                              className={`space-y-3 p-4 rounded-xl border bg-white shadow-sm ${
-                                isDefault
-                                  ? "border-[#67afc3]/40 shadow-[#67afc3]/10"
-                                  : "border-slate-200"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className={`w-1 h-4 rounded-full shrink-0 ${
-                                    isDefault ? "bg-[#67afc3]" : "bg-slate-200"
-                                  }`}
-                                />
-                                <h4 className="font-semibold text-slate-700 text-sm flex-1 truncate">
-                                  {lista.Nombre}
-                                </h4>
-                                {isDefault && (
-                                  <Chip
-                                    size="sm"
-                                    variant="flat"
-                                    className="h-4 text-[10px] bg-[#67afc3]/10 text-[#67afc3]"
-                                  >
-                                    Defecto
-                                  </Chip>
-                                )}
-                              </div>
-                              <NumberInput
-                                label="% Ganancia"
-                                placeholder="0"
-                                value={
-                                  Number(listaData.PorcentajeGanancia) || 0
-                                }
-                                onValueChange={(value) =>
-                                  updatePrecio(
-                                    lista.Id,
-                                    "PorcentajeGanancia",
-                                    value,
-                                  )
-                                }
-                                isRequired
-                                isDisabled={isSaving}
-                                classNames={inputClassNames}
-                              />
-                              <NumberInput
-                                label="Precio de Venta"
-                                placeholder="0.00"
-                                value={Number(listaData.PrecioFinal) || 0}
-                                onValueChange={(value) =>
-                                  updatePrecio(lista.Id, "PrecioFinal", value)
-                                }
-                                isDisabled={isSaving}
-                                classNames={{
-                                  ...inputClassNames,
-                                  input: `font-bold ${isDefault ? "text-[#67afc3]" : "text-slate-700"}`,
-                                }}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
-
-              {/* ── STOCK ────────────────────────────────────────── */}
-              {activeSection === "stock" && (
-                <>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-1">
-                    Stock
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/60">
-                    <Input
-                      label="Stock Mínimo"
-                      classNames={inputClassNames}
-                      placeholder="0"
-                      type="number"
-                      step="0.01"
-                      value={formData.StockMinimo?.toString() || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          StockMinimo: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      isDisabled={isSaving || formData.EsCombo}
-                      description={
-                        formData.EsCombo ? "No aplicable en combos." : undefined
-                      }
-                    />
-                    <Input
-                      label="Días de Vencimiento"
-                      classNames={inputClassNames}
-                      placeholder="0"
-                      type="number"
-                      value={formData.VencimientoDias?.toString() || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          VencimientoDias: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      isDisabled={isSaving}
-                    />
-                    <Input
-                      label="Stock Actual"
-                      classNames={inputClassNames}
-                      placeholder="0"
-                      type="number"
-                      step="0.01"
-                      value={formData.Stock?.toString() || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          Stock: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      isDisabled={isSaving || formData.EsCombo}
-                      description={
-                        formData.EsCombo
-                          ? "El stock se calcula dinámicamente según los componentes."
-                          : undefined
-                      }
-                    />
-                  </div>
-                  <div className="flex flex-col gap-4 p-4 rounded-xl border border-slate-200 bg-white">
-                    <Switch
-                      isSelected={formData.DescuentaStock}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, DescuentaStock: value })
-                      }
-                      isDisabled={isSaving}
-                    >
-                      <span className="text-sm text-slate-700">
-                        Descuenta Stock
-                      </span>
-                    </Switch>
-                    <Switch
-                      isSelected={formData.PermiteStockNegativo}
-                      onValueChange={(value) =>
-                        setFormData({
-                          ...formData,
-                          PermiteStockNegativo: value,
-                        })
-                      }
-                      isDisabled={isSaving}
-                    >
-                      <span className="text-sm text-slate-700">
-                        Permite Stock Negativo
-                      </span>
-                    </Switch>
-                  </div>
-                </>
-              )}
-
-              {/* ── PROMOCIONES ──────────────────────────────────────── */}
-              {activeSection === "promociones" && (
-                <>
-                  <div className="flex items-center justify-between pb-1 border-b border-slate-100 mb-4">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Promociones por Cantidad
-                    </p>
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      className="bg-[#67afc3]/10 text-[#67afc3] font-semibold h-8 rounded-lg"
-                      startContent={<PlusIcon size={14} />}
-                      onPress={() => {
-                        const isPeso = formData.TipoVenta === TiposVenta.PESO;
-                        setFormData((prev) => ({
-                          ...prev,
-                          PromocionesCantidad: [
-                            ...(prev.PromocionesCantidad || []),
-                            {
-                              Cantidad: isPeso ? 0.001 : 2,
-                              DescuentoPorcentaje: 0,
-                              EstaActiva: true,
-                            },
-                          ],
-                        }));
-                      }}
-                    >
-                      Añadir Escala
-                    </Button>
-                  </div>
-
-                  {(formData.PromocionesCantidad || []).length === 0 ? (
-                    <div className="text-center py-10 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-                      <Percent
-                        size={32}
-                        className="mx-auto text-slate-300 mb-3"
-                      />
-                      <p className="text-sm text-slate-500 font-medium">
-                        No hay promociones configuradas
-                      </p>
-                      <p className="text-xs text-slate-400 mt-1">
-                        Añadí escalas para aplicar descuentos por volumen
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {(formData.PromocionesCantidad || []).map(
-                        (promo, index) => (
-                          <div
-                            key={index}
-                            className="flex flex-col sm:flex-row gap-3 items-end bg-white p-3 rounded-xl border border-slate-200 shadow-sm relative group"
-                          >
-                            <div className="flex-1 w-full">
-                              <NumberInput
-                                label={
-                                  formData.TipoVenta === TiposVenta.PESO
-                                    ? "A partir de (kg)"
-                                    : "A partir de (cantidad)"
-                                }
-                                value={promo.Cantidad}
-                                onValueChange={(val) => {
-                                  const newPromos = [
-                                    ...(formData.PromocionesCantidad || []),
-                                  ];
-                                  newPromos[index].Cantidad = val;
-                                  setFormData({
-                                    ...formData,
-                                    PromocionesCantidad: newPromos,
-                                  });
-                                }}
-                                minValue={
-                                  formData.TipoVenta === TiposVenta.PESO
-                                    ? 0.001
-                                    : 1
-                                }
-                                step={
-                                  formData.TipoVenta === TiposVenta.PESO
-                                    ? 0.001
-                                    : 1
-                                }
-                                formatOptions={
-                                  formData.TipoVenta === TiposVenta.PESO
-                                    ? {
-                                        minimumFractionDigits: 3,
-                                        maximumFractionDigits: 3,
-                                      }
-                                    : {
-                                        minimumFractionDigits: 0,
-                                        maximumFractionDigits: 0,
-                                      }
-                                }
-                                classNames={inputClassNames}
-                                // description={
-                                //   formData.TipoVenta === TiposVenta.PESO
-                                //     ? "Ingresá el peso mínimo en kg (ej: 0,500)"
-                                //     : "Ingresá la cantidad mínima de unidades"
-                                // }
-                              />
-                            </div>
-                            <div className="flex-1 w-full">
-                              <NumberInput
-                                label="% de Descuento"
-                                value={promo.DescuentoPorcentaje}
-                                onValueChange={(val) => {
-                                  const newPromos = [
-                                    ...(formData.PromocionesCantidad || []),
-                                  ];
-                                  newPromos[index].DescuentoPorcentaje = val;
-                                  setFormData({
-                                    ...formData,
-                                    PromocionesCantidad: newPromos,
-                                  });
-                                }}
-                                minValue={0}
-                                classNames={inputClassNames}
-                              />
-                            </div>
-                            <div className="flex items-center gap-2 pb-1">
-                              <Switch
-                                size="sm"
-                                isSelected={promo.EstaActiva}
-                                onValueChange={(val) => {
-                                  const newPromos = [
-                                    ...(formData.PromocionesCantidad || []),
-                                  ];
-                                  newPromos[index].EstaActiva = val;
-                                  setFormData({
-                                    ...formData,
-                                    PromocionesCantidad: newPromos,
-                                  });
-                                }}
-                              />
-                              <Button
-                                isIconOnly
-                                size="sm"
-                                color="danger"
-                                variant="light"
-                                className="text-red-400 hover:bg-red-50"
-                                onPress={() => {
-                                  const newPromos = [
-                                    ...(formData.PromocionesCantidad || []),
-                                  ];
-                                  newPromos.splice(index, 1);
-                                  setFormData({
-                                    ...formData,
-                                    PromocionesCantidad: newPromos,
-                                  });
-                                }}
-                              >
-                                <Trash2 size={16} />
-                              </Button>
-                            </div>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* ── CONFIGURACIÓN ────────────────────────────────── */}
-              {activeSection === "configuracion" && (
-                <>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-1">
-                    Configuración
-                  </p>
-                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 space-y-4">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                      Límites de Venta
-                    </p>
-                    <div className="flex items-center gap-4 flex-wrap">
-                      <Switch
-                        isSelected={formData.ActivarLimiteVenta}
-                        onValueChange={(value) =>
-                          setFormData({
-                            ...formData,
-                            ActivarLimiteVenta: value,
-                          })
-                        }
-                        isDisabled={isSaving}
+                    ivas?.map((iva: any) => (
+                      <SelectItem
+                        key={iva.Id.toString()}
+                        textValue={iva.Descripcion}
                       >
-                        <span className="text-sm text-slate-700">
-                          Activar Límite de Venta
-                        </span>
-                      </Switch>
-                      {formData.ActivarLimiteVenta && (
-                        <NumberInput
-                          label="Límite"
-                          classNames={inputClassNames}
-                          placeholder="0.00"
-                          value={Number(formData.LimiteVenta) || 0}
-                          onValueChange={(value) =>
-                            setFormData({
-                              ...formData,
-                              LimiteVenta: Number(value),
-                            })
-                          }
-                          className="max-w-xs"
-                          isDisabled={isSaving}
-                        />
-                      )}
-                    </div>
-                    <div className="space-y-3">
-                      <Switch
-                        isSelected={formData.ActivarHoraVenta}
-                        onValueChange={(value) =>
-                          setFormData({ ...formData, ActivarHoraVenta: value })
-                        }
-                        isDisabled={isSaving}
-                      >
-                        <span className="text-sm text-slate-700">
-                          Activar Horario de Venta
-                        </span>
-                      </Switch>
-                      {formData.ActivarHoraVenta && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                          <Input
-                            label="Hora Desde"
-                            classNames={inputClassNames}
-                            type="time"
-                            value={formData.HoraLimiteVentaDesde || ""}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                HoraLimiteVentaDesde: e.target.value,
-                              })
-                            }
-                            isDisabled={isSaving}
-                          />
-                          <Input
-                            label="Hora Hasta"
-                            classNames={inputClassNames}
-                            type="time"
-                            value={formData.HoraLimiteVentaHasta || ""}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                HoraLimiteVentaHasta: e.target.value,
-                              })
-                            }
-                            isDisabled={isSaving}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                        {iva.Descripcion}
+                      </SelectItem>
+                    ))
+                  )}
+                </Select>
+              </div>
 
-                  <div className="p-4 rounded-xl border border-slate-200 bg-white">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
-                      Estado del Producto
-                    </p>
-                    <Switch
-                      isSelected={!formData.EstaEliminado}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, EstaEliminado: !value })
-                      }
-                      color={formData.EstaEliminado ? "danger" : "success"}
-                      isDisabled={isSaving}
-                    >
-                      <span
-                        className={`text-sm font-medium ${
-                          formData.EstaEliminado
-                            ? "text-rose-600"
-                            : "text-emerald-600"
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/80 mb-5">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
+                  Costo Base
+                </p>
+                <NumberInput
+                  label="Precio Costo"
+                  classNames={inputClassNames}
+                  placeholder="0,00"
+                  value={Number(formData.PrecioCosto) || 0}
+                  onValueChange={(value) =>
+                    updatePrecio(null, "PrecioCosto", value)
+                  }
+                  isRequired
+                  isDisabled={isSaving}
+                  min={0}
+                />
+              </div>
+
+              {isLoadingListas ? (
+                <div className="text-center text-sm text-slate-400 py-4">
+                  Cargando listas de precios...
+                </div>
+              ) : listasPrecios.length === 0 ? (
+                <div className="text-center text-sm text-slate-400 py-4">
+                  No hay listas de precios activas.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {listasPrecios.map((lista: any) => {
+                    const isDefault = lista.PorDefecto;
+                    const listaData = formData.PreciosLista?.find(
+                      (p) => Number(p.ListaPrecioId) === Number(lista.Id),
+                    ) || { PorcentajeGanancia: 0, PrecioFinal: 0 };
+
+                    return (
+                      <div
+                        key={lista.Id}
+                        className={`space-y-3 p-4 rounded-xl border ${
+                          isDefault
+                            ? "bg-gradient-to-br from-[#67afc3]/5 to-[#4899b0]/5 border-[#67afc3]/30 shadow-sm"
+                            : "bg-white border-slate-200"
                         }`}
                       >
-                        {formData.EstaEliminado
-                          ? "Producto Inactivo"
-                          : "Producto Activo"}
-                      </span>
-                    </Switch>
-                  </div>
-                </>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`w-1 h-4 rounded-full shrink-0 ${
+                              isDefault ? "bg-[#67afc3]" : "bg-slate-300"
+                            }`}
+                          />
+                          <h4 className="font-semibold text-slate-800 text-sm flex-1 truncate">
+                            {lista.Nombre}
+                          </h4>
+                          {isDefault && (
+                            <Chip
+                              size="sm"
+                              variant="flat"
+                              className="h-5 text-[10px] bg-[#67afc3]/10 text-[#67afc3] font-semibold tracking-wide"
+                            >
+                              DEFECTO
+                            </Chip>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <NumberInput
+                            label="% Ganancia"
+                            placeholder="0"
+                            value={Number(listaData.PorcentajeGanancia) || 0}
+                            onValueChange={(value) =>
+                              updatePrecio(
+                                lista.Id,
+                                "PorcentajeGanancia",
+                                value,
+                              )
+                            }
+                            isRequired
+                            isDisabled={isSaving}
+                            classNames={inputClassNames}
+                          />
+                          <NumberInput
+                            label="Precio Venta"
+                            placeholder="0.00"
+                            value={Number(listaData.PrecioFinal) || 0}
+                            onValueChange={(value) =>
+                              updatePrecio(lista.Id, "PrecioFinal", value)
+                            }
+                            isDisabled={isSaving}
+                            classNames={{
+                              ...inputClassNames,
+                              input: `font-bold ${isDefault ? "text-[#67afc3]" : "text-slate-800"}`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
+            </CardBody>
+          </Card>
 
-              {/* ── COMPONENTES ────────────────────────────────── */}
-              {activeSection === "componentes" && (
-                <>
-                  <div className="flex items-center justify-between pb-1 border-b border-slate-100 mb-4">
+          
+          {/* COMPONENTES */}
+          <Card className="shadow-sm border border-slate-200/60 bg-white">
+            <CardBody className="p-6">
+              <h3 className="text-base font-semibold text-slate-800 mb-5 flex items-center gap-2">
+                <Package size={18} className="text-[#67afc3]" /> Componentes del Combo
+              </h3>
+              <div className="flex items-center justify-between pb-1 border-b border-slate-100 mb-4">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                       Componentes del Combo
                     </p>
@@ -1490,31 +1062,159 @@ export default function ComboForm({
                       })}
                     </div>
                   )}
-                </>
-              )}
-            </div>
-          </ModalBody>
+            </CardBody>
+          </Card>
 
-          {/* ── Footer ─────────────────────────────────────────────── */}
-          <ModalFooter className="flex items-center justify-between py-3.5 px-5 border-t border-slate-100 flex-none bg-white gap-3">
-            <Button
-              variant="light"
-              onPress={onClose}
-              isDisabled={isSaving}
-              className="font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl h-10 px-5"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onPress={handleSubmit}
-              isLoading={isSaving}
-              className="bg-[#67afc3] hover:bg-[#4899b0] text-white font-bold rounded-xl shadow-md shadow-[#67afc3]/30 h-10 px-6"
-            >
-              {isEdit ? "Guardar Cambios" : "Crear Producto"}
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+        </div>
+
+        {/* Right Column (Sidebar Content) */}
+        <div className="space-y-6">
+          {/* ESTADO Y FOTO */}
+          <Card className="shadow-sm border border-slate-200/60 bg-white">
+            <CardBody className="p-6">
+              <h3 className="text-base font-semibold text-slate-800 mb-5 flex items-center gap-2">
+                <Settings size={18} className="text-[#67afc3]" /> Estado y Foto
+              </h3>
+
+              <div className="mb-6 p-4 rounded-xl border border-slate-100 bg-slate-50 flex justify-between items-center">
+                <div>
+                  <p className="font-medium text-slate-700 text-sm">
+                    Visibilidad
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    ¿El producto está disponible?
+                  </p>
+                </div>
+                <Switch
+                  isSelected={!formData.EstaEliminado}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      EstaEliminado: !value,
+                      EsCombo: false,
+                    })
+                  }
+                  color={formData.EstaEliminado ? "danger" : "success"}
+                  isDisabled={isSaving}
+                >
+                  <span
+                    className={`text-sm font-bold ml-1 ${
+                      formData.EstaEliminado
+                        ? "text-rose-600"
+                        : "text-emerald-600"
+                    }`}
+                  >
+                    {formData.EstaEliminado ? "Inactivo" : "Activo"}
+                  </span>
+                </Switch>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100">
+                <ImageUploadField
+                  existingImageUrl={formData.Foto || null}
+                  previewUrl={fotoPreview}
+                  onChange={(file, base64) => {
+                    setFotoFile(file);
+                    setFotoPreview(base64);
+                  }}
+                  disabled={isSaving}
+                />
+              </div>
+            </CardBody>
+          </Card>
+
+
+
+
+          {/* CONFIGURACIÓN AVANZADA */}
+          <Card className="shadow-sm border border-slate-200/60 bg-white">
+            <CardBody className="p-6">
+              <h3 className="text-base font-semibold text-slate-800 mb-5 flex items-center gap-2">
+                <Settings size={18} className="text-[#67afc3]" /> Opciones
+                Avanzadas
+              </h3>
+
+              <div className="space-y-5">
+                <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 space-y-3">
+                  <Switch
+                    isSelected={formData.ActivarLimiteVenta}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, ActivarLimiteVenta: value })
+                    }
+                    isDisabled={isSaving}
+                    size="sm"
+                    classNames={{
+                      label: "text-sm text-slate-700 font-medium ml-2",
+                    }}
+                  >
+                    Límite Máximo por Venta
+                  </Switch>
+                  {formData.ActivarLimiteVenta && (
+                    <NumberInput
+                      label="Cantidad Máxima"
+                      size="sm"
+                      classNames={inputClassNames}
+                      value={Number(formData.LimiteVenta) || 0}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, LimiteVenta: Number(value) })
+                      }
+                      isDisabled={isSaving}
+                    />
+                  )}
+                </div>
+
+                <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 space-y-3">
+                  <Switch
+                    isSelected={formData.ActivarHoraVenta}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, ActivarHoraVenta: value })
+                    }
+                    isDisabled={isSaving}
+                    size="sm"
+                    classNames={{
+                      label: "text-sm text-slate-700 font-medium ml-2",
+                    }}
+                  >
+                    Restricción Horaria
+                  </Switch>
+                  {formData.ActivarHoraVenta && (
+                    <div className="grid grid-cols-2 gap-3 mt-2">
+                      <Input
+                        label="Desde"
+                        size="sm"
+                        classNames={inputClassNames}
+                        type="time"
+                        value={formData.HoraLimiteVentaDesde || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            HoraLimiteVentaDesde: e.target.value,
+                          })
+                        }
+                        isDisabled={isSaving}
+                      />
+                      <Input
+                        label="Hasta"
+                        size="sm"
+                        classNames={inputClassNames}
+                        type="time"
+                        value={formData.HoraLimiteVentaHasta || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            HoraLimiteVentaHasta: e.target.value,
+                          })
+                        }
+                        isDisabled={isSaving}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+      </div>
 
       {/* ── Sub-modales ────────────────────────────────────────────── */}
       <Modal
@@ -1579,6 +1279,6 @@ export default function ComboForm({
           isSaving={createUnidadMutation.isPending}
         />
       </Modal>
-    </>
+    </div>
   );
 }
