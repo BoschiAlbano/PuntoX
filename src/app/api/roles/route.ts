@@ -14,7 +14,7 @@ import {
 // Conjunto de todas las claves válidas del sistema de permisos
 const CLAVES_VALIDAS = new Set<string>(ALL_PERMISSIONS);
 
-type RolTipo = "ADMINISTRADOR" | "EMPLEADO";
+type RolTipo = "SUPERADMIN" | "ADMINISTRADOR" | "EMPLEADO";
 
 export const rolSchema = z.object({
   nombre: z
@@ -22,12 +22,12 @@ export const rolSchema = z.object({
     .min(1)
     .max(250, "El nombre no puede exceder 250 caracteres"),
   descripcion: z.string().optional().nullable(),
-  tipo: z.enum(["ADMINISTRADOR", "EMPLEADO"]).default("EMPLEADO"),
+  tipo: z.enum(["SUPERADMIN", "ADMINISTRADOR", "EMPLEADO"]).default("EMPLEADO"),
   permisos: z.array(z.string().min(1)).optional().default([]),
 });
 
 function mapRolTipo(tipo?: string | null): RolTipo {
-  if (tipo === "ADMINISTRADOR" || tipo === "EMPLEADO") return tipo;
+  if (tipo === "SUPERADMIN" || tipo === "ADMINISTRADOR" || tipo === "EMPLEADO") return tipo;
   return "EMPLEADO";
 }
 
@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const busqueda = searchParams.get("q")?.trim() || "";
+    const editId = searchParams.get("editId");
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const limit = Math.min(
       200,
@@ -47,13 +48,17 @@ export async function GET(req: NextRequest) {
     );
     const skip = (page - 1) * limit;
 
-    const whereBase = {
+    const whereBase: any = {
       TenantId: BigInt(tenantId),
       EstaEliminado: false,
       ...(busqueda
         ? { Descripcion: { contains: busqueda, mode: "insensitive" as const } }
         : {}),
     };
+
+    if (editId && !Number.isNaN(Number(editId))) {
+      whereBase.Id = BigInt(editId);
+    }
 
     const [total, roles] = await Promise.all([
       prisma.perfiles.count({ where: whereBase }),
@@ -111,7 +116,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, usuarioId } = await getAuthContext({
+    const { tenantId, usuarioId, isAdministrador, isSuperAdmin } = await getAuthContext({
       req,
       permission: SET_PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
@@ -122,6 +127,22 @@ export async function POST(req: NextRequest) {
     }
 
     const data = parsed.data;
+
+    // Validación BOLA / Elevación de privilegios: Solo Admin o SuperAdmin pueden crear roles de Administrador
+    if (data.tipo === "ADMINISTRADOR" && !isAdministrador && !isSuperAdmin) {
+      return NextResponse.json(
+        { error: "No tienes permisos para crear roles de Administrador" },
+        { status: 403 },
+      );
+    }
+
+    if (data.tipo === "SUPERADMIN" && !isSuperAdmin) {
+      return NextResponse.json(
+        { error: "Solo un Superadmin puede crear roles de tipo Superadmin" },
+        { status: 403 },
+      );
+    }
+
     // Si es rol administrador, nos aseguramos de incluir el permiso core de empleados.
     const permisosSolicitados = Array.from(
       new Set([
@@ -239,7 +260,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, usuarioId } = await getAuthContext({
+    const { tenantId, usuarioId, isAdministrador, isSuperAdmin } = await getAuthContext({
       req,
       permission: SET_PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
@@ -312,6 +333,18 @@ export async function PATCH(req: NextRequest) {
     }
 
     const data = parsed.data;
+
+    // Validación BOLA / Elevación de privilegios: 
+    // - Un empleado no puede cambiar un rol a tipo ADMINISTRADOR.
+    // - Un empleado no puede editar un rol que ya es de tipo ADMINISTRADOR.
+    if (!isAdministrador && !isSuperAdmin) {
+      if (data.tipo === "ADMINISTRADOR" || rolExistente.Tipo === "ADMINISTRADOR" || rolExistente.Tipo === "SUPERADMIN") {
+        return NextResponse.json(
+          { error: "No tienes permisos para modificar o asignar roles de Administrador" },
+          { status: 403 },
+        );
+      }
+    }
 
     // Si es rol del sistema, no permitir cambiar nombre ni tipo
     if (esRolSistema) {

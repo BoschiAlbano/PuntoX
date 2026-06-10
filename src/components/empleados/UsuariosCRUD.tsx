@@ -9,9 +9,9 @@ import {
 } from "@heroui/react";
 import { EditButton, DeleteButton, PasswordButton, LockButton } from "../shared/TableActions";
 import { useQueryClient } from "@tanstack/react-query";
-import UsuarioForm from "./UsuarioForm";
 import ChangePasswordModal from "./ChangePasswordModal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { useRouter } from "next/navigation";
 import { PerfilTipo } from "../../../prisma/generated/prisma";
 import { useUserStore } from "@/store/useUserStore";
 import { TIPO_PERFIL } from "@/lib/constants/comprobantes";
@@ -52,7 +52,8 @@ export type Usuario = {
 };
 
 export default function UsuariosCRUD() {
-  const { user, roles, updateUserFoto } = useUserStore();
+  const router = useRouter();
+  const { user, roles, updateUserFoto, isAdministrador, isSuperAdmin } = useUserStore();
   const queryClient = useQueryClient();
   const [passwordModalUser, setPasswordModalUser] = useState<Usuario | null>(
     null,
@@ -388,14 +389,10 @@ export default function UsuariosCRUD() {
               );
             }
             case "acciones": {
-              const isCurrentUser = Number(item.Id) === Number(user?.Id);
+              const isCurrentUser = Number(item.usuarioId) === Number(user?.Id);
 
               // Check if the CURRENT user is an Administrator
-              const currentUserIsAdmin = roles?.some(
-                (r) =>
-                  r.Tipo === TIPO_PERFIL.ADMINISTRADOR ||
-                  r.Tipo === "SUPERADMIN",
-              );
+              const currentUserIsAdmin = isAdministrador || isSuperAdmin;
 
               // 1. Editar / Cambiar Contraseña: admin puede editar a todos; no-admin solo a sí mismo
               const canEditOrPass = currentUserIsAdmin || isCurrentUser;
@@ -414,7 +411,7 @@ export default function UsuariosCRUD() {
                   />
 
                   <EditButton
-                    onPress={() => actions.onEdit(item)}
+                    onPress={() => router.push(`/empleados/${item.personaId}`)}
                     label={`Editar ${item.nombreCompleto || "usuario"}`}
                     isDisabled={!canEditOrPass}
                   />
@@ -440,7 +437,7 @@ export default function UsuariosCRUD() {
               return null;
           }
         }}
-        FormComponent={UsuarioForm}
+        onNewClick={() => router.push("/empleados/new")}
       />
       {passwordModalUser && (
         <ChangePasswordModal

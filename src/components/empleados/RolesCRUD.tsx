@@ -6,6 +6,8 @@ import { EditButton, DeleteButton } from "@/components/shared/TableActions";
 import { TIPO_PERFIL } from "@/lib/constants/comprobantes";
 import { Users } from "lucide-react";
 
+import { useRouter } from "next/navigation";
+
 // Roles del sistema: no se pueden editar ni eliminar
 function esRolSistema(rol: RolItem): boolean {
   return (
@@ -17,13 +19,15 @@ function esRolSistema(rol: RolItem): boolean {
 }
 
 export default function RolesCRUD() {
+  const router = useRouter();
+
   return (
     <GenericCrud<RolItem>
       apiPath="/api/roles"
       queryKey="roles-generic"
       searchPlaceholder="Buscar rol por nombre"
       additionalInvalidateQueryKeys={["roles-crud", "roles-select"]}
-      FormComponent={RolForm}
+      onNewClick={() => router.push("/empleados/roles/nuevo")}
       exportConfig={{
         filename: "roles",
         columns: [
@@ -105,7 +109,22 @@ export default function RolesCRUD() {
               </div>
             );
 
-          case "permisos":
+          case "permisos": {
+            const isSystemAdmin =
+              item.tipo === "ADMINISTRADOR" ||
+              item.tipo === "SUPERADMIN" ||
+              item.nombre.toLowerCase() === "administrador" ||
+              item.nombre.toLowerCase() === "admin" ||
+              item.nombre.toLowerCase() === "superadmin";
+
+            if (isSystemAdmin) {
+              return (
+                <span className="text-sm font-semibold text-[#67afc3]">
+                  Acceso Total (Sistema)
+                </span>
+              );
+            }
+
             return (
               <span className="text-sm text-slate-500">
                 {(item.permisos ?? []).length > 0
@@ -113,6 +132,7 @@ export default function RolesCRUD() {
                   : "Sin permisos"}
               </span>
             );
+          }
 
           case "acciones": {
             const esSistema = esRolSistema(item);
@@ -124,7 +144,7 @@ export default function RolesCRUD() {
                     esSistema ? "No se puede editar un rol del sistema" : "Editar"
                   }
                   isDisabled={esSistema}
-                  onPress={() => actions.onEdit(item)}
+                  onPress={() => router.push(`/empleados/roles/${item.Id}`)}
                 />
                 <DeleteButton
                   tooltipContent={

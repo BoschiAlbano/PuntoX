@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
@@ -117,6 +117,7 @@ export async function GET(req: NextRequest) {
     const estadoFilter = searchParams.get("estado");
     const busquedaFilter = searchParams.get("q");
     const sucursalFilter = searchParams.get("sucursal");
+    const editId = searchParams.get("editId");
 
     // Construir where base
     const where: any = {
@@ -124,6 +125,10 @@ export async function GET(req: NextRequest) {
       EstaEliminado: false,
       Persona_Empleado: { isNot: null },
     };
+
+    if (editId && !Number.isNaN(Number(editId))) {
+      where.Id = BigInt(editId);
+    }
 
     // Filtro de búsqueda (nombre, apellido, email, dni)
     // Nota: OR debe estar al mismo nivel que otros filtros, no anidado
@@ -386,7 +391,7 @@ export async function GET(req: NextRequest) {
 }
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, usuarioId } = await getAuthContext({
+    const { tenantId, usuarioId, isAdministrador, isSuperAdmin } = await getAuthContext({
       req,
       permission: SET_PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
@@ -541,6 +546,19 @@ export async function POST(req: NextRequest) {
             { status: 400 },
           );
         }
+      }
+
+      if ((rolTipo === "ADMINISTRADOR" || rolTipo === "SUPERADMIN") && !isAdministrador && !isSuperAdmin) {
+        return NextResponse.json(
+          { error: "No tienes permisos para asignar roles superiores" },
+          { status: 403 },
+        );
+      }
+      if (rolTipo === "SUPERADMIN" && !isSuperAdmin) {
+        return NextResponse.json(
+          { error: "Solo el Super Administrador puede asignar roles Superadmin" },
+          { status: 403 }
+        );
       }
     }
 
@@ -790,7 +808,7 @@ export async function POST(req: NextRequest) {
 }
 export async function PUT(req: NextRequest) {
   try {
-    const { tenantId, usuarioId: usuarioIdAccion } = await getAuthContext({
+    const { tenantId, usuarioId: usuarioIdAccion, isAdministrador, isSuperAdmin } = await getAuthContext({
       req,
       permission: SET_PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
@@ -798,6 +816,7 @@ export async function PUT(req: NextRequest) {
     const json = await req.json().catch(() => null);
     const parsed = updateEmpleadoSchema.safeParse(json);
     if (!parsed.success) {
+      console.error("Validation error PUT /api/empleados:", parsed.error.format());
       return NextResponse.json({ error: "Datos invalidos" }, { status: 400 });
     }
 
@@ -857,6 +876,99 @@ export async function PUT(req: NextRequest) {
     const rolIdAnterior = usuarioActual.PerfilUsuario?.[0]?.Perfil_Id
       ? Number(usuarioActual.PerfilUsuario[0].Perfil_Id)
       : null;
+
+    // VALIDACIÓN BOLA: No permitir que un Empleado edite a un Admin/SuperAdmin
+    let targetIsAdminOrSuper = false;
+    let dbPerfilAnterior = null;
+    if (rolIdAnterior) {
+      dbPerfilAnterior = await prisma.perfiles.findUnique({
+        where: { Id: BigInt(rolIdAnterior) },
+        select: { Tipo: true },
+      });
+      if (dbPerfilAnterior && (dbPerfilAnterior.Tipo === "ADMINISTRADOR" || dbPerfilAnterior.Tipo === "SUPERADMIN")) {
+        targetIsAdminOrSuper = true;
+      }
+    }
+
+    const isTargetAdminOrSuper = personaActual.Persona_Empleado?.Usuario?.[0]?.PerfilUsuario?.some(
+      (pu) =>
+        pu.Perfiles?.Tipo === "ADMINISTRADOR" ||
+        pu.Perfiles?.Tipo === "SUPERADMIN" ||
+        (pu.Perfiles as any)?.tipo === "ADMINISTRADOR" ||
+        (pu.Perfiles as any)?.tipo === "SUPERADMIN"
+    ) || targetIsAdminOrSuper;
+
+    const targetIsSuperAdmin = personaActual.Persona_Empleado?.Usuario?.[0]?.PerfilUsuario?.some(
+      (pu) => pu.Perfiles?.Tipo === "SUPERADMIN" || (pu.Perfiles as any)?.tipo === "SUPERADMIN"
+    ) || (dbPerfilAnterior && dbPerfilAnterior.Tipo === "SUPERADMIN");
+
+    if (targetIsSuperAdmin && !isSuperAdmin) {
+      return NextResponse.json(
+        { error: "Solo un Super Administrador puede modificar a otro Super Administrador" },
+        { status: 403 },
+      );
+    }
+
+    if (isTargetAdminOrSuper && !isAdministrador && !isSuperAdmin) {
+      return NextResponse.json(
+        { error: "No tienes permisos para modificar a un usuario con rol superior" },
+        { status: 403 },
+      );
+    }
+
+    // VALIDACIÓN: Un Super Administrador no puede ser bajado de rango
+    if (targetIsSuperAdmin && data.rolId !== undefined && data.rolId !== null) {
+      const nuevoRolDb = await prisma.perfiles.findUnique({
+        where: { Id: BigInt(data.rolId) },
+        select: { Tipo: true },
+      });
+      if (!nuevoRolDb || nuevoRolDb.Tipo !== "SUPERADMIN") {
+        return NextResponse.json(
+          { error: "No se puede degradar el rol de un Super Administrador" },
+          { status: 403 },
+        );
+      }
+    }
+
+    // VALIDACIÓN: Un Administrador no puede ser degradado a Empleado
+    const targetIsAdmin = personaActual.Persona_Empleado?.Usuario?.[0]?.PerfilUsuario?.some(
+      (pu) => pu.Perfiles?.Tipo === "ADMINISTRADOR" || (pu.Perfiles as any)?.tipo === "ADMINISTRADOR"
+    ) || (dbPerfilAnterior && dbPerfilAnterior.Tipo === "ADMINISTRADOR");
+
+    if (targetIsAdmin && data.rolId !== undefined && data.rolId !== null) {
+      const nuevoRolDb = await prisma.perfiles.findUnique({
+        where: { Id: BigInt(data.rolId) },
+        select: { Tipo: true },
+      });
+      if (nuevoRolDb && nuevoRolDb.Tipo === "EMPLEADO") {
+        return NextResponse.json(
+          { error: "No se puede degradar a un Administrador a Empleado" },
+          { status: 403 },
+        );
+      }
+    }
+
+    // VALIDACIÓN: No permitir asignar rol superior si no eres Admin/SuperAdmin
+    if (data.rolId !== undefined && data.rolId !== null) {
+      const nuevoRolDb = await prisma.perfiles.findUnique({
+        where: { Id: BigInt(data.rolId) },
+        select: { Tipo: true },
+      });
+      if (nuevoRolDb) {
+        if ((nuevoRolDb.Tipo === "ADMINISTRADOR" || nuevoRolDb.Tipo === "SUPERADMIN") && !isAdministrador && !isSuperAdmin) {
+          return NextResponse.json(
+            { error: "No tienes permisos para asignar roles superiores" },
+            { status: 403 },
+          );
+        }
+        if (nuevoRolDb.Tipo === "SUPERADMIN" && !isSuperAdmin) {
+          return NextResponse.json(
+            { error: "Solo el Super Administrador puede asignar el rol de Superadmin" },
+            { status: 403 },
+          );
+        }
+      }
+    }
 
     // Validar localidad si se proporciona
     let localidadIdBigInt: bigint | undefined;
@@ -1160,7 +1272,7 @@ export async function PUT(req: NextRequest) {
 }
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, usuarioId: usuarioIdAccion } = await getAuthContext({
+    const { tenantId, usuarioId: usuarioIdAccion, isAdministrador, isSuperAdmin } = await getAuthContext({
       req,
       permission: SET_PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
@@ -1183,6 +1295,11 @@ export async function PATCH(req: NextRequest) {
         Id: true,
         EstaBloqueado: true,
         Persona_Empleado: { select: { Id: true } },
+        PerfilUsuario: {
+          select: {
+            Perfiles: { select: { Tipo: true } },
+          },
+        },
       },
     });
 
@@ -1190,6 +1307,17 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json(
         { error: "Usuario no encontrado" },
         { status: 404 },
+      );
+    }
+
+    const targetIsAdminOrSuper = usuarioAnterior.PerfilUsuario?.some(
+      (pu) => pu.Perfiles?.Tipo === "ADMINISTRADOR" || pu.Perfiles?.Tipo === "SUPERADMIN"
+    );
+
+    if (targetIsAdminOrSuper && !isAdministrador && !isSuperAdmin) {
+      return NextResponse.json(
+        { error: "No tienes permisos para bloquear a un usuario con rol superior" },
+        { status: 403 },
       );
     }
 
@@ -1241,7 +1369,7 @@ export async function PATCH(req: NextRequest) {
 }
 export async function DELETE(req: NextRequest) {
   try {
-    const { tenantId, usuarioId: usuarioIdAccion } = await getAuthContext({
+    const { tenantId, usuarioId: usuarioIdAccion, isAdministrador, isSuperAdmin } = await getAuthContext({
       req,
       permission: SET_PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
@@ -1266,7 +1394,15 @@ export async function DELETE(req: NextRequest) {
           select: {
             Id: true,
             Usuario: {
-              select: { Id: true, AuthUserId: true },
+              select: { 
+                Id: true, 
+                AuthUserId: true,
+                PerfilUsuario: {
+                  select: {
+                    Perfiles: { select: { Tipo: true } }
+                  }
+                }
+              },
             },
           },
         },
@@ -1277,6 +1413,17 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json(
         { error: "Empleado no encontrado" },
         { status: 404 },
+      );
+    }
+
+    const targetIsAdminOrSuper = persona.Persona_Empleado?.Usuario?.[0]?.PerfilUsuario?.some(
+      (pu) => pu.Perfiles?.Tipo === "ADMINISTRADOR" || pu.Perfiles?.Tipo === "SUPERADMIN"
+    );
+
+    if (targetIsAdminOrSuper && !isAdministrador && !isSuperAdmin) {
+      return NextResponse.json(
+        { error: "No tienes permisos para eliminar a un usuario con rol superior" },
+        { status: 403 },
       );
     }
 
