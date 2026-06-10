@@ -14,6 +14,7 @@ import ConfirmModal from "@/components/shared/ConfirmModal";
 import { useRouter } from "next/navigation";
 import { PerfilTipo } from "../../../prisma/generated/prisma";
 import { useUserStore } from "@/store/useUserStore";
+import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
 import { TIPO_PERFIL } from "@/lib/constants/comprobantes";
 
 /** Sucursal tal como viene de la API de empleados (incluye EsDefault de UsuarioSucursal) */
@@ -54,6 +55,7 @@ export type Usuario = {
 export default function UsuariosCRUD() {
   const router = useRouter();
   const { user, roles, updateUserFoto, isAdministrador, isSuperAdmin } = useUserStore();
+  const { setOverride } = useBreadcrumbStore();
   const queryClient = useQueryClient();
   const [passwordModalUser, setPasswordModalUser] = useState<Usuario | null>(
     null,
@@ -411,7 +413,10 @@ export default function UsuariosCRUD() {
                   />
 
                   <EditButton
-                    onPress={() => router.push(`/empleados/${item.personaId}`)}
+                    onPress={() => {
+                      setOverride(`/empleados/${item.personaId}`, item.nombreCompleto || "Empleado");
+                      router.push(`/empleados/${item.personaId}`);
+                    }}
                     label={`Editar ${item.nombreCompleto || "usuario"}`}
                     isDisabled={!canEditOrPass}
                   />

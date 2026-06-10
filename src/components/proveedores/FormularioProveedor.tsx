@@ -153,38 +153,39 @@ export default function FormularioProveedor({
 
   return (
     <div className="w-full max-w-7xl mx-auto flex flex-col gap-6">
-      {/* ── Header ─────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-[#67afc3] to-[#4899b0] shadow-sm">
-            <Truck size={24} className="text-white" />
+      {/* HEADER SECTION */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-[#0F2233] to-[#1a364d] shadow-sm flex-shrink-0">
+            <Truck className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800 leading-tight">
+            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
               {isEdit ? "Editar Proveedor" : "Nuevo Proveedor"}
             </h1>
-            <p className="text-sm text-slate-500 mt-0.5">
+            <p className="text-sm text-slate-500 font-medium mt-1">
               {isEdit
-                ? formData.RazonSocial || "Sin nombre"
-                : "Completá la información del proveedor"}
+                ? "Actualiza la información del proveedor"
+                : "Completa los datos para registrar un nuevo proveedor"}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex gap-3 w-full sm:w-auto">
           <Button
             variant="flat"
             onPress={onCancel}
             isDisabled={isSaving}
-            className="font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl px-5 h-10"
+            className="flex-1 sm:flex-none font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200"
           >
             Cancelar
           </Button>
           <Button
             onPress={handleSubmit}
             isLoading={isSaving}
-            className="bg-[#0F2233] hover:bg-[#0F2233]/90 text-white font-bold rounded-xl shadow-md shadow-[#0F2233]/30 px-6 h-10"
+            isDisabled={!formData.RazonSocial || !formData.CUIT || !formData.Direccion || !formData.LocalidadId || !formData.CondicionIvaId}
+            className="flex-1 sm:flex-none bg-[#0F2233] hover:bg-[#1a364d] text-white font-semibold shadow-md shadow-[#0F2233]/20"
           >
-            {isEdit ? "Guardar Cambios" : "Crear Proveedor"}
+            {isEdit ? "Actualizar" : "Guardar"}
           </Button>
         </div>
       </div>

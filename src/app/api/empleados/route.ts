@@ -891,15 +891,15 @@ export async function PUT(req: NextRequest) {
     }
 
     const isTargetAdminOrSuper = personaActual.Persona_Empleado?.Usuario?.[0]?.PerfilUsuario?.some(
-      (pu) =>
+      (pu: any) =>
         pu.Perfiles?.Tipo === "ADMINISTRADOR" ||
         pu.Perfiles?.Tipo === "SUPERADMIN" ||
-        (pu.Perfiles as any)?.tipo === "ADMINISTRADOR" ||
-        (pu.Perfiles as any)?.tipo === "SUPERADMIN"
+        pu.Perfiles?.tipo === "ADMINISTRADOR" ||
+        pu.Perfiles?.tipo === "SUPERADMIN"
     ) || targetIsAdminOrSuper;
 
     const targetIsSuperAdmin = personaActual.Persona_Empleado?.Usuario?.[0]?.PerfilUsuario?.some(
-      (pu) => pu.Perfiles?.Tipo === "SUPERADMIN" || (pu.Perfiles as any)?.tipo === "SUPERADMIN"
+      (pu: any) => pu.Perfiles?.Tipo === "SUPERADMIN" || pu.Perfiles?.tipo === "SUPERADMIN"
     ) || (dbPerfilAnterior && dbPerfilAnterior.Tipo === "SUPERADMIN");
 
     if (targetIsSuperAdmin && !isSuperAdmin) {
@@ -932,7 +932,7 @@ export async function PUT(req: NextRequest) {
 
     // VALIDACIÓN: Un Administrador no puede ser degradado a Empleado
     const targetIsAdmin = personaActual.Persona_Empleado?.Usuario?.[0]?.PerfilUsuario?.some(
-      (pu) => pu.Perfiles?.Tipo === "ADMINISTRADOR" || (pu.Perfiles as any)?.tipo === "ADMINISTRADOR"
+      (pu: any) => pu.Perfiles?.Tipo === "ADMINISTRADOR" || pu.Perfiles?.tipo === "ADMINISTRADOR"
     ) || (dbPerfilAnterior && dbPerfilAnterior.Tipo === "ADMINISTRADOR");
 
     if (targetIsAdmin && data.rolId !== undefined && data.rolId !== null) {

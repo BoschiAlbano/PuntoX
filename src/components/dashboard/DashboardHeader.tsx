@@ -26,6 +26,7 @@ import { Tooltip } from "@heroui/react";
 import GlobalSearchModal from "@/components/shared/GlobalSearchModal";
 import { NotificacionesDropdown } from "./NotificacionesDropdown";
 import { UserDropdown } from "./UserDropdown";
+import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
 
 // ─── Route map ────────────────────────────────────────────────────────────────
 const routeNames: Record<string, string> = {
@@ -211,6 +212,7 @@ function DashboardHeaderComponent({
   const router = useRouter();
   const pathname = usePathname();
   const { user, isInitialized, isSuperAdmin } = useUserStore();
+  const { overrides } = useBreadcrumbStore();
   const hasUserSession = isInitialized && !!user;
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -238,14 +240,22 @@ function DashboardHeaderComponent({
       currentPath += `/${segment}`;
       // Evitar duplicar "/dashboard" que ya está como primer elemento (Inicio)
       if (currentPath === "/dashboard") return;
-      const label =
-        routeNames[currentPath] ||
-        segment.charAt(0).toUpperCase() + segment.slice(1);
+      
+      let label = routeNames[currentPath] || overrides[currentPath];
+      
+      if (!label) {
+        if (!isNaN(Number(segment))) {
+           label = "Editar";
+        } else {
+           label = segment.charAt(0).toUpperCase() + segment.slice(1);
+        }
+      }
+      
       result.push({ label, path: currentPath });
     });
 
     return result;
-  }, [pathname]);
+  }, [pathname, overrides]);
 
   // Datos de usuario
   const email = typeof user?.Email === "string" ? user.Email : "";

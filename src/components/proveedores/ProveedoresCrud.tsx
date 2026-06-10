@@ -9,9 +9,11 @@ import {
   DeleteButton,
   CreditCardButton,
 } from "@/components/shared/TableActions";
+import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
 
 export default function ProveedoresCrud() {
   const router = useRouter();
+  const { setOverride } = useBreadcrumbStore();
   return (
     <GenericCrud<Proveedor>
       apiPath="/api/proveedores"
@@ -251,7 +253,10 @@ export default function ProveedoresCrud() {
                 />
                 <EditButton
                   label="Editar Proveedor"
-                  onPress={() => router.push(`/proveedores/${item.Id}`)}
+                  onPress={() => {
+                    setOverride(`/proveedores/${item.Id}`, item.RazonSocial || "Proveedor");
+                    router.push(`/proveedores/${item.Id}`);
+                  }}
                 />
                 <DeleteButton
                   label="Eliminar Proveedor"

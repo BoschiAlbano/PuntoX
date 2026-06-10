@@ -6,7 +6,10 @@ import { ArrowLeft } from "lucide-react";
 import UsuarioForm from "@/components/empleados/UsuarioForm";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { handleError } from "@/lib/auth/errorHandler";
+import { LoadingComponent } from "@/components/loading/loading";
 import { Usuario } from "@/components/empleados/UsuariosCRUD";
+import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
+import { useEffect } from "react";
 
 export default function EditarEmpleadoPage() {
   const router = useRouter();
@@ -24,6 +27,19 @@ export default function EditarEmpleadoPage() {
     },
     enabled: !!id,
   });
+
+  const { setOverride } = useBreadcrumbStore();
+
+  useEffect(() => {
+    if (empleado) {
+      setOverride(
+        `/empleados/${id}`,
+        empleado.nombreCompleto ||
+          `${empleado.nombre || ""} ${empleado.apellido || ""}`.trim() ||
+          "Empleado"
+      );
+    }
+  }, [empleado, id, setOverride]);
 
   const editMutation = useMutation({
     mutationFn: async (data: Partial<Usuario>) => {
@@ -70,17 +86,17 @@ export default function EditarEmpleadoPage() {
         </Button>
       </div>
 
-      <div className="flex-1 w-full flex items-center justify-center">
-        {isLoading ? (
-          <div className="flex items-center gap-2 text-slate-500">
-            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            Cargando empleado...
+      <div className="flex-1 w-full">
+        {isLoading && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+            <LoadingComponent message="Cargando detalles..." />
           </div>
-        ) : !empleado ? (
-          <div className="text-slate-500">No se encontró el empleado.</div>
+        )}
+        {!isLoading && !empleado ? (
+          <div className="text-slate-500 flex justify-center py-10">No se encontró el empleado.</div>
         ) : (
           <UsuarioForm
-            initialData={empleado}
+            initialData={empleado || null}
             onSubmit={(data) => editMutation.mutate(data)}
             isSaving={editMutation.isPending}
             onCancel={() => router.push("/empleados")}

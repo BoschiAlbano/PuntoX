@@ -7,6 +7,9 @@ import FormularioProveedor from "@/components/proveedores/FormularioProveedor";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Proveedor } from "@/lib/validations/proveedor.schema";
 import { handleError } from "@/lib/auth/errorHandler";
+import { LoadingComponent } from "@/components/loading/loading";
+import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
+import { useEffect } from "react";
 
 export default function EditarProveedorPage() {
   const router = useRouter();
@@ -24,6 +27,14 @@ export default function EditarProveedorPage() {
     },
     enabled: !!id,
   });
+
+  const { setOverride } = useBreadcrumbStore();
+
+  useEffect(() => {
+    if (proveedor) {
+      setOverride(`/proveedores/${id}`, proveedor.RazonSocial || "Proveedor");
+    }
+  }, [proveedor, id, setOverride]);
 
   const editMutation = useMutation({
     mutationFn: async (data: Partial<Proveedor>) => {
@@ -68,17 +79,17 @@ export default function EditarProveedorPage() {
         </Button>
       </div>
 
-      <div className="flex-1 w-full flex items-center justify-center">
-        {isLoading ? (
-          <div className="flex items-center gap-2 text-slate-500">
-            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            Cargando proveedor...
+      <div className="flex-1 w-full">
+        {isLoading && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+            <LoadingComponent message="Cargando detalles..." />
           </div>
-        ) : !proveedor ? (
-          <div className="text-slate-500">No se encontró el proveedor.</div>
+        )}
+        {!isLoading && !proveedor ? (
+          <div className="text-slate-500 flex justify-center py-10">No se encontró el proveedor.</div>
         ) : (
           <FormularioProveedor
-            initialData={proveedor}
+            initialData={proveedor || null}
             onSubmit={(data) => editMutation.mutate(data)}
             isSaving={editMutation.isPending}
             onCancel={() => router.push("/proveedores")}

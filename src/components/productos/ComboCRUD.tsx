@@ -22,6 +22,7 @@ import { Copy, Check, Barcode } from "lucide-react";
 import { ProductoCard } from "./ProductoCard";
 import { useRouter } from "next/navigation";
 import { BulkPrintBarcodesModal } from "./BulkPrintBarcodesModal";
+import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
 
 function ProductoPreviewContent({ item }: { item: Producto }) {
   const currency = useCurrency();
@@ -236,6 +237,7 @@ export default function ComboCRUD() {
   }>({ open: false, items: [] });
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const router = useRouter();
+  const { setOverride } = useBreadcrumbStore();
 
   const invalidateProductos = () => {
     queryClient.invalidateQueries({ queryKey: ["combos-generic"] });
@@ -282,7 +284,10 @@ export default function ComboCRUD() {
         renderCard={(item, actions) => (
           <ProductoCard
             item={item}
-            onEdit={() => router.push(`/productos/promociones-combo/${item.Id}`)}
+            onEdit={() => {
+              setOverride(`/productos/promociones-combo/${item.Id}`, item.Descripcion || "Combo");
+              router.push(`/productos/promociones-combo/${item.Id}`);
+            }}
             onDelete={actions.onDelete}
             onOpenStockModal={handleOpenStockModal}
             onClick={actions.onPreview}
@@ -493,7 +498,10 @@ export default function ComboCRUD() {
               return (
                 <div className="flex gap-2 w-full justify-center items-center">
                   <EditButton
-                    onPress={() => router.push(`/productos/promociones-combo/${item.Id}`)}
+                    onPress={() => {
+                      setOverride(`/productos/promociones-combo/${item.Id}`, item.Descripcion || "Combo");
+                      router.push(`/productos/promociones-combo/${item.Id}`);
+                    }}
                     label={`Editar ${item.Descripcion || "producto"}`}
                   />
                   <DeleteButton

@@ -14,10 +14,12 @@ import {
 import { clienteListAdapter } from "@/lib/adapters/cliente.adapter";
 import { Cliente } from "@/lib/validations/cliente.schema";
 import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
+import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
 
 export default function ClienteCRUD() {
   const currency = useCurrency();
   const router = useRouter();
+  const { setOverride } = useBreadcrumbStore();
   return (
     <GenericCrud<Cliente>
       apiPath="/api/clientes"
@@ -319,7 +321,10 @@ export default function ClienteCRUD() {
                     esConsumidorFinal ? "No se puede editar" : "Editar"
                   }
                   isDisabled={esConsumidorFinal}
-                  onPress={() => router.push(`/clientes/${item.Id}`)}
+                  onPress={() => {
+                    setOverride(`/clientes/${item.Id}`, `${item.Nombre} ${item.Apellido}`.trim() || "Cliente");
+                    router.push(`/clientes/${item.Id}`);
+                  }}
                 />
                 <DeleteButton
                   tooltipContent={

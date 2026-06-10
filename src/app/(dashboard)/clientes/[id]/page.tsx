@@ -7,6 +7,9 @@ import ClienteForm from "@/components/clientes/ClienteForm";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Cliente } from "@/lib/validations/cliente.schema";
 import { handleError } from "@/lib/auth/errorHandler";
+import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
+import { useEffect } from "react";
+import { LoadingComponent } from "@/components/loading/loading";
 
 export default function EditarClientePage() {
   const router = useRouter();
@@ -24,6 +27,17 @@ export default function EditarClientePage() {
     },
     enabled: !!id,
   });
+
+  const { setOverride } = useBreadcrumbStore();
+
+  useEffect(() => {
+    if (cliente) {
+      setOverride(
+        `/clientes/${id}`,
+        `${cliente.Nombre} ${cliente.Apellido}`.trim() || "Cliente"
+      );
+    }
+  }, [cliente, id, setOverride]);
 
   const editMutation = useMutation({
     mutationFn: async (data: Partial<Cliente>) => {
@@ -68,17 +82,17 @@ export default function EditarClientePage() {
         </Button>
       </div>
 
-      <div className="flex-1 w-full flex items-center justify-center">
-        {isLoading ? (
-          <div className="flex items-center gap-2 text-slate-500">
-            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            Cargando cliente...
+      <div className="flex-1 w-full">
+        {isLoading && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+            <LoadingComponent message="Cargando detalles..." />
           </div>
-        ) : !cliente ? (
-          <div className="text-slate-500">No se encontró el cliente.</div>
+        )}
+        {!isLoading && !cliente ? (
+          <div className="text-slate-500 flex justify-center py-10">No se encontró el cliente.</div>
         ) : (
           <ClienteForm
-            initialData={cliente}
+            initialData={cliente || null}
             onSubmit={(data) => editMutation.mutate(data)}
             isSaving={editMutation.isPending}
             onCancel={() => router.push("/clientes")}

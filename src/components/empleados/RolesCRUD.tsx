@@ -5,8 +5,8 @@ import RolForm, { type RolItem } from "./RolForm";
 import { EditButton, DeleteButton } from "@/components/shared/TableActions";
 import { TIPO_PERFIL } from "@/lib/constants/comprobantes";
 import { Users } from "lucide-react";
-
 import { useRouter } from "next/navigation";
+import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
 
 // Roles del sistema: no se pueden editar ni eliminar
 function esRolSistema(rol: RolItem): boolean {
@@ -20,6 +20,7 @@ function esRolSistema(rol: RolItem): boolean {
 
 export default function RolesCRUD() {
   const router = useRouter();
+  const { setOverride } = useBreadcrumbStore();
 
   return (
     <GenericCrud<RolItem>
@@ -144,7 +145,10 @@ export default function RolesCRUD() {
                     esSistema ? "No se puede editar un rol del sistema" : "Editar"
                   }
                   isDisabled={esSistema}
-                  onPress={() => router.push(`/empleados/roles/${item.Id}`)}
+                  onPress={() => {
+                    setOverride(`/empleados/roles/${item.Id}`, item.nombre || "Rol");
+                    router.push(`/empleados/roles/${item.Id}`);
+                  }}
                 />
                 <DeleteButton
                   tooltipContent={

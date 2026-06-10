@@ -23,6 +23,7 @@ import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
 import { Copy, Check, Barcode } from "lucide-react";
 import { ProductoCard } from "./ProductoCard";
 import { BulkPrintBarcodesModal } from "./BulkPrintBarcodesModal";
+import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
 
 function ProductoPreviewContent({ item }: { item: Producto }) {
   const currency = useCurrency();
@@ -251,6 +252,7 @@ export default function ProductoCRUD() {
   const router = useRouter();
   const currency = useCurrency();
   const queryClient = useQueryClient();
+  const { setOverride } = useBreadcrumbStore();
   const { addStockMutation } = useProductos();
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
   const [productToAddStock, setProductToAddStock] = useState<Producto | null>(
@@ -315,7 +317,10 @@ export default function ProductoCRUD() {
           renderCard={(item, actions) => (
             <ProductoCard
               item={item}
-              onEdit={() => router.push(`/productos/${item.Id}`)}
+              onEdit={() => {
+                setOverride(`/productos/${item.Id}`, item.Descripcion || "Producto");
+                router.push(`/productos/${item.Id}`);
+              }}
               onDelete={actions.onDelete}
               onOpenStockModal={handleOpenStockModal}
               onClick={actions.onPreview}
@@ -546,7 +551,10 @@ export default function ProductoCRUD() {
                       label={`Agregar Stock ${item.Descripcion || "producto"}`}
                     />
                     <EditButton
-                      onPress={() => router.push(`/productos/${item.Id}`)}
+                      onPress={() => {
+                        setOverride(`/productos/${item.Id}`, item.Descripcion || "Producto");
+                        router.push(`/productos/${item.Id}`);
+                      }}
                       label={`Editar ${item.Descripcion || "producto"}`}
                     />
                     <DeleteButton
