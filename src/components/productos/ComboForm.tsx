@@ -107,7 +107,7 @@ const defaultProducto: Producto = {
   PreciosLista: [],
   PromocionesCantidad: [],
   Stock: 0,
-  EsCombo: false,
+  EsCombo: true,
   ComponentesCombo: [],
 };
 
@@ -357,7 +357,7 @@ export default function ComboForm({
   }, [nextCodeData, initialData]);
 
   const handleSubmit = () => {
-    const dataToSubmit = { ...formData, EsCombo: false, ComponentesCombo: [] };
+    const dataToSubmit = { ...formData, EsCombo: true };
     if (fotoPreview) dataToSubmit.Foto = fotoPreview;
     onSubmit(dataToSubmit);
   };
@@ -1097,7 +1097,6 @@ export default function ComboForm({
                     setFormData({
                       ...formData,
                       EstaEliminado: !value,
-                      EsCombo: false,
                     })
                   }
                   color={formData.EstaEliminado ? "danger" : "success"}
