@@ -40,6 +40,8 @@ export const cerrarCajaSchema = z.object({
     ),
 });
 
+// Función helper para calcular la Ganancia de Ventas de una caja específica
+import { calcularGananciaVentasCaja } from "@/lib/caja/ganancias";
 // GET: Obtener caja actual o historial
 export async function GET(req: NextRequest) {
   try {
@@ -172,9 +174,12 @@ export async function GET(req: NextRequest) {
         return usuario.Nombre || null;
       };
 
+      const gananciaVentas = await calcularGananciaVentasCaja(caja.Id);
+
       return NextResponse.json({
         caja: {
           ...caja,
+          GananciaVentas: gananciaVentas,
           Id: Number(caja.Id),
           TenantId: Number(caja.TenantId),
           UsuarioAperturaId: Number(caja.UsuarioAperturaId),
@@ -371,9 +376,12 @@ export async function GET(req: NextRequest) {
         return usuario.Nombre || null;
       };
 
+      const gananciaVentas = await calcularGananciaVentasCaja(caja.Id);
+
       return NextResponse.json({
         caja: {
           ...caja,
+          GananciaVentas: gananciaVentas,
           Id: Number(caja.Id),
           TenantId: Number(caja.TenantId),
           UsuarioAperturaId: Number(caja.UsuarioAperturaId),
@@ -534,6 +542,12 @@ export async function GET(req: NextRequest) {
         return usuario.Nombre || null;
       };
 
+      // Obtener ganancia de ventas por cada caja
+      const cajasGanancias = await Promise.all(
+        cajasDelDia.map(c => calcularGananciaVentasCaja(c.Id))
+      );
+      const gananciaVentasTotal = cajasGanancias.reduce((a, b) => a + b, 0);
+
       return NextResponse.json({
         resumenDia: {
           fecha: hoy.toISOString(),
@@ -564,8 +578,9 @@ export async function GET(req: NextRequest) {
               totalesDia.totalSalidaCtaCte +
               totalesDia.totalEntradaTransf -
               totalesDia.totalSalidaTransf,
+            gananciaVentas: gananciaVentasTotal,
           },
-          cajas: cajasDelDia.map((c) => ({
+          cajas: cajasDelDia.map((c, idx) => ({
             Id: Number(c.Id),
             FechaApertura: c.FechaApertura,
             FechaCierre: c.FechaCierre,
@@ -574,6 +589,7 @@ export async function GET(req: NextRequest) {
             TotalEntradaEfectivo: Number(c.TotalEntradaEfectivo),
             TotalSalidaEfectivo: Number(c.TotalSalidaEfectivo),
             Ganancia: Number(c.Ganancia),
+            GananciaVentas: cajasGanancias[idx],
             estaCerrada: !!c.FechaCierre,
             UsuarioApertura: c.Usuario_Caja_UsuarioAperturaIdToUsuario
               ? {

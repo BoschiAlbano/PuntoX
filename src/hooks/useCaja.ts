@@ -40,6 +40,7 @@ export type Caja = {
   TotalEntradaTransf: number;
   TotalSalidaTransf: number;
   Ganancia: number;
+  GananciaVentas?: number;
   EstaEliminado: boolean;
   UsuarioApertura?: UsuarioCaja | null;
   UsuarioCierre?: UsuarioCaja | null;
@@ -104,6 +105,7 @@ export type ResumenDiaCaja = {
   TotalEntradaEfectivo: number;
   TotalSalidaEfectivo: number;
   Ganancia: number;
+  GananciaVentas?: number;
   estaCerrada: boolean;
   UsuarioApertura?: {
     Id: number;
@@ -133,6 +135,7 @@ export type ResumenDia = {
     totalEntradaTransf: number;
     totalSalidaTransf: number;
     ganancia: number;
+    gananciaVentas?: number;
     efectivo: number;
     tarjeta: number;
     cheque: number;
@@ -160,6 +163,23 @@ const fetchCajaActual = async (
   return data.caja || null;
 };
 
+export const fetchCajaById = async (
+  id: number | string,
+  sucursalId: number | undefined,
+): Promise<Caja | null> => {
+  if (!id || !sucursalId) return null;
+  const response = await fetch(
+    `/api/caja?id=${id}&historial=true&sucursalId=${sucursalId}`,
+  );
+  if (!response.ok) {
+    if (response.status === 401 || response.status === 403) return null;
+    const error = await response.json();
+    throw new Error(error.error || "Error al obtener caja histórica");
+  }
+  const data = await response.json();
+  return data.caja || null;
+};
+
 const fetchResumenDia = async (
   sucursalId: number | undefined,
 ): Promise<ResumenDia | null> => {
@@ -172,7 +192,18 @@ const fetchResumenDia = async (
   return data.resumenDia || null;
 };
 
-// Hook principal
+export function useCajaByIdQuery(id: number | string | undefined) {
+  const { currentBranch } = useUserStore();
+  const sucursalId = currentBranch?.Id ? Number(currentBranch.Id) : undefined;
+
+  return useQuery({
+    queryKey: ["caja", "historial", id, sucursalId],
+    queryFn: () => fetchCajaById(id!, sucursalId),
+    enabled: !!id && !!sucursalId,
+    ...dynamicDataQueryOptions,
+  });
+}
+
 export function useCaja(options?: {
   enableCaja?: boolean;
   enableResumen?: boolean;

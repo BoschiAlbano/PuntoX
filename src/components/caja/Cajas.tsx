@@ -4,8 +4,9 @@ import React, { useState, useCallback } from "react";
 import GenericTable, { Column } from "@/components/shared/GenericTable";
 import { useCajasQuery, CajasFilters } from "@/hooks/useCajasQuery";
 import { Caja } from "@/hooks/useCaja";
-import { Chip, Select, SelectItem, Input, Button } from "@heroui/react";
-import { CalendarDays, X } from "lucide-react";
+import { Chip, Select, SelectItem, Input, Button, Tooltip } from "@heroui/react";
+import { CalendarDays, X, Eye } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const columns: Column[] = [
   { uid: "status", name: "Estado", sortable: false, align: "center" },
@@ -14,6 +15,7 @@ const columns: Column[] = [
   { uid: "montoInicial", name: "Monto Inicial", sortable: false, align: "end" },
   { uid: "montoCierre", name: "Monto Cierre", sortable: false, align: "end" },
   { uid: "ganancia", name: "Ganancia", sortable: false, align: "end" },
+  { uid: "acciones", name: "Acciones", sortable: false, align: "center" },
 ];
 
 const formatMoney = (amount: number | null) => {
@@ -46,8 +48,9 @@ export default function Cajas() {
     page: 1,
     limit: 10,
     estado: "todas",
-    q: "",
   });
+
+  const router = useRouter();
 
   const { data, isLoading, isError, refetch, isFetching } =
     useCajasQuery(filters);
@@ -108,11 +111,28 @@ export default function Cajas() {
         return formatMoney(item.MontoInicial);
       case "montoCierre":
         return formatMoney(item.MontoCierre);
-      case "ganancia":
+      case "ganancia": {
+        const ganancia = item.GananciaVentas || 0;
         return (
-          <span className={item.Ganancia >= 0 ? "text-success" : "text-danger"}>
-            {formatMoney(item.Ganancia)}
+          <span className={ganancia >= 0 ? "text-success" : "text-danger"}>
+            {formatMoney(ganancia)}
           </span>
+        );
+      }
+      case "acciones":
+        return (
+          <div className="flex items-center justify-center">
+            <Tooltip content="Ver detalle de caja">
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                onPress={() => router.push(`/caja/historial/${item.Id}`)}
+              >
+                <Eye size={18} className="text-default-500" />
+              </Button>
+            </Tooltip>
+          </div>
         );
       default:
         return null;

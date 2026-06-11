@@ -4,3 +4,6 @@ Nuevas implementaciones:
 2- limpieza de comprobantes viejos o datos viejos que no se usen como cuentas corrientes viejas (No por analíticas)
 3- dar de baja un registro de manera física y no lógica, en opciones menú. (Implementar).
 4- Imprimir codigo dee barra para articulos propios.
+
+5- lector codigo de barras en producto y combo new/edit.
+6- mejorar el splash screen.

@@ -36,13 +36,15 @@ import {
   Coins,
   CheckCircle2,
   AlertTriangle,
+  Printer,
 } from "lucide-react";
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { LoadingComponent } from "../loading/loading";
 import { handleNumberInput } from "@/lib/input/number";
-import { TIPO_MOVIMIENTO, TIPO_PAGO } from "@/lib/constants/comprobantes";
+import { TIPO_MOVIMIENTO } from "@/lib/constants/comprobantes";
+import { ReporteCajaImprimible } from "./ReporteCajaImprimible";
 import { useReactToPrint } from "react-to-print";
-import { TicketImpresion } from "../ventas/TicketImpresion";
+import { useRouter } from "next/navigation";
 import StatCard from "../dashboard/StatCard";
 import GenericTable, { Column } from "@/components/shared/GenericTable";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
@@ -112,21 +114,13 @@ export default function CajaActual({
   const onCerrarChange = propOnCerrarChange ?? _onCerrarChange;
   const [montoCierre, setMontoCierre] = useState("");
 
-  // Detalle Comprobante Modal
-  const {
-    isOpen: isTicketOpen,
-    onOpen: onTicketOpen,
-    onOpenChange: onTicketChange,
-  } = useDisclosure();
-  const [selectedTicket, setSelectedTicket] = useState<any>(null);
-  const [isLoadingTicket, setIsLoadingTicket] = useState(false);
+  // Detalle Comprobante via navigation
+  const router = useRouter();
 
-  // Ticket Printing logic - Moved up to avoid hook order issues
-  const ticketRef = React.useRef<HTMLDivElement>(null);
-
-  const handlePrint = useReactToPrint({
-    contentRef: ticketRef,
-    documentTitle: "Ticket de Venta",
+  const reporteCajaRef = React.useRef<HTMLDivElement>(null);
+  const handlePrintReporteCaja = useReactToPrint({
+    contentRef: reporteCajaRef,
+    documentTitle: "Reporte de Caja",
   });
 
   const movimientos = cajaActual?.Movimiento || [];
@@ -203,25 +197,8 @@ export default function CajaActual({
     );
   }, [cajaActual]);
 
-  const handleViewTicket = async (comprobanteId: number) => {
-    setIsLoadingTicket(true);
-    setSelectedTicket(null);
-    onTicketOpen();
-    try {
-      if (fetchDetalleComprobante) {
-        const data = await fetchDetalleComprobante(comprobanteId);
-        setSelectedTicket(data);
-      }
-    } catch (error) {
-      console.error("Error fetching ticket:", error);
-      addToast({
-        title: "Error",
-        description: "No se pudo obtener el detalle del comprobante",
-        color: "danger",
-      });
-    } finally {
-      setIsLoadingTicket(false);
-    }
+  const handleViewTicket = (comprobanteId: number) => {
+    router.push(`/comprobantes/${comprobanteId}`);
   };
 
   const renderMovCell = useCallback(
@@ -338,11 +315,14 @@ export default function CajaActual({
   }
 
   const handleCerrarCaja = async () => {
-    const monto = parseFloat(montoCierre.replace(",", "."));
-    if (!montoCierre || isNaN(monto) || monto < 0) {
+    // Si el usuario no escribe nada, asumimos el valor del placeholder (0)
+    const valorFinal = montoCierre.trim() === "" ? "0" : montoCierre;
+    const monto = parseFloat(valorFinal.replace(",", "."));
+    
+    if (isNaN(monto) || monto < 0) {
       addToast({
         title: "Error",
-        description: "Debe ingresar un monto válido",
+        description: "Debe ingresar un monto numérico válido mayor o igual a 0",
         color: "danger",
       });
       return;
@@ -395,72 +375,6 @@ export default function CajaActual({
     );
   }
 
-  const getTipoComprobanteLabel = (tipo: number) => {
-    switch (tipo) {
-      case 1:
-        return "Factura A"; // TIPO_COMPROBANTE_VENTA.FACTURA_A
-      case 2:
-        return "Factura B"; // TIPO_COMPROBANTE_VENTA.FACTURA_B
-      case 3:
-        return "Factura C"; // TIPO_COMPROBANTE_VENTA.FACTURA_C
-      case 4:
-        return "Presupuesto";
-      case 5:
-        return "Remito";
-      case 6:
-        return "Nota de Crédito";
-      default:
-        return "Comprobante";
-    }
-  };
-
-  const handlePrintTicket = () => {
-    if (!selectedTicket) return;
-    handlePrint();
-  };
-
-  // Prepare data for printing (including ARCA/CAE data)
-  // FacturaElectronica es relación 1:1 en Prisma (objeto, no array)
-  const arcaFe = selectedTicket?.FacturaElectronica ?? null;
-  const ticketData = selectedTicket
-    ? {
-        items: selectedTicket.DetalleComprobante.map((d: any) => ({
-          ...d,
-          subtotal: Number(d.SubTotal),
-          cantidad: Number(d.Cantidad),
-          Iva: { Porcentaje: Number(d.Iva) },
-        })),
-        cliente:
-          selectedTicket.cliente ||
-          selectedTicket.Comprobante_Factura?.Persona_Cliente?.Persona,
-        subtotal: Number(selectedTicket.SubTotal),
-        descuento: Number(selectedTicket.Descuento),
-        total: Number(selectedTicket.Total),
-        fecha: selectedTicket.Fecha,
-        numeroComprobante: selectedTicket.Numero,
-        tipoComprobante: getTipoComprobanteLabel(
-          selectedTicket.TipoComprobante,
-        ),
-        formasPago: selectedTicket.FormaPago.map((fp: any) => ({
-          tipoPago: fp.TipoPago,
-          monto: Number(fp.Monto),
-        })),
-        pie: configuracion?.observacionPieFactura || "",
-        // ARCA / Factura Electrónica
-        arcaStatus: arcaFe?.Estado ?? undefined,
-        cae: arcaFe?.CAE ?? undefined,
-        caeFchVto: arcaFe?.CAEFchVto
-          ? new Date(arcaFe.CAEFchVto)
-              .toISOString()
-              .split("T")[0]
-              .replace(/-/g, "")
-          : undefined,
-        cuitEmisor: configuracion?.cuit ?? undefined,
-        puntoVentaNum: arcaFe?.PuntoVenta ?? undefined,
-        cbteNro: arcaFe?.CbteNumero ?? undefined,
-      }
-    : null;
-
   return (
     <div className="flex flex-col gap-6 pb-4">
       {/* Entradas del dia */}
@@ -469,13 +383,23 @@ export default function CajaActual({
           <TrendingUp size={18} className="text-green-500" />
           Entradas del día
         </h2>
-        <Button
-          onPress={() => onCerrarChange()}
-          className="bg-[#0F2233] text-white font-semibold px-4 h-9 rounded-xl gap-2 hover:bg-[#0F2233]/80 transition-all shadow-sm text-sm"
-          startContent={<Lock size={14} strokeWidth={2.5} />}
-        >
-          Cerrar Caja
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onPress={() => handlePrintReporteCaja()}
+            variant="flat"
+            className="h-9 px-4 rounded-xl text-sm"
+            startContent={<Printer size={14} />}
+          >
+            Reporte
+          </Button>
+          <Button
+            onPress={() => onCerrarChange()}
+            className="bg-[#0F2233] text-white font-semibold px-4 h-9 rounded-xl gap-2 hover:bg-[#0F2233]/80 transition-all shadow-sm text-sm"
+            startContent={<Lock size={14} strokeWidth={2.5} />}
+          >
+            Cerrar Caja
+          </Button>
+        </div>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <StatCard
@@ -705,36 +629,51 @@ export default function CajaActual({
                     </div>
 
                     {/* Ganancia del día destacada */}
-                    <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-[#67afc3] to-[#4899b0] shadow-lg shadow-[#67afc3]/25">
-                      <div className="absolute top-0 right-0 w-28 h-28 bg-white/10 rounded-full -translate-y-10 translate-x-10" />
-                      <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/10 rounded-full translate-y-8 -translate-x-8" />
-                      <div className="relative z-10 flex items-center justify-between">
-                        <div>
-                          <p className="text-[9px] font-bold text-white/70 uppercase tracking-widest">
-                            Ganancia neta del día
-                          </p>
-                          <p
-                            className={`text-[2rem] font-black leading-tight mt-1 ${
-                              gananciaDelDia >= 0
-                                ? "text-white"
-                                : "text-rose-200"
-                            }`}
-                          >
-                            {formatMoney(gananciaDelDia)}
-                          </p>
-                          <p className="text-[10px] text-white/60 mt-1">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-[#67afc3] to-[#4899b0] shadow-lg shadow-[#67afc3]/25">
+                        <div className="absolute top-0 right-0 w-28 h-28 bg-white/10 rounded-full -translate-y-10 translate-x-10" />
+                        <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/10 rounded-full translate-y-8 -translate-x-8" />
+                        <div className="relative z-10 flex flex-col justify-between h-full">
+                          <div>
+                            <p className="text-[9px] font-bold text-white/70 uppercase tracking-widest">
+                              Balance Neto Total
+                            </p>
+                            <p
+                              className={`text-2xl font-black leading-tight mt-1 ${
+                                gananciaDelDia >= 0 ? "text-white" : "text-rose-200"
+                              }`}
+                            >
+                              {formatMoney(gananciaDelDia)}
+                            </p>
+                          </div>
+                          <p className="text-[10px] text-white/60 mt-2">
                             Efect. esperado:{" "}
                             <span className="font-bold text-white/90">
                               {formatMoney(efectivoEsperado)}
                             </span>
                           </p>
                         </div>
-                        <div className="p-3 rounded-2xl bg-white/20 shrink-0">
-                          <DollarSign
-                            size={26}
-                            className="text-white"
-                            strokeWidth={2}
-                          />
+                      </div>
+
+                      <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-indigo-500 to-indigo-600 shadow-lg shadow-indigo-500/25">
+                        <div className="absolute top-0 right-0 w-28 h-28 bg-white/10 rounded-full -translate-y-10 translate-x-10" />
+                        <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/10 rounded-full translate-y-8 -translate-x-8" />
+                        <div className="relative z-10 flex flex-col justify-between h-full">
+                          <div>
+                            <p className="text-[9px] font-bold text-white/70 uppercase tracking-widest">
+                              Ganancia de Ventas
+                            </p>
+                            <p
+                              className={`text-2xl font-black leading-tight mt-1 ${
+                                (cajaActual?.GananciaVentas || 0) >= 0 ? "text-white" : "text-rose-200"
+                              }`}
+                            >
+                              {formatMoney(cajaActual?.GananciaVentas || 0)}
+                            </p>
+                          </div>
+                          <p className="text-[10px] text-white/60 mt-2 leading-tight">
+                            Precio de venta deducido del costo de compra
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -801,7 +740,16 @@ export default function CajaActual({
                 </ModalBody>
 
                 {/* ─── Footer ──────────────────────────────────────────── */}
-                <ModalFooter className="gap-2">
+                <ModalFooter className="gap-2 flex-wrap">
+                  <div className="flex w-full gap-2 mb-2">
+                    <Button
+                      onPress={() => handlePrintReporteCaja()}
+                      className="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-bold px-6 rounded-xl shadow-md transition-all"
+                      startContent={<FileText size={15} strokeWidth={2.5} />}
+                    >
+                      Imprimir Reporte
+                    </Button>
+                  </div>
                   <Button
                     variant="flat"
                     className="font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl"
@@ -826,358 +774,16 @@ export default function CajaActual({
         </ModalContent>
       </Modal>
 
-      {/* Ticket Detail Modal */}
-      <Modal
-        isOpen={isTicketOpen}
-        onOpenChange={onTicketChange}
-        size="2xl"
-        placement="center"
-        backdrop="opaque"
-        scrollBehavior="inside"
-        motionProps={modalMotionProps}
-        classNames={{
-          wrapper: "z-[1000]",
-          base: "bg-white shadow-2xl border border-slate-200",
-        }}
-      >
-        <ModalContent>
-          {(onClose) => {
-            const fe = selectedTicket?.FacturaElectronica ?? null;
-            const feAutorizado = fe?.Estado === "AUTORIZADO";
-            const feRechazado = fe?.Estado === "RECHAZADO";
-            const tieneFe = !!fe;
-
-            return (
-              <>
-                <ModalHeader className="flex flex-col gap-1 pb-2 border-b border-slate-100">
-                  <div className="flex flex-row items-center justify-between pr-8">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: "#67afc3" }}
-                      >
-                        <FileText size={18} className="text-white" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-base font-bold text-slate-800 leading-tight">
-                          {selectedTicket
-                            ? `Comprobante #${selectedTicket.Numero.toString().padStart(8, "0")}`
-                            : "Detalle de comprobante"}
-                        </span>
-                        {selectedTicket && (
-                          <span className="text-xs text-slate-400">
-                            {formatDate(selectedTicket.Fecha)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {selectedTicket && (
-                      <div className="flex items-center gap-2">
-                        <Chip
-                          size="sm"
-                          variant="flat"
-                          style={{
-                            backgroundColor: "#67afc320",
-                            color: "#3a8fa3",
-                          }}
-                        >
-                          {getTipoComprobanteLabel(
-                            selectedTicket.TipoComprobante,
-                          )}
-                        </Chip>
-                      </div>
-                    )}
-                  </div>
-                </ModalHeader>
-
-                <ModalBody className="px-5 py-4">
-                  {isLoadingTicket ? (
-                    <div className="flex justify-center py-10">
-                      <LoadingComponent message="Cargando comprobante..." />
-                    </div>
-                  ) : selectedTicket ? (
-                    <div className="flex flex-col gap-5">
-                      {/* Cliente + Totales */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {/* Cliente */}
-                        <Card className="shadow-none border border-slate-100 bg-slate-50/60">
-                          <CardBody className="py-3 px-4 gap-1.5">
-                            <span
-                              className="text-[10px] uppercase font-bold tracking-wider"
-                              style={{ color: "#67afc3" }}
-                            >
-                              Cliente
-                            </span>
-                            <span className="font-semibold text-slate-800">
-                              {selectedTicket?.cliente?.Nombre
-                                ? `${selectedTicket.cliente.Nombre} ${selectedTicket.cliente.Apellido || ""}`.trim()
-                                : "Consumidor Final"}
-                            </span>
-                            {selectedTicket?.cliente?.Dni && (
-                              <span className="text-xs text-slate-500">
-                                DNI / CUIT: {selectedTicket.cliente.Dni}
-                              </span>
-                            )}
-                            {selectedTicket?.cliente?.Direccion && (
-                              <span className="text-xs text-slate-400">
-                                {selectedTicket.cliente.Direccion}
-                              </span>
-                            )}
-                          </CardBody>
-                        </Card>
-
-                        {/* Totales */}
-                        <Card className="shadow-none border border-slate-100 bg-slate-50/60">
-                          <CardBody className="py-3 px-4 gap-2">
-                            <span
-                              className="text-[10px] uppercase font-bold tracking-wider"
-                              style={{ color: "#67afc3" }}
-                            >
-                              Resumen
-                            </span>
-                            <div className="flex justify-between text-sm text-slate-600">
-                              <span>Subtotal</span>
-                              <span>
-                                {formatMoney(selectedTicket.SubTotal)}
-                              </span>
-                            </div>
-                            {Number(selectedTicket.Descuento) > 0 && (
-                              <div className="flex justify-between text-sm text-slate-500">
-                                <span>Descuento</span>
-                                <span className="text-danger">
-                                  -{formatMoney(selectedTicket.Descuento)}
-                                </span>
-                              </div>
-                            )}
-                            <div className="flex justify-between items-center pt-1 border-t border-slate-200">
-                              <span className="text-sm font-semibold text-slate-700">
-                                Total
-                              </span>
-                              <span
-                                className="text-xl font-bold"
-                                style={{ color: "#67afc3" }}
-                              >
-                                {formatMoney(selectedTicket.Total)}
-                              </span>
-                            </div>
-                          </CardBody>
-                        </Card>
-                      </div>
-
-                      {/* ARCA / Factura Electrónica */}
-                      {tieneFe && (
-                        <div
-                          className={`rounded-xl border px-4 py-3 flex flex-col gap-2 ${
-                            feAutorizado
-                              ? "bg-emerald-50 border-emerald-200"
-                              : feRechazado
-                                ? "bg-red-50 border-red-200"
-                                : "bg-slate-50 border-slate-200"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span
-                              className={`text-[10px] uppercase font-bold tracking-wider ${
-                                feAutorizado
-                                  ? "text-emerald-600"
-                                  : feRechazado
-                                    ? "text-red-500"
-                                    : "text-slate-500"
-                              }`}
-                            >
-                              Factura electrónica ARCA
-                            </span>
-                            <Chip
-                              size="sm"
-                              variant="flat"
-                              color={
-                                feAutorizado
-                                  ? "success"
-                                  : feRechazado
-                                    ? "danger"
-                                    : "default"
-                              }
-                            >
-                              {fe.Estado}
-                            </Chip>
-                          </div>
-                          {feAutorizado && fe.CAE && (
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                              <div className="flex flex-col">
-                                <span className="text-xs text-slate-500">
-                                  CAE
-                                </span>
-                                <span className="font-mono font-semibold text-slate-800 text-xs tracking-wide">
-                                  {fe.CAE}
-                                </span>
-                              </div>
-                              {fe.CAEFchVto && (
-                                <div className="flex flex-col">
-                                  <span className="text-xs text-slate-500">
-                                    Vence
-                                  </span>
-                                  <span className="font-semibold text-slate-700 text-xs">
-                                    {new Date(fe.CAEFchVto).toLocaleDateString(
-                                      "es-AR",
-                                    )}
-                                  </span>
-                                </div>
-                              )}
-                              <div className="flex flex-col">
-                                <span className="text-xs text-slate-500">
-                                  PtoVta
-                                </span>
-                                <span className="font-semibold text-slate-700 text-xs">
-                                  {String(fe.PuntoVenta).padStart(4, "0")}
-                                </span>
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="text-xs text-slate-500">
-                                  Nro. Cbte.
-                                </span>
-                                <span className="font-semibold text-slate-700 text-xs">
-                                  {String(fe.CbteNumero).padStart(8, "0")}
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Items */}
-                      <div>
-                        <h4
-                          className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2"
-                          style={{ color: "#67afc3" }}
-                        >
-                          <FileText size={13} />
-                          Ítems del comprobante
-                        </h4>
-                        <div className="border border-slate-100 rounded-xl overflow-hidden">
-                          <Table
-                            aria-label="Items del comprobante"
-                            removeWrapper
-                            classNames={{
-                              th: "text-[11px] font-bold uppercase tracking-wide bg-slate-50 text-slate-500",
-                              td: "text-sm py-2",
-                              tr: "border-b border-slate-50 last:border-0",
-                            }}
-                          >
-                            <TableHeader>
-                              <TableColumn>CANT</TableColumn>
-                              <TableColumn>DESCRIPCIÓN</TableColumn>
-                              <TableColumn align="end">UNITARIO</TableColumn>
-                              <TableColumn align="end">SUBTOTAL</TableColumn>
-                            </TableHeader>
-                            <TableBody>
-                              {selectedTicket.DetalleComprobante.map(
-                                (item: any) => (
-                                  <TableRow key={item.Id}>
-                                    <TableCell>
-                                      <span className="font-semibold text-slate-700">
-                                        {item.Cantidad}
-                                      </span>
-                                    </TableCell>
-                                    <TableCell>
-                                      <div className="flex flex-col">
-                                        <span className="text-slate-800">
-                                          {item.Descripcion}
-                                        </span>
-                                        {item.Codigo && (
-                                          <span className="text-[11px] text-slate-400">
-                                            SKU: {item.Codigo}
-                                          </span>
-                                        )}
-                                      </div>
-                                    </TableCell>
-                                    <TableCell className="text-slate-600">
-                                      {formatMoney(item.Precio)}
-                                    </TableCell>
-                                    <TableCell>
-                                      <span className="font-semibold text-slate-800">
-                                        {formatMoney(item.SubTotal)}
-                                      </span>
-                                    </TableCell>
-                                  </TableRow>
-                                ),
-                              )}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </div>
-
-                      {/* Pagos */}
-                      <div>
-                        <h4
-                          className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2"
-                          style={{ color: "#67afc3" }}
-                        >
-                          <TrendingUp size={13} />
-                          Formas de pago
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedTicket.FormaPago.map((fp: any) => (
-                            <div
-                              key={fp.Id}
-                              className="rounded-lg px-3 py-2 flex items-center gap-2 border"
-                              style={{
-                                backgroundColor: "#67afc310",
-                                borderColor: "#67afc340",
-                              }}
-                            >
-                              <span
-                                className="text-[11px] font-bold uppercase"
-                                style={{ color: "#3a8fa3" }}
-                              >
-                                {Object.keys(TIPO_PAGO).find(
-                                  (key) =>
-                                    TIPO_PAGO[key as keyof typeof TIPO_PAGO] ===
-                                    fp.TipoPago,
-                                ) || "OTRO"}
-                              </span>
-                              <span className="font-bold text-slate-800 text-sm">
-                                {formatMoney(fp.Monto)}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-center text-slate-400 py-8">
-                      No se encontró información del comprobante.
-                    </p>
-                  )}
-                </ModalBody>
-
-                <ModalFooter className="flex justify-between border-t border-slate-100 pt-3">
-                  <Button
-                    variant="light"
-                    onPress={onClose}
-                    className="text-slate-500"
-                  >
-                    Cerrar
-                  </Button>
-                  {selectedTicket && (
-                    <Button
-                      onPress={handlePrintTicket}
-                      style={{ backgroundColor: "#67afc3" }}
-                      className="text-white font-semibold"
-                      startContent={<FileText size={16} />}
-                    >
-                      Imprimir
-                    </Button>
-                  )}
-                </ModalFooter>
-              </>
-            );
-          }}
-        </ModalContent>
-      </Modal>
-
       {/* Hidden Ticket Component for Printing */}
       <div style={{ display: "none" }}>
-        <TicketImpresion ref={ticketRef} datosVenta={ticketData} />
+        <div ref={reporteCajaRef}>
+          {cajaActual && (
+            <ReporteCajaImprimible
+              cajaActual={cajaActual as any}
+              nombreEmpresa={configuracion?.nombreFantasia || configuracion?.razonSocial}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

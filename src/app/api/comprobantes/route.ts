@@ -227,9 +227,11 @@ export async function POST(req: NextRequest) {
       if (!articulo) continue;
 
       const porcentajeIva = Number(articulo.Iva.Porcentaje);
-      const baseImponible = detalle.subtotal * (1 - descuento / subtotal);
+      const baseImponible = detalle.subtotal * (1 - (subtotal > 0 ? descuento / subtotal : 0));
 
       detalle.iva = porcentajeIva;
+      // Guardamos el costo total del renglón (precio de costo * cantidad)
+      detalle.costo = Number(articulo.PrecioCosto) * detalle.cantidad;
 
       if (porcentajeIva === 21) {
         iva21 += (baseImponible * 21) / 121;

@@ -9,6 +9,7 @@ import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { PERMISSIONS, GET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { Prisma } from "../../../../prisma/generated/prisma";
+import { calcularGananciaVentasCaja } from "@/lib/caja/ganancias";
 
 export async function GET(req: NextRequest) {
   try {
@@ -169,44 +170,49 @@ export async function GET(req: NextRequest) {
       return usuario.Nombre || null;
     };
 
-    const data = cajas.map((c) => ({
-      ...c,
-      Id: Number(c.Id),
-      TenantId: Number(c.TenantId),
-      SucursalId: c.SucursalId ? Number(c.SucursalId) : null,
-      UsuarioAperturaId: Number(c.UsuarioAperturaId),
-      UsuarioCierreId: c.UsuarioCierreId ? Number(c.UsuarioCierreId) : null,
-      MontoInicial: Number(c.MontoInicial),
-      MontoCierre: c.MontoCierre ? Number(c.MontoCierre) : null,
-      TotalEntradaEfectivo: Number(c.TotalEntradaEfectivo),
-      TotalSalidaEfectivo: Number(c.TotalSalidaEfectivo),
-      TotalEntradaTarjeta: Number(c.TotalEntradaTarjeta),
-      TotalSalidaTarjeta: Number(c.TotalSalidaTarjeta),
-      TotalEntradaCheque: Number(c.TotalEntradaCheque),
-      TotalSalidaCheque: Number(c.TotalSalidaCheque),
-      TotalEntradaCtaCte: Number(c.TotalEntradaCtaCte),
-      TotalSalidaCtaCte: Number(c.TotalSalidaCtaCte),
-      TotalEntradaTransf: Number(c.TotalEntradaTransf),
-      TotalSalidaTransf: Number(c.TotalSalidaTransf),
-      Ganancia: Number(c.Ganancia),
-      UsuarioApertura: c.Usuario_Caja_UsuarioAperturaIdToUsuario
-        ? {
-            Id: Number(c.Usuario_Caja_UsuarioAperturaIdToUsuario.Id),
-            Nombre: c.Usuario_Caja_UsuarioAperturaIdToUsuario.Nombre,
-            NombreCompleto: formatearNombreUsuario(
-              c.Usuario_Caja_UsuarioAperturaIdToUsuario,
-            ),
-          }
-        : null,
-      UsuarioCierre: c.Usuario_Caja_UsuarioCierreIdToUsuario
-        ? {
-            Id: Number(c.Usuario_Caja_UsuarioCierreIdToUsuario.Id),
-            Nombre: c.Usuario_Caja_UsuarioCierreIdToUsuario.Nombre,
-            NombreCompleto: formatearNombreUsuario(
-              c.Usuario_Caja_UsuarioCierreIdToUsuario,
-            ),
-          }
-        : null,
+    const data = await Promise.all(cajas.map(async (c) => {
+      const gananciaVentas = await calcularGananciaVentasCaja(c.Id);
+      
+      return {
+        ...c,
+        Id: Number(c.Id),
+        TenantId: Number(c.TenantId),
+        SucursalId: c.SucursalId ? Number(c.SucursalId) : null,
+        UsuarioAperturaId: Number(c.UsuarioAperturaId),
+        UsuarioCierreId: c.UsuarioCierreId ? Number(c.UsuarioCierreId) : null,
+        MontoInicial: Number(c.MontoInicial),
+        MontoCierre: c.MontoCierre ? Number(c.MontoCierre) : null,
+        TotalEntradaEfectivo: Number(c.TotalEntradaEfectivo),
+        TotalSalidaEfectivo: Number(c.TotalSalidaEfectivo),
+        TotalEntradaTarjeta: Number(c.TotalEntradaTarjeta),
+        TotalSalidaTarjeta: Number(c.TotalSalidaTarjeta),
+        TotalEntradaCheque: Number(c.TotalEntradaCheque),
+        TotalSalidaCheque: Number(c.TotalSalidaCheque),
+        TotalEntradaCtaCte: Number(c.TotalEntradaCtaCte),
+        TotalSalidaCtaCte: Number(c.TotalSalidaCtaCte),
+        TotalEntradaTransf: Number(c.TotalEntradaTransf),
+        TotalSalidaTransf: Number(c.TotalSalidaTransf),
+        Ganancia: Number(c.Ganancia),
+        GananciaVentas: gananciaVentas,
+        UsuarioApertura: c.Usuario_Caja_UsuarioAperturaIdToUsuario
+          ? {
+              Id: Number(c.Usuario_Caja_UsuarioAperturaIdToUsuario.Id),
+              Nombre: c.Usuario_Caja_UsuarioAperturaIdToUsuario.Nombre,
+              NombreCompleto: formatearNombreUsuario(
+                c.Usuario_Caja_UsuarioAperturaIdToUsuario,
+              ),
+            }
+          : null,
+        UsuarioCierre: c.Usuario_Caja_UsuarioCierreIdToUsuario
+          ? {
+              Id: Number(c.Usuario_Caja_UsuarioCierreIdToUsuario.Id),
+              Nombre: c.Usuario_Caja_UsuarioCierreIdToUsuario.Nombre,
+              NombreCompleto: formatearNombreUsuario(
+                c.Usuario_Caja_UsuarioCierreIdToUsuario,
+              ),
+            }
+          : null,
+      };
     }));
 
     return NextResponse.json(createPaginationResponse(data, total, pagination));
