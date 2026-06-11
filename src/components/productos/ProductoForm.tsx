@@ -42,7 +42,9 @@ import {
   Percent,
   Trash2,
   Wand2,
+  ScanBarcode,
 } from "lucide-react";
+import CameraScannerModal from "@/components/ventas/CameraScannerModal";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
 import MarcaGenericForm from "../marcas/MarcaForm";
 import RubroGenericForm from "../rubros/RubroForm";
@@ -182,6 +184,7 @@ export default function ProductoForm({
   const [isMarcaModalOpen, setIsMarcaModalOpen] = useState(false);
   const [isRubroModalOpen, setIsRubroModalOpen] = useState(false);
   const [isUnidadModalOpen, setIsUnidadModalOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string>("");
 
@@ -525,28 +528,40 @@ export default function ProductoForm({
                   isDisabled={isSaving}
                   classNames={inputClassNames}
                   endContent={
-                    <Tooltip
-                      content="Generar código automático"
-                      placement="top"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => {
-                          // Generamos un código de 12 dígitos comenzando con '100'
-                          // para evitar choques con balanzas (que usan 13 dígitos y empiezan con 20-29).
-                          const randomCode =
-                            "100" +
-                            Math.floor(Math.random() * 1000000000)
-                              .toString()
-                              .padStart(9, "0");
-                          setFormData({ ...formData, CodigoBarra: randomCode });
-                        }}
-                        className="text-slate-400 hover:text-[#67afc3] transition-colors focus:outline-none"
-                        disabled={isSaving}
+                    <div className="flex items-center gap-1">
+                      <Tooltip content="Escanear código de barras" placement="top">
+                        <button
+                          type="button"
+                          onClick={() => setIsScannerOpen(true)}
+                          className="text-slate-400 hover:text-[#67afc3] transition-colors focus:outline-none"
+                          disabled={isSaving}
+                        >
+                          <ScanBarcode size={18} />
+                        </button>
+                      </Tooltip>
+                      <Tooltip
+                        content="Generar código automático"
+                        placement="top"
                       >
-                        <Wand2 size={18} />
-                      </button>
-                    </Tooltip>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Generamos un código de 12 dígitos comenzando con '100'
+                            // para evitar choques con balanzas (que usan 13 dígitos y empiezan con 20-29).
+                            const randomCode =
+                              "100" +
+                              Math.floor(Math.random() * 1000000000)
+                                .toString()
+                                .padStart(9, "0");
+                            setFormData({ ...formData, CodigoBarra: randomCode });
+                          }}
+                          className="text-slate-400 hover:text-[#67afc3] transition-colors focus:outline-none"
+                          disabled={isSaving}
+                        >
+                          <Wand2 size={18} />
+                        </button>
+                      </Tooltip>
+                    </div>
                   }
                 />
                 <Input
@@ -1352,6 +1367,15 @@ export default function ProductoForm({
           isSaving={createUnidadMutation.isPending}
         />
       </Modal>
+
+      <CameraScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScanSuccess={(code) => {
+          setFormData((prev) => ({ ...prev, CodigoBarra: code }));
+          setIsScannerOpen(false);
+        }}
+      />
     </div>
   );
 }
