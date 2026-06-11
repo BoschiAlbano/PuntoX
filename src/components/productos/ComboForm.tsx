@@ -432,7 +432,7 @@ export default function ComboForm({
   return (
     <div className="w-full max-w-7xl mx-auto pb-20">
       {isLoadingFullProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
           <LoadingComponent message="Cargando detalles..." />
         </div>
       )}
@@ -466,7 +466,13 @@ export default function ComboForm({
           <Button
             onPress={handleSubmit}
             isLoading={isSaving}
-            isDisabled={!formData.Codigo || !formData.Descripcion || !formData.MarcaId || !formData.RubroId || !formData.UnidadMedidaId}
+            isDisabled={
+              !formData.Codigo ||
+              !formData.Descripcion ||
+              !formData.MarcaId ||
+              !formData.RubroId ||
+              !formData.UnidadMedidaId
+            }
             className="flex-1 sm:flex-none bg-[#0F2233] hover:bg-[#1a364d] text-white font-semibold shadow-md shadow-[#0F2233]/20"
           >
             {isEdit ? "Actualizar" : "Guardar"}

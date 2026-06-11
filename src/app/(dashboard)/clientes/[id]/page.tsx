@@ -34,7 +34,7 @@ export default function EditarClientePage() {
     if (cliente) {
       setOverride(
         `/clientes/${id}`,
-        `${cliente.Nombre} ${cliente.Apellido}`.trim() || "Cliente"
+        `${cliente.Nombre} ${cliente.Apellido}`.trim() || "Cliente",
       );
     }
   }, [cliente, id, setOverride]);
@@ -49,7 +49,9 @@ export default function EditarClientePage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error || err?.message || "Error al actualizar cliente");
+        throw new Error(
+          err?.error || err?.message || "Error al actualizar cliente",
+        );
       }
       return res.json();
     },
@@ -84,12 +86,14 @@ export default function EditarClientePage() {
 
       <div className="flex-1 w-full">
         {isLoading && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
             <LoadingComponent message="Cargando detalles..." />
           </div>
         )}
         {!isLoading && !cliente ? (
-          <div className="text-slate-500 flex justify-center py-10">No se encontró el cliente.</div>
+          <div className="text-slate-500 flex justify-center py-10">
+            No se encontró el cliente.
+          </div>
         ) : (
           <ClienteForm
             initialData={cliente || null}

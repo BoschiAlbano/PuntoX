@@ -84,12 +84,14 @@ export default function EditarRolPage() {
 
       <div className="flex-1 w-full">
         {isLoading && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
             <LoadingComponent message="Cargando detalles..." />
           </div>
         )}
         {!isLoading && !rol ? (
-          <div className="text-slate-500 flex justify-center py-10">No se encontró el rol.</div>
+          <div className="text-slate-500 flex justify-center py-10">
+            No se encontró el rol.
+          </div>
         ) : (
           <RolForm
             initialData={rol || null}
