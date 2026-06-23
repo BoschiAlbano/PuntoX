@@ -142,6 +142,13 @@ export async function GET(req: NextRequest) {
                   TipoComprobante: true,
                   Total: true,
                   Fecha: true,
+                  FacturaElectronica: {
+                    select: {
+                      Estado: true,
+                      CAE: true,
+                      Observaciones: true,
+                    }
+                  }
                 },
               },
               Usuario: {
@@ -311,6 +318,13 @@ export async function GET(req: NextRequest) {
                   TipoComprobante: true,
                   Total: true,
                   Fecha: true,
+                  FacturaElectronica: {
+                    select: {
+                      Estado: true,
+                      CAE: true,
+                      Observaciones: true,
+                    }
+                  }
                 },
               },
               Usuario: {

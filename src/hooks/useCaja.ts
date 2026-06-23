@@ -65,6 +65,11 @@ export type Movimiento = {
     TipoComprobante: number;
     Total: number;
     Fecha: string;
+    FacturaElectronica?: {
+      Estado: string;
+      CAE: string | null;
+      Observaciones: string | null;
+    } | null;
   };
   Usuario?: {
     Id: number;

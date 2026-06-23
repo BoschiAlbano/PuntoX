@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { 
   Button, 
   Card, 
@@ -14,14 +14,23 @@ import {
   TableBody, 
   TableRow, 
   TableCell,
-  Spinner
+  Spinner,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+  addToast,
+  Input,
 } from "@heroui/react";
-import { FileText, ArrowLeft, TrendingUp } from "lucide-react";
+import { FileText, ArrowLeft, TrendingUp, Calendar } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
 import { TIPO_PAGO, TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
 import { TicketImpresion } from "@/components/ventas/TicketImpresion";
 import { useUserStore } from "@/store/useUserStore";
+import { useConfiguracion } from "@/hooks/useConfiguracion";
 import { LoadingComponent } from "@/components/loading/loading";
 
 interface ComprobanteDetalleScreenProps {
@@ -58,7 +67,9 @@ const getTipoComprobanteLabel = (tipo: number) => {
 
 export default function ComprobanteDetalleScreen({ id }: ComprobanteDetalleScreenProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { tenant, isAdministrador, isSuperAdmin } = useUserStore();
+  const { configuracion } = useConfiguracion({ enableConfiguracion: true });
   const isAdmin = isAdministrador || isSuperAdmin;
 
   const { data: selectedTicket, isLoading, isError } = useQuery({
@@ -76,6 +87,86 @@ export default function ComprobanteDetalleScreen({ id }: ComprobanteDetalleScree
     contentRef: ticketRef,
     documentTitle: "Ticket de Venta",
   });
+
+  // Estado para corrección de fecha
+  const { isOpen: isFechaOpen, onOpen: onFechaOpen, onOpenChange: onFechaOpenChange } = useDisclosure();
+  const [nuevaFecha, setNuevaFecha] = useState("");
+  const [isGuardandoFecha, setIsGuardandoFecha] = useState(false);
+
+  const fe = selectedTicket?.FacturaElectronica ?? null;
+  const feRechazado = fe?.Estado === "RECHAZADO";
+
+  const handleCorregirFecha = async () => {
+    if (!nuevaFecha) {
+      addToast({ title: "Error", description: "Seleccione una fecha", color: "danger" });
+      return;
+    }
+
+    setIsGuardandoFecha(true);
+    try {
+      const response = await fetch("/api/comprobantes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          comprobanteId: id,
+          fecha: nuevaFecha,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      addToast({
+        title: "Fecha corregida",
+        description: "La fecha se actualizó. Ahora puede reintentar la facturación.",
+        color: "success",
+      });
+
+      // Refrescar datos
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["comprobante", id] }),
+        queryClient.invalidateQueries({ queryKey: ["caja"] }),
+      ]);
+      onFechaOpenChange();
+      setNuevaFecha("");
+    } catch (error: any) {
+      addToast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar la fecha",
+        color: "danger",
+      });
+    } finally {
+      setIsGuardandoFecha(false);
+    }
+  };
+
+  const handleReintentarFe = async () => {
+    try {
+      const response = await fetch(`/api/facturacion/electronica/${id}/reprocesar`, {
+        method: "POST",
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || data.observaciones || "Error al reintentar");
+
+      addToast({
+        title: "Comprobante autorizado",
+        description: `CAE: ${data.result.cae}`,
+        color: "success",
+      });
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["comprobante", id] }),
+        queryClient.invalidateQueries({ queryKey: ["caja"] }),
+      ]);
+    } catch (error: any) {
+      addToast({
+        title: "Error",
+        description: error.message || "No se pudo autorizar",
+        color: "danger",
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -96,12 +187,9 @@ export default function ComprobanteDetalleScreen({ id }: ComprobanteDetalleScree
     );
   }
 
-  const fe = selectedTicket?.FacturaElectronica ?? null;
-  const feAutorizado = fe?.Estado === "AUTORIZADO";
-  const feRechazado = fe?.Estado === "RECHAZADO";
-  const tieneFe = !!fe;
-
   const esVenta = selectedTicket ? Object.values(TIPO_COMPROBANTE_VENTA).includes(selectedTicket.TipoComprobante) : false;
+  const feAutorizado = fe?.Estado === "AUTORIZADO";
+  const tieneFe = !!fe;
 
   // item.Costo en la base de datos ya almacena el costo total del renglón (Costo Unitario * Cantidad)
   const totalCosto = selectedTicket?.DetalleComprobante?.reduce((sum: number, item: any) => sum + Number(item.Costo || 0), 0) || 0;
@@ -131,7 +219,7 @@ export default function ComprobanteDetalleScreen({ id }: ComprobanteDetalleScree
     arcaStatus: fe?.Estado,
     cae: fe?.CAE,
     caeFchVto: fe?.CAEFchVto,
-    cuitEmisor: undefined,
+    cuitEmisor: configuracion?.cuit || "",
     puntoVentaNum: fe?.PuntoVenta,
     cbteNro: fe?.CbteNumero
   } : null;
@@ -178,13 +266,41 @@ export default function ComprobanteDetalleScreen({ id }: ComprobanteDetalleScree
           </Chip>
         </div>
 
-        <Button
-          onPress={() => handlePrintTicket()}
-          className="bg-slate-800 hover:bg-slate-900 text-white font-bold px-6 h-11 rounded-xl shadow-md transition-all sm:w-auto w-full"
-          startContent={<FileText size={18} strokeWidth={2.5} />}
-        >
-          Reimprimir Ticket
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {feRechazado && (
+            <>
+              <Button
+                onPress={() => {
+                  // Establecer fecha actual como default
+                  const fechaActual = selectedTicket.Fecha
+                    ? new Date(selectedTicket.Fecha).toISOString().split("T")[0]
+                    : new Date().toISOString().split("T")[0];
+                  setNuevaFecha(fechaActual);
+                  onFechaOpen();
+                }}
+                variant="flat"
+                className="font-semibold text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-xl"
+                startContent={<Calendar size={16} />}
+              >
+                Corregir fecha
+              </Button>
+              <Button
+                onPress={handleReintentarFe}
+                className="font-semibold bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl"
+                startContent={<TrendingUp size={16} />}
+              >
+                Reintentar FE
+              </Button>
+            </>
+          )}
+          <Button
+            onPress={() => handlePrintTicket()}
+            className="bg-slate-800 hover:bg-slate-900 text-white font-bold px-6 h-11 rounded-xl shadow-md transition-all sm:w-auto w-full"
+            startContent={<FileText size={18} strokeWidth={2.5} />}
+          >
+            Reimprimir Ticket
+          </Button>
+        </div>
       </div>
 
       {/* Main Content scrollable area */}
@@ -509,6 +625,48 @@ export default function ComprobanteDetalleScreen({ id }: ComprobanteDetalleScree
       <div style={{ display: "none" }}>
         <TicketImpresion ref={ticketRef} datosVenta={datosVentaImpresion} />
       </div>
+
+      {/* Modal Corregir Fecha */}
+      <Modal isOpen={isFechaOpen} onOpenChange={onFechaOpenChange} placement="center" backdrop="opaque">
+        <ModalContent>
+          <ModalHeader className="flex items-center gap-2">
+            <Calendar size={18} className="text-amber-500" />
+            <span>Corregir Fecha del Comprobante</span>
+          </ModalHeader>
+          <ModalBody>
+            <p className="text-sm text-slate-500">
+              La fecha actual no es válida para ARCA. Seleccione una fecha dentro del rango permitido (±5 días desde hoy).
+            </p>
+            <Input
+              type="date"
+              label="Nueva fecha"
+              value={nuevaFecha}
+              onValueChange={setNuevaFecha}
+              variant="bordered"
+              classNames={{
+                label: "font-semibold text-slate-600",
+                inputWrapper: "border-2 hover:border-amber-400 focus-within:!border-amber-500",
+              }}
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="flat"
+              onPress={onFechaOpenChange}
+              className="font-semibold text-slate-600"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onPress={handleCorregirFecha}
+              isLoading={isGuardandoFecha}
+              className="font-semibold bg-amber-500 hover:bg-amber-600 text-white"
+            >
+              Guardar y reintentar
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

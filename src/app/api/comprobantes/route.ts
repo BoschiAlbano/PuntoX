@@ -609,3 +609,90 @@ export async function GET(req: NextRequest) {
     return handleError(error);
   }
 }
+
+// PATCH: Actualizar fecha de comprobante con FE rechazada
+export async function PATCH(req: NextRequest) {
+  try {
+    const { tenantId } = await getAuthContext({ req });
+
+    const body = await req.json();
+    const { comprobanteId, fecha } = body;
+
+    if (!comprobanteId || !fecha) {
+      return NextResponse.json(
+        { error: "comprobanteId y fecha son requeridos" },
+        { status: 400 },
+      );
+    }
+
+    const tenantIdBigInt = BigInt(tenantId);
+    const comprobanteIdBigInt = BigInt(comprobanteId);
+
+    // Buscar el comprobante
+    const comprobante = await prisma.comprobante.findUnique({
+      where: {
+        Id: comprobanteIdBigInt,
+        TenantId: tenantIdBigInt,
+      },
+      include: {
+        FacturaElectronica: true,
+      },
+    });
+
+    if (!comprobante) {
+      return NextResponse.json(
+        { error: "Comprobante no encontrado" },
+        { status: 404 },
+      );
+    }
+
+    // Solo permitir editar si tiene FE y está RECHAZADO
+    if (!comprobante.FacturaElectronica) {
+      return NextResponse.json(
+        { error: "Este comprobante no tiene factura electrónica asociada" },
+        { status: 400 },
+      );
+    }
+
+    if (comprobante.FacturaElectronica.Estado !== "RECHAZADO") {
+      return NextResponse.json(
+        { error: "Solo se pueden editar comprobantes con FE rechazada" },
+        { status: 400 },
+      );
+    }
+
+    // Parsear y validar la fecha
+    const fechaDate = new Date(fecha);
+    if (isNaN(fechaDate.getTime())) {
+      return NextResponse.json(
+        { error: "Fecha inválida" },
+        { status: 400 },
+      );
+    }
+
+    // Actualizar la fecha del comprobante
+    await prisma.comprobante.update({
+      where: { Id: comprobanteIdBigInt },
+      data: { Fecha: fechaDate },
+    });
+
+    // Limpiar el estado de la FE para que se pueda reintentar
+    await prisma.facturaElectronica.update({
+      where: { Id: comprobante.FacturaElectronica.Id },
+      data: {
+        Estado: "PENDIENTE",
+        Observaciones: null,
+        CAE: null,
+        CAEFchVto: null,
+        Resultado: null,
+      },
+    });
+
+    return NextResponse.json({
+      message: "Fecha actualizada correctamente",
+      fecha: fechaDate,
+    });
+  } catch (error) {
+    return handleError(error);
+  }
+}

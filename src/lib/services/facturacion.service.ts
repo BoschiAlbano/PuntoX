@@ -3,7 +3,7 @@
  * Coordina la creación de comprobantes locales con la autorización ARCA.
  */
 
-import prisma from '@/DB/prisma';
+import prisma from "@/DB/prisma";
 import {
   getArcaConfig,
   getPuntoVentaSucursal,
@@ -12,7 +12,7 @@ import {
   type ArcaConfig,
   type VoucherData,
   type AutorizarComprobanteResult,
-} from './arca.service';
+} from "./arca.service";
 import {
   TIPO_COMPROBANTE_LOCAL_A_AFIP,
   CBTE_TIPO_AFIP,
@@ -23,7 +23,7 @@ import {
   RESULTADO_AFIP,
   DOC_TIPO_AFIP,
   requiereAutorizacionAfip,
-} from '@/lib/constants/afip';
+} from "@/lib/constants/afip";
 
 // Interface for the comprobante data we need from the existing system
 interface ComprobanteConDetalle {
@@ -34,9 +34,9 @@ interface ComprobanteConDetalle {
   Numero: number;
   Fecha: Date;
   SubTotal: any; // Decimal
-  Total: any;    // Decimal
-  Iva21: any;    // Decimal
-  Iva105: any;   // Decimal
+  Total: any; // Decimal
+  Iva21: any; // Decimal
+  Iva105: any; // Decimal
   Descuento: any; // Decimal
   Comprobante_Factura?: {
     ClienteId: bigint;
@@ -63,7 +63,9 @@ interface ComprobanteConDetalle {
 /**
  * Verifica si la facturación electrónica está habilitada para un tenant.
  */
-export async function isFacturacionElectronicaHabilitada(tenantId: bigint): Promise<boolean> {
+export async function isFacturacionElectronicaHabilitada(
+  tenantId: bigint,
+): Promise<boolean> {
   const config = await prisma.configuracion.findFirst({
     where: {
       TenantId: tenantId,
@@ -76,7 +78,11 @@ export async function isFacturacionElectronicaHabilitada(tenantId: bigint): Prom
     },
   });
 
-  return !!(config?.AfipHabilitado && config?.AfipCertificado && config?.AfipClavePrivada);
+  return !!(
+    config?.AfipHabilitado &&
+    config?.AfipCertificado &&
+    config?.AfipClavePrivada
+  );
 }
 
 /**
@@ -93,7 +99,8 @@ export async function autorizarComprobante(
   if (!arcaConfig) {
     return {
       success: false,
-      errores: 'La facturación electrónica no está configurada. Configure el certificado AFIP en Configuración → Fiscal.',
+      errores:
+        "La facturación electrónica no está configurada. Configure el certificado AFIP en Configuración → Fiscal.",
     };
   }
 
@@ -102,12 +109,13 @@ export async function autorizarComprobante(
   if (!puntoVenta) {
     return {
       success: false,
-      errores: 'La sucursal no tiene un Punto de Venta AFIP asignado. Configure el PDV en Configuración → Fiscal.',
+      errores:
+        "La sucursal no tiene un Punto de Venta AFIP asignado. Configure el PDV en Configuración → Fiscal.",
     };
   }
 
   // 3. Obtener datos del comprobante con sus detalles
-  const comprobante = await prisma.comprobante.findFirst({
+  const comprobante = (await prisma.comprobante.findFirst({
     where: {
       Id: comprobanteId,
       TenantId: tenantId,
@@ -136,17 +144,18 @@ export async function autorizarComprobante(
         },
       },
     },
-  }) as unknown as ComprobanteConDetalle | null;
+  })) as unknown as ComprobanteConDetalle | null;
 
   if (!comprobante) {
     return {
       success: false,
-      errores: 'Comprobante no encontrado.',
+      errores: "Comprobante no encontrado.",
     };
   }
 
   // 4. Determinar tipo de comprobante AFIP
-  const cbteTipoAfip = TIPO_COMPROBANTE_LOCAL_A_AFIP[comprobante.TipoComprobante];
+  const cbteTipoAfip =
+    TIPO_COMPROBANTE_LOCAL_A_AFIP[comprobante.TipoComprobante];
   if (!cbteTipoAfip) {
     return {
       success: false,
@@ -154,10 +163,33 @@ export async function autorizarComprobante(
     };
   }
 
+  // Revisar si ya existe un registro de FacturaElectronica
+  let facturaElectronica = await prisma.facturaElectronica.findUnique({
+    where: { ComprobanteId: comprobanteId },
+  });
+
+  if (
+    facturaElectronica?.CAE &&
+    facturaElectronica.Estado === ESTADO_FACTURA_ELECTRONICA.AUTORIZADO
+  ) {
+    return {
+      success: true,
+      cae: facturaElectronica.CAE,
+      caeFchVto: facturaElectronica.CAEFchVto?.toISOString() || undefined,
+      cbteNumero: facturaElectronica.CbteNumero,
+      resultado: RESULTADO_AFIP.APROBADO,
+      facturaElectronicaId: facturaElectronica.Id,
+    };
+  }
+
   // 5. Obtener último número autorizado por ARCA
   let ultimoNumero: number;
   try {
-    ultimoNumero = await getUltimoComprobanteAutorizado(arcaConfig, puntoVenta, cbteTipoAfip);
+    ultimoNumero = await getUltimoComprobanteAutorizado(
+      arcaConfig,
+      puntoVenta,
+      cbteTipoAfip,
+    );
   } catch (error: any) {
     return {
       success: false,
@@ -165,9 +197,63 @@ export async function autorizarComprobante(
     };
   }
 
-  const nuevoNumero = ultimoNumero + 1;
+  // =========================================================================
+  // PREVENCIÓN DE FALSOS NEGATIVOS (Recuperación de CAE)
+  // =========================================================================
+  if (
+    facturaElectronica &&
+    facturaElectronica.Estado === ESTADO_FACTURA_ELECTRONICA.PENDIENTE
+  ) {
+    if (ultimoNumero >= facturaElectronica.CbteNumero) {
+      // AFIP procesó algún comprobante posterior al que intentamos, o el mismo.
+      // Importamos getVoucherInfo dinámicamente si no está (aunque lo agregamos en arca.service)
+      const { getVoucherInfo } = await import("./arca.service");
+      const voucherInfo = await getVoucherInfo(
+        arcaConfig,
+        puntoVenta,
+        cbteTipoAfip,
+        facturaElectronica.CbteNumero,
+      );
 
-  // 6. Preparar datos para ARCA
+      // AFIP retorna el comprobante. Verificamos si el ImpTotal coincide (es decir, es nuestro)
+      // La propiedad suele venir como ImpTotal en la respuesta.
+      const impTotalAfip = voucherInfo?.ResultGet?.ImpTotal;
+      const codAutorizacion = voucherInfo?.ResultGet?.CodAutorizacion;
+      const fchVto = voucherInfo?.ResultGet?.FchVto;
+
+      if (
+        impTotalAfip &&
+        Number(impTotalAfip) === Number(comprobante.Total) &&
+        codAutorizacion
+      ) {
+        // ¡Era nuestro! Recuperamos el CAE.
+        facturaElectronica = await prisma.facturaElectronica.update({
+          where: { Id: facturaElectronica.Id },
+          data: {
+            CAE: codAutorizacion,
+            CAEFchVto: fchVto ? parseFechaAfip(fchVto) : null,
+            Estado: ESTADO_FACTURA_ELECTRONICA.AUTORIZADO,
+            Resultado: RESULTADO_AFIP.APROBADO,
+            Observaciones: "CAE Recuperado por sistema (Falso Negativo)",
+            ResponseXml: JSON.stringify(voucherInfo),
+          },
+        });
+
+        return {
+          success: true,
+          cae: codAutorizacion,
+          caeFchVto: fchVto,
+          cbteNumero: facturaElectronica.CbteNumero,
+          resultado: RESULTADO_AFIP.APROBADO,
+          observaciones: "CAE Recuperado por sistema (Falso Negativo)",
+          facturaElectronicaId: facturaElectronica.Id,
+        };
+      }
+    }
+  }
+
+  // 6. Asignar nuevo número y preparar datos
+  const nuevoNumero = ultimoNumero + 1;
   const voucherData = prepararDatosAfip(
     comprobante,
     cbteTipoAfip,
@@ -175,63 +261,78 @@ export async function autorizarComprobante(
     nuevoNumero,
   );
 
-  // 7. Autorizar con ARCA
-  const resultado = await autorizarVoucher(arcaConfig, voucherData);
-
-  // 8. Guardar resultado en FacturaElectronica (upsert para evitar duplicados en reintentos)
-  const facturaElectronica = await prisma.facturaElectronica.upsert({
-    where: {
-      TenantId_PuntoVenta_CbteTipo_CbteNumero: {
+  // 7. GUARDAR COMO PENDIENTE ANTES DE ENVIAR A ARCA (Protección contra cortes)
+  if (facturaElectronica) {
+    facturaElectronica = await prisma.facturaElectronica.update({
+      where: { Id: facturaElectronica.Id },
+      data: {
+        CbteNumero: nuevoNumero,
+        Estado: ESTADO_FACTURA_ELECTRONICA.PENDIENTE,
+        Reprocesado: true,
+        RequestXml: JSON.stringify(voucherData),
+        Observaciones: null,
+      },
+    });
+  } else {
+    facturaElectronica = await prisma.facturaElectronica.create({
+      data: {
         TenantId: tenantId,
-        PuntoVenta: puntoVenta,
+        ComprobanteId: comprobanteId,
+        SucursalId: sucursalId,
         CbteTipo: cbteTipoAfip,
         CbteNumero: nuevoNumero,
+        PuntoVenta: puntoVenta,
+        Concepto: CONCEPTO_AFIP.PRODUCTOS,
+        DocTipo: voucherData.DocTipo,
+        DocNro: String(voucherData.DocNro),
+        ImpTotal: Number(comprobante.Total),
+        ImpNeto: voucherData.ImpNeto,
+        ImpIva: voucherData.ImpIVA,
+        ImpTrib: 0,
+        ImpOpEx: 0,
+        ImpTotConc: 0,
+        MonId: voucherData.MonId,
+        MonCotiz: voucherData.MonCotiz,
+        Estado: ESTADO_FACTURA_ELECTRONICA.PENDIENTE,
+        RequestXml: JSON.stringify(voucherData),
+        Detalles: {
+          create: (voucherData.Iva || []).map((iva) => ({
+            IvaAfipId: iva.Id,
+            BaseImponible: iva.BaseImp,
+            Importe: iva.Importe,
+          })),
+        },
       },
-    },
-    update: {
+    });
+  }
+
+  // 8. Llamar a ARCA con Try-Catch para que nunca falle arrojando un throw
+  let resultado;
+  try {
+    resultado = await autorizarVoucher(arcaConfig, voucherData);
+  } catch (error: any) {
+    return {
+      success: false,
+      errores: `Error de conexión con ARCA/AFIP: ${error.message}. El comprobante quedó PENDIENTE.`,
+      facturaElectronicaId: facturaElectronica.Id,
+    };
+  }
+
+  // 9. Actualizar registro final con la respuesta
+  facturaElectronica = await prisma.facturaElectronica.update({
+    where: { Id: facturaElectronica.Id },
+    data: {
       CAE: resultado.CAE || null,
-      CAEFchVto: resultado.CAEFchVto ? parseFechaAfip(resultado.CAEFchVto) : null,
-      Estado: resultado.Resultado === RESULTADO_AFIP.APROBADO
-        ? ESTADO_FACTURA_ELECTRONICA.AUTORIZADO
-        : ESTADO_FACTURA_ELECTRONICA.RECHAZADO,
+      CAEFchVto: resultado.CAEFchVto
+        ? parseFechaAfip(resultado.CAEFchVto)
+        : null,
+      Estado:
+        resultado.Resultado === RESULTADO_AFIP.APROBADO
+          ? ESTADO_FACTURA_ELECTRONICA.AUTORIZADO
+          : ESTADO_FACTURA_ELECTRONICA.RECHAZADO,
       Resultado: resultado.Resultado,
       Observaciones: resultado.Observaciones || resultado.Errores || null,
       ResponseXml: JSON.stringify(resultado),
-    },
-    create: {
-      TenantId: tenantId,
-      ComprobanteId: comprobanteId,
-      SucursalId: sucursalId,
-      CbteTipo: cbteTipoAfip,
-      CbteNumero: nuevoNumero,
-      PuntoVenta: puntoVenta,
-      Concepto: CONCEPTO_AFIP.PRODUCTOS,
-      DocTipo: voucherData.DocTipo,
-      DocNro: String(voucherData.DocNro),
-      ImpTotal: Number(comprobante.Total),
-      ImpNeto: voucherData.ImpNeto,
-      ImpIva: voucherData.ImpIVA,
-      ImpTrib: 0,
-      ImpOpEx: 0,
-      ImpTotConc: 0,
-      MonId: voucherData.MonId,
-      MonCotiz: voucherData.MonCotiz,
-      CAE: resultado.CAE || null,
-      CAEFchVto: resultado.CAEFchVto ? parseFechaAfip(resultado.CAEFchVto) : null,
-      Estado: resultado.Resultado === RESULTADO_AFIP.APROBADO
-        ? ESTADO_FACTURA_ELECTRONICA.AUTORIZADO
-        : ESTADO_FACTURA_ELECTRONICA.RECHAZADO,
-      Resultado: resultado.Resultado,
-      Observaciones: resultado.Observaciones || resultado.Errores || null,
-      RequestXml: JSON.stringify(voucherData),
-      ResponseXml: JSON.stringify(resultado),
-      Detalles: {
-        create: (voucherData.Iva || []).map((iva) => ({
-          IvaAfipId: iva.Id,
-          BaseImponible: iva.BaseImp,
-          Importe: iva.Importe,
-        })),
-      },
     },
   });
 
@@ -258,20 +359,19 @@ function prepararDatosAfip(
   puntoVenta: number,
   cbteNumero: number,
 ): VoucherData {
-
   // Determinar documento del receptor
   let docTipo: number = DOC_TIPO_AFIP.SIN_IDENTIFICAR;
   let docNro = 0;
 
   const clienteData = comprobante.Comprobante_Factura?.Persona_Cliente;
   let condicionIva = 6; // CONSUMIDOR_FINAL por defecto
-  
+
   if (clienteData?.CondicionIvaId) {
     condicionIva = Number(clienteData.CondicionIvaId);
   }
 
   if (clienteData?.Persona?.Dni) {
-    const dni = clienteData.Persona.Dni.replace(/[^\d]/g, '');
+    const dni = clienteData.Persona.Dni.replace(/[^\d]/g, "");
     if (dni.length === 11) {
       docTipo = DOC_TIPO_AFIP.CUIT;
       docNro = Number(dni);
@@ -281,9 +381,11 @@ function prepararDatosAfip(
     }
   }
 
-  // Formatear fecha YYYYMMDD
+  // Formatear fecha YYYYMMDD (en UTC para consistencia)
+  // toISOString() devuelve siempre en UTC como YYYY-MM-DD
   const fecha = comprobante.Fecha;
-  const cbteFch = `${fecha.getFullYear()}${String(fecha.getMonth() + 1).padStart(2, '0')}${String(fecha.getDate()).padStart(2, '0')}`;
+  const fechaIso = fecha.toISOString().split("T")[0]; // "2026-06-23"
+  const cbteFch = fechaIso.replace(/-/g, ""); // "20260623"
 
   // Calcular IVA por alícuota
   const ivaMap = new Map<number, { baseImp: number; importe: number }>();
@@ -297,7 +399,8 @@ function prepararDatosAfip(
       const existing = ivaMap.get(afipIvaId) || { baseImp: 0, importe: 0 };
       const subtotal = Number(detalle.SubTotal);
       // Base imponible = subtotal sin IVA
-      const baseImp = porcentaje > 0 ? subtotal / (1 + porcentaje / 100) : subtotal;
+      const baseImp =
+        porcentaje > 0 ? subtotal / (1 + porcentaje / 100) : subtotal;
       // Importe IVA = base * tasa (NO usar detalle.Iva que puede ser otro campo)
       const importe = Math.round(baseImp * porcentaje) / 100;
       existing.baseImp += baseImp;
@@ -313,14 +416,12 @@ function prepararDatosAfip(
   }));
 
   // ImpNeto = suma de BaseImp (no Total - IVA, porque hay diferencias de redondeo)
-  const impNeto = Math.round(
-    ivaArray.reduce((acc, iva) => acc + iva.BaseImp, 0) * 100
-  ) / 100;
+  const impNeto =
+    Math.round(ivaArray.reduce((acc, iva) => acc + iva.BaseImp, 0) * 100) / 100;
 
   // ImpIVA = suma exacta de Importe (mismo valor que ARCA va a validar)
-  const impIvaTotal = Math.round(
-    ivaArray.reduce((acc, iva) => acc + iva.Importe, 0) * 100
-  ) / 100;
+  const impIvaTotal =
+    Math.round(ivaArray.reduce((acc, iva) => acc + iva.Importe, 0) * 100) / 100;
 
   // ImpTotal viene del comprobante (precio con IVA incluido)
   const total = Math.round(Number(comprobante.Total) * 100) / 100;
@@ -352,7 +453,7 @@ function prepararDatosAfip(
     ImpOpEx: 0,
     ImpIVA: esComprobanteC ? 0 : impIvaTotal,
     ImpTrib: 0,
-    MonId: 'PES',
+    MonId: "PES",
     MonCotiz: 1,
     CondicionIVAReceptorId: condicionIva,
   };

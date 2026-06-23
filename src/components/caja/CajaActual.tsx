@@ -12,6 +12,7 @@ import {
   ModalFooter,
   ModalHeader,
   Skeleton,
+  Spinner,
   Table,
   TableBody,
   TableCell,
@@ -20,6 +21,8 @@ import {
   TableRow,
   useDisclosure,
   addToast,
+  Checkbox,
+  Tooltip,
 } from "@heroui/react";
 import {
   Eye,
@@ -37,11 +40,20 @@ import {
   CheckCircle2,
   AlertTriangle,
   Printer,
+  FileCheck,
+  FileX,
+  Clock,
+  Calendar,
 } from "lucide-react";
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { LoadingComponent } from "../loading/loading";
 import { handleNumberInput } from "@/lib/input/number";
-import { TIPO_MOVIMIENTO } from "@/lib/constants/comprobantes";
+import {
+  TIPO_MOVIMIENTO,
+  TIPO_COMPROBANTE_VENTA,
+  TIPO_COMPROBANTE_VENTA_LABELS,
+} from "@/lib/constants/comprobantes";
+import { parseArcaObservations } from "@/lib/constants/arca-errors";
 import { ReporteCajaImprimible } from "./ReporteCajaImprimible";
 import { useReactToPrint } from "react-to-print";
 import { useRouter } from "next/navigation";
@@ -53,6 +65,7 @@ import { modalMotionProps } from "@/lib/motionConfig";
 const movimientosColumns: Column[] = [
   { uid: "fecha", name: "Fecha", sortable: false },
   { uid: "descripcion", name: "Descripción", sortable: false },
+  { uid: "facturaElectronica", name: "FE", sortable: false, align: "center" },
   { uid: "tipo", name: "Tipo", sortable: false, align: "center" },
   {
     uid: "monto",
@@ -93,8 +106,9 @@ export default function CajaActual({
     enableResumen: true,
   });
 
-  const { configuracion } = useConfiguracion({
+  const { configuracion, fiscal } = useConfiguracion({
     enableConfiguracion: true,
+    enableFiscal: true,
   });
 
   const { isOpen: _isAbrirOpen, onOpenChange: _onAbrirChange } =
@@ -128,17 +142,46 @@ export default function CajaActual({
   // Movimientos: búsqueda y paginación local
   const [movSearch, setMovSearch] = useState("");
   const [movPage, setMovPage] = useState(1);
+  const [filtroPendientes, setFiltroPendientes] = useState(false);
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
+  const [isReprocesando, setIsReprocesando] = useState(false);
+  const {
+    isOpen: isFechaBulkOpen,
+    onOpen: onFechaBulkOpen,
+    onOpenChange: onFechaBulkOpenChange,
+  } = useDisclosure();
+  const [fechaBulk, setFechaBulk] = useState(
+    () => new Date().toISOString().split("T")[0],
+  );
   const MOV_LIMIT = 10;
 
   const filteredMovimientos = useMemo(() => {
-    if (!movSearch.trim()) return movimientos;
+    let result = movimientos;
+
+    if (filtroPendientes) {
+      result = result.filter((m: any) => {
+        if (!m.ComprobanteId || !m.Comprobante) return false;
+        const tiposAfip = [
+          TIPO_COMPROBANTE_VENTA.FACTURA_A,
+          TIPO_COMPROBANTE_VENTA.FACTURA_B,
+          TIPO_COMPROBANTE_VENTA.FACTURA_C,
+        ];
+        if (!tiposAfip.includes(m.Comprobante.TipoComprobante)) return false;
+
+        // Pendiente si no tiene FacturaElectronica o si no está AUTORIZADO
+        if (!m.Comprobante.FacturaElectronica) return true;
+        return m.Comprobante.FacturaElectronica.Estado !== "AUTORIZADO";
+      });
+    }
+
+    if (!movSearch.trim()) return result;
     const q = movSearch.toLowerCase();
-    return movimientos.filter(
+    return result.filter(
       (m: any) =>
         m.Descripcion?.toLowerCase().includes(q) ||
         m.Comprobante?.Numero?.toString().includes(q),
     );
-  }, [movimientos, movSearch]);
+  }, [movimientos, movSearch, filtroPendientes]);
 
   const paginatedMovimientos = useMemo(() => {
     const start = (movPage - 1) * MOV_LIMIT;
@@ -201,6 +244,122 @@ export default function CajaActual({
     router.push(`/comprobantes/${comprobanteId}`);
   };
 
+  // Validar si una fecha está dentro del rango permitido por ARCA (N±5 días)
+  const isDateInArcaRange = (dateToCheck: string): boolean => {
+    try {
+      const datePart = dateToCheck.split("T")[0];
+      const [year, month, day] = datePart.split("-").map(Number);
+      const targetDate = new Date(Date.UTC(year, month - 1, day));
+
+      const today = new Date();
+      const todayUTC = new Date(
+        Date.UTC(
+          today.getUTCFullYear(),
+          today.getUTCMonth(),
+          today.getUTCDate(),
+        ),
+      );
+
+      const diffTime = Math.abs(targetDate.getTime() - todayUTC.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      return diffDays <= 5;
+    } catch {
+      return false;
+    }
+  };
+
+  // Calcular rango de fechas válidas
+  const getArcaDateRange = (): { min: string; max: string } => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const minDate = new Date(today);
+    minDate.setDate(minDate.getDate() - 5);
+
+    const maxDate = new Date(today);
+    maxDate.setDate(maxDate.getDate() + 5);
+
+    return {
+      min: minDate.toISOString().split("T")[0],
+      max: maxDate.toISOString().split("T")[0],
+    };
+  };
+
+  // Contar comprobantes que estarían fuera de rango con la fecha elegida
+  const countComprobantesFueraDeRango = (fechaPropuesta: string): number => {
+    if (!isDateInArcaRange(fechaPropuesta)) return selectedKeys.size;
+
+    return Array.from(selectedKeys)
+      .map((key) => {
+        const mov = movimientos.find((m) => String(m.Id) === key);
+        return mov?.Comprobante?.Fecha;
+      })
+      .filter((fecha) => fecha && !isDateInArcaRange(fecha)).length;
+  };
+
+  const handleBulkEmitirArca = () => {
+    if (selectedKeys.size === 0) return;
+    onFechaBulkOpen();
+  };
+
+  const handleConfirmBulkEmitirArca = async () => {
+    if (selectedKeys.size === 0) return;
+
+    // Validar que la fecha está dentro del rango de ARCA
+    if (!isDateInArcaRange(fechaBulk)) {
+      const range = getArcaDateRange();
+      addToast({
+        title: "Fecha fuera de rango permitido",
+        description: `ARCA solo permite facturas entre ${range.min} y ${range.max}. La fecha ${fechaBulk} está fuera de rango.`,
+        color: "warning",
+      });
+      return;
+    }
+
+    // Convertir selectedKeys a ComprobanteIds
+    const comprobantesIds = Array.from(selectedKeys)
+      .map((key) => {
+        const mov = movimientos.find((m) => String(m.Id) === key);
+        return mov?.ComprobanteId;
+      })
+      .filter(Boolean);
+
+    if (comprobantesIds.length === 0) return;
+
+    setIsReprocesando(true);
+
+    try {
+      const response = await fetch(
+        "/api/facturacion/electronica/bulk-reprocesar",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ comprobantesIds, fecha: fechaBulk }),
+        },
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Error al procesar en lote");
+      }
+
+      addToast({
+        title: "Proceso completado",
+        description: `Se emitieron ${data.resumen.exitosos} de ${data.resumen.total}. Fallidos: ${data.resumen.fallidos}`,
+        color: data.resumen.fallidos > 0 ? "warning" : "success",
+      });
+
+      setSelectedKeys(new Set());
+      refetch();
+    } catch (err: any) {
+      addToast({ title: "Error", description: err.message, color: "danger" });
+    } finally {
+      setIsReprocesando(false);
+      onFechaBulkOpenChange();
+    }
+  };
+
   const renderMovCell = useCallback(
     (mov: any, columnKey: React.Key) => {
       switch (columnKey) {
@@ -211,10 +370,142 @@ export default function CajaActual({
             <div className="flex flex-col">
               <span className="text-sm font-medium">{mov.Descripcion}</span>
               {mov.Comprobante && (
-                <span className="text-xs text-gray-400">
-                  Comp. #{mov.Comprobante.Numero}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                    {TIPO_COMPROBANTE_VENTA_LABELS[
+                      mov.Comprobante.TipoComprobante
+                    ] || "Comprobante"}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    #{mov.Comprobante.Numero?.toString().padStart(8, "0")}
+                  </span>
+                </div>
               )}
+            </div>
+          );
+        case "facturaElectronica":
+          if (!mov.Comprobante) return <span className="text-gray-300">-</span>;
+
+          const tiposAfip = [
+            TIPO_COMPROBANTE_VENTA.FACTURA_A,
+            TIPO_COMPROBANTE_VENTA.FACTURA_B,
+            TIPO_COMPROBANTE_VENTA.FACTURA_C,
+          ];
+          const esTipoAfip = tiposAfip.includes(
+            mov.Comprobante.TipoComprobante,
+          );
+
+          if (!esTipoAfip) {
+            return (
+              <span className="text-[10px] text-gray-400 font-medium">
+                No aplica
+              </span>
+            );
+          }
+
+          const estado = mov.Comprobante.FacturaElectronica?.Estado;
+          const fechaComprobanteEstaFueraDeRango =
+            mov.Comprobante.Fecha && !isDateInArcaRange(mov.Comprobante.Fecha);
+
+          if (estado === "AUTORIZADO") {
+            return (
+              <div
+                className="flex items-center justify-center gap-1"
+                title="Factura electrónica autorizada por ARCA"
+              >
+                <FileCheck size={14} className="text-green-500" />
+                <span className="text-[10px] font-bold text-green-600">OK</span>
+              </div>
+            );
+          }
+
+          if (estado === "RECHAZADO") {
+            const obs = mov.Comprobante.FacturaElectronica?.Observaciones;
+            const errorFiltrado = obs
+              ? parseArcaObservations(obs)
+              : "Sin detalle de error";
+            return (
+              <Tooltip
+                content={
+                  <div className="max-w-xs p-2">
+                    <p className="font-bold text-red-400 text-xs mb-1">
+                      Error ARCA:
+                    </p>
+                    <p className="text-xs text-white leading-relaxed">
+                      {errorFiltrado}
+                    </p>
+                  </div>
+                }
+                placement="top"
+                classNames={{
+                  content: "bg-slate-800 text-white border border-slate-600",
+                }}
+              >
+                <div className="flex items-center justify-center gap-1 cursor-help">
+                  <FileX size={14} className="text-red-500" />
+                  <span className="text-[10px] font-bold text-red-600">
+                    Error
+                  </span>
+                </div>
+              </Tooltip>
+            );
+          }
+
+          if (estado === "PENDIENTE") {
+            return (
+              <div
+                className="flex items-center justify-center gap-1"
+                title="Factura electrónica pendiente de envío"
+              >
+                <Clock size={14} className="text-yellow-500" />
+                <span className="text-[10px] font-bold text-yellow-600">
+                  Pend.
+                </span>
+              </div>
+            );
+          }
+
+          // Sin FE emitida — mostrar alerta si la fecha está fuera de rango
+          if (fechaComprobanteEstaFueraDeRango) {
+            const range = getArcaDateRange();
+            return (
+              <Tooltip
+                content={
+                  <div className="max-w-xs p-2">
+                    <p className="font-bold text-orange-400 text-xs mb-1">
+                      Fecha fuera de rango ARCA
+                    </p>
+                    <p className="text-xs text-white leading-relaxed">
+                      Este comprobante tiene fecha {mov.Comprobante.Fecha}. ARCA
+                      solo permite facturas entre {range.min} y {range.max}.
+                      Deberás cambiar la fecha del comprobante antes de poder
+                      facturarlo electrónicamente.
+                    </p>
+                  </div>
+                }
+                placement="top"
+                classNames={{
+                  content: "bg-slate-800 text-white border border-slate-600",
+                }}
+              >
+                <div className="flex items-center justify-center gap-1 cursor-help">
+                  <AlertTriangle size={14} className="text-orange-500" />
+                  <span className="text-[10px] font-bold text-orange-600">
+                    Fuera rango
+                  </span>
+                </div>
+              </Tooltip>
+            );
+          }
+
+          return (
+            <div
+              className="flex items-center justify-center"
+              title="Sin factura electrónica emitida"
+            >
+              <span className="text-[10px] text-gray-400 font-medium">
+                No emitida
+              </span>
             </div>
           );
         case "tipo":
@@ -318,7 +609,7 @@ export default function CajaActual({
     // Si el usuario no escribe nada, asumimos el valor del placeholder (0)
     const valorFinal = montoCierre.trim() === "" ? "0" : montoCierre;
     const monto = parseFloat(valorFinal.replace(",", "."));
-    
+
     if (isNaN(monto) || monto < 0) {
       addToast({
         title: "Error",
@@ -521,11 +812,51 @@ export default function CajaActual({
         page={movPage}
         onPageChange={setMovPage}
         paginationMeta={movPaginationMeta}
-        isRefreshing={isFetching}
+        isRefreshing={isFetching || isReprocesando}
         onRefresh={refetch}
         renderCell={renderMovCell}
         emptyText="No hay movimientos registrados."
         printConfig={{ title: "Movimientos de Caja" }}
+        enableSelection={true}
+        selectedKeys={selectedKeys}
+        onSelectionChange={(keys) => {
+          if (keys === "all") {
+            setSelectedKeys(
+              new Set(filteredMovimientos.map((m) => String(m.Id))),
+            );
+          } else {
+            setSelectedKeys(keys as Set<string>);
+          }
+        }}
+        selectedCount={selectedKeys.size}
+        onClearSelection={() => setSelectedKeys(new Set())}
+        bulkActionsDropdown={
+          fiscal?.afipHabilitado && !isReprocesando
+            ? [
+                {
+                  key: "emitir-arca",
+                  label: "Emitir Facturas Electrónicas",
+                  onClick: () => handleBulkEmitirArca(),
+                },
+              ]
+            : undefined
+        }
+        extraSearchContent={
+          <Button
+            size="sm"
+            variant={filtroPendientes ? "solid" : "flat"}
+            color={filtroPendientes ? "warning" : "default"}
+            onPress={() => {
+              setFiltroPendientes(!filtroPendientes);
+              setMovPage(1);
+              setSelectedKeys(new Set());
+            }}
+            startContent={<AlertTriangle size={14} />}
+            className="h-8 px-3 rounded-lg text-xs font-semibold"
+          >
+            {filtroPendientes ? "Mostrando: Sin FE" : "Filtrar sin FE"}
+          </Button>
+        }
       />
 
       {/* Modal Cerrar Caja */}
@@ -640,7 +971,9 @@ export default function CajaActual({
                             </p>
                             <p
                               className={`text-2xl font-black leading-tight mt-1 ${
-                                gananciaDelDia >= 0 ? "text-white" : "text-rose-200"
+                                gananciaDelDia >= 0
+                                  ? "text-white"
+                                  : "text-rose-200"
                               }`}
                             >
                               {formatMoney(gananciaDelDia)}
@@ -665,7 +998,9 @@ export default function CajaActual({
                             </p>
                             <p
                               className={`text-2xl font-black leading-tight mt-1 ${
-                                (cajaActual?.GananciaVentas || 0) >= 0 ? "text-white" : "text-rose-200"
+                                (cajaActual?.GananciaVentas || 0) >= 0
+                                  ? "text-white"
+                                  : "text-rose-200"
                               }`}
                             >
                               {formatMoney(cajaActual?.GananciaVentas || 0)}
@@ -780,11 +1115,147 @@ export default function CajaActual({
           {cajaActual && (
             <ReporteCajaImprimible
               cajaActual={cajaActual as any}
-              nombreEmpresa={configuracion?.nombreFantasia || configuracion?.razonSocial}
+              nombreEmpresa={
+                configuracion?.nombreFantasia || configuracion?.razonSocial
+              }
             />
           )}
         </div>
       </div>
+
+      {/* Modal Fecha Emisión Masiva */}
+      <Modal
+        isOpen={isFechaBulkOpen}
+        onOpenChange={onFechaBulkOpenChange}
+        placement="center"
+        backdrop="opaque"
+      >
+        <ModalContent>
+          <ModalHeader className="flex items-center gap-2">
+            <Calendar size={18} className="text-[#67afc3]" />
+            <span>Fecha de Emisión Masiva</span>
+          </ModalHeader>
+          <ModalBody className="gap-4">
+            {isReprocesando ? (
+              <div className="flex flex-col items-center justify-center py-8 gap-4">
+                <Spinner size="lg" color="current" classNames={{ circle1: "border-b-[#67afc3]" }} />
+                <div className="text-center">
+                  <p className="text-sm font-semibold text-slate-700">
+                    Procesando comprobantes...
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Enviando {selectedKeys.size} comprobante(s) a ARCA con fecha{" "}
+                    {fechaBulk}. Esto puede tomar unos segundos.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-slate-600">
+                  Se aplicará esta fecha a los{" "}
+                  <strong>{selectedKeys.size}</strong> comprobante(s)
+                  seleccionado(s) antes de enviarlos a ARCA.
+                </p>
+
+                {/* Rango permitido por ARCA */}
+                <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                  <p className="text-xs font-bold text-blue-700 mb-1">
+                    ℹ️ Rango permitido por ARCA:
+                  </p>
+                  <p className="text-sm text-blue-600">
+                    {getArcaDateRange().min} a {getArcaDateRange().max} (±5 días
+                    desde hoy)
+                  </p>
+                </div>
+
+                <Input
+                  type="date"
+                  label="Fecha de emisión"
+                  value={fechaBulk}
+                  onValueChange={setFechaBulk}
+                  min={getArcaDateRange().min}
+                  max={getArcaDateRange().max}
+                  variant="bordered"
+                  classNames={{
+                    label: "font-semibold text-slate-600",
+                    inputWrapper:
+                      "border-2 hover:border-[#67afc3]/50 focus-within:!border-[#67afc3]",
+                  }}
+                />
+
+                {/* Advertencia si está fuera de rango */}
+                {!isDateInArcaRange(fechaBulk) && (
+                  <div className="p-3 rounded-lg bg-red-50 border border-red-200 flex gap-2">
+                    <AlertTriangle
+                      size={16}
+                      className="text-red-600 flex-shrink-0 mt-0.5"
+                    />
+                    <div>
+                      <p className="text-xs font-bold text-red-700">
+                        Fecha fuera de rango ARCA
+                      </p>
+                      <p className="text-xs text-red-600 mt-0.5">
+                        ARCA rechazará todos los comprobantes con esta fecha.
+                        Selecciona una fecha entre {getArcaDateRange().min} y{" "}
+                        {getArcaDateRange().max}.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Información de comprobantes fuera de rango */}
+                {isDateInArcaRange(fechaBulk) &&
+                  countComprobantesFueraDeRango(fechaBulk) > 0 && (
+                    <div className="p-3 rounded-lg bg-yellow-50 border border-yellow-200 flex gap-2">
+                      <AlertTriangle
+                        size={16}
+                        className="text-yellow-600 flex-shrink-0 mt-0.5"
+                      />
+                      <div>
+                        <p className="text-xs font-bold text-yellow-700">
+                          Comprobantes con fechas antiguas detectados
+                        </p>
+                        <p className="text-xs text-yellow-600 mt-0.5">
+                          {countComprobantesFueraDeRango(fechaBulk)} de los{" "}
+                          {selectedKeys.size} comprobante(s) tienen fechas fuera
+                          del rango de ±5 días. ARCA los rechazará. Considera
+                          cambiar la fecha de esos comprobantes primero.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+              </>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            {isReprocesando ? (
+              <Button
+                variant="flat"
+                isDisabled
+                className="font-semibold text-slate-400"
+              >
+                Cancelar
+              </Button>
+            ) : (
+              <Button
+                variant="flat"
+                onPress={onFechaBulkOpenChange}
+                className="font-semibold text-slate-600"
+              >
+                Cancelar
+              </Button>
+            )}
+            <Button
+              onPress={handleConfirmBulkEmitirArca}
+              isLoading={isReprocesando}
+              isDisabled={!isDateInArcaRange(fechaBulk) || isReprocesando}
+              className="font-semibold bg-[#67afc3] hover:bg-[#4899b0] text-white disabled:opacity-50"
+            >
+              {isReprocesando ? "Procesando..." : `Emitir ${selectedKeys.size} comprobante(s)`}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

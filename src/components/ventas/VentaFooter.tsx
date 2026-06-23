@@ -265,36 +265,38 @@ export default function VentaFooter({
 
       setLastSaleData(ticketData);
 
-      if (data.comprobante.arcaStatus === 'RECHAZADO') {
-        // ARCA rechazó: mostrar error detallado, NO imprimir, NO limpiar pantalla
+      // Determinar tipo de error de ARCA para la notificación
+      const arcaError = data.comprobante.arcaErrores;
+      const esConexionFallida = arcaError?.includes("conexión") || arcaError?.includes("conectar");
+      const esRechazado = data.comprobante.arcaStatus === 'RECHAZADO';
+
+      if (esRechazado || esConexionFallida) {
+        // ARCA falló o rechazó: imprimir ticket SIN QR pero notificar al usuario
         addToast({
-          title: "⚠️ AFIP rechazó el comprobante",
-          description: data.comprobante.arcaErrores
-            ? `Error ARCA: ${data.comprobante.arcaErrores}`
-            : "La factura fue rechazada por AFIP. Revisá la consola del servidor para más detalles.",
-          color: "danger",
-          timeout: 10000,
+          title: esRechazado ? "⚠️ ARCA rechazó el comprobante" : "⚠️ ARCA no respondió",
+          description: arcaError
+            ? `La venta se registró pero la FE tuvo un problema: ${arcaError}. El ticket se imprime sin QR.`
+            : "La venta se registró pero la FE no se completó. El ticket se imprime sin QR.",
+          color: "warning",
+          timeout: 12000,
         });
-        // La venta se guardó en el sistema pero sin CAE — el cajero debe revisarla
-        queryClient.invalidateQueries({ queryKey: ["productos"] });
-        setIsSaving(false);
-        // No limpiar, no imprimir
-        return;
+      } else {
+        // ARCA autorizó o no aplica FE
+        addToast({
+          title: "✅ Venta registrada",
+          description: data.comprobante.cae
+            ? `Factura #${data.comprobante.numero} autorizada por ARCA. CAE: ${data.comprobante.cae}`
+            : `Venta #${data.comprobante.numero} registrada con éxito`,
+        });
       }
 
-      addToast({
-        title: "✅ Venta registrada",
-        description: data.comprobante.cae
-          ? `Factura #${data.comprobante.numero} autorizada por ARCA. CAE: ${data.comprobante.cae}`
-          : `Venta #${data.comprobante.numero} registrada con éxito`,
-      });
-
-      // Solo imprime si fue autorizado (o si no requería ARCA)
+      // Siempre imprimir el ticket (con o sin QR según el caso)
       setTimeout(() => {
         handlePrint();
       }, 500);
 
       queryClient.invalidateQueries({ queryKey: ["productos"] });
+      queryClient.invalidateQueries({ queryKey: ["caja"] });
       handleLimpiar();
       setIsSaving(false);
     },

@@ -182,6 +182,33 @@ export async function getUltimoComprobanteAutorizado(
 }
 
 /**
+ * Obtiene la información de un comprobante específico desde ARCA.
+ */
+export async function getVoucherInfo(
+  arcaConfig: ArcaConfig,
+  puntoVenta: number,
+  cbteTipo: number,
+  cbteNumero: number,
+): Promise<any | null> {
+  try {
+    const { Arca } = await import('@arcasdk/core');
+    
+    const arca = new Arca({
+      cuit: arcaConfig.cuit,
+      cert: arcaConfig.cert,
+      key: arcaConfig.key,
+      production: arcaConfig.production,
+    });
+
+    const result = await arca.electronicBillingService.getVoucherInfo(cbteNumero, puntoVenta, cbteTipo);
+    return result;
+  } catch (error: any) {
+    console.error('[ARCA] Error al consultar información de comprobante:', error.message);
+    return null;
+  }
+}
+
+/**
  * Autoriza un comprobante contra ARCA (solicita CAE).
  */
 export async function autorizarVoucher(
