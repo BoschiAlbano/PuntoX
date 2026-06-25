@@ -39,9 +39,9 @@ export interface VoucherData {
   ImpOpEx: number;
   ImpIVA: number;
   ImpTrib: number;
-  MonId: string;
-  MonCotiz: number;
-  CondicionIVAReceptorId: number;
+   MonId: string;
+   MonCotiz: number;
+   CondicionIVAReceptorId?: number;
   // Campos de servicio (Concepto 2 o 3)
   FchServDesde?: string;
   FchServHasta?: string;

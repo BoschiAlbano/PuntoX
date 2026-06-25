@@ -22,6 +22,8 @@ import {
   ESTADO_FACTURA_ELECTRONICA,
   RESULTADO_AFIP,
   DOC_TIPO_AFIP,
+  CONDICION_IVA_AFIP,
+  CONDICION_IVA_LOCAL_TO_AFIP,
   requiereAutorizacionAfip,
 } from "@/lib/constants/afip";
 
@@ -42,6 +44,9 @@ interface ComprobanteConDetalle {
     ClienteId: bigint;
     Persona_Cliente: {
       CondicionIvaId: bigint;
+      CondicionIva?: {
+        Descripcion: string;
+      };
       Persona: {
         Dni: string | null;
       };
@@ -128,6 +133,9 @@ export async function autorizarComprobante(
             include: {
               Persona: {
                 select: { Dni: true },
+              },
+              CondicionIva: {
+                select: { Descripcion: true },
               },
             },
           },
@@ -252,8 +260,37 @@ export async function autorizarComprobante(
     }
   }
 
-  // 6. Asignar nuevo número y preparar datos
+  // 6. Limpiar FE stale y preparar nuevo número
+  // Si existe una FE previa no autorizada para este comprobante, eliminarla
+  if (facturaElectronica && facturaElectronica.Estado !== ESTADO_FACTURA_ELECTRONICA.AUTORIZADO) {
+    await prisma.facturaElectronicaIva.deleteMany({
+      where: { FacturaElectronicaId: facturaElectronica.Id },
+    });
+    await prisma.facturaElectronica.delete({
+      where: { Id: facturaElectronica.Id },
+    });
+    facturaElectronica = null;
+  }
   const nuevoNumero = ultimoNumero + 1;
+
+  // Eliminar FEs huérfanas de otros comprobantes que ocupen este número
+  const feConflicto = await prisma.facturaElectronica.findFirst({
+    where: {
+      TenantId: tenantId,
+      PuntoVenta: puntoVenta,
+      CbteTipo: cbteTipoAfip,
+      CbteNumero: nuevoNumero,
+      Estado: { not: ESTADO_FACTURA_ELECTRONICA.AUTORIZADO },
+    },
+  });
+  if (feConflicto) {
+    await prisma.facturaElectronicaIva.deleteMany({
+      where: { FacturaElectronicaId: feConflicto.Id },
+    });
+    await prisma.facturaElectronica.delete({
+      where: { Id: feConflicto.Id },
+    });
+  }
   const voucherData = prepararDatosAfip(
     comprobante,
     cbteTipoAfip,
@@ -364,13 +401,18 @@ function prepararDatosAfip(
   let docNro = 0;
 
   const clienteData = comprobante.Comprobante_Factura?.Persona_Cliente;
-  let condicionIva = 6; // CONSUMIDOR_FINAL por defecto
+  let condicionIva = CONDICION_IVA_AFIP.CONSUMIDOR_FINAL;
 
-  if (clienteData?.CondicionIvaId) {
-    condicionIva = Number(clienteData.CondicionIvaId);
+  if (clienteData?.CondicionIva?.Descripcion) {
+    const desc = clienteData.CondicionIva.Descripcion.toLowerCase();
+    condicionIva = CONDICION_IVA_LOCAL_TO_AFIP[desc] ?? condicionIva;
   }
 
-  if (clienteData?.Persona?.Dni) {
+  const esConsumidorFinal = condicionIva === CONDICION_IVA_AFIP.CONSUMIDOR_FINAL;
+
+  // Para Consumidor Final: DocTipo=99, DocNro=0 (sin identificar)
+  // ARCA rechaza si se envía DNI/CUIT con condición Consumidor Final
+  if (!esConsumidorFinal && clienteData?.Persona?.Dni) {
     const dni = clienteData.Persona.Dni.replace(/[^\d]/g, "");
     if (dni.length === 11) {
       docTipo = DOC_TIPO_AFIP.CUIT;

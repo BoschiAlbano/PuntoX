@@ -23,8 +23,10 @@ import {
   useDisclosure,
   addToast,
   Input,
+  Select,
+  SelectItem,
 } from "@heroui/react";
-import { FileText, ArrowLeft, TrendingUp, Calendar } from "lucide-react";
+import { FileText, ArrowLeft, TrendingUp, Calendar, ArrowRightLeft } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
 import { TIPO_PAGO, TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
@@ -69,7 +71,7 @@ export default function ComprobanteDetalleScreen({ id }: ComprobanteDetalleScree
   const router = useRouter();
   const queryClient = useQueryClient();
   const { tenant, isAdministrador, isSuperAdmin } = useUserStore();
-  const { configuracion } = useConfiguracion({ enableConfiguracion: true });
+  const { configuracion, fiscal } = useConfiguracion({ enableConfiguracion: true });
   const isAdmin = isAdministrador || isSuperAdmin;
 
   const { data: selectedTicket, isLoading, isError } = useQuery({
@@ -92,6 +94,50 @@ export default function ComprobanteDetalleScreen({ id }: ComprobanteDetalleScree
   const { isOpen: isFechaOpen, onOpen: onFechaOpen, onOpenChange: onFechaOpenChange } = useDisclosure();
   const [nuevaFecha, setNuevaFecha] = useState("");
   const [isGuardandoFecha, setIsGuardandoFecha] = useState(false);
+
+  // Estado para cambio de tipo
+  const { isOpen: isTipoOpen, onOpen: onTipoOpen, onOpenChange: onTipoOpenChange } = useDisclosure();
+  const [nuevoTipo, setNuevoTipo] = useState<number>(0);
+  const [isGuardandoTipo, setIsGuardandoTipo] = useState(false);
+
+  // Condiciones IVA (para filtrar tipos válidos como en ComprobanteSelector)
+  const { data: condicionesIva = [] } = useQuery({
+    queryKey: ["condiciones-iva"],
+    queryFn: async () => {
+      const res = await fetch("/api/condiciones-iva");
+      if (!res.ok) throw new Error("Error al cargar condiciones de IVA");
+      return res.json();
+    },
+  });
+
+  // Determinar tipos de comprobante fiscales permitidos (misma lógica que ComprobanteSelector)
+  const tiposFiscalesPermitidos = React.useMemo(() => {
+    if (condicionesIva.length === 0 || !fiscal?.condicionIvaId) return [];
+    const issuerCondicion = condicionesIva.find(
+      (c: any) => String(c.id) === String(fiscal.condicionIvaId),
+    );
+    const clientCondicionIvaId = (selectedTicket as any)?.Comprobante_Factura?.Persona_Cliente?.CondicionIvaId;
+    const clientCondicion = clientCondicionIvaId
+      ? condicionesIva.find((c: any) => String(c.id) === String(clientCondicionIvaId))
+      : null;
+
+    if (!issuerCondicion) return [];
+    const issuerStr = issuerCondicion.descripcion.toLowerCase();
+    const clientStr = clientCondicion
+      ? clientCondicion.descripcion.toLowerCase()
+      : "consumidor final";
+    const isIssuerRI = issuerStr.includes("responsable inscripto");
+    const isClientRI = clientStr.includes("responsable inscripto");
+
+    if (isIssuerRI) {
+      return [
+        isClientRI
+          ? TIPO_COMPROBANTE_VENTA.FACTURA_A
+          : TIPO_COMPROBANTE_VENTA.FACTURA_B,
+      ];
+    }
+    return [TIPO_COMPROBANTE_VENTA.FACTURA_C];
+  }, [condicionesIva, fiscal, selectedTicket]);
 
   const fe = selectedTicket?.FacturaElectronica ?? null;
   const feRechazado = fe?.Estado === "RECHAZADO";
@@ -165,6 +211,47 @@ export default function ComprobanteDetalleScreen({ id }: ComprobanteDetalleScree
         description: error.message || "No se pudo autorizar",
         color: "danger",
       });
+    }
+  };
+
+  const handleCambiarTipo = async () => {
+    if (!nuevoTipo) {
+      addToast({ title: "Error", description: "Seleccione un tipo de comprobante", color: "danger" });
+      return;
+    }
+    setIsGuardandoTipo(true);
+    try {
+      const response = await fetch("/api/comprobantes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          comprobanteId: id,
+          tipoComprobante: nuevoTipo,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      addToast({
+        title: "Tipo cambiado",
+        description: `El comprobante ahora es ${getTipoComprobanteLabel(nuevoTipo)}. Puede reintentar la facturación.`,
+        color: "success",
+      });
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["comprobante", id] }),
+        queryClient.invalidateQueries({ queryKey: ["caja"] }),
+      ]);
+      onTipoOpenChange();
+      setNuevoTipo(0);
+    } catch (error: any) {
+      addToast({
+        title: "Error",
+        description: error.message || "No se pudo cambiar el tipo",
+        color: "danger",
+      });
+    } finally {
+      setIsGuardandoTipo(false);
     }
   };
 
@@ -271,7 +358,6 @@ export default function ComprobanteDetalleScreen({ id }: ComprobanteDetalleScree
             <>
               <Button
                 onPress={() => {
-                  // Establecer fecha actual como default
                   const fechaActual = selectedTicket.Fecha
                     ? new Date(selectedTicket.Fecha).toISOString().split("T")[0]
                     : new Date().toISOString().split("T")[0];
@@ -284,6 +370,19 @@ export default function ComprobanteDetalleScreen({ id }: ComprobanteDetalleScree
               >
                 Corregir fecha
               </Button>
+              {tiposFiscalesPermitidos.length > 0 && (
+                <Button
+                  onPress={() => {
+                    setNuevoTipo(selectedTicket.TipoComprobante);
+                    onTipoOpen();
+                  }}
+                  variant="flat"
+                  className="font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl"
+                  startContent={<ArrowRightLeft size={16} />}
+                >
+                  Cambiar tipo
+                </Button>
+              )}
               <Button
                 onPress={handleReintentarFe}
                 className="font-semibold bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl"
@@ -663,6 +762,63 @@ export default function ComprobanteDetalleScreen({ id }: ComprobanteDetalleScree
               className="font-semibold bg-amber-500 hover:bg-amber-600 text-white"
             >
               Guardar y reintentar
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal Cambiar Tipo */}
+      <Modal isOpen={isTipoOpen} onOpenChange={onTipoOpenChange} placement="center" backdrop="opaque">
+        <ModalContent>
+          <ModalHeader className="flex items-center gap-2">
+            <ArrowRightLeft size={18} className="text-blue-500" />
+            <span>Cambiar Tipo de Comprobante</span>
+          </ModalHeader>
+          <ModalBody>
+            <p className="text-sm text-slate-500">
+              El tipo de comprobante actual no es válido para ARCA según su configuración fiscal. Seleccione el tipo correcto.
+            </p>
+            <Select
+              label="Nuevo tipo"
+              placeholder="Seleccione un tipo"
+              selectedKeys={nuevoTipo ? [String(nuevoTipo)] : []}
+              onSelectionChange={(keys) => {
+                const val = Array.from(keys)[0];
+                if (val) setNuevoTipo(Number(val));
+              }}
+              variant="bordered"
+              classNames={{
+                label: "font-semibold text-slate-600",
+                trigger: "border-2 hover:border-blue-400 focus-within:!border-blue-500",
+              }}
+            >
+              {tiposFiscalesPermitidos.map((tipo) => (
+                <SelectItem key={String(tipo)} textValue={getTipoComprobanteLabel(tipo)}>
+                  {getTipoComprobanteLabel(tipo)}
+                </SelectItem>
+              ))}
+            </Select>
+            {nuevoTipo === selectedTicket?.TipoComprobante && (
+              <p className="text-xs text-amber-600 font-medium mt-1">
+                El tipo seleccionado es el mismo que el actual.
+              </p>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="flat"
+              onPress={onTipoOpenChange}
+              className="font-semibold text-slate-600"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onPress={handleCambiarTipo}
+              isLoading={isGuardandoTipo}
+              isDisabled={nuevoTipo === selectedTicket?.TipoComprobante}
+              className="font-semibold bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              Cambiar y reintentar
             </Button>
           </ModalFooter>
         </ModalContent>

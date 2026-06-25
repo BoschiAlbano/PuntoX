@@ -116,6 +116,15 @@ export const CONDICION_IVA_AFIP = {
   IVA_RNI_AGENTE_RETENCION: 11,
 } as const;
 
+// Mapeo: descripción local de CondicionIva → código AFIP
+export const CONDICION_IVA_LOCAL_TO_AFIP: Record<string, number> = {
+  "responsable inscripto": CONDICION_IVA_AFIP.RESPONSABLE_INSCRIPTO,
+  "monotributista": CONDICION_IVA_AFIP.MONOTRIBUTISTA,
+  "exento": CONDICION_IVA_AFIP.EXENTO,
+  "no responsable": CONDICION_IVA_AFIP.NO_RESPONSABLE,
+  "consumidor final": CONDICION_IVA_AFIP.CONSUMIDOR_FINAL,
+};
+
 // Estados de factura electrónica
 export const ESTADO_FACTURA_ELECTRONICA = {
   PENDIENTE: 'PENDIENTE',

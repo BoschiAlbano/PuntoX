@@ -610,17 +610,17 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// PATCH: Actualizar fecha de comprobante con FE rechazada
+// PATCH: Actualizar fecha o tipo de comprobante con FE rechazada
 export async function PATCH(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({ req });
 
     const body = await req.json();
-    const { comprobanteId, fecha } = body;
+    const { comprobanteId, fecha, tipoComprobante } = body;
 
-    if (!comprobanteId || !fecha) {
+    if (!comprobanteId || (!fecha && !tipoComprobante)) {
       return NextResponse.json(
-        { error: "comprobanteId y fecha son requeridos" },
+        { error: "comprobanteId y fecha o tipoComprobante son requeridos" },
         { status: 400 },
       );
     }
@@ -661,19 +661,34 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Parsear y validar la fecha
-    const fechaDate = new Date(fecha);
-    if (isNaN(fechaDate.getTime())) {
-      return NextResponse.json(
-        { error: "Fecha inválida" },
-        { status: 400 },
-      );
+    const updateData: any = {};
+
+    if (fecha) {
+      const fechaDate = new Date(fecha);
+      if (isNaN(fechaDate.getTime())) {
+        return NextResponse.json(
+          { error: "Fecha inválida" },
+          { status: 400 },
+        );
+      }
+      updateData.Fecha = fechaDate;
     }
 
-    // Actualizar la fecha del comprobante
+    if (tipoComprobante) {
+      const tipoValido = Object.values(TIPO_COMPROBANTE_VENTA).includes(tipoComprobante);
+      if (!tipoValido) {
+        return NextResponse.json(
+          { error: "Tipo de comprobante inválido" },
+          { status: 400 },
+        );
+      }
+      updateData.TipoComprobante = tipoComprobante;
+    }
+
+    // Actualizar el comprobante
     await prisma.comprobante.update({
       where: { Id: comprobanteIdBigInt },
-      data: { Fecha: fechaDate },
+      data: updateData,
     });
 
     // Limpiar el estado de la FE para que se pueda reintentar
@@ -689,8 +704,9 @@ export async function PATCH(req: NextRequest) {
     });
 
     return NextResponse.json({
-      message: "Fecha actualizada correctamente",
-      fecha: fechaDate,
+      message: "Comprobante actualizado correctamente",
+      ...(fecha && { fecha: new Date(fecha) }),
+      ...(tipoComprobante && { tipoComprobante }),
     });
   } catch (error) {
     return handleError(error);
