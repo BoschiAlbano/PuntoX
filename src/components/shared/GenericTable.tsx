@@ -22,11 +22,13 @@ import {
 import { useState, useRef, Key, useEffect } from "react";
 import {
   Check,
+  ChevronRight,
   Columns2,
   Download,
   FileSpreadsheet,
   LayoutGrid,
   Menu,
+  Plus,
   Printer,
   RefreshCcw,
   Search,
@@ -223,6 +225,7 @@ export default function GenericTable<T extends { Id: number | string }>({
   renderCards,
 }: GenericTableProps<T>) {
   const tablePrintRef = useRef<HTMLDivElement>(null);
+  const [mobileColumnsExpanded, setMobileColumnsExpanded] = useState(false);
 
   // Columnas visibles: ocultar "acciones" por defecto del selector (siempre visible en tabla)
   const selectableColumns = columns.filter((c) => c.uid !== "acciones");
@@ -299,15 +302,366 @@ export default function GenericTable<T extends { Id: number | string }>({
   const ICON_SIZE = 18;
   const ICON_STROKE = 2;
 
+  type MenuItem = {
+    key: string;
+    label: string;
+    icon?: React.ReactNode;
+    endContent?: React.ReactNode;
+    className?: string;
+    onPress?: () => void;
+    isSeparator?: boolean;
+    isSectionLabel?: boolean;
+    isPrimaryAction?: boolean;
+    isNested?: boolean;
+    closeOnSelect?: boolean;
+    textValue?: string;
+  };
+
+  const toggleColumnVisibility = (colUid: string) => {
+    setVisibleUids((prev) => {
+      const next = new Set(prev);
+      if (next.has(colUid)) {
+        if (next.size <= 1) return prev;
+        next.delete(colUid);
+      } else {
+        next.add(colUid);
+      }
+      return next;
+    });
+  };
+
+  const buildMoreOptionsItems = (includeToolbarActions: boolean): MenuItem[] => {
+    const items: MenuItem[] = [];
+
+    if (includeToolbarActions) {
+      if (onNewClick) {
+        items.push({
+          key: "nuevo",
+          label: newButtonText,
+          icon: <Plus size={16} strokeWidth={2.5} className="text-white" />,
+          isPrimaryAction: true,
+          className:
+            "rounded-md px-3 py-2.5 font-semibold bg-[var(--crud-accent)] text-white data-[hover=true]:bg-[var(--crud-accent-hover)] data-[focus=true]:bg-[var(--crud-accent-hover)] shadow-sm",
+          onPress: onNewClick,
+        });
+        items.push({
+          key: "sep-toolbar-nuevo",
+          label: " ",
+          textValue: "separador",
+          isSeparator: true,
+          className:
+            "h-px bg-slate-200 rounded-none my-1 p-0 data-[hover=true]:bg-slate-200",
+        });
+      }
+
+      if (selectableColumns.length > 1) {
+        items.push({
+          key: "cols-toggle",
+          label: "Columnas visibles",
+          icon: <Columns2 size={16} strokeWidth={2} />,
+          endContent: (
+            <ChevronRight
+              size={16}
+              strokeWidth={2}
+              className={`text-slate-400 transition-transform duration-200 ${mobileColumnsExpanded ? "rotate-90" : ""}`}
+              aria-hidden
+            />
+          ),
+          closeOnSelect: false,
+          className:
+            "rounded-md px-3 py-2 font-medium data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
+          onPress: () => setMobileColumnsExpanded((prev) => !prev),
+        });
+        if (mobileColumnsExpanded) {
+          selectableColumns.forEach((col) => {
+            items.push({
+              key: `col-${col.uid}`,
+              label: col.name,
+              isNested: true,
+              icon: visibleUids.has(col.uid) ? (
+                <Check
+                  size={16}
+                  strokeWidth={2}
+                  className="text-[var(--crud-accent)] flex-shrink-0"
+                />
+              ) : (
+                <span className="w-4 inline-block" aria-hidden />
+              ),
+              closeOnSelect: false,
+              className:
+                "rounded-md px-3 py-2 pl-9 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
+              onPress: () => toggleColumnVisibility(col.uid),
+            });
+          });
+        }
+        items.push({
+          key: "sep-toolbar-cols",
+          label: " ",
+          textValue: "separador",
+          isSeparator: true,
+          className:
+            "h-px bg-slate-200 rounded-none my-1 p-0 data-[hover=true]:bg-slate-200",
+        });
+      }
+
+      if (renderCards && onViewModeChange) {
+        items.push({
+          key: "view-table",
+          label: "Vista tabla",
+          icon: <TableIcon size={16} strokeWidth={2} />,
+          className:
+            viewMode === "table"
+              ? "rounded-md px-3 py-2 bg-[var(--crud-accent)]/15 text-[var(--crud-accent)] font-medium data-[hover=true]:bg-[var(--crud-accent)]/20"
+              : "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
+          onPress: () => onViewModeChange("table"),
+        });
+        items.push({
+          key: "view-cards",
+          label: "Vista tarjetas",
+          icon: <LayoutGrid size={16} strokeWidth={2} />,
+          className:
+            viewMode === "cards"
+              ? "rounded-md px-3 py-2 bg-[var(--crud-accent)]/15 text-[var(--crud-accent)] font-medium data-[hover=true]:bg-[var(--crud-accent)]/20"
+              : "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
+          onPress: () => onViewModeChange("cards"),
+        });
+        items.push({
+          key: "sep-toolbar-view",
+          label: " ",
+          textValue: "separador",
+          isSeparator: true,
+          className:
+            "h-px bg-slate-200 rounded-none my-1 p-0 data-[hover=true]:bg-slate-200",
+        });
+      }
+    }
+
+    if (extraMenuItems && extraMenuItems.length > 0) {
+      extraMenuItems.forEach((item) => {
+        items.push({
+          key: item.key,
+          label: item.label,
+          icon: item.icon,
+          className: item.isActive
+            ? "rounded-md px-3 py-2 bg-amber-500/15 text-amber-800 data-[hover=true]:bg-amber-500/25 data-[focus=true]:bg-amber-500/25 font-medium"
+            : "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
+          onPress: item.onPress,
+        });
+      });
+      items.push({
+        key: "sep-extra",
+        label: " ",
+        textValue: "separador",
+        isSeparator: true,
+        className:
+          "h-px bg-slate-200 rounded-none my-1 p-0 data-[hover=true]:bg-slate-200",
+      });
+    }
+
+    const csvPressHandler =
+      selectedCount > 0 && onExportCsvSelected
+        ? onExportCsvSelected
+        : onExportCsv;
+    if (csvPressHandler) {
+      items.push({
+        key: "exportar-csv",
+        label:
+          selectedCount > 0
+            ? `Exportar CSV (${selectedCount} sel.)`
+            : "Exportar como CSV",
+        icon: <Download size={16} strokeWidth={2} />,
+        className:
+          "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
+        onPress: csvPressHandler,
+      });
+    }
+    const xlsPressHandler =
+      selectedCount > 0 && onExportXlsSelected
+        ? onExportXlsSelected
+        : onExportXls;
+    if (xlsPressHandler) {
+      items.push({
+        key: "exportar-xls",
+        label:
+          selectedCount > 0
+            ? `Exportar XLS (${selectedCount} sel.)`
+            : "Exportar como XLS",
+        icon: <FileSpreadsheet size={16} strokeWidth={2} />,
+        className:
+          "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
+        onPress: xlsPressHandler,
+      });
+    }
+    items.push({
+      key: "imprimir",
+      label:
+        selectedCount > 0
+          ? `Imprimir (${selectedCount} sel.)`
+          : "Imprimir",
+      icon: <Printer size={16} strokeWidth={2} />,
+      className:
+        "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
+      onPress: () => handlePrint(),
+    });
+
+    if (
+      selectedCount > 0 &&
+      bulkActionsDropdown &&
+      bulkActionsDropdown.length > 0
+    ) {
+      items.push({
+        key: "sep-bulk",
+        label: " ",
+        textValue: "separador",
+        isSeparator: true,
+        className:
+          "h-px bg-slate-200 rounded-none my-1 p-0 data-[hover=true]:bg-slate-200",
+      });
+      bulkActionsDropdown.forEach((a) => {
+        items.push({
+          key: a.key,
+          label: a.label,
+          className:
+            "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10",
+          onPress: a.onClick,
+        });
+      });
+    }
+
+    if (selectedCount > 0 && onBulkDelete) {
+      items.push({
+        key: "sep-delete",
+        label: " ",
+        textValue: "separador",
+        isSeparator: true,
+        className:
+          "h-px bg-slate-200 rounded-none my-1 p-0 data-[hover=true]:bg-slate-200",
+      });
+      items.push({
+        key: "eliminar-sel",
+        label: `Eliminar ${selectedCount} seleccionado${selectedCount !== 1 ? "s" : ""}`,
+        className:
+          "rounded-md px-3 py-2 text-red-600 data-[hover=true]:bg-red-50 data-[focus=true]:bg-red-50 font-medium",
+        onPress: onBulkDelete,
+      });
+    }
+
+    if (selectedCount > 0 && onClearSelection) {
+      items.push({
+        key: "sep-clear",
+        label: " ",
+        textValue: "separador",
+        isSeparator: true,
+        className:
+          "h-px bg-slate-200 rounded-none my-1 p-0 data-[hover=true]:bg-slate-200",
+      });
+      items.push({
+        key: "deseleccionar",
+        label: "Deseleccionar todo",
+        className:
+          "rounded-md px-3 py-2 text-slate-600 data-[hover=true]:bg-slate-100 data-[focus=true]:bg-slate-100",
+        onPress: onClearSelection,
+      });
+    }
+
+    return items;
+  };
+
+  const renderMoreOptionsDropdown = (
+    includeToolbarActions: boolean,
+    triggerClassName?: string,
+  ) => (
+    <Dropdown
+      closeOnSelect={!includeToolbarActions}
+      onOpenChange={(open) => {
+        if (!open) setMobileColumnsExpanded(false);
+      }}
+    >
+      <DropdownTrigger>
+        <div className="relative inline-flex flex-shrink-0">
+          <button
+            type="button"
+            className={
+              triggerClassName ??
+              "flex items-center justify-center sm:justify-start gap-2 px-3 w-auto h-10 sm:h-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[var(--crud-accent)] text-slate-700 hover:text-[var(--crud-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--crud-accent)]/40 transition-all duration-150"
+            }
+            title={
+              selectedCount > 0
+                ? `Más opciones (${selectedCount} seleccionados)`
+                : "Más opciones"
+            }
+            aria-label={
+              selectedCount > 0
+                ? `Más opciones: ${selectedCount} seleccionados`
+                : "Más opciones"
+            }
+          >
+            <Menu size={ICON_SIZE} strokeWidth={ICON_STROKE} aria-hidden="true" />
+            {!triggerClassName && (
+              <span className="hidden md:inline text-sm font-medium">
+                Más opciones
+              </span>
+            )}
+          </button>
+          {selectedCount > 0 && (
+            <span
+              className="pointer-events-none absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-[var(--crud-accent)] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 shadow-sm ring-2 ring-white"
+              aria-hidden="true"
+            >
+              {selectedCount > 99 ? "99+" : selectedCount}
+            </span>
+          )}
+        </div>
+      </DropdownTrigger>
+      <DropdownMenu
+        aria-label="Más opciones"
+        classNames={{
+          base: "min-w-[220px] max-h-[min(70vh,480px)] overflow-y-auto p-2 rounded-lg shadow-lg border border-slate-200/80",
+          list: "p-1 gap-0.5",
+        }}
+        items={buildMoreOptionsItems(includeToolbarActions)}
+      >
+        {(item) => (
+          <DropdownItem
+            key={item.key}
+            isReadOnly={item.isSeparator || item.isSectionLabel}
+            closeOnSelect={item.closeOnSelect ?? !item.isSectionLabel}
+            startContent={
+              !item.isSeparator && !item.isSectionLabel ? item.icon : undefined
+            }
+            endContent={
+              !item.isSeparator && !item.isSectionLabel
+                ? item.endContent
+                : undefined
+            }
+            onPress={
+              !item.isSeparator && !item.isSectionLabel
+                ? item.onPress
+                : undefined
+            }
+            textValue={item.textValue ?? item.label}
+            className={
+              item.className ??
+              (item.isPrimaryAction
+                ? "rounded-md px-3 py-2.5 font-semibold bg-[var(--crud-accent)] text-white"
+                : "")
+            }
+          >
+            {item.label}
+          </DropdownItem>
+        )}
+      </DropdownMenu>
+    </Dropdown>
+  );
+
   return (
     <section className="w-full flex flex-col gap-4 flex-1">
       <div className="rounded-lg flex flex-col gap-4 bg-[#F5F8FD] w-full flex-1">
-        {/* Barra de herramientas: Búsqueda+Filtro | Botones - grilla 8px */}
+        {/* Barra de herramientas: mobile = búsqueda + refresh + más opciones */}
         <section className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-2 sm:p-4 rounded-xl bg-[#F5F8FD]">
-          {/* Búsqueda + Refresh */}
+          {/* Búsqueda + Refresh + Más opciones (mobile) */}
           <div className="w-full sm:flex-1 sm:min-w-0 order-1 flex flex-row flex-wrap items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-2 flex-1 min-w-0 sm:max-w-[480px]">
-              {/* Input de búsqueda */}
               <div className="relative flex items-center flex-1 min-w-0">
                 <Search
                   size={15}
@@ -335,7 +689,6 @@ export default function GenericTable<T extends { Id: number | string }>({
                 )}
               </div>
 
-              {/* Refresh — a la derecha del buscador */}
               {onRefresh && (
                 <button
                   onClick={onRefresh}
@@ -352,239 +705,41 @@ export default function GenericTable<T extends { Id: number | string }>({
                   />
                 </button>
               )}
+
+              {/* Mobile: único menú con Nuevo, columnas, vistas, export, etc. */}
+              <div className="sm:hidden flex-shrink-0">
+                {renderMoreOptionsDropdown(
+                  true,
+                  "flex items-center justify-center h-10 w-10 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[var(--crud-accent)] text-slate-700 hover:text-[var(--crud-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--crud-accent)]/40 transition-all duration-150",
+                )}
+              </div>
             </div>
             {extraSearchContent}
           </div>
 
-          {/* Acciones - a la derecha, grilla 8px */}
-          <div className="flex items-center gap-2 sm:gap-3 sm:flex-shrink-0 order-2 sm:order-3 w-full sm:w-auto">
+          {/* Desktop: acciones visibles */}
+          <div className="hidden sm:flex items-center gap-2 sm:gap-3 sm:flex-shrink-0 order-2 sm:order-3">
             {onNewClick && (
               <button
                 onClick={onNewClick}
-                className="flex-1 sm:flex-none px-4 h-10 sm:h-9 rounded-lg bg-[var(--crud-accent)] hover:bg-[var(--crud-accent-hover)] text-white font-medium text-sm shadow-sm transition-all duration-150 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center whitespace-nowrap"
+                className="px-4 h-9 rounded-lg bg-[var(--crud-accent)] hover:bg-[var(--crud-accent-hover)] text-white font-medium text-sm shadow-sm transition-all duration-150 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center whitespace-nowrap"
                 aria-label={newButtonText}
               >
                 {newButtonText}
               </button>
             )}
 
-            <div
-              className="hidden sm:block w-px h-6 bg-slate-200 shrink-0"
-              aria-hidden
-            />
+            <div className="w-px h-6 bg-slate-200 shrink-0" aria-hidden />
 
-            <div className="flex items-center gap-2 flex-shrink-0 justify-end sm:justify-start">
-              <Dropdown>
-                <DropdownTrigger>
-                  {/* Wrapper relativo para el badge de selección */}
-                  <div className="relative inline-flex flex-shrink-0">
-                    <button
-                      type="button"
-                      className="flex items-center justify-center sm:justify-start gap-2 px-3 w-auto h-10 sm:h-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[var(--crud-accent)] text-slate-700 hover:text-[var(--crud-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--crud-accent)]/40 transition-all duration-150"
-                      title={
-                        selectedCount > 0
-                          ? `Más opciones (${selectedCount} seleccionados)`
-                          : "Exportar, Imprimir"
-                      }
-                      aria-label={
-                        selectedCount > 0
-                          ? `Más opciones: ${selectedCount} seleccionados`
-                          : "Más opciones: Exportar, Imprimir"
-                      }
-                    >
-                      <Menu
-                        size={ICON_SIZE}
-                        strokeWidth={ICON_STROKE}
-                        aria-hidden="true"
-                      />
-                      <span className="hidden md:inline text-sm font-medium">
-                        Más opciones
-                      </span>
-                    </button>
-                    {/* Badge de selección activa */}
-                    {selectedCount > 0 && (
-                      <span
-                        className="pointer-events-none absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-[var(--crud-accent)] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 shadow-sm ring-2 ring-white"
-                        aria-hidden="true"
-                      >
-                        {selectedCount > 99 ? "99+" : selectedCount}
-                      </span>
-                    )}
-                  </div>
-                </DropdownTrigger>
-                <DropdownMenu
-                  aria-label="Más opciones"
-                  classNames={{
-                    base: "min-w-[220px] p-2 rounded-lg shadow-lg border border-slate-200/80",
-                    list: "p-1 gap-0.5",
-                  }}
-                  items={(() => {
-                    // Build a flat array of menu item descriptors
-                    type MenuItem = {
-                      key: string;
-                      label: string;
-                      icon?: React.ReactNode;
-                      className?: string;
-                      onPress?: () => void;
-                      isSeparator?: boolean;
-                      textValue?: string;
-                    };
-                    const items: MenuItem[] = [];
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {renderMoreOptionsDropdown(false)}
 
-                    // ── Ítems extra (ej: filtro Bajo stock) ──
-                    if (extraMenuItems && extraMenuItems.length > 0) {
-                      extraMenuItems.forEach((item) => {
-                        items.push({
-                          key: item.key,
-                          label: item.label,
-                          icon: item.icon,
-                          className: item.isActive
-                            ? "rounded-md px-3 py-2 bg-amber-500/15 text-amber-800 data-[hover=true]:bg-amber-500/25 data-[focus=true]:bg-amber-500/25 font-medium"
-                            : "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
-                          onPress: item.onPress,
-                        });
-                      });
-                      items.push({
-                        key: "sep-extra",
-                        label: " ",
-                        textValue: "separador",
-                        isSeparator: true,
-                        className:
-                          "h-px bg-slate-200 rounded-none my-1 p-0 data-[hover=true]:bg-slate-200",
-                      });
-                    }
-
-                    // ── Exportar / Imprimir (always visible, smart) ──
-                    const csvPressHandler =
-                      selectedCount > 0 && onExportCsvSelected
-                        ? onExportCsvSelected
-                        : onExportCsv;
-                    if (csvPressHandler) {
-                      items.push({
-                        key: "exportar-csv",
-                        label:
-                          selectedCount > 0
-                            ? `Exportar CSV (${selectedCount} sel.)`
-                            : "Exportar como CSV",
-                        icon: <Download size={16} strokeWidth={2} />,
-                        className:
-                          "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
-                        onPress: csvPressHandler,
-                      });
-                    }
-                    const xlsPressHandler =
-                      selectedCount > 0 && onExportXlsSelected
-                        ? onExportXlsSelected
-                        : onExportXls;
-                    if (xlsPressHandler) {
-                      items.push({
-                        key: "exportar-xls",
-                        label:
-                          selectedCount > 0
-                            ? `Exportar XLS (${selectedCount} sel.)`
-                            : "Exportar como XLS",
-                        icon: <FileSpreadsheet size={16} strokeWidth={2} />,
-                        className:
-                          "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
-                        onPress: () => handlePrint(),
-                      });
-                    }
-                    items.push({
-                      key: "imprimir",
-                      label:
-                        selectedCount > 0
-                          ? `Imprimir (${selectedCount} sel.)`
-                          : "Imprimir",
-                      icon: <Printer size={16} strokeWidth={2} />,
-                      className:
-                        "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
-                      onPress: () => handlePrint(),
-                    });
-
-                    // ── Bulk actions (only when items are selected) ──
-                    if (
-                      selectedCount > 0 &&
-                      bulkActionsDropdown &&
-                      bulkActionsDropdown.length > 0
-                    ) {
-                      items.push({
-                        key: "sep-bulk",
-                        label: " ",
-                        textValue: "separador",
-                        isSeparator: true,
-                        className:
-                          "h-px bg-slate-200 rounded-none my-1 p-0 data-[hover=true]:bg-slate-200",
-                      });
-                      bulkActionsDropdown.forEach((a) => {
-                        items.push({
-                          key: a.key,
-                          label: a.label,
-                          className:
-                            "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10",
-                          onPress: a.onClick,
-                        });
-                      });
-                    }
-
-                    if (selectedCount > 0 && onBulkDelete) {
-                      items.push({
-                        key: "sep-delete",
-                        label: " ",
-                        textValue: "separador",
-                        isSeparator: true,
-                        className:
-                          "h-px bg-slate-200 rounded-none my-1 p-0 data-[hover=true]:bg-slate-200",
-                      });
-                      items.push({
-                        key: "eliminar-sel",
-                        label: `Eliminar ${selectedCount} seleccionado${selectedCount !== 1 ? "s" : ""}`,
-                        className:
-                          "rounded-md px-3 py-2 text-red-600 data-[hover=true]:bg-red-50 data-[focus=true]:bg-red-50 font-medium",
-                        onPress: onBulkDelete,
-                      });
-                    }
-
-                    if (selectedCount > 0 && onClearSelection) {
-                      items.push({
-                        key: "sep-clear",
-                        label: " ",
-                        textValue: "separador",
-                        isSeparator: true,
-                        className:
-                          "h-px bg-slate-200 rounded-none my-1 p-0 data-[hover=true]:bg-slate-200",
-                      });
-                      items.push({
-                        key: "deseleccionar",
-                        label: "Deseleccionar todo",
-                        className:
-                          "rounded-md px-3 py-2 text-slate-600 data-[hover=true]:bg-slate-100 data-[focus=true]:bg-slate-100",
-                        onPress: onClearSelection,
-                      });
-                    }
-
-                    return items;
-                  })()}
-                >
-                  {(item) => (
-                    <DropdownItem
-                      key={item.key}
-                      isReadOnly={item.isSeparator}
-                      startContent={!item.isSeparator ? item.icon : undefined}
-                      onPress={!item.isSeparator ? item.onPress : undefined}
-                      textValue={item.textValue ?? item.label}
-                      className={item.className ?? ""}
-                    >
-                      {item.label}
-                    </DropdownItem>
-                  )}
-                </DropdownMenu>
-              </Dropdown>
               {selectableColumns.length > 1 && (
                 <Dropdown closeOnSelect={false}>
                   <DropdownTrigger>
                     <button
                       type="button"
-                      className="p-2 h-10 w-10 sm:h-9 sm:w-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[var(--crud-accent)] text-slate-700 hover:text-[var(--crud-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--crud-accent)]/40 transition-all duration-150 flex items-center justify-center flex-shrink-0"
+                      className="p-2 h-9 w-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 hover:border-[var(--crud-accent)] text-slate-700 hover:text-[var(--crud-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--crud-accent)]/40 transition-all duration-150 flex items-center justify-center flex-shrink-0"
                       title="Columnas visibles"
                       aria-label="Mostrar u ocultar columnas"
                     >
@@ -617,18 +772,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                             <span className="w-4 inline-block" aria-hidden />
                           )
                         }
-                        onPress={() => {
-                          setVisibleUids((prev) => {
-                            const next = new Set(prev);
-                            if (next.has(col.uid)) {
-                              if (next.size <= 1) return prev;
-                              next.delete(col.uid);
-                            } else {
-                              next.add(col.uid);
-                            }
-                            return next;
-                          });
-                        }}
+                        onPress={() => toggleColumnVisibility(col.uid)}
                         className="rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10 data-[selected=true]:bg-[var(--crud-accent)]/15"
                       >
                         {col.name}
@@ -637,12 +781,13 @@ export default function GenericTable<T extends { Id: number | string }>({
                   </DropdownMenu>
                 </Dropdown>
               )}
+
               {renderCards && onViewModeChange && (
                 <div className="flex rounded-lg border border-slate-300 overflow-hidden flex-shrink-0">
                   <button
                     type="button"
                     onClick={() => onViewModeChange("table")}
-                    className={`p-2 h-10 w-10 sm:h-9 sm:w-9 flex items-center justify-center transition-colors ${
+                    className={`p-2 h-9 w-9 flex items-center justify-center transition-colors ${
                       viewMode === "table"
                         ? "bg-[var(--crud-accent)] text-white"
                         : "bg-white text-slate-600 hover:bg-slate-50"
@@ -655,7 +800,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                   <button
                     type="button"
                     onClick={() => onViewModeChange("cards")}
-                    className={`p-2 h-10 w-10 sm:h-9 sm:w-9 flex items-center justify-center transition-colors ${
+                    className={`p-2 h-9 w-9 flex items-center justify-center transition-colors ${
                       viewMode === "cards"
                         ? "bg-[var(--crud-accent)] text-white"
                         : "bg-white text-slate-600 hover:bg-slate-50"
@@ -669,7 +814,7 @@ export default function GenericTable<T extends { Id: number | string }>({
               )}
             </div>
           </div>
-          {/* Filtros extra — fila propia en mobile (order-3), entre search y botones en desktop (sm:order-2) */}
+
           {extraRightContent && (
             <div className="order-3 sm:order-2 sm:flex-shrink-0 w-full sm:w-auto">
               {extraRightContent}
