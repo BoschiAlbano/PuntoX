@@ -13,7 +13,7 @@ export default async function ComprobantePage({
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="w-full">
       <ComprobanteDetalleScreen id={comprobanteId} />
     </div>
   );

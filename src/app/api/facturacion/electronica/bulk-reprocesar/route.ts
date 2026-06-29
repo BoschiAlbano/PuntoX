@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     const tenantIdBigInt = BigInt(tenantId);
 
     const body = await req.json();
-    const { comprobantesIds, fecha } = body;
+    const { comprobantesIds, fecha, tipoComprobante } = body;
 
     if (!Array.isArray(comprobantesIds) || comprobantesIds.length === 0) {
       return NextResponse.json(
@@ -131,6 +131,14 @@ export async function POST(req: NextRequest) {
           where: { Id: comprobanteId },
           data: { Fecha: fechaUniforme },
         });
+      }
+
+      if (tipoComprobante) {
+        await prisma.comprobante.update({
+          where: { Id: comprobanteId },
+          data: { TipoComprobante: tipoComprobante },
+        });
+        comprobante.TipoComprobante = tipoComprobante;
       }
 
       if (comprobante.FacturaElectronica) {

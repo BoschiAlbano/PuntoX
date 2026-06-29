@@ -11,6 +11,8 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
+  Select,
+  SelectItem,
   Skeleton,
   Spinner,
   Table,
@@ -57,6 +59,7 @@ import { parseArcaObservations } from "@/lib/constants/arca-errors";
 import { ReporteCajaImprimible } from "./ReporteCajaImprimible";
 import { useReactToPrint } from "react-to-print";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import StatCard from "../dashboard/StatCard";
 import GenericTable, { Column } from "@/components/shared/GenericTable";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
@@ -110,6 +113,34 @@ export default function CajaActual({
     enableConfiguracion: true,
     enableFiscal: true,
   });
+
+  // Condiciones IVA para determinar tipos fiscales disponibles
+  const { data: condicionesIva = [] } = useQuery({
+    queryKey: ["condiciones-iva"],
+    queryFn: async () => {
+      const res = await fetch("/api/condiciones-iva");
+      if (!res.ok) throw new Error("Error al cargar condiciones de IVA");
+      return res.json();
+    },
+  });
+
+  const [tipoBulk, setTipoBulk] = useState<number>(0);
+
+  const tiposFiscalesBulk = useMemo(() => {
+    if (condicionesIva.length === 0 || !fiscal?.condicionIvaId) return [];
+    const issuerCondicion = condicionesIva.find(
+      (c: any) => String(c.id) === String(fiscal.condicionIvaId),
+    );
+    if (!issuerCondicion) return [];
+    const isIssuerRI = issuerCondicion.descripcion.toLowerCase().includes("responsable inscripto");
+    if (isIssuerRI) {
+      return [
+        { value: TIPO_COMPROBANTE_VENTA.FACTURA_A, label: "Factura A" },
+        { value: TIPO_COMPROBANTE_VENTA.FACTURA_B, label: "Factura B" },
+      ];
+    }
+    return [{ value: TIPO_COMPROBANTE_VENTA.FACTURA_C, label: "Factura C" }];
+  }, [condicionesIva, fiscal]);
 
   const { isOpen: _isAbrirOpen, onOpenChange: _onAbrirChange } =
     useDisclosure();
@@ -335,7 +366,7 @@ export default function CajaActual({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ comprobantesIds, fecha: fechaBulk }),
+          body: JSON.stringify({ comprobantesIds, fecha: fechaBulk, tipoComprobante: tipoBulk || undefined }),
         },
       );
       const data = await response.json();
@@ -669,7 +700,7 @@ export default function CajaActual({
   return (
     <div className="flex flex-col gap-6 pb-4">
       {/* Entradas del dia */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
           <TrendingUp size={18} className="text-green-500" />
           Entradas del día
@@ -678,14 +709,14 @@ export default function CajaActual({
           <Button
             onPress={() => handlePrintReporteCaja()}
             variant="flat"
-            className="h-9 px-4 rounded-xl text-sm"
+            className="flex-1 sm:flex-none h-9 px-4 rounded-xl text-sm"
             startContent={<Printer size={14} />}
           >
             Reporte
           </Button>
           <Button
             onPress={() => onCerrarChange()}
-            className="bg-[#0F2233] text-white font-semibold px-4 h-9 rounded-xl gap-2 hover:bg-[#0F2233]/80 transition-all shadow-sm text-sm"
+            className="flex-1 sm:flex-none bg-[#0F2233] text-white font-semibold px-4 h-9 rounded-xl gap-2 hover:bg-[#0F2233]/80 transition-all shadow-sm text-sm"
             startContent={<Lock size={14} strokeWidth={2.5} />}
           >
             Cerrar Caja
@@ -852,11 +883,24 @@ export default function CajaActual({
               setSelectedKeys(new Set());
             }}
             startContent={<AlertTriangle size={14} />}
-            className="h-8 px-3 rounded-lg text-xs font-semibold"
+            className="hidden sm:flex h-8 px-3 rounded-lg text-xs font-semibold"
           >
             {filtroPendientes ? "Mostrando: Sin FE" : "Filtrar sin FE"}
           </Button>
         }
+        extraMenuItems={[
+          {
+            key: "filtrar-sin-fe",
+            label: filtroPendientes ? "✓ Mostrando: Sin FE" : "Filtrar sin FE",
+            icon: <AlertTriangle size={16} className={filtroPendientes ? "text-amber-600" : "text-slate-500"} />,
+            isActive: filtroPendientes,
+            onPress: () => {
+              setFiltroPendientes(!filtroPendientes);
+              setMovPage(1);
+              setSelectedKeys(new Set());
+            },
+          },
+        ]}
       />
 
       {/* Modal Cerrar Caja */}
@@ -1182,6 +1226,36 @@ export default function CajaActual({
                       "border-2 hover:border-[#67afc3]/50 focus-within:!border-[#67afc3]",
                   }}
                 />
+
+                {/* Tipo de comprobante */}
+                {tiposFiscalesBulk.length > 0 && (
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-semibold text-slate-600">
+                      Tipo de comprobante <span className="text-slate-400 font-normal">(opcional)</span>
+                    </span>
+                    <Select
+                      placeholder="Mantener tipo actual"
+                      selectedKeys={tipoBulk ? [String(tipoBulk)] : []}
+                      onSelectionChange={(keys) => {
+                        const val = Array.from(keys)[0];
+                        if (val) setTipoBulk(Number(val));
+                      }}
+                      variant="bordered"
+                      classNames={{
+                        trigger: "border-2 hover:border-[#67afc3]/50 focus-within:!border-[#67afc3] min-h-unit-10",
+                      }}
+                    >
+                      {tiposFiscalesBulk.map((tipo) => (
+                        <SelectItem key={String(tipo.value)} textValue={tipo.label}>
+                          {tipo.label}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                    <p className="text-xs text-slate-400">
+                      Si seleccionás un tipo, se cambiará en todos los comprobantes antes de emitir.
+                    </p>
+                  </div>
+                )}
 
                 {/* Advertencia si está fuera de rango */}
                 {!isDateInArcaRange(fechaBulk) && (

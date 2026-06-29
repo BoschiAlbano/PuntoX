@@ -1,39 +1,41 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import { useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { 
-  Button, 
-  Card, 
-  CardBody, 
-  Chip, 
-  Table, 
-  TableHeader, 
-  TableColumn, 
-  TableBody, 
-  TableRow, 
+import { useQuery } from "@tanstack/react-query";
+import {
+  Button,
+  Card,
+  CardBody,
+  Chip,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
   TableCell,
-  Spinner,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  useDisclosure,
-  addToast,
-  Input,
-  Select,
-  SelectItem,
+  Skeleton,
 } from "@heroui/react";
-import { FileText, ArrowLeft, TrendingUp, Calendar, ArrowRightLeft } from "lucide-react";
+import {
+  FileText,
+  ArrowLeft,
+  TrendingUp,
+  User,
+  Building2,
+  MapPin,
+  Percent,
+  Banknote,
+  Receipt,
+} from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
-import { TIPO_PAGO, TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
+import {
+  TIPO_PAGO,
+  TIPO_COMPROBANTE_VENTA,
+} from "@/lib/constants/comprobantes";
 import { TicketImpresion } from "@/components/ventas/TicketImpresion";
 import { useUserStore } from "@/store/useUserStore";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
-import { LoadingComponent } from "@/components/loading/loading";
 
 interface ComprobanteDetalleScreenProps {
   id: number;
@@ -67,14 +69,144 @@ const getTipoComprobanteLabel = (tipo: number) => {
   }
 };
 
-export default function ComprobanteDetalleScreen({ id }: ComprobanteDetalleScreenProps) {
+const getTipoComprobanteColor = (tipo: number) => {
+  switch (tipo) {
+    case 1:
+      return { bg: "#fee2e2", text: "#b91c1c", label: "A" };
+    case 2:
+      return { bg: "#fef3c7", text: "#92400e", label: "B" };
+    case 3:
+      return { bg: "#dbeafe", text: "#1e40af", label: "C" };
+    default:
+      return { bg: "#e2e8f0", text: "#475569", label: "Otro" };
+  }
+};
+
+function LoadingSkeleton() {
+  return (
+    <div className="flex flex-col w-full bg-[#F5F8FD]">
+      {/* Header skeleton */}
+      <div className="flex items-center justify-between gap-2 px-3 pt-3 pb-0 sm:p-6 sm:pb-0 lg:p-8 lg:pb-0">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+          <Skeleton className="w-8 h-8 rounded-xl shrink-0" />
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <Skeleton className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl shrink-0" />
+            <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Skeleton className="w-32 sm:w-44 h-5 sm:h-6 rounded-lg" />
+                <Skeleton className="w-20 h-5 rounded-full shrink-0" />
+              </div>
+              <Skeleton className="w-28 h-3.5 rounded" />
+            </div>
+          </div>
+        </div>
+        <Skeleton className="w-28 sm:w-32 h-9 sm:h-11 rounded-xl shrink-0" />
+      </div>
+
+      {/* Main content skeleton */}
+      <div className="px-3 pt-4 pb-3 sm:p-6 sm:pb-6 lg:p-8 lg:pb-8">
+        <div className="max-w-4xl mx-auto flex flex-col gap-4 sm:gap-6">
+
+          {/* Info cards grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            {[1, 2].map((i) => (
+              <div
+                key={i}
+                className="rounded-xl border border-slate-100 bg-white shadow-sm p-4 sm:p-5 flex flex-col gap-3"
+              >
+                <div className="flex items-center gap-2">
+                  <Skeleton className="w-7 h-7 rounded-lg shrink-0" />
+                  <Skeleton className="w-20 h-3 rounded" />
+                </div>
+                <Skeleton className="w-40 h-5 rounded" />
+                <div className="space-y-2">
+                  <Skeleton className="w-full h-4 rounded" />
+                  <Skeleton className="w-3/4 h-4 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Items section */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Skeleton className="w-6 h-6 rounded-md shrink-0" />
+              <Skeleton className="w-32 h-3.5 rounded" />
+            </div>
+
+            {/* Mobile: card skeletons */}
+            <div className="sm:hidden flex flex-col gap-2">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="rounded-xl border border-slate-200 bg-white shadow-sm p-3.5 flex flex-col gap-2.5"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <Skeleton className="w-7 h-7 rounded-lg shrink-0" />
+                      <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                        <Skeleton className="w-full h-4 rounded" />
+                        <Skeleton className="w-16 h-3 rounded" />
+                      </div>
+                    </div>
+                    <Skeleton className="w-16 h-4 rounded shrink-0" />
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <Skeleton className="w-24 h-3 rounded" />
+                    <Skeleton className="w-16 h-3 rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop: table row skeletons */}
+            <div className="hidden sm:block border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="flex gap-4 px-4 py-3.5 border-b border-slate-100 last:border-0 bg-white even:bg-slate-50/40"
+                >
+                  <Skeleton className="w-8 h-8 rounded-lg shrink-0" />
+                  <Skeleton className="flex-1 h-5 rounded" />
+                  <Skeleton className="w-24 h-5 rounded" />
+                  <Skeleton className="w-24 h-5 rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Payments section */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Skeleton className="w-6 h-6 rounded-md shrink-0" />
+              <Skeleton className="w-44 h-3.5 rounded" />
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {[1, 2].map((i) => (
+                <Skeleton key={i} className="w-full sm:w-36 h-11 rounded-xl" />
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ComprobanteDetalleScreen({
+  id,
+}: ComprobanteDetalleScreenProps) {
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const { tenant, isAdministrador, isSuperAdmin } = useUserStore();
-  const { configuracion, fiscal } = useConfiguracion({ enableConfiguracion: true });
+  const { isAdministrador, isSuperAdmin } = useUserStore();
+  const { configuracion } = useConfiguracion({ enableConfiguracion: true });
   const isAdmin = isAdministrador || isSuperAdmin;
 
-  const { data: selectedTicket, isLoading, isError } = useQuery({
+  const {
+    data: selectedTicket,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["comprobante", id, { detalle: true }],
     queryFn: async () => {
       const response = await fetch(`/api/comprobantes?id=${id}&detalle=true`);
@@ -90,443 +222,324 @@ export default function ComprobanteDetalleScreen({ id }: ComprobanteDetalleScree
     documentTitle: "Ticket de Venta",
   });
 
-  // Estado para corrección de fecha
-  const { isOpen: isFechaOpen, onOpen: onFechaOpen, onOpenChange: onFechaOpenChange } = useDisclosure();
-  const [nuevaFecha, setNuevaFecha] = useState("");
-  const [isGuardandoFecha, setIsGuardandoFecha] = useState(false);
-
-  // Estado para cambio de tipo
-  const { isOpen: isTipoOpen, onOpen: onTipoOpen, onOpenChange: onTipoOpenChange } = useDisclosure();
-  const [nuevoTipo, setNuevoTipo] = useState<number>(0);
-  const [isGuardandoTipo, setIsGuardandoTipo] = useState(false);
-
-  // Condiciones IVA (para filtrar tipos válidos como en ComprobanteSelector)
-  const { data: condicionesIva = [] } = useQuery({
-    queryKey: ["condiciones-iva"],
-    queryFn: async () => {
-      const res = await fetch("/api/condiciones-iva");
-      if (!res.ok) throw new Error("Error al cargar condiciones de IVA");
-      return res.json();
-    },
-  });
-
-  // Determinar tipos de comprobante fiscales permitidos (misma lógica que ComprobanteSelector)
-  const tiposFiscalesPermitidos = React.useMemo(() => {
-    if (condicionesIva.length === 0 || !fiscal?.condicionIvaId) return [];
-    const issuerCondicion = condicionesIva.find(
-      (c: any) => String(c.id) === String(fiscal.condicionIvaId),
-    );
-    const clientCondicionIvaId = (selectedTicket as any)?.Comprobante_Factura?.Persona_Cliente?.CondicionIvaId;
-    const clientCondicion = clientCondicionIvaId
-      ? condicionesIva.find((c: any) => String(c.id) === String(clientCondicionIvaId))
-      : null;
-
-    if (!issuerCondicion) return [];
-    const issuerStr = issuerCondicion.descripcion.toLowerCase();
-    const clientStr = clientCondicion
-      ? clientCondicion.descripcion.toLowerCase()
-      : "consumidor final";
-    const isIssuerRI = issuerStr.includes("responsable inscripto");
-    const isClientRI = clientStr.includes("responsable inscripto");
-
-    if (isIssuerRI) {
-      return [
-        isClientRI
-          ? TIPO_COMPROBANTE_VENTA.FACTURA_A
-          : TIPO_COMPROBANTE_VENTA.FACTURA_B,
-      ];
-    }
-    return [TIPO_COMPROBANTE_VENTA.FACTURA_C];
-  }, [condicionesIva, fiscal, selectedTicket]);
-
   const fe = selectedTicket?.FacturaElectronica ?? null;
   const feRechazado = fe?.Estado === "RECHAZADO";
 
-  const handleCorregirFecha = async () => {
-    if (!nuevaFecha) {
-      addToast({ title: "Error", description: "Seleccione una fecha", color: "danger" });
-      return;
-    }
-
-    setIsGuardandoFecha(true);
-    try {
-      const response = await fetch("/api/comprobantes", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          comprobanteId: id,
-          fecha: nuevaFecha,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
-
-      addToast({
-        title: "Fecha corregida",
-        description: "La fecha se actualizó. Ahora puede reintentar la facturación.",
-        color: "success",
-      });
-
-      // Refrescar datos
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["comprobante", id] }),
-        queryClient.invalidateQueries({ queryKey: ["caja"] }),
-      ]);
-      onFechaOpenChange();
-      setNuevaFecha("");
-    } catch (error: any) {
-      addToast({
-        title: "Error",
-        description: error.message || "No se pudo actualizar la fecha",
-        color: "danger",
-      });
-    } finally {
-      setIsGuardandoFecha(false);
-    }
-  };
-
-  const handleReintentarFe = async () => {
-    try {
-      const response = await fetch(`/api/facturacion/electronica/${id}/reprocesar`, {
-        method: "POST",
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || data.observaciones || "Error al reintentar");
-
-      addToast({
-        title: "Comprobante autorizado",
-        description: `CAE: ${data.result.cae}`,
-        color: "success",
-      });
-
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["comprobante", id] }),
-        queryClient.invalidateQueries({ queryKey: ["caja"] }),
-      ]);
-    } catch (error: any) {
-      addToast({
-        title: "Error",
-        description: error.message || "No se pudo autorizar",
-        color: "danger",
-      });
-    }
-  };
-
-  const handleCambiarTipo = async () => {
-    if (!nuevoTipo) {
-      addToast({ title: "Error", description: "Seleccione un tipo de comprobante", color: "danger" });
-      return;
-    }
-    setIsGuardandoTipo(true);
-    try {
-      const response = await fetch("/api/comprobantes", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          comprobanteId: id,
-          tipoComprobante: nuevoTipo,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
-
-      addToast({
-        title: "Tipo cambiado",
-        description: `El comprobante ahora es ${getTipoComprobanteLabel(nuevoTipo)}. Puede reintentar la facturación.`,
-        color: "success",
-      });
-
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["comprobante", id] }),
-        queryClient.invalidateQueries({ queryKey: ["caja"] }),
-      ]);
-      onTipoOpenChange();
-      setNuevoTipo(0);
-    } catch (error: any) {
-      addToast({
-        title: "Error",
-        description: error.message || "No se pudo cambiar el tipo",
-        color: "danger",
-      });
-    } finally {
-      setIsGuardandoTipo(false);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
-        <LoadingComponent message="Cargando detalles..." />
-      </div>
-    );
-  }
+  if (isLoading) return <LoadingSkeleton />;
 
   if (isError || !selectedTicket) {
     return (
-      <div className="flex flex-col h-full w-full items-center justify-center bg-[#F5F8FD]">
-        <p className="text-slate-500 mb-4">No se encontró información del comprobante.</p>
-        <Button onPress={() => router.back()} startContent={<ArrowLeft size={16} />}>
+      <div className="flex flex-col w-full min-h-[50vh] items-center justify-center bg-[#F5F8FD] gap-4">
+        <div className="p-4 rounded-full bg-red-50 border border-red-100">
+          <Receipt size={32} className="text-red-400" />
+        </div>
+        <p className="text-slate-500 font-medium">
+          No se encontró información del comprobante.
+        </p>
+        <Button
+          onPress={() => router.back()}
+          startContent={<ArrowLeft size={16} />}
+          variant="flat"
+          className="font-semibold"
+        >
           Volver
         </Button>
       </div>
     );
   }
 
-  const esVenta = selectedTicket ? Object.values(TIPO_COMPROBANTE_VENTA).includes(selectedTicket.TipoComprobante) : false;
+  const esVenta = Object.values(TIPO_COMPROBANTE_VENTA).includes(
+    selectedTicket.TipoComprobante,
+  );
   const feAutorizado = fe?.Estado === "AUTORIZADO";
   const tieneFe = !!fe;
 
-  // item.Costo en la base de datos ya almacena el costo total del renglón (Costo Unitario * Cantidad)
-  const totalCosto = selectedTicket?.DetalleComprobante?.reduce((sum: number, item: any) => sum + Number(item.Costo || 0), 0) || 0;
-  const gananciaNeta = Number(selectedTicket?.Total || 0) - totalCosto;
-  const margenGanancia = Number(selectedTicket?.Total || 0) > 0 ? (gananciaNeta / Number(selectedTicket?.Total)) * 100 : 0;
+  const totalCosto =
+    selectedTicket.DetalleComprobante?.reduce(
+      (sum: number, item: any) => sum + Number(item.Costo || 0),
+      0,
+    ) || 0;
+  const gananciaNeta = Number(selectedTicket.Total || 0) - totalCosto;
+  const margenGanancia =
+    Number(selectedTicket.Total) > 0
+      ? (gananciaNeta / Number(selectedTicket.Total)) * 100
+      : 0;
   const showRentabilidad = isAdmin && esVenta;
+  const tipoColor = getTipoComprobanteColor(selectedTicket.TipoComprobante);
 
-  const datosVentaImpresion = selectedTicket ? {
-    items: selectedTicket.DetalleComprobante?.map((item: any) => ({
-      cantidad: Number(item.Cantidad) || 1,
-      descripcion: item.Descripcion,
-      precio: Number(item.Precio),
-      subtotal: Number(item.SubTotal)
-    })) || [],
-    cliente: selectedTicket.cliente,
-    subtotal: Number(selectedTicket.SubTotal) || 0,
-    descuento: Number(selectedTicket.Descuento) || 0,
-    total: Number(selectedTicket.Total) || 0,
-    fecha: selectedTicket.Fecha,
-    numeroComprobante: selectedTicket.Numero?.toString().padStart(8, "0") || "00000000",
-    tipoComprobante: getTipoComprobanteLabel(selectedTicket.TipoComprobante),
-    formasPago: selectedTicket.FormaPago?.map((fp: any) => ({
-      tipo: Object.keys(TIPO_PAGO).find(key => TIPO_PAGO[key as keyof typeof TIPO_PAGO] === fp.TipoPago) || "OTRO",
-      monto: Number(fp.Monto)
-    })) || [],
-    pie: "Gracias por su compra!",
-    arcaStatus: fe?.Estado,
-    cae: fe?.CAE,
-    caeFchVto: fe?.CAEFchVto,
-    cuitEmisor: configuracion?.cuit || "",
-    puntoVentaNum: fe?.PuntoVenta,
-    cbteNro: fe?.CbteNumero
-  } : null;
+  const datosVentaImpresion = selectedTicket
+    ? {
+        items:
+          selectedTicket.DetalleComprobante?.map((item: any) => ({
+            cantidad: Number(item.Cantidad) || 1,
+            descripcion: item.Descripcion,
+            precio: Number(item.Precio),
+            subtotal: Number(item.SubTotal),
+          })) || [],
+        cliente: selectedTicket.cliente,
+        subtotal: Number(selectedTicket.SubTotal) || 0,
+        descuento: Number(selectedTicket.Descuento) || 0,
+        total: Number(selectedTicket.Total) || 0,
+        fecha: selectedTicket.Fecha,
+        numeroComprobante:
+          selectedTicket.Numero?.toString().padStart(8, "0") || "00000000",
+        tipoComprobante: getTipoComprobanteLabel(
+          selectedTicket.TipoComprobante,
+        ),
+        formasPago:
+          selectedTicket.FormaPago?.map((fp: any) => ({
+            tipo:
+              Object.keys(TIPO_PAGO).find(
+                (key) =>
+                  TIPO_PAGO[key as keyof typeof TIPO_PAGO] === fp.TipoPago,
+              ) || "OTRO",
+            monto: Number(fp.Monto),
+          })) || [],
+        pie: "Gracias por su compra!",
+        arcaStatus: fe?.Estado,
+        cae: fe?.CAE,
+        caeFchVto: fe?.CAEFchVto,
+        cuitEmisor: configuracion?.cuit || "",
+        puntoVentaNum: fe?.PuntoVenta,
+        cbteNro: fe?.CbteNumero,
+      }
+    : null;
 
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden bg-[#F5F8FD] p-4 lg:p-8">
+    <div className="flex flex-col w-full bg-[#F5F8FD]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between gap-2 px-3 pt-3 pb-0 sm:p-6 sm:pb-0 lg:p-8 lg:pb-0">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
           <Button
             isIconOnly
             variant="flat"
-            className="bg-white hover:bg-slate-100 shadow-sm rounded-xl"
+            className="bg-white hover:bg-slate-100 shadow-sm rounded-xl transition-all duration-200 cursor-pointer shrink-0"
             onPress={() => router.back()}
+            aria-label="Volver"
+            size="sm"
           >
-            <ArrowLeft size={20} className="text-slate-600" />
+            <ArrowLeft size={18} className="text-slate-600" />
           </Button>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm shadow-[#67afc3]/20"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm"
               style={{ backgroundColor: "#67afc3" }}
             >
-              <FileText size={20} className="text-white" />
+              <FileText size={16} className="text-white sm:size-5" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-bold text-slate-800 leading-tight">
-                Comprobante #{selectedTicket.Numero?.toString().padStart(8, "0") || "00000000"}
-              </span>
-              <span className="text-sm font-medium text-slate-500">
+            <div className="flex flex-col min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-base sm:text-xl font-bold text-slate-800 leading-tight truncate">
+                  #{String(selectedTicket.Numero || "").padStart(8, "0")}
+                </span>
+                <Chip
+                  size="sm"
+                  variant="flat"
+                  className="font-semibold shadow-sm cursor-default shrink-0"
+                  style={{ backgroundColor: tipoColor.bg, color: tipoColor.text }}
+                >
+                  {getTipoComprobanteLabel(selectedTicket.TipoComprobante)}
+                </Chip>
+              </div>
+              <span className="text-xs sm:text-sm font-medium text-slate-500 truncate">
                 {formatDate(selectedTicket.Fecha)}
               </span>
             </div>
           </div>
-          <Chip
-            size="md"
-            variant="flat"
-            style={{
-              backgroundColor: "#67afc320",
-              color: "#3a8fa3",
-            }}
-            className="hidden sm:flex font-semibold shadow-sm"
-          >
-            {getTipoComprobanteLabel(selectedTicket.TipoComprobante)}
-          </Chip>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          {feRechazado && (
-            <>
-              <Button
-                onPress={() => {
-                  const fechaActual = selectedTicket.Fecha
-                    ? new Date(selectedTicket.Fecha).toISOString().split("T")[0]
-                    : new Date().toISOString().split("T")[0];
-                  setNuevaFecha(fechaActual);
-                  onFechaOpen();
-                }}
-                variant="flat"
-                className="font-semibold text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-xl"
-                startContent={<Calendar size={16} />}
-              >
-                Corregir fecha
-              </Button>
-              {tiposFiscalesPermitidos.length > 0 && (
-                <Button
-                  onPress={() => {
-                    setNuevoTipo(selectedTicket.TipoComprobante);
-                    onTipoOpen();
-                  }}
-                  variant="flat"
-                  className="font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl"
-                  startContent={<ArrowRightLeft size={16} />}
-                >
-                  Cambiar tipo
-                </Button>
-              )}
-              <Button
-                onPress={handleReintentarFe}
-                className="font-semibold bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl"
-                startContent={<TrendingUp size={16} />}
-              >
-                Reintentar FE
-              </Button>
-            </>
-          )}
-          <Button
-            onPress={() => handlePrintTicket()}
-            className="bg-slate-800 hover:bg-slate-900 text-white font-bold px-6 h-11 rounded-xl shadow-md transition-all sm:w-auto w-full"
-            startContent={<FileText size={18} strokeWidth={2.5} />}
-          >
-            Reimprimir Ticket
-          </Button>
-        </div>
+        <Button
+          onPress={() => handlePrintTicket()}
+          size="sm"
+          className="bg-slate-800 hover:bg-slate-900 text-white font-bold px-3 sm:px-6 h-9 sm:h-11 rounded-xl shadow-md transition-all duration-200 cursor-pointer shrink-0"
+          startContent={<FileText size={16} strokeWidth={2.5} />}
+        >
+          Reimprimir
+        </Button>
       </div>
 
-      {/* Main Content scrollable area */}
-      <div className="flex-1 overflow-y-auto min-h-0 bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-        <div className="max-w-4xl mx-auto flex flex-col gap-6">
-          {/* Cliente + Totales + Rentabilidad (opcional) */}
-          <div className={`grid grid-cols-1 md:grid-cols-2 ${showRentabilidad ? 'lg:grid-cols-3' : ''} gap-4`}>
+      {/* Main Content */}
+      <div className="space-y-4 sm:space-y-6 px-3 pt-4 pb-6 sm:p-6 sm:pb-8 lg:p-8 lg:pb-10">
+        <div className="max-w-4xl mx-auto flex flex-col gap-4 sm:gap-6">
+          {/* Info Cards Grid */}
+          <div
+            className={`grid grid-cols-1 sm:grid-cols-2 ${showRentabilidad ? "lg:grid-cols-3" : ""} gap-3 sm:gap-4`}
+          >
             {/* Cliente */}
-            <Card className="shadow-sm border border-slate-100 bg-slate-50/60 rounded-xl">
-              <CardBody className="py-4 px-5 gap-2">
-                <span
-                  className="text-xs uppercase font-bold tracking-wider"
-                  style={{ color: "#67afc3" }}
-                >
-                  Cliente
-                </span>
-                <span className="text-lg font-bold text-slate-800">
-                  {selectedTicket?.cliente?.Nombre
-                    ? `${selectedTicket.cliente.Nombre} ${selectedTicket.cliente.Apellido || ""}`.trim()
-                    : "Consumidor Final"}
-                </span>
-                {selectedTicket?.cliente?.Dni && (
-                  <span className="text-sm font-medium text-slate-500">
-                    DNI / CUIT: <span className="text-slate-700">{selectedTicket.cliente.Dni}</span>
-                  </span>
-                )}
-                {selectedTicket?.cliente?.Direccion && (
-                  <span className="text-sm font-medium text-slate-500 flex items-center gap-1.5 mt-1">
-                    <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {selectedTicket.cliente.Direccion}
-                  </span>
-                )}
-              </CardBody>
-            </Card>
-
-            {/* Totales */}
-            <Card className="shadow-sm border border-slate-100 bg-slate-50/60 rounded-xl">
+            <Card className="shadow-sm border border-slate-100 bg-white rounded-xl transition-shadow duration-200 hover:shadow-md">
               <CardBody className="py-4 px-5 gap-3">
-                <span
-                  className="text-xs uppercase font-bold tracking-wider"
-                  style={{ color: "#67afc3" }}
-                >
-                  Resumen Económico
-                </span>
-                <div className="flex justify-between text-base font-medium text-slate-600">
-                  <span>Subtotal</span>
-                  <span className="text-slate-800">
-                    {formatCurrency(selectedTicket.SubTotal)}
-                  </span>
-                </div>
-                {Number(selectedTicket.Descuento) > 0 && (
-                  <div className="flex justify-between text-base font-medium text-slate-500">
-                    <span>Descuento</span>
-                    <span className="text-danger font-bold">
-                      -{formatCurrency(selectedTicket.Descuento)}
-                    </span>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: "#67afc315" }}
+                  >
+                    <User size={14} style={{ color: "#67afc3" }} />
                   </div>
-                )}
-                <div className="flex justify-between items-center pt-3 border-t border-slate-200 mt-1">
-                  <span className="text-lg font-bold text-slate-700">
-                    Total Facturado
-                  </span>
                   <span
-                    className="text-2xl font-black tracking-tight"
+                    className="text-[11px] uppercase font-bold tracking-widest"
                     style={{ color: "#67afc3" }}
                   >
-                    {formatCurrency(selectedTicket.Total)}
+                    Cliente
                   </span>
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-base font-bold text-slate-800">
+                    {selectedTicket.cliente?.Nombre
+                      ? `${selectedTicket.cliente.Nombre} ${selectedTicket.cliente.Apellido || ""}`.trim()
+                      : "Consumidor Final"}
+                  </p>
+                  {selectedTicket.cliente?.Dni && (
+                    <div className="flex items-center gap-1.5">
+                      <Building2
+                        size={13}
+                        className="text-slate-400 flex-shrink-0"
+                      />
+                      <span className="text-sm text-slate-500">
+                        CUIT / DNI:{" "}
+                        <span className="font-semibold text-slate-700">
+                          {selectedTicket.cliente.Dni}
+                        </span>
+                      </span>
+                    </div>
+                  )}
+                  {selectedTicket.cliente?.Direccion && (
+                    <div className="flex items-center gap-1.5">
+                      <MapPin
+                        size={13}
+                        className="text-slate-400 flex-shrink-0"
+                      />
+                      <span className="text-sm text-slate-500">
+                        {selectedTicket.cliente.Direccion}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </CardBody>
             </Card>
 
-            {/* Análisis de Rentabilidad (Solo Admins) */}
-            {showRentabilidad && (
-              <Card className="shadow-sm border border-emerald-100 bg-emerald-50/30 rounded-xl">
-                <CardBody className="py-4 px-5 gap-3">
-                  <span
-                    className="text-xs uppercase font-bold tracking-wider text-emerald-600"
+            {/* Resumen Económico */}
+            <Card className="shadow-sm border border-slate-100 bg-white rounded-xl transition-shadow duration-200 hover:shadow-md">
+              <CardBody className="py-4 px-5 gap-3">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: "#67afc315" }}
                   >
-                    Análisis de Rentabilidad
+                    <Banknote size={14} style={{ color: "#67afc3" }} />
+                  </div>
+                  <span
+                    className="text-[11px] uppercase font-bold tracking-widest"
+                    style={{ color: "#67afc3" }}
+                  >
+                    Resumen Económico
                   </span>
-                  <div className="flex justify-between text-base font-medium text-slate-600">
-                    <span>Costo Total</span>
-                    <span className="text-slate-800">
-                      {formatCurrency(totalCosto)}
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500">Subtotal</span>
+                    <span className="font-semibold text-slate-700">
+                      {formatCurrency(selectedTicket.SubTotal)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-base font-medium text-slate-600">
-                    <span>Ganancia Neta</span>
-                    <span className="text-emerald-600 font-bold">
-                      {formatCurrency(gananciaNeta)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center pt-3 border-t border-emerald-200/50 mt-1">
-                    <span className="text-lg font-bold text-slate-700">
-                      Margen
+                  {Number(selectedTicket.Descuento) > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Descuento</span>
+                      <span className="font-bold text-red-500">
+                        -{formatCurrency(selectedTicket.Descuento)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+                    <span className="text-sm font-bold text-slate-700">
+                      Total Facturado
                     </span>
                     <span
-                      className="text-2xl font-black tracking-tight text-emerald-600"
+                      className="text-xl font-black tracking-tight"
+                      style={{ color: "#67afc3" }}
                     >
-                      {margenGanancia.toFixed(1)}%
+                      {formatCurrency(selectedTicket.Total)}
                     </span>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* Rentabilidad (Admin) */}
+            {showRentabilidad && (
+              <Card className="shadow-sm border border-emerald-100 bg-gradient-to-br from-emerald-50/80 to-white rounded-xl transition-shadow duration-200 hover:shadow-md">
+                <CardBody className="py-4 px-5 gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-emerald-100">
+                      <Percent size={14} className="text-emerald-600" />
+                    </div>
+                    <span className="text-[11px] uppercase font-bold tracking-widest text-emerald-600">
+                      Rentabilidad
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Costo Total</span>
+                      <span className="font-semibold text-slate-700">
+                        {formatCurrency(totalCosto)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Ganancia Neta</span>
+                      <span
+                        className={`font-bold ${gananciaNeta >= 0 ? "text-emerald-600" : "text-red-500"}`}
+                      >
+                        {formatCurrency(gananciaNeta)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center pt-3 border-t border-emerald-200/50">
+                      <span className="text-sm font-bold text-slate-700">
+                        Margen
+                      </span>
+                      <span
+                        className={`text-xl font-black tracking-tight ${margenGanancia >= 0 ? "text-emerald-600" : "text-red-500"}`}
+                      >
+                        {margenGanancia.toFixed(1)}%
+                      </span>
+                    </div>
                   </div>
                 </CardBody>
               </Card>
             )}
           </div>
 
-          {/* ARCA / Factura Electrónica */}
+          {/* ARCA / FE Status */}
           {tieneFe && (
             <div
-              className={`rounded-2xl border px-6 py-5 flex flex-col gap-4 shadow-sm ${
+              className={`rounded-2xl border px-4 sm:px-6 py-4 sm:py-5 flex flex-col gap-4 shadow-sm transition-all duration-200 ${
                 feAutorizado
-                  ? "bg-emerald-50/50 border-emerald-200"
+                  ? "bg-emerald-50/60 border-emerald-200"
                   : feRechazado
-                    ? "bg-red-50/50 border-red-200"
+                    ? "bg-red-50/60 border-red-200"
                     : "bg-slate-50 border-slate-200"
               }`}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <svg className={`w-5 h-5 ${feAutorizado ? 'text-emerald-500' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                      feAutorizado
+                        ? "bg-emerald-100"
+                        : feRechazado
+                          ? "bg-red-100"
+                          : "bg-slate-200/60"
+                    }`}
+                  >
+                    <Receipt
+                      size={16}
+                      className={
+                        feAutorizado
+                          ? "text-emerald-600"
+                          : feRechazado
+                            ? "text-red-500"
+                            : "text-slate-500"
+                      }
+                    />
+                  </div>
                   <span
                     className={`text-xs uppercase font-bold tracking-wider ${
                       feAutorizado
@@ -540,9 +553,9 @@ export default function ComprobanteDetalleScreen({ id }: ComprobanteDetalleScree
                   </span>
                 </div>
                 <Chip
-                  size="md"
+                  size="sm"
                   variant="flat"
-                  className="font-bold shadow-sm"
+                  className="font-bold shadow-sm cursor-default shrink-0"
                   color={
                     feAutorizado
                       ? "success"
@@ -554,43 +567,48 @@ export default function ComprobanteDetalleScreen({ id }: ComprobanteDetalleScree
                   {fe.Estado}
                 </Chip>
               </div>
-              
+
               {feAutorizado && fe.CAE && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 bg-white/60 p-4 rounded-xl border border-emerald-100/50">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] uppercase font-bold text-emerald-800/60">
-                      Código CAE
-                    </span>
-                    <span className="font-mono font-bold text-emerald-900 text-sm">
-                      {fe.CAE}
-                    </span>
-                  </div>
-                  {fe.CAEFchVto && (
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[11px] uppercase font-bold text-emerald-800/60">
-                        Vencimiento
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 bg-white/70 p-3 sm:p-4 rounded-xl border border-emerald-100/60">
+                  {[
+                    { label: "Código CAE", value: fe.CAE, mono: true },
+                    {
+                      label: "Vencimiento",
+                      value: fe.CAEFchVto
+                        ? new Date(fe.CAEFchVto).toLocaleDateString("es-AR")
+                        : "-",
+                    },
+                    {
+                      label: "Punto de Venta",
+                      value: String(fe.PuntoVenta).padStart(4, "0"),
+                    },
+                    {
+                      label: "Nro. Comprobante",
+                      value: String(fe.CbteNumero).padStart(8, "0"),
+                    },
+                  ].map((item) => (
+                    <div key={item.label} className="flex flex-col gap-1">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-700/60">
+                        {item.label}
                       </span>
-                      <span className="font-semibold text-emerald-900 text-sm">
-                        {new Date(fe.CAEFchVto).toLocaleDateString("es-AR")}
+                      <span
+                        className={`font-bold text-emerald-900 text-xs sm:text-sm break-all ${item.mono ? "font-mono tracking-wide" : ""}`}
+                      >
+                        {item.value}
                       </span>
                     </div>
-                  )}
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] uppercase font-bold text-emerald-800/60">
-                      Punto de Venta
-                    </span>
-                    <span className="font-semibold text-emerald-900 text-sm">
-                      {String(fe.PuntoVenta).padStart(4, "0")}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] uppercase font-bold text-emerald-800/60">
-                      Nro. Comprobante
-                    </span>
-                    <span className="font-semibold text-emerald-900 text-sm">
-                      {String(fe.CbteNumero).padStart(8, "0")}
-                    </span>
-                  </div>
+                  ))}
+                </div>
+              )}
+
+              {feRechazado && fe.Observaciones && (
+                <div className="p-3 rounded-lg bg-red-100/60 border border-red-200">
+                  <p className="text-xs font-semibold text-red-700 mb-0.5">
+                    Motivo del rechazo:
+                  </p>
+                  <p className="text-xs text-red-600 leading-relaxed">
+                    {fe.Observaciones}
+                  </p>
                 </div>
               )}
             </div>
@@ -598,231 +616,262 @@ export default function ComprobanteDetalleScreen({ id }: ComprobanteDetalleScree
 
           {/* Items */}
           <div>
-            <h4
-              className="text-sm font-bold uppercase tracking-wider mb-3 flex items-center gap-2"
-              style={{ color: "#67afc3" }}
-            >
-              <FileText size={16} />
-              Detalle de Ítems
-            </h4>
-            <div className="border-2 border-slate-100/80 rounded-2xl overflow-hidden shadow-sm">
-              <Table
-                aria-label="Items del comprobante"
-                removeWrapper
-                classNames={{
-                  th: "text-xs font-bold uppercase tracking-wider bg-slate-50/80 text-slate-500 py-3",
-                  td: "text-sm py-3 px-4",
-                  tr: "border-b border-slate-100 last:border-0 hover:bg-slate-50/40 transition-colors",
-                }}
+            <div className="flex items-center gap-2 mb-3">
+              <div
+                className="w-6 h-6 rounded-md flex items-center justify-center"
+                style={{ backgroundColor: "#67afc315" }}
               >
-                <TableHeader>
-                  <TableColumn>CANT</TableColumn>
-                  <TableColumn>DESCRIPCIÓN</TableColumn>
-                  <TableColumn align="end" className={showRentabilidad ? "" : "hidden"}>COSTO UNIT.</TableColumn>
-                  <TableColumn align="end">PRECIO UNIT.</TableColumn>
-                  <TableColumn align="end">SUBTOTAL</TableColumn>
-                  <TableColumn align="end" className={showRentabilidad ? "" : "hidden"}>GANANCIA</TableColumn>
-                </TableHeader>
-                <TableBody>
-                  {selectedTicket.DetalleComprobante?.map((item: any) => {
-                    const globalSubtotal = Number(selectedTicket?.SubTotal || 0);
-                    const globalDescuento = Number(selectedTicket?.Descuento || 0);
-                    const ratioFacturado = globalSubtotal > 0 ? (globalSubtotal - globalDescuento) / globalSubtotal : 1;
+                <FileText size={13} style={{ color: "#67afc3" }} />
+              </div>
+              <h4
+                className="text-xs font-bold uppercase tracking-widest"
+                style={{ color: "#67afc3" }}
+              >
+                Detalle de Ítems
+              </h4>
+            </div>
 
-                    const cantidad = Number(item.Cantidad || 1);
-                    const costoTotalItem = Number(item.Costo || 0);
-                    const costoUnitario = cantidad > 0 ? costoTotalItem / cantidad : 0;
-                    
-                    const precioUnitario = Number(item.Precio || 0);
-                    const subtotalItem = Number(item.SubTotal || 0);
-                    const subtotalNetoItem = subtotalItem * ratioFacturado;
-                    const gananciaItem = subtotalNetoItem - costoTotalItem;
+            {/* Mobile: card list */}
+            <div className="sm:hidden flex flex-col gap-2">
+              {selectedTicket.DetalleComprobante?.map(
+                (item: any, idx: number) => {
+                  const cantidad = Number(item.Cantidad || 1);
+                  const costoTotalItem = Number(item.Costo || 0);
+                  const costoUnitario =
+                    cantidad > 0 ? costoTotalItem / cantidad : 0;
+                  const precioUnitario = Number(item.Precio || 0);
+                  const subtotalItem = Number(item.SubTotal || 0);
+                  const gananciaItem = subtotalItem - costoTotalItem;
 
-                    return (
-                      <TableRow key={item.Id}>
-                        <TableCell>
-                          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100/80 text-slate-700 font-bold text-sm">
+                  return (
+                    <div
+                      key={item.Id}
+                      className={`rounded-xl border border-slate-200 shadow-sm p-3.5 flex flex-col gap-2.5 ${
+                        idx % 2 === 0 ? "bg-white" : "bg-slate-50/60"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-slate-100/80 text-slate-700 font-bold text-xs shrink-0">
                             {cantidad}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-0.5">
-                            <span className="font-bold text-slate-800 text-base">
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-semibold text-slate-800 text-sm leading-tight">
                               {item.Descripcion}
                             </span>
                             {item.Codigo && (
-                              <span className="text-xs font-medium text-slate-400">
+                              <span className="text-[10px] font-medium text-slate-400">
                                 SKU: {item.Codigo}
                               </span>
                             )}
                           </div>
-                        </TableCell>
-                        <TableCell className={`text-slate-500 font-medium ${showRentabilidad ? "" : "hidden"}`}>
-                          {formatCurrency(costoUnitario)}
-                        </TableCell>
-                        <TableCell className="text-slate-600 font-medium">
-                          {formatCurrency(precioUnitario)}
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-bold text-slate-900 text-base">
-                            {formatCurrency(subtotalItem)}
+                        </div>
+                        <span className="text-sm font-black text-slate-900 shrink-0">
+                          {formatCurrency(subtotalItem)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                        <span className="text-xs text-slate-400">
+                          Precio u.:{" "}
+                          <span className="font-semibold text-slate-600">
+                            {formatCurrency(precioUnitario)}
                           </span>
-                        </TableCell>
-                        <TableCell className={showRentabilidad ? "" : "hidden"}>
-                          <span className="font-bold text-emerald-600 text-base">
-                            {formatCurrency(gananciaItem)}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                        </span>
+                        {showRentabilidad && (
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-slate-400">
+                              Costo:{" "}
+                              <span className="font-semibold text-slate-600">
+                                {formatCurrency(costoUnitario)}
+                              </span>
+                            </span>
+                            <span
+                              className={`text-xs font-bold ${
+                                gananciaItem >= 0
+                                  ? "text-emerald-600"
+                                  : "text-red-500"
+                              }`}
+                            >
+                              {formatCurrency(gananciaItem)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                },
+              )}
+            </div>
+
+            {/* Desktop: table */}
+            <div className="hidden sm:block border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table
+                  aria-label="Items del comprobante"
+                  removeWrapper
+                  classNames={{
+                    th: "text-[11px] font-bold uppercase tracking-wider bg-slate-50 text-slate-500 py-3.5 px-4 border-b border-slate-200 whitespace-nowrap",
+                    td: "text-sm py-3.5 px-4 whitespace-nowrap",
+                    tr: "border-b border-slate-100 last:border-0 transition-colors duration-150",
+                  }}
+                >
+                  <TableHeader>
+                    <TableColumn className="w-16 text-center">CANT</TableColumn>
+                    <TableColumn>DESCRIPCIÓN</TableColumn>
+                    <TableColumn
+                      align="end"
+                      className={showRentabilidad ? "" : "hidden"}
+                    >
+                      COSTO U.
+                    </TableColumn>
+                    <TableColumn align="end">PRECIO U.</TableColumn>
+                    <TableColumn align="end">SUBTOTAL</TableColumn>
+                    <TableColumn
+                      align="end"
+                      className={showRentabilidad ? "" : "hidden"}
+                    >
+                      GANANCIA
+                    </TableColumn>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedTicket.DetalleComprobante?.map(
+                      (item: any, idx: number) => {
+                        const cantidad = Number(item.Cantidad || 1);
+                        const costoTotalItem = Number(item.Costo || 0);
+                        const costoUnitario =
+                          cantidad > 0 ? costoTotalItem / cantidad : 0;
+                        const precioUnitario = Number(item.Precio || 0);
+                        const subtotalItem = Number(item.SubTotal || 0);
+                        const gananciaItem = subtotalItem - costoTotalItem;
+
+                        return (
+                          <TableRow
+                            key={item.Id}
+                            className={
+                              idx % 2 === 0
+                                ? "bg-white"
+                                : "bg-slate-50/40 hover:bg-slate-100/60"
+                            }
+                          >
+                            <TableCell>
+                              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100/80 text-slate-700 font-bold text-xs mx-auto">
+                                {cantidad}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col gap-0.5 min-w-0">
+                                <span className="font-semibold text-slate-800 text-sm">
+                                  {item.Descripcion}
+                                </span>
+                                {item.Codigo && (
+                                  <span className="text-[11px] font-medium text-slate-400">
+                                    SKU: {item.Codigo}
+                                  </span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell
+                              className={`text-right ${showRentabilidad ? "" : "hidden"}`}
+                            >
+                              <span className="text-sm text-slate-500 font-medium">
+                                {formatCurrency(costoUnitario)}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <span className="text-sm text-slate-600 font-medium">
+                                {formatCurrency(precioUnitario)}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <span className="text-sm font-bold text-slate-900">
+                                {formatCurrency(subtotalItem)}
+                              </span>
+                            </TableCell>
+                            <TableCell
+                              className={`text-right ${showRentabilidad ? "" : "hidden"}`}
+                            >
+                              <span
+                                className={`text-sm font-bold ${gananciaItem >= 0 ? "text-emerald-600" : "text-red-500"}`}
+                              >
+                                {formatCurrency(gananciaItem)}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      },
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </div>
 
           {/* Pagos */}
           <div>
-            <h4
-              className="text-sm font-bold uppercase tracking-wider mb-3 flex items-center gap-2"
-              style={{ color: "#67afc3" }}
-            >
-              <TrendingUp size={16} />
-              Formas de pago recibidas
-            </h4>
+            <div className="flex items-center gap-2 mb-3">
+              <div
+                className="w-6 h-6 rounded-md flex items-center justify-center"
+                style={{ backgroundColor: "#67afc315" }}
+              >
+                <TrendingUp size={13} style={{ color: "#67afc3" }} />
+              </div>
+              <h4
+                className="text-xs font-bold uppercase tracking-widest"
+                style={{ color: "#67afc3" }}
+              >
+                Formas de pago recibidas
+              </h4>
+            </div>
             <div className="flex flex-wrap gap-3">
-              {selectedTicket.FormaPago?.map((fp: any) => (
-                <div
-                  key={fp.Id}
-                  className="rounded-xl px-5 py-3 flex items-center gap-3 border shadow-sm"
-                  style={{
-                    backgroundColor: "#67afc308",
-                    borderColor: "#67afc330",
-                  }}
-                >
-                  <span
-                    className="text-xs font-black uppercase tracking-wide"
-                    style={{ color: "#3a8fa3" }}
+              {selectedTicket.FormaPago?.map((fp: any) => {
+                const label =
+                  Object.keys(TIPO_PAGO).find(
+                    (key) =>
+                      TIPO_PAGO[key as keyof typeof TIPO_PAGO] === fp.TipoPago,
+                  ) || "OTRO";
+                return (
+                  <div
+                    key={fp.Id}
+                    className="w-full sm:w-auto rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between sm:justify-start gap-2 sm:gap-3 border shadow-sm transition-all duration-200 hover:shadow-md cursor-default"
+                    style={{
+                      backgroundColor: "#67afc308",
+                      borderColor: "#67afc325",
+                    }}
                   >
-                    {Object.keys(TIPO_PAGO).find(
-                      (key) =>
-                        TIPO_PAGO[key as keyof typeof TIPO_PAGO] === fp.TipoPago,
-                    ) || "OTRO"}
-                  </span>
-                  <div className="w-px h-6 bg-[#67afc3]/20" />
-                  <span className="font-black text-slate-800 text-lg tracking-tight">
-                    {formatCurrency(fp.Monto)}
-                  </span>
-                </div>
-              ))}
+                    <span
+                      className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider px-1.5 sm:px-2 py-1 rounded-md"
+                      style={{
+                        backgroundColor: "#67afc315",
+                        color: "#3a8fa3",
+                      }}
+                    >
+                      {label}
+                    </span>
+                    <div
+                      className="w-px h-4 sm:h-5 hidden sm:block"
+                      style={{ backgroundColor: "#67afc320" }}
+                    />
+                    <span className="font-black text-slate-800 text-sm sm:text-base tracking-tight">
+                      {formatCurrency(fp.Monto)}
+                    </span>
+                  </div>
+                );
+              })}
+              {(!selectedTicket.FormaPago ||
+                selectedTicket.FormaPago.length === 0) && (
+                <p className="text-sm text-slate-400 italic">
+                  Sin formas de pago registradas
+                </p>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Hidden Ticket Component for Printing */}
+      {/* Hidden Ticket Component */}
       <div style={{ display: "none" }}>
         <TicketImpresion ref={ticketRef} datosVenta={datosVentaImpresion} />
       </div>
-
-      {/* Modal Corregir Fecha */}
-      <Modal isOpen={isFechaOpen} onOpenChange={onFechaOpenChange} placement="center" backdrop="opaque">
-        <ModalContent>
-          <ModalHeader className="flex items-center gap-2">
-            <Calendar size={18} className="text-amber-500" />
-            <span>Corregir Fecha del Comprobante</span>
-          </ModalHeader>
-          <ModalBody>
-            <p className="text-sm text-slate-500">
-              La fecha actual no es válida para ARCA. Seleccione una fecha dentro del rango permitido (±5 días desde hoy).
-            </p>
-            <Input
-              type="date"
-              label="Nueva fecha"
-              value={nuevaFecha}
-              onValueChange={setNuevaFecha}
-              variant="bordered"
-              classNames={{
-                label: "font-semibold text-slate-600",
-                inputWrapper: "border-2 hover:border-amber-400 focus-within:!border-amber-500",
-              }}
-            />
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              variant="flat"
-              onPress={onFechaOpenChange}
-              className="font-semibold text-slate-600"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onPress={handleCorregirFecha}
-              isLoading={isGuardandoFecha}
-              className="font-semibold bg-amber-500 hover:bg-amber-600 text-white"
-            >
-              Guardar y reintentar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Modal Cambiar Tipo */}
-      <Modal isOpen={isTipoOpen} onOpenChange={onTipoOpenChange} placement="center" backdrop="opaque">
-        <ModalContent>
-          <ModalHeader className="flex items-center gap-2">
-            <ArrowRightLeft size={18} className="text-blue-500" />
-            <span>Cambiar Tipo de Comprobante</span>
-          </ModalHeader>
-          <ModalBody>
-            <p className="text-sm text-slate-500">
-              El tipo de comprobante actual no es válido para ARCA según su configuración fiscal. Seleccione el tipo correcto.
-            </p>
-            <Select
-              label="Nuevo tipo"
-              placeholder="Seleccione un tipo"
-              selectedKeys={nuevoTipo ? [String(nuevoTipo)] : []}
-              onSelectionChange={(keys) => {
-                const val = Array.from(keys)[0];
-                if (val) setNuevoTipo(Number(val));
-              }}
-              variant="bordered"
-              classNames={{
-                label: "font-semibold text-slate-600",
-                trigger: "border-2 hover:border-blue-400 focus-within:!border-blue-500",
-              }}
-            >
-              {tiposFiscalesPermitidos.map((tipo) => (
-                <SelectItem key={String(tipo)} textValue={getTipoComprobanteLabel(tipo)}>
-                  {getTipoComprobanteLabel(tipo)}
-                </SelectItem>
-              ))}
-            </Select>
-            {nuevoTipo === selectedTicket?.TipoComprobante && (
-              <p className="text-xs text-amber-600 font-medium mt-1">
-                El tipo seleccionado es el mismo que el actual.
-              </p>
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              variant="flat"
-              onPress={onTipoOpenChange}
-              className="font-semibold text-slate-600"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onPress={handleCambiarTipo}
-              isLoading={isGuardandoTipo}
-              isDisabled={nuevoTipo === selectedTicket?.TipoComprobante}
-              className="font-semibold bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              Cambiar y reintentar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
     </div>
   );
 }
