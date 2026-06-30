@@ -262,7 +262,10 @@ export async function autorizarComprobante(
 
   // 6. Limpiar FE stale y preparar nuevo número
   // Si existe una FE previa no autorizada para este comprobante, eliminarla
-  if (facturaElectronica && facturaElectronica.Estado !== ESTADO_FACTURA_ELECTRONICA.AUTORIZADO) {
+  if (
+    facturaElectronica &&
+    facturaElectronica.Estado !== ESTADO_FACTURA_ELECTRONICA.AUTORIZADO
+  ) {
     await prisma.facturaElectronicaIva.deleteMany({
       where: { FacturaElectronicaId: facturaElectronica.Id },
     });
@@ -401,14 +404,15 @@ function prepararDatosAfip(
   let docNro = 0;
 
   const clienteData = comprobante.Comprobante_Factura?.Persona_Cliente;
-  let condicionIva = CONDICION_IVA_AFIP.CONSUMIDOR_FINAL;
+  let condicionIva: number = CONDICION_IVA_AFIP.CONSUMIDOR_FINAL;
 
   if (clienteData?.CondicionIva?.Descripcion) {
     const desc = clienteData.CondicionIva.Descripcion.toLowerCase();
     condicionIva = CONDICION_IVA_LOCAL_TO_AFIP[desc] ?? condicionIva;
   }
 
-  const esConsumidorFinal = condicionIva === CONDICION_IVA_AFIP.CONSUMIDOR_FINAL;
+  const esConsumidorFinal =
+    condicionIva === CONDICION_IVA_AFIP.CONSUMIDOR_FINAL;
 
   // Para Consumidor Final: DocTipo=99, DocNro=0 (sin identificar)
   // ARCA rechaza si se envía DNI/CUIT con condición Consumidor Final

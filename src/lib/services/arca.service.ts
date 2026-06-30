@@ -3,8 +3,8 @@
  * Wrapper de @arcasdk/core adaptado a PuntoX.
  */
 
-import { decryptText } from './crypto.service';
-import prisma from '@/DB/prisma';
+import { decryptText } from "./crypto.service";
+import prisma from "@/DB/prisma";
 import {
   TIPO_COMPROBANTE_LOCAL_A_AFIP,
   CONCEPTO_AFIP,
@@ -13,13 +13,13 @@ import {
   ESTADO_FACTURA_ELECTRONICA,
   RESULTADO_AFIP,
   requiereAutorizacionAfip,
-} from '@/lib/constants/afip';
+} from "@/lib/constants/afip";
 
 // Types for ARCA integration
 export interface ArcaConfig {
   cuit: number;
-  cert: string;       // Certificado PEM desencriptado
-  key: string;        // Clave privada PEM desencriptada
+  cert: string; // Certificado PEM desencriptado
+  key: string; // Clave privada PEM desencriptada
   production: boolean;
 }
 
@@ -32,16 +32,16 @@ export interface VoucherData {
   DocNro: number;
   CbteDesde: number;
   CbteHasta: number;
-  CbteFch: string;    // YYYYMMDD
+  CbteFch: string; // YYYYMMDD
   ImpTotal: number;
   ImpTotConc: number;
   ImpNeto: number;
   ImpOpEx: number;
   ImpIVA: number;
   ImpTrib: number;
-   MonId: string;
-   MonCotiz: number;
-   CondicionIVAReceptorId?: number;
+  MonId: string;
+  MonCotiz: number;
+  CondicionIVAReceptorId: number;
   // Campos de servicio (Concepto 2 o 3)
   FchServDesde?: string;
   FchServHasta?: string;
@@ -85,7 +85,10 @@ export interface AutorizarComprobanteResult {
  * Obtiene la configuración AFIP del tenant, desencriptando los certificados.
  * Retorna null si no hay configuración AFIP habilitada.
  */
-export async function getArcaConfig(tenantId: bigint, checkHabilitado = true): Promise<ArcaConfig | null> {
+export async function getArcaConfig(
+  tenantId: bigint,
+  checkHabilitado = true,
+): Promise<ArcaConfig | null> {
   const config = await prisma.configuracion.findFirst({
     where: {
       TenantId: tenantId,
@@ -109,7 +112,7 @@ export async function getArcaConfig(tenantId: bigint, checkHabilitado = true): P
   }
 
   // Limpiar CUIT (quitar guiones)
-  const cuitLimpio = config.Cuit.replace(/[-\s]/g, '');
+  const cuitLimpio = config.Cuit.replace(/[-\s]/g, "");
   if (!/^\d{11}$/.test(cuitLimpio)) {
     throw new Error(`CUIT inválido: ${config.Cuit}. Debe tener 11 dígitos.`);
   }
@@ -126,7 +129,7 @@ export async function getArcaConfig(tenantId: bigint, checkHabilitado = true): P
     };
   } catch (error) {
     throw new Error(
-      'Error al desencriptar certificados AFIP. Verifique que AFIP_ENCRYPTION_KEY sea correcta.'
+      "Error al desencriptar certificados AFIP. Verifique que AFIP_ENCRYPTION_KEY sea correcta.",
     );
   }
 }
@@ -163,8 +166,8 @@ export async function getUltimoComprobanteAutorizado(
 ): Promise<number> {
   try {
     // Dynamic import para evitar errores si el paquete no está instalado
-    const { Arca } = await import('@arcasdk/core');
-    
+    const { Arca } = await import("@arcasdk/core");
+
     const arca = new Arca({
       cuit: arcaConfig.cuit,
       cert: arcaConfig.cert,
@@ -172,12 +175,20 @@ export async function getUltimoComprobanteAutorizado(
       production: arcaConfig.production,
     });
 
-    const result = await arca.electronicBillingService.getLastVoucher(puntoVenta, cbteTipo);
+    const result = await arca.electronicBillingService.getLastVoucher(
+      puntoVenta,
+      cbteTipo,
+    );
     // El SDK retorna { cbteNro, cbteTipo, ptoVta }, no un número directo
     return (result as any)?.cbteNro ?? 0;
   } catch (error: any) {
-    console.error('[ARCA] Error al consultar último comprobante:', error.message);
-    throw new Error(`Error al consultar último comprobante ARCA: ${error.message}`);
+    console.error(
+      "[ARCA] Error al consultar último comprobante:",
+      error.message,
+    );
+    throw new Error(
+      `Error al consultar último comprobante ARCA: ${error.message}`,
+    );
   }
 }
 
@@ -191,8 +202,8 @@ export async function getVoucherInfo(
   cbteNumero: number,
 ): Promise<any | null> {
   try {
-    const { Arca } = await import('@arcasdk/core');
-    
+    const { Arca } = await import("@arcasdk/core");
+
     const arca = new Arca({
       cuit: arcaConfig.cuit,
       cert: arcaConfig.cert,
@@ -200,10 +211,17 @@ export async function getVoucherInfo(
       production: arcaConfig.production,
     });
 
-    const result = await arca.electronicBillingService.getVoucherInfo(cbteNumero, puntoVenta, cbteTipo);
+    const result = await arca.electronicBillingService.getVoucherInfo(
+      cbteNumero,
+      puntoVenta,
+      cbteTipo,
+    );
     return result;
   } catch (error: any) {
-    console.error('[ARCA] Error al consultar información de comprobante:', error.message);
+    console.error(
+      "[ARCA] Error al consultar información de comprobante:",
+      error.message,
+    );
     return null;
   }
 }
@@ -216,8 +234,8 @@ export async function autorizarVoucher(
   voucherData: VoucherData,
 ): Promise<VoucherResult> {
   try {
-    const { Arca } = await import('@arcasdk/core');
-    
+    const { Arca } = await import("@arcasdk/core");
+
     const arca = new Arca({
       cuit: arcaConfig.cuit,
       cert: arcaConfig.cert,
@@ -225,20 +243,24 @@ export async function autorizarVoucher(
       production: arcaConfig.production,
     });
 
-    console.log('[ARCA] Enviando voucher:', JSON.stringify(voucherData, null, 2));
-    const result = await arca.electronicBillingService.createVoucher(voucherData);
-    console.log('[ARCA] Respuesta raw:', JSON.stringify(result, null, 2));
-    
+    console.log(
+      "[ARCA] Enviando voucher:",
+      JSON.stringify(voucherData, null, 2),
+    );
+    const result =
+      await arca.electronicBillingService.createVoucher(voucherData);
+    console.log("[ARCA] Respuesta raw:", JSON.stringify(result, null, 2));
+
     // La respuesta del SDK tiene la estructura: result.response.FeDetResp.FECAEDetResponse[0]
     const rawResult = result as any;
     const detResp = rawResult?.response?.FeDetResp?.FECAEDetResponse?.[0];
-    
+
     // Observaciones AFIP (ej: código 10051 - error de alicuota)
     const obsArray = detResp?.Observaciones?.Obs;
     const observaciones = obsArray
       ? (Array.isArray(obsArray) ? obsArray : [obsArray])
           .map((o: any) => `[${o.Code}] ${o.Msg}`)
-          .join(' | ')
+          .join(" | ")
       : undefined;
 
     // Errores a nivel cabecera
@@ -246,33 +268,42 @@ export async function autorizarVoucher(
     const errores = errArray
       ? (Array.isArray(errArray) ? errArray : [errArray])
           .map((e: any) => `[${e.Code}] ${e.Msg}`)
-          .join(' | ')
+          .join(" | ")
       : undefined;
-    
+
     return {
-      CAE: result?.cae || '',
-      CAEFchVto: result?.caeFchVto || '',
+      CAE: result?.cae || "",
+      CAEFchVto: result?.caeFchVto || "",
       CbteDesde: voucherData.CbteDesde,
       CbteHasta: voucherData.CbteHasta,
-      Resultado: result?.cae ? RESULTADO_AFIP.APROBADO : RESULTADO_AFIP.RECHAZADO,
+      Resultado: result?.cae
+        ? RESULTADO_AFIP.APROBADO
+        : RESULTADO_AFIP.RECHAZADO,
       Observaciones: observaciones,
       Errores: errores,
     };
   } catch (error: any) {
     // Loguear el error completo para diagnóstico
-    console.error('[ARCA] Error al autorizar comprobante - mensaje:', error.message);
-    console.error('[ARCA] Error completo:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
-    
+    console.error(
+      "[ARCA] Error al autorizar comprobante - mensaje:",
+      error.message,
+    );
+    console.error(
+      "[ARCA] Error completo:",
+      JSON.stringify(error, Object.getOwnPropertyNames(error), 2),
+    );
+
     // Intentar extraer detalle del error según distintos formatos del SDK
-    const errorDetail = error.message
-      || error.Msg
-      || (error.Errors && JSON.stringify(error.Errors))
-      || (error.errors && JSON.stringify(error.errors))
-      || 'Error desconocido al autorizar en ARCA';
+    const errorDetail =
+      error.message ||
+      error.Msg ||
+      (error.Errors && JSON.stringify(error.Errors)) ||
+      (error.errors && JSON.stringify(error.errors)) ||
+      "Error desconocido al autorizar en ARCA";
 
     return {
-      CAE: '',
-      CAEFchVto: '',
+      CAE: "",
+      CAEFchVto: "",
       CbteDesde: voucherData.CbteDesde,
       CbteHasta: voucherData.CbteHasta,
       Resultado: RESULTADO_AFIP.RECHAZADO,
@@ -288,8 +319,8 @@ export async function verificarConexionArca(
   arcaConfig: ArcaConfig,
 ): Promise<{ ok: boolean; puntosDeVenta?: any[]; error?: string }> {
   try {
-    const { Arca } = await import('@arcasdk/core');
-    
+    const { Arca } = await import("@arcasdk/core");
+
     const arca = new Arca({
       cuit: arcaConfig.cuit,
       cert: arcaConfig.cert,
@@ -298,15 +329,17 @@ export async function verificarConexionArca(
     });
 
     const pdvs = await arca.electronicBillingService.getSalesPoints();
-    
+
     return {
       ok: true,
-      puntosDeVenta: Array.isArray(pdvs) ? pdvs : ((pdvs as any).ResultGet || [pdvs]),
+      puntosDeVenta: Array.isArray(pdvs)
+        ? pdvs
+        : (pdvs as any).ResultGet || [pdvs],
     };
   } catch (error: any) {
     return {
       ok: false,
-      error: error.message || 'Error desconocido al conectar con ARCA',
+      error: error.message || "Error desconocido al conectar con ARCA",
     };
   }
 }
