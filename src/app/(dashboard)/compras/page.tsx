@@ -5,14 +5,14 @@ import ComprasScreen from "@/components/compras/ComprasScreen";
 
 export default function ComprasPage() {
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="flex flex-col items-stretch min-h-full relative min-w-0 flex-1">
       <motion.div
-        initial={{ opacity: 0, y: 6 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.08, ease: "easeOut" }}
-        className="flex-1 min-h-0 relative flex flex-col"
+        transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
+        className="flex-1 relative flex flex-col min-w-0 min-h-0"
       >
-        <div className="relative z-10 flex-1 min-h-0 flex flex-col">
+        <div className="relative z-10 flex-1 flex flex-col min-w-0 min-h-0">
           <ComprasScreen />
         </div>
       </motion.div>

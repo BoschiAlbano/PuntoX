@@ -1,13 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Button,
-  Input,
-  Select,
-  SelectItem,
-  Textarea,
-} from "@heroui/react";
+import { Button, Input, Select, SelectItem, Textarea } from "@heroui/react";
 import { ShieldCheck } from "lucide-react";
 import {
   PERMISSION_MODULES,
@@ -164,9 +158,11 @@ function PermisosTable({
       </table>
       <div className="p-4 border-t border-slate-100 bg-slate-50/30">
         <p className="text-xs text-slate-500 font-medium">
-          <span className="text-[#0F2233] font-bold">Página</span> → acceso a la sección ·{" "}
-          <span className="text-blue-600 font-bold">Leer</span> → consultar datos ·{" "}
-          <span className="text-amber-600 font-bold">Escribir</span> → crear, editar y eliminar
+          <span className="text-[#0F2233] font-bold">Página</span> → acceso a la
+          sección · <span className="text-blue-600 font-bold">Leer</span> →
+          consultar datos ·{" "}
+          <span className="text-amber-600 font-bold">Escribir</span> → crear,
+          editar y eliminar
         </p>
       </div>
     </div>
@@ -245,7 +241,7 @@ export default function RolForm({
       {/* HEADER SECTION */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-[#0F2233] to-[#1a364d] shadow-sm flex-shrink-0">
+          <div className="p-3 rounded-xl bg-linear-to-br from-[#0F2233] to-[#1a364d] shadow-sm shrink-0">
             <ShieldCheck className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -314,7 +310,10 @@ export default function RolForm({
                 <SelectItem key={TIPO_PERFIL.EMPLEADO} textValue="Empleado">
                   Empleado
                 </SelectItem>
-                <SelectItem key={TIPO_PERFIL.ADMINISTRADOR} textValue="Administrador">
+                <SelectItem
+                  key={TIPO_PERFIL.ADMINISTRADOR}
+                  textValue="Administrador"
+                >
                   Administrador
                 </SelectItem>
               </Select>
@@ -342,7 +341,7 @@ export default function RolForm({
                 Seleccioná qué accesos tendrá este rol en cada módulo.
               </p>
             </div>
-            <div className="p-6 flex-1 bg-slate-50/30">
+            <div className="sm:p-6 p-1 flex-1 bg-slate-50/30">
               <PermisosTable
                 permisos={formData.permisos ?? []}
                 onChange={(permisos) => handleChange("permisos", permisos)}

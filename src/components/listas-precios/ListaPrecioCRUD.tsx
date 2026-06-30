@@ -11,7 +11,7 @@ import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoMod
 
 async function bulkPatchListas(
   ids: (number | string)[],
-  data: { EstaEliminado?: boolean; Activa?: boolean }
+  data: { EstaEliminado?: boolean; Activa?: boolean },
 ) {
   for (const id of ids) {
     const res = await fetch("/api/listas-precios", {
@@ -53,7 +53,9 @@ export default function ListaPrecioCRUD() {
               <p className="font-medium text-slate-800">{item.Nombre}</p>
             </div>
             <div>
-              <p className="text-slate-500 text-xs mb-0.5">Artículos Asignados</p>
+              <p className="text-slate-500 text-xs mb-0.5">
+                Artículos Asignados
+              </p>
               <p className="font-medium text-slate-800">
                 {(item.CantidadArticulos ?? 0).toLocaleString()}
               </p>
@@ -62,7 +64,9 @@ export default function ListaPrecioCRUD() {
               <p className="text-slate-500 text-xs mb-0.5">Por Defecto</p>
               <span
                 className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                  item.PorDefecto ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"
+                  item.PorDefecto
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-gray-100 text-gray-700"
                 }`}
               >
                 {item.PorDefecto ? "Sí" : "No"}
@@ -72,7 +76,9 @@ export default function ListaPrecioCRUD() {
               <p className="text-slate-500 text-xs mb-0.5">Estado</p>
               <span
                 className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                  !item.Activa ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+                  !item.Activa
+                    ? "bg-red-100 text-red-700"
+                    : "bg-green-100 text-green-700"
                 }`}
               >
                 {!item.Activa ? "Inactivo" : "Activo"}
@@ -104,7 +110,11 @@ export default function ListaPrecioCRUD() {
             key: "cambiar-estado",
             label: "Cambiar estado (Activa/Inactiva)",
             onAction: (ctx) => {
-              setBulkEstadoModal({ open: true, items: ctx.items, clearSelection: ctx.clearSelection });
+              setBulkEstadoModal({
+                open: true,
+                items: ctx.items,
+                clearSelection: ctx.clearSelection,
+              });
             },
           },
         ]}
@@ -127,9 +137,7 @@ export default function ListaPrecioCRUD() {
           switch (columnKey) {
             case "Nombre":
               return (
-                <span className="font-medium text-gray-700">
-                  {item.Nombre}
-                </span>
+                <span className="font-medium text-gray-700">{item.Nombre}</span>
               );
             case "PorDefecto":
               return (
@@ -153,7 +161,7 @@ export default function ListaPrecioCRUD() {
               );
             case "acciones":
               return (
-                <div className="flex gap-2 w-full justify-center items-center">
+                <div className="flex sm:gap-2 gap-0 w-full justify-center items-center">
                   <EditButton
                     onPress={() => actions.onEdit(item)}
                     label={`Editar ${item.Nombre}`}

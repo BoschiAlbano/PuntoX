@@ -105,7 +105,7 @@ export default function RubroCRUD() {
               return <StatusBadge estaEliminado={item.EstaEliminado} />;
             case "acciones":
               return (
-                <div className="flex gap-2 w-full justify-center items-center">
+                <div className="flex sm:gap-2 gap-0 w-full justify-center items-center">
                   <EditButton
                     onPress={() => actions.onEdit(item)}
                     label={`Editar ${item.Descripcion || "rubro"}`}

@@ -14,8 +14,15 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { initialize, isInitialized, isLoading, branches, roles, tenant, isSuperAdmin } =
-    useUserStore();
+  const {
+    initialize,
+    isInitialized,
+    isLoading,
+    branches,
+    roles,
+    tenant,
+    isSuperAdmin,
+  } = useUserStore();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [show, setShow] = useState(true);
   const pathname = usePathname();
@@ -81,10 +88,10 @@ export default function DashboardLayout({
             />
           </div>
 
-          <div className="relative flex min-h-0 flex-1 print:p-0 overflow-y-auto overflow-x-hidden">
-            <div className=" relative flex min-h-0 flex-1 flex-col">
-              <div className="relative z-10 flex min-h-0 flex-1 flex-col print:overflow-visible print:h-auto">
-                <main className=" bg-[#F5F8FD] overflow-hidden rounded-tl-4xl  relative z-10 flex w-full min-h-0 flex-1 print:m-0 print:bg-white print:p-0">
+          <div className="relative flex min-h-0 flex-1 print:p-0 overflow-y-auto min-w-0">
+            <div className=" relative flex min-h-0 flex-1 flex-col min-w-0">
+              <div className="relative z-10 flex min-h-0 flex-1 flex-col print:overflow-visible print:h-auto min-w-0">
+                <main className=" bg-[#F5F8FD] rounded-tl-4xl  relative z-10 flex w-full min-h-0 flex-1 print:m-0 print:bg-white print:p-0 min-w-0 overflow-hidden pb-2.5">
                   <div className="shell-content-frame">
                     <ProgressProvider
                       height="3px"

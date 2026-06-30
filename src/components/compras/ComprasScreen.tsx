@@ -26,7 +26,8 @@ export default function ComprasScreen() {
   } = useCompraStore();
 
   const { configuracion } = useConfiguracion({ enableConfiguracion: true });
-  const unificarRenglones = configuracion?.unificarRenglonesIngresarMismoProducto ?? true;
+  const unificarRenglones =
+    configuracion?.unificarRenglonesIngresarMismoProducto ?? true;
 
   // ProductSearch puede pasar hasta 4 args: (producto, cantidad?, precioOverride?, origenPrecio?)
   // En compras ignoramos precioOverride/origenPrecio y siempre usamos PrecioCosto como default
@@ -34,14 +35,14 @@ export default function ComprasScreen() {
     try {
       // Pre-cargar el costo del artículo desde su PrecioCosto
       const costoDefault = Number(producto.PrecioCosto ?? 0);
-      
+
       // Sumar todas las cantidades de productos con el mismo código
       // (necesario cuando no se unifica y hay múltiples renglones del mismo producto)
       const currentQty = items
         .filter((i) => i.CodigoBarra === producto.CodigoBarra)
         .reduce((sum, i) => sum + i.cantidad, 0);
       const totalQty = currentQty + cantidad;
-      
+
       // Validar que no se exceda el stock mínimo si está configurado
       if (producto.StockMinimo && producto.DescuentaStock) {
         if (totalQty > producto.StockMinimo) {
@@ -52,17 +53,18 @@ export default function ComprasScreen() {
           });
         }
       }
-      
+
       addItem(producto, cantidad, costoDefault, unificarRenglones);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Error desconocido";
+      const message =
+        error instanceof Error ? error.message : "Error desconocido";
       addToast({ title: "Error", description: message, color: "danger" });
     }
   };
 
   const handleUpdateQuantity = (id: number, cantidad: number) => {
     if (cantidad <= 0) return;
-    
+
     const item = items.find((i) => i.Id === id);
     if (item && item.StockMinimo && item.DescuentaStock) {
       // Calcular la cantidad total de todos los renglones de este producto
@@ -71,7 +73,7 @@ export default function ComprasScreen() {
         .filter((i) => i.CodigoBarra === item.CodigoBarra && i.Id !== id)
         .reduce((sum, i) => sum + i.cantidad, 0);
       const totalQty = cantidad + totalOtherItems;
-      
+
       if (totalQty > item.StockMinimo) {
         addToast({
           title: "Advertencia",
@@ -80,7 +82,7 @@ export default function ComprasScreen() {
         });
       }
     }
-    
+
     updateItemQuantity(id, cantidad);
   };
 
@@ -92,23 +94,24 @@ export default function ComprasScreen() {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       const tag = target?.tagName;
-      const isProductSearch = target?.id === 'product-search-compras-input';
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) && !isProductSearch) return;
+      const isProductSearch = target?.id === "product-search-compras-input";
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(tag) && !isProductSearch)
+        return;
       if (document.querySelector('[data-slot="backdrop"]')) return;
 
-      if (e.key === 'F2') {
+      if (e.key === "F2") {
         e.preventDefault();
-        document.getElementById('product-search-compras-input')?.focus();
+        document.getElementById("product-search-compras-input")?.focus();
       }
     };
-    window.addEventListener('keydown', handler, true);
-    return () => window.removeEventListener('keydown', handler, true);
+    window.addEventListener("keydown", handler, true);
+    return () => window.removeEventListener("keydown", handler, true);
   }, []);
 
   return (
     <div className="flex-1 min-h-0 w-full flex flex-col gap-0">
       {/* ── MOBILE TABS ── */}
-      <div className="lg:hidden flex items-center bg-white border-b border-slate-100 shrink-0 px-3 pt-1">
+      <div className="lg:hidden flex items-center bg-transparent border-b border-slate-100 shrink-0 px-0 pt-1">
         <button
           onClick={() => setMobileTab("productos")}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold border-b-2 transition-all duration-200 ${
@@ -120,7 +123,7 @@ export default function ComprasScreen() {
           <ShoppingCart size={15} />
           <span>Productos</span>
           {items.length > 0 && (
-            <span className="ml-1 min-w-[20px] h-5 rounded-full bg-[#67afc3] text-white text-[10px] font-bold flex items-center justify-center px-1.5">
+            <span className="ml-1 min-w-5 h-5 rounded-full bg-[#67afc3] text-white text-[10px] font-bold flex items-center justify-center px-1.5">
               {items.length}
             </span>
           )}
@@ -137,16 +140,22 @@ export default function ComprasScreen() {
           <span>Pago</span>
           {total > 0 && (
             <span className="ml-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
-              ${total.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              $
+              {total.toLocaleString("es-AR", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              })}
             </span>
           )}
         </button>
       </div>
 
       {/* ── MAIN LAYOUT ── */}
-      <div className="flex flex-col lg:flex-row flex-1 gap-2 overflow-auto lg:overflow-hidden p-2">
+      <div className="flex flex-col lg:flex-row flex-1 gap-2 overflow-auto lg:overflow-hidden p-2 px-0">
         {/* ── LEFT: PRODUCTS ── */}
-        <div className={`flex-1 flex flex-col gap-2 lg:overflow-hidden ${mobileTab === "productos" ? "flex" : "hidden lg:flex"}`}>
+        <div
+          className={`flex-1 flex flex-col gap-2 lg:overflow-hidden ${mobileTab === "productos" ? "flex" : "hidden lg:flex"}`}
+        >
           {/* Toolbar */}
           <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center shrink-0">
             <div className="flex-1">
@@ -164,7 +173,9 @@ export default function ComprasScreen() {
         </div>
 
         {/* ── RIGHT: PROVEEDOR + PAGO ── */}
-        <div className={`w-full lg:w-[320px] xl:w-[350px] flex flex-col gap-2 shrink-0 lg:h-full lg:overflow-hidden ${mobileTab === "pago" ? "flex" : "hidden lg:flex"}`}>
+        <div
+          className={`w-full lg:w-[320px] xl:w-[350px] flex flex-col gap-2 shrink-0 lg:h-full lg:overflow-hidden ${mobileTab === "pago" ? "flex" : "hidden lg:flex"}`}
+        >
           <CompraFooter
             subtotal={subtotal}
             total={total}

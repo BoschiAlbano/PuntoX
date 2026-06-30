@@ -330,7 +330,9 @@ export default function GenericTable<T extends { Id: number | string }>({
     });
   };
 
-  const buildMoreOptionsItems = (includeToolbarActions: boolean): MenuItem[] => {
+  const buildMoreOptionsItems = (
+    includeToolbarActions: boolean,
+  ): MenuItem[] => {
     const items: MenuItem[] = [];
 
     if (includeToolbarActions) {
@@ -495,9 +497,7 @@ export default function GenericTable<T extends { Id: number | string }>({
     items.push({
       key: "imprimir",
       label:
-        selectedCount > 0
-          ? `Imprimir (${selectedCount} sel.)`
-          : "Imprimir",
+        selectedCount > 0 ? `Imprimir (${selectedCount} sel.)` : "Imprimir",
       icon: <Printer size={16} strokeWidth={2} />,
       className:
         "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
@@ -596,7 +596,11 @@ export default function GenericTable<T extends { Id: number | string }>({
                 : "Más opciones"
             }
           >
-            <Menu size={ICON_SIZE} strokeWidth={ICON_STROKE} aria-hidden="true" />
+            <Menu
+              size={ICON_SIZE}
+              strokeWidth={ICON_STROKE}
+              aria-hidden="true"
+            />
             {!triggerClassName && (
               <span className="hidden md:inline text-sm font-medium">
                 Más opciones
@@ -655,13 +659,13 @@ export default function GenericTable<T extends { Id: number | string }>({
   );
 
   return (
-    <section className="w-full flex flex-col gap-4 flex-1">
-      <div className="rounded-lg flex flex-col gap-4 bg-[#F5F8FD] w-full flex-1">
+    <section className="w-full min-w-0 min-h-0 flex flex-col gap-4 flex-1">
+      <div className="rounded-lg flex flex-col gap-4 bg-[#F5F8FD] w-full min-w-0 min-h-0 flex-1">
         {/* Barra de herramientas: mobile = búsqueda + refresh + más opciones */}
         <section className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-2 sm:p-4 rounded-xl bg-[#F5F8FD]">
           {/* Búsqueda + Refresh + Más opciones (mobile) */}
-          <div className="w-full sm:flex-1 sm:min-w-0 order-1 flex flex-row flex-wrap items-center gap-2 sm:gap-3">
-            <div className="flex items-center gap-2 flex-1 min-w-0 sm:max-w-[480px]">
+          <div className="w-full sm:flex-1 sm:min-w-0 order-1 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+            <div className="flex items-center sm:gap-2 gap-1.25 flex-1 min-w-0 sm:max-w-120">
               <div className="relative flex items-center flex-1 min-w-0">
                 <Search
                   size={15}
@@ -825,8 +829,8 @@ export default function GenericTable<T extends { Id: number | string }>({
         {/* Barra de selección masiva eliminada — acciones movidas al menú "Más opciones" */}
 
         {/* Table/Cards + Pagination */}
-        <div className="w-full flex flex-col rounded-xl bg-[#F5F8FD] flex-1">
-          <div className="overflow-x-auto flex-1">
+        <div className="w-full min-w-0 flex flex-col rounded-xl bg-[#F5F8FD] flex-1">
+          <div className="w-full overflow-x-auto overflow-y-auto flex-1 min-h-0">
             {viewMode === "cards" && renderCards ? (
               isLoading ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
@@ -888,15 +892,16 @@ export default function GenericTable<T extends { Id: number | string }>({
                     // Disable row-click selection: only the checkbox should trigger it
                     onRowAction: () => {},
                   })}
-                className="bg-[#F5F8FD] border-none"
+                className="bg-[#F5F8FD] border-none min-h-full"
                 checkboxesProps={{
                   classNames: { wrapper: "table-cb-accent" },
                 }}
                 classNames={{
-                  wrapper: "bg-[#F5F8FD] shadow-none  border-none sm:p-4 p-1",
-                  th: "bg-[var(--crud-accent)] text-white text-[11px] sm:text-[13px] font-semibold border-b border-slate-200/60 px-2 sm:px-4",
-                  base: "bg-transparent shadow-none border-none",
-                  td: "border-b border-slate-200/80 text-slate-800 text-[12px] sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2.5",
+                  wrapper:
+                    "bg-[#F5F8FD] shadow-none border-none sm:p-4 p-0 min-h-full flex flex-col",
+                  th: "bg-[var(--crud-accent)] text-white text-[11px] sm:text-[13px] font-semibold border-b border-slate-200/60 px-2 sm:px-4 whitespace-nowrap",
+                  base: "bg-transparent shadow-none border-none flex-1",
+                  td: "border-b border-slate-200/80 text-slate-800 text-[12px] sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2.5 whitespace-nowrap",
                   tr: "group transition-all duration-200 data-[hover=true]:relative data-[hover=true]:z-10 data-[selected=true]:bg-[var(--table-row-selected-bg)]",
                 }}
               >
@@ -917,7 +922,7 @@ export default function GenericTable<T extends { Id: number | string }>({
                 <TableBody
                   items={
                     isLoading
-                      ? Array.from({ length: 5 }).map(
+                      ? Array.from({ length: 10 }).map(
                           (_, i) => ({ Id: `skeleton-${i}` }) as T,
                         )
                       : data
@@ -1037,10 +1042,10 @@ export default function GenericTable<T extends { Id: number | string }>({
                     <div className="h-9 w-9 rounded-medium bg-default-200" />
                   </Skeleton>
                 </div>
-                <span className="text-[var(--crud-accent)]/90 w-full sm:text-start text-center sm:pl-2 pl-0 text-sm sm:absolute relative bottom-0 flex flex-col sm:items-start items-center">
+                <span className="text-(--crud-accent)/90 w-full sm:text-start text-center sm:pl-2 pl-0 text-sm sm:absolute relative bottom-0 flex flex-col sm:items-start items-center">
                   {/* {`${paginationMeta.limit} de ${paginationMeta.total} registros totales`} */}
-                  <Skeleton className="rounded-medium w-[120px] h-4 opacity-50 ">
-                    <div className="h-4 w-[120px] rounded-medium bg-default-200" />
+                  <Skeleton className="rounded-medium w-30 h-4 opacity-50 ">
+                    <div className="h-4 w-30 rounded-medium bg-default-200" />
                   </Skeleton>
                 </span>
               </section>

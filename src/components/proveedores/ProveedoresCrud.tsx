@@ -237,7 +237,7 @@ export default function ProveedoresCrud() {
           case "acciones": {
             const tieneDeudaProveedor = (item.SaldoCtaCte ?? 0) > 0;
             return (
-              <div className="flex gap-2 w-full justify-center items-center">
+              <div className="flex sm:gap-2 gap-0 w-full justify-center items-center">
                 <CreditCardButton
                   hasDebt={tieneDeudaProveedor}
                   tooltipContent={
@@ -254,7 +254,10 @@ export default function ProveedoresCrud() {
                 <EditButton
                   label="Editar Proveedor"
                   onPress={() => {
-                    setOverride(`/proveedores/${item.Id}`, item.RazonSocial || "Proveedor");
+                    setOverride(
+                      `/proveedores/${item.Id}`,
+                      item.RazonSocial || "Proveedor",
+                    );
                     router.push(`/proveedores/${item.Id}`);
                   }}
                 />

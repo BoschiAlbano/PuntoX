@@ -44,7 +44,7 @@ const inputCls = {
 // ─── Skeleton KPI ──────────────────────────────────────────────────────────
 function KPISkeleton() {
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 animate-pulse">
+    <div className="bg-white rounded-xl sm:rounded-2xl border border-slate-100 shadow-sm p-4 sm:p-5 animate-pulse">
       <div className="h-3 bg-slate-200 rounded w-3/4 mb-3" />
       <div className="h-7 bg-slate-200 rounded w-1/2" />
     </div>
@@ -67,20 +67,20 @@ function Panel({
 }) {
   return (
     <div
-      className={`bg-white/90 backdrop-blur-xl border border-slate-100 rounded-[20px] shadow-sm ${className}`}
+      className={`bg-white/90 backdrop-blur-xl border border-slate-100 rounded-2xl sm:rounded-[20px] shadow-sm ${className}`}
     >
-      <div className="px-6 py-4 border-b border-slate-100/60 bg-slate-50/50 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 text-[#67afc3]">
-            <Icon size={16} strokeWidth={2.5} />
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100/60 bg-slate-50/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="p-1.5 sm:p-2 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 text-[#67afc3]">
+            <Icon size={16} strokeWidth={2.5} className="shrink-0" />
           </div>
           <h3 className="text-sm font-bold text-slate-700 tracking-tight">
             {title}
           </h3>
         </div>
-        {action}
+        {action && <div className="w-full sm:w-auto">{action}</div>}
       </div>
-      <div className="p-5">{children}</div>
+      <div className="p-4 sm:p-5">{children}</div>
     </div>
   );
 }
@@ -161,7 +161,7 @@ function AnaliticasContent() {
     kpisLoading || ingresosLoading || pagosLoading || productosLoading;
 
   return (
-    <div className="   flex flex-col items-stretch min-h-full relative space-y-4 sm:space-y-6 print:p-0 print:m-0 print:block">
+    <div className="flex flex-col items-stretch min-h-full relative space-y-4 sm:space-y-6 print:p-0 print:m-0 print:block">
       <div className="print:hidden">
         <PageHeader
           title="Gestión de"
@@ -192,30 +192,35 @@ function AnaliticasContent() {
             icon={SlidersHorizontal}
             className="print:hidden"
             action={
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full sm:w-auto justify-end">
                 <Button
                   size="sm"
                   variant="flat"
                   onPress={() => window.print()}
-                  className="text-slate-600 bg-slate-100 hover:bg-slate-200 font-bold text-xs rounded-xl gap-1.5"
-                  startContent={<Printer size={13} />}
+                  className="text-slate-600 bg-slate-100 hover:bg-slate-200 font-bold text-xs rounded-xl gap-1.5 flex-1 sm:flex-initial"
+                  startContent={<Printer size={13} className="shrink-0" />}
                 >
-                  Imprimir
+                  <span className="hidden sm:inline">Imprimir</span>
                 </Button>
                 <Button
                   size="sm"
                   variant="solid"
                   isLoading={isRefreshing}
                   onPress={handleAplicarFiltros}
-                  className="bg-[#67afc3] text-white font-bold text-xs rounded-xl gap-1.5 shadow-sm shadow-[#67afc3]/30"
-                  startContent={!isRefreshing && <CheckCircle2 size={13} />}
+                  className="bg-[#67afc3] text-white font-bold text-xs rounded-xl gap-1.5 shadow-sm shadow-[#67afc3]/30 flex-1 sm:flex-initial"
+                  startContent={
+                    !isRefreshing && (
+                      <CheckCircle2 size={13} className="shrink-0" />
+                    )
+                  }
                 >
-                  Aplicar
+                  <span className="hidden sm:inline">Aplicar</span>
+                  <span className="sm:hidden">OK</span>
                 </Button>
               </div>
             }
           >
-            <div className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <Select
                 size="sm"
                 label="Período"
@@ -227,7 +232,7 @@ function AnaliticasContent() {
                   setPeriodo(e.target.value as "semanal" | "mensual");
                   fechasModificadasPorUsuario.current = false;
                 }}
-                className="w-full sm:w-1/4"
+                className="w-full"
               >
                 <SelectItem key="semanal">Últimos 7 días</SelectItem>
                 <SelectItem key="mensual">Últimos 30 días</SelectItem>
@@ -250,7 +255,7 @@ function AnaliticasContent() {
                     className="text-slate-400 shrink-0 mr-1"
                   />
                 }
-                className="w-full sm:w-1/4"
+                className="w-full"
               />
               <Input
                 size="sm"
@@ -270,7 +275,7 @@ function AnaliticasContent() {
                     className="text-slate-400 shrink-0 mr-1"
                   />
                 }
-                className="w-full sm:w-1/4"
+                className="w-full"
               />
               <Select
                 size="sm"
@@ -282,7 +287,7 @@ function AnaliticasContent() {
                 onChange={(e) =>
                   setAgrupacion(e.target.value as "dia" | "semana" | "mes")
                 }
-                className="w-full sm:w-1/4"
+                className="w-full"
               >
                 <SelectItem key="dia">Por día</SelectItem>
                 <SelectItem key="semana">Por semana</SelectItem>
@@ -292,7 +297,7 @@ function AnaliticasContent() {
           </Panel>
 
           {/* ─── Top Level KPIs ─── */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
             {kpisLoading
               ? Array.from({ length: 10 }).map((_, i) => (
                   <KPISkeleton key={i} />
@@ -376,11 +381,11 @@ function AnaliticasContent() {
           </div>
 
           {/* ─── Charts Section ─── */}
-          <div className="pt-4 border-t border-slate-100 mt-4 space-y-5 print:hidden">
+          <div className="pt-4 border-t border-slate-100 mt-4 space-y-4 sm:space-y-5 print:hidden">
             <h3 className="text-sm font-bold text-slate-700 tracking-tight px-1">
               Visualización de Datos
             </h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
               {ingresosLoading ? (
                 <div className="bg-white rounded-[20px] border border-slate-100 shadow-sm h-[340px] animate-pulse" />
               ) : graficasIngresos ? (

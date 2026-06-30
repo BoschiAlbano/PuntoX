@@ -300,7 +300,7 @@ export default function ClienteCRUD() {
               item.Nombre === consumidorFinalSchema.Nombre &&
               item.Apellido === consumidorFinalSchema.Apellido;
             return (
-              <div className="flex gap-2 w-full justify-center items-center">
+              <div className="flex sm:gap-2 gap-0 w-full justify-center items-center">
                 {!esConsumidorFinal && (
                   <CreditCardButton
                     hasDebt={tieneDeudaCliente}
@@ -322,7 +322,10 @@ export default function ClienteCRUD() {
                   }
                   isDisabled={esConsumidorFinal}
                   onPress={() => {
-                    setOverride(`/clientes/${item.Id}`, `${item.Nombre} ${item.Apellido}`.trim() || "Cliente");
+                    setOverride(
+                      `/clientes/${item.Id}`,
+                      `${item.Nombre} ${item.Apellido}`.trim() || "Cliente",
+                    );
                     router.push(`/clientes/${item.Id}`);
                   }}
                 />

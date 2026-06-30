@@ -178,7 +178,9 @@ export default function ActualizarPreciosContainer() {
           <div className="flex flex-col items-end gap-0.5">
             <span
               className={`font-mono text-sm ${
-                costoCambio ? "font-medium text-sky-600" : "text-slate-400 font-normal"
+                costoCambio
+                  ? "font-medium text-sky-600"
+                  : "text-slate-400 font-normal"
               }`}
             >
               ${costoActual.toLocaleString()}
@@ -237,7 +239,7 @@ export default function ActualizarPreciosContainer() {
   return (
     <div className="flex-1 flex flex-col min-h-0">
       {/* ── MOBILE TABS ── solo visible en pantallas < xl */}
-      <div className="xl:hidden flex items-center bg-white border-b border-slate-100 shrink-0 px-3 pt-1 mb-2">
+      <div className="xl:hidden flex items-center bg-transparent border-b border-slate-100 shrink-0 px-3 pt-1 mb-2">
         <button
           onClick={() => setMobileTab("busqueda")}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold border-b-2 transition-all duration-200 ${
@@ -272,10 +274,10 @@ export default function ActualizarPreciosContainer() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start flex-1 min-h-0">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 flex-1 min-h-0">
         {/* Panel Izquierdo: Tabla Genérica */}
         <div
-          className={`xl:col-span-3 h-full flex flex-col min-h-0 ${
+          className={`xl:col-span-3 flex flex-col min-h-0 ${
             mobileTab === "busqueda" ? "flex" : "hidden xl:flex"
           }`}
         >
@@ -303,7 +305,7 @@ export default function ActualizarPreciosContainer() {
             </div>
           )}
 
-          <div className="flex-1 h-[calc(100vh-200px)] min-h-125">
+          <div className="flex-1 min-h-0 flex flex-col">
             <GenericTable
               data={previewModo ? articulosPreview : articulos}
               columns={columns}

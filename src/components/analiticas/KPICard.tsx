@@ -22,7 +22,7 @@ export default function KPICard({
 }: KPICardProps) {
   const formatValue = (val: number | string): string => {
     if (typeof val === "string") return val;
-    
+
     switch (format) {
       case "currency":
         return new Intl.NumberFormat("es-AR", {
@@ -43,7 +43,8 @@ export default function KPICard({
   const getVariationIcon = () => {
     if (variation === undefined || variation === null) return null;
     if (variation > 0) return <TrendingUp size={16} className="text-success" />;
-    if (variation < 0) return <TrendingDown size={16} className="text-danger" />;
+    if (variation < 0)
+      return <TrendingDown size={16} className="text-danger" />;
     return <Minus size={16} className="text-gray-400" />;
   };
 
@@ -54,30 +55,28 @@ export default function KPICard({
     return "text-gray-500";
   };
 
-
-
   return (
     <Card
-      className={`rounded-2xl border border-slate-100 shadow-sm backdrop-blur-2xl hover:shadow-md transition-shadow group border-l-[#67afc3] bg-linear-to-br from-[#67afc3]/5 to-white`}
+      className={`rounded-xl sm:rounded-2xl border border-slate-100 shadow-sm backdrop-blur-2xl hover:shadow-md transition-shadow group border-l-[#67afc3] bg-linear-to-br from-[#67afc3]/5 to-white`}
     >
-      <CardBody className="p-5">
-        <div className="flex items-start justify-between">
-          <div className="flex-1 w-full truncate">
-            <p className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+      <CardBody className="p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 w-full min-w-0">
+            <p className="text-[11px] sm:text-[13px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5 sm:mb-2 truncate">
               {title}
             </p>
-            <p className="text-2xl font-bold text-slate-800 truncate tracking-tight">
+            <p className="text-xl sm:text-2xl font-bold text-slate-800 truncate tracking-tight">
               {formatValue(value)}
             </p>
             {variation !== undefined && variation !== null && (
-              <div className="flex items-center gap-1.5 mt-3">
+              <div className="flex items-center gap-1.5 mt-2 sm:mt-3">
                 <span
-                  className={`flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md tracking-wider ${
+                  className={`flex items-center gap-1 text-[10px] sm:text-[11px] font-bold px-1.5 sm:px-2 py-0.5 rounded-md tracking-wider ${
                     variation > 0
                       ? "bg-emerald-50 text-emerald-600"
                       : variation < 0
-                      ? "bg-red-50 text-red-600"
-                      : "bg-slate-100 text-slate-600"
+                        ? "bg-red-50 text-red-600"
+                        : "bg-slate-100 text-slate-600"
                   }`}
                 >
                   {getVariationIcon()}
@@ -85,7 +84,7 @@ export default function KPICard({
                   {variation.toFixed(1)}%
                 </span>
                 {previousValue !== undefined && (
-                  <span className="text-[10px] text-slate-400 uppercase font-medium tracking-wide">
+                  <span className="text-[10px] text-slate-400 uppercase font-medium tracking-wide hidden sm:inline">
                     vs ant.
                   </span>
                 )}
@@ -93,7 +92,7 @@ export default function KPICard({
             )}
           </div>
           {icon && (
-            <div className="p-2.5 rounded-xl border shrink-0 transition-transform group-hover:scale-105 shadow-sm bg-[#67afc3]/10 border-[#67afc3]/20 text-[#67afc3]">
+            <div className="p-2 sm:p-2.5 rounded-xl border shrink-0 transition-transform group-hover:scale-105 shadow-sm bg-[#67afc3]/10 border-[#67afc3]/20 text-[#67afc3]">
               {icon}
             </div>
           )}
@@ -102,4 +101,3 @@ export default function KPICard({
     </Card>
   );
 }
-

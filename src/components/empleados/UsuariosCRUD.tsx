@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import GenericCrud from "@/components/shared/GenericCrud";
+import { Chip, Tooltip, addToast } from "@heroui/react";
 import {
-  Chip,
-  Tooltip,
-  addToast,
-} from "@heroui/react";
-import { EditButton, DeleteButton, PasswordButton, LockButton } from "../shared/TableActions";
+  EditButton,
+  DeleteButton,
+  PasswordButton,
+  LockButton,
+} from "../shared/TableActions";
 import { useQueryClient } from "@tanstack/react-query";
 import ChangePasswordModal from "./ChangePasswordModal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
@@ -54,7 +55,8 @@ export type Usuario = {
 
 export default function UsuariosCRUD() {
   const router = useRouter();
-  const { user, roles, updateUserFoto, isAdministrador, isSuperAdmin } = useUserStore();
+  const { user, roles, updateUserFoto, isAdministrador, isSuperAdmin } =
+    useUserStore();
   const { setOverride } = useBreadcrumbStore();
   const queryClient = useQueryClient();
   const [passwordModalUser, setPasswordModalUser] = useState<Usuario | null>(
@@ -128,7 +130,8 @@ export default function UsuariosCRUD() {
           const fotoNueva = result?.empleado?.foto;
           if (fotoNueva === undefined) return; // La API no devolvió foto → nada que hacer
           // Verificar si el empleado editado es el usuario actual
-          const editedUsuarioId = result?.empleado?.id ?? result?.empleado?.usuarioId;
+          const editedUsuarioId =
+            result?.empleado?.id ?? result?.empleado?.usuarioId;
           if (editedUsuarioId && Number(editedUsuarioId) === Number(user?.Id)) {
             updateUserFoto(fotoNueva ?? null);
           }
@@ -406,7 +409,7 @@ export default function UsuariosCRUD() {
               const estaActivo = item.estado !== "Suspendido";
 
               return (
-                <div className="flex gap-2 w-full justify-center items-center">
+                <div className="flex sm:gap-2 gap-0 w-full justify-center items-center">
                   <PasswordButton
                     onPress={() => setPasswordModalUser(item)}
                     isDisabled={!canEditOrPass}
@@ -414,7 +417,10 @@ export default function UsuariosCRUD() {
 
                   <EditButton
                     onPress={() => {
-                      setOverride(`/empleados/${item.personaId}`, item.nombreCompleto || "Empleado");
+                      setOverride(
+                        `/empleados/${item.personaId}`,
+                        item.nombreCompleto || "Empleado",
+                      );
                       router.push(`/empleados/${item.personaId}`);
                     }}
                     label={`Editar ${item.nombreCompleto || "usuario"}`}

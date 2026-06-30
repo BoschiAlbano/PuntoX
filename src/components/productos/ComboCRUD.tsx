@@ -285,7 +285,10 @@ export default function ComboCRUD() {
           <ProductoCard
             item={item}
             onEdit={() => {
-              setOverride(`/productos/promociones-combo/${item.Id}`, item.Descripcion || "Combo");
+              setOverride(
+                `/productos/promociones-combo/${item.Id}`,
+                item.Descripcion || "Combo",
+              );
               router.push(`/productos/promociones-combo/${item.Id}`);
             }}
             onDelete={actions.onDelete}
@@ -340,7 +343,6 @@ export default function ComboCRUD() {
           title: "Listado de Productos",
           orientation: "landscape",
         }}
-
         transformer={(item) => productoListAdapter(item)}
         additionalInvalidateQueryKeys={["producto-detail"]}
         exportConfig={{
@@ -423,14 +425,29 @@ export default function ComboCRUD() {
                         <p className="font-semibold text-slate-300 mb-1 border-b border-slate-600 pb-1">
                           Disponibilidad según componentes:
                         </p>
-                        {item.ComponentesCombo && item.ComponentesCombo.length > 0 ? (
+                        {item.ComponentesCombo &&
+                        item.ComponentesCombo.length > 0 ? (
                           <ul className="space-y-1">
                             {item.ComponentesCombo.map((c: any, i: number) => {
-                              const puedeArmar = c.CantidadRequerida > 0 ? Math.floor(c.Stock / c.CantidadRequerida) : 0;
+                              const puedeArmar =
+                                c.CantidadRequerida > 0
+                                  ? Math.floor(c.Stock / c.CantidadRequerida)
+                                  : 0;
                               return (
-                                <li key={i} className="flex justify-between gap-4">
-                                  <span className="truncate max-w-[120px]">{c.CantidadRequerida}x {c.Descripcion}</span>
-                                  <span className={puedeArmar === 0 ? "text-red-400 font-bold" : "text-slate-300"}>
+                                <li
+                                  key={i}
+                                  className="flex justify-between gap-4"
+                                >
+                                  <span className="truncate max-w-[120px]">
+                                    {c.CantidadRequerida}x {c.Descripcion}
+                                  </span>
+                                  <span
+                                    className={
+                                      puedeArmar === 0
+                                        ? "text-red-400 font-bold"
+                                        : "text-slate-300"
+                                    }
+                                  >
                                     Stock: {c.Stock} (Arma {puedeArmar})
                                   </span>
                                 </li>
@@ -438,7 +455,9 @@ export default function ComboCRUD() {
                             })}
                           </ul>
                         ) : (
-                          <p className="text-slate-400 italic">No tiene componentes.</p>
+                          <p className="text-slate-400 italic">
+                            No tiene componentes.
+                          </p>
                         )}
                       </div>
                     }
@@ -496,10 +515,13 @@ export default function ComboCRUD() {
               );
             case "acciones":
               return (
-                <div className="flex gap-2 w-full justify-center items-center">
+                <div className="flex sm:gap-2 gap-0 w-full justify-center items-center">
                   <EditButton
                     onPress={() => {
-                      setOverride(`/productos/promociones-combo/${item.Id}`, item.Descripcion || "Combo");
+                      setOverride(
+                        `/productos/promociones-combo/${item.Id}`,
+                        item.Descripcion || "Combo",
+                      );
                       router.push(`/productos/promociones-combo/${item.Id}`);
                     }}
                     label={`Editar ${item.Descripcion || "producto"}`}

@@ -242,7 +242,7 @@ export default function CuentasCorrientesCRUD() {
   return (
     <div className="w-full flex-1 relative flex flex-col gap-4">
       <div
-        className="flex-1 flex flex-col min-h-0 w-full px-1 sm:px-4 pb-4 focus:outline-none focus:ring-0"
+        className="flex-1 flex flex-col min-h-0 w-full px-0 sm:px-4 pb-4 focus:outline-none focus:ring-0"
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();

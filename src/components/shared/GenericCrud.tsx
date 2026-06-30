@@ -132,6 +132,8 @@ interface GenericCrudProps<T> {
   viewMode?: "table" | "cards";
   onViewModeChange?: (mode: "table" | "cards") => void;
   renderCard?: (item: T, actions: CrudActions<T>) => React.ReactNode;
+  /** Columnas visibles por defecto en mobile. Si no se pasa, se usa 'descripcion' o la primera columna disponible */
+  defaultVisibleUidsMobile?: string[];
 }
 
 export default function GenericCrud<T extends { Id: number | string }>({
@@ -163,6 +165,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
   onSaveSuccess,
   onNewClick,
   newButtonText,
+  defaultVisibleUidsMobile,
 }: GenericCrudProps<T>) {
   // Estados de UI
   const { isOpen, onOpen, onClose } = useDisclosure(); // Modal Form
@@ -264,6 +267,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
     data,
     paginationMeta,
     isLoading,
+    isFetching,
     isError,
     saveMutation,
     deleteMutation,
@@ -276,8 +280,12 @@ export default function GenericCrud<T extends { Id: number | string }>({
     page,
     limit,
     extraParams: {
-      ...(getApiExtraParams ? getApiExtraParams({ lowStockOnly }) : (lowStockApiParam && lowStockOnly ? { bajoStock: true } : {})),
-      ...(editId ? { editId } : {})
+      ...(getApiExtraParams
+        ? getApiExtraParams({ lowStockOnly })
+        : lowStockApiParam && lowStockOnly
+          ? { bajoStock: true }
+          : {}),
+      ...(editId ? { editId } : {}),
     },
     transformer,
     additionalInvalidateQueryKeys,
@@ -696,7 +704,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
   };
 
   return (
-    <div className="w-full relative flex flex-col flex-1">
+    <div className="w-full min-w-0 min-h-0 relative flex flex-col flex-1">
       {/* Botón flotante para crear (opcional, o se puede integrar en la tabla) */}
       {/* Por ahora, asumimos que la tabla tiene el botón o se pasa */}
       {/* Vamos a poner un botón de crear flotante simple o header si se desea */}
@@ -737,7 +745,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
         onNewClick={handleCreate}
         newButtonText={newButtonText}
         onRefresh={handleRefresh}
-        isRefreshing={isRefreshing}
+        isRefreshing={isRefreshing || isFetching}
         onExportCsv={
           exportConfig
             ? () => {
@@ -830,7 +838,11 @@ export default function GenericCrud<T extends { Id: number | string }>({
                   icon: <AlertTriangle size={16} strokeWidth={2} />,
                   isActive: lowStockOnly,
                   onPress: () => {
-                    if (!lowStockOnly && lowStockApiParam && prefetchWithParams) {
+                    if (
+                      !lowStockOnly &&
+                      lowStockApiParam &&
+                      prefetchWithParams
+                    ) {
                       prefetchWithParams({
                         page: 1,
                         extraParams: { bajoStock: true },
@@ -842,7 +854,9 @@ export default function GenericCrud<T extends { Id: number | string }>({
               ]
             : []),
         ]}
-        extraSearchContent={toolbarExtraContent ? <>{toolbarExtraContent}</> : undefined}
+        extraSearchContent={
+          toolbarExtraContent ? <>{toolbarExtraContent}</> : undefined
+        }
         onRowClick={undefined}
         onRowKeyDown={(item, key) => {
           if (key === "Enter") handleEdit(item);
@@ -852,6 +866,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
         renderCards={
           renderCard ? (item) => renderCard(item, actions) : undefined
         }
+        defaultVisibleUidsMobile={defaultVisibleUidsMobile}
       />
 
       {/* Modal de Formulario */}

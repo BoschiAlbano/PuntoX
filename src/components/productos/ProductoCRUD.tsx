@@ -2,7 +2,7 @@
 
 import GenericCrud from "@/components/shared/GenericCrud";
 import { Producto } from "@/lib/validations/producto.schema";
-import { Button, Chip, Skeleton, Tooltip } from "@heroui/react";
+import { Chip, Skeleton, Tooltip } from "@heroui/react";
 import { productoListAdapter } from "@/lib/adapters/producto.adapter";
 import {
   AddStockButton,
@@ -15,11 +15,9 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
 import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
-import { exportToCsv, exportToXls } from "@/lib/utils/exportCsv";
 import { Copy, Check, Barcode } from "lucide-react";
 import { ProductoCard } from "./ProductoCard";
 import { BulkPrintBarcodesModal } from "./BulkPrintBarcodesModal";
@@ -309,298 +307,304 @@ export default function ProductoCRUD() {
         onNewClick={() => router.push("/productos/new")}
         newButtonText="Nuevo Producto"
         renderRowPreview={(item) => <ProductoPreviewContent item={item} />}
-          getRowPreviewTitle={(item) => item.Descripcion || "Producto"}
-          showEditInPreview={false}
-          enableBulkActions
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          renderCard={(item, actions) => (
-            <ProductoCard
-              item={item}
-              onEdit={() => {
-                setOverride(`/productos/${item.Id}`, item.Descripcion || "Producto");
-                router.push(`/productos/${item.Id}`);
-              }}
-              onDelete={actions.onDelete}
-              onOpenStockModal={handleOpenStockModal}
-              onClick={actions.onPreview}
-            />
-          )}
-          lowStockFilterFn={(item) => {
-            const min = item.StockMinimo ?? 0;
-            const stock = item.Stock ?? 0;
-            return min > 0 && stock <= min;
-          }}
-          lowStockApiParam
-          printConfig={{
-            title: "Listado de Productos",
-            orientation: "landscape",
-          }}
-          extraMenuItems={(currentItems) => [
-            {
-              key: "imprimir-barras-todos",
-              label: "Imprimir códigos",
-              icon: <Barcode size={16} strokeWidth={2} />,
-              onPress: () => {
-                setBulkPrintModal({
-                  open: true,
-                  items: currentItems,
-                });
-              },
+        getRowPreviewTitle={(item) => item.Descripcion || "Producto"}
+        showEditInPreview={false}
+        enableBulkActions
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        renderCard={(item, actions) => (
+          <ProductoCard
+            item={item}
+            onEdit={() => {
+              setOverride(
+                `/productos/${item.Id}`,
+                item.Descripcion || "Producto",
+              );
+              router.push(`/productos/${item.Id}`);
+            }}
+            onDelete={actions.onDelete}
+            onOpenStockModal={handleOpenStockModal}
+            onClick={actions.onPreview}
+          />
+        )}
+        lowStockFilterFn={(item) => {
+          const min = item.StockMinimo ?? 0;
+          const stock = item.Stock ?? 0;
+          return min > 0 && stock <= min;
+        }}
+        lowStockApiParam
+        printConfig={{
+          title: "Listado de Productos",
+          orientation: "landscape",
+        }}
+        extraMenuItems={(currentItems) => [
+          {
+            key: "imprimir-barras-todos",
+            label: "Imprimir códigos",
+            icon: <Barcode size={16} strokeWidth={2} />,
+            onPress: () => {
+              setBulkPrintModal({
+                open: true,
+                items: currentItems,
+              });
             },
-          ]}
-          bulkActionsDropdown={[
-            {
-              key: "imprimir-barras",
-              label: "Imprimir códigos",
-              onAction: (ctx) => {
-                setBulkPrintModal({
-                  open: true,
-                  items: ctx.items,
-                  clearSelection: ctx.clearSelection,
-                });
-              },
+          },
+        ]}
+        bulkActionsDropdown={[
+          {
+            key: "imprimir-barras",
+            label: "Imprimir códigos",
+            onAction: (ctx) => {
+              setBulkPrintModal({
+                open: true,
+                items: ctx.items,
+                clearSelection: ctx.clearSelection,
+              });
             },
-            {
-              key: "cambiar-estado",
-              label: "Cambiar estado",
-              onAction: (ctx) => {
-                setBulkEstadoModal({
-                  open: true,
-                  items: ctx.items,
-                  clearSelection: ctx.clearSelection,
-                });
-              },
+          },
+          {
+            key: "cambiar-estado",
+            label: "Cambiar estado",
+            onAction: (ctx) => {
+              setBulkEstadoModal({
+                open: true,
+                items: ctx.items,
+                clearSelection: ctx.clearSelection,
+              });
             },
-          ]}
-          transformer={(item) => productoListAdapter(item)}
-          additionalInvalidateQueryKeys={["producto-detail"]}
-          exportConfig={{
-            filename: "productos",
-            columns: [
-              { key: "CodigoBarra", header: "Código" },
-              { key: "Descripcion", header: "Descripción" },
-              { key: "Marca", header: "Marca" },
-              { key: "Rubro", header: "Rubro" },
-              { key: "Stock", header: "Stock" },
-              { key: "StockMinimo", header: "Stock mínimo" },
-              { key: "Costo", header: "Costo" },
-              { key: "Precios", header: "Precios" },
-            ],
-            mapItem: (p) => ({
-              CodigoBarra: p.CodigoBarra,
-              Descripcion: p.Descripcion,
-              Marca: p.Marca?.Descripcion ?? "",
-              Rubro: p.Rubro?.Descripcion ?? "",
-              Stock: p.Stock ?? 0,
-              StockMinimo: p.StockMinimo ?? 0,
-              Costo: p.PrecioCosto ?? 0,
-              Precios:
-                p.PreciosLista?.map(
-                  (pl: any) => `${pl.ListaPrecio?.Nombre}: $${pl.PrecioFinal}`,
-                ).join(" | ") || "",
-            }),
-          }}
-          columns={[
-            { uid: "Codigo", name: "CODIGO", sortable: false },
-            {
-              uid: "Descripcion",
-              name: "DESCRIPCIÓN",
-              sortable: true,
-              align: "start",
-            },
-            { uid: "Marca", name: "MARCA", sortable: true, align: "start" },
-            { uid: "Rubro", name: "RUBRO", sortable: true, align: "start" },
-            { uid: "Stock", name: "STOCK", sortable: true },
-            {
-              uid: "Costo",
-              name: "COSTO",
-              sortable: true,
-              sortKey: "Precio.PrecioCosto",
-            },
-            {
-              uid: "Precios",
-              name: "PRECIOS",
-              sortable: false,
-            },
-            { uid: "Estado", name: "ESTADO" },
-            { uid: "acciones", name: "ACCIONES" },
-          ]}
-          renderCell={(item, columnKey, actions) => {
-            switch (columnKey) {
-              case "Codigo":
-                return (
-                  <CopyableCode
-                    value={item.CodigoBarra || item.Codigo?.toString() || ""}
-                  />
-                );
-              case "Descripcion":
-                return (
-                  <span className="font-medium text-gray-700">
-                    {item.Descripcion}
-                  </span>
-                );
-              case "Marca":
-                return (
-                  <span className="text-gray-600">
-                    {item.Marca?.Descripcion ?? "—"}
-                  </span>
-                );
-              case "Rubro":
-                return (
-                  <span className="text-gray-600">
-                    {item.Rubro?.Descripcion ?? "—"}
-                  </span>
-                );
-              case "Stock": {
-                const stock = item.Stock ?? 0;
-                const stockMinimo = item.StockMinimo ?? 0;
-                const isLowStock = stockMinimo > 0 && stock <= stockMinimo;
-                const fmt = (v: number) => parseFloat(v.toFixed(3)).toString();
+          },
+        ]}
+        transformer={(item) => productoListAdapter(item)}
+        additionalInvalidateQueryKeys={["producto-detail"]}
+        exportConfig={{
+          filename: "productos",
+          columns: [
+            { key: "CodigoBarra", header: "Código" },
+            { key: "Descripcion", header: "Descripción" },
+            { key: "Marca", header: "Marca" },
+            { key: "Rubro", header: "Rubro" },
+            { key: "Stock", header: "Stock" },
+            { key: "StockMinimo", header: "Stock mínimo" },
+            { key: "Costo", header: "Costo" },
+            { key: "Precios", header: "Precios" },
+          ],
+          mapItem: (p) => ({
+            CodigoBarra: p.CodigoBarra,
+            Descripcion: p.Descripcion,
+            Marca: p.Marca?.Descripcion ?? "",
+            Rubro: p.Rubro?.Descripcion ?? "",
+            Stock: p.Stock ?? 0,
+            StockMinimo: p.StockMinimo ?? 0,
+            Costo: p.PrecioCosto ?? 0,
+            Precios:
+              p.PreciosLista?.map(
+                (pl: any) => `${pl.ListaPrecio?.Nombre}: $${pl.PrecioFinal}`,
+              ).join(" | ") || "",
+          }),
+        }}
+        columns={[
+          { uid: "Codigo", name: "CODIGO", sortable: false },
+          {
+            uid: "Descripcion",
+            name: "DESCRIPCIÓN",
+            sortable: true,
+            align: "start",
+          },
+          { uid: "Marca", name: "MARCA", sortable: true, align: "start" },
+          { uid: "Rubro", name: "RUBRO", sortable: true, align: "start" },
+          { uid: "Stock", name: "STOCK", sortable: true },
+          {
+            uid: "Costo",
+            name: "COSTO",
+            sortable: true,
+            sortKey: "Precio.PrecioCosto",
+          },
+          {
+            uid: "Precios",
+            name: "PRECIOS",
+            sortable: false,
+          },
+          { uid: "Estado", name: "ESTADO" },
+          { uid: "acciones", name: "ACCIONES" },
+        ]}
+        renderCell={(item, columnKey, actions) => {
+          switch (columnKey) {
+            case "Codigo":
+              return (
+                <CopyableCode
+                  value={item.CodigoBarra || item.Codigo?.toString() || ""}
+                />
+              );
+            case "Descripcion":
+              return (
+                <span className="font-medium text-gray-700">
+                  {item.Descripcion}
+                </span>
+              );
+            case "Marca":
+              return (
+                <span className="text-gray-600">
+                  {item.Marca?.Descripcion ?? "—"}
+                </span>
+              );
+            case "Rubro":
+              return (
+                <span className="text-gray-600">
+                  {item.Rubro?.Descripcion ?? "—"}
+                </span>
+              );
+            case "Stock": {
+              const stock = item.Stock ?? 0;
+              const stockMinimo = item.StockMinimo ?? 0;
+              const isLowStock = stockMinimo > 0 && stock <= stockMinimo;
+              const fmt = (v: number) => parseFloat(v.toFixed(3)).toString();
 
-                return (
-                  <div className="flex flex-col gap-0.5 min-w-[80px]">
-                    <Tooltip
-                      content={
-                        <div className="text-xs px-1 py-0.5">
-                          <p>
-                            <span className="text-slate-400">Mínimo:</span>{" "}
-                            {fmt(stockMinimo)}
-                          </p>
-                          <p>
-                            <span className="text-slate-400">Actual:</span>{" "}
-                            {fmt(stock)}
-                          </p>
-                        </div>
-                      }
-                      placement="top"
-                      delay={300}
-                      classNames={{
-                        base: "before:bg-[#0F2233]",
-                        content: "bg-[#0F2233] text-white text-xs font-medium",
-                      }}
-                    >
-                      <span
-                        className={
-                          isLowStock
-                            ? "font-semibold text-red-600 cursor-default"
-                            : "font-medium text-gray-700 cursor-default"
-                        }
-                      >
-                        {fmt(stockMinimo)} / {fmt(stock)}
-                      </span>
-                    </Tooltip>
-                    {item.SucursalNombre && (
-                      <span className="text-[10px] text-slate-400">
-                        {item.SucursalNombre}
-                      </span>
-                    )}
-                  </div>
-                );
-              }
-              case "Costo":
-                return (
-                  <span className="font-medium text-gray-700">
-                    {formatCurrency(Number(item.PrecioCosto ?? 0), currency)}
-                  </span>
-                );
-              case "Precios":
-                return (
-                  <div className="flex flex-col gap-0.5">
-                    {item.PreciosLista?.slice(0, 2).map(
-                      (pl: any, idx: number) => (
-                        <span
-                          key={pl.Id || idx}
-                          className="text-xs text-gray-700 truncate max-w-[120px]"
-                          title={`${pl.ListaPrecio?.Nombre}: ${pl.PrecioFinal}`}
-                        >
-                          <span className="text-gray-400 mr-1">
-                            {pl.ListaPrecio?.Nombre?.substring(0, 3)}:
-                          </span>
-                          <span className="font-medium">
-                            {formatCurrency(
-                              Number(pl.PrecioFinal ?? 0),
-                              currency,
-                            )}
-                          </span>
-                        </span>
-                      ),
-                    )}
-                    {(item.PreciosLista?.length || 0) > 2 && (
-                      <span className="text-[10px] text-gray-400">
-                        +{item.PreciosLista!.length - 2} más
-                      </span>
-                    )}
-                  </div>
-                );
-              case "Estado":
-                return (
-                  <Chip
-                    color={item.EstaEliminado ? "danger" : "success"}
-                    variant="flat"
-                    size="sm"
+              return (
+                <div className="flex flex-col gap-0.5 min-w-[80px]">
+                  <Tooltip
+                    content={
+                      <div className="text-xs px-1 py-0.5">
+                        <p>
+                          <span className="text-slate-400">Mínimo:</span>{" "}
+                          {fmt(stockMinimo)}
+                        </p>
+                        <p>
+                          <span className="text-slate-400">Actual:</span>{" "}
+                          {fmt(stock)}
+                        </p>
+                      </div>
+                    }
+                    placement="top"
+                    delay={300}
+                    classNames={{
+                      base: "before:bg-[#0F2233]",
+                      content: "bg-[#0F2233] text-white text-xs font-medium",
+                    }}
                   >
-                    {item.EstaEliminado ? "Inactivo" : "Activo"}
-                  </Chip>
-                );
-              case "acciones":
-                return (
-                  <div className="flex gap-2 w-full justify-center items-center">
-                    <AddStockButton
-                      onPress={() => handleOpenStockModal(item)}
-                      label={`Agregar Stock ${item.Descripcion || "producto"}`}
-                    />
-                    <EditButton
-                      onPress={() => {
-                        setOverride(`/productos/${item.Id}`, item.Descripcion || "Producto");
-                        router.push(`/productos/${item.Id}`);
-                      }}
-                      label={`Editar ${item.Descripcion || "producto"}`}
-                    />
-                    <DeleteButton
-                      onPress={() => actions.onDelete(item)}
-                      label={`Eliminar ${item.Descripcion || "producto"}`}
-                    />
-                  </div>
-                );
-              default:
-                return null;
+                    <span
+                      className={
+                        isLowStock
+                          ? "font-semibold text-red-600 cursor-default"
+                          : "font-medium text-gray-700 cursor-default"
+                      }
+                    >
+                      {fmt(stockMinimo)} / {fmt(stock)}
+                    </span>
+                  </Tooltip>
+                  {item.SucursalNombre && (
+                    <span className="text-[10px] text-slate-400">
+                      {item.SucursalNombre}
+                    </span>
+                  )}
+                </div>
+              );
             }
-          }}
-        ></GenericCrud>
+            case "Costo":
+              return (
+                <span className="font-medium text-gray-700">
+                  {formatCurrency(Number(item.PrecioCosto ?? 0), currency)}
+                </span>
+              );
+            case "Precios":
+              return (
+                <div className="flex flex-col gap-0.5">
+                  {item.PreciosLista?.slice(0, 2).map(
+                    (pl: any, idx: number) => (
+                      <span
+                        key={pl.Id || idx}
+                        className="text-xs text-gray-700 truncate max-w-[120px]"
+                        title={`${pl.ListaPrecio?.Nombre}: ${pl.PrecioFinal}`}
+                      >
+                        <span className="text-gray-400 mr-1">
+                          {pl.ListaPrecio?.Nombre?.substring(0, 3)}:
+                        </span>
+                        <span className="font-medium">
+                          {formatCurrency(
+                            Number(pl.PrecioFinal ?? 0),
+                            currency,
+                          )}
+                        </span>
+                      </span>
+                    ),
+                  )}
+                  {(item.PreciosLista?.length || 0) > 2 && (
+                    <span className="text-[10px] text-gray-400">
+                      +{item.PreciosLista!.length - 2} más
+                    </span>
+                  )}
+                </div>
+              );
+            case "Estado":
+              return (
+                <Chip
+                  color={item.EstaEliminado ? "danger" : "success"}
+                  variant="flat"
+                  size="sm"
+                >
+                  {item.EstaEliminado ? "Inactivo" : "Activo"}
+                </Chip>
+              );
+            case "acciones":
+              return (
+                <div className="flex sm:gap-2 gap-0 w-full justify-center items-center">
+                  <AddStockButton
+                    onPress={() => handleOpenStockModal(item)}
+                    label={`Agregar Stock ${item.Descripcion || "producto"}`}
+                  />
+                  <EditButton
+                    onPress={() => {
+                      setOverride(
+                        `/productos/${item.Id}`,
+                        item.Descripcion || "Producto",
+                      );
+                      router.push(`/productos/${item.Id}`);
+                    }}
+                    label={`Editar ${item.Descripcion || "producto"}`}
+                  />
+                  <DeleteButton
+                    onPress={() => actions.onDelete(item)}
+                    label={`Eliminar ${item.Descripcion || "producto"}`}
+                  />
+                </div>
+              );
+            default:
+              return null;
+          }
+        }}
+      ></GenericCrud>
 
-        <AddStockModal
-          isOpen={isStockModalOpen}
-          onClose={() => setIsStockModalOpen(false)}
-          product={productToAddStock}
-          onConfirm={handleAddStock}
-        />
+      <AddStockModal
+        isOpen={isStockModalOpen}
+        onClose={() => setIsStockModalOpen(false)}
+        product={productToAddStock}
+        onConfirm={handleAddStock}
+      />
 
-        <BulkCambiarEstadoModal<Producto>
-          isOpen={bulkEstadoModal.open}
-          onClose={() => setBulkEstadoModal({ open: false, items: [] })}
-          items={bulkEstadoModal.items}
-          entityLabel="producto"
-          getCurrentEstado={(p) => !!p.EstaEliminado}
-          onConfirm={async (ids, nuevoEstado) => {
-            await bulkPatchProductos(ids, {
-              EstaEliminado: !nuevoEstado,
-            });
-          }}
-          onSuccess={() => {
-            bulkEstadoModal.clearSelection?.();
-            invalidateProductos();
-          }}
-        />
+      <BulkCambiarEstadoModal<Producto>
+        isOpen={bulkEstadoModal.open}
+        onClose={() => setBulkEstadoModal({ open: false, items: [] })}
+        items={bulkEstadoModal.items}
+        entityLabel="producto"
+        getCurrentEstado={(p) => !!p.EstaEliminado}
+        onConfirm={async (ids, nuevoEstado) => {
+          await bulkPatchProductos(ids, {
+            EstaEliminado: !nuevoEstado,
+          });
+        }}
+        onSuccess={() => {
+          bulkEstadoModal.clearSelection?.();
+          invalidateProductos();
+        }}
+      />
 
-        <BulkPrintBarcodesModal
-          isOpen={bulkPrintModal.open}
-          onClose={() => setBulkPrintModal({ open: false, items: [] })}
-          items={bulkPrintModal.items}
-          onSuccess={() => {
-            bulkPrintModal.clearSelection?.();
-          }}
-        />
+      <BulkPrintBarcodesModal
+        isOpen={bulkPrintModal.open}
+        onClose={() => setBulkPrintModal({ open: false, items: [] })}
+        items={bulkPrintModal.items}
+        onSuccess={() => {
+          bulkPrintModal.clearSelection?.();
+        }}
+      />
     </>
   );
 }

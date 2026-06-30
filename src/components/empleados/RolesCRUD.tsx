@@ -29,6 +29,7 @@ export default function RolesCRUD() {
       searchPlaceholder="Buscar rol por nombre"
       additionalInvalidateQueryKeys={["roles-crud", "roles-select"]}
       onNewClick={() => router.push("/empleados/roles/nuevo")}
+      defaultVisibleUidsMobile={["nombre", "acciones"]}
       exportConfig={{
         filename: "roles",
         columns: [
@@ -95,7 +96,7 @@ export default function RolesCRUD() {
 
           case "descripcion":
             return (
-              <span className="text-sm text-slate-500 line-clamp-1 max-w-[240px]">
+              <span className="text-sm text-slate-500 line-clamp-1 max-w-60">
                 {item.descripcion || "—"}
               </span>
             );
@@ -139,14 +140,19 @@ export default function RolesCRUD() {
             const esSistema = esRolSistema(item);
             const tieneUsuarios = item.usuarios > 0;
             return (
-              <div className="flex gap-2 w-full justify-center items-center">
+              <div className="flex sm:gap-2 gap-0 w-full justify-center items-center">
                 <EditButton
                   tooltipContent={
-                    esSistema ? "No se puede editar un rol del sistema" : "Editar"
+                    esSistema
+                      ? "No se puede editar un rol del sistema"
+                      : "Editar"
                   }
                   isDisabled={esSistema}
                   onPress={() => {
-                    setOverride(`/empleados/roles/${item.Id}`, item.nombre || "Rol");
+                    setOverride(
+                      `/empleados/roles/${item.Id}`,
+                      item.nombre || "Rol",
+                    );
                     router.push(`/empleados/roles/${item.Id}`);
                   }}
                 />

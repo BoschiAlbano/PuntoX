@@ -63,6 +63,7 @@ export default function AuditoriasCRUD() {
       initialLimit={10}
       transformer={transformer}
       showEditInPreview={false}
+      defaultVisibleUidsMobile={["usuario", "detalles"]}
       enableBulkActions
       exportConfig={{
         filename: "auditorias",
