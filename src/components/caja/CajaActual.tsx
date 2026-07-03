@@ -132,7 +132,9 @@ export default function CajaActual({
       (c: any) => String(c.id) === String(fiscal.condicionIvaId),
     );
     if (!issuerCondicion) return [];
-    const isIssuerRI = issuerCondicion.descripcion.toLowerCase().includes("responsable inscripto");
+    const isIssuerRI = issuerCondicion.descripcion
+      .toLowerCase()
+      .includes("responsable inscripto");
     if (isIssuerRI) {
       return [
         { value: TIPO_COMPROBANTE_VENTA.FACTURA_A, label: "Factura A" },
@@ -366,7 +368,11 @@ export default function CajaActual({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ comprobantesIds, fecha: fechaBulk, tipoComprobante: tipoBulk || undefined }),
+          body: JSON.stringify({
+            comprobantesIds,
+            fecha: fechaBulk,
+            tipoComprobante: tipoBulk || undefined,
+          }),
         },
       );
       const data = await response.json();
@@ -462,7 +468,7 @@ export default function CajaActual({
                     <p className="font-bold text-red-400 text-xs mb-1">
                       Error ARCA:
                     </p>
-                    <p className="text-xs text-white leading-relaxed">
+                    <p className="text-xs text-white leading-relaxed overflow-hidden">
                       {errorFiltrado}
                     </p>
                   </div>
@@ -892,7 +898,14 @@ export default function CajaActual({
           {
             key: "filtrar-sin-fe",
             label: filtroPendientes ? "✓ Mostrando: Sin FE" : "Filtrar sin FE",
-            icon: <AlertTriangle size={16} className={filtroPendientes ? "text-amber-600" : "text-slate-500"} />,
+            icon: (
+              <AlertTriangle
+                size={16}
+                className={
+                  filtroPendientes ? "text-amber-600" : "text-slate-500"
+                }
+              />
+            ),
             isActive: filtroPendientes,
             onPress: () => {
               setFiltroPendientes(!filtroPendientes);
@@ -1182,7 +1195,11 @@ export default function CajaActual({
           <ModalBody className="gap-4">
             {isReprocesando ? (
               <div className="flex flex-col items-center justify-center py-8 gap-4">
-                <Spinner size="lg" color="current" classNames={{ circle1: "border-b-[#67afc3]" }} />
+                <Spinner
+                  size="lg"
+                  color="current"
+                  classNames={{ circle1: "border-b-[#67afc3]" }}
+                />
                 <div className="text-center">
                   <p className="text-sm font-semibold text-slate-700">
                     Procesando comprobantes...
@@ -1231,7 +1248,10 @@ export default function CajaActual({
                 {tiposFiscalesBulk.length > 0 && (
                   <div className="flex flex-col gap-1.5">
                     <span className="text-xs font-semibold text-slate-600">
-                      Tipo de comprobante <span className="text-slate-400 font-normal">(opcional)</span>
+                      Tipo de comprobante{" "}
+                      <span className="text-slate-400 font-normal">
+                        (opcional)
+                      </span>
                     </span>
                     <Select
                       placeholder="Mantener tipo actual"
@@ -1242,17 +1262,22 @@ export default function CajaActual({
                       }}
                       variant="bordered"
                       classNames={{
-                        trigger: "border-2 hover:border-[#67afc3]/50 focus-within:!border-[#67afc3] min-h-unit-10",
+                        trigger:
+                          "border-2 hover:border-[#67afc3]/50 focus-within:!border-[#67afc3] min-h-unit-10",
                       }}
                     >
                       {tiposFiscalesBulk.map((tipo) => (
-                        <SelectItem key={String(tipo.value)} textValue={tipo.label}>
+                        <SelectItem
+                          key={String(tipo.value)}
+                          textValue={tipo.label}
+                        >
                           {tipo.label}
                         </SelectItem>
                       ))}
                     </Select>
                     <p className="text-xs text-slate-400">
-                      Si seleccionás un tipo, se cambiará en todos los comprobantes antes de emitir.
+                      Si seleccionás un tipo, se cambiará en todos los
+                      comprobantes antes de emitir.
                     </p>
                   </div>
                 )}
@@ -1325,7 +1350,9 @@ export default function CajaActual({
               isDisabled={!isDateInArcaRange(fechaBulk) || isReprocesando}
               className="font-semibold bg-[#67afc3] hover:bg-[#4899b0] text-white disabled:opacity-50"
             >
-              {isReprocesando ? "Procesando..." : `Emitir ${selectedKeys.size} comprobante(s)`}
+              {isReprocesando
+                ? "Procesando..."
+                : `Emitir ${selectedKeys.size} comprobante(s)`}
             </Button>
           </ModalFooter>
         </ModalContent>
