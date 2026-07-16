@@ -1,11 +1,11 @@
-Nuevas implementaciones:
+Nuevas implementaciones a "futuro":
 
 1- optimización de imágenes en supabase .web (implementar).
 2- limpieza de comprobantes viejos o datos viejos que no se usen como cuentas corrientes viejas (No por analíticas)
 3- dar de baja un registro de manera física y no lógica, en opciones menú. (Implementar).
 4- Planes de tiendas, eliminar funcionalidades y separar los planes.
 
-Erorres Test:
+Erorres al hacer "Test" corregir:
 
 1- Error en producto nuevo, promociones articulo peso, (Pan)
     {

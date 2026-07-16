@@ -217,6 +217,7 @@ model Articulo {
   CombosQueIntegra     ArticuloComboItem[]  @relation("ComboComponent")
 
   @@index([TenantId])
+  @@index([TenantId, Codigo])
   @@index([IvaId])
   @@index([MarcaId])
   @@index([RubroId])
@@ -227,7 +228,7 @@ model Articulo {
 model PromocionCantidad {
   Id                  BigInt   @id @default(autoincrement())
   ArticuloId          BigInt
-  Cantidad            Int
+  Cantidad            Decimal  @db.Decimal(10, 3)
   DescuentoPorcentaje Decimal  @db.Decimal(18, 2)
   EstaActiva          Boolean  @default(true)
   TenantId            BigInt

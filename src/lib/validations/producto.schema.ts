@@ -1,6 +1,33 @@
 import { z } from "zod";
 import { TiposVenta } from "../../../prisma/generated/prisma";
 
+/**
+ * Los productos vendidos por PESO admiten cantidades decimales en sus escalas
+ * de promoción (ej. "a partir de 3,550kg"); el resto exige cantidades enteras.
+ */
+function validarPromocionesCantidad(
+  data: { TipoVenta?: TiposVenta; PromocionesCantidad?: { Cantidad: number }[] },
+  ctx: z.RefinementCtx
+) {
+  const esPeso = data.TipoVenta === TiposVenta.PESO;
+  data.PromocionesCantidad?.forEach((promo, index) => {
+    if (!esPeso && !Number.isInteger(promo.Cantidad)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La cantidad debe ser un número entero para productos por unidad",
+        path: ["PromocionesCantidad", index, "Cantidad"],
+      });
+    }
+    if (!esPeso && promo.Cantidad < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La cantidad debe ser mayor o igual a 2",
+        path: ["PromocionesCantidad", index, "Cantidad"],
+      });
+    }
+  });
+}
+
 export const createProductoSchema = z.object({
   // Relaciones (IDs) - Se esperan números mayores a 0
   MarcaId: z
@@ -82,14 +109,14 @@ export const createProductoSchema = z.object({
   PromocionesCantidad: z.array(
     z.object({
       Id: z.number().optional(),
-      Cantidad: z.number().int().min(2),
+      Cantidad: z.number().positive(),
       DescuentoPorcentaje: z.number().min(0).max(100).default(0),
       EstaActiva: z.boolean().default(true),
     })
   ).optional().default([]),
-});
+}).superRefine(validarPromocionesCantidad);
 
-export const updateProductoSchema = z.object({
+export const updateProductoSchemaBase = z.object({
   Id: z.number().int({ message: "Id debe ser un entero" }),
   // Relaciones (IDs) - Se esperan números
   MarcaId: z.number().int({ message: "MarcaId debe ser un entero" }).optional(),
@@ -168,12 +195,14 @@ export const updateProductoSchema = z.object({
   PromocionesCantidad: z.array(
     z.object({
       Id: z.number().optional(),
-      Cantidad: z.number().int().min(2),
+      Cantidad: z.number().positive(),
       DescuentoPorcentaje: z.number().min(0).max(100).default(0),
       EstaActiva: z.boolean().default(true),
     })
   ).optional(),
 });
+
+export const updateProductoSchema = updateProductoSchemaBase.superRefine(validarPromocionesCantidad);
 
 export type CreateProductoInput = z.infer<typeof createProductoSchema>;
 export type UpdateProductoInput = z.infer<typeof updateProductoSchema>;

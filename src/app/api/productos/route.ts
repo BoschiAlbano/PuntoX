@@ -307,6 +307,21 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const validarProducto = createProductoSchema.parse(body);
 
+    const codigoExistente = await prisma.articulo.findFirst({
+      where: {
+        TenantId: BigInt(tenantId),
+        Codigo: validarProducto.Codigo,
+        EstaEliminado: false,
+      },
+      select: { Id: true },
+    });
+    if (codigoExistente) {
+      throw createError.conflict(
+        `El código ${validarProducto.Codigo} ya está en uso por otro producto`,
+        { field: "Codigo" },
+      );
+    }
+
     // 1. Subir Foto a Supabase si existe
     let fotoUrl: string | null = null;
     if (typeof validarProducto.Foto === "string" && validarProducto.Foto.length > 0) {
@@ -498,6 +513,27 @@ export async function PATCH(req: NextRequest) {
       throw createError.notFound(
         "Artículo no encontrado o no pertenece a tu tenant",
       );
+    }
+
+    if (
+      validarProducto.Codigo !== undefined &&
+      validarProducto.Codigo !== articulo.Codigo
+    ) {
+      const codigoExistente = await prisma.articulo.findFirst({
+        where: {
+          TenantId: tenantIdBigInt,
+          Codigo: validarProducto.Codigo,
+          EstaEliminado: false,
+          Id: { not: articulo.Id },
+        },
+        select: { Id: true },
+      });
+      if (codigoExistente) {
+        throw createError.conflict(
+          `El código ${validarProducto.Codigo} ya está en uso por otro producto`,
+          { field: "Codigo" },
+        );
+      }
     }
 
     const producto = await prisma.$transaction(async (tx) => {

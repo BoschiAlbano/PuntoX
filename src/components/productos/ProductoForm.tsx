@@ -43,6 +43,7 @@ import {
   Trash2,
   Wand2,
   ScanBarcode,
+  RotateCcw,
 } from "lucide-react";
 import CameraScannerModal from "@/components/ventas/CameraScannerModal";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
@@ -512,6 +513,38 @@ export default function ProductoForm({
                   isRequired
                   isDisabled={isLoadingFullProduct || isSaving}
                   classNames={inputClassNames}
+                  description={
+                    !initialData &&
+                    nextCodeData?.ultimoCodigo &&
+                    formData.Codigo !== nextCodeData.ultimoCodigo
+                      ? `Sugerido: ${nextCodeData.ultimoCodigo}`
+                      : undefined
+                  }
+                  endContent={
+                    !initialData && nextCodeData?.ultimoCodigo ? (
+                      <Tooltip
+                        content={`Usar código sugerido (${nextCodeData.ultimoCodigo})`}
+                        placement="top"
+                      >
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData({
+                              ...formData,
+                              Codigo: nextCodeData.ultimoCodigo,
+                            })
+                          }
+                          className="text-slate-400 hover:text-[#67afc3] transition-colors focus:outline-none disabled:opacity-30"
+                          disabled={
+                            isSaving ||
+                            formData.Codigo === nextCodeData.ultimoCodigo
+                          }
+                        >
+                          <RotateCcw size={18} />
+                        </button>
+                      </Tooltip>
+                    ) : undefined
+                  }
                 />
                 <Input
                   label="Código de Barras"

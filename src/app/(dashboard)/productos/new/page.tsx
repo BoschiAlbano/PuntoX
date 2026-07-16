@@ -23,9 +23,7 @@ export default function NuevoProductoPage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(
-          err?.error || err?.message || "Error al crear producto",
-        );
+        throw err;
       }
       return res.json();
     },

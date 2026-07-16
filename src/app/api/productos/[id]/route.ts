@@ -98,7 +98,7 @@ export async function GET(
 
       PromocionesCantidad: producto.PromocionesCantidad?.map((pc: any) => ({
         Id: Number(pc.Id),
-        Cantidad: pc.Cantidad,
+        Cantidad: Number(pc.Cantidad),
         DescuentoPorcentaje: Number(pc.DescuentoPorcentaje),
         EstaActiva: pc.EstaActiva,
       })) || [],

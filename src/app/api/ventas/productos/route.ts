@@ -268,7 +268,7 @@ export async function GET(req: NextRequest) {
         PromocionesCantidad:
           p.PromocionesCantidad?.map((pc: any) => ({
             Id: Number(pc.Id),
-            Cantidad: pc.Cantidad,
+            Cantidad: Number(pc.Cantidad),
             DescuentoPorcentaje: Number(pc.DescuentoPorcentaje),
             EstaActiva: pc.EstaActiva,
           })) || [],
