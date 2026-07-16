@@ -1,30 +1,23 @@
 "use client";
 
 import { useCajaByIdQuery } from "@/hooks/useCaja";
-import { Button, Card, CardBody, Chip, Skeleton, Tooltip } from "@heroui/react";
+import { Button, Card, CardBody, Chip, Tooltip } from "@heroui/react";
 import {
   ArrowLeft,
-  ArrowRightLeft,
-  Banknote,
-  Coins,
-  CreditCard,
-  DollarSign,
   Eye,
   FileText,
   Printer,
   TrendingDown,
   TrendingUp,
-  Wallet,
 } from "lucide-react";
 import React, { useMemo, useRef } from "react";
 import { LoadingComponent } from "../loading/loading";
-import { TIPO_MOVIMIENTO, TIPO_PAGO } from "@/lib/constants/comprobantes";
+import { TIPO_MOVIMIENTO } from "@/lib/constants/comprobantes";
 import { ReporteCajaImprimible } from "./ReporteCajaImprimible";
 import { useReactToPrint } from "react-to-print";
 import { useRouter } from "next/navigation";
-import StatCard from "../dashboard/StatCard";
 import GenericTable, { Column } from "@/components/shared/GenericTable";
-import { useConfiguracion } from "@/hooks/useConfiguracion";
+import CajaResumenCompartido from "@/components/caja/CajaResumenCompartido";
 
 const movimientosColumns: Column[] = [
   { uid: "fecha", name: "Fecha", sortable: false },
@@ -43,7 +36,6 @@ const movimientosColumns: Column[] = [
 export default function CajaHistorialDetalleScreen({ id }: { id: number }) {
   const router = useRouter();
   const { data: cajaActual, isLoading, isError } = useCajaByIdQuery(id);
-  const { configuracion } = useConfiguracion({ enableConfiguracion: true });
 
   const printContentRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
@@ -62,12 +54,36 @@ export default function CajaHistorialDetalleScreen({ id }: { id: number }) {
   const [movPage, setMovPage] = React.useState(1);
   const movLimit = 10;
 
-  const filteredMovimientos = useMemo(() => {
-    if (!cajaActual?.Movimiento) return [];
-    return cajaActual.Movimiento.filter((m: any) =>
-      m.Descripcion?.toLowerCase().includes(movSearch.toLowerCase()),
+  const movimientosConGastos = useMemo(() => {
+    const movs = (cajaActual?.Movimiento || []).map((m: any) => ({ ...m, _esGasto: false }));
+    const gas = (cajaActual?.Gasto || []).map((g: any) => ({
+      Id: `gasto-${g.Id}`,
+      Fecha: g.Fecha,
+      Descripcion: g.Descripcion,
+      Monto: g.Monto,
+      TipoMovimiento: 2,
+      _esGasto: true,
+      _gasto: g,
+      Comprobante: null,
+      ComprobanteId: null,
+    }));
+    return [...movs, ...gas].sort(
+      (a: any, b: any) =>
+        new Date(b.Fecha).getTime() - new Date(a.Fecha).getTime(),
     );
-  }, [cajaActual?.Movimiento, movSearch]);
+  }, [cajaActual?.Movimiento, cajaActual?.Gasto]);
+
+  const filteredMovimientos = useMemo(() => {
+    if (!movimientosConGastos.length) return [];
+    const q = movSearch.toLowerCase().trim();
+    if (!q) return movimientosConGastos;
+    return movimientosConGastos.filter(
+      (m: any) =>
+        m.Descripcion?.toLowerCase().includes(q) ||
+        m._gasto?.ConceptoGastos?.Descripcion?.toLowerCase().includes(q) ||
+        m.Comprobante?.Numero?.toString().includes(q),
+    );
+  }, [movimientosConGastos, movSearch]);
 
   const movPaginationMeta = useMemo(() => {
     const total = filteredMovimientos.length;
@@ -94,15 +110,9 @@ export default function CajaHistorialDetalleScreen({ id }: { id: number }) {
     });
   };
 
-  // Ganancia neta del día = total entradas - total salidas
-  const gananciaDelDia = useMemo(
-    () =>
-      cajaActual
-        ? Number(cajaActual.TotalEntradaEfectivo) -
-          Number(cajaActual.TotalSalidaEfectivo)
-        : 0,
-    [cajaActual],
-  );
+  const handleViewGasto = (gastoId: number) => {
+    router.push(`/caja/gastos/${gastoId}`);
+  };
 
   const renderMovimientoCell = React.useCallback(
     (mov: any, columnKey: React.Key) => {
@@ -111,24 +121,26 @@ export default function CajaHistorialDetalleScreen({ id }: { id: number }) {
           return (
             <div className="flex flex-col">
               <span className="text-small">{formatDate(mov.Fecha)}</span>
-              <span className="text-tiny text-default-400">
-                {mov.Usuario?.Nombre || "-"}
-              </span>
+              {!mov._esGasto && (
+                <span className="text-tiny text-default-400">
+                  {mov.Usuario?.Nombre || "-"}
+                </span>
+              )}
             </div>
           );
         case "descripcion":
           return (
             <div className="flex flex-col">
               <span className="text-small font-medium">{mov.Descripcion}</span>
-              {mov.Comprobante && (
+              {mov._esGasto ? null : mov.Comprobante ? (
                 <span className="text-xs text-gray-400">
                   Comp. #{mov.Comprobante.Numero}
                 </span>
-              )}
+              ) : null}
             </div>
           );
         case "tipo":
-          const isEntradaTipo = mov.TipoMovimiento === TIPO_MOVIMIENTO.ENTRADA;
+          const isEntradaTipo = mov._esGasto ? false : mov.TipoMovimiento === TIPO_MOVIMIENTO.ENTRADA;
           return (
             <Chip
               className="capitalize"
@@ -147,7 +159,7 @@ export default function CajaHistorialDetalleScreen({ id }: { id: number }) {
             </Chip>
           );
         case "monto":
-          const isPos = mov.TipoMovimiento === TIPO_MOVIMIENTO.ENTRADA;
+          const isPos = mov._esGasto ? false : mov.TipoMovimiento === TIPO_MOVIMIENTO.ENTRADA;
           return (
             <span
               className={`font-semibold ${isPos ? "text-success" : "text-danger"}`}
@@ -156,6 +168,22 @@ export default function CajaHistorialDetalleScreen({ id }: { id: number }) {
             </span>
           );
         case "acciones":
+          if (mov._esGasto) {
+            return (
+              <div className="flex items-center justify-center gap-2">
+                <Tooltip content="Ver detalle del gasto">
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    onPress={() => handleViewGasto(mov._gasto.Id)}
+                  >
+                    <Eye size={16} className="text-default-500" />
+                  </Button>
+                </Tooltip>
+              </div>
+            );
+          }
           if (!mov.ComprobanteId) return null;
           return (
             <div className="flex items-center justify-center gap-2">
@@ -177,7 +205,7 @@ export default function CajaHistorialDetalleScreen({ id }: { id: number }) {
           return null;
       }
     },
-    [router],
+    [router, handleViewGasto],
   );
 
   if (isLoading) {
@@ -242,177 +270,29 @@ export default function CajaHistorialDetalleScreen({ id }: { id: number }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 flex flex-col gap-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
-              title="Monto Inicial"
-              value={formatMoney(cajaActual.MontoInicial)}
-              icon={Wallet}
-              colorScheme="blue"
-              delay={0.1}
-              subtitle={`Abierta: ${formatDate(cajaActual.FechaApertura)}`}
+      <CajaResumenCompartido cajaActual={cajaActual} isLoading={isLoading}>
+        <Card className="shadow-sm border-none bg-white rounded-2xl">
+          <CardBody className="p-0">
+            <GenericTable
+              data={paginatedMovimientos}
+              columns={movimientosColumns}
+              renderCell={renderMovimientoCell}
+              emptyText="No hay movimientos registrados en esta caja."
+              isLoading={false}
+              isError={false}
+              search={movSearch}
+              onSearchChange={(val) => {
+                setMovSearch(val);
+                setMovPage(1);
+              }}
+              searchPlaceholder="Buscar movimiento..."
+              page={movPage}
+              onPageChange={setMovPage}
+              paginationMeta={movPaginationMeta}
             />
-            <StatCard
-              title="Entradas (Efectivo)"
-              value={formatMoney(cajaActual.TotalEntradaEfectivo)}
-              icon={TrendingUp}
-              colorScheme="emerald"
-              delay={0.2}
-              subtitle="Ventas y aportes"
-            />
-            <StatCard
-              title="Salidas (Efectivo)"
-              value={formatMoney(cajaActual.TotalSalidaEfectivo)}
-              icon={TrendingDown}
-              colorScheme="red"
-              delay={0.3}
-              subtitle="Gastos y retiros"
-            />
-            <StatCard
-              title="Monto Cierre Estimado"
-              value={formatMoney(
-                Number(cajaActual.MontoInicial) + gananciaDelDia,
-              )}
-              icon={Coins}
-              colorScheme="orange"
-              delay={0.4}
-              subtitle={
-                cajaActual.FechaCierre
-                  ? `Cerrada: ${formatDate(cajaActual.FechaCierre)}`
-                  : "En curso"
-              }
-            />
-          </div>
-
-          <Card className="shadow-sm border-none bg-white">
-            <CardBody className="p-0">
-              <GenericTable
-                data={paginatedMovimientos}
-                columns={movimientosColumns}
-                renderCell={renderMovimientoCell}
-                emptyText="No hay movimientos registrados en esta caja."
-                isLoading={false}
-                isError={false}
-                search={movSearch}
-                onSearchChange={(val) => {
-                  setMovSearch(val);
-                  setMovPage(1);
-                }}
-                searchPlaceholder="Buscar movimiento..."
-                page={movPage}
-                onPageChange={setMovPage}
-                paginationMeta={movPaginationMeta}
-              />
-            </CardBody>
-          </Card>
-        </div>
-
-        <div className="flex flex-col gap-6">
-          <Card className="shadow-sm border-none bg-white">
-            <CardBody className="p-5 flex flex-col gap-6">
-              <div className="flex items-center gap-2 border-b border-divider pb-3">
-                <FileText size={20} className="text-primary" />
-                <h3 className="text-lg font-semibold text-slate-800">
-                  Resumen de la Caja
-                </h3>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                <div className="bg-slate-50 p-4 rounded-xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white rounded-lg shadow-sm">
-                      <Banknote size={20} className="text-emerald-500" />
-                    </div>
-                    <span className="font-medium text-slate-700">
-                      Efectivo Total
-                    </span>
-                  </div>
-                  <span className="font-bold text-slate-900">
-                    {formatMoney(
-                      Number(cajaActual.MontoInicial) + gananciaDelDia,
-                    )}
-                  </span>
-                </div>
-
-                <div className="bg-slate-50 p-4 rounded-xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white rounded-lg shadow-sm">
-                      <CreditCard size={20} className="text-blue-500" />
-                    </div>
-                    <span className="font-medium text-slate-700">Tarjetas</span>
-                  </div>
-                  <span className="font-bold text-slate-900">
-                    {formatMoney(
-                      Number(cajaActual.TotalEntradaTarjeta) -
-                        Number(cajaActual.TotalSalidaTarjeta),
-                    )}
-                  </span>
-                </div>
-
-                <div className="bg-slate-50 p-4 rounded-xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white rounded-lg shadow-sm">
-                      <ArrowRightLeft size={20} className="text-indigo-500" />
-                    </div>
-                    <span className="font-medium text-slate-700">Transferencias</span>
-                  </div>
-                  <span className="font-bold text-slate-900">
-                    {formatMoney(
-                      Number(cajaActual.TotalEntradaTransf) -
-                        Number(cajaActual.TotalSalidaTransf),
-                    )}
-                  </span>
-                </div>
-
-                <div className="bg-slate-50 p-4 rounded-xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white rounded-lg shadow-sm">
-                      <Wallet size={20} className="text-amber-500" />
-                    </div>
-                    <span className="font-medium text-slate-700">Cheques</span>
-                  </div>
-                  <span className="font-bold text-slate-900">
-                    {formatMoney(
-                      Number(cajaActual.TotalEntradaCheque) -
-                        Number(cajaActual.TotalSalidaCheque),
-                    )}
-                  </span>
-                </div>
-
-                <div className="bg-slate-50 p-4 rounded-xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white rounded-lg shadow-sm">
-                      <FileText size={20} className="text-rose-500" />
-                    </div>
-                    <span className="font-medium text-slate-700">Cta. Corriente</span>
-                  </div>
-                  <span className="font-bold text-slate-900">
-                    {formatMoney(
-                      Number(cajaActual.TotalEntradaCtaCte) -
-                        Number(cajaActual.TotalSalidaCtaCte),
-                    )}
-                  </span>
-                </div>
-
-                <div className="bg-slate-50 p-4 rounded-xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white rounded-lg shadow-sm">
-                      <DollarSign size={20} className="text-primary" />
-                    </div>
-                    <span className="font-medium text-slate-700">
-                      Ganancia Ventas
-                    </span>
-                  </div>
-                  <span className="font-bold text-slate-900">
-                    {formatMoney(cajaActual.GananciaVentas || 0)}
-                  </span>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-        </div>
-      </div>
+          </CardBody>
+        </Card>
+      </CajaResumenCompartido>
 
       <div style={{ display: "none" }}>
         <ReporteCajaImprimible ref={printContentRef} cajaActual={cajaActual} />

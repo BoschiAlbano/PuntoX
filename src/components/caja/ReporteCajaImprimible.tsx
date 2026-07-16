@@ -1,7 +1,7 @@
 import React from "react";
 import { Caja } from "@/hooks/useCaja";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
-import { TIPO_MOVIMIENTO } from "@/lib/constants/comprobantes";
+import { TIPO_MOVIMIENTO, TIPO_PAGO_LABELS } from "@/lib/constants/comprobantes";
 
 interface ReporteCajaImprimibleProps {
   cajaActual: Caja;
@@ -27,6 +27,11 @@ export const ReporteCajaImprimible = React.forwardRef<
     Number(cajaActual.TotalSalidaTransf || 0) +
     Number(cajaActual.TotalSalidaCheque || 0) +
     Number(cajaActual.TotalSalidaCtaCte || 0);
+
+  const totalGastos = (cajaActual.Gasto || []).reduce(
+    (sum, g) => sum + Number(g.Monto),
+    0,
+  );
 
   const saldoEfectivo =
     Number(cajaActual.MontoInicial || 0) +
@@ -112,6 +117,14 @@ export const ReporteCajaImprimible = React.forwardRef<
               {formatCurrency(totalSalidas)}
             </span>
           </div>
+          {totalGastos > 0 && (
+            <div className="flex justify-between">
+              <span>Total Gastos:</span>
+              <span className="font-semibold text-red-700">
+                {formatCurrency(totalGastos)}
+              </span>
+            </div>
+          )}
           {cajaActual.MontoCierre !== null && (
             <div className="flex justify-between pt-2 border-t border-gray-200">
               <span>Efectivo Contado (Cierre):</span>
@@ -190,6 +203,62 @@ export const ReporteCajaImprimible = React.forwardRef<
           </tbody>
         </table>
       </div>
+
+      {/* Gastos */}
+      {cajaActual.Gasto && cajaActual.Gasto.length > 0 && (
+        <div className="mb-4">
+          <h3 className="text-lg font-bold border-b border-gray-300 mb-3 pb-1">
+            Gastos del Turno
+          </h3>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="py-2 px-3 border border-gray-300">Hora</th>
+                <th className="py-2 px-3 border border-gray-300">Concepto</th>
+                <th className="py-2 px-3 border border-gray-300">Descripción</th>
+                <th className="py-2 px-3 border border-gray-300">Forma de Pago</th>
+                <th className="py-2 px-3 border border-gray-300 text-right">
+                  Monto
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {cajaActual.Gasto.map((gasto) => (
+                <tr key={gasto.Id} className="border-b border-gray-200">
+                  <td className="py-1 px-3 border-x border-gray-300">
+                    {new Date(gasto.Fecha).toLocaleTimeString("es-AR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </td>
+                  <td className="py-1 px-3 border-x border-gray-300">
+                    {gasto.ConceptoGastos?.Descripcion || "Gasto"}
+                  </td>
+                  <td className="py-1 px-3 border-x border-gray-300 truncate max-w-[200px]">
+                    {gasto.Descripcion}
+                  </td>
+                  <td className="py-1 px-3 border-x border-gray-300">
+                    {gasto.FormaPago?.map((fp) => TIPO_PAGO_LABELS[fp.TipoPago] || fp.TipoPago).join(", ") || "-"}
+                  </td>
+                  <td className="py-1 px-3 border-x border-gray-300 text-right font-medium text-red-700">
+                    {formatCurrency(gasto.Monto)}
+                  </td>
+                </tr>
+              ))}
+              <tr className="font-bold bg-gray-50">
+                <td colSpan={4} className="py-2 px-3 border border-gray-300 text-right">
+                  Total Gastos:
+                </td>
+                <td className="py-2 px-3 border border-gray-300 text-right text-red-700">
+                  {formatCurrency(
+                    cajaActual.Gasto.reduce((sum, g) => sum + Number(g.Monto), 0),
+                  )}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Pie de página */}
       <div className="mt-8 text-center text-gray-500 text-xs">

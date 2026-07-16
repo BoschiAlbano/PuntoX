@@ -23,6 +23,87 @@ export const createGastoSchema = z.object({
     .min(1, "Debe agregar al menos un pago"),
 });
 
+export async function GET(req: NextRequest) {
+  try {
+    const { tenantId, user } = await getAuthContext({
+      req,
+      permission: GET_PERMISSIONS.CAJA,
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
+
+    const searchParams = req.nextUrl.searchParams;
+    const gastoId = searchParams.get("id");
+
+    if (!gastoId) {
+      return NextResponse.json(
+        { error: "ID del gasto es requerido" },
+        { status: 400 },
+      );
+    }
+
+    const gasto = await prisma.gasto.findFirst({
+      where: {
+        Id: BigInt(gastoId),
+        TenantId: BigInt(tenantId),
+        EstaEliminado: false,
+      },
+      include: {
+        ConceptoGastos: {
+          select: { Id: true, Descripcion: true },
+        },
+        FormaPago: {
+          where: { EstaEliminado: false },
+        },
+        Caja: {
+          select: {
+            Id: true,
+            FechaApertura: true,
+            FechaCierre: true,
+            MontoInicial: true,
+          },
+        },
+      },
+    });
+
+    if (!gasto) {
+      return NextResponse.json(
+        { error: "Gasto no encontrado" },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({
+      gasto: {
+        ...gasto,
+        Id: Number(gasto.Id),
+        CajaId: Number(gasto.CajaId),
+        ConceptoGastoId: Number(gasto.ConceptoGastoId),
+        TenantId: Number(gasto.TenantId),
+        FormaPago: gasto.FormaPago.map((p) => ({
+          ...p,
+          Id: Number(p.Id),
+          GastoId: Number(p.GastoId),
+          TenantId: Number(p.TenantId),
+          TipoPago: Number(p.TipoPago),
+          Monto: Number(p.Monto),
+        })),
+        Caja: gasto.Caja
+          ? {
+              ...gasto.Caja,
+              Id: Number(gasto.Caja.Id),
+              MontoInicial: Number(gasto.Caja.MontoInicial),
+            }
+          : null,
+      },
+    });
+  } catch (error) {
+    return handleError(error);
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { tenantId, user } = await getAuthContext({

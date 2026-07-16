@@ -1,5 +1,6 @@
 import { useCaja } from "@/hooks/useCaja";
 import { ModalAbrirCaja } from "@/components/caja/ModalAbrirCaja";
+import CajaResumenCompartido from "@/components/caja/CajaResumenCompartido";
 import {
   Button,
   Card,
@@ -34,10 +35,6 @@ import {
   TrendingUp,
   Unlock,
   DollarSign,
-  Banknote,
-  CreditCard,
-  ArrowRightLeft,
-  Wallet,
   Coins,
   CheckCircle2,
   AlertTriangle,
@@ -60,10 +57,8 @@ import { ReporteCajaImprimible } from "./ReporteCajaImprimible";
 import { useReactToPrint } from "react-to-print";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import StatCard from "../dashboard/StatCard";
 import GenericTable, { Column } from "@/components/shared/GenericTable";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
-import { modalMotionProps } from "@/lib/motionConfig";
 
 const movimientosColumns: Column[] = [
   { uid: "fecha", name: "Fecha", sortable: false },
@@ -171,6 +166,7 @@ export default function CajaActual({
   });
 
   const movimientos = cajaActual?.Movimiento || [];
+  const gastos = cajaActual?.Gasto || [];
 
   // Movimientos: búsqueda y paginación local
   const [movSearch, setMovSearch] = useState("");
@@ -188,11 +184,31 @@ export default function CajaActual({
   );
   const MOV_LIMIT = 10;
 
+  const movimientosConGastos = useMemo(() => {
+    const movs = movimientos.map((m: any) => ({ ...m, _esGasto: false }));
+    const gas = (gastos || []).map((g: any) => ({
+      Id: `gasto-${g.Id}`,
+      Fecha: g.Fecha,
+      Descripcion: g.Descripcion,
+      Monto: g.Monto,
+      TipoMovimiento: TIPO_MOVIMIENTO.SALIDA,
+      _esGasto: true,
+      _gasto: g,
+      Comprobante: null,
+      ComprobanteId: null,
+    }));
+    return [...movs, ...gas].sort(
+      (a: any, b: any) =>
+        new Date(b.Fecha).getTime() - new Date(a.Fecha).getTime(),
+    );
+  }, [movimientos, gastos]);
+
   const filteredMovimientos = useMemo(() => {
-    let result = movimientos;
+    let result = movimientosConGastos;
 
     if (filtroPendientes) {
       result = result.filter((m: any) => {
+        if (m._esGasto) return false;
         if (!m.ComprobanteId || !m.Comprobante) return false;
         const tiposAfip = [
           TIPO_COMPROBANTE_VENTA.FACTURA_A,
@@ -201,7 +217,6 @@ export default function CajaActual({
         ];
         if (!tiposAfip.includes(m.Comprobante.TipoComprobante)) return false;
 
-        // Pendiente si no tiene FacturaElectronica o si no está AUTORIZADO
         if (!m.Comprobante.FacturaElectronica) return true;
         return m.Comprobante.FacturaElectronica.Estado !== "AUTORIZADO";
       });
@@ -212,9 +227,10 @@ export default function CajaActual({
     return result.filter(
       (m: any) =>
         m.Descripcion?.toLowerCase().includes(q) ||
+        m._gasto?.ConceptoGastos?.Descripcion?.toLowerCase().includes(q) ||
         m.Comprobante?.Numero?.toString().includes(q),
     );
-  }, [movimientos, movSearch, filtroPendientes]);
+  }, [movimientosConGastos, movSearch, filtroPendientes]);
 
   const paginatedMovimientos = useMemo(() => {
     const start = (movPage - 1) * MOV_LIMIT;
@@ -275,6 +291,10 @@ export default function CajaActual({
 
   const handleViewTicket = (comprobanteId: number) => {
     router.push(`/comprobantes/${comprobanteId}`);
+  };
+
+  const handleViewGasto = (gastoId: number) => {
+    router.push(`/caja/gastos/${gastoId}`);
   };
 
   // Validar si una fecha está dentro del rango permitido por ARCA (N±5 días)
@@ -406,7 +426,7 @@ export default function CajaActual({
           return (
             <div className="flex flex-col">
               <span className="text-sm font-medium">{mov.Descripcion}</span>
-              {mov.Comprobante && (
+              {!mov._esGasto && mov.Comprobante ? (
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
                     {TIPO_COMPROBANTE_VENTA_LABELS[
@@ -417,10 +437,17 @@ export default function CajaActual({
                     #{mov.Comprobante.Numero?.toString().padStart(8, "0")}
                   </span>
                 </div>
-              )}
+              ) : null}
             </div>
           );
         case "facturaElectronica":
+          if (mov._esGasto) {
+            return (
+              <span className="text-[10px] text-gray-400 font-medium">
+                No aplica
+              </span>
+            );
+          }
           if (!mov.Comprobante) return <span className="text-gray-300">-</span>;
 
           const tiposAfip = [
@@ -571,6 +598,18 @@ export default function CajaActual({
             </span>
           );
         case "acciones":
+          if (mov._esGasto) {
+            return (
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                onPress={() => handleViewGasto(mov._gasto.Id)}
+              >
+                <Eye size={18} className="text-gray-500" />
+              </Button>
+            );
+          }
           return mov.ComprobanteId ? (
             <Button
               isIconOnly
@@ -587,7 +626,7 @@ export default function CajaActual({
           return null;
       }
     },
-    [handleViewTicket],
+    [handleViewTicket, handleViewGasto],
   );
 
   const formatMoney = (val: number) =>
@@ -638,6 +677,7 @@ export default function CajaActual({
           paginationMeta={{ total: 0, page: 1, limit: 10, totalPages: 1 }}
           renderCell={() => null}
         />
+
       </div>
     );
   }
@@ -705,17 +745,25 @@ export default function CajaActual({
 
   return (
     <div className="flex flex-col gap-6 pb-4">
-      {/* Entradas del dia */}
+      {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
-          <TrendingUp size={18} className="text-green-500" />
-          Entradas del día
-        </h2>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">
+              Caja Actual
+            </h1>
+            <p className="text-slate-500 text-sm">
+              {cajaActual.UsuarioApertura?.NombreCompleto ||
+                cajaActual.UsuarioApertura?.Nombre ||
+                "Usuario"}
+            </p>
+          </div>
+        </div>
         <div className="flex gap-2">
           <Button
             onPress={() => handlePrintReporteCaja()}
             variant="flat"
-            className="flex-1 sm:flex-none h-9 px-4 rounded-xl text-sm"
+            className="flex-1 sm:flex-none h-9 px-4 rounded-xl text-sm font-medium"
             startContent={<Printer size={14} />}
           >
             Reporte
@@ -729,192 +777,113 @@ export default function CajaActual({
           </Button>
         </div>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <StatCard
-          title="Efectivo"
-          value={formatMoney(cajaActual.TotalEntradaEfectivo)}
-          icon={Banknote}
-          colorScheme="green"
-          chartType="bar"
-          delay={0.05}
-        />
 
-        <StatCard
-          title="Tarjeta"
-          value={formatMoney(cajaActual.TotalEntradaTarjeta)}
-          icon={CreditCard}
-          colorScheme="green"
-          chartType="bar"
-          delay={0.1}
-        />
-
-        <StatCard
-          title="Transferencia"
-          value={formatMoney(cajaActual.TotalEntradaTransf)}
-          icon={ArrowRightLeft}
-          colorScheme="green"
-          chartType="bar"
-          delay={0.15}
-        />
-
-        <StatCard
-          title="Cheque"
-          value={formatMoney(cajaActual.TotalEntradaCheque)}
-          icon={Wallet}
-          colorScheme="green"
-          chartType="bar"
-          delay={0.2}
-        />
-
-        <StatCard
-          title="Cta. Corriente"
-          value={formatMoney(cajaActual.TotalEntradaCtaCte)}
-          icon={Wallet}
-          colorScheme="green"
-          chartType="bar"
-          delay={0.25}
-        />
-      </div>
-
-      {/* Salidas del dia */}
-      <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
-        <TrendingDown size={18} className="text-red-500" />
-        Salidas del día
-      </h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <StatCard
-          title="Efectivo"
-          value={formatMoney(cajaActual.TotalSalidaEfectivo)}
-          icon={Banknote}
-          colorScheme="red"
-          chartType="line"
-          delay={0.05}
-        />
-
-        <StatCard
-          title="Tarjeta"
-          value={formatMoney(cajaActual.TotalSalidaTarjeta)}
-          icon={CreditCard}
-          colorScheme="red"
-          chartType="line"
-          delay={0.1}
-        />
-
-        <StatCard
-          title="Transferencia"
-          value={formatMoney(cajaActual.TotalSalidaTransf)}
-          icon={ArrowRightLeft}
-          colorScheme="red"
-          chartType="line"
-          delay={0.15}
-        />
-
-        <StatCard
-          title="Cheque"
-          value={formatMoney(cajaActual.TotalSalidaCheque)}
-          icon={Wallet}
-          colorScheme="red"
-          chartType="line"
-          delay={0.2}
-        />
-
-        <StatCard
-          title="Cta. Corriente"
-          value={formatMoney(cajaActual.TotalSalidaCtaCte)}
-          icon={Wallet}
-          colorScheme="red"
-          chartType="line"
-          delay={0.25}
-        />
-      </div>
-
-      {/* Movements Table Section */}
-      <div className="flex flex-col gap-2">
-        <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
-          <TrendingUp size={18} className="text-[#69b0c3]" />
-          Movimientos
-        </h2>
-      </div>
-      <GenericTable
-        data={paginatedMovimientos}
-        columns={movimientosColumns}
-        isLoading={false}
-        isError={false}
-        search={movSearch}
-        onSearchChange={(val) => {
-          setMovSearch(val);
-          setMovPage(1);
-        }}
-        searchPlaceholder="Buscar movimiento..."
-        page={movPage}
-        onPageChange={setMovPage}
-        paginationMeta={movPaginationMeta}
-        isRefreshing={isFetching || isReprocesando}
-        onRefresh={refetch}
-        renderCell={renderMovCell}
-        emptyText="No hay movimientos registrados."
-        printConfig={{ title: "Movimientos de Caja" }}
-        enableSelection={true}
-        selectedKeys={selectedKeys}
-        onSelectionChange={(keys) => {
-          if (keys === "all") {
-            setSelectedKeys(
-              new Set(filteredMovimientos.map((m) => String(m.Id))),
-            );
-          } else {
-            setSelectedKeys(keys as Set<string>);
-          }
-        }}
-        selectedCount={selectedKeys.size}
-        onClearSelection={() => setSelectedKeys(new Set())}
-        bulkActionsDropdown={
-          fiscal?.afipHabilitado && !isReprocesando
-            ? [
-                {
-                  key: "emitir-arca",
-                  label: "Emitir Facturas Electrónicas",
-                  onClick: () => handleBulkEmitirArca(),
-                },
-              ]
-            : undefined
-        }
-        extraSearchContent={
-          <Button
-            size="sm"
-            variant={filtroPendientes ? "solid" : "flat"}
-            color={filtroPendientes ? "warning" : "default"}
-            onPress={() => {
-              setFiltroPendientes(!filtroPendientes);
-              setMovPage(1);
-              setSelectedKeys(new Set());
-            }}
-            startContent={<AlertTriangle size={14} />}
-            className="hidden sm:flex h-8 px-3 rounded-lg text-xs font-semibold"
-          >
-            {filtroPendientes ? "Mostrando: Sin FE" : "Filtrar sin FE"}
-          </Button>
-        }
-        extraMenuItems={[
-          {
-            key: "filtrar-sin-fe",
-            label: filtroPendientes ? "✓ Mostrando: Sin FE" : "Filtrar sin FE",
-            icon: (
-              <AlertTriangle
-                size={16}
-                className={
-                  filtroPendientes ? "text-amber-600" : "text-slate-500"
+      <CajaResumenCompartido cajaActual={cajaActual} isLoading={isLoading}>
+        {/* Movements Table Section */}
+        <div className="flex flex-col gap-2">
+          <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+            <TrendingUp size={18} className="text-[#69b0c3]" />
+            Movimientos
+          </h2>
+        </div>
+        <Card className="shadow-sm border-none bg-white rounded-2xl">
+          <CardBody className="p-0">
+            <GenericTable
+              data={paginatedMovimientos}
+              columns={movimientosColumns}
+              isLoading={false}
+              isError={false}
+              search={movSearch}
+              onSearchChange={(val) => {
+                setMovSearch(val);
+                setMovPage(1);
+              }}
+              searchPlaceholder="Buscar movimiento..."
+              page={movPage}
+              onPageChange={setMovPage}
+              paginationMeta={movPaginationMeta}
+              isRefreshing={isFetching || isReprocesando}
+              onRefresh={refetch}
+              renderCell={renderMovCell}
+              emptyText="No hay movimientos registrados."
+              printConfig={{ title: "Movimientos de Caja" }}
+              enableSelection={true}
+              selectedKeys={selectedKeys}
+              onSelectionChange={(keys) => {
+                if (keys === "all") {
+                  setSelectedKeys(
+                    new Set(filteredMovimientos.map((m) => String(m.Id))),
+                  );
+                } else {
+                  setSelectedKeys(keys as Set<string>);
                 }
-              />
-            ),
-            isActive: filtroPendientes,
-            onPress: () => {
-              setFiltroPendientes(!filtroPendientes);
-              setMovPage(1);
-              setSelectedKeys(new Set());
-            },
-          },
-        ]}
-      />
+              }}
+              selectedCount={selectedKeys.size}
+              onClearSelection={() => setSelectedKeys(new Set())}
+              bulkActionsDropdown={
+                fiscal?.afipHabilitado && !isReprocesando
+                  ? [
+                      {
+                        key: "emitir-arca",
+                        label: "Emitir Facturas Electrónicas",
+                        onClick: () => handleBulkEmitirArca(),
+                      },
+                    ]
+                  : undefined
+              }
+              extraSearchContent={
+                <Button
+                  size="sm"
+                  variant={filtroPendientes ? "solid" : "flat"}
+                  color={filtroPendientes ? "warning" : "default"}
+                  onPress={() => {
+                    setFiltroPendientes(!filtroPendientes);
+                    setMovPage(1);
+                    setSelectedKeys(new Set());
+                  }}
+                  startContent={<AlertTriangle size={14} />}
+                  className="hidden sm:flex h-8 px-3 rounded-lg text-xs font-semibold"
+                >
+                  {filtroPendientes ? "Mostrando: Sin FE" : "Filtrar sin FE"}
+                </Button>
+              }
+              extraMenuItems={[
+                {
+                  key: "filtrar-sin-fe",
+                  label: filtroPendientes ? "✓ Mostrando: Sin FE" : "Filtrar sin FE",
+                  icon: (
+                    <AlertTriangle
+                      size={16}
+                      className={
+                        filtroPendientes ? "text-amber-600" : "text-slate-500"
+                      }
+                    />
+                  ),
+                  isActive: filtroPendientes,
+                  onPress: () => {
+                    setFiltroPendientes(!filtroPendientes);
+                    setMovPage(1);
+                    setSelectedKeys(new Set());
+                  },
+                },
+              ]}
+            />
+          </CardBody>
+        </Card>
+      </CajaResumenCompartido>
+
+      <div style={{ display: "none" }}>
+        <div ref={reporteCajaRef}>
+          {cajaActual && (
+            <ReporteCajaImprimible
+              cajaActual={cajaActual as any}
+              nombreEmpresa={
+                configuracion?.nombreFantasia || configuracion?.razonSocial
+              }
+            />
+          )}
+        </div>
+      </div>
 
       {/* Modal Cerrar Caja */}
       <Modal
