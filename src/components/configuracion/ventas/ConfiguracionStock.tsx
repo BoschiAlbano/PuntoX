@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useConfiguracion, Configuracion } from "@/hooks/useConfiguracion";
 import { VentasSection, ToggleRow } from "./VentasPrimitives";
+import { useReportDirty } from "../OnboardingDirtyContext";
 
 export function ConfiguracionStock() {
   const {
@@ -53,6 +54,8 @@ export function ConfiguracionStock() {
       configStock.actualizaCostoDesdeCompra !== (configuracionData.actualizaCostoDesdeCompra ?? false) ||
       configStock.modificaPrecioVentaDesdeCompra !== (configuracionData.modificaPrecioVentaDesdeCompra ?? false)
     : false;
+
+  useReportDirty("ventas-stock", hasChanges);
 
   const disabled = isSavingConfiguracion || !configuracionData;
 

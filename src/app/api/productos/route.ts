@@ -13,6 +13,7 @@ import {
 } from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
 import { createError } from "@/lib/errors/types";
+import { ejecutarBorradoFisico } from "@/lib/errors/hardDelete";
 import { fotoDefault } from "@/utilities/fotoDefault";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { resolveStockNotifications } from "@/lib/services/notificaciones";
@@ -28,6 +29,8 @@ export async function GET(req: NextRequest) {
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
     const bajoStock =
       req.nextUrl.searchParams.get("bajoStock")?.toLowerCase() === "true";
+    const incluirInactivos =
+      req.nextUrl.searchParams.get("incluirInactivos") === "true";
     const editIdParam = req.nextUrl.searchParams.get("editId");
     const editId = editIdParam ? Number(editIdParam) : null;
 
@@ -37,12 +40,14 @@ export async function GET(req: NextRequest) {
     const where: {
       TenantId: bigint;
       EsCombo?: boolean;
+      EstaEliminado?: boolean;
       OR?: Array<{
         Descripcion?: { contains: string; mode: "insensitive" };
         CodigoBarra?: { contains: string; mode: "insensitive" };
       }>;
     } = {
       TenantId: BigInt(tenantId),
+      ...(incluirInactivos ? {} : { EstaEliminado: false }),
     };
 
     if (tipoParam === "combo") {
@@ -788,6 +793,7 @@ export async function DELETE(req: NextRequest) {
 
     const params = req.nextUrl.searchParams;
     const Id = params.get("Id");
+    const permanente = params.get("permanente") === "true";
 
     // Obtener estado actual del artículo
     const articuloActual = await prisma.articulo.findUnique({
@@ -802,6 +808,34 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json(
         { error: "Artículo no encontrado" },
         { status: 404 },
+      );
+    }
+
+    if (permanente) {
+      if (!articuloActual.EstaEliminado) {
+        return NextResponse.json(
+          {
+            error:
+              "Primero tenés que desactivar el producto antes de eliminarlo definitivamente",
+          },
+          { status: 400 },
+        );
+      }
+
+      await ejecutarBorradoFisico(async () => {
+        await prisma.$transaction(async (tx) => {
+          await tx.precioLista.deleteMany({
+            where: { ArticuloId: Number(Id), TenantId: BigInt(tenantId) },
+          });
+          await tx.articulo.delete({
+            where: { Id: Number(Id), TenantId: BigInt(tenantId) },
+          });
+        });
+      }, "No se puede eliminar definitivamente: el producto tiene ventas, bajas de stock o integra un combo.");
+
+      return NextResponse.json(
+        { success: true, Id: Number(Id) },
+        { status: 200 },
       );
     }
 

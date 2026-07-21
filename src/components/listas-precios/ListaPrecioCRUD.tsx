@@ -5,8 +5,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import GenericCrud from "@/components/shared/GenericCrud";
 import ListaPrecioForm from "./ListaPrecioForm";
 import { ListaPrecio } from "@/lib/validations/lista-precio.schema";
-import { Chip } from "@heroui/react";
-import { DeleteButton, EditButton } from "../shared/TableActions";
+import { Chip, addToast } from "@heroui/react";
+import { ToggleStatusButton, EditButton } from "../shared/TableActions";
 import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
 
 async function bulkPatchListas(
@@ -33,15 +33,43 @@ export default function ListaPrecioCRUD() {
     items: ListaPrecio[];
     clearSelection?: () => void;
   }>({ open: false, items: [] });
+  const [togglingId, setTogglingId] = useState<number | string | null>(null);
 
   const invalidateListas = () => {
     queryClient.invalidateQueries({ queryKey: ["listas-precios-generic"] });
+  };
+
+  // Toggle de EstaEliminado (archivar/restaurar), independiente del campo
+  // "Activa" que ya maneja su propio "Cambiar estado" más abajo.
+  const handleToggleEliminado = async (item: ListaPrecio) => {
+    setTogglingId(item.Id);
+    try {
+      await bulkPatchListas([item.Id], { EstaEliminado: !item.EstaEliminado });
+      addToast({
+        title: "Estado actualizado",
+        description: `Lista de precio ${item.EstaEliminado ? "restaurada" : "archivada"} correctamente`,
+        color: "success",
+      });
+      invalidateListas();
+    } catch (err: unknown) {
+      addToast({
+        title: "Error",
+        description:
+          err instanceof Error ? err.message : "Error al actualizar el estado",
+        color: "danger",
+      });
+    } finally {
+      setTogglingId(null);
+    }
   };
 
   return (
     <>
       <GenericCrud<ListaPrecio>
         apiPath="/api/listas-precios"
+        enableInactiveFilter
+        enableHardDelete
+        showBulkSoftDelete={false}
         queryKey="listas-precios-generic"
         title="Gestión de Listas de Precios"
         searchPlaceholder="Buscar listas de precios..."
@@ -137,7 +165,14 @@ export default function ListaPrecioCRUD() {
           switch (columnKey) {
             case "Nombre":
               return (
-                <span className="font-medium text-gray-700">{item.Nombre}</span>
+                <span className="font-medium text-gray-700 flex items-center gap-2">
+                  {item.Nombre}
+                  {item.EstaEliminado && (
+                    <span className="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-500">
+                      Archivada
+                    </span>
+                  )}
+                </span>
               );
             case "PorDefecto":
               return (
@@ -166,9 +201,12 @@ export default function ListaPrecioCRUD() {
                     onPress={() => actions.onEdit(item)}
                     label={`Editar ${item.Nombre}`}
                   />
-                  <DeleteButton
-                    onPress={() => actions.onDelete(item)}
-                    label={`Eliminar ${item.Nombre}`}
+                  <ToggleStatusButton
+                    isInactive={!!item.EstaEliminado}
+                    isDisabled={togglingId === item.Id}
+                    onPress={() => handleToggleEliminado(item)}
+                    label={`${item.EstaEliminado ? "Restaurar" : "Archivar"} ${item.Nombre}`}
+                    tooltipContent={item.EstaEliminado ? "Restaurar" : "Archivar"}
                   />
                 </div>
               );

@@ -6,7 +6,7 @@ import { Chip, Skeleton, Tooltip } from "@heroui/react";
 import { productoListAdapter } from "@/lib/adapters/producto.adapter";
 import {
   AddStockButton,
-  DeleteButton,
+  ToggleStatusButton,
   EditButton,
 } from "@/components/shared/TableActions";
 import AddStockModal from "./AddStockModal";
@@ -267,10 +267,39 @@ export default function ProductoCRUD() {
     clearSelection?: () => void;
   }>({ open: false, items: [] });
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
+  const [togglingId, setTogglingId] = useState<number | string | null>(null);
 
   const invalidateProductos = () => {
     queryClient.invalidateQueries({ queryKey: ["productos-generic"] });
     queryClient.invalidateQueries({ queryKey: ["producto-detail"] });
+    // El buscador global (Ctrl+K) cachea por término de búsqueda con
+    // staleTime propio; sin esto, reactivar/editar un producto no se
+    // reflejaría ahí hasta que expire el cache.
+    queryClient.invalidateQueries({ queryKey: ["global-search-products"] });
+  };
+
+  const handleToggleEstado = async (item: Producto) => {
+    setTogglingId(item.Id);
+    try {
+      await bulkPatchProductos([item.Id], {
+        EstaEliminado: !item.EstaEliminado,
+      });
+      addToast({
+        title: "Estado actualizado",
+        description: `Producto ${item.EstaEliminado ? "activado" : "desactivado"} correctamente`,
+        color: "success",
+      });
+      invalidateProductos();
+    } catch (err: unknown) {
+      addToast({
+        title: "Error",
+        description:
+          err instanceof Error ? err.message : "Error al actualizar el estado",
+        color: "danger",
+      });
+    } finally {
+      setTogglingId(null);
+    }
   };
 
   const handleOpenStockModal = (item: Producto) => {
@@ -298,6 +327,9 @@ export default function ProductoCRUD() {
     <>
       <GenericCrud<Producto>
         apiPath="/api/productos"
+        enableInactiveFilter
+        enableHardDelete
+        showBulkSoftDelete={false}
         getApiExtraParams={(state) => ({
           tipo: "articulo",
           ...(state.lowStockOnly ? { bajoStock: true } : {}),
@@ -322,7 +354,7 @@ export default function ProductoCRUD() {
               );
               router.push(`/productos/${item.Id}`);
             }}
-            onDelete={actions.onDelete}
+            onToggleEstado={handleToggleEstado}
             onOpenStockModal={handleOpenStockModal}
             onClick={actions.onPreview}
           />
@@ -375,7 +407,7 @@ export default function ProductoCRUD() {
           },
         ]}
         transformer={(item) => productoListAdapter(item)}
-        additionalInvalidateQueryKeys={["producto-detail"]}
+        additionalInvalidateQueryKeys={["producto-detail", "global-search-products"]}
         exportConfig={{
           filename: "productos",
           columns: [
@@ -561,9 +593,11 @@ export default function ProductoCRUD() {
                     }}
                     label={`Editar ${item.Descripcion || "producto"}`}
                   />
-                  <DeleteButton
-                    onPress={() => actions.onDelete(item)}
-                    label={`Eliminar ${item.Descripcion || "producto"}`}
+                  <ToggleStatusButton
+                    isInactive={!!item.EstaEliminado}
+                    isDisabled={togglingId === item.Id}
+                    onPress={() => handleToggleEstado(item)}
+                    label={`${item.EstaEliminado ? "Activar" : "Desactivar"} ${item.Descripcion || "producto"}`}
                   />
                 </div>
               );

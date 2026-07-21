@@ -13,6 +13,7 @@ import {
   createPaginationResponse,
 } from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
+import { ejecutarBorradoFisico } from "@/lib/errors/hardDelete";
 
 export async function GET(req: NextRequest) {
   try {
@@ -23,9 +24,12 @@ export async function GET(req: NextRequest) {
 
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
     const limitParam = req.nextUrl.searchParams.get("limit");
+    const incluirInactivos =
+      req.nextUrl.searchParams.get("incluirInactivos") === "true";
 
     const where: any = {
       TenantId: BigInt(tenantId),
+      ...(incluirInactivos ? {} : { EstaEliminado: false }),
     };
 
     if (search) {
@@ -37,17 +41,25 @@ export async function GET(req: NextRequest) {
 
     // 2. Si no hay límite, devolver todo
     if (!limitParam) {
-      const unidadesMedida = await prisma.unidadMedida.findMany({
+      const unidadesMedidaRaw = await prisma.unidadMedida.findMany({
         where,
         select: {
           Id: true,
           Descripcion: true,
           EstaEliminado: true,
+          _count: { select: { Articulo: true } },
         },
         orderBy: {
           Descripcion: "asc",
         },
       });
+
+      const unidadesMedida = unidadesMedidaRaw.map((u) => ({
+        Id: Number(u.Id),
+        Descripcion: u.Descripcion,
+        EstaEliminado: u.EstaEliminado,
+        CantidadProductos: u._count.Articulo,
+      }));
 
       return NextResponse.json(
         {
@@ -68,12 +80,13 @@ export async function GET(req: NextRequest) {
     // 3. Paginación normal
     const pagination = parsePaginationParams(req);
 
-    const unidadesMedida = await prisma.unidadMedida.findMany({
+    const unidadesMedidaRaw = await prisma.unidadMedida.findMany({
       where,
       select: {
         Id: true,
         Descripcion: true,
         EstaEliminado: true,
+        _count: { select: { Articulo: true } },
       },
       orderBy: {
         Descripcion: "asc",
@@ -81,6 +94,13 @@ export async function GET(req: NextRequest) {
       skip: pagination.skip,
       take: pagination.limit,
     });
+
+    const unidadesMedida = unidadesMedidaRaw.map((u) => ({
+      Id: Number(u.Id),
+      Descripcion: u.Descripcion,
+      EstaEliminado: u.EstaEliminado,
+      CantidadProductos: u._count.Articulo,
+    }));
 
     // 4. Formatear Respuesta
     const response = createPaginationResponse(
@@ -152,6 +172,7 @@ export async function DELETE(req: NextRequest) {
     const idParam =
       req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
     const unidadMedidaId = idParam ? Number(idParam) : NaN;
+    const permanente = req.nextUrl.searchParams.get("permanente") === "true";
 
     if (!Number.isInteger(unidadMedidaId)) {
       return NextResponse.json(
@@ -160,14 +181,50 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const unidadMedidaActualizada = await prisma.unidadMedida.delete({
-      where: {
-        Id: unidadMedidaId,
-        TenantId: BigInt(tenantId),
-      },
-      select: {
-        Id: true,
-      },
+    const tenantIdBigInt = BigInt(tenantId);
+
+    const unidadMedidaActual = await prisma.unidadMedida.findUnique({
+      where: { Id: unidadMedidaId, TenantId: tenantIdBigInt },
+      select: { EstaEliminado: true },
+    });
+
+    if (!unidadMedidaActual) {
+      return NextResponse.json(
+        { error: "Unidad de medida no encontrada" },
+        { status: 404 },
+      );
+    }
+
+    if (permanente) {
+      if (!unidadMedidaActual.EstaEliminado) {
+        return NextResponse.json(
+          {
+            error:
+              "Primero tenés que desactivar la unidad de medida antes de eliminarla definitivamente",
+          },
+          { status: 400 },
+        );
+      }
+
+      await ejecutarBorradoFisico(
+        () =>
+          prisma.unidadMedida.delete({
+            where: { Id: unidadMedidaId, TenantId: tenantIdBigInt },
+          }),
+        "No se puede eliminar definitivamente: la unidad de medida tiene productos asociados.",
+      );
+
+      return NextResponse.json(
+        { success: true, Id: unidadMedidaId },
+        { status: 200 },
+      );
+    }
+
+    // Toggle: invertir el estado
+    const unidadMedidaActualizada = await prisma.unidadMedida.update({
+      where: { Id: unidadMedidaId, TenantId: tenantIdBigInt },
+      data: { EstaEliminado: !unidadMedidaActual.EstaEliminado },
+      select: { Id: true },
     });
 
     return NextResponse.json(
@@ -175,16 +232,6 @@ export async function DELETE(req: NextRequest) {
       { status: 200 },
     );
   } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message.toLowerCase().includes("record to update")
-    ) {
-      return NextResponse.json(
-        { error: "Unidad de medida no encontrada" },
-        { status: 404 },
-      );
-    }
-
     return handleError(error);
   }
 }

@@ -64,6 +64,7 @@ export default function EditarClientePage() {
       });
       queryClient.invalidateQueries({ queryKey: ["clientes-generic"] });
       queryClient.invalidateQueries({ queryKey: ["cliente", id] });
+      queryClient.invalidateQueries({ queryKey: ["global-search-clients"] });
       router.push("/clientes");
     },
     onError: (error: any) => {

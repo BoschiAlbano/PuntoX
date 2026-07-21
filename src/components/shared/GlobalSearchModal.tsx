@@ -195,8 +195,10 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
     if (item.type === "page" && item.href) {
       router.push(item.href);
     } else if (item.type === "product") {
-      // Navegar a productos buscando el código exacto y abrir el modal
-      router.push(`/productos?q=${encodeURIComponent(item.data.Codigo || item.data.Descripcion)}&editId=${item.data.Id}`);
+      // Navegar a productos: la tabla busca por Descripción/CodigoBarra
+      // (no por Codigo), así que usamos la Descripción para que el término
+      // efectivamente filtre la lista además de abrir el modal de edición.
+      router.push(`/productos?q=${encodeURIComponent(item.data.Descripcion)}&editId=${item.data.Id}`);
     } else if (item.type === "client") {
       // Navegar a clientes y abrir el modal
       const searchDni = item.data.dni || item.data.cuit;

@@ -93,6 +93,7 @@ import {
   createPaginationResponse,
 } from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
+import { ejecutarBorradoFisico } from "@/lib/errors/hardDelete";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 import { PerfilTipo } from "../../../../prisma/generated/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
@@ -1468,24 +1469,28 @@ export async function DELETE(req: NextRequest) {
     // Limpiar foto del bucket antes de borrar registros en BD
     await deleteEmpleadoFotoFromStorage(personaCompleta?.Persona_Empleado?.Foto ?? null);
 
-    await prisma.$transaction(async (tx) => {
-      if (usuarioIds.length) {
-        await tx.perfilUsuario.deleteMany({
-          where: { Usuario_Id: { in: usuarioIds } },
-        });
-        await tx.usuario.deleteMany({
-          where: { Id: { in: usuarioIds }, TenantId: tenantIdBig },
-        });
-      }
+    await ejecutarBorradoFisico(
+      () =>
+        prisma.$transaction(async (tx) => {
+          if (usuarioIds.length) {
+            await tx.perfilUsuario.deleteMany({
+              where: { Usuario_Id: { in: usuarioIds } },
+            });
+            await tx.usuario.deleteMany({
+              where: { Id: { in: usuarioIds }, TenantId: tenantIdBig },
+            });
+          }
 
-      await tx.persona_Empleado.deleteMany({
-        where: { Id: personaId },
-      });
+          await tx.persona_Empleado.deleteMany({
+            where: { Id: personaId },
+          });
 
-      await tx.persona.delete({
-        where: { Id: personaId, TenantId: tenantIdBig },
-      });
-    });
+          await tx.persona.delete({
+            where: { Id: personaId, TenantId: tenantIdBig },
+          });
+        }),
+      "No se puede eliminar: el empleado tiene ventas, movimientos de caja o registros de auditoría asociados. Podés bloquearlo en su lugar.",
+    );
 
     // Registrar auditoría después de borrar en BD pero antes de Supabase
     if (personaCompleta) {

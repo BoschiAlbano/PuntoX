@@ -12,6 +12,7 @@ import {
   createPaginationResponse,
 } from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
+import { ejecutarBorradoFisico } from "@/lib/errors/hardDelete";
 import { Prisma } from "../../../../prisma/generated/prisma";
 
 export async function GET(req: NextRequest) {
@@ -23,9 +24,12 @@ export async function GET(req: NextRequest) {
 
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
     const limitParam = req.nextUrl.searchParams.get("limit");
+    const incluirInactivos =
+      req.nextUrl.searchParams.get("incluirInactivos") === "true";
 
     const where: Prisma.RubroWhereInput = {
       TenantId: BigInt(tenantId),
+      ...(incluirInactivos ? {} : { EstaEliminado: false }),
     };
 
     if (search) {
@@ -37,17 +41,25 @@ export async function GET(req: NextRequest) {
 
     // 2. Si no hay límite, devolver todo
     if (!limitParam) {
-      const rubros = await prisma.rubro.findMany({
+      const rubrosRaw = await prisma.rubro.findMany({
         where,
         select: {
           Id: true,
           Descripcion: true,
           EstaEliminado: true,
+          _count: { select: { Articulo: true } },
         },
         orderBy: {
           Descripcion: "asc",
         },
       });
+
+      const rubros = rubrosRaw.map((r) => ({
+        Id: Number(r.Id),
+        Descripcion: r.Descripcion,
+        EstaEliminado: r.EstaEliminado,
+        CantidadProductos: r._count.Articulo,
+      }));
 
       return NextResponse.json(
         {
@@ -68,12 +80,13 @@ export async function GET(req: NextRequest) {
     // 3. Paginación normal
     const pagination = parsePaginationParams(req);
 
-    const rubros = await prisma.rubro.findMany({
+    const rubrosRaw = await prisma.rubro.findMany({
       where,
       select: {
         Id: true,
         Descripcion: true,
         EstaEliminado: true,
+        _count: { select: { Articulo: true } },
       },
       orderBy: {
         Descripcion: "asc",
@@ -81,6 +94,13 @@ export async function GET(req: NextRequest) {
       skip: pagination.skip,
       take: pagination.limit,
     });
+
+    const rubros = rubrosRaw.map((r) => ({
+      Id: Number(r.Id),
+      Descripcion: r.Descripcion,
+      EstaEliminado: r.EstaEliminado,
+      CantidadProductos: r._count.Articulo,
+    }));
 
     // 4. Formatear Respuesta
     const response = createPaginationResponse(rubros, total, pagination);
@@ -135,6 +155,7 @@ export async function DELETE(req: NextRequest) {
     const idParam =
       req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
     const rubroId = idParam ? Number(idParam) : NaN;
+    const permanente = req.nextUrl.searchParams.get("permanente") === "true";
 
     if (!Number.isInteger(rubroId)) {
       return NextResponse.json(
@@ -143,31 +164,57 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const rubroActualizada = await prisma.rubro.delete({
-      where: {
-        Id: rubroId,
-        TenantId: BigInt(tenantId),
-      },
-      select: {
-        Id: true,
-      },
+    const tenantIdBigInt = BigInt(tenantId);
+
+    const rubroActual = await prisma.rubro.findUnique({
+      where: { Id: rubroId, TenantId: tenantIdBigInt },
+      select: { EstaEliminado: true },
     });
 
-    return NextResponse.json(
-      { success: true, Id: Number(rubroActualizada.Id) },
-      { status: 200 },
-    );
-  } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message.toLowerCase().includes("record to update")
-    ) {
+    if (!rubroActual) {
       return NextResponse.json(
         { error: "Rubro no encontrado" },
         { status: 404 },
       );
     }
 
+    if (permanente) {
+      if (!rubroActual.EstaEliminado) {
+        return NextResponse.json(
+          {
+            error:
+              "Primero tenés que desactivar el rubro antes de eliminarlo definitivamente",
+          },
+          { status: 400 },
+        );
+      }
+
+      await ejecutarBorradoFisico(
+        () =>
+          prisma.rubro.delete({
+            where: { Id: rubroId, TenantId: tenantIdBigInt },
+          }),
+        "No se puede eliminar definitivamente: el rubro tiene productos asociados.",
+      );
+
+      return NextResponse.json(
+        { success: true, Id: rubroId },
+        { status: 200 },
+      );
+    }
+
+    // Toggle: invertir el estado
+    const rubroActualizado = await prisma.rubro.update({
+      where: { Id: rubroId, TenantId: tenantIdBigInt },
+      data: { EstaEliminado: !rubroActual.EstaEliminado },
+      select: { Id: true },
+    });
+
+    return NextResponse.json(
+      { success: true, Id: Number(rubroActualizado.Id) },
+      { status: 200 },
+    );
+  } catch (error) {
     return handleError(error);
   }
 }

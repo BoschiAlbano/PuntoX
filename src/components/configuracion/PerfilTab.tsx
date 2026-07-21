@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
 import { PerfilTabSkeleton } from "./ConfiguracionSkeleton";
+import { useReportDirty } from "./OnboardingDirtyContext";
 
 const inputCls = {
   label:
@@ -210,6 +211,33 @@ export function PerfilTab() {
   const isSaving = isSavingTenant || isSavingConfiguracion;
   const isLoading =
     isLoadingTenant || isLoadingConfiguracion || isLoadingBranding;
+
+  const hasChanges =
+    (!!tenantData &&
+      JSON.stringify(tenant) !==
+        JSON.stringify({
+          nombre: tenantData.nombre || "",
+          dominio: tenantData.dominio || "",
+        })) ||
+    (!!configuracionData &&
+      JSON.stringify(configuracion) !==
+        JSON.stringify({
+          razonSocial: configuracionData.razonSocial || "",
+          nombreFantasia: configuracionData.nombreFantasia || "",
+          cuit: configuracionData.cuit || "",
+          email: configuracionData.email || "",
+          telefono: configuracionData.telefono || "",
+          celular: configuracionData.celular || "",
+          direccion: configuracionData.direccion || "",
+          localidadId: configuracionData.localidadId || null,
+          departamentoId: configuracionData.departamentoId || null,
+          provinciaId: configuracionData.provinciaId || null,
+          observacionPieFactura: configuracionData.observacionPieFactura || "",
+          ShowFoto: configuracionData.ShowFoto || false,
+        })) ||
+    !!logo;
+
+  useReportDirty("perfil", hasChanges);
 
   if (isLoading) {
     return <PerfilTabSkeleton />;

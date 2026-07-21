@@ -25,6 +25,7 @@ export default function RolesCRUD() {
   return (
     <GenericCrud<RolItem>
       apiPath="/api/roles"
+      softDeleteEntity={false}
       queryKey="roles-generic"
       searchPlaceholder="Buscar rol por nombre"
       additionalInvalidateQueryKeys={["roles-crud", "roles-select"]}

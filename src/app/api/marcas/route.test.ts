@@ -3,7 +3,7 @@
  *
  * Este archivo es la ESTRUCTURA DE REFERENCIA para el resto de tests de API del proyecto:
  * - getAuthContext con permission (PERMISSIONS.PRODUCTOS / equivalente)
- * - Mocks: getAuthContext, prisma, handleError (PermisoError ÿÿÿ 403), parsePaginationParams, createPaginationResponse
+ * - Mocks: getAuthContext, prisma, handleError (PermisoError ï¿½ï¿½ï¿½ 403), parsePaginationParams, createPaginationResponse
  * - GET: 403 sin permiso, 200 con { data, pagination }
  * - POST: 403, 400 body inv?lido ({ error: "Datos inv?lidos", details }), 201 con recurso creado
  * - PATCH: 403, 400 body inv?lido, 201 con recurso actualizado
@@ -15,6 +15,7 @@ import { GET, POST, PATCH, DELETE } from "./route";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import prisma from "@/DB/prisma";
 import { PermisoError } from "@/lib/requirePermiso";
+import { AppErrorClass } from "@/lib/errors/types";
 
 vi.mock("@/lib/auth/getAuthUser", () => ({
   getAuthContext: vi.fn(),
@@ -24,6 +25,7 @@ vi.mock("@/DB/prisma", () => ({
     marca: {
       count: vi.fn(),
       findMany: vi.fn(),
+      findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -32,6 +34,12 @@ vi.mock("@/DB/prisma", () => ({
 }));
 vi.mock("@/lib/errors/handler", () => ({
   handleError: vi.fn((error: unknown) => {
+    if (error instanceof AppErrorClass) {
+      return new Response(
+        JSON.stringify({ error: { code: error.code, message: error.message } }),
+        { status: error.statusCode },
+      );
+    }
     const msg = error instanceof PermisoError ? error.message : "Error interno";
     const status = error instanceof PermisoError ? error.status : 500;
     return new Response(JSON.stringify({ error: msg }), { status });
@@ -259,7 +267,7 @@ describe("DELETE /api/marcas", () => {
       isSuperAdmin: false,
       permissions: ["productos"],
     });
-    vi.mocked(prisma.marca.delete).mockRejectedValue(new Error("Record to update not found"));
+    vi.mocked(prisma.marca.findUnique).mockResolvedValue(null);
     const req = new NextRequest("http://localhost:3000/api/marcas?Id=999", {
       method: "DELETE",
     });
@@ -269,7 +277,7 @@ describe("DELETE /api/marcas", () => {
     expect(data.error).toBe("Marca no encontrada");
   });
 
-  it("retorna 200 con success e Id cuando se elimina correctamente", async () => {
+  it("invierte el estado (toggle) cuando no se pide borrado permanente", async () => {
     vi.mocked(getAuthContext).mockResolvedValue({
       tenantId: 1,
       usuarioId: 1,
@@ -278,7 +286,8 @@ describe("DELETE /api/marcas", () => {
       isSuperAdmin: false,
       permissions: ["productos"],
     });
-    vi.mocked(prisma.marca.delete).mockResolvedValue({ Id: 1 } as any);
+    vi.mocked(prisma.marca.findUnique).mockResolvedValue({ EstaEliminado: false } as any);
+    vi.mocked(prisma.marca.update).mockResolvedValue({ Id: 1 } as any);
     const req = new NextRequest("http://localhost:3000/api/marcas?Id=1", {
       method: "DELETE",
     });
@@ -287,5 +296,68 @@ describe("DELETE /api/marcas", () => {
     expect(res.status).toBe(200);
     expect(data.success).toBe(true);
     expect(data.Id).toBe(1);
+    expect(prisma.marca.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { EstaEliminado: true } }),
+    );
+  });
+
+  it("rechaza el borrado permanente si la marca sigue activa", async () => {
+    vi.mocked(getAuthContext).mockResolvedValue({
+      tenantId: 1,
+      usuarioId: 1,
+      user: {} as any,
+      sucursalId: 0,
+      isSuperAdmin: false,
+      permissions: ["productos"],
+    });
+    vi.mocked(prisma.marca.findUnique).mockResolvedValue({ EstaEliminado: false } as any);
+    const req = new NextRequest("http://localhost:3000/api/marcas?Id=1&permanente=true", {
+      method: "DELETE",
+    });
+    const res = await DELETE(req);
+    const data = await res.json();
+    expect(res.status).toBe(400);
+    expect(data.error).toContain("desactivar");
+  });
+
+  it("elimina definitivamente cuando ya estÃ¡ inactiva", async () => {
+    vi.mocked(getAuthContext).mockResolvedValue({
+      tenantId: 1,
+      usuarioId: 1,
+      user: {} as any,
+      sucursalId: 0,
+      isSuperAdmin: false,
+      permissions: ["productos"],
+    });
+    vi.mocked(prisma.marca.findUnique).mockResolvedValue({ EstaEliminado: true } as any);
+    vi.mocked(prisma.marca.delete).mockResolvedValue({ Id: 1 } as any);
+    const req = new NextRequest("http://localhost:3000/api/marcas?Id=1&permanente=true", {
+      method: "DELETE",
+    });
+    const res = await DELETE(req);
+    const data = await res.json();
+    expect(res.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(prisma.marca.delete).toHaveBeenCalled();
+  });
+
+  it("devuelve un mensaje amigable si el borrado permanente falla por relaciones", async () => {
+    vi.mocked(getAuthContext).mockResolvedValue({
+      tenantId: 1,
+      usuarioId: 1,
+      user: {} as any,
+      sucursalId: 0,
+      isSuperAdmin: false,
+      permissions: ["productos"],
+    });
+    vi.mocked(prisma.marca.findUnique).mockResolvedValue({ EstaEliminado: true } as any);
+    vi.mocked(prisma.marca.delete).mockRejectedValue(new Error("Foreign key constraint failed"));
+    const req = new NextRequest("http://localhost:3000/api/marcas?Id=1&permanente=true", {
+      method: "DELETE",
+    });
+    const res = await DELETE(req);
+    const data = await res.json();
+    expect(res.status).toBe(409);
+    expect(data.error.message).toContain("productos asociados");
   });
 });

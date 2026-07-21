@@ -80,6 +80,34 @@ interface GenericCrudProps<T> {
   searchPlaceholder?: string;
   initialLimit?: number;
   transformer?: (data: any) => T[];
+  /**
+   * true (default) si "Eliminar" en esta entidad es un borrado lógico reversible
+   * (EstaEliminado). false si "Eliminar" ya es un borrado físico inmediato
+   * (ej. empleados, roles). Solo cambia el texto de confirmación del modal
+   * de borrado genérico de un solo ítem (no aplica si la entidad no usa
+   * `actions.onDelete` para ese fin, ej. cuando el botón de fila alterna
+   * el estado directamente).
+   */
+  softDeleteEntity?: boolean;
+  /**
+   * Habilita el filtro "Mostrar/Ocultar inactivos" en "Más opciones",
+   * persistido en localStorage por queryKey. Úsalo en cualquier entidad
+   * cuyo listado muestre activos e inactivos sin distinción.
+   */
+  enableInactiveFilter?: boolean;
+  /**
+   * Habilita además la acción masiva "Eliminar definitivamente" en "Más
+   * opciones" (borrado físico condicionado a que el seleccionado esté
+   * inactivo).
+   */
+  enableHardDelete?: boolean;
+  /**
+   * true (default) para mostrar la acción masiva genérica "Eliminar N
+   * seleccionados" (borrado lógico) en "Más opciones". Ponelo en false
+   * cuando la entidad ya tiene su propia acción "Cambiar estado" (ej.
+   * marcas, rubros) para no duplicar la misma acción con dos nombres.
+   */
+  showBulkSoftDelete?: boolean;
   additionalInvalidateQueryKeys?: any[];
   /** Configuración para exportar datos actuales (CSV/XLS) desde "Más opciones" */
   exportConfig?: {
@@ -166,6 +194,10 @@ export default function GenericCrud<T extends { Id: number | string }>({
   onNewClick,
   newButtonText,
   defaultVisibleUidsMobile,
+  softDeleteEntity = true,
+  enableInactiveFilter = false,
+  enableHardDelete = false,
+  showBulkSoftDelete = true,
 }: GenericCrudProps<T>) {
   // Estados de UI
   const { isOpen, onOpen, onClose } = useDisclosure(); // Modal Form
@@ -173,6 +205,11 @@ export default function GenericCrud<T extends { Id: number | string }>({
     isOpen: isDeleteOpen,
     onOpen: onDeleteOpen,
     onClose: onDeleteClose,
+  } = useDisclosure();
+  const {
+    isOpen: isHardDeleteOpen,
+    onOpen: onHardDeleteOpen,
+    onClose: onHardDeleteClose,
   } = useDisclosure();
   const {
     isOpen: isBulkDeleteOpen,
@@ -192,6 +229,28 @@ export default function GenericCrud<T extends { Id: number | string }>({
     () => searchParams?.get("bajoStock") === "true",
   );
 
+  // "Mostrar inactivos": persistido en localStorage por tabla (queryKey)
+  const inactiveFilterStorageKey = `crud:${queryKey}:mostrarInactivos`;
+  const [mostrarInactivos, setMostrarInactivos] = useState(false);
+  useEffect(() => {
+    if (!enableInactiveFilter || typeof window === "undefined") return;
+    setMostrarInactivos(
+      window.localStorage.getItem(inactiveFilterStorageKey) === "true",
+    );
+    // Solo al montar: la key depende del queryKey, que no cambia en runtime.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enableInactiveFilter]);
+
+  const toggleMostrarInactivos = () => {
+    setMostrarInactivos((prev) => {
+      const next = !prev;
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(inactiveFilterStorageKey, String(next));
+      }
+      return next;
+    });
+  };
+
   // Selección masiva cross-page
   const [selectionMode, setSelectionMode] = useState<SelectionMode>("manual");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -200,7 +259,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
 
   const hasRowPreview = !!renderRowPreview || !!onRowClick;
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => searchParams?.get("q") || "");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(initialLimit);
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
@@ -271,6 +330,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
     isError,
     saveMutation,
     deleteMutation,
+    hardDeleteMutation,
     refetch,
     prefetchWithParams,
   } = useGenericApi<T>({
@@ -285,6 +345,9 @@ export default function GenericCrud<T extends { Id: number | string }>({
         : lowStockApiParam && lowStockOnly
           ? { bajoStock: true }
           : {}),
+      ...(enableInactiveFilter && mostrarInactivos
+        ? { incluirInactivos: true }
+        : {}),
       ...(editId ? { editId } : {}),
     },
     transformer,
@@ -313,6 +376,21 @@ export default function GenericCrud<T extends { Id: number | string }>({
       }
     }
   }, [editId, data, isOpen, onOpen, router, pathname, searchParams]);
+
+  // Si la URL trae ?q= (ej. desde el buscador global), ya sembramos el
+  // estado "search" en el useState inicial de arriba. Lo sacamos de la URL
+  // para que no vuelva a aplicarse en un refresh futuro ni quede colgado
+  // si el usuario borra el término manualmente.
+  useEffect(() => {
+    if (searchParams?.get("q")) {
+      const newParams = new URLSearchParams(searchParams.toString());
+      newParams.delete("q");
+      const newUrl = `${pathname}${newParams.toString() ? `?${newParams.toString()}` : ""}`;
+      router.replace(newUrl, { scroll: false });
+    }
+    // Solo al montar: es una siembra única del valor inicial de la URL.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -431,11 +509,16 @@ export default function GenericCrud<T extends { Id: number | string }>({
 
   // Fetch todos los ítems que coinciden con los filtros (pagina para cubrir cross-page)
   const fetchAllMatchingItems = useCallback(async (): Promise<T[]> => {
-    const extraParams = getApiExtraParams
-      ? getApiExtraParams({ lowStockOnly })
-      : lowStockApiParam && lowStockOnly
-        ? { bajoStock: true }
-        : undefined;
+    const extraParams: Record<string, string | number | boolean> = {
+      ...(getApiExtraParams
+        ? getApiExtraParams({ lowStockOnly })
+        : lowStockApiParam && lowStockOnly
+          ? { bajoStock: true }
+          : {}),
+      ...(enableInactiveFilter && mostrarInactivos
+        ? { incluirInactivos: true }
+        : {}),
+    };
     const total = paginationMeta.total;
     const cap = Math.min(total, 2000);
     const allItems: T[] = [];
@@ -476,6 +559,8 @@ export default function GenericCrud<T extends { Id: number | string }>({
     getApiExtraParams,
     lowStockApiParam,
     transformer,
+    enableInactiveFilter,
+    mostrarInactivos,
   ]);
 
   const getBulkSelectionContext = useCallback(async (): Promise<
@@ -581,7 +666,18 @@ export default function GenericCrud<T extends { Id: number | string }>({
     }
   }, [exportConfig, hasSelection, getBulkSelectionContext]);
 
-  const isSaving = saveMutation.isPending || deleteMutation.isPending;
+  const isSaving =
+    saveMutation.isPending ||
+    deleteMutation.isPending ||
+    hardDeleteMutation.isPending;
+
+  // Estados de carga dedicados para los modales masivos: no alcanza con
+  // *Mutation.isPending porque estos handlers hacen un fetch previo
+  // (getBulkSelectionContext) y, en el caso de borrado definitivo, disparan
+  // varias mutations en paralelo — isPending de una única mutation no
+  // refleja de forma confiable todo ese tramo async.
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [isBulkHardDeleting, setIsBulkHardDeleting] = useState(false);
 
   // --- Handlers ---
 
@@ -602,6 +698,11 @@ export default function GenericCrud<T extends { Id: number | string }>({
   const handleDeleteClick = (item: T) => {
     setItemToDelete(item);
     onDeleteOpen();
+  };
+
+  const handleBulkHardDeleteClick = () => {
+    if (!hasSelection) return;
+    onHardDeleteOpen();
   };
 
   const handleSave = (formData: Partial<T>) => {
@@ -636,15 +737,16 @@ export default function GenericCrud<T extends { Id: number | string }>({
 
   const handleBulkDelete = async () => {
     if (!hasSelection) return;
-    const ctx = await getBulkSelectionContext();
-    if (ctx.ids.length === 0) return;
-
-    const isEmpleados = apiPath.includes("/empleados");
-    const idsToDelete = isEmpleados
-      ? ctx.items.map((i: any) => i.personaId ?? i.Id).filter(Boolean)
-      : ctx.ids;
-
+    setIsBulkDeleting(true);
     try {
+      const ctx = await getBulkSelectionContext();
+      if (ctx.ids.length === 0) return;
+
+      const isEmpleados = apiPath.includes("/empleados");
+      const idsToDelete = isEmpleados
+        ? ctx.items.map((i: any) => i.personaId ?? i.Id).filter(Boolean)
+        : ctx.ids;
+
       for (const id of idsToDelete) {
         await deleteMutation.mutateAsync(id);
       }
@@ -657,6 +759,8 @@ export default function GenericCrud<T extends { Id: number | string }>({
       clearSelection();
     } catch (error: any) {
       handleError(error, "Error al eliminar seleccionados");
+    } finally {
+      setIsBulkDeleting(false);
     }
   };
 
@@ -688,6 +792,70 @@ export default function GenericCrud<T extends { Id: number | string }>({
         handleError(error, "Error al eliminar");
       },
     });
+  };
+
+  const handleConfirmBulkHardDelete = async () => {
+    if (!hasSelection) return;
+    setIsBulkHardDeleting(true);
+    try {
+      const ctx = await getBulkSelectionContext();
+      const isEmpleados = apiPath.includes("/empleados");
+      const inactivos = ctx.items.filter((i: any) => i.EstaEliminado === true);
+      const omitidos = ctx.items.length - inactivos.length;
+
+      if (inactivos.length === 0) {
+        addToast({
+          title: "No se puede eliminar",
+          description:
+            "Los registros seleccionados no están inactivos. Desactivalos primero desde \"Eliminar\".",
+          color: "warning",
+        });
+        onHardDeleteClose();
+        return;
+      }
+
+      const idsToDelete = isEmpleados
+        ? inactivos.map((i: any) => i.personaId ?? i.Id).filter(Boolean)
+        : inactivos.map((i) => i.Id);
+
+      const results = await Promise.allSettled(
+        idsToDelete.map((id) => hardDeleteMutation.mutateAsync(id)),
+      );
+      const okCount = results.filter((r) => r.status === "fulfilled").length;
+      const failed = results.filter((r) => r.status === "rejected");
+
+      if (okCount > 0) {
+        const partes = [
+          `${okCount} registro${okCount !== 1 ? "s" : ""} eliminado${okCount !== 1 ? "s" : ""} definitivamente.`,
+        ];
+        if (failed.length > 0) {
+          partes.push(
+            `${failed.length} no se pud${failed.length !== 1 ? "ieron" : "o"} eliminar por tener relaciones con otros datos.`,
+          );
+        }
+        if (omitidos > 0) {
+          partes.push(
+            `${omitidos} omitido${omitidos !== 1 ? "s" : ""} por no estar inactivo${omitidos !== 1 ? "s" : ""}.`,
+          );
+        }
+        addToast({
+          title: "Eliminación definitiva",
+          description: partes.join(" "),
+          color: failed.length > 0 ? "warning" : "success",
+          timeout: 5000,
+        });
+      } else if (failed.length > 0) {
+        handleError(
+          (failed[0] as PromiseRejectedResult).reason,
+          "No se pudo eliminar definitivamente",
+        );
+      }
+
+      onHardDeleteClose();
+      clearSelection();
+    } finally {
+      setIsBulkHardDeleting(false);
+    }
   };
 
   // Acciones que pasamos al renderCell y renderCard
@@ -795,7 +963,19 @@ export default function GenericCrud<T extends { Id: number | string }>({
         selectedCount={effectiveSelectedCount}
         totalCount={paginationMeta.total}
         selectedItems={selectedItemsOnPage}
-        onBulkDelete={enableBulkActions ? onBulkDeleteOpen : undefined}
+        onBulkDelete={
+          enableBulkActions && showBulkSoftDelete ? onBulkDeleteOpen : undefined
+        }
+        onBulkHardDelete={
+          enableBulkActions && enableHardDelete
+            ? handleBulkHardDeleteClick
+            : undefined
+        }
+        inactiveToggle={
+          enableInactiveFilter
+            ? { isActive: mostrarInactivos, onToggle: toggleMostrarInactivos }
+            : undefined
+        }
         onClearSelection={enableBulkActions ? clearSelection : undefined}
         bulkActionsDropdown={
           enableBulkActions && bulkActionsDropdown?.length
@@ -928,10 +1108,26 @@ export default function GenericCrud<T extends { Id: number | string }>({
         onClose={onDeleteClose}
         onConfirm={handleConfirmDelete}
         title="Confirmar Eliminación"
-        description="¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer."
+        description={
+          softDeleteEntity
+            ? "¿Estás seguro de que deseas eliminar este registro? Quedará marcado como inactivo y podrás reactivarlo o eliminarlo definitivamente más adelante."
+            : "¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer."
+        }
         confirmLabel="Eliminar"
         variant="danger"
         isLoading={isSaving}
+      />
+
+      {/* Modal de Eliminación Definitiva masiva (borrado físico) */}
+      <ConfirmModal
+        isOpen={isHardDeleteOpen}
+        onClose={onHardDeleteClose}
+        onConfirm={handleConfirmBulkHardDelete}
+        title="Eliminar definitivamente"
+        description={`Esta acción borra ${effectiveSelectedCount} registro${effectiveSelectedCount !== 1 ? "s" : ""} de forma permanente y no se puede deshacer. Solo se eliminarán los que estén inactivos; si tienen relaciones con otros datos, no se podrán eliminar.`}
+        confirmLabel="Eliminar definitivamente"
+        variant="danger"
+        isLoading={isBulkHardDeleting}
       />
 
       {/* Modal de confirmación eliminación masiva */}
@@ -953,7 +1149,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
         }
         confirmLabel={`Eliminar ${effectiveSelectedCount} registro${effectiveSelectedCount !== 1 ? "s" : ""}`}
         variant="danger"
-        isLoading={isSaving}
+        isLoading={isBulkDeleting}
       />
     </div>
   );

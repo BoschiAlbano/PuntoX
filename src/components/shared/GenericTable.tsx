@@ -141,7 +141,14 @@ interface GenericTableProps<T> {
   /** Ítems seleccionados actuales (para imprimir/exportar seleccionados) */
   selectedItems?: T[];
   onBulkDelete?: () => void;
+  /** Elimina definitivamente los seleccionados (borrado físico). Solo se ofrece si hay inactivos entre los seleccionados. */
+  onBulkHardDelete?: () => void;
   onClearSelection?: () => void;
+  /** Toggle "Mostrar/Ocultar inactivos", siempre visible en "Más opciones" cuando se provee. */
+  inactiveToggle?: {
+    isActive: boolean;
+    onToggle: () => void;
+  };
   /** Opciones del dropdown "Más opciones" visibles cuando hay selección */
   bulkActionsDropdown?: Array<{
     key: string;
@@ -213,7 +220,9 @@ export default function GenericTable<T extends { Id: number | string }>({
   totalCount = 0,
   selectedItems,
   onBulkDelete,
+  onBulkHardDelete,
   onClearSelection,
+  inactiveToggle,
   bulkActionsDropdown,
   extraMenuItems,
   extraSearchContent,
@@ -438,6 +447,30 @@ export default function GenericTable<T extends { Id: number | string }>({
       }
     }
 
+    if (inactiveToggle) {
+      items.push({
+        key: "toggle-inactivos",
+        label: inactiveToggle.isActive
+          ? "Ocultar inactivos"
+          : "Mostrar inactivos",
+        icon: inactiveToggle.isActive ? (
+          <Check size={16} strokeWidth={2} />
+        ) : undefined,
+        className: inactiveToggle.isActive
+          ? "rounded-md px-3 py-2 bg-amber-500/15 text-amber-800 data-[hover=true]:bg-amber-500/25 data-[focus=true]:bg-amber-500/25 font-medium"
+          : "rounded-md px-3 py-2 data-[hover=true]:bg-[var(--crud-accent)]/10 data-[focus=true]:bg-[var(--crud-accent)]/10",
+        onPress: inactiveToggle.onToggle,
+      });
+      items.push({
+        key: "sep-inactive-toggle",
+        label: " ",
+        textValue: "separador",
+        isSeparator: true,
+        className:
+          "h-px bg-slate-200 rounded-none my-1 p-0 data-[hover=true]:bg-slate-200",
+      });
+    }
+
     if (extraMenuItems && extraMenuItems.length > 0) {
       extraMenuItems.forEach((item) => {
         items.push({
@@ -543,6 +576,16 @@ export default function GenericTable<T extends { Id: number | string }>({
         className:
           "rounded-md px-3 py-2 text-red-600 data-[hover=true]:bg-red-50 data-[focus=true]:bg-red-50 font-medium",
         onPress: onBulkDelete,
+      });
+    }
+
+    if (selectedCount > 0 && onBulkHardDelete) {
+      items.push({
+        key: "eliminar-definitivo-sel",
+        label: `Eliminar definitivamente ${selectedCount} seleccionado${selectedCount !== 1 ? "s" : ""}`,
+        className:
+          "rounded-md px-3 py-2 text-red-600 data-[hover=true]:bg-red-50 data-[focus=true]:bg-red-50 font-bold",
+        onPress: onBulkHardDelete,
       });
     }
 

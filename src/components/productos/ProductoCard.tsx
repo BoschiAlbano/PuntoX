@@ -6,7 +6,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
 import {
   AddStockButton,
-  DeleteButton,
+  ToggleStatusButton,
   EditButton,
 } from "@/components/shared/TableActions";
 
@@ -15,7 +15,7 @@ const PLACEHOLDER_IMG = "/producto-placeholder.svg";
 interface ProductoCardProps {
   item: Producto;
   onEdit: (item: Producto) => void;
-  onDelete: (item: Producto) => void;
+  onToggleEstado: (item: Producto) => void;
   onOpenStockModal: (item: Producto) => void;
   onClick?: (item: Producto) => void;
 }
@@ -23,7 +23,7 @@ interface ProductoCardProps {
 export function ProductoCard({
   item,
   onEdit,
-  onDelete,
+  onToggleEstado,
   onOpenStockModal,
   onClick,
 }: ProductoCardProps) {
@@ -120,9 +120,10 @@ export function ProductoCard({
             onPress={() => onEdit(item)}
             label={`Editar ${item.Descripcion}`}
           />
-          <DeleteButton
-            onPress={() => onDelete(item)}
-            label={`Eliminar ${item.Descripcion}`}
+          <ToggleStatusButton
+            isInactive={!!item.EstaEliminado}
+            onPress={() => onToggleEstado(item)}
+            label={`${item.EstaEliminado ? "Activar" : "Desactivar"} ${item.Descripcion}`}
           />
         </div>
       </CardBody>

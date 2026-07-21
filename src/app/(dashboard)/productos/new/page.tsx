@@ -36,6 +36,7 @@ export default function NuevoProductoPage() {
         timeout: 3000,
       });
       queryClient.invalidateQueries({ queryKey: ["productos-generic"] });
+      queryClient.invalidateQueries({ queryKey: ["global-search-products"] });
       setFormKey((prev) => prev + 1);
     },
     onError: (error: any) => {

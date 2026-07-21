@@ -45,6 +45,7 @@ export const updateClienteSchema = z.object({
       "El monto máximo de cuenta corriente no puede exceder el límite",
     )
     .optional(),
+  EstaEliminado: z.boolean().optional(),
 });
 
 export type CreateClienteInput = z.infer<typeof createClienteSchema>;
@@ -71,4 +72,5 @@ export interface Cliente {
   MontoMaximoCtaCte: number;
   ListaPrecioId?: number | null;
   SaldoCtaCte?: number;
+  EstaEliminado?: boolean;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Card, CardBody } from "@heroui/react";
+import { Button, Card, CardBody, addToast } from "@heroui/react";
 import { PerfilTab } from "@/components/configuracion/PerfilTab";
 import { FiscalTab } from "@/components/configuracion/FiscalTab";
 import { VentasTab } from "@/components/configuracion/VentasTab";
@@ -12,6 +12,10 @@ import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  OnboardingDirtyProvider,
+  useHasUnsavedChanges,
+} from "@/components/configuracion/OnboardingDirtyContext";
 
 const steps = [
   { id: "perfil", title: "Perfil de Negocio", icon: Building2, component: PerfilTab },
@@ -22,9 +26,18 @@ const steps = [
 ];
 
 export default function OnboardingPage() {
+  return (
+    <OnboardingDirtyProvider>
+      <OnboardingWizard />
+    </OnboardingDirtyProvider>
+  );
+}
+
+function OnboardingWizard() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const router = useRouter();
   const refreshUserData = useUserStore((s) => s.refreshUserData);
+  const hasUnsavedChanges = useHasUnsavedChanges();
 
   const completeMutation = useMutation({
     mutationFn: async () => {
@@ -43,6 +56,14 @@ export default function OnboardingPage() {
   const isLast = currentIndex === steps.length - 1;
 
   const handleNext = () => {
+    if (hasUnsavedChanges) {
+      addToast({
+        title: "Tenés cambios sin guardar",
+        description: "Guardá los cambios de este paso antes de continuar.",
+        color: "warning",
+      });
+      return;
+    }
     if (isLast) {
       completeMutation.mutate();
     } else {

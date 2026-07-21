@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { addToast } from "@heroui/react";
 import GenericCrud from "@/components/shared/GenericCrud";
 import MarcaForm, { Marca } from "./MarcaForm";
 import StatusBadge from "@/components/shared/StatusBadge";
 import DetailField from "@/components/shared/DetailField";
 import DetailPanel from "@/components/shared/DetailPanel";
-import { DeleteButton, EditButton } from "../shared/TableActions";
+import { ToggleStatusButton, EditButton } from "../shared/TableActions";
 import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
 
 async function bulkPatchMarcas(
@@ -34,15 +35,41 @@ export default function MarcaCRUD() {
     items: Marca[];
     clearSelection?: () => void;
   }>({ open: false, items: [] });
+  const [togglingId, setTogglingId] = useState<number | string | null>(null);
 
   const invalidateMarcas = () => {
     queryClient.invalidateQueries({ queryKey: ["marcas-generic"] });
+  };
+
+  const handleToggleEstado = async (item: Marca) => {
+    setTogglingId(item.Id);
+    try {
+      await bulkPatchMarcas([item.Id], { EstaEliminado: !item.EstaEliminado });
+      addToast({
+        title: "Estado actualizado",
+        description: `Marca ${item.EstaEliminado ? "activada" : "desactivada"} correctamente`,
+        color: "success",
+      });
+      invalidateMarcas();
+    } catch (err: unknown) {
+      addToast({
+        title: "Error",
+        description:
+          err instanceof Error ? err.message : "Error al actualizar el estado",
+        color: "danger",
+      });
+    } finally {
+      setTogglingId(null);
+    }
   };
 
   return (
     <>
       <GenericCrud<Marca>
         apiPath="/api/marcas"
+        enableInactiveFilter
+        enableHardDelete
+        showBulkSoftDelete={false}
         queryKey="marcas-generic"
         title="Gestión de Marcas"
         searchPlaceholder="Buscar marcas..."
@@ -126,9 +153,11 @@ export default function MarcaCRUD() {
                     onPress={() => actions.onEdit(item)}
                     label={`Editar ${item.Descripcion || "marca"}`}
                   />
-                  <DeleteButton
-                    onPress={() => actions.onDelete(item)}
-                    label={`Eliminar ${item.Descripcion || "marca"}`}
+                  <ToggleStatusButton
+                    isInactive={!!item.EstaEliminado}
+                    isDisabled={togglingId === item.Id}
+                    onPress={() => handleToggleEstado(item)}
+                    label={`${item.EstaEliminado ? "Activar" : "Desactivar"} ${item.Descripcion || "marca"}`}
                   />
                 </div>
               );

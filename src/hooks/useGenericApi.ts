@@ -219,6 +219,43 @@ export function useGenericApi<T extends { Id: number | string }>({
     },
   });
 
+  // DELETE definitivo (borrado físico, solo para registros ya inactivos)
+  const hardDeleteMutation = useMutation({
+    mutationFn: async (id: number | string) => {
+      const cleanEndpoint = endpoint.endsWith("/")
+        ? endpoint.slice(0, -1)
+        : endpoint;
+
+      const isEmpleados = endpoint.includes("/empleados");
+
+      let response: Response;
+      if (isEmpleados) {
+        response = await fetch(cleanEndpoint, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ personaId: id, permanente: true }),
+        });
+      } else {
+        const url = `${cleanEndpoint}/?Id=${id}&permanente=true`;
+        response = await fetch(url, { method: "DELETE" });
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw errorData;
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [queryKey] });
+      additionalInvalidateQueryKeys.forEach((key) => {
+        queryClient.invalidateQueries({
+          queryKey: Array.isArray(key) ? key : [key],
+        });
+      });
+    },
+  });
+
   return {
     data: query.data?.data || [],
     prefetchWithParams,
@@ -236,6 +273,7 @@ export function useGenericApi<T extends { Id: number | string }>({
     error: query.error,
     saveMutation,
     deleteMutation,
+    hardDeleteMutation,
     refetch: query.refetch,
   };
 }

@@ -5,6 +5,7 @@ import { Button, Input } from "@heroui/react";
 import { Scale, Tag, Hash, Save, Info } from "lucide-react";
 import { useConfiguracion, Configuracion } from "@/hooks/useConfiguracion";
 import { VentasSection, ToggleRow } from "./VentasPrimitives";
+import { useReportDirty } from "../OnboardingDirtyContext";
 
 const inputCls = {
   label: "text-slate-500 font-bold uppercase text-[10px] tracking-widest",
@@ -49,6 +50,8 @@ export function ConfiguracionBascula() {
       configBascula.etiquetaPorPeso !== (configuracionData.etiquetaPorPeso ?? false) ||
       configBascula.codigoBascula !== (configuracionData.codigoBascula ?? "")
     : false;
+
+  useReportDirty("ventas-bascula", hasChanges);
 
   const disabled = isSavingConfiguracion || !configuracionData;
 

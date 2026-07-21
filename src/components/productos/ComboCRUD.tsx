@@ -6,7 +6,7 @@ import { Chip, Skeleton, Tooltip } from "@heroui/react";
 import { productoListAdapter } from "@/lib/adapters/producto.adapter";
 import {
   AddStockButton,
-  DeleteButton,
+  ToggleStatusButton,
   EditButton,
 } from "@/components/shared/TableActions";
 import AddStockModal from "./AddStockModal";
@@ -242,6 +242,33 @@ export default function ComboCRUD() {
   const invalidateProductos = () => {
     queryClient.invalidateQueries({ queryKey: ["combos-generic"] });
     queryClient.invalidateQueries({ queryKey: ["producto-detail"] });
+    queryClient.invalidateQueries({ queryKey: ["global-search-products"] });
+  };
+
+  const [togglingId, setTogglingId] = useState<number | string | null>(null);
+
+  const handleToggleEstado = async (item: Producto) => {
+    setTogglingId(item.Id);
+    try {
+      await bulkPatchProductos([item.Id], {
+        EstaEliminado: !item.EstaEliminado,
+      });
+      addToast({
+        title: "Estado actualizado",
+        description: `Combo ${item.EstaEliminado ? "activado" : "desactivado"} correctamente`,
+        color: "success",
+      });
+      invalidateProductos();
+    } catch (err: unknown) {
+      addToast({
+        title: "Error",
+        description:
+          err instanceof Error ? err.message : "Error al actualizar el estado",
+        color: "danger",
+      });
+    } finally {
+      setTogglingId(null);
+    }
   };
 
   const handleOpenStockModal = (item: Producto) => {
@@ -269,6 +296,9 @@ export default function ComboCRUD() {
     <>
       <GenericCrud<Producto>
         apiPath="/api/productos"
+        enableInactiveFilter
+        enableHardDelete
+        showBulkSoftDelete={false}
         getApiExtraParams={() => ({ tipo: "combo" })}
         queryKey="combos-generic"
         searchPlaceholder="Buscar por nombre, cÃ³digo o barras..."
@@ -291,7 +321,7 @@ export default function ComboCRUD() {
               );
               router.push(`/productos/promociones-combo/${item.Id}`);
             }}
-            onDelete={actions.onDelete}
+            onToggleEstado={handleToggleEstado}
             onOpenStockModal={handleOpenStockModal}
             onClick={actions.onPreview}
           />
@@ -344,7 +374,7 @@ export default function ComboCRUD() {
           orientation: "landscape",
         }}
         transformer={(item) => productoListAdapter(item)}
-        additionalInvalidateQueryKeys={["producto-detail"]}
+        additionalInvalidateQueryKeys={["producto-detail", "global-search-products"]}
         exportConfig={{
           filename: "productos",
           columns: [
@@ -526,9 +556,11 @@ export default function ComboCRUD() {
                     }}
                     label={`Editar ${item.Descripcion || "producto"}`}
                   />
-                  <DeleteButton
-                    onPress={() => actions.onDelete(item)}
-                    label={`Eliminar ${item.Descripcion || "producto"}`}
+                  <ToggleStatusButton
+                    isInactive={!!item.EstaEliminado}
+                    isDisabled={togglingId === item.Id}
+                    onPress={() => handleToggleEstado(item)}
+                    label={`${item.EstaEliminado ? "Activar" : "Desactivar"} ${item.Descripcion || "producto"}`}
                   />
                 </div>
               );

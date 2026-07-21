@@ -1,9 +1,9 @@
 Nuevas implementaciones a "futuro":
 
-1- optimización de imágenes en supabase .web (implementar).
-2- limpieza de comprobantes viejos o datos viejos que no se usen como cuentas corrientes viejas (No por analíticas)
-3- dar de baja un registro de manera física y no lógica, en opciones menú. (Implementar).
-4- Planes de tiendas, eliminar funcionalidades y separar los planes.
+1- optimización de imágenes en supabase .web (implementar EN EL FUTURO).
+2- limpieza de comprobantes viejos o datos viejos que no se usen como cuentas corrientes viejas (NO IMPLEMENTAR POR QUE PERDERIA funcionalidades EN analíticas)
+3- dar de baja un registro de manera física y no lógica, en opciones menú. (LISTO).
+4- Planes de tiendas, eliminar funcionalidades y separar los planes. (PENDIENTE)
 
 Erorres al hacer "Test" corregir:
 
@@ -29,8 +29,5 @@ Erorres al hacer "Test" corregir:
 11- en imprimir reporte de caja no estan los gastos.
 12- historia de cajas, acciones no aparece en responsive.
 13- error arca, no me gusta que se guarde un mensaje tan largo cuandote tenga este error: Error al consultar último comprobante ARCA: Error al consultar último comprobante ARCA: ns1:coe.alreadyAuthenticated: El CEE ya posee un TA valido para el acceso al WSN solicitado: {"exceptionName":"gov.afip.desein.dvadac.sua.view.wsa
-14- 
-
-
-1- Imprimir codigo dee barra para articulos propios. (Iprimir solo seleccionados no la grilla completa).
+14- Imprimir codigo dee barra para articulos propios. (Iprimir solo seleccionados no la grilla completa).
 

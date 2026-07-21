@@ -1,26 +1,84 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import GenericCrud from "@/components/shared/GenericCrud";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
 import { addToast } from "@heroui/react";
 import {
   EditButton,
-  DeleteButton,
+  ToggleStatusButton,
   CreditCardButton,
 } from "@/components/shared/TableActions";
+import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
 
 import { clienteListAdapter } from "@/lib/adapters/cliente.adapter";
 import { Cliente } from "@/lib/validations/cliente.schema";
 import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
 import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
 
+async function bulkPatchClientes(
+  ids: (number | string)[],
+  data: { EstaEliminado?: boolean },
+) {
+  for (const id of ids) {
+    const res = await fetch("/api/clientes", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ Id: id, ...data }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error || err?.message || "Error al actualizar");
+    }
+  }
+}
+
 export default function ClienteCRUD() {
   const currency = useCurrency();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { setOverride } = useBreadcrumbStore();
+  const [bulkEstadoModal, setBulkEstadoModal] = useState<{
+    open: boolean;
+    items: Cliente[];
+    clearSelection?: () => void;
+  }>({ open: false, items: [] });
+  const [togglingId, setTogglingId] = useState<number | string | null>(null);
+
+  const invalidateClientes = () => {
+    queryClient.invalidateQueries({ queryKey: ["clientes-generic"] });
+    queryClient.invalidateQueries({ queryKey: ["global-search-clients"] });
+  };
+
+  const handleToggleEstado = async (item: Cliente) => {
+    setTogglingId(item.Id);
+    try {
+      await bulkPatchClientes([item.Id], {
+        EstaEliminado: !item.EstaEliminado,
+      });
+      addToast({
+        title: "Estado actualizado",
+        description: `Cliente ${item.EstaEliminado ? "activado" : "desactivado"} correctamente`,
+        color: "success",
+      });
+      invalidateClientes();
+    } catch (err: unknown) {
+      addToast({
+        title: "Error",
+        description:
+          err instanceof Error ? err.message : "Error al actualizar el estado",
+        color: "danger",
+      });
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   return (
+    <>
     <GenericCrud<Cliente>
       apiPath="/api/clientes"
       queryKey="clientes-generic"
@@ -29,7 +87,10 @@ export default function ClienteCRUD() {
       onNewClick={() => router.push("/clientes/new")}
       newButtonText="Nuevo Cliente"
       transformer={(item) => clienteListAdapter(item)}
-      additionalInvalidateQueryKeys={["cliente"]}
+      additionalInvalidateQueryKeys={["cliente", "global-search-clients"]}
+      enableInactiveFilter
+      enableHardDelete
+      showBulkSoftDelete={false}
       renderRowPreview={(item) => (
         <div className="space-y-6 text-sm">
           <div className="p-4 rounded-xl bg-linear-to-br from-slate-50 to-white border border-slate-100 shadow-sm flex items-center gap-4">
@@ -172,9 +233,10 @@ export default function ClienteCRUD() {
           key: "cambiar-estado",
           label: "Cambiar estado",
           onAction: (ctx) => {
-            addToast({
-              title: "Cambiar estado",
-              description: `${ctx.totalCount} cliente(s)`,
+            setBulkEstadoModal({
+              open: true,
+              items: ctx.items,
+              clearSelection: ctx.clearSelection,
             });
           },
         },
@@ -202,8 +264,13 @@ export default function ClienteCRUD() {
                   {item.Apellido?.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-slate-800">
+                  <span className="font-semibold text-slate-800 flex items-center gap-2">
                     {item.Nombre} {item.Apellido}
+                    {item.EstaEliminado && (
+                      <span className="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-red-50 text-red-500">
+                        Inactivo
+                      </span>
+                    )}
                   </span>
                   {item.Dni && (
                     <span className="text-[11px] font-medium text-slate-500">
@@ -329,12 +396,17 @@ export default function ClienteCRUD() {
                     router.push(`/clientes/${item.Id}`);
                   }}
                 />
-                <DeleteButton
+                <ToggleStatusButton
+                  isInactive={!!item.EstaEliminado}
+                  isDisabled={esConsumidorFinal || togglingId === item.Id}
                   tooltipContent={
-                    esConsumidorFinal ? "No se puede eliminar" : "Eliminar"
+                    esConsumidorFinal
+                      ? "No se puede modificar"
+                      : item.EstaEliminado
+                        ? "Activar"
+                        : "Desactivar"
                   }
-                  isDisabled={esConsumidorFinal}
-                  onPress={() => actions.onDelete(item)}
+                  onPress={() => handleToggleEstado(item)}
                 />
               </div>
             );
@@ -344,5 +416,21 @@ export default function ClienteCRUD() {
         }
       }}
     />
+
+      <BulkCambiarEstadoModal<Cliente>
+        isOpen={bulkEstadoModal.open}
+        onClose={() => setBulkEstadoModal({ open: false, items: [] })}
+        items={bulkEstadoModal.items}
+        entityLabel="cliente"
+        getCurrentEstado={(c) => !!c.EstaEliminado}
+        onConfirm={async (ids, nuevoEstado) => {
+          await bulkPatchClientes(ids, { EstaEliminado: !nuevoEstado });
+        }}
+        onSuccess={() => {
+          bulkEstadoModal.clearSelection?.();
+          invalidateClientes();
+        }}
+      />
+    </>
   );
 }

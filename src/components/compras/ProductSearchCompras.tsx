@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Input, Button, Spinner, addToast } from "@heroui/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Search, ScanBarcode } from "lucide-react";
@@ -81,6 +81,16 @@ export default function ProductSearchCompras({
     await processSearchTerm(term);
     if (term) setInputValue("");
   };
+
+  // Al cerrarse el modal de búsqueda o el escáner, el foco puede quedar
+  // atrapado por la animación de cierre del modal; lo reafirmamos en el
+  // siguiente frame para que el usuario pueda seguir tipeando sin hacer click.
+  useEffect(() => {
+    if (!isSearchModalOpen && !isScannerOpen) {
+      const raf = requestAnimationFrame(() => inputRef.current?.focus());
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [isSearchModalOpen, isScannerOpen]);
 
   const handleSelectProduct = (product: Producto, cantidad: number = 1) => {
     onProductSelect(product, cantidad);

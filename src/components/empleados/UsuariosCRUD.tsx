@@ -119,6 +119,7 @@ export default function UsuariosCRUD() {
     <>
       <GenericCrud<Usuario>
         apiPath="/api/empleados"
+        softDeleteEntity={false}
         queryKey="usuarios-crud"
         searchPlaceholder="Buscar por nombre, usuario o DNI..."
         transformer={transformer}

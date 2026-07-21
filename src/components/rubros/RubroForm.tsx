@@ -7,6 +7,7 @@ export interface Rubro {
   Id: number;
   Descripcion: string;
   EstaEliminado: boolean;
+  CantidadProductos?: number;
 }
 
 const RubroGenericForm = createSimpleEntityForm<Rubro>({

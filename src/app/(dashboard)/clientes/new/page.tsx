@@ -35,6 +35,7 @@ export default function NuevoClientePage() {
         timeout: 3000,
       });
       queryClient.invalidateQueries({ queryKey: ["clientes-generic"] });
+      queryClient.invalidateQueries({ queryKey: ["global-search-clients"] });
       setFormKey((prev) => prev + 1);
     },
     onError: (error: any) => {

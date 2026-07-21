@@ -6,6 +6,7 @@ import { Store, Hash, Save } from "lucide-react";
 import { VentasSection } from "./ventas/VentasPrimitives";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
+import { useReportDirty } from "./OnboardingDirtyContext";
 
 interface PuntoVenta {
   sucursalId: number;
@@ -53,6 +54,8 @@ export function PuntosVentaSettings() {
   });
 
   const hasChanges = JSON.stringify(data) !== JSON.stringify(localData);
+
+  useReportDirty("fiscal-puntos-venta", !!data && hasChanges);
 
   const handleUpdate = (id: number, field: string, value: any) => {
     setLocalData(prev => prev.map(p => p.sucursalId === id ? { ...p, [field]: value } : p));

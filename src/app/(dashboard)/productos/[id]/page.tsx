@@ -37,6 +37,7 @@ export default function EditarProductoPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["productos-generic"] });
       queryClient.invalidateQueries({ queryKey: ["producto-detail", Number(id)] });
+      queryClient.invalidateQueries({ queryKey: ["global-search-products"] });
       router.push("/productos");
     },
     onError: (error: any) => {

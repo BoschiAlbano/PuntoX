@@ -13,6 +13,7 @@ import {
 import { useConfiguracion } from "@/hooks/useConfiguracion";
 import { TIPO_PAGO } from "@/lib/constants/comprobantes";
 import { VentasSection, ToggleRow } from "./VentasPrimitives";
+import { useReportDirty } from "../OnboardingDirtyContext";
 
 const selectCls = {
   trigger:
@@ -69,6 +70,8 @@ export function ConfiguracionCaja() {
       configCaja.activarRetiroDeCaja !== (configuracionData.activarRetiroDeCaja ?? false) ||
       configCaja.montoMaximoRetiroCaja !== (configuracionData.montoMaximoRetiroCaja ?? 0)
     : false;
+
+  useReportDirty("ventas-caja", hasChanges);
 
   const disabled = isSavingConfiguracion || !configuracionData;
 

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useConfiguracion, Fiscal } from "@/hooks/useConfiguracion";
 import { useQuery } from "@tanstack/react-query";
+import { useReportDirty } from "./OnboardingDirtyContext";
 import { VentasSection } from "./ventas/VentasPrimitives";
 import { ArcaSettings } from "./ArcaSettings";
 import { PuntosVentaSettings } from "./PuntosVentaSettings";
@@ -96,6 +97,8 @@ export function FiscalTab() {
   const hasChanges = fiscalData
     ? JSON.stringify(regional) !== JSON.stringify(fiscalData)
     : false;
+
+  useReportDirty("fiscal", hasChanges);
 
   if (isLoadingFiscal) {
     return <FiscalTabSkeleton />;

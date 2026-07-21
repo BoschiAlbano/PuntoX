@@ -13,6 +13,7 @@ import {
   createPaginationResponse,
 } from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
+import { ejecutarBorradoFisico } from "@/lib/errors/hardDelete";
 
 export async function GET(req: NextRequest) {
   try {
@@ -23,9 +24,12 @@ export async function GET(req: NextRequest) {
 
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
     const limitParam = req.nextUrl.searchParams.get("limit");
+    const incluirInactivos =
+      req.nextUrl.searchParams.get("incluirInactivos") === "true";
 
     const where: any = {
       TenantId: BigInt(tenantId),
+      ...(incluirInactivos ? {} : { EstaEliminado: false }),
     };
 
     if (search) {
@@ -183,6 +187,7 @@ export async function DELETE(req: NextRequest) {
     const idParam =
       req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
     const listaId = idParam ? Number(idParam) : NaN;
+    const permanente = req.nextUrl.searchParams.get("permanente") === "true";
 
     if (!Number.isInteger(listaId)) {
       return NextResponse.json(
@@ -191,14 +196,50 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const listaActualizada = await prisma.listaPrecio.delete({
-      where: {
-        Id: listaId,
-        TenantId: BigInt(tenantId),
-      },
-      select: {
-        Id: true,
-      },
+    const tenantIdBigInt = BigInt(tenantId);
+
+    const listaActual = await prisma.listaPrecio.findUnique({
+      where: { Id: listaId, TenantId: tenantIdBigInt },
+      select: { EstaEliminado: true },
+    });
+
+    if (!listaActual) {
+      return NextResponse.json(
+        { error: "Lista de precio no encontrada" },
+        { status: 404 },
+      );
+    }
+
+    if (permanente) {
+      if (!listaActual.EstaEliminado) {
+        return NextResponse.json(
+          {
+            error:
+              "Primero tenés que desactivar la lista de precio antes de eliminarla definitivamente",
+          },
+          { status: 400 },
+        );
+      }
+
+      await ejecutarBorradoFisico(
+        () =>
+          prisma.listaPrecio.delete({
+            where: { Id: listaId, TenantId: tenantIdBigInt },
+          }),
+        "No se puede eliminar definitivamente: la lista de precio tiene productos o clientes asociados.",
+      );
+
+      return NextResponse.json(
+        { success: true, Id: listaId },
+        { status: 200 },
+      );
+    }
+
+    // Toggle: invertir el estado
+    const listaActualizada = await prisma.listaPrecio.update({
+      where: { Id: listaId, TenantId: tenantIdBigInt },
+      data: { EstaEliminado: !listaActual.EstaEliminado },
+      select: { Id: true },
     });
 
     return NextResponse.json(
@@ -206,16 +247,6 @@ export async function DELETE(req: NextRequest) {
       { status: 200 },
     );
   } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message.toLowerCase().includes("record to update")
-    ) {
-      return NextResponse.json(
-        { error: "Lista de precio no encontrada" },
-        { status: 404 },
-      );
-    }
-
     return handleError(error);
   }
 }

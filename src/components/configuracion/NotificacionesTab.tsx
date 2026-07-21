@@ -6,6 +6,7 @@ import { Bell, Mail, AlertTriangle, Save } from "lucide-react";
 import { useConfiguracion, Notificaciones } from "@/hooks/useConfiguracion";
 import { VentasSection, ToggleRow } from "./ventas/VentasPrimitives";
 import { NotificacionesTabSkeleton } from "./ConfiguracionSkeleton";
+import { useReportDirty } from "./OnboardingDirtyContext";
 
 export function NotificacionesTab() {
   const {
@@ -28,6 +29,8 @@ export function NotificacionesTab() {
     ? notificaciones.resumenDiario !== notificacionesData.resumenDiario ||
       notificaciones.stockBajo !== notificacionesData.stockBajo
     : false;
+
+  useReportDirty("notificaciones", hasChanges);
 
   if (isLoadingNotificaciones) {
     return <NotificacionesTabSkeleton />;

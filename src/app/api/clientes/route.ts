@@ -13,6 +13,7 @@ import {
   createPaginationResponse,
 } from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
+import { ejecutarBorradoFisico } from "@/lib/errors/hardDelete";
 import {
   createClienteSchema,
   updateClienteSchema,
@@ -31,10 +32,11 @@ export async function GET(req: NextRequest) {
     const pagination = parsePaginationParams(req);
     const searchParams = req.nextUrl.searchParams;
     const busqueda = searchParams.get("q")?.trim() || "";
+    const incluirInactivos = searchParams.get("incluirInactivos") === "true";
 
     const where: Prisma.PersonaWhereInput = {
       TenantId: BigInt(tenantId),
-      EstaEliminado: false,
+      ...(incluirInactivos ? {} : { EstaEliminado: false }),
       Persona_Cliente: { isNot: null },
       NOT: {
         AND: [
@@ -70,6 +72,7 @@ export async function GET(req: NextRequest) {
           Telefono: true,
           Mail: true,
           LocalidadId: true,
+          EstaEliminado: true,
           Localidad: {
             select: {
               Id: true,
@@ -159,6 +162,7 @@ export async function GET(req: NextRequest) {
       Telefono: c.Telefono,
       Mail: c.Mail,
       LocalidadId: Number(c.LocalidadId),
+      EstaEliminado: c.EstaEliminado,
       Localidad: c.Localidad,
       Persona_Cliente: c.Persona_Cliente,
       SaldoCtaCte: parseFloat(
@@ -410,11 +414,11 @@ export async function PATCH(req: NextRequest) {
     const tenantIdBigInt = BigInt(tenantId);
 
     // Verificar que el cliente existe y pertenece al tenant
+    // (sin filtrar por EstaEliminado: también se puede editar/reactivar un cliente inactivo)
     const clienteExistente = await prisma.persona.findFirst({
       where: {
         Id: BigInt(validarCliente.Id),
         TenantId: tenantIdBigInt,
-        EstaEliminado: false,
         Persona_Cliente: { isNot: null },
       },
       select: {
@@ -522,6 +526,8 @@ export async function PATCH(req: NextRequest) {
         updatePersonaData.Telefono = validarCliente.Telefono?.trim() || null;
       if (validarCliente.Mail !== undefined)
         updatePersonaData.Mail = validarCliente.Mail.trim().toLowerCase();
+      if (validarCliente.EstaEliminado !== undefined)
+        updatePersonaData.EstaEliminado = validarCliente.EstaEliminado;
       if (localidadIdNumber !== null)
         updatePersonaData.Localidad = {
           connect: { Id: BigInt(localidadIdNumber) },
@@ -658,6 +664,7 @@ export async function DELETE(req: NextRequest) {
 
     const searchParams = req.nextUrl.searchParams;
     const clienteId = searchParams.get("Id");
+    const permanente = searchParams.get("permanente") === "true";
 
     if (!clienteId) {
       return NextResponse.json(
@@ -682,11 +689,11 @@ export async function DELETE(req: NextRequest) {
       where: {
         Id: personaId,
         TenantId: tenantIdBigInt,
-        EstaEliminado: false,
         Persona_Cliente: { isNot: null },
       },
       select: {
         Id: true,
+        EstaEliminado: true,
       },
     });
 
@@ -697,11 +704,37 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    // Soft delete: marcar como eliminado en transacción
+    if (permanente) {
+      if (!clienteExistente.EstaEliminado) {
+        return NextResponse.json(
+          {
+            error:
+              "Primero tenés que desactivar el cliente antes de eliminarlo definitivamente",
+          },
+          { status: 400 },
+        );
+      }
+
+      await ejecutarBorradoFisico(async () => {
+        await prisma.$transaction(async (tx) => {
+          await tx.persona_Cliente.delete({ where: { Id: personaId } });
+          await tx.persona.delete({
+            where: { Id: personaId, TenantId: tenantIdBigInt },
+          });
+        });
+      }, "No se puede eliminar definitivamente: el cliente tiene comprobantes o movimientos de cuenta corriente asociados.");
+
+      return NextResponse.json(
+        { ok: true, clienteId: clienteIdNumber },
+        { status: 200 },
+      );
+    }
+
+    // Toggle: invertir el estado
     await prisma.$transaction(async (tx) => {
       await tx.persona.update({
         where: { Id: personaId, TenantId: tenantIdBigInt },
-        data: { EstaEliminado: true },
+        data: { EstaEliminado: !clienteExistente.EstaEliminado },
       });
     });
 

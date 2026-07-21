@@ -2,12 +2,16 @@
 
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { addToast } from "@heroui/react";
 import GenericCrud from "@/components/shared/GenericCrud";
 import RubroForm, { Rubro } from "./RubroForm";
 import StatusBadge from "@/components/shared/StatusBadge";
 import DetailField from "@/components/shared/DetailField";
 import DetailPanel from "@/components/shared/DetailPanel";
-import { DeleteButton, EditButton } from "@/components/shared/TableActions";
+import {
+  ToggleStatusButton,
+  EditButton,
+} from "@/components/shared/TableActions";
 import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
 
 async function bulkPatchRubros(
@@ -34,15 +38,41 @@ export default function RubroCRUD() {
     items: Rubro[];
     clearSelection?: () => void;
   }>({ open: false, items: [] });
+  const [togglingId, setTogglingId] = useState<number | string | null>(null);
 
   const invalidateRubros = () => {
     queryClient.invalidateQueries({ queryKey: ["rubros-generic"] });
+  };
+
+  const handleToggleEstado = async (item: Rubro) => {
+    setTogglingId(item.Id);
+    try {
+      await bulkPatchRubros([item.Id], { EstaEliminado: !item.EstaEliminado });
+      addToast({
+        title: "Estado actualizado",
+        description: `Rubro ${item.EstaEliminado ? "activado" : "desactivado"} correctamente`,
+        color: "success",
+      });
+      invalidateRubros();
+    } catch (err: unknown) {
+      addToast({
+        title: "Error",
+        description:
+          err instanceof Error ? err.message : "Error al actualizar el estado",
+        color: "danger",
+      });
+    } finally {
+      setTogglingId(null);
+    }
   };
 
   return (
     <>
       <GenericCrud<Rubro>
         apiPath="/api/rubros"
+        enableInactiveFilter
+        enableHardDelete
+        showBulkSoftDelete={false}
         queryKey="rubros-generic"
         title="Gestión de Rubros"
         searchPlaceholder="Buscar rubros..."
@@ -50,6 +80,9 @@ export default function RubroCRUD() {
         renderRowPreview={(item) => (
           <DetailPanel>
             <DetailField label="Descripción">{item.Descripcion}</DetailField>
+            <DetailField label="Productos">
+              {(item.CantidadProductos ?? 0).toLocaleString()}
+            </DetailField>
             <DetailField label="Estado">
               <StatusBadge estaEliminado={item.EstaEliminado} />
             </DetailField>
@@ -62,11 +95,13 @@ export default function RubroCRUD() {
           columns: [
             { key: "Id", header: "ID" },
             { key: "Descripcion", header: "Descripción" },
+            { key: "Productos", header: "Productos" },
             { key: "Estado", header: "Estado" },
           ],
           mapItem: (r) => ({
             Id: r.Id,
             Descripcion: r.Descripcion ?? "",
+            Productos: r.CantidadProductos ?? 0,
             Estado: r.EstaEliminado ? "Inactivo" : "Activo",
           }),
         }}
@@ -90,6 +125,11 @@ export default function RubroCRUD() {
             sortable: true,
             align: "start",
           },
+          {
+            uid: "CantidadProductos",
+            name: "PRODUCTOS",
+            align: "center",
+          },
           { uid: "Estado", name: "ESTADO" },
           { uid: "acciones", name: "ACCIONES" },
         ]}
@@ -101,6 +141,12 @@ export default function RubroCRUD() {
                   {item.Descripcion}
                 </span>
               );
+            case "CantidadProductos":
+              return (
+                <span className="text-gray-600 tabular-nums">
+                  {(item.CantidadProductos ?? 0).toLocaleString()}
+                </span>
+              );
             case "Estado":
               return <StatusBadge estaEliminado={item.EstaEliminado} />;
             case "acciones":
@@ -110,9 +156,11 @@ export default function RubroCRUD() {
                     onPress={() => actions.onEdit(item)}
                     label={`Editar ${item.Descripcion || "rubro"}`}
                   />
-                  <DeleteButton
-                    onPress={() => actions.onDelete(item)}
-                    label={`Eliminar ${item.Descripcion || "rubro"}`}
+                  <ToggleStatusButton
+                    isInactive={!!item.EstaEliminado}
+                    isDisabled={togglingId === item.Id}
+                    onPress={() => handleToggleEstado(item)}
+                    label={`${item.EstaEliminado ? "Activar" : "Desactivar"} ${item.Descripcion || "rubro"}`}
                   />
                 </div>
               );

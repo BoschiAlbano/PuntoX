@@ -1,20 +1,77 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Proveedor } from "@/lib/validations/proveedor.schema";
 import GenericCrud from "@/components/shared/GenericCrud";
 import { addToast } from "@heroui/react";
 import {
   EditButton,
-  DeleteButton,
+  ToggleStatusButton,
   CreditCardButton,
 } from "@/components/shared/TableActions";
+import { BulkCambiarEstadoModal } from "@/components/shared/BulkCambiarEstadoModal";
 import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
+
+async function bulkPatchProveedores(
+  ids: (number | string)[],
+  data: { EstaEliminado?: boolean },
+) {
+  for (const id of ids) {
+    const res = await fetch("/api/proveedores", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ Id: id, ...data }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error || err?.message || "Error al actualizar");
+    }
+  }
+}
 
 export default function ProveedoresCrud() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { setOverride } = useBreadcrumbStore();
+  const [bulkEstadoModal, setBulkEstadoModal] = useState<{
+    open: boolean;
+    items: Proveedor[];
+    clearSelection?: () => void;
+  }>({ open: false, items: [] });
+  const [togglingId, setTogglingId] = useState<number | string | null>(null);
+
+  const invalidateProveedores = () => {
+    queryClient.invalidateQueries({ queryKey: ["proveedores-generic"] });
+  };
+
+  const handleToggleEstado = async (item: Proveedor) => {
+    setTogglingId(item.Id);
+    try {
+      await bulkPatchProveedores([item.Id], {
+        EstaEliminado: !item.EstaEliminado,
+      });
+      addToast({
+        title: "Estado actualizado",
+        description: `Proveedor ${item.EstaEliminado ? "activado" : "desactivado"} correctamente`,
+        color: "success",
+      });
+      invalidateProveedores();
+    } catch (err: unknown) {
+      addToast({
+        title: "Error",
+        description:
+          err instanceof Error ? err.message : "Error al actualizar el estado",
+        color: "danger",
+      });
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   return (
+    <>
     <GenericCrud<Proveedor>
       apiPath="/api/proveedores"
       queryKey="proveedores-generic"
@@ -24,6 +81,9 @@ export default function ProveedoresCrud() {
       newButtonText="Nuevo Proveedor"
       transformer={(item) => item}
       additionalInvalidateQueryKeys={["proveedores"]}
+      enableInactiveFilter
+      enableHardDelete
+      showBulkSoftDelete={false}
       renderRowPreview={(item) => (
         <div className="space-y-6 text-sm">
           <div className="p-4 rounded-xl bg-linear-to-br from-slate-50 to-white border border-slate-100 shadow-sm flex items-center gap-4">
@@ -122,13 +182,13 @@ export default function ProveedoresCrud() {
       }}
       bulkActionsDropdown={[
         {
-          key: "eliminar-masivo",
-          label: "Eliminar seleccionados",
+          key: "cambiar-estado",
+          label: "Cambiar estado",
           onAction: (ctx) => {
-            // logica bulk actions mock
-            addToast({
-              title: "Acción en lote",
-              description: `Se han procesado ${ctx.totalCount} proveedores.`,
+            setBulkEstadoModal({
+              open: true,
+              items: ctx.items,
+              clearSelection: ctx.clearSelection,
             });
           },
         },
@@ -155,8 +215,13 @@ export default function ProveedoresCrud() {
                   {item.RazonSocial?.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-slate-800">
+                  <span className="font-semibold text-slate-800 flex items-center gap-2">
                     {item.RazonSocial}
+                    {item.EstaEliminado && (
+                      <span className="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-red-50 text-red-500">
+                        Inactivo
+                      </span>
+                    )}
                   </span>
                   {item.CUIT && (
                     <span className="text-[11px] font-medium text-slate-500">
@@ -261,9 +326,11 @@ export default function ProveedoresCrud() {
                     router.push(`/proveedores/${item.Id}`);
                   }}
                 />
-                <DeleteButton
-                  label="Eliminar Proveedor"
-                  onPress={() => actions.onDelete(item)}
+                <ToggleStatusButton
+                  isInactive={!!item.EstaEliminado}
+                  isDisabled={togglingId === item.Id}
+                  label={item.EstaEliminado ? "Activar Proveedor" : "Desactivar Proveedor"}
+                  onPress={() => handleToggleEstado(item)}
                 />
               </div>
             );
@@ -273,5 +340,21 @@ export default function ProveedoresCrud() {
         }
       }}
     />
+
+      <BulkCambiarEstadoModal<Proveedor>
+        isOpen={bulkEstadoModal.open}
+        onClose={() => setBulkEstadoModal({ open: false, items: [] })}
+        items={bulkEstadoModal.items}
+        entityLabel="proveedor"
+        getCurrentEstado={(p) => !!p.EstaEliminado}
+        onConfirm={async (ids, nuevoEstado) => {
+          await bulkPatchProveedores(ids, { EstaEliminado: !nuevoEstado });
+        }}
+        onSuccess={() => {
+          bulkEstadoModal.clearSelection?.();
+          invalidateProveedores();
+        }}
+      />
+    </>
   );
 }

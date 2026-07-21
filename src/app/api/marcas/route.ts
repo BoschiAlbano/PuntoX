@@ -13,6 +13,7 @@ import {
   createPaginationResponse,
 } from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
+import { ejecutarBorradoFisico } from "@/lib/errors/hardDelete";
 
 export async function GET(req: NextRequest) {
   try {
@@ -23,9 +24,12 @@ export async function GET(req: NextRequest) {
 
     const search = req.nextUrl.searchParams.get("q")?.trim() || "";
     const limitParam = req.nextUrl.searchParams.get("limit");
+    const incluirInactivos =
+      req.nextUrl.searchParams.get("incluirInactivos") === "true";
 
     const where: any = {
       TenantId: BigInt(tenantId),
+      ...(incluirInactivos ? {} : { EstaEliminado: false }),
     };
 
     if (search) {
@@ -164,6 +168,7 @@ export async function DELETE(req: NextRequest) {
     const idParam =
       req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
     const marcaId = idParam ? Number(idParam) : NaN;
+    const permanente = req.nextUrl.searchParams.get("permanente") === "true";
 
     if (!Number.isInteger(marcaId)) {
       return NextResponse.json(
@@ -172,14 +177,50 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const marcaActualizada = await prisma.marca.delete({
-      where: {
-        Id: marcaId,
-        TenantId: BigInt(tenantId),
-      },
-      select: {
-        Id: true,
-      },
+    const tenantIdBigInt = BigInt(tenantId);
+
+    const marcaActual = await prisma.marca.findUnique({
+      where: { Id: marcaId, TenantId: tenantIdBigInt },
+      select: { EstaEliminado: true },
+    });
+
+    if (!marcaActual) {
+      return NextResponse.json(
+        { error: "Marca no encontrada" },
+        { status: 404 },
+      );
+    }
+
+    if (permanente) {
+      if (!marcaActual.EstaEliminado) {
+        return NextResponse.json(
+          {
+            error:
+              "Primero tenés que desactivar la marca antes de eliminarla definitivamente",
+          },
+          { status: 400 },
+        );
+      }
+
+      await ejecutarBorradoFisico(
+        () =>
+          prisma.marca.delete({
+            where: { Id: marcaId, TenantId: tenantIdBigInt },
+          }),
+        "No se puede eliminar definitivamente: la marca tiene productos asociados.",
+      );
+
+      return NextResponse.json(
+        { success: true, Id: marcaId },
+        { status: 200 },
+      );
+    }
+
+    // Toggle: invertir el estado
+    const marcaActualizada = await prisma.marca.update({
+      where: { Id: marcaId, TenantId: tenantIdBigInt },
+      data: { EstaEliminado: !marcaActual.EstaEliminado },
+      select: { Id: true },
     });
 
     return NextResponse.json(
@@ -187,16 +228,6 @@ export async function DELETE(req: NextRequest) {
       { status: 200 },
     );
   } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message.toLowerCase().includes("record to update")
-    ) {
-      return NextResponse.json(
-        { error: "Marca no encontrada" },
-        { status: 404 },
-      );
-    }
-
     return handleError(error);
   }
 }

@@ -10,6 +10,8 @@ import {
   KeyRound,
   LockKeyhole,
   LockKeyholeOpen,
+  ToggleLeft,
+  ToggleRight,
 } from "lucide-react";
 import { ReactNode } from "react";
 
@@ -269,6 +271,50 @@ export const LockButton = ({
           <LockKeyholeOpen size={ICON_SIZE} strokeWidth={ICON_STROKE} />
         ) : (
           <LockKeyhole size={ICON_SIZE} strokeWidth={ICON_STROKE} />
+        )}
+      </Button>
+    </ActionTooltip>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// ToggleStatusButton (activar/desactivar registro — borrado lógico reversible)
+// ---------------------------------------------------------------------------
+interface ToggleStatusButtonProps extends ActionButtonProps {
+  /** true = el registro está inactivo → el botón ofrece activarlo */
+  isInactive?: boolean;
+}
+
+export const ToggleStatusButton = ({
+  onPress,
+  label,
+  tooltipContent,
+  isDisabled,
+  isInactive,
+  className,
+  ...props
+}: ToggleStatusButtonProps) => {
+  const defaultLabel = isInactive ? "Activar" : "Desactivar";
+  return (
+    <ActionTooltip content={tooltipContent ?? label ?? defaultLabel}>
+      <Button
+        isIconOnly
+        size="sm"
+        variant="flat"
+        onPress={onPress}
+        isDisabled={isDisabled}
+        aria-label={label ?? defaultLabel}
+        {...props}
+        className={`${baseButtonClass} ${
+          isInactive
+            ? "bg-slate-100 text-slate-500 hover:bg-slate-200"
+            : "bg-emerald-50 text-emerald-500 hover:bg-emerald-100"
+        } ${className ?? ""}`}
+      >
+        {isInactive ? (
+          <ToggleLeft size={ICON_SIZE} strokeWidth={ICON_STROKE} />
+        ) : (
+          <ToggleRight size={ICON_SIZE} strokeWidth={ICON_STROKE} />
         )}
       </Button>
     </ActionTooltip>

@@ -7,6 +7,7 @@ export interface UnidadMedida {
   Id: number;
   Descripcion: string;
   EstaEliminado: boolean;
+  CantidadProductos?: number;
 }
 
 const UnidadMedidaGenericForm = createSimpleEntityForm<UnidadMedida>({

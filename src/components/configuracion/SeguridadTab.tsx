@@ -31,6 +31,7 @@ import { useConfiguracion, Seguridad } from "@/hooks/useConfiguracion";
 import { VentasSection, ToggleRow } from "./ventas/VentasPrimitives";
 import { SeguridadTabSkeleton } from "./ConfiguracionSkeleton";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
+import { useReportDirty } from "./OnboardingDirtyContext";
 
 interface SesionActiva {
   id: number;
@@ -187,6 +188,8 @@ export function SeguridadTab() {
   const hasChanges = seguridadData
     ? JSON.stringify(seguridad) !== JSON.stringify(seguridadData)
     : false;
+
+  useReportDirty("seguridad", hasChanges);
 
   const statCards = [
     {

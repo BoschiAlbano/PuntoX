@@ -8,6 +8,7 @@ import { GET, POST, PATCH, DELETE } from "./route";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import prisma from "@/DB/prisma";
 import { PermisoError } from "@/lib/requirePermiso";
+import { AppErrorClass } from "@/lib/errors/types";
 
 vi.mock("@/lib/auth/getAuthUser", () => ({ getAuthContext: vi.fn() }));
 vi.mock("@/DB/prisma", () => ({
@@ -15,6 +16,7 @@ vi.mock("@/DB/prisma", () => ({
     rubro: {
       count: vi.fn(),
       findMany: vi.fn(),
+      findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -23,6 +25,12 @@ vi.mock("@/DB/prisma", () => ({
 }));
 vi.mock("@/lib/errors/handler", () => ({
   handleError: vi.fn((err: unknown) => {
+    if (err instanceof AppErrorClass) {
+      return new Response(
+        JSON.stringify({ error: { code: err.code, message: err.message } }),
+        { status: err.statusCode },
+      );
+    }
     const msg = err instanceof PermisoError ? err.message : "Error interno";
     const status = err instanceof PermisoError ? err.status : 500;
     return new Response(JSON.stringify({ error: msg }), { status });
@@ -44,7 +52,12 @@ describe("GET /api/rubros", () => {
     vi.mocked(getAuthContext).mockResolvedValue(authOk as any);
     vi.mocked(prisma.rubro.count).mockResolvedValue(1);
     vi.mocked(prisma.rubro.findMany).mockResolvedValue([
-      { Id: 1, Descripcion: "Rubro A", EstaEliminado: false },
+      {
+        Id: 1,
+        Descripcion: "Rubro A",
+        EstaEliminado: false,
+        _count: { Articulo: 3 },
+      },
     ] as any);
   });
 
@@ -128,20 +141,54 @@ describe("DELETE /api/rubros", () => {
   });
 
   it("retorna 404 cuando no existe", async () => {
-    vi.mocked(prisma.rubro.delete).mockRejectedValue(new Error("record to update not found"));
+    vi.mocked(prisma.rubro.findUnique).mockResolvedValue(null);
     const req = new NextRequest("http://localhost:3000/api/rubros?Id=999", { method: "DELETE" });
     const res = await DELETE(req);
     const data = await res.json();
     expect(res.status).toBe(404);
   });
 
-  it("retorna 200 con success", async () => {
-    vi.mocked(prisma.rubro.delete).mockResolvedValue({ Id: BigInt(1) } as any);
+  it("invierte el estado (toggle) cuando no se pide borrado permanente", async () => {
+    vi.mocked(prisma.rubro.findUnique).mockResolvedValue({ EstaEliminado: false } as any);
+    vi.mocked(prisma.rubro.update).mockResolvedValue({ Id: BigInt(1) } as any);
     const req = new NextRequest("http://localhost:3000/api/rubros?Id=1", { method: "DELETE" });
     const res = await DELETE(req);
     const data = await res.json();
     expect(res.status).toBe(200);
     expect(data.success).toBe(true);
     expect(data.Id).toBe(1);
+    expect(prisma.rubro.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { EstaEliminado: true } }),
+    );
+  });
+
+  it("rechaza el borrado permanente si el rubro sigue activo", async () => {
+    vi.mocked(prisma.rubro.findUnique).mockResolvedValue({ EstaEliminado: false } as any);
+    const req = new NextRequest("http://localhost:3000/api/rubros?Id=1&permanente=true", { method: "DELETE" });
+    const res = await DELETE(req);
+    const data = await res.json();
+    expect(res.status).toBe(400);
+    expect(data.error).toContain("desactivar");
+  });
+
+  it("elimina definitivamente cuando ya está inactivo", async () => {
+    vi.mocked(prisma.rubro.findUnique).mockResolvedValue({ EstaEliminado: true } as any);
+    vi.mocked(prisma.rubro.delete).mockResolvedValue({ Id: BigInt(1) } as any);
+    const req = new NextRequest("http://localhost:3000/api/rubros?Id=1&permanente=true", { method: "DELETE" });
+    const res = await DELETE(req);
+    const data = await res.json();
+    expect(res.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(prisma.rubro.delete).toHaveBeenCalled();
+  });
+
+  it("devuelve un mensaje amigable si el borrado permanente falla por relaciones", async () => {
+    vi.mocked(prisma.rubro.findUnique).mockResolvedValue({ EstaEliminado: true } as any);
+    vi.mocked(prisma.rubro.delete).mockRejectedValue(new Error("Foreign key constraint failed"));
+    const req = new NextRequest("http://localhost:3000/api/rubros?Id=1&permanente=true", { method: "DELETE" });
+    const res = await DELETE(req);
+    const data = await res.json();
+    expect(res.status).toBe(409);
+    expect(data.error.message).toContain("productos asociados");
   });
 });

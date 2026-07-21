@@ -25,6 +25,7 @@ export const clienteAdapter = (data: any): Cliente => {
       : null,
     SaldoCtaCte:
       data.SaldoCtaCte !== undefined ? Number(data.SaldoCtaCte) : undefined,
+    EstaEliminado: Boolean(data.EstaEliminado),
   };
 };
 

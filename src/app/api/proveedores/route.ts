@@ -7,6 +7,7 @@ import {
   createPaginationResponse,
 } from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
+import { ejecutarBorradoFisico } from "@/lib/errors/hardDelete";
 import {
   createProveedorSchema,
   updateProveedorSchema,
@@ -24,10 +25,11 @@ export async function GET(req: NextRequest) {
     const pagination = parsePaginationParams(req);
     const searchParams = req.nextUrl.searchParams;
     const busqueda = searchParams.get("q")?.trim() || "";
+    const incluirInactivos = searchParams.get("incluirInactivos") === "true";
 
     const where: Prisma.ProveedorWhereInput = {
       TenantId: BigInt(tenantId),
-      EstaEliminado: false,
+      ...(incluirInactivos ? {} : { EstaEliminado: false }),
     };
 
     // Si hay búsqueda, filtrar por RazonSocial, CUIT, o Mail
@@ -54,6 +56,7 @@ export async function GET(req: NextRequest) {
           Mail: true,
           LocalidadId: true,
           CondicionIvaId: true,
+          EstaEliminado: true,
           Localidad: {
             select: {
               Id: true,
@@ -142,6 +145,7 @@ export async function GET(req: NextRequest) {
       CondicionIvaId: Number(prov.CondicionIvaId),
       CondicionIva: prov.CondicionIva?.Descripcion ?? null,
       SaldoCtaCte: parseFloat(((deudaMap.get(prov.Id.toString()) ?? 0) - (pagosMap.get(prov.Id.toString()) ?? 0)).toFixed(2)),
+      EstaEliminado: prov.EstaEliminado,
     }));
 
     const paginatedResponse = createPaginationResponse(
@@ -320,11 +324,11 @@ export async function PATCH(req: NextRequest) {
     const tenantIdBigInt = BigInt(tenantId);
 
     // Verificar que el proveedor existe
+    // (sin filtrar por EstaEliminado: también se puede editar/reactivar uno inactivo)
     const proveedorExistente = await prisma.proveedor.findFirst({
       where: {
         Id: BigInt(validarProveedor.Id),
         TenantId: tenantIdBigInt,
-        EstaEliminado: false,
       },
       select: {
         Id: true,
@@ -414,7 +418,8 @@ export async function PATCH(req: NextRequest) {
     if (validarProveedor.Direccion !== undefined) updateData.Direccion = validarProveedor.Direccion.trim();
     if (validarProveedor.Telefono !== undefined) updateData.Telefono = validarProveedor.Telefono?.trim() || null;
     if (validarProveedor.Mail !== undefined) updateData.Mail = validarProveedor.Mail.trim().toLowerCase();
-    
+    if (validarProveedor.EstaEliminado !== undefined) updateData.EstaEliminado = validarProveedor.EstaEliminado;
+
     if (localidadIdNumber !== null) {
       updateData.Localidad = { connect: { Id: BigInt(localidadIdNumber) } };
     }
@@ -489,6 +494,7 @@ export async function DELETE(req: NextRequest) {
 
     const searchParams = req.nextUrl.searchParams;
     const proveedorId = searchParams.get("Id");
+    const permanente = searchParams.get("permanente") === "true";
 
     if (!proveedorId) {
       return NextResponse.json(
@@ -512,9 +518,8 @@ export async function DELETE(req: NextRequest) {
       where: {
         Id: primsaId,
         TenantId: tenantIdBigInt,
-        EstaEliminado: false,
       },
-      select: { Id: true },
+      select: { Id: true, EstaEliminado: true },
     });
 
     if (!existe) {
@@ -524,9 +529,31 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
+    if (permanente) {
+      if (!existe.EstaEliminado) {
+        return NextResponse.json(
+          {
+            error:
+              "Primero tenés que desactivar el proveedor antes de eliminarlo definitivamente",
+          },
+          { status: 400 },
+        );
+      }
+
+      await ejecutarBorradoFisico(
+        () =>
+          prisma.proveedor.delete({
+            where: { Id: primsaId, TenantId: tenantIdBigInt },
+          }),
+        "No se puede eliminar definitivamente: el proveedor tiene compras o movimientos de cuenta corriente asociados.",
+      );
+
+      return NextResponse.json({ ok: true, Id: idNumber }, { status: 200 });
+    }
+
     await prisma.proveedor.update({
         where: { Id: primsaId, TenantId: tenantIdBigInt },
-        data: { EstaEliminado: true },
+        data: { EstaEliminado: !existe.EstaEliminado },
     });
 
     return NextResponse.json(

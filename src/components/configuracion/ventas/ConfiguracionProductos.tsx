@@ -5,6 +5,7 @@ import { Button } from "@heroui/react";
 import { Layers, Save } from "lucide-react";
 import { useConfiguracion, Configuracion } from "@/hooks/useConfiguracion";
 import { VentasSection, ToggleRow } from "./VentasPrimitives";
+import { useReportDirty } from "../OnboardingDirtyContext";
 
 export function ConfiguracionProductos() {
   const {
@@ -38,6 +39,8 @@ export function ConfiguracionProductos() {
     ? configProductos.unificarRenglonesIngresarMismoProducto !==
       (configuracionData.unificarRenglonesIngresarMismoProducto ?? true)
     : false;
+
+  useReportDirty("ventas-productos", hasChanges);
 
   return (
     <VentasSection title="Comportamiento de productos" icon={Layers}>

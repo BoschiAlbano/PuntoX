@@ -21,6 +21,7 @@ export const updateProveedorSchema = z.object({
   Mail: z.string().email("Email inválido").optional(),
   LocalidadId: z.union([z.number(), z.string()]).optional(),
   CondicionIvaId: z.union([z.number(), z.string()]).optional(),
+  EstaEliminado: z.boolean().optional(),
 });
 
 export type CreateProveedorInput = z.infer<typeof createProveedorSchema>;
@@ -42,4 +43,5 @@ export interface Proveedor {
   CondicionIvaId: number;
   CondicionIva: string;
   SaldoCtaCte?: number;
+  EstaEliminado?: boolean;
 }
