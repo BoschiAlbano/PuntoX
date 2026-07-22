@@ -5,3 +5,7 @@ Ideas Nuevas de implementaciones a "futuro":
 3- Planes de tiendas, eliminar funcionalidades y separar los planes.
 
 Erorres al hacer "Test" corregir:
+
+
+1- crear usuario con mismo nombre y misma contraseña diferente correo, pero a cual entra?
+2- no aparecen los remitos, presupuestos y notas de credito en caja actual, verificar.

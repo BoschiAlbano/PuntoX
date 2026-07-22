@@ -22,6 +22,7 @@ import { Copy, Check, Barcode } from "lucide-react";
 import { ProductoCard } from "./ProductoCard";
 import { BulkPrintBarcodesModal } from "./BulkPrintBarcodesModal";
 import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 
 function ProductoPreviewContent({ item }: { item: Producto }) {
   const currency = useCurrency();
@@ -251,6 +252,7 @@ export default function ProductoCRUD() {
   const currency = useCurrency();
   const queryClient = useQueryClient();
   const { setOverride } = useBreadcrumbStore();
+  const { puedeCrearArticulo, articulos } = usePlanFeatures();
   const { addStockMutation } = useProductos();
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
   const [productToAddStock, setProductToAddStock] = useState<Producto | null>(
@@ -338,6 +340,12 @@ export default function ProductoCRUD() {
         searchPlaceholder="Buscar por nombre, código o barras..."
         onNewClick={() => router.push("/productos/new")}
         newButtonText="Nuevo Producto"
+        newButtonDisabled={!puedeCrearArticulo}
+        newButtonDisabledMessage={
+          articulos.limite !== null
+            ? `Tu plan permite hasta ${articulos.limite} artículos`
+            : undefined
+        }
         renderRowPreview={(item) => <ProductoPreviewContent item={item} />}
         getRowPreviewTitle={(item) => item.Descripcion || "Producto"}
         showEditInPreview={false}

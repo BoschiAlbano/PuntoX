@@ -81,8 +81,17 @@ soporte humano, no algo que el software deba habilitar o bloquear.
 - **Artículos**: `Articulo` con `TenantId` del tenant, `EstaEliminado = false`
   (misma lógica que sucursales: un artículo desactivado/archivado pero no
   borrado definitivamente sigue ocupando el cupo).
-- **AFIP**: cualquier intento de emitir Factura Electrónica (alta de
-  comprobante con tipo AFIP, reproceso individual o en lote).
+- **AFIP**: cualquier intento de **declarar/autorizar electrónicamente** un
+  comprobante ante AFIP/ARCA (reproceso individual o en lote, y el intento
+  automático de autorización al crear la venta). **Importante**: el plan NO
+  bloquea la creación de comprobantes tipo Factura A/B/C en sí — un negocio
+  puede seguir emitiendo esas facturas en papel/local sin declararlas a AFIP
+  (práctica habitual y legal de facturación en Argentina, incluso si no
+  siempre se declara todo electrónicamente). Sin plan con AFIP, el
+  comprobante se crea igual pero nunca se intenta autorizar electrónicamente
+  (ni automático ni manual), y las acciones de emisión/reproceso de FA se
+  ocultan por no tener sentido — pero el selector de tipo de comprobante en
+  la venta NO filtra Factura A/B/C por plan.
 
 ## 4. Comportamiento al superar un límite o no tener una feature
 

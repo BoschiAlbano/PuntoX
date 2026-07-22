@@ -12,6 +12,7 @@ import {
 } from "@/lib/services/arca.service";
 import { TIPO_COMPROBANTE_LOCAL_A_AFIP } from "@/lib/constants/afip";
 import { parseArcaObservations } from "@/lib/constants/arca-errors";
+import { planIncluyeAFIP } from "@/lib/planes/features";
 
 /**
  * Parsea una fecha en formato YYYY-MM-DD a un objeto Date en UTC
@@ -57,6 +58,20 @@ export async function POST(req: NextRequest) {
           { status: 400 },
         );
       }
+    }
+
+    // Verificar primero si el plan incluye AFIP (mensaje distinto de "faltan
+    // certificados" para no confundir a un tenant cuyo plan simplemente no
+    // lo incluye).
+    const incluyeAFIP = await planIncluyeAFIP(Number(tenantId));
+    if (!incluyeAFIP) {
+      return NextResponse.json(
+        {
+          error:
+            "Tu plan no incluye Facturación Electrónica. Actualizá tu plan para emitir comprobantes AFIP.",
+        },
+        { status: 403 },
+      );
     }
 
     const arcaHabilitada =

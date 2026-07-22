@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { handleError } from "@/lib/errors/handler";
+import { assertDentroDeLimite } from "@/lib/planes/features";
 
 export async function POST(request: NextRequest) {
   try {
@@ -81,6 +82,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    await assertDentroDeLimite(Number(parsedTenantId), "usuarios");
 
     const localidadValida = await prisma.localidad.findFirst({
       where: {

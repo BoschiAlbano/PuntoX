@@ -17,6 +17,7 @@ import { ejecutarBorradoFisico } from "@/lib/errors/hardDelete";
 import { fotoDefault } from "@/utilities/fotoDefault";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { resolveStockNotifications } from "@/lib/services/notificaciones";
+import { assertDentroDeLimite } from "@/lib/planes/features";
 
 export async function GET(req: NextRequest) {
   try {
@@ -308,6 +309,8 @@ export async function POST(req: NextRequest) {
       req,
       permission: SET_PERMISSIONS.PRODUCTOS, // Permiso de escritura
     });
+
+    await assertDentroDeLimite(tenantId, "articulos");
 
     const body = await req.json();
     const validarProducto = createProductoSchema.parse(body);

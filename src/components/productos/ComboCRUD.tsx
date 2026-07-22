@@ -23,6 +23,7 @@ import { ProductoCard } from "./ProductoCard";
 import { useRouter } from "next/navigation";
 import { BulkPrintBarcodesModal } from "./BulkPrintBarcodesModal";
 import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 
 function ProductoPreviewContent({ item }: { item: Producto }) {
   const currency = useCurrency();
@@ -238,6 +239,7 @@ export default function ComboCRUD() {
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const router = useRouter();
   const { setOverride } = useBreadcrumbStore();
+  const { puedeCrearArticulo, articulos } = usePlanFeatures();
 
   const invalidateProductos = () => {
     queryClient.invalidateQueries({ queryKey: ["combos-generic"] });
@@ -305,6 +307,12 @@ export default function ComboCRUD() {
         title="Promociones y Combos"
         newButtonText="Nuevo Combo"
         onNewClick={() => router.push("/productos/promociones-combo/new")}
+        newButtonDisabled={!puedeCrearArticulo}
+        newButtonDisabledMessage={
+          articulos.limite !== null
+            ? `Tu plan permite hasta ${articulos.limite} artículos`
+            : undefined
+        }
         renderRowPreview={(item) => <ProductoPreviewContent item={item} />}
         getRowPreviewTitle={(item) => item.Descripcion || "Producto"}
         showEditInPreview={false}

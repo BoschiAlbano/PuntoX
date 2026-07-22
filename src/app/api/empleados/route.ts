@@ -97,6 +97,7 @@ import { ejecutarBorradoFisico } from "@/lib/errors/hardDelete";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 import { PerfilTipo } from "../../../../prisma/generated/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { assertDentroDeLimite } from "@/lib/planes/features";
 import {
   PERMISSIONS,
   GET_PERMISSIONS,
@@ -396,6 +397,8 @@ export async function POST(req: NextRequest) {
       req,
       permission: SET_PERMISSIONS.EMPLEADOS, // Mismo permiso que productos por coherencia
     });
+
+    await assertDentroDeLimite(tenantId, "usuarios");
 
     const tenantIdBigInt = BigInt(tenantId);
 

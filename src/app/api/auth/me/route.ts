@@ -1,6 +1,7 @@
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import prisma from "@/DB/prisma";
 import { NextResponse } from "next/server";
+import { parsePlanFeatures } from "@/lib/planes/features";
 
 export async function GET() {
   try {
@@ -18,7 +19,18 @@ export async function GET() {
     const dbUser = await prisma.usuario.findUnique({
       where: { AuthUserId: supabaseUser.id },
       include: {
-        Tenant: true,
+        Tenant: {
+          include: {
+            Plan: true,
+            _count: {
+              select: {
+                Sucursales: { where: { EstaEliminado: false } },
+                Usuarios: { where: { EstaEliminado: false } },
+                Articulos: { where: { EstaEliminado: false } },
+              },
+            },
+          },
+        },
         Sucursales: {
           where: {
             Sucursal: {
@@ -104,6 +116,15 @@ export async function GET() {
 
     const permissions = Array.from(permissionsSet);
 
+    const planFeatures = parsePlanFeatures(
+      dbUser.Tenant.Plan?.Caracteristicas ?? null,
+    );
+    const planUsage = {
+      sucursales: dbUser.Tenant._count.Sucursales,
+      usuarios: dbUser.Tenant._count.Usuarios,
+      articulos: dbUser.Tenant._count.Articulos,
+    };
+
     return NextResponse.json({
       user: usuarioDTO,
       tenant: dbUser.Tenant,
@@ -113,6 +134,8 @@ export async function GET() {
       roles,
       isSuperAdmin,
       isAdministrador,
+      planFeatures,
+      planUsage,
     });
   } catch (error) {
     console.error("Error fetching user data:", error);

@@ -60,6 +60,7 @@ import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import GenericTable, { Column } from "@/components/shared/GenericTable";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 
 const movimientosColumns: Column[] = [
   { uid: "fecha", name: "Fecha", sortable: false },
@@ -111,6 +112,7 @@ export default function CajaActual({
     enableConfiguracion: true,
     enableFiscal: true,
   });
+  const { tieneAFIP } = usePlanFeatures();
 
   // Condiciones IVA para determinar tipos fiscales disponibles
   const { data: condicionesIva = [] } = useQuery({
@@ -644,7 +646,10 @@ export default function CajaActual({
             tiposAfipAcciones.includes(mov.Comprobante.TipoComprobante);
           const estadoFa = mov.Comprobante?.FacturaElectronica?.Estado;
           const puedeEmitirFa =
-            esTipoAfipAcciones && estadoFa !== "AUTORIZADO" && estadoFa !== "PENDIENTE";
+            esTipoAfipAcciones &&
+            tieneAFIP &&
+            estadoFa !== "AUTORIZADO" &&
+            estadoFa !== "PENDIENTE";
 
           return (
             <div className="flex items-center gap-1">
@@ -691,7 +696,13 @@ export default function CajaActual({
           return null;
       }
     },
-    [handleViewTicket, handleViewGasto, handleReimprimirTicket, handleEmitirFaSingle],
+    [
+      handleViewTicket,
+      handleViewGasto,
+      handleReimprimirTicket,
+      handleEmitirFaSingle,
+      tieneAFIP,
+    ],
   );
 
   const formatMoney = (val: number) =>
@@ -886,7 +897,7 @@ export default function CajaActual({
               selectedCount={selectedKeys.size}
               onClearSelection={() => setSelectedKeys(new Set())}
               bulkActionsDropdown={
-                fiscal?.afipHabilitado && !isReprocesando
+                fiscal?.afipHabilitado && tieneAFIP && !isReprocesando
                   ? [
                       {
                         key: "emitir-arca",
@@ -897,41 +908,51 @@ export default function CajaActual({
                   : undefined
               }
               extraSearchContent={
-                <Button
-                  size="sm"
-                  variant={filtroPendientes ? "solid" : "flat"}
-                  color={filtroPendientes ? "warning" : "default"}
-                  onPress={() => {
-                    setFiltroPendientes(!filtroPendientes);
-                    setMovPage(1);
-                    setSelectedKeys(new Set());
-                  }}
-                  startContent={<AlertTriangle size={14} />}
-                  className="hidden sm:flex h-8 px-3 rounded-lg text-xs font-semibold"
-                >
-                  {filtroPendientes ? "Mostrando: Sin FE" : "Filtrar sin FE"}
-                </Button>
+                tieneAFIP ? (
+                  <Button
+                    size="sm"
+                    variant={filtroPendientes ? "solid" : "flat"}
+                    color={filtroPendientes ? "warning" : "default"}
+                    onPress={() => {
+                      setFiltroPendientes(!filtroPendientes);
+                      setMovPage(1);
+                      setSelectedKeys(new Set());
+                    }}
+                    startContent={<AlertTriangle size={14} />}
+                    className="hidden sm:flex h-8 px-3 rounded-lg text-xs font-semibold"
+                  >
+                    {filtroPendientes ? "Mostrando: Sin FE" : "Filtrar sin FE"}
+                  </Button>
+                ) : undefined
               }
-              extraMenuItems={[
-                {
-                  key: "filtrar-sin-fe",
-                  label: filtroPendientes ? "✓ Mostrando: Sin FE" : "Filtrar sin FE",
-                  icon: (
-                    <AlertTriangle
-                      size={16}
-                      className={
-                        filtroPendientes ? "text-amber-600" : "text-slate-500"
-                      }
-                    />
-                  ),
-                  isActive: filtroPendientes,
-                  onPress: () => {
-                    setFiltroPendientes(!filtroPendientes);
-                    setMovPage(1);
-                    setSelectedKeys(new Set());
-                  },
-                },
-              ]}
+              extraMenuItems={
+                tieneAFIP
+                  ? [
+                      {
+                        key: "filtrar-sin-fe",
+                        label: filtroPendientes
+                          ? "✓ Mostrando: Sin FE"
+                          : "Filtrar sin FE",
+                        icon: (
+                          <AlertTriangle
+                            size={16}
+                            className={
+                              filtroPendientes
+                                ? "text-amber-600"
+                                : "text-slate-500"
+                            }
+                          />
+                        ),
+                        isActive: filtroPendientes,
+                        onPress: () => {
+                          setFiltroPendientes(!filtroPendientes);
+                          setMovPage(1);
+                          setSelectedKeys(new Set());
+                        },
+                      },
+                    ]
+                  : []
+              }
             />
           </CardBody>
         </Card>

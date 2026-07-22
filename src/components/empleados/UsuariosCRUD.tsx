@@ -17,6 +17,7 @@ import { PerfilTipo } from "../../../prisma/generated/prisma";
 import { useUserStore } from "@/store/useUserStore";
 import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
 import { TIPO_PERFIL } from "@/lib/constants/comprobantes";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 
 /** Sucursal tal como viene de la API de empleados (incluye EsDefault de UsuarioSucursal) */
 export type SucursalUsuario = {
@@ -57,6 +58,7 @@ export default function UsuariosCRUD() {
   const router = useRouter();
   const { user, roles, updateUserFoto, isAdministrador, isSuperAdmin } =
     useUserStore();
+  const { puedeCrearUsuario, usuarios } = usePlanFeatures();
   const { setOverride } = useBreadcrumbStore();
   const queryClient = useQueryClient();
   const [passwordModalUser, setPasswordModalUser] = useState<Usuario | null>(
@@ -450,6 +452,12 @@ export default function UsuariosCRUD() {
           }
         }}
         onNewClick={() => router.push("/empleados/new")}
+        newButtonDisabled={!puedeCrearUsuario}
+        newButtonDisabledMessage={
+          usuarios.limite !== null
+            ? `Tu plan permite hasta ${usuarios.limite} usuarios`
+            : undefined
+        }
       />
       {passwordModalUser && (
         <ChangePasswordModal

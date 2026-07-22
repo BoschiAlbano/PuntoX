@@ -118,6 +118,10 @@ interface GenericTableProps<T> {
   onSortChange?: (descriptor: SortDescriptor) => void;
   onNewClick?: () => void;
   newButtonText?: string;
+  /** Deshabilita el botón "Nuevo X" (ej: límite del plan alcanzado) */
+  newButtonDisabled?: boolean;
+  /** Mensaje a mostrar (toast) cuando se intenta crear estando deshabilitado */
+  newButtonDisabledMessage?: string;
   /** Exportar todos los datos visibles como CSV */
   onExportCsv?: () => void;
   /** Exportar todos los datos visibles como XLS */
@@ -204,6 +208,8 @@ export default function GenericTable<T extends { Id: number | string }>({
   onSortChange,
   onNewClick,
   newButtonText = "Nuevo",
+  newButtonDisabled = false,
+  newButtonDisabledMessage,
   onExportCsv,
   onExportXls,
   onExportCsvSelected,
@@ -324,6 +330,7 @@ export default function GenericTable<T extends { Id: number | string }>({
     isNested?: boolean;
     closeOnSelect?: boolean;
     textValue?: string;
+    isDisabled?: boolean;
   };
 
   const toggleColumnVisibility = (colUid: string) => {
@@ -348,12 +355,23 @@ export default function GenericTable<T extends { Id: number | string }>({
       if (onNewClick) {
         items.push({
           key: "nuevo",
-          label: newButtonText,
-          icon: <Plus size={16} strokeWidth={2.5} className="text-white" />,
-          isPrimaryAction: true,
-          className:
-            "rounded-md px-3 py-2.5 font-semibold bg-[var(--crud-accent)] text-white data-[hover=true]:bg-[var(--crud-accent-hover)] data-[focus=true]:bg-[var(--crud-accent-hover)] shadow-sm",
-          onPress: onNewClick,
+          label:
+            newButtonDisabled && newButtonDisabledMessage
+              ? `${newButtonText} — ${newButtonDisabledMessage}`
+              : newButtonText,
+          icon: (
+            <Plus
+              size={16}
+              strokeWidth={2.5}
+              className={newButtonDisabled ? "text-slate-400" : "text-white"}
+            />
+          ),
+          isPrimaryAction: !newButtonDisabled,
+          isDisabled: newButtonDisabled,
+          className: newButtonDisabled
+            ? "rounded-md px-3 py-2.5 font-medium text-slate-400"
+            : "rounded-md px-3 py-2.5 font-semibold bg-[var(--crud-accent)] text-white data-[hover=true]:bg-[var(--crud-accent-hover)] data-[focus=true]:bg-[var(--crud-accent-hover)] shadow-sm",
+          onPress: newButtonDisabled ? undefined : onNewClick,
         });
         items.push({
           key: "sep-toolbar-nuevo",
@@ -672,6 +690,7 @@ export default function GenericTable<T extends { Id: number | string }>({
           <DropdownItem
             key={item.key}
             isReadOnly={item.isSeparator || item.isSectionLabel}
+            isDisabled={item.isDisabled}
             closeOnSelect={item.closeOnSelect ?? !item.isSectionLabel}
             startContent={
               !item.isSeparator && !item.isSectionLabel ? item.icon : undefined
@@ -768,8 +787,10 @@ export default function GenericTable<T extends { Id: number | string }>({
           <div className="hidden sm:flex items-center gap-2 sm:gap-3 sm:flex-shrink-0 order-2 sm:order-3">
             {onNewClick && (
               <button
-                onClick={onNewClick}
-                className="px-4 h-9 rounded-lg bg-[var(--crud-accent)] hover:bg-[var(--crud-accent-hover)] text-white font-medium text-sm shadow-sm transition-all duration-150 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center whitespace-nowrap"
+                onClick={newButtonDisabled ? undefined : onNewClick}
+                disabled={newButtonDisabled}
+                title={newButtonDisabled ? newButtonDisabledMessage : undefined}
+                className="px-4 h-9 rounded-lg bg-[var(--crud-accent)] hover:bg-[var(--crud-accent-hover)] text-white font-medium text-sm shadow-sm transition-all duration-150 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-sm flex items-center justify-center whitespace-nowrap"
                 aria-label={newButtonText}
               >
                 {newButtonText}

@@ -16,12 +16,12 @@ import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { PERMISSIONS, GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
+import { assertDentroDeLimite } from "@/lib/planes/features";
+import { handleError } from "@/lib/errors/handler";
 import {
   parsePaginationParams,
   createPaginationResponse,
 } from "@/lib/pagination";
-
-import { handleError } from "@/lib/errors/handler";
 
 // Schema de validación para crear sucursal
 const crearSucursalSchema = z.object({
@@ -126,6 +126,8 @@ export async function POST(req: NextRequest) {
       req,
       permission: SET_PERMISSIONS.SUCURSALES,
     });
+
+    await assertDentroDeLimite(tenantId, "sucursales");
 
     const body = await req.json();
     const data = crearSucursalSchema.parse(body);

@@ -77,6 +77,10 @@ interface GenericCrudProps<T> {
   title?: string; // Título de la sección
   onNewClick?: () => void;
   newButtonText?: string;
+  /** Deshabilita el botón "Nuevo X" (ej: límite del plan alcanzado) */
+  newButtonDisabled?: boolean;
+  /** Mensaje mostrado junto al botón "Nuevo X" cuando está deshabilitado */
+  newButtonDisabledMessage?: string;
   searchPlaceholder?: string;
   initialLimit?: number;
   transformer?: (data: any) => T[];
@@ -201,6 +205,8 @@ export default function GenericCrud<T extends { Id: number | string }>({
   onSaveSuccess,
   onNewClick,
   newButtonText,
+  newButtonDisabled,
+  newButtonDisabledMessage,
   defaultVisibleUidsMobile,
   softDeleteEntity = true,
   enableInactiveFilter = false,
@@ -920,6 +926,8 @@ export default function GenericCrud<T extends { Id: number | string }>({
         onSortChange={setSortDescriptor}
         onNewClick={handleCreate}
         newButtonText={newButtonText}
+        newButtonDisabled={newButtonDisabled}
+        newButtonDisabledMessage={newButtonDisabledMessage}
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing || isFetching}
         onExportCsv={

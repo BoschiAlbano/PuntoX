@@ -15,6 +15,8 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import SucursalForm from "@/components/sucursales/SucursalForm";
 import { motion } from "framer-motion";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { useUserStore } from "@/store/useUserStore";
 
 export interface Sucursal {
   Id: number;
@@ -29,6 +31,8 @@ export interface Sucursal {
 
 export default function SucursalesPage() {
   const queryClient = useQueryClient();
+  const { puedeCrearSucursal, sucursales } = usePlanFeatures();
+  const refreshUserData = useUserStore((s) => s.refreshUserData);
 
   return (
     <div className="flex flex-col items-stretch min-h-full relative min-w-0 flex-1">
@@ -45,6 +49,12 @@ export default function SucursalesPage() {
             searchPlaceholder="Buscar por nombre o dirección..."
             initialLimit={10}
             enableBulkActions={false}
+            newButtonDisabled={!puedeCrearSucursal}
+            newButtonDisabledMessage={
+              sucursales.limite !== null
+                ? `Tu plan permite hasta ${sucursales.limite} sucursales`
+                : undefined
+            }
             columns={[
               { uid: "nombre", name: "SUCURSAL", sortable: true },
               { uid: "usuarios", name: "USUARIOS", sortable: false },
@@ -253,6 +263,7 @@ export default function SucursalesPage() {
                 sucursal={initialData as any}
                 onSuccess={() => {
                   queryClient.invalidateQueries({ queryKey: ["sucursales"] });
+                  refreshUserData();
                 }}
               />
             )}

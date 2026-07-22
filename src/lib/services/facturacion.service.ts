@@ -26,6 +26,7 @@ import {
   CONDICION_IVA_LOCAL_TO_AFIP,
   requiereAutorizacionAfip,
 } from "@/lib/constants/afip";
+import { planIncluyeAFIP } from "@/lib/planes/features";
 
 // Interface for the comprobante data we need from the existing system
 interface ComprobanteConDetalle {
@@ -71,17 +72,22 @@ interface ComprobanteConDetalle {
 export async function isFacturacionElectronicaHabilitada(
   tenantId: bigint,
 ): Promise<boolean> {
-  const config = await prisma.configuracion.findFirst({
-    where: {
-      TenantId: tenantId,
-      EstaEliminado: false,
-    },
-    select: {
-      AfipHabilitado: true,
-      AfipCertificado: true,
-      AfipClavePrivada: true,
-    },
-  });
+  const [config, incluyeAFIP] = await Promise.all([
+    prisma.configuracion.findFirst({
+      where: {
+        TenantId: tenantId,
+        EstaEliminado: false,
+      },
+      select: {
+        AfipHabilitado: true,
+        AfipCertificado: true,
+        AfipClavePrivada: true,
+      },
+    }),
+    planIncluyeAFIP(Number(tenantId)),
+  ]);
+
+  if (!incluyeAFIP) return false;
 
   return !!(
     config?.AfipHabilitado &&

@@ -6,6 +6,7 @@ import {
   isFacturacionElectronicaHabilitada,
   autorizarComprobante,
 } from "@/lib/services/facturacion.service";
+import { planIncluyeAFIP } from "@/lib/planes/features";
 
 export async function POST(
   req: NextRequest,
@@ -20,6 +21,20 @@ export async function POST(
     const { id } = await params;
     const comprobanteId = BigInt(id);
     const tenantIdBigInt = BigInt(tenantId);
+
+    // Verificar primero si el plan incluye AFIP (mensaje distinto de "faltan
+    // certificados" para no confundir a un tenant cuyo plan simplemente no
+    // lo incluye).
+    const incluyeAFIP = await planIncluyeAFIP(Number(tenantId));
+    if (!incluyeAFIP) {
+      return NextResponse.json(
+        {
+          error:
+            "Tu plan no incluye Facturación Electrónica. Actualizá tu plan para emitir comprobantes AFIP.",
+        },
+        { status: 403 },
+      );
+    }
 
     // Verificar si la facturación electrónica está habilitada
     const arcaHabilitada =

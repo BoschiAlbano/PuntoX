@@ -8,6 +8,7 @@ import { GET, POST, PATCH, DELETE } from "./route";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import prisma from "@/DB/prisma";
 import { PermisoError } from "@/lib/requirePermiso";
+import { AppErrorClass } from "@/lib/errors/types";
 vi.mock("@/lib/auth/getAuthUser", () => ({
   getAuthContext: vi.fn(),
 }));
@@ -23,11 +24,17 @@ vi.mock("@/DB/prisma", () => ({
     },
     precio: { create: vi.fn(), update: vi.fn() },
     articuloStock: { upsert: vi.fn() },
+    tenant: { findUnique: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
 vi.mock("@/lib/errors/handler", () => ({
   handleError: vi.fn((error: unknown) => {
+    if (error instanceof AppErrorClass) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: error.statusCode,
+      });
+    }
     const msg = error instanceof PermisoError ? error.message : "Error interno";
     const status = error instanceof PermisoError ? error.status : 500;
     return new Response(JSON.stringify({ error: msg }), { status });
@@ -131,6 +138,9 @@ describe("POST /api/productos", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getAuthContext).mockResolvedValue(authOk as any);
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      Plan: { Caracteristicas: null },
+    } as any);
     vi.mocked(prisma.$transaction).mockImplementation(async (cb: any) => {
       const tx = {
         precio: {
@@ -215,6 +225,20 @@ describe("POST /api/productos", () => {
     expect(res.status).toBe(201);
     expect(data.producto).toBeDefined();
     expect(data.producto.Id).toBe(10);
+  });
+
+  it("retorna 403 cuando se alcanzó el límite de artículos del plan", async () => {
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      Plan: { Caracteristicas: '{"maxArticulos":100}' },
+    } as any);
+    vi.mocked(prisma.articulo.count).mockResolvedValue(100);
+    const req = new NextRequest("http://localhost:3000/api/productos", {
+      method: "POST",
+      body: JSON.stringify(productoValidoPost),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(403);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 });
 

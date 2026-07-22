@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { Button, Switch, Input } from "@heroui/react";
-import { ShieldCheck, Upload, Trash2, Server, CheckCircle2, XCircle } from "lucide-react";
+import { ShieldCheck, Upload, Trash2, Server, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { VentasSection } from "./ventas/VentasPrimitives";
 
 export function ArcaSettings() {
   const { fiscal, saveFiscal, isSavingFiscal, refetchFiscal } = useConfiguracion({ enableFiscal: true });
-  
+  const { tieneAFIP } = usePlanFeatures();
+
   const [certFile, setCertFile] = useState<File | null>(null);
   const [keyFile, setKeyFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -84,20 +86,34 @@ export function ArcaSettings() {
   return (
     <VentasSection title="Facturación Electrónica (ARCA)" icon={ShieldCheck}>
       <div className="space-y-6 px-1">
-        
+
+        {!tieneAFIP && (
+          <div className="flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-xl p-4">
+            <AlertTriangle size={18} className="text-amber-500 shrink-0 mt-0.5" />
+            <p className="text-sm text-amber-700">
+              Tu plan actual no incluye Facturación Electrónica. Actualizá tu
+              plan para poder habilitarla y emitir comprobantes AFIP.
+            </p>
+          </div>
+        )}
+
         {/* Switches */}
         <div className="flex flex-col sm:flex-row gap-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
           <Switch
             isSelected={fiscal.afipHabilitado}
             onValueChange={(val) => saveFiscal({ ...fiscal, afipHabilitado: val })}
-            isDisabled={!fiscal.afipCertificadoCargado || isSavingFiscal}
+            isDisabled={!fiscal.afipCertificadoCargado || isSavingFiscal || !tieneAFIP}
             color="success"
             size="sm"
           >
             <div className="flex flex-col ml-1">
               <span className="font-semibold text-slate-700 text-sm">Habilitar Facturación</span>
               <span className="text-xs text-slate-500">
-                {fiscal.afipCertificadoCargado ? "Activa la autorización de comprobantes" : "Requiere cargar certificados primero"}
+                {!tieneAFIP
+                  ? "No incluida en tu plan actual"
+                  : fiscal.afipCertificadoCargado
+                    ? "Activa la autorización de comprobantes"
+                    : "Requiere cargar certificados primero"}
               </span>
             </div>
           </Switch>

@@ -7,6 +7,7 @@ import { GET, POST } from "./route";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import prisma from "@/DB/prisma";
 import { PermisoError } from "@/lib/requirePermiso";
+import { AppErrorClass } from "@/lib/errors/types";
 
 vi.mock("@/lib/auth/getAuthUser", () => ({ getAuthContext: vi.fn() }));
 vi.mock("@/DB/prisma", () => ({
@@ -16,11 +17,20 @@ vi.mock("@/DB/prisma", () => ({
       findFirst: vi.fn(),
       create: vi.fn(),
       updateMany: vi.fn(),
+      count: vi.fn(),
+    },
+    tenant: {
+      findUnique: vi.fn(),
     },
   },
 }));
 vi.mock("@/lib/errors/handler", () => ({
   handleError: vi.fn((err: unknown) => {
+    if (err instanceof AppErrorClass) {
+      return new Response(JSON.stringify({ error: err.message }), {
+        status: err.statusCode,
+      });
+    }
     const msg = err instanceof PermisoError ? err.message : "Error interno";
     const status = err instanceof PermisoError ? err.status : 500;
     return new Response(JSON.stringify({ error: msg }), { status });
@@ -76,6 +86,9 @@ describe("POST /api/sucursales", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getAuthContext).mockResolvedValue(authOk as any);
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      Plan: { Caracteristicas: null },
+    } as any);
     vi.mocked(prisma.sucursal.findFirst).mockResolvedValue(null);
     vi.mocked(prisma.sucursal.updateMany).mockResolvedValue({ count: 0 });
     vi.mocked(prisma.sucursal.create).mockResolvedValue({
@@ -130,5 +143,19 @@ describe("POST /api/sucursales", () => {
     expect(data.sucursal).toBeDefined();
     expect(data.sucursal.id).toBe(1);
     expect(data.sucursal.nombre).toBe("Nueva Sucursal");
+  });
+
+  it("retorna 403 cuando se alcanzó el límite de sucursales del plan", async () => {
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      Plan: { Caracteristicas: '{"maxSucursales":1}' },
+    } as any);
+    vi.mocked(prisma.sucursal.count).mockResolvedValue(1);
+    const req = new NextRequest("http://localhost:3000/api/sucursales", {
+      method: "POST",
+      body: JSON.stringify({ nombre: "Nueva Sucursal" }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(403);
+    expect(prisma.sucursal.create).not.toHaveBeenCalled();
   });
 });

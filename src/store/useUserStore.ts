@@ -27,6 +27,21 @@ interface Role {
   Tipo: "ADMINISTRADOR" | "EMPLEADO" | "SUPERADMIN";
 }
 
+// Espejo simplificado de PlanFeatures (src/lib/planes/features.ts) para no
+// importar código de servidor (Prisma) en el store del cliente.
+interface PlanFeatures {
+  maxSucursales: number | null;
+  maxUsuarios: number | null;
+  maxArticulos: number | null;
+  incluyeAFIP: boolean;
+}
+
+interface PlanUsage {
+  sucursales: number;
+  usuarios: number;
+  articulos: number;
+}
+
 interface UserState {
   user: User | null;
   branches: UserBranch[];
@@ -38,6 +53,8 @@ interface UserState {
   isAdministrador: boolean;
   isLoading: boolean;
   isInitialized: boolean;
+  planFeatures: PlanFeatures | null;
+  planUsage: PlanUsage | null;
 
   initialize: () => Promise<void>;
   refreshUserData: () => Promise<void>;
@@ -68,6 +85,8 @@ export const useUserStore = create<UserState>()(
       isAdministrador: false,
       isLoading: false,
       isInitialized: false,
+      planFeatures: null,
+      planUsage: null,
 
       initialize: async () => {
         // Prevent double init
@@ -106,6 +125,8 @@ export const useUserStore = create<UserState>()(
                   (r: Role) => r.Tipo === "ADMINISTRADOR",
                 ),
                 isInitialized: true,
+                planFeatures: data.planFeatures ?? null,
+                planUsage: data.planUsage ?? null,
               },
               false,
               "refresh/success",

@@ -8,6 +8,7 @@ import { GET, POST, PATCH } from "./route";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import prisma from "@/DB/prisma";
 import { PermisoError } from "@/lib/requirePermiso";
+import { AppErrorClass } from "@/lib/errors/types";
 
 vi.mock("@/lib/auth/getAuthUser", () => ({
   getAuthContext: vi.fn(),
@@ -24,11 +25,17 @@ vi.mock("@/DB/prisma", () => ({
     },
     localidad: { findFirst: vi.fn() },
     persona_Empleado: { create: vi.fn() },
-    usuario: { findFirst: vi.fn(), update: vi.fn() },
+    usuario: { findFirst: vi.fn(), update: vi.fn(), count: vi.fn() },
+    tenant: { findUnique: vi.fn() },
   },
 }));
 vi.mock("@/lib/errors/handler", () => ({
   handleError: vi.fn((error: unknown) => {
+    if (error instanceof AppErrorClass) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: error.statusCode,
+      });
+    }
     const msg = error instanceof PermisoError ? error.message : "Error interno";
     const status = error instanceof PermisoError ? error.status : 500;
     return new Response(JSON.stringify({ error: msg }), { status });
@@ -141,6 +148,9 @@ describe("POST /api/empleados", () => {
       isSuperAdmin: false,
       permissions: ["empleados"],
     });
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      Plan: { Caracteristicas: null },
+    } as any);
     const req = new NextRequest("http://localhost:3000/api/empleados", {
       method: "POST",
       body: JSON.stringify({
@@ -156,6 +166,34 @@ describe("POST /api/empleados", () => {
     const data = await res.json();
     expect(res.status).toBe(400);
     expect(data.error).toBeDefined();
+  });
+
+  it("retorna 403 cuando se alcanzó el límite de usuarios del plan", async () => {
+    vi.mocked(getAuthContext).mockResolvedValue({
+      tenantId: 1,
+      usuarioId: 1,
+      user: {} as any,
+      sucursalId: 0,
+      isSuperAdmin: false,
+      permissions: ["empleados"],
+    });
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      Plan: { Caracteristicas: '{"maxUsuarios":3}' },
+    } as any);
+    vi.mocked(prisma.usuario.count).mockResolvedValue(3);
+    const req = new NextRequest("http://localhost:3000/api/empleados", {
+      method: "POST",
+      body: JSON.stringify({
+        nombre: "Juan",
+        apellido: "Pérez",
+        direccion: "Calle 123",
+        localidadId: 1,
+        nombreUsuario: "juan.perez",
+        password: "password123",
+      }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(403);
   });
 });
 

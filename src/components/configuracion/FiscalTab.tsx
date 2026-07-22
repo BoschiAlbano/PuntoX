@@ -94,8 +94,21 @@ export function FiscalTab() {
     if (fiscalData) setRegional((d) => ({ ...d, ...fiscalData }));
   }, [fiscalData]);
 
+  // Comparación campo a campo (no JSON.stringify): el orden de claves del
+  // objeto `regional` local no coincide con el de `fiscalData` (la API
+  // declara `tipoIva` antes que `condicionIvaId`), lo que hacía que
+  // JSON.stringify difiriera aunque los valores fueran idénticos y
+  // marcara "cambios sin guardar" apenas cargaba la pantalla.
   const hasChanges = fiscalData
-    ? JSON.stringify(regional) !== JSON.stringify(fiscalData)
+    ? regional.moneda !== fiscalData.moneda ||
+      regional.zonaHoraria !== fiscalData.zonaHoraria ||
+      regional.idioma !== fiscalData.idioma ||
+      regional.tipoIva !== fiscalData.tipoIva ||
+      regional.condicionIvaId !== fiscalData.condicionIvaId ||
+      regional.puntoVenta !== fiscalData.puntoVenta ||
+      regional.inicioActividades !== fiscalData.inicioActividades ||
+      regional.ingresosBrutos !== fiscalData.ingresosBrutos ||
+      regional.cuit !== fiscalData.cuit
     : false;
 
   useReportDirty("fiscal", hasChanges);

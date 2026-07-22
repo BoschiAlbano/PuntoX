@@ -71,7 +71,15 @@ describe("GET /api/auth/me", () => {
           Mail: "juan@test.com",
         },
       },
-      Tenant: { Id: 1, Nombre: "Tenant" },
+      Tenant: {
+        Id: 1,
+        Nombre: "Tenant",
+        Plan: {
+          Caracteristicas:
+            '{"maxSucursales":1,"maxUsuarios":3,"maxArticulos":100,"incluyeAFIP":false}',
+        },
+        _count: { Sucursales: 1, Usuarios: 2, Articulos: 50 },
+      },
       Sucursales: [],
       PerfilUsuario: [],
     } as any);
@@ -82,5 +90,12 @@ describe("GET /api/auth/me", () => {
     expect(data.user.Usuario).toBe("juan");
     expect(data.tenant).toBeDefined();
     expect(data.permissions).toEqual([]);
+    expect(data.planFeatures).toEqual({
+      maxSucursales: 1,
+      maxUsuarios: 3,
+      maxArticulos: 100,
+      incluyeAFIP: false,
+    });
+    expect(data.planUsage).toEqual({ sucursales: 1, usuarios: 2, articulos: 50 });
   });
 });
