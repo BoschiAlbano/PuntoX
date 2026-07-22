@@ -43,6 +43,7 @@ import {
   FileX,
   Clock,
   Calendar,
+  Send,
 } from "lucide-react";
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { LoadingComponent } from "../loading/loading";
@@ -56,7 +57,7 @@ import { parseArcaObservations } from "@/lib/constants/arca-errors";
 import { ReporteCajaImprimible } from "./ReporteCajaImprimible";
 import { useReactToPrint } from "react-to-print";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import GenericTable, { Column } from "@/components/shared/GenericTable";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
 
@@ -103,6 +104,8 @@ export default function CajaActual({
     enableCaja: true,
     enableResumen: true,
   });
+
+  const queryClient = useQueryClient();
 
   const { configuracion, fiscal } = useConfiguracion({
     enableConfiguracion: true,
@@ -297,6 +300,15 @@ export default function CajaActual({
     router.push(`/caja/gastos/${gastoId}`);
   };
 
+  const handleReimprimirTicket = (comprobanteId: number) => {
+    router.push(`/comprobantes/${comprobanteId}?print=1`);
+  };
+
+  const handleEmitirFaSingle = (mov: any) => {
+    setSelectedKeys(new Set([String(mov.Id)]));
+    onFechaBulkOpen();
+  };
+
   // Validar si una fecha está dentro del rango permitido por ARCA (N±5 días)
   const isDateInArcaRange = (dateToCheck: string): boolean => {
     try {
@@ -409,6 +421,14 @@ export default function CajaActual({
 
       setSelectedKeys(new Set());
       refetch();
+      // Sin esto, /comprobantes/[id] (y su ticket) siguen mostrando la
+      // versión cacheada sin FA/QR si se abrió antes de emitir la factura:
+      // invalida la cache de React Query...
+      queryClient.invalidateQueries({ queryKey: ["comprobante"] });
+      // ...y la Router Cache de Next (el payload RSC de la página del
+      // comprobante), que sobrevive a la invalidación de arriba porque es
+      // una capa de cache distinta y solo se limpia con router.refresh().
+      router.refresh();
     } catch (err: any) {
       addToast({ title: "Error", description: err.message, color: "danger" });
     } finally {
@@ -610,23 +630,68 @@ export default function CajaActual({
               </Button>
             );
           }
-          return mov.ComprobanteId ? (
-            <Button
-              isIconOnly
-              size="sm"
-              variant="light"
-              onPress={() => handleViewTicket(mov.ComprobanteId)}
-            >
-              <Eye size={18} className="text-gray-500" />
-            </Button>
-          ) : (
-            <span className="text-gray-300">-</span>
+          if (!mov.ComprobanteId) {
+            return <span className="text-gray-300">-</span>;
+          }
+
+          const tiposAfipAcciones = [
+            TIPO_COMPROBANTE_VENTA.FACTURA_A,
+            TIPO_COMPROBANTE_VENTA.FACTURA_B,
+            TIPO_COMPROBANTE_VENTA.FACTURA_C,
+          ];
+          const esTipoAfipAcciones =
+            mov.Comprobante &&
+            tiposAfipAcciones.includes(mov.Comprobante.TipoComprobante);
+          const estadoFa = mov.Comprobante?.FacturaElectronica?.Estado;
+          const puedeEmitirFa =
+            esTipoAfipAcciones && estadoFa !== "AUTORIZADO" && estadoFa !== "PENDIENTE";
+
+          return (
+            <div className="flex items-center gap-1">
+              <Tooltip content="Ver detalle" placement="top">
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="light"
+                  onPress={() => handleViewTicket(mov.ComprobanteId)}
+                >
+                  <Eye size={18} className="text-gray-500" />
+                </Button>
+              </Tooltip>
+              <Tooltip content="Reimprimir ticket" placement="top">
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="light"
+                  onPress={() => handleReimprimirTicket(mov.ComprobanteId)}
+                >
+                  <Printer size={18} className="text-gray-500" />
+                </Button>
+              </Tooltip>
+              {puedeEmitirFa ? (
+                <Tooltip
+                  content={
+                    estadoFa === "RECHAZADO" ? "Reintentar FA" : "Emitir FA"
+                  }
+                  placement="top"
+                >
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    onPress={() => handleEmitirFaSingle(mov)}
+                  >
+                    <Send size={18} className="text-blue-500" />
+                  </Button>
+                </Tooltip>
+              ) : null}
+            </div>
           );
         default:
           return null;
       }
     },
-    [handleViewTicket, handleViewGasto],
+    [handleViewTicket, handleViewGasto, handleReimprimirTicket, handleEmitirFaSingle],
   );
 
   const formatMoney = (val: number) =>

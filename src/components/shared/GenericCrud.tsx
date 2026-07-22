@@ -141,8 +141,16 @@ interface GenericCrudProps<T> {
   getApiExtraParams?: (state: {
     lowStockOnly: boolean;
   }) => Record<string, string | number | boolean>;
-  /** Ítems extra en el menú de Más Opciones siempre visibles */
-  extraMenuItems?: (currentItems: T[]) => Array<{
+  /** Ítems extra en el menú de Más Opciones siempre visibles. `hasSelection` permite ocultar
+   * condicionalmente ítems que no tenga sentido mostrar cuando ya hay una selección activa
+   * (ej: reemplazarlos por una variante que use `selectedItems`, ya cargados en la página
+   * actual, evitando el fetch cross-page de `bulkActionsDropdown`). */
+  extraMenuItems?: (
+    currentItems: T[],
+    hasSelection: boolean,
+    selectedItems: T[],
+    clearSelection: () => void,
+  ) => Array<{
     key: string;
     label: string;
     icon?: React.ReactNode;
@@ -1009,7 +1017,14 @@ export default function GenericCrud<T extends { Id: number | string }>({
             lowStockFilterFn && lowStockOnly ? "Solo bajo stock" : undefined,
         }}
         extraMenuItems={[
-          ...(extraMenuItems ? extraMenuItems(sortedItems) : []),
+          ...(extraMenuItems
+            ? extraMenuItems(
+                sortedItems,
+                hasSelection,
+                selectedItemsOnPage,
+                clearSelection,
+              )
+            : []),
           ...(lowStockFilterFn
             ? [
                 {

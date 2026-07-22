@@ -369,31 +369,26 @@ export default function ProductoCRUD() {
           title: "Listado de Productos",
           orientation: "landscape",
         }}
-        extraMenuItems={(currentItems) => [
+        extraMenuItems={(
+          currentItems,
+          hasSelection,
+          selectedItems,
+          clearSelection,
+        ) => [
           {
-            key: "imprimir-barras-todos",
-            label: "Imprimir códigos",
+            key: "imprimir-barras",
+            label: hasSelection ? "Imprimir código" : "Imprimir códigos (todos)",
             icon: <Barcode size={16} strokeWidth={2} />,
             onPress: () => {
               setBulkPrintModal({
                 open: true,
-                items: currentItems,
+                items: hasSelection ? selectedItems : currentItems,
+                clearSelection: hasSelection ? clearSelection : undefined,
               });
             },
           },
         ]}
         bulkActionsDropdown={[
-          {
-            key: "imprimir-barras",
-            label: "Imprimir códigos",
-            onAction: (ctx) => {
-              setBulkPrintModal({
-                open: true,
-                items: ctx.items,
-                clearSelection: ctx.clearSelection,
-              });
-            },
-          },
           {
             key: "cambiar-estado",
             label: "Cambiar estado",

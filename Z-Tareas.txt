@@ -6,28 +6,3 @@ Nuevas implementaciones a "futuro":
 4- Planes de tiendas, eliminar funcionalidades y separar los planes. (PENDIENTE)
 
 Erorres al hacer "Test" corregir:
-
-1- Error en producto nuevo, promociones articulo peso, (Pan)
-    {
-    "error": "Datos inválidos",
-    "details": [
-        {
-            "field": "PromocionesCantidad.0.Cantidad",
-            "message": "Invalid input: expected int, received number"
-        }
-    ]
-}
-2- Bloquear campo codigo, o crear mensaje de error cuando el campo codigo ya exista.
-3- al ingresar un articulo en ventas o compora deberia quedar listo el foco para ingresar otro articulo y no estar haciendo click en el campo de busqueda.
-4- eliminar prodcuto logico, cambiar mensaje de advertencia: ¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.
-5- al buscar un producto que esta eliminado con control + k este no aparece, eso esta bien, pero queda cacheada la busqueda y por lo tanto al reactivar el procuto y buscar no aparece. (🤔) ,si saco el cacheado no me conviene por que haria mas consulatas a la db.
-6- me parece que el CUIT del negocio en el onboarding no se guardo. al facturar me di cuenta que no tenia para la FA
-7- al crear la FA no se actuliza la pagina del comprobante para reimprimir ya con el QR, /comprobantes/27
-8- me gustaria que en las acciones este los iconos para, reimprimir ticket, emitir FA en caso de no se alla impreso o tenga un error y el icono de ver detalle (ya esta).
-9- en movimientos de caja actual deberia ver todos lo movimientos ? no estan los de gastos solo los comprobantes. en las tarjetas de salida si figura, pero no se puede ver un detalle del gasto. SOLUCION - Crear una grilla mas para ver los gastos o mostrarlo en la misma grilla, en historial de caja (/caja/historial/3) y caja actual (/caja), tener cuidado con las acciones que se pueden hacer ya que no es lo mismo que un comprobante, no deberia poder hacer ninguna accion mas que solo ver el detalle del gastos. 
-10- la ganancia se esta calculando solo con los comprobantes, y no los gastos ni las compras (al parecer son ganancias de ventas).
-11- en imprimir reporte de caja no estan los gastos.
-12- historia de cajas, acciones no aparece en responsive.
-13- error arca, no me gusta que se guarde un mensaje tan largo cuandote tenga este error: Error al consultar último comprobante ARCA: Error al consultar último comprobante ARCA: ns1:coe.alreadyAuthenticated: El CEE ya posee un TA valido para el acceso al WSN solicitado: {"exceptionName":"gov.afip.desein.dvadac.sua.view.wsa
-14- Imprimir codigo dee barra para articulos propios. (Iprimir solo seleccionados no la grilla completa).
-

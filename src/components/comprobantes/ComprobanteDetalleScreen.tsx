@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
   Button,
@@ -198,6 +198,8 @@ export default function ComprobanteDetalleScreen({
   id,
 }: ComprobanteDetalleScreenProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const { isAdministrador, isSuperAdmin } = useUserStore();
   const { configuracion } = useConfiguracion({ enableConfiguracion: true });
   const isAdmin = isAdministrador || isSuperAdmin;
@@ -214,6 +216,11 @@ export default function ComprobanteDetalleScreen({
       return response.json();
     },
     enabled: !!id,
+    // Página de detalle de bajo tráfico: preferimos siempre datos frescos
+    // (ej. FA/QR recién emitidos desde Caja Actual) antes que aprovechar
+    // el cache de 30s por defecto de la app.
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const ticketRef = useRef<HTMLDivElement>(null);
@@ -221,6 +228,19 @@ export default function ComprobanteDetalleScreen({
     contentRef: ticketRef,
     documentTitle: "Ticket de Venta",
   });
+
+  useEffect(() => {
+    if (searchParams.get("print") !== "1") return;
+    if (isLoading || !selectedTicket) return;
+
+    handlePrintTicket();
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("print");
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, selectedTicket, searchParams, pathname]);
 
   const fe = selectedTicket?.FacturaElectronica ?? null;
   const feRechazado = fe?.Estado === "RECHAZADO";
