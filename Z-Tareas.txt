@@ -1,8 +1,7 @@
-Nuevas implementaciones a "futuro":
+Ideas Nuevas de implementaciones a "futuro":
 
-1- optimización de imágenes en supabase .web (implementar EN EL FUTURO).
-2- limpieza de comprobantes viejos o datos viejos que no se usen como cuentas corrientes viejas (NO IMPLEMENTAR POR QUE PERDERIA funcionalidades EN analíticas)
-3- dar de baja un registro de manera física y no lógica, en opciones menú. (LISTO).
-4- Planes de tiendas, eliminar funcionalidades y separar los planes. (PENDIENTE)
+1- optimización de imágenes en supabase .web
+2- un boton de reset, para borrar todos los datos de la tienda, o para limpiar la tienda desde una determinada fecha.
+3- Planes de tiendas, eliminar funcionalidades y separar los planes.
 
 Erorres al hacer "Test" corregir:
