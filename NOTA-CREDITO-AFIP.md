@@ -1,8 +1,22 @@
 # Nota de Crédito electrónica (AFIP/ARCA) — Investigación y plan
 
-> Estado: **definición**, aún no implementado. Este documento junta lo que
-> encontré investigando cómo ARCA exige las Notas de Crédito (NC) y un plan
-> de implementación concreto para conectarlo al código existente.
+> Estado: **🟢 Implementado** (pendiente de probar en homologación de ARCA
+> antes de habilitarlo para clientes reales — ver paso 7). Este documento
+> junta la investigación de cómo ARCA exige las Notas de Crédito (NC), el
+> plan paso a paso, y el progreso de la implementación.
+
+## 0. Decisiones confirmadas con el usuario
+
+1. **Si la factura asociada no fue autorizada por AFIP**: se **bloquea la
+   creación de la Nota de Crédito** (no solo el intento de declararla a
+   AFIP) — devuelve un error antes de crear nada, porque esa factura no
+   existe para AFIP.
+2. **Ese bloqueo solo aplica cuando la tienda tiene AFIP habilitado**
+   (plan + configuración). Si la tienda no usa AFIP (ej. Plan Básico), las
+   Notas de Crédito se siguen creando exactamente igual que hoy — de forma
+   local, sin ningún chequeo nuevo, sin intento de declararlas.
+3. El `Cuit` en `CbtesAsoc` es el CUIT propio del emisor (el cargado en
+   Configuración → Fiscal, `arcaConfig.cuit`) — no el del cliente.
 
 ## 1. Estado actual (confirmado leyendo el código)
 
@@ -103,11 +117,31 @@ Reemplazar la línea única `TIPO_COMPROBANTE_LOCAL_A_AFIP[comprobante.TipoCompr
 por: si es Factura A/B/C, igual que hoy; si es NC, usar
 `getCbteTipoNotaCredito()` sobre el tipo de la factura asociada.
 
-### Paso 4 — Guardia: factura asociada no autorizada
-Antes de armar el pedido a ARCA: si es NC y la factura asociada no tiene
-`FacturaElectronica` con `Estado=AUTORIZADO`, devolver un error claro ("no
-se puede emitir la Nota de Crédito electrónica: la factura asociada no fue
-autorizada por AFIP") en vez de mandarlo a ARCA y que lo rechace.
+### Paso 4 — Guardia: bloquear la CREACIÓN de la NC (no solo la emisión)
+Decisión confirmada: si la tienda tiene AFIP habilitado y la factura
+asociada no tiene `FacturaElectronica` con `Estado=AUTORIZADO`, **no se crea
+la Nota de Crédito en absoluto** — ni afecta stock ni caja. Si la tienda NO
+tiene AFIP habilitado, no se hace este chequeo (comportamiento actual,
+intacto).
+
+Esto obliga a reordenar el flujo en `src/app/api/comprobantes/route.ts`:
+hoy `createNotaCredito` resuelve la factura asociada **dentro** de la
+transacción (`comprobantes.ts:633-657`, vía `tx.comprobante.findFirst`). Hay
+que mover esa resolución **antes** de `prisma.$transaction(...)` (mismo
+lugar donde ya se resuelve `esDiferido`/la caja abierta, líneas 248-293),
+para poder devolver un `400` limpio sin haber tocado nada:
+
+1. Si `tipoComprobante === NOTA_CREDITO`: resolver `comprobanteAsociadoId`
+   (por `data.comprobanteAsociadoId` o `data.numeroComprobanteAsociado`,
+   misma lógica que hoy tiene `createNotaCredito`).
+2. Llamar a `isFacturacionElectronicaHabilitada(tenantIdBigInt)` (ya
+   existe, `facturacion.service.ts:71`).
+3. Si devuelve `true`: buscar la `FacturaElectronica` de esa factura
+   asociada. Si no existe o `Estado !== AUTORIZADO` → `400` con mensaje
+   claro ("No se puede crear la Nota de Crédito: la factura asociada no fue
+   autorizada por AFIP") y no se ejecuta la transacción.
+4. Pasar el `comprobanteAsociadoId` ya resuelto a `createNotaCredito` (que
+   deja de resolverlo por su cuenta, solo lo usa).
 
 ### Paso 5 — `prepararDatosAfip`: cliente + `CbtesAsoc`
 - Resolver el cliente desde la factura asociada cuando es NC (no desde
@@ -140,13 +174,14 @@ autorizada por AFIP") en vez de mandarlo a ARCA y que lo rechace.
   `isFacturacionElectronicaHabilitada`), así que no hace falta tocar nada
   del sistema de planes para esto.
 
-## 5. Decisiones abiertas (para confirmar antes de empezar)
+## 5. Progreso
 
-1. ¿Qué pasa si el usuario intenta crear una NC referenciando una factura
-   que nunca se autorizó por AFIP (plan sin AFIP, o AFIP no configurado en
-   ese momento)? Propuesta: permitir crear la NC local igual que hoy
-   (afecta stock/caja), pero sin declarar a AFIP y avisando por qué,
-   en vez de bloquear la creación de la NC completa.
-2. ¿El campo `Cuit` de `CbtesAsoc` va con el CUIT del emisor (tu negocio) en
-   todos los casos, o hay algún escenario de tu operación donde debería ser
-   otro? (Lo estándar es el propio, pero preferí preguntar antes de asumir).
+| Paso | Estado | Notas |
+|---|---|---|
+| 1. Helper de mapeo NC → letra AFIP | ☑ | `getCbteTipoNotaCredito()` + `NOTA_CREDITO` agregado a `TIPOS_COMPROBANTE_FISCAL` (`afip.ts`). |
+| 2. Ampliar consulta en `autorizarComprobante` | ☑ | Include de `Comprobante_NotaCredito_Comprobante_NotaCredito_IdToComprobante` → factura asociada (cliente + `FacturaElectronica`). El nombre real de la relación en Prisma es más largo de lo previsto en el plan (dos relaciones a `Comprobante` desde la misma tabla). |
+| 3. Resolver `cbteTipoAfip` con caso especial NC | ☑ | En `autorizarComprobante`: si es NC, usa `getCbteTipoNotaCredito(facturaAsociada.TipoComprobante)`; si no, el mapeo directo de siempre. |
+| 4. Bloquear creación si falta AFIP en la factura asociada | ☑ | Movido a `comprobantes/route.ts`, ANTES de `prisma.$transaction`. `createNotaCredito` ahora acepta el `comprobanteAsociadoIdResuelto` ya validado (sigue resolviéndolo internamente si no se lo pasan, por compatibilidad). |
+| 5. `prepararDatosAfip`: cliente + `CbtesAsoc` | ☑ | Ojo con un error que corregí en el camino: `CbtesAsoc[].Tipo` es el código AFIP de la **factura original** (ej. 11=Factura C), no el de la NC (ej. 13=NC-C) — inicialmente lo escribí al revés. |
+| 6. UI: Caja Actual y reprocesar | ☑ | `NOTA_CREDITO` sumado a los 3 arrays `tiposAfip`/`tiposAfipAcciones` en `CajaActual.tsx` (columna FE, botón "Emitir FA", filtro "Filtrar sin FE"). Reprocesar (individual/bulk) no necesitó cambios. |
+| 7. Verificación | ☑ (falta homologación) | `tsc --noEmit` limpio. 34/35 tests dirigidos ✓ (la 1 falla es preexistente, no relacionada). Tests nuevos: `afip.test.ts` (7), `facturacion.service.test.ts` (+2 casos NC), `comprobantes/route.test.ts` (+3 casos NC/AFIP). Build de producción OK (`next build` directo, sin `prisma generate` porque el schema no cambió). **Falta**: probar contra ARCA homologación con un caso real antes de usarlo con clientes — el campo `Cuit` de `CbtesAsoc` no está 100% confirmado como obligatorio en todos los casos. |

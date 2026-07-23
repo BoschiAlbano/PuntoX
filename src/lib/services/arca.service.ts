@@ -52,6 +52,15 @@ export interface VoucherData {
     BaseImp: number;
     Importe: number;
   }>;
+  // Comprobantes asociados (obligatorio para Notas de Crédito/Débito): el
+  // comprobante que se está acreditando/debitando.
+  CbtesAsoc?: Array<{
+    Tipo: number;
+    PtoVta: number;
+    Nro: number;
+    Cuit: string;
+    CbteFch?: string;
+  }>;
 }
 
 export interface VoucherResult {

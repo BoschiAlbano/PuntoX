@@ -649,8 +649,13 @@ export async function createNotaCredito(
   descuentaStock: boolean,
   sucursalId: bigint,
   cajaId?: bigint,
+  // Si el caller ya resolvió y validó la factura asociada (ej. para
+  // chequear que esté autorizada por AFIP antes de abrir la transacción),
+  // se pasa acá y se evita resolverla de nuevo.
+  comprobanteAsociadoIdResuelto?: number,
 ) {
-  let comprobanteAsociadoId = data.comprobanteAsociadoId;
+  let comprobanteAsociadoId =
+    comprobanteAsociadoIdResuelto ?? data.comprobanteAsociadoId;
 
   if (!comprobanteAsociadoId && data.numeroComprobanteAsociado) {
     const invoice = await tx.comprobante.findFirst({

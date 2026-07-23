@@ -21,7 +21,7 @@ import {
 import { getNextNumeroComprobante } from "@/lib/services/contadores";
 import { triggerStockBajoNotifications } from "@/lib/services/notificaciones";
 import { isFacturacionElectronicaHabilitada, autorizarComprobante } from "@/lib/services/facturacion.service";
-import { requiereAutorizacionAfip } from "@/lib/constants/afip";
+import { requiereAutorizacionAfip, ESTADO_FACTURA_ELECTRONICA } from "@/lib/constants/afip";
 
 // POST: Crear comprobante (venta)
 export async function POST(req: NextRequest) {
@@ -306,6 +306,71 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Nota de Crédito: resolver y validar la factura asociada ANTES de la
+    // transacción, para poder devolver un 400 limpio sin haber creado nada.
+    // Si la tienda tiene AFIP habilitado, la factura asociada tiene que
+    // estar ya autorizada por AFIP (no se puede acreditar electrónicamente
+    // algo que ARCA no tiene registrado). Si la tienda no usa AFIP, no se
+    // hace este chequeo y la NC se crea igual que siempre (solo local).
+    let comprobanteAsociadoIdResuelto: number | undefined;
+    if (data.tipoComprobante === TIPO_COMPROBANTE_VENTA.NOTA_CREDITO) {
+      comprobanteAsociadoIdResuelto = data.comprobanteAsociadoId ?? undefined;
+
+      if (!comprobanteAsociadoIdResuelto && data.numeroComprobanteAsociado) {
+        const facturaAsociada = await prisma.comprobante.findFirst({
+          where: {
+            TenantId: tenantIdBigInt,
+            Numero: data.numeroComprobanteAsociado,
+            TipoComprobante: {
+              in: [
+                TIPO_COMPROBANTE_VENTA.FACTURA_A,
+                TIPO_COMPROBANTE_VENTA.FACTURA_B,
+                TIPO_COMPROBANTE_VENTA.FACTURA_C,
+              ],
+            },
+            EstaEliminado: false,
+          },
+        });
+        if (!facturaAsociada) {
+          return NextResponse.json(
+            {
+              error: `No se encontró una factura con el número ${data.numeroComprobanteAsociado}`,
+            },
+            { status: 400 },
+          );
+        }
+        comprobanteAsociadoIdResuelto = Number(facturaAsociada.Id);
+      }
+
+      if (!comprobanteAsociadoIdResuelto) {
+        return NextResponse.json(
+          { error: "Comprobante asociado requerido para Nota de Crédito" },
+          { status: 400 },
+        );
+      }
+
+      const tieneAfipHabilitado =
+        await isFacturacionElectronicaHabilitada(tenantIdBigInt);
+      if (tieneAfipHabilitado) {
+        const facturaElectronicaAsociada =
+          await prisma.facturaElectronica.findUnique({
+            where: { ComprobanteId: BigInt(comprobanteAsociadoIdResuelto) },
+          });
+        if (
+          facturaElectronicaAsociada?.Estado !==
+          ESTADO_FACTURA_ELECTRONICA.AUTORIZADO
+        ) {
+          return NextResponse.json(
+            {
+              error:
+                "No se puede crear la Nota de Crédito: la factura asociada no fue autorizada por AFIP.",
+            },
+            { status: 400 },
+          );
+        }
+      }
+    }
+
     // Transaction
     const resultado = await prisma.$transaction(async (tx) => {
       // 0. Resolver cliente
@@ -446,6 +511,7 @@ export async function POST(req: NextRequest) {
             !!descuentaStock,
             sucursalId,
             cajaId,
+            comprobanteAsociadoIdResuelto,
           );
         case TIPO_COMPROBANTE_VENTA.CUENTA_CORRIENTE_CLIENTE:
           if (!cliente) {

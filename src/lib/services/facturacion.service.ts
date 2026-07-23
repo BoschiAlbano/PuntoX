@@ -25,7 +25,9 @@ import {
   CONDICION_IVA_AFIP,
   CONDICION_IVA_LOCAL_TO_AFIP,
   requiereAutorizacionAfip,
+  getCbteTipoNotaCredito,
 } from "@/lib/constants/afip";
+import { TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
 import { planIncluyeAFIP } from "@/lib/planes/features";
 
 // Interface for the comprobante data we need from the existing system
@@ -53,6 +55,32 @@ interface ComprobanteConDetalle {
       };
     };
   } | null;
+  // Presente solo cuando el comprobante es una Nota de Crédito: apunta a la
+  // factura que se está acreditando (para tomar su cliente y verificar que
+  // ya haya sido autorizada por AFIP antes de declarar la NC).
+  Comprobante_NotaCredito_Comprobante_NotaCredito_IdToComprobante?: {
+    ComprobanteId: bigint;
+    Comprobante_Comprobante_NotaCredito_ComprobanteIdToComprobante: {
+      TipoComprobante: number;
+      Comprobante_Factura?: {
+        ClienteId: bigint;
+        Persona_Cliente: {
+          CondicionIvaId: bigint;
+          CondicionIva?: {
+            Descripcion: string;
+          };
+          Persona: {
+            Dni: string | null;
+          };
+        };
+      } | null;
+      FacturaElectronica?: {
+        Estado: string;
+        PuntoVenta: number;
+        CbteNumero: number;
+      } | null;
+    };
+  } | null;
   DetalleComprobante: Array<{
     Cantidad: any;
     Precio: any;
@@ -64,6 +92,19 @@ interface ComprobanteConDetalle {
       };
     };
   }>;
+}
+
+/**
+ * Si el comprobante es una Nota de Crédito, devuelve los datos de la
+ * factura que está acreditando (tipo, cliente, y su FacturaElectronica ya
+ * autorizada por AFIP). Devuelve null para cualquier otro tipo, o si la NC
+ * no tiene la relación cargada.
+ */
+function resolverFacturaAsociadaNotaCredito(comprobante: ComprobanteConDetalle) {
+  return (
+    comprobante.Comprobante_NotaCredito_Comprobante_NotaCredito_IdToComprobante
+      ?.Comprobante_Comprobante_NotaCredito_ComprobanteIdToComprobante ?? null
+  );
 }
 
 /**
@@ -147,6 +188,31 @@ export async function autorizarComprobante(
           },
         },
       },
+      Comprobante_NotaCredito_Comprobante_NotaCredito_IdToComprobante: {
+        include: {
+          Comprobante_Comprobante_NotaCredito_ComprobanteIdToComprobante: {
+            include: {
+              Comprobante_Factura: {
+                include: {
+                  Persona_Cliente: {
+                    include: {
+                      Persona: {
+                        select: { Dni: true },
+                      },
+                      CondicionIva: {
+                        select: { Descripcion: true },
+                      },
+                    },
+                  },
+                },
+              },
+              FacturaElectronica: {
+                select: { Estado: true, PuntoVenta: true, CbteNumero: true },
+              },
+            },
+          },
+        },
+      },
       DetalleComprobante: {
         where: { EstaEliminado: false },
         include: {
@@ -168,8 +234,40 @@ export async function autorizarComprobante(
   }
 
   // 4. Determinar tipo de comprobante AFIP
-  const cbteTipoAfip =
-    TIPO_COMPROBANTE_LOCAL_A_AFIP[comprobante.TipoComprobante];
+  // La Nota de Crédito no tiene un código AFIP propio: la letra (A/B/C)
+  // depende de la factura que se está acreditando.
+  const esNotaCredito =
+    comprobante.TipoComprobante === TIPO_COMPROBANTE_VENTA.NOTA_CREDITO;
+  const facturaAsociada = resolverFacturaAsociadaNotaCredito(comprobante);
+
+  let cbteTipoAfip: number | undefined;
+  if (esNotaCredito) {
+    if (!facturaAsociada) {
+      return {
+        success: false,
+        errores:
+          "Esta Nota de Crédito no tiene una factura asociada registrada.",
+      };
+    }
+    cbteTipoAfip =
+      getCbteTipoNotaCredito(facturaAsociada.TipoComprobante) ?? undefined;
+    if (!cbteTipoAfip) {
+      return {
+        success: false,
+        errores: `La factura asociada (tipo ${facturaAsociada.TipoComprobante}) no admite Nota de Crédito electrónica.`,
+      };
+    }
+    if (facturaAsociada.FacturaElectronica?.Estado !== ESTADO_FACTURA_ELECTRONICA.AUTORIZADO) {
+      return {
+        success: false,
+        errores:
+          "No se puede emitir la Nota de Crédito electrónica: la factura asociada no fue autorizada por AFIP.",
+      };
+    }
+  } else {
+    cbteTipoAfip = TIPO_COMPROBANTE_LOCAL_A_AFIP[comprobante.TipoComprobante];
+  }
+
   if (!cbteTipoAfip) {
     return {
       success: false,
@@ -305,6 +403,8 @@ export async function autorizarComprobante(
     cbteTipoAfip,
     puntoVenta,
     nuevoNumero,
+    arcaConfig.cuit,
+    facturaAsociada,
   );
 
   // 7. GUARDAR COMO PENDIENTE ANTES DE ENVIAR A ARCA (Protección contra cortes)
@@ -404,12 +504,18 @@ function prepararDatosAfip(
   cbteTipoAfip: number,
   puntoVenta: number,
   cbteNumero: number,
+  cuitEmisor: number,
+  facturaAsociada: ReturnType<typeof resolverFacturaAsociadaNotaCredito>,
 ): VoucherData {
   // Determinar documento del receptor
   let docTipo: number = DOC_TIPO_AFIP.SIN_IDENTIFICAR;
   let docNro = 0;
 
-  const clienteData = comprobante.Comprobante_Factura?.Persona_Cliente;
+  // El cliente de una Nota de Crédito es el mismo de la factura que
+  // acredita: la NC en sí no tiene Comprobante_Factura propio.
+  const clienteData =
+    comprobante.Comprobante_Factura?.Persona_Cliente ??
+    facturaAsociada?.Comprobante_Factura?.Persona_Cliente;
   let condicionIva: number = CONDICION_IVA_AFIP.CONSUMIDOR_FINAL;
 
   if (clienteData?.CondicionIva?.Descripcion) {
@@ -513,6 +619,25 @@ function prepararDatosAfip(
   // Array Iva solo para Factura A/B (comprobantes con IVA discriminado)
   if (!esComprobanteC && ivaArray.length > 0) {
     data.Iva = ivaArray;
+  }
+
+  // Comprobantes asociados: obligatorio para Notas de Crédito, referencia
+  // a la factura que se está acreditando con el PtoVta/Nro con los que
+  // ARCA ya la autorizó (no el número interno del sistema). OJO: "Tipo" acá
+  // es el código AFIP de la FACTURA original (ej. 11 = Factura C), no el de
+  // la Nota de Crédito (ej. 13 = NC-C) — son campos distintos aunque ambos
+  // salgan del mismo tipo local de comprobante.
+  if (facturaAsociada?.FacturaElectronica) {
+    const cbteTipoFacturaAsociada =
+      TIPO_COMPROBANTE_LOCAL_A_AFIP[facturaAsociada.TipoComprobante];
+    data.CbtesAsoc = [
+      {
+        Tipo: cbteTipoFacturaAsociada,
+        PtoVta: facturaAsociada.FacturaElectronica.PuntoVenta,
+        Nro: facturaAsociada.FacturaElectronica.CbteNumero,
+        Cuit: String(cuitEmisor),
+      },
+    ];
   }
 
   return data;

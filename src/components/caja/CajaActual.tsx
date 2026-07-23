@@ -219,6 +219,7 @@ export default function CajaActual({
           TIPO_COMPROBANTE_VENTA.FACTURA_A,
           TIPO_COMPROBANTE_VENTA.FACTURA_B,
           TIPO_COMPROBANTE_VENTA.FACTURA_C,
+          TIPO_COMPROBANTE_VENTA.NOTA_CREDITO,
         ];
         if (!tiposAfip.includes(m.Comprobante.TipoComprobante)) return false;
 
@@ -476,6 +477,7 @@ export default function CajaActual({
             TIPO_COMPROBANTE_VENTA.FACTURA_A,
             TIPO_COMPROBANTE_VENTA.FACTURA_B,
             TIPO_COMPROBANTE_VENTA.FACTURA_C,
+            TIPO_COMPROBANTE_VENTA.NOTA_CREDITO,
           ];
           const esTipoAfip = tiposAfip.includes(
             mov.Comprobante.TipoComprobante,
@@ -640,6 +642,7 @@ export default function CajaActual({
             TIPO_COMPROBANTE_VENTA.FACTURA_A,
             TIPO_COMPROBANTE_VENTA.FACTURA_B,
             TIPO_COMPROBANTE_VENTA.FACTURA_C,
+            TIPO_COMPROBANTE_VENTA.NOTA_CREDITO,
           ];
           const esTipoAfipAcciones =
             mov.Comprobante &&

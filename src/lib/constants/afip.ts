@@ -22,7 +22,7 @@ export const TIPO_COMPROBANTE_LOCAL_A_AFIP: Record<number, number> = {
 };
 
 // Tipos de comprobante local que requieren autorización AFIP
-export const TIPOS_COMPROBANTE_FISCAL = [1, 2, 3] as const; // FACTURA_A, FACTURA_B, FACTURA_C
+export const TIPOS_COMPROBANTE_FISCAL = [1, 2, 3, 6] as const; // FACTURA_A, FACTURA_B, FACTURA_C, NOTA_CREDITO
 
 // Tipos de documento receptor (códigos AFIP)
 export const DOC_TIPO_AFIP = {
@@ -180,4 +180,26 @@ export function determinarTipoCbteAfip(
  */
 export function requiereAutorizacionAfip(tipoComprobanteLocal: number): boolean {
   return TIPOS_COMPROBANTE_FISCAL.includes(tipoComprobanteLocal as any);
+}
+
+/**
+ * Determina el código AFIP de Nota de Crédito (A/B/C) a partir del tipo LOCAL
+ * de la FACTURA que se está acreditando (no de la nota de crédito en sí).
+ * AFIP no tiene un único código de "Nota de Crédito": la letra tiene que
+ * coincidir con la de la factura asociada (Factura A → NC-A, etc.).
+ * Retorna null si el tipo local no corresponde a ninguna Factura A/B/C.
+ */
+export function getCbteTipoNotaCredito(
+  tipoFacturaOriginalLocal: number,
+): number | null {
+  switch (tipoFacturaOriginalLocal) {
+    case 1: // FACTURA_A
+      return CBTE_TIPO_AFIP.NOTA_CREDITO_A;
+    case 2: // FACTURA_B
+      return CBTE_TIPO_AFIP.NOTA_CREDITO_B;
+    case 3: // FACTURA_C
+      return CBTE_TIPO_AFIP.NOTA_CREDITO_C;
+    default:
+      return null;
+  }
 }
