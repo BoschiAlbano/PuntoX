@@ -2,8 +2,5 @@ Ideas Nuevas de implementaciones a "futuro":
 
 1- optimización de imágenes en supabase .web
 2- un boton de reset, para borrar todos los datos de la tienda, o para limpiar la tienda desde una determinada fecha.
-3- Planes de tiendas, eliminar funcionalidades y separar los planes.
 
 Erorres al hacer "Test" corregir:
-
-2- no aparecen los remitos, presupuestos y notas de credito en caja actual, verificar.

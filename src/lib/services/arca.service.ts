@@ -91,6 +91,27 @@ export interface AutorizarComprobanteResult {
 }
 
 /**
+ * Traduce mensajes de error crudos de ARCA/WSAA a mensajes claros y
+ * accionables para el usuario. Si no reconoce el patrón, devuelve el
+ * mensaje original sin modificar (nunca se pierde información).
+ */
+export function interpretarErrorArca(mensaje: string | undefined): string {
+  if (!mensaje) return mensaje ?? "Error desconocido al comunicarse con ARCA";
+
+  if (mensaje.includes("cms.cert.untrusted")) {
+    return (
+      "El certificado AFIP cargado no es válido para el entorno seleccionado. " +
+      "Los certificados de Homologación y Producción son distintos aunque " +
+      "correspondan al mismo CUIT: verificá en Configuración → Fiscal que el " +
+      "certificado subido corresponda al entorno tildado (Producción u " +
+      "Homologación)."
+    );
+  }
+
+  return mensaje;
+}
+
+/**
  * Obtiene la configuración AFIP del tenant, desencriptando los certificados.
  * Retorna null si no hay configuración AFIP habilitada.
  */
@@ -195,9 +216,7 @@ export async function getUltimoComprobanteAutorizado(
       "[ARCA] Error al consultar último comprobante:",
       error.message,
     );
-    throw new Error(
-      `Error al consultar último comprobante ARCA: ${error.message}`,
-    );
+    throw new Error(interpretarErrorArca(error.message));
   }
 }
 
@@ -303,12 +322,13 @@ export async function autorizarVoucher(
     );
 
     // Intentar extraer detalle del error según distintos formatos del SDK
-    const errorDetail =
+    const errorDetail = interpretarErrorArca(
       error.message ||
-      error.Msg ||
-      (error.Errors && JSON.stringify(error.Errors)) ||
-      (error.errors && JSON.stringify(error.errors)) ||
-      "Error desconocido al autorizar en ARCA";
+        error.Msg ||
+        (error.Errors && JSON.stringify(error.Errors)) ||
+        (error.errors && JSON.stringify(error.errors)) ||
+        "Error desconocido al autorizar en ARCA",
+    );
 
     return {
       CAE: "",

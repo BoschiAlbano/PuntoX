@@ -9,6 +9,7 @@ import {
   getPuntoVentaSucursal,
   getUltimoComprobanteAutorizado,
   autorizarVoucher,
+  interpretarErrorArca,
   type ArcaConfig,
   type VoucherData,
   type AutorizarComprobanteResult,
@@ -459,7 +460,7 @@ export async function autorizarComprobante(
   } catch (error: any) {
     return {
       success: false,
-      errores: `Error de conexión con ARCA/AFIP: ${error.message}. El comprobante quedó PENDIENTE.`,
+      errores: `Error de conexión con ARCA/AFIP: ${interpretarErrorArca(error.message)}. El comprobante quedó PENDIENTE.`,
       facturaElectronicaId: facturaElectronica.Id,
     };
   }
