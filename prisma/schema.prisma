@@ -1116,7 +1116,10 @@ model UnidadMedida {
 model Usuario {
   Id                                   BigInt                 @id @default(autoincrement())
   EmpleadoId                           BigInt
-  Nombre                               String                 @db.VarChar(50)
+  /// Nombre de usuario para login. Único a nivel global (no por tenant): el
+  /// login resuelve el username a un email sin conocer el tenant todavía
+  /// (ver get-email-by-username), así que dos tenants no pueden compartir uno.
+  Nombre                               String                 @unique @db.VarChar(50)
   EstaBloqueado                        Boolean
   EstaEliminado                        Boolean
   /// Contador de intentos de login fallidos consecutivos. Se resetea al iniciar sesión correctamente o al desbloquear.

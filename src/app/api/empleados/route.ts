@@ -599,13 +599,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Verificar si el nombre de usuario generado ya existe, si es así, agregar un número
+    // Verificar si el nombre de usuario generado ya existe, si es así, agregar un número.
+    // El nombre de usuario es la única entrada del login (get-email-by-username lo busca
+    // sin filtrar por tenant), así que la unicidad tiene que ser GLOBAL y no por tenant:
+    // si dos tenants tuvieran el mismo username, el login de uno de los dos resolvería
+    // siempre al primero que encuentre la consulta, sin importar a qué tenant pertenece
+    // quien intenta entrar.
     let finalUsername = usernameNormalized;
     let counter = 1;
     let existingUsuario = await prisma.usuario.findFirst({
       where: {
         Nombre: finalUsername,
-        TenantId: tenantIdBigInt,
         EstaEliminado: false,
       },
     });
@@ -616,7 +620,6 @@ export async function POST(req: NextRequest) {
       existingUsuario = await prisma.usuario.findFirst({
         where: {
           Nombre: finalUsername,
-          TenantId: tenantIdBigInt,
           EstaEliminado: false,
         },
       });

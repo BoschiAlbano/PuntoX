@@ -90,6 +90,37 @@ describe("POST /api/auth/register", () => {
     expect(data.error).toContain("Tenant");
   });
 
+  it("retorna 400 cuando el nombre de usuario ya está en uso, aunque sea de OTRO tenant", async () => {
+    // El login (get-email-by-username) resuelve el username sin filtrar por
+    // tenant, así que dos tenants con el mismo username romperían el login:
+    // la unicidad tiene que chequearse de forma GLOBAL.
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({ Id: BigInt(1) } as any);
+    vi.mocked(prisma.localidad.findFirst).mockResolvedValue({ Id: BigInt(1) } as any);
+    vi.mocked(prisma.persona.findFirst).mockResolvedValue(null);
+    vi.mocked(prisma.usuario.findFirst).mockResolvedValue({ Id: BigInt(99) } as any);
+
+    const req = new NextRequest("http://localhost:3000/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        apellido: "Test",
+        nombre: "Usuario",
+        direccion: "Calle 1",
+        mail: "otro@test.com",
+        localidadId: 1,
+        nombreUsuario: "juan.perez",
+        password: "password123",
+        tenantId: 1,
+      }),
+    });
+    const res = await POST(req);
+    const data = await res.json();
+    expect(res.status).toBe(400);
+    expect(data.error).toContain("nombre de usuario");
+    expect(
+      vi.mocked(prisma.usuario.findFirst).mock.calls[0][0],
+    ).not.toHaveProperty("where.TenantId");
+  });
+
   it("retorna 201 con userId y personaId cuando el registro es exitoso", async () => {
     vi.mocked(prisma.tenant.findUnique).mockResolvedValue({ Id: BigInt(1) } as any);
     vi.mocked(prisma.localidad.findFirst).mockResolvedValue({ Id: BigInt(1) } as any);

@@ -114,11 +114,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // El nombre de usuario es la única entrada del login (get-email-by-username
+    // lo busca sin filtrar por tenant), así que la unicidad tiene que ser
+    // GLOBAL y no por tenant.
     const existingUsuario = await prisma.usuario.findFirst({
       where: {
         Nombre: usernameNormalized,
         EstaEliminado: false,
-        TenantId: parsedTenantId,
       },
     });
 

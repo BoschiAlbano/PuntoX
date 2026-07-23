@@ -322,6 +322,18 @@ async function createBaseComprobante(
     const esSalida = isNotaCredito; // Facturas son entradas, NC son salidas (generalmente)
     const tipoMovimiento = esSalida ? 2 : 1;
 
+    // Presupuestos y Remitos no representan un cobro real (no hay plata que
+    // haya cambiado de mano): se registran como Movimiento para que se vean
+    // en la grilla de Caja Actual, pero no deben sumar a los totales de caja
+    // (TotalEntradaEfectivo, etc.) ni a DetalleCaja, a diferencia de una
+    // Factura, Nota de Crédito o cobro en Cuenta Corriente.
+    const afectaTotalesCaja = !(
+      [
+        TIPO_COMPROBANTE_VENTA.PRESUPUESTO,
+        TIPO_COMPROBANTE_VENTA.REMITO,
+      ] as number[]
+    ).includes(data.tipoComprobante);
+
     let descripcionMov = `Venta - Comp #${numero}`;
     if (
       data.tipoComprobante === TIPO_COMPROBANTE_VENTA.CUENTA_CORRIENTE_CLIENTE
@@ -329,6 +341,10 @@ async function createBaseComprobante(
       descripcionMov = `Pago Cta Cte - Comp #${numero}`;
     } else if (isNotaCredito) {
       descripcionMov = `Nota Crédito - Comp #${numero}`;
+    } else if (data.tipoComprobante === TIPO_COMPROBANTE_VENTA.PRESUPUESTO) {
+      descripcionMov = `Presupuesto - Comp #${numero}`;
+    } else if (data.tipoComprobante === TIPO_COMPROBANTE_VENTA.REMITO) {
+      descripcionMov = `Remito - Comp #${numero}`;
     }
 
     movimiento = await tx.movimiento.create({
@@ -345,8 +361,8 @@ async function createBaseComprobante(
       },
     });
 
-    // Update Caja & DetalleCaja
-    for (const formaPago of data.formasPago) {
+    // Update Caja & DetalleCaja (solo si el comprobante representa plata real)
+    for (const formaPago of afectaTotalesCaja ? data.formasPago : []) {
       if (!formaPago.monto || formaPago.monto === 0) continue;
 
       let fieldToUpdate: string | undefined;
@@ -564,6 +580,7 @@ export async function createPresupuesto(
   clienteId: number,
   descuentaStock: boolean,
   sucursalId: bigint,
+  cajaId?: bigint,
 ) {
   const { comprobante } = await createBaseComprobante(
     tx,
@@ -575,6 +592,7 @@ export async function createPresupuesto(
     descuentaStock,
     sucursalId,
     clienteId, // passed
+    cajaId,
   );
   await tx.comprobante_Presupuesto.create({
     data: {
@@ -595,6 +613,7 @@ export async function createRemito(
   clienteId: number,
   descuentaStock: boolean,
   sucursalId: bigint,
+  cajaId?: bigint,
 ) {
   const { comprobante } = await createBaseComprobante(
     tx,
@@ -606,6 +625,7 @@ export async function createRemito(
     descuentaStock,
     sucursalId,
     clienteId, // passed
+    cajaId,
   );
   await tx.comprobante_Remito.create({
     data: {

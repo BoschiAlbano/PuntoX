@@ -405,6 +405,7 @@ export async function POST(req: NextRequest) {
             clienteIdFinal,
             !!descuentaStock,
             sucursalId,
+            cajaId,
           );
         case TIPO_COMPROBANTE_VENTA.REMITO:
           const numeroR = await getNextNumeroComprobante(
@@ -423,6 +424,7 @@ export async function POST(req: NextRequest) {
             clienteIdFinal,
             !!descuentaStock,
             sucursalId,
+            cajaId,
           );
         case TIPO_COMPROBANTE_VENTA.NOTA_CREDITO:
           const numeroNC = await getNextNumeroComprobante(

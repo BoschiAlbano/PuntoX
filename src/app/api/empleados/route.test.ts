@@ -195,6 +195,57 @@ describe("POST /api/empleados", () => {
     const res = await POST(req);
     expect(res.status).toBe(403);
   });
+
+  it("verifica el nombre de usuario disponible de forma GLOBAL, sin filtrar por tenant", async () => {
+    // El login (get-email-by-username) resuelve el username sin filtrar por
+    // tenant, así que dos tenants con el mismo username romperían el login.
+    // Esta prueba fija el bug: la consulta de unicidad no debe llevar
+    // TenantId en su `where`, sin importar el tenant que está creando el
+    // empleado.
+    vi.mocked(getAuthContext).mockResolvedValue({
+      tenantId: 1,
+      usuarioId: 1,
+      user: {} as any,
+      sucursalId: 0,
+      isSuperAdmin: false,
+      permissions: ["empleados"],
+    });
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      Plan: { Caracteristicas: null },
+    } as any);
+    vi.mocked(prisma.usuario.count).mockResolvedValue(0);
+    vi.mocked(prisma.localidad.findFirst).mockResolvedValue({
+      Id: 1n,
+      Departamento: { Id: 1n, ProvinciaId: 1n },
+    } as any);
+    // Simula: "juan.perez" ya existe (en OTRO tenant) -> se reintenta con
+    // sufijo "1", que sí está libre.
+    vi.mocked(prisma.usuario.findFirst)
+      .mockResolvedValueOnce({ Id: 99 } as any)
+      .mockResolvedValueOnce(null);
+
+    const req = new NextRequest("http://localhost:3000/api/empleados", {
+      method: "POST",
+      body: JSON.stringify({
+        nombre: "Juan",
+        apellido: "Pérez",
+        direccion: "Calle 123",
+        localidadId: 1,
+        nombreUsuario: "juan.perez",
+        password: "password123",
+      }),
+    });
+
+    await POST(req).catch(() => {});
+
+    const calls = vi.mocked(prisma.usuario.findFirst).mock.calls;
+    expect(calls.length).toBeGreaterThanOrEqual(2);
+    for (const [args] of calls) {
+      expect((args as any).where).not.toHaveProperty("TenantId");
+    }
+    expect((calls[0][0] as any).where.Nombre).toBe("juan.perez");
+    expect((calls[1][0] as any).where.Nombre).toBe("juan.perez1");
+  });
 });
 
 describe("PATCH /api/empleados", () => {
