@@ -2,5 +2,13 @@ Ideas Nuevas de implementaciones a "futuro":
 
 1- optimización de imágenes en supabase .web
 2- un boton de reset, para borrar todos los datos de la tienda, o para limpiar la tienda desde una determinada fecha.
+3- Lo que existe en ARCA pero tu sistema todavía no tiene:
+
+    Nota de Débito (A/B/C): es el "opuesto" de la Nota de Crédito — sirve para cargarle algo de más a una factura ya emitida (ej. intereses, diferencia de precio), en vez de restarle. Dato curioso: el código ya tiene los códigos AFIP reservados (NOTA_DEBITO_A/B/C = 2/7/12 en CBTE_TIPO_AFIP) pero no existe como tipo de comprobante local — nunca se implementó la creación de Notas de Débito en absoluto, ni siquiera a nivel local. Si alguna vez la necesitás, avisame y la agregamos con el mismo patrón que la NC.
+    
+    Factura E: para operaciones de exportación — no aplica a menos que tu negocio (o el de algún cliente del SaaS) exporte.
+    
+    Factura M: un régimen especial para ciertos monotributistas con retención de terceros — caso puntual, poco común en un POS de retail estándar.
+
 
 Erorres al hacer "Test" corregir:
