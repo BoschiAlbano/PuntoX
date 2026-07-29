@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { ShoppingCart, CreditCard } from "lucide-react";
 
 import ProductSearch from "./ProductSearch";
-import VentaGrid from "./VentaGrid";
+import VentaProductosPanel from "./VentaProductosPanel";
 import VentaFooter from "./VentaFooter";
 import ClienteSearch from "./ClienteSearch";
 import ComprobanteSelector from "./ComprobanteSelector";
@@ -15,9 +15,15 @@ import { useVentaStore, Item, OrigenPrecio } from "@/store/ventaStore";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
 
 type MobileTab = "productos" | "pago";
+type InnerTab = "carrito" | "buscar";
 
 export default function VentasScreen() {
   const [mobileTab, setMobileTab] = useState<MobileTab>("productos");
+  const [innerTab, setInnerTab] = useState<InnerTab>("carrito");
+  const [searchResults, setSearchResults] = useState<Producto[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchingPanel, setIsSearchingPanel] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
 
   // Store
   const {
@@ -56,7 +62,7 @@ export default function VentasScreen() {
     if (product.DescuentaStock && !product.PermiteStockNegativo) {
       if (product.Stock < newQuantity) {
         throw new Error(
-          `"${product.Descripcion || 'El artículo'}" no tiene suficiente stock disponible. (Stock actual: ${product.Stock})`,
+          `"${product.Descripcion || 'El artÃ­culo'}" no tiene suficiente stock disponible. (Stock actual: ${product.Stock})`,
         );
       }
     }
@@ -65,7 +71,7 @@ export default function VentasScreen() {
     if (product.ActivarLimiteVenta && product.LimiteVenta > 0) {
       if (newQuantity > product.LimiteVenta) {
         throw new Error(
-          `Supera el límite de venta permitido (${product.LimiteVenta} unidades).`,
+          `Supera el lÃ­mite de venta permitido (${product.LimiteVenta} unidades).`,
         );
       }
     }
@@ -115,8 +121,6 @@ export default function VentasScreen() {
     ingresadoPorBalanza?: boolean,
   ) => {
     try {
-      // Sumar todas las cantidades de productos con el mismo código
-      // (necesario cuando no se unifica y hay múltiples renglones del mismo producto)
       const currentQty = items
         .filter((i) => i.CodigoBarra === producto.CodigoBarra)
         .reduce((sum, i) => sum + i.cantidad, 0);
@@ -131,8 +135,18 @@ export default function VentasScreen() {
         precioOverride,
         origenPrecio,
         unificarRenglones,
-        ingresadoPorBalanza
+        ingresadoPorBalanza,
       );
+
+      // Al agregar un producto desde el panel de búsqueda, volver al carrito y limpiar la búsqueda
+      if (innerTab === "buscar") {
+        setInnerTab("carrito");
+      }
+      setSearchResults([]);
+      setSearchQuery("");
+
+      // Devolver el foco al buscador para encadenar la próxima búsqueda sin usar el mouse
+      document.getElementById("product-search-input")?.focus();
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Error desconocido";
@@ -149,15 +163,12 @@ export default function VentasScreen() {
       const item = items.find((i) => i.Id === id);
       if (!item) return;
 
-      // Calcular la cantidad total de todos los renglones de este producto
-      // para validar correctamente el stock
       const currentItemQty = item.cantidad;
       const totalOtherItems = items
         .filter((i) => i.CodigoBarra === item.CodigoBarra && i.Id !== id)
         .reduce((sum, i) => sum + i.cantidad, 0);
       const totalQty = cantidad - currentItemQty + totalOtherItems + cantidad;
 
-      // Validar contra la cantidad total en lugar de solo este renglón
       const productForCheck = { ...item, cantidad: cantidad + totalOtherItems };
       checkProductRules(productForCheck, cantidad + totalOtherItems);
 
@@ -182,16 +193,23 @@ export default function VentasScreen() {
   const total = calculateTotal();
   const subtotal = items.reduce((acc, item) => acc + item.subtotal, 0);
 
-  // ── Keyboard shortcuts ──
+  // Handler para bÃºsquedas ambiguas desde ProductSearch:
+  // guarda los resultados y activa la pestaÃ±a "buscar"
+  const handleAmbiguousSearch = (results: Producto[], query: string) => {
+    setSearchResults(results);
+    setSearchQuery(query);
+    setInnerTab("buscar");
+    setHighlightedIndex(0);
+  };
+
+  // â”€â”€ Keyboard shortcuts â”€â”€
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      // No activar si el usuario está escribiendo en un campo
       const target = e.target as HTMLElement;
       const tag = target?.tagName;
       const isProductSearch = target?.id === "product-search-input";
       if (["INPUT", "TEXTAREA", "SELECT"].includes(tag) && !isProductSearch)
         return;
-      // No activar si hay un modal/overlay abierto
       if (document.querySelector('[data-slot="backdrop"]')) return;
 
       if (e.key === "F2") {
@@ -204,14 +222,43 @@ export default function VentasScreen() {
           .querySelector<HTMLElement>('[data-shortcut="cliente-trigger"]')
           ?.click();
       }
+
+      // ── Navegación por teclado en los resultados de búsqueda ──
+      if (innerTab === "buscar" && searchResults.length > 0) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setHighlightedIndex((i) => Math.min(i + 1, searchResults.length - 1));
+          return;
+        }
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setHighlightedIndex((i) => Math.max(i - 1, 0));
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          setInnerTab("carrito");
+          return;
+        }
+        if (e.key === "Enter" && isProductSearch) {
+          const value = (target as HTMLInputElement).value ?? "";
+          // Sólo agrega el resaltado si no hay un término nuevo esperando búsqueda
+          if (!value.trim()) {
+            e.preventDefault();
+            e.stopPropagation();
+            const producto = searchResults[highlightedIndex];
+            if (producto) handleAddItem(producto);
+          }
+        }
+      }
     };
     window.addEventListener("keydown", handler, true);
     return () => window.removeEventListener("keydown", handler, true);
-  }, []);
+  }, [innerTab, searchResults, highlightedIndex, handleAddItem]);
 
   return (
     <div className="flex-1 min-h-0 w-full flex flex-col gap-0">
-      {/* ── MOBILE TABS ── solo visible en pantallas < lg */}
+      {/* â”€â”€ MOBILE TABS â”€â”€ solo visible en pantallas < lg */}
       <div className="lg:hidden flex items-center shrink-0 px-0 pt-1">
         <button
           onClick={() => setMobileTab("productos")}
@@ -252,10 +299,10 @@ export default function VentasScreen() {
       </div>
 
       {/* ── MAIN LAYOUT ── */}
-      <div className="flex flex-col lg:flex-row flex-1 gap-2 overflow-auto lg:overflow-hidden p-2 px-0">
+      <div className="flex flex-col lg:flex-row flex-1 min-h-0 h-full gap-2 overflow-auto lg:overflow-hidden p-2 px-0">
         {/* ── LEFT PANEL: PRODUCTS ── */}
         <div
-          className={`flex-1 flex flex-col gap-2 lg:overflow-hidden ${
+          className={`flex-1 min-h-0 h-full flex flex-col gap-2 lg:overflow-hidden ${
             mobileTab === "productos" ? "flex" : "hidden lg:flex"
           }`}
         >
@@ -263,7 +310,10 @@ export default function VentasScreen() {
           <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center shrink-0">
             {/* Buscador */}
             <div className="flex-1">
-              <ProductSearch onProductSelect={handleAddItem} />
+              <ProductSearch
+                onProductSelect={handleAddItem}
+                onAmbiguousSearch={handleAmbiguousSearch}
+              />
             </div>
 
             <div className="hidden sm:block h-6 w-px bg-slate-200 mx-2" />
@@ -275,8 +325,8 @@ export default function VentasScreen() {
             />
           </div>
 
-          {/* Grilla de items */}
-          <VentaGrid
+          {/* Panel con pestaÃ±as Carrito / Buscar */}
+          <VentaProductosPanel
             items={items}
             onUpdateQuantity={handleUpdateQuantity}
             onUpdateDiscount={updateItemDiscount}
@@ -285,10 +335,18 @@ export default function VentasScreen() {
             onChangeListaPrecios={updateItemsListaPrecios}
             onRemoveItems={removeItems}
             onApplyDiscount={applyDiscountToItems}
+            searchResults={searchResults}
+            isSearching={isSearchingPanel}
+            searchQuery={searchQuery}
+            onProductAdd={handleAddItem}
+            activeTab={innerTab}
+            onTabChange={setInnerTab}
+            highlightedIndex={highlightedIndex}
+            onHighlightChange={setHighlightedIndex}
           />
         </div>
 
-        {/* ── RIGHT PANEL: CLIENT + PAYMENT ── */}
+        {/* â”€â”€ RIGHT PANEL: CLIENT + PAYMENT â”€â”€ */}
         <div
           className={`w-full lg:w-[320px] xl:w-[350px] flex flex-col gap-2 shrink-0 lg:h-full lg:overflow-hidden ${
             mobileTab === "pago" ? "flex" : "hidden lg:flex"

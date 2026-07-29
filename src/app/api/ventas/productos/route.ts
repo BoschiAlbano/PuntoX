@@ -116,6 +116,9 @@ export async function GET(req: NextRequest) {
               EstaActiva: true,
             },
           },
+          Foto: true,
+          Marca: { select: { Descripcion: true } },
+          Rubro: { select: { Descripcion: true } },
           ArticuloStock: {
             where: { SucursalId: BigInt(sucursalId) },
             select: { Stock: true, StockMinimo: true, Ubicacion: true },
@@ -193,6 +196,9 @@ export async function GET(req: NextRequest) {
               EstaActiva: true,
             },
           },
+          Foto: true,
+          Marca: { select: { Descripcion: true } },
+          Rubro: { select: { Descripcion: true } },
           ArticuloStock: {
             where: { SucursalId: BigInt(sucursalId) },
             select: { Stock: true, StockMinimo: true, Ubicacion: true },
@@ -237,6 +243,9 @@ export async function GET(req: NextRequest) {
         Codigo: p.Codigo,
         CodigoBarra: p.CodigoBarra,
         Descripcion: p.Descripcion,
+        Foto: p.Foto || null,
+        Marca: p.Marca ? { Descripcion: p.Marca.Descripcion } : null,
+        Rubro: p.Rubro ? { Descripcion: p.Rubro.Descripcion } : null,
         Stock: stockReal,
         EsCombo: p.EsCombo,
 

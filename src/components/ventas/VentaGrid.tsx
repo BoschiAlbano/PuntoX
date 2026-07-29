@@ -140,7 +140,7 @@ export default function VentaGrid({
   };
 
   return (
-    <div className="bg-white flex-1 overflow-hidden rounded-lg border border-slate-300 flex flex-col justify-start min-h-[150px]">
+    <div className="bg-white flex-1 h-full w-full overflow-hidden rounded-lg border border-slate-300 flex flex-col justify-start min-h-[150px]">
       {/* ── Bulk Action Bar ── */}
       {selectedIds.size > 0 && (
         <div className="shrink-0 flex flex-col gap-2 px-3 py-2.5 bg-[#67afc3]/10 border-b border-[#67afc3]/20">

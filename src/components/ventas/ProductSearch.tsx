@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import {
@@ -14,29 +14,37 @@ import { Producto } from "@/lib/validations/producto.schema";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
 import { parseScaleBarcode } from "@/lib/utils/barcode";
 import CameraScannerModal from "./CameraScannerModal";
-import ProductSearchModal from "./ProductSearchModal";
 import { useVentaStore, OrigenPrecio } from "@/store/ventaStore";
+
+interface ProductSearchProps {
+  onProductSelect: (
+    p: Producto,
+    cantidad?: number,
+    precioOverride?: number,
+    origenPrecio?: OrigenPrecio,
+    ingresadoPorBalanza?: boolean,
+  ) => void;
+  /** Llamado cuando la bÃºsqueda es ambigua o no hay match exacto.
+   *  Recibe los resultados y el tÃ©rmino buscado para que el padre
+   *  los muestre en el panel de bÃºsqueda y active la pestaÃ±a correspondiente. */
+  onAmbiguousSearch?: (results: Producto[], query: string) => void;
+}
 
 export default function ProductSearch({
   onProductSelect,
-}: {
-  onProductSelect: (p: Producto, cantidad?: number, precioOverride?: number, origenPrecio?: OrigenPrecio, ingresadoPorBalanza?: boolean) => void;
-}) {
+  onAmbiguousSearch,
+}: ProductSearchProps) {
   const [inputValue, setInputValue] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-  
-  // Estado para el modal de búsqueda
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [searchTermForModal, setSearchTermForModal] = useState("");
+
   const { listaPrecios } = useVentaStore();
 
   const inputRef = useRef<HTMLInputElement>(null);
   const isSearchingRef = useRef(false);
   const queryClient = useQueryClient();
 
-
-  // Configuración para báscula
+  // ConfiguraciÃ³n para bÃ¡scula
   const { configuracion } = useConfiguracion({ enableConfiguracion: true });
 
   const setSearchingState = (value: boolean) => {
@@ -47,14 +55,14 @@ export default function ProductSearch({
   const processSearchTerm = async (rawTerm: string) => {
     const term = rawTerm.trim();
     if (!term) {
-      setSearchTermForModal("");
-      setIsSearchModalOpen(true);
+      // BÃºsqueda vacÃ­a â†’ mostrar panel sin resultados
+      onAmbiguousSearch?.([], "");
       return;
     }
 
     if (isSearchingRef.current) return;
 
-    // ── Parsear sintaxis código*precio ──
+    // â”€â”€ Parsear sintaxis cÃ³digo*precio â”€â”€
     const altPriceMatch = term.match(/^(\d+)\*(\d+\.?\d*)$/);
     if (altPriceMatch) {
       const codigo = altPriceMatch[1];
@@ -62,7 +70,7 @@ export default function ProductSearch({
 
       if (precioAlternativo <= 0) {
         addToast({
-          title: "Precio inválido",
+          title: "Precio invÃ¡lido",
           description: "El precio alternativo debe ser mayor a 0.",
           color: "warning",
         });
@@ -91,7 +99,7 @@ export default function ProductSearch({
         } else {
           addToast({
             title: "Producto no encontrado",
-            description: `No se encontró un producto con código ${codigo}.`,
+            description: `No se encontrÃ³ un producto con cÃ³digo ${codigo}.`,
             color: "warning",
           });
         }
@@ -106,7 +114,7 @@ export default function ProductSearch({
     setSearchingState(true);
 
     try {
-      // 1. Validar si es código de báscula pero está desactivada
+      // 1. Validar si es cÃ³digo de bÃ¡scula pero estÃ¡ desactivada
       if (
         configuracion?.codigoBascula &&
         term.length === 13 &&
@@ -114,15 +122,15 @@ export default function ProductSearch({
         !configuracion.activarBascula
       ) {
         addToast({
-          title: "Báscula desactivada",
+          title: "BÃ¡scula desactivada",
           description:
-            "Se detectó un código de báscula, pero la función está desactivada en la configuración.",
+            "Se detectÃ³ un cÃ³digo de bÃ¡scula, pero la funciÃ³n estÃ¡ desactivada en la configuraciÃ³n.",
           color: "warning",
         });
         return;
       }
 
-      // 2. Intentar parsear como código de balanza
+      // 2. Intentar parsear como cÃ³digo de balanza
       let scaleResult = null;
       if (
         configuracion?.activarBascula &&
@@ -139,8 +147,8 @@ export default function ProductSearch({
 
         if (!scaleResult) {
           addToast({
-            title: "Error al leer código",
-            description: "No se pudo leer el código de báscula.",
+            title: "Error al leer cÃ³digo",
+            description: "No se pudo leer el cÃ³digo de bÃ¡scula.",
             color: "danger",
           });
           return;
@@ -148,7 +156,7 @@ export default function ProductSearch({
       }
 
       if (scaleResult) {
-        // Buscar producto por PLU (usando el código parseado)
+        // Buscar producto por PLU (usando el cÃ³digo parseado)
         const result = await queryClient.fetchQuery({
           queryKey: ["productos-ventas-scale", scaleResult.plu],
           queryFn: ({ signal }) =>
@@ -166,17 +174,20 @@ export default function ProductSearch({
 
         if (found) {
           let cantidad = 1;
-          
+
           if (found.TipoVenta === "UNIDAD") {
-            // Si el producto se vende por unidad, usamos el valor original (sin decimales) como cantidad de unidades
             cantidad = scaleResult.valueRaw;
             if (cantidad === 0) cantidad = 1;
           } else {
             if (scaleResult.type === "weight") {
               cantidad = scaleResult.value;
             } else if (scaleResult.type === "price") {
-              const pl = found.PreciosLista?.find(p => Number(p.ListaPrecioId) === Number(listaPrecios));
-              const price = pl ? Number(pl.PrecioFinal) : Number(found.PrecioCosto || 0);
+              const pl = found.PreciosLista?.find(
+                (p) => Number(p.ListaPrecioId) === Number(listaPrecios),
+              );
+              const price = pl
+                ? Number(pl.PrecioFinal)
+                : Number(found.PrecioCosto || 0);
               if (price > 0) {
                 cantidad = Number((scaleResult.value / price).toFixed(3));
               }
@@ -188,8 +199,7 @@ export default function ProductSearch({
         }
       }
 
-      // 3. Búsqueda normal si no es báscula o no se encontró
-      // Verificar si el término contiene solo números
+      // 3. BÃºsqueda normal si no es bÃ¡scula o no se encontrÃ³
       const isNumeric = /^\d+$/.test(term);
 
       if (isNumeric) {
@@ -206,28 +216,46 @@ export default function ProductSearch({
         });
 
         if (result.data && result.data.length === 1) {
-          // Producto exacto encontrado (ej. código exacto o código de barras)
+          // Producto exacto encontrado
           handleSelectProduct(result.data[0]);
         } else if (result.data && result.data.length > 1) {
-          // Verificar si el primer resultado es coincidencia exacta por código
           const codeNum = parseInt(term, 10);
           const exactMatch = result.data.find((p) => p.Codigo === codeNum);
           if (exactMatch) {
             handleSelectProduct(exactMatch);
           } else {
-            // Múltiples coincidencias sin código exacto -> Abrir Modal
-            setSearchTermForModal(term);
-            setIsSearchModalOpen(true);
+            // MÃºltiples sin cÃ³digo exacto â†’ panel de bÃºsqueda
+            onAmbiguousSearch?.(result.data, term);
           }
         } else {
-          // Sin coincidencias -> Abrir Modal
-          setSearchTermForModal(term);
-          setIsSearchModalOpen(true);
+          // Sin coincidencias â†’ buscar con mÃ¡s resultados y mostrar en panel
+          const broadResult = await queryClient.fetchQuery({
+            queryKey: ["productos-ventas-ambiguous", term],
+            queryFn: ({ signal }) =>
+              fetchProductosVentas({
+                signal,
+                search: term,
+                page: 1,
+                limit: 50,
+              }),
+            staleTime: 10 * 1000,
+          });
+          onAmbiguousSearch?.(broadResult.data, term);
         }
       } else {
-        // Contiene letras u otros caracteres, abrir el modal directamente
-        setSearchTermForModal(term);
-        setIsSearchModalOpen(true);
+        // Contiene letras â†’ buscar y mostrar en panel
+        const result = await queryClient.fetchQuery({
+          queryKey: ["productos-ventas-text", term],
+          queryFn: ({ signal }) =>
+            fetchProductosVentas({
+              signal,
+              search: term,
+              page: 1,
+              limit: 50,
+            }),
+          staleTime: 10 * 1000,
+        });
+        onAmbiguousSearch?.(result.data, term);
       }
     } catch (err) {
       console.error("Error searching product:", err);
@@ -244,17 +272,21 @@ export default function ProductSearch({
     }
   };
 
-  // Al cerrarse el modal de búsqueda o el escáner, el foco puede quedar
-  // atrapado por la animación de cierre del modal; lo reafirmamos en el
-  // siguiente frame para que el usuario pueda seguir tipeando sin hacer click.
+  // Al cerrarse el escÃ¡ner, reafirmar foco en el input
   useEffect(() => {
-    if (!isSearchModalOpen && !isScannerOpen) {
+    if (!isScannerOpen) {
       const raf = requestAnimationFrame(() => inputRef.current?.focus());
       return () => cancelAnimationFrame(raf);
     }
-  }, [isSearchModalOpen, isScannerOpen]);
+  }, [isScannerOpen]);
 
-  const handleSelectProduct = (product: Producto, cantidad: number = 1, precioOverride?: number, origenPrecio?: OrigenPrecio, ingresadoPorBalanza?: boolean) => {
+  const handleSelectProduct = (
+    product: Producto,
+    cantidad: number = 1,
+    precioOverride?: number,
+    origenPrecio?: OrigenPrecio,
+    ingresadoPorBalanza?: boolean,
+  ) => {
     onProductSelect(product, cantidad, precioOverride, origenPrecio, ingresadoPorBalanza);
     setInputValue("");
     if (!isScannerOpen) {
@@ -278,7 +310,7 @@ export default function ProductSearch({
           inputWrapper:
             "h-10 min-h-[40px] font-normal text-default-500 bg-white outline-none hover:border-[#67afc3] focus-within:border-[#67afc3] data-[hover=true]:bg-white rounded-lg border border-slate-300 shadow-none transition-colors",
         }}
-        placeholder="Código, nombre o código*precio (ej: 2*350)"
+        placeholder="CÃ³digo, nombre o cÃ³digo*precio (ej: 2*350)"
         size="sm"
         autoFocus
         value={inputValue}
@@ -288,14 +320,13 @@ export default function ProductSearch({
         }}
         onKeyDown={handleInputKeyDown}
         startContent={
-          <Button 
-            isIconOnly 
-            variant="light" 
+          <Button
+            isIconOnly
+            variant="light"
             size="sm"
             isDisabled={isSearching}
             onPress={() => {
-              setSearchTermForModal(inputValue);
-              setIsSearchModalOpen(true);
+              processSearchTerm(inputValue);
               setInputValue("");
             }}
           >
@@ -307,32 +338,24 @@ export default function ProductSearch({
           </Button>
         }
         endContent={
-          <Button 
-            isIconOnly 
-            variant="light" 
-            size="sm" 
+          <Button
+            isIconOnly
+            variant="light"
+            size="sm"
             isDisabled={isSearching}
             onPress={() => setIsScannerOpen(true)}
-            title="Escanear con cámara"
+            title="Escanear con cÃ¡mara"
           >
             <ScanBarcode className="text-slate-400 hover:text-[#67afc3] transition-colors" size={18} />
           </Button>
         }
       />
 
-      <CameraScannerModal 
-        isOpen={isScannerOpen} 
-        onClose={() => setIsScannerOpen(false)} 
-        onScanSuccess={handleCameraScan} 
-      />
-
-      <ProductSearchModal
-        isOpen={isSearchModalOpen}
-        onOpenChange={() => setIsSearchModalOpen(false)}
-        initialSearch={searchTermForModal}
-        handleSelect={handleSelectProduct}
+      <CameraScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScanSuccess={handleCameraScan}
       />
     </div>
   );
 }
-
