@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Input, Button, Spinner, addToast } from "@heroui/react";
+import { Input, Button, Spinner } from "@heroui/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Search, ScanBarcode } from "lucide-react";
 import { fetchProductosCompras } from "@/hooks/useProductos";
 import { Producto } from "@/lib/validations/producto.schema";
 import CameraScannerModal from "@/components/ventas/CameraScannerModal";
-import ProductSearchComprasModal from "./ProductSearchComprasModal";
 
 /**
  * Buscador de productos para COMPRAS.
@@ -17,26 +16,37 @@ import ProductSearchComprasModal from "./ProductSearchComprasModal";
  */
 export default function ProductSearchCompras({
   onProductSelect,
+  onAmbiguousSearch,
 }: {
   onProductSelect: (p: Producto, cantidad?: number) => void;
+  /** Llamado cuando la búsqueda es ambigua o no hay match exacto.
+   *  Recibe los resultados y el término buscado para que el padre
+   *  los muestre en el panel de búsqueda. */
+  onAmbiguousSearch?: (results: Producto[], query: string) => void;
 }) {
   const [inputValue, setInputValue] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [searchTermForModal, setSearchTermForModal] = useState("");
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const isSearchingRef = useRef(false);
   const queryClient = useQueryClient();
 
-  const processSearchTerm = async (term: string) => {
+  const setSearchingState = (value: boolean) => {
+    isSearchingRef.current = value;
+    setIsSearching(value);
+  };
+
+  const processSearchTerm = async (rawTerm: string) => {
+    const term = rawTerm.trim();
     if (!term) {
-      setSearchTermForModal("");
-      setIsSearchModalOpen(true);
+      onAmbiguousSearch?.([], "");
       return;
     }
 
-    setIsSearching(true);
+    if (isSearchingRef.current) return;
+
+    setSearchingState(true);
     try {
       const isNumeric = /^\d+$/.test(term);
 
@@ -55,42 +65,56 @@ export default function ProductSearchCompras({
 
         if (result.data && result.data.length > 1) {
           const codeNum = parseInt(term, 10);
-          const exact = result.data.find((p) => p.Codigo === codeNum);
-          if (exact) {
-            handleSelectProduct(exact);
+          const exactMatch = result.data.find((p) => p.Codigo === codeNum);
+          if (exactMatch) {
+            handleSelectProduct(exactMatch);
             return;
           }
+          // Múltiples sin código exacto → panel de búsqueda
+          onAmbiguousSearch?.(result.data, term);
+          return;
         }
-      }
 
-      // Si no puede resolver directamente → abrir modal
-      setSearchTermForModal(term);
-      setIsSearchModalOpen(true);
+        // Sin coincidencias → buscar con más resultados y mostrar en panel
+        const broadResult = await queryClient.fetchQuery({
+          queryKey: ["productos-compras-ambiguous", term],
+          queryFn: ({ signal }) =>
+            fetchProductosCompras({ signal, search: term, page: 1, limit: 50 }),
+          staleTime: 10_000,
+        });
+        onAmbiguousSearch?.(broadResult.data, term);
+      } else {
+        // Contiene letras → buscar y mostrar en panel
+        const result = await queryClient.fetchQuery({
+          queryKey: ["productos-compras-text", term],
+          queryFn: ({ signal }) =>
+            fetchProductosCompras({ signal, search: term, page: 1, limit: 50 }),
+          staleTime: 10_000,
+        });
+        onAmbiguousSearch?.(result.data, term);
+      }
     } catch (err) {
       console.error("Error al buscar producto:", err);
     } finally {
-      setIsSearching(false);
+      setSearchingState(false);
     }
   };
 
   const handleInputKeyDown = async (e: React.KeyboardEvent) => {
-    if (e.key !== "Enter") return;
-    e.preventDefault();
-
-    const term = inputValue.trim();
-    await processSearchTerm(term);
-    if (term) setInputValue("");
+    if (e.key === "Enter") {
+      e.preventDefault();
+      await processSearchTerm(inputValue);
+      setInputValue("");
+    }
   };
 
-  // Al cerrarse el modal de búsqueda o el escáner, el foco puede quedar
-  // atrapado por la animación de cierre del modal; lo reafirmamos en el
-  // siguiente frame para que el usuario pueda seguir tipeando sin hacer click.
+  // Al cerrarse el escáner, reafirmar foco en el input
   useEffect(() => {
-    if (!isSearchModalOpen && !isScannerOpen) {
+    if (!isScannerOpen) {
       const raf = requestAnimationFrame(() => inputRef.current?.focus());
       return () => cancelAnimationFrame(raf);
     }
-  }, [isSearchModalOpen, isScannerOpen]);
+  }, [isScannerOpen]);
 
   const handleSelectProduct = (product: Producto, cantidad: number = 1) => {
     onProductSelect(product, cantidad);
@@ -99,7 +123,7 @@ export default function ProductSearchCompras({
   };
 
   const handleCameraScan = async (decodedText: string) => {
-    await processSearchTerm(decodedText.trim());
+    await processSearchTerm(decodedText);
   };
 
   return (
@@ -118,16 +142,19 @@ export default function ProductSearchCompras({
         size="sm"
         autoFocus
         value={inputValue}
-        onValueChange={setInputValue}
+        onValueChange={(value) => {
+          if (isSearchingRef.current) return;
+          setInputValue(value);
+        }}
         onKeyDown={handleInputKeyDown}
         startContent={
           <Button
             isIconOnly
             variant="light"
             size="sm"
+            isDisabled={isSearching}
             onPress={() => {
-              setSearchTermForModal(inputValue);
-              setIsSearchModalOpen(true);
+              processSearchTerm(inputValue);
               setInputValue("");
             }}
           >
@@ -143,6 +170,7 @@ export default function ProductSearchCompras({
             isIconOnly
             variant="light"
             size="sm"
+            isDisabled={isSearching}
             onPress={() => setIsScannerOpen(true)}
             title="Escanear con cámara"
           >
@@ -155,13 +183,6 @@ export default function ProductSearchCompras({
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
         onScanSuccess={handleCameraScan}
-      />
-
-      <ProductSearchComprasModal
-        isOpen={isSearchModalOpen}
-        onOpenChange={() => setIsSearchModalOpen(false)}
-        initialSearch={searchTermForModal}
-        handleSelect={handleSelectProduct}
       />
     </div>
   );

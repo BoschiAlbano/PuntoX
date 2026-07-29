@@ -5,16 +5,21 @@ import { ShoppingCart, CreditCard } from "lucide-react";
 import { addToast } from "@heroui/react";
 
 import ProductSearchCompras from "./ProductSearchCompras";
-import CompraGrid from "./CompraGrid";
+import CompraProductosPanel from "./CompraProductosPanel";
 import CompraFooter from "./CompraFooter";
 import { Producto } from "@/lib/validations/producto.schema";
 import { useCompraStore } from "@/store/useCompraStore";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
 
 type MobileTab = "productos" | "pago";
+type InnerTab = "carrito" | "buscar";
 
 export default function ComprasScreen() {
   const [mobileTab, setMobileTab] = useState<MobileTab>("productos");
+  const [innerTab, setInnerTab] = useState<InnerTab>("carrito");
+  const [searchResults, setSearchResults] = useState<Producto[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
 
   const {
     items,
@@ -55,11 +60,30 @@ export default function ComprasScreen() {
       }
 
       addItem(producto, cantidad, costoDefault, unificarRenglones);
+
+      // Al agregar un producto desde el panel de búsqueda, volver al carrito y limpiar la búsqueda
+      if (innerTab === "buscar") {
+        setInnerTab("carrito");
+      }
+      setSearchResults([]);
+      setSearchQuery("");
+
+      // Devolver el foco al buscador para encadenar la próxima búsqueda sin usar el mouse
+      document.getElementById("product-search-compras-input")?.focus();
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Error desconocido";
       addToast({ title: "Error", description: message, color: "danger" });
     }
+  };
+
+  // Handler para búsquedas ambiguas desde ProductSearchCompras:
+  // guarda los resultados y activa la vista de búsqueda
+  const handleAmbiguousSearch = (results: Producto[], query: string) => {
+    setSearchResults(results);
+    setSearchQuery(query);
+    setInnerTab("buscar");
+    setHighlightedIndex(0);
   };
 
   const handleUpdateQuantity = (id: number, cantidad: number) => {
@@ -103,10 +127,39 @@ export default function ComprasScreen() {
         e.preventDefault();
         document.getElementById("product-search-compras-input")?.focus();
       }
+
+      // ── Navegación por teclado en los resultados de búsqueda ──
+      if (innerTab === "buscar" && searchResults.length > 0) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setHighlightedIndex((i) => Math.min(i + 1, searchResults.length - 1));
+          return;
+        }
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setHighlightedIndex((i) => Math.max(i - 1, 0));
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          setInnerTab("carrito");
+          return;
+        }
+        if (e.key === "Enter" && isProductSearch) {
+          const value = (target as HTMLInputElement).value ?? "";
+          // Sólo agrega el resaltado si no hay un término nuevo esperando búsqueda
+          if (!value.trim()) {
+            e.preventDefault();
+            e.stopPropagation();
+            const producto = searchResults[highlightedIndex];
+            if (producto) handleAddItem(producto);
+          }
+        }
+      }
     };
     window.addEventListener("keydown", handler, true);
     return () => window.removeEventListener("keydown", handler, true);
-  }, []);
+  }, [innerTab, searchResults, highlightedIndex, handleAddItem]);
 
   return (
     <div className="flex-1 min-h-0 w-full flex flex-col gap-0">
@@ -159,16 +212,26 @@ export default function ComprasScreen() {
           {/* Toolbar */}
           <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center shrink-0">
             <div className="flex-1">
-              <ProductSearchCompras onProductSelect={handleAddItem} />
+              <ProductSearchCompras
+                onProductSelect={handleAddItem}
+                onAmbiguousSearch={handleAmbiguousSearch}
+              />
             </div>
           </div>
 
-          {/* Grilla */}
-          <CompraGrid
+          {/* Panel con carrito / resultados de búsqueda */}
+          <CompraProductosPanel
             items={items}
             onUpdateQuantity={handleUpdateQuantity}
             onUpdateCosto={updateItemCosto}
             onRemoveItem={removeItem}
+            searchResults={searchResults}
+            searchQuery={searchQuery}
+            onProductAdd={handleAddItem}
+            activeTab={innerTab}
+            onTabChange={setInnerTab}
+            highlightedIndex={highlightedIndex}
+            onHighlightChange={setHighlightedIndex}
           />
         </div>
 

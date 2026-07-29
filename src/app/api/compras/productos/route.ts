@@ -61,6 +61,9 @@ export async function GET(req: NextRequest) {
       HoraLimiteVentaHasta: true,
       TipoVenta: true,
       Stock: true,
+      Foto: true,
+      Marca: { select: { Descripcion: true } },
+      Rubro: { select: { Descripcion: true } },
       Precios: {
         select: {
           Id: true,
@@ -122,6 +125,9 @@ export async function GET(req: NextRequest) {
         Codigo: p.Codigo,
         CodigoBarra: p.CodigoBarra,
         Descripcion: p.Descripcion,
+        Foto: p.Foto || null,
+        Marca: p.Marca ? { Descripcion: p.Marca.Descripcion } : null,
+        Rubro: p.Rubro ? { Descripcion: p.Rubro.Descripcion } : null,
         Stock: Number(stockReal),
 
         DescuentaStock: p.DescuentaStock,
