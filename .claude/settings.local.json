@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(pnpm run *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npx vitest *)",
+      "Bash(git stash *)",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/@heroui/react/package.json'\\).version\\)\")",
+      "Bash(node -e \"const m = require\\('./node_modules/@heroui/react/dist/index.js'\\); console.log\\(Object.keys\\(m\\).filter\\(k => /Date|Range/i.test\\(k\\)\\)\\)\")",
+      "Bash(node -e ' *)"
     ]
   }
 }

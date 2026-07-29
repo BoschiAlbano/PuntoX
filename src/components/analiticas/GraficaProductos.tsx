@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, CardBody, CardHeader } from "@heroui/react";
+import { Package } from "lucide-react";
+import Panel from "./Panel";
 
 export interface GraficaProductosProps {
   datos: Array<{
@@ -20,34 +21,21 @@ export default function GraficaProductos({ datos }: GraficaProductosProps) {
 
   if (!datos || datos.length === 0) {
     return (
-      <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-        <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
-          <h3 className="text-lg font-semibold text-slate-900">
-            Top 10 Productos por Ventas
-          </h3>
-        </CardHeader>
-        <CardBody>
-          <div className="flex items-center justify-center h-[400px] text-gray-500">
-            <p>
-              No hay datos de productos vendidos para el período seleccionado
-            </p>
-          </div>
-        </CardBody>
-      </Card>
+      <Panel title="Top 10 Productos por Ventas" icon={Package}>
+        <div className="flex items-center justify-center h-[400px] text-gray-500">
+          <p>
+            No hay datos de productos vendidos para el período seleccionado
+          </p>
+        </div>
+      </Panel>
     );
   }
 
   const maxMonto = top10.length > 0 ? Math.max(...top10.map(p => p.monto)) : 0;
 
   return (
-    <Card className="rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-      <CardHeader className="pb-3 border-b border-slate-200/70 bg-slate-50/70">
-        <h3 className="text-lg font-semibold text-slate-900">
-          Ranking de Productos por Ventas
-        </h3>
-      </CardHeader>
-      <CardBody className="p-5">
-        <div className="flex flex-col gap-4">
+    <Panel title="Ranking de Productos por Ventas" icon={Package}>
+      <div className="flex flex-col gap-4">
           {top10.map((producto, index) => {
             const widthPercentage = maxMonto > 0 ? (producto.monto / maxMonto) * 100 : 0;
             // Variamos la opacidad del color acento para darle jerarquía sin usar otros colores
@@ -87,8 +75,7 @@ export default function GraficaProductos({ datos }: GraficaProductosProps) {
               </div>
             );
           })}
-        </div>
-      </CardBody>
-    </Card>
+      </div>
+    </Panel>
   );
 }
