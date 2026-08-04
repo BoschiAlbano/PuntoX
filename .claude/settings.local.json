@@ -7,7 +7,10 @@
       "Bash(git stash *)",
       "Bash(node -e \"console.log\\(require\\('./node_modules/@heroui/react/package.json'\\).version\\)\")",
       "Bash(node -e \"const m = require\\('./node_modules/@heroui/react/dist/index.js'\\); console.log\\(Object.keys\\(m\\).filter\\(k => /Date|Range/i.test\\(k\\)\\)\\)\")",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(mkdir *)",
+      "Bash(node \"C:/Users/BOSCHI~1/AppData/Local/Temp/claude/C--Users-boschi-albano-jose-Desktop-Punto-X-Saas-PuntoX/78d0d7ed-dbc5-4b5a-8028-d2a6a4a6b3f5/scratchpad/gen-icons.js\")",
+      "Bash(node gen-icons.tmp.js)"
     ]
   }
 }
