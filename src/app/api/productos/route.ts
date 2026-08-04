@@ -18,6 +18,8 @@ import { fotoDefault } from "@/utilities/fotoDefault";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { resolveStockNotifications } from "@/lib/services/notificaciones";
 import { assertDentroDeLimite } from "@/lib/planes/features";
+import { guardarEnCacheSiCorresponde } from "@/lib/services/imagenProductoCache";
+import { ImagenCacheFuente } from "../../../../prisma/generated/prisma";
 
 export async function GET(req: NextRequest) {
   try {
@@ -305,7 +307,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, sucursalId } = await getAuthContext({
+    const { tenantId, sucursalId, isSuperAdmin, usuarioId } = await getAuthContext({
       req,
       permission: SET_PERMISSIONS.PRODUCTOS, // Permiso de escritura
     });
@@ -348,6 +350,17 @@ export async function POST(req: NextRequest) {
         if (!error) {
           const { data } = supabase.storage.from("articulos").getPublicUrl(fileName);
           fotoUrl = data.publicUrl;
+
+          await guardarEnCacheSiCorresponde({
+            codigoBarra: validarProducto.CodigoBarra,
+            codigoBarraGenerado: validarProducto.CodigoBarraGenerado ?? false,
+            descripcion: validarProducto.Descripcion,
+            imageBuffer: buffer,
+            fuente: ImagenCacheFuente.USUARIO,
+            isSuperAdmin,
+            tenantId: BigInt(tenantId),
+            userId: BigInt(usuarioId),
+          });
         } else {
           console.error("Supabase upload error (POST articulo):", error);
         }
@@ -365,6 +378,7 @@ export async function POST(req: NextRequest) {
           ActivarLimiteVenta: validarProducto.ActivarLimiteVenta,
           Codigo: validarProducto.Codigo,
           CodigoBarra: validarProducto.CodigoBarra,
+          CodigoBarraGenerado: validarProducto.CodigoBarraGenerado ?? false,
           Abreviatura: validarProducto.Abreviatura,
           Descripcion: validarProducto.Descripcion,
           Detalle: validarProducto.Detalle,
@@ -495,7 +509,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId, sucursalId } = await getAuthContext({
+    const { tenantId, sucursalId, isSuperAdmin, usuarioId } = await getAuthContext({
       req,
       permission: SET_PERMISSIONS.PRODUCTOS, // Permiso de escritura
     });
@@ -606,6 +620,7 @@ export async function PATCH(req: NextRequest) {
       const directFields = [
         "Codigo",
         "CodigoBarra",
+        "CodigoBarraGenerado",
         "Abreviatura",
         "Descripcion",
         "Detalle",
@@ -672,6 +687,18 @@ export async function PATCH(req: NextRequest) {
             if (!error) {
               const { data } = supabase.storage.from("articulos").getPublicUrl(fileName);
               articuloData.Foto = data.publicUrl;
+
+              await guardarEnCacheSiCorresponde({
+                codigoBarra: validarProducto.CodigoBarra ?? articulo.CodigoBarra,
+                codigoBarraGenerado:
+                  validarProducto.CodigoBarraGenerado ?? articulo.CodigoBarraGenerado,
+                descripcion: validarProducto.Descripcion ?? articulo.Descripcion,
+                imageBuffer: buffer,
+                fuente: ImagenCacheFuente.USUARIO,
+                isSuperAdmin,
+                tenantId: tenantIdBigInt,
+                userId: BigInt(usuarioId),
+              });
             } else {
               console.error("Supabase upload error (PATCH articulo):", error);
             }

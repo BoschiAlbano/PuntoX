@@ -198,6 +198,9 @@ model Articulo {
   TipoVenta            TiposVenta           @default(UNIDAD)
   EstaEliminado        Boolean
   EsCombo              Boolean              @default(false)
+  /// true si el CodigoBarra fue autogenerado (botÃ³n "Generar cÃ³digo automÃ¡tico"), no un cÃ³digo real.
+  /// Estos cÃ³digos no son Ãºnicos globalmente entre tenants: nunca deben participar del cachÃ© de imÃ¡genes.
+  CodigoBarraGenerado  Boolean              @default(false)
   /// Tenant dueÃ±o de este artÃ­culo
   TenantId             BigInt
   /// Stock global (DEPRECADO: usar ArticuloStock para stock por sucursal)
@@ -222,6 +225,30 @@ model Articulo {
   @@index([MarcaId])
   @@index([RubroId])
   @@index([UnidadMedidaId])
+}
+
+enum ImagenCacheFuente {
+  OPEN_FOOD_FACTS
+  USUARIO
+}
+
+/// Caché de imágenes de producto compartido entre todos los tenants, indexado por código de barra.
+/// Se alimenta automáticamente cuando un tenant carga la foto de un producto con código real
+/// (ver CodigoBarraGenerado en Articulo). No pertenece a ningún tenant en particular.
+model ImagenProductoCache {
+  Id                BigInt            @id @default(autoincrement())
+  CodigoBarra       String            @unique @db.VarChar(100)
+  /// Descripción del producto al momento de cachear, usada solo como índice de búsqueda por texto
+  Descripcion       String?           @db.VarChar(250)
+  /// URL pública en el bucket dedicado del caché (no el storage de ningún tenant)
+  ImageUrl          String            @db.VarChar(1000)
+  Fuente            ImagenCacheFuente
+  CreadoPorTenantId BigInt?
+  CreadoPorUserId   BigInt?
+  FechaCreacion     DateTime          @default(now())
+  ModificadoEn      DateTime          @updatedAt
+
+  @@index([Descripcion])
 }
 
 /// Promociones por cantidad para un artículo específico.

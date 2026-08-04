@@ -11,6 +11,7 @@ import {
   CreditCard,
   Shield,
   ChevronDown,
+  ImageIcon,
 } from "lucide-react";
 
 interface MenuItem {
@@ -53,6 +54,11 @@ const menuSections: MenuSection[] = [
         icon: <CreditCard className="w-5 h-5" />,
         label: "Planes SaaS",
         href: "/admin/planes",
+      },
+      {
+        icon: <ImageIcon className="w-5 h-5" />,
+        label: "Imágenes (Caché)",
+        href: "/admin/imagenes-cache",
       },
     ],
   },

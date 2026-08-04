@@ -55,6 +55,8 @@ export const createProductoSchema = z.object({
     .max(100, {
       message: "El código de barras no puede superar los 100 caracteres",
     }),
+  // true si el código fue autogenerado (no es un código de barra real)
+  CodigoBarraGenerado: z.boolean().optional().default(false),
   Abreviatura: z.string().max(20).optional().nullable(),
 
   // Descripción
@@ -139,6 +141,7 @@ export const updateProductoSchemaBase = z.object({
       message: "El código de barras no puede superar los 100 caracteres",
     })
     .optional(),
+  CodigoBarraGenerado: z.boolean().optional(),
   Abreviatura: z.string().max(20).optional().nullable(),
 
   // Descripción
@@ -215,6 +218,7 @@ export interface Producto {
   IvaId: number;
   Codigo: number;
   CodigoBarra: string;
+  CodigoBarraGenerado?: boolean;
   Abreviatura?: string;
   Descripcion: string;
   Detalle?: string;

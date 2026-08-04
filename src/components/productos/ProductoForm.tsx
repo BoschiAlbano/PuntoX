@@ -1,5 +1,5 @@
 import { modalMotionProps } from "@/lib/motionConfig";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Modal,
   ModalContent,
@@ -44,9 +44,13 @@ import {
   Wand2,
   ScanBarcode,
   RotateCcw,
+  Search,
 } from "lucide-react";
 import CameraScannerModal from "@/components/ventas/CameraScannerModal";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
+import SeleccionarFotoModal, {
+  FotoCandidato,
+} from "@/components/productos/SeleccionarFotoModal";
 import MarcaGenericForm from "../marcas/MarcaForm";
 import RubroGenericForm from "../rubros/RubroForm";
 import UnidadMedidaGenericForm from "../unidad-medida/UnidadMedidaForm";
@@ -188,6 +192,134 @@ export default function ProductoForm({
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string>("");
+  const [isFotoModalOpen, setIsFotoModalOpen] = useState(false);
+  const [candidatosFoto, setCandidatosFoto] = useState<FotoCandidato[]>([]);
+  const isApplicandoCandidatoRef = useRef(false);
+
+  const buscarFotoTextoMutation = useMutation({
+    mutationFn: async (texto: string) => {
+      const res = await fetch(
+        `/api/productos/buscar-foto-texto?q=${encodeURIComponent(texto)}`,
+      );
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error?.error?.message || "Error al buscar imágenes");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setCandidatosFoto(data.results || []);
+      if (!data.results || data.results.length === 0) {
+        setIsFotoModalOpen(false);
+        addToast({
+          title: "Sin resultados",
+          description:
+            "No se encontró ninguna imagen para este producto en Open Food Facts",
+          color: "warning",
+          timeout: 4000,
+        });
+      }
+    },
+    onError: (error: any) => {
+      setIsFotoModalOpen(false);
+      addToast({
+        title: "Error",
+        description: error.message || "Error al buscar imágenes",
+        color: "danger",
+        timeout: 3000,
+      });
+    },
+  });
+
+  const buscarFotoMutation = useMutation({
+    mutationFn: async (codigoBarra: string) => {
+      const res = await fetch(
+        `/api/productos/buscar-foto?codigoBarra=${encodeURIComponent(codigoBarra)}`,
+      );
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error?.error?.message || "Error al buscar la foto");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      const esCandidato = isApplicandoCandidatoRef.current;
+      isApplicandoCandidatoRef.current = false;
+
+      if (data.found) {
+        setFotoFile(null);
+        setFotoPreview(data.imageBase64);
+        setIsFotoModalOpen(false);
+        const origen =
+          data.fuente === "PUNTO_X" ? " (comunidad PuntoX)" : "";
+        addToast({
+          title: "Foto encontrada",
+          description: data.productName
+            ? `Se encontró una imagen para "${data.productName}"${origen}`
+            : `Se encontró una imagen para este código de barra${origen}`,
+          color: "success",
+          timeout: 3000,
+        });
+        return;
+      }
+
+      if (esCandidato) {
+        addToast({
+          title: "Error",
+          description: "No se pudo cargar esa imagen, probá con otra",
+          color: "danger",
+          timeout: 3000,
+        });
+        return;
+      }
+
+      // No hubo match por código de barra: probamos por descripción del producto
+      if (formData.Descripcion) {
+        setIsFotoModalOpen(true);
+        buscarFotoTextoMutation.mutate(formData.Descripcion);
+      } else {
+        addToast({
+          title: "Sin resultados",
+          description:
+            "No se encontró ninguna imagen para ese código de barra en Open Food Facts",
+          color: "warning",
+          timeout: 4000,
+        });
+      }
+    },
+    onError: (error: any) => {
+      addToast({
+        title: "Error",
+        description: error.message || "Error al buscar la foto",
+        color: "danger",
+        timeout: 3000,
+      });
+    },
+  });
+
+  const handleBuscarFoto = () => {
+    // Un código autogenerado no identifica al producto real: no tiene sentido
+    // buscarlo por código exacto, vamos directo a la búsqueda por descripción.
+    if (formData.CodigoBarraGenerado) {
+      if (formData.Descripcion) {
+        setIsFotoModalOpen(true);
+        buscarFotoTextoMutation.mutate(formData.Descripcion);
+      } else {
+        addToast({
+          title: "Falta información",
+          description:
+            "Este código fue generado automáticamente. Cargá una descripción para poder buscar la foto.",
+          color: "warning",
+          timeout: 4000,
+        });
+      }
+      return;
+    }
+
+    if (formData.CodigoBarra) {
+      buscarFotoMutation.mutate(formData.CodigoBarra);
+    }
+  };
 
   const createMarcaMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -554,6 +686,7 @@ export default function ProductoForm({
                     setFormData({
                       ...formData,
                       CodigoBarra: e.target.value,
+                      CodigoBarraGenerado: false,
                     })
                   }
                   type="text"
@@ -586,7 +719,11 @@ export default function ProductoForm({
                               Math.floor(Math.random() * 1000000000)
                                 .toString()
                                 .padStart(9, "0");
-                            setFormData({ ...formData, CodigoBarra: randomCode });
+                            setFormData({
+                              ...formData,
+                              CodigoBarra: randomCode,
+                              CodigoBarraGenerado: true,
+                            });
                           }}
                           className="text-slate-400 hover:text-[#67afc3] transition-colors focus:outline-none"
                           disabled={isSaving}
@@ -1153,6 +1290,18 @@ export default function ProductoForm({
                   }}
                   disabled={isSaving}
                 />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="flat"
+                  className="mt-3 bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  startContent={<Search size={16} />}
+                  isDisabled={isSaving || !formData.CodigoBarra}
+                  isLoading={buscarFotoMutation.isPending}
+                  onPress={handleBuscarFoto}
+                >
+                  Buscar foto por código de barra
+                </Button>
               </div>
             </CardBody>
           </Card>
@@ -1405,8 +1554,23 @@ export default function ProductoForm({
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
         onScanSuccess={(code) => {
-          setFormData((prev) => ({ ...prev, CodigoBarra: code }));
+          setFormData((prev) => ({
+            ...prev,
+            CodigoBarra: code,
+            CodigoBarraGenerado: false,
+          }));
           setIsScannerOpen(false);
+        }}
+      />
+
+      <SeleccionarFotoModal
+        isOpen={isFotoModalOpen}
+        onClose={() => setIsFotoModalOpen(false)}
+        isLoading={buscarFotoTextoMutation.isPending}
+        candidatos={candidatosFoto}
+        onSelect={(candidato: FotoCandidato) => {
+          isApplicandoCandidatoRef.current = true;
+          buscarFotoMutation.mutate(candidato.code);
         }}
       />
     </div>
