@@ -14,6 +14,9 @@ Erorres al hacer "Test" corregir:
     1- revisar page dashboard, tarjeta stock bajo. dice 14 pero solo muestra 1 al redirigir a http://localhost:3000/productos?bajoStock=true
     2- revisar page dashboard, tarjeta clientes activos dice 1 pero no tengo clientes registrados.
     3- NOTA: modificar todo los datos que se muestran en dashboard. solo datos importantes del sistema actual y caja actual. si nececita ver mas estaditicas a nivel de meses o años ir a analiticas.
+    4- al reiprimir un ticket, este no muestra las formas de pago y tampoco la descripcions de los productos facturados.
+    5- el QR deberi ser mas grande y centrado en medio para poder escanear bien.
+    
 Agregar en superadmin:
     1- Cambiar planes a tiendas desde superadmin.
     2- Que sea mas visible las tiendas con plan vencido, en Listado de Tiendas.
