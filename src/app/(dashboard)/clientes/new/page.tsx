@@ -49,7 +49,7 @@ export default function NuevoClientePage() {
         <Button
           variant="light"
           startContent={<ArrowLeft className="w-4 h-4" />}
-          onPress={() => router.push("/clientes")}
+          onPress={() => router.back()}
           className="text-slate-600 px-0 hover:bg-transparent hover:text-slate-900 ml-4 sm:ml-0"
         >
           Volver a clientes
@@ -62,7 +62,7 @@ export default function NuevoClientePage() {
           initialData={null}
           onSubmit={(data) => createMutation.mutate(data)}
           isSaving={createMutation.isPending}
-          onCancel={() => router.push("/clientes")}
+          onCancel={() => router.back()}
         />
       </div>
     </main>

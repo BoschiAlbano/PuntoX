@@ -59,7 +59,7 @@ export default function EditarProveedorPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["proveedores-generic"] });
       queryClient.invalidateQueries({ queryKey: ["proveedor", id] });
-      router.push("/proveedores");
+      router.back();
     },
     onError: (error: any) => {
       handleError(error, "Error al actualizar proveedor");
@@ -72,7 +72,7 @@ export default function EditarProveedorPage() {
         <Button
           variant="light"
           startContent={<ArrowLeft className="w-4 h-4" />}
-          onPress={() => router.push("/proveedores")}
+          onPress={() => router.back()}
           className="text-slate-600 px-0 hover:bg-transparent hover:text-slate-900 ml-4 sm:ml-0"
         >
           Volver a proveedores
@@ -92,7 +92,7 @@ export default function EditarProveedorPage() {
             initialData={proveedor || null}
             onSubmit={(data) => editMutation.mutate(data)}
             isSaving={editMutation.isPending}
-            onCancel={() => router.push("/proveedores")}
+            onCancel={() => router.back()}
           />
         )}
       </div>

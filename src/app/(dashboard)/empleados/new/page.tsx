@@ -40,7 +40,7 @@ export default function NuevoEmpleadoPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["empleados-generic"] });
       refreshUserData();
-      router.push("/empleados");
+      router.back();
     },
     onError: (error: any) => {
       handleError(error, "Error al crear empleado");
@@ -54,7 +54,7 @@ export default function NuevoEmpleadoPage() {
           <Button
             variant="light"
             startContent={<ArrowLeft className="w-4 h-4" />}
-            onPress={() => router.push("/empleados")}
+            onPress={() => router.back()}
             className="text-slate-600 px-2 hover:bg-transparent hover:text-slate-900 ml-4 sm:ml-0"
           >
             Volver a empleados
@@ -81,7 +81,7 @@ export default function NuevoEmpleadoPage() {
         <Button
           variant="light"
           startContent={<ArrowLeft className="w-4 h-4" />}
-          onPress={() => router.push("/empleados")}
+          onPress={() => router.back()}
           className="text-slate-600 px-2 hover:bg-transparent hover:text-slate-900 ml-4 sm:ml-0"
         >
           Volver a empleados
@@ -93,7 +93,7 @@ export default function NuevoEmpleadoPage() {
           initialData={null}
           onSubmit={(data) => createMutation.mutate(data)}
           isSaving={createMutation.isPending}
-          onCancel={() => router.push("/empleados")}
+          onCancel={() => router.back()}
         />
       </div>
     </main>

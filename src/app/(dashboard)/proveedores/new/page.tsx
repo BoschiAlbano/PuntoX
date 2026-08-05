@@ -48,7 +48,7 @@ export default function NuevoProveedorPage() {
         <Button
           variant="light"
           startContent={<ArrowLeft className="w-4 h-4" />}
-          onPress={() => router.push("/proveedores")}
+          onPress={() => router.back()}
           className="text-slate-600 px-0 hover:bg-transparent hover:text-slate-900 ml-4 sm:ml-0"
         >
           Volver a proveedores
@@ -61,7 +61,7 @@ export default function NuevoProveedorPage() {
           initialData={null}
           onSubmit={(data) => createMutation.mutate(data)}
           isSaving={createMutation.isPending}
-          onCancel={() => router.push("/proveedores")}
+          onCancel={() => router.back()}
         />
       </div>
     </main>

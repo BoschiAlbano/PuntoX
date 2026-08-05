@@ -66,7 +66,7 @@ export default function EditarEmpleadoPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["empleados-generic"] });
       queryClient.invalidateQueries({ queryKey: ["empleado", id] });
-      router.push("/empleados");
+      router.back();
     },
     onError: (error: any) => {
       handleError(error, "Error al actualizar empleado");
@@ -79,7 +79,7 @@ export default function EditarEmpleadoPage() {
         <Button
           variant="light"
           startContent={<ArrowLeft className="w-4 h-4" />}
-          onPress={() => router.push("/empleados")}
+          onPress={() => router.back()}
           className="text-slate-600 px-2 hover:bg-transparent hover:text-slate-900 ml-4 sm:ml-0"
         >
           Volver a empleados
@@ -101,7 +101,7 @@ export default function EditarEmpleadoPage() {
             initialData={empleado || null}
             onSubmit={(data) => editMutation.mutate(data)}
             isSaving={editMutation.isPending}
-            onCancel={() => router.push("/empleados")}
+            onCancel={() => router.back()}
           />
         )}
       </div>

@@ -62,7 +62,7 @@ export default function EditarRolPage() {
       queryClient.invalidateQueries({ queryKey: ["roles-crud"] });
       queryClient.invalidateQueries({ queryKey: ["roles-select"] });
       queryClient.invalidateQueries({ queryKey: ["rol", id] });
-      router.push("/empleados/roles");
+      router.back();
     },
     onError: (error: any) => {
       handleError(error, "Error al actualizar rol");
@@ -75,7 +75,7 @@ export default function EditarRolPage() {
         <Button
           variant="light"
           startContent={<ArrowLeft className="w-4 h-4" />}
-          onPress={() => router.push("/empleados/roles")}
+          onPress={() => router.back()}
           className="text-slate-600 px-2 hover:bg-transparent hover:text-slate-900 ml-4 sm:ml-0"
         >
           Volver a roles
@@ -97,7 +97,7 @@ export default function EditarRolPage() {
             initialData={rol || null}
             onSubmit={(data) => editMutation.mutate(data)}
             isSaving={editMutation.isPending}
-            onCancel={() => router.push("/empleados/roles")}
+            onCancel={() => router.back()}
           />
         )}
       </div>

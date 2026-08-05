@@ -65,7 +65,7 @@ export default function EditarClientePage() {
       queryClient.invalidateQueries({ queryKey: ["clientes-generic"] });
       queryClient.invalidateQueries({ queryKey: ["cliente", id] });
       queryClient.invalidateQueries({ queryKey: ["global-search-clients"] });
-      router.push("/clientes");
+      router.back();
     },
     onError: (error: any) => {
       handleError(error, "Error al actualizar cliente");
@@ -78,7 +78,7 @@ export default function EditarClientePage() {
         <Button
           variant="light"
           startContent={<ArrowLeft className="w-4 h-4" />}
-          onPress={() => router.push("/clientes")}
+          onPress={() => router.back()}
           className="text-slate-600 px-0 hover:bg-transparent hover:text-slate-900 ml-4 sm:ml-0"
         >
           Volver a clientes
@@ -100,7 +100,7 @@ export default function EditarClientePage() {
             initialData={cliente || null}
             onSubmit={(data) => editMutation.mutate(data)}
             isSaving={editMutation.isPending}
-            onCancel={() => router.push("/clientes")}
+            onCancel={() => router.back()}
           />
         )}
       </div>

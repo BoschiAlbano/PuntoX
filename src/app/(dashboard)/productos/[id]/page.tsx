@@ -38,7 +38,7 @@ export default function EditarProductoPage() {
       queryClient.invalidateQueries({ queryKey: ["productos-generic"] });
       queryClient.invalidateQueries({ queryKey: ["producto-detail", Number(id)] });
       queryClient.invalidateQueries({ queryKey: ["global-search-products"] });
-      router.push("/productos");
+      router.back();
     },
     onError: (error: any) => {
       handleError(error, "Error al actualizar producto");
@@ -53,7 +53,7 @@ export default function EditarProductoPage() {
         <Button
           variant="light"
           startContent={<ArrowLeft className="w-4 h-4" />}
-          onPress={() => router.push("/productos")}
+          onPress={() => router.back()}
           className="text-slate-600 px-0 hover:bg-transparent hover:text-slate-900 ml-4 sm:ml-0"
         >
           Volver a productos
@@ -65,7 +65,7 @@ export default function EditarProductoPage() {
           initialData={{ Id: Number(id) } as any}
           onSubmit={(data) => editMutation.mutate(data)}
           isSaving={editMutation.isPending}
-          onCancel={() => router.push("/productos")}
+          onCancel={() => router.back()}
         />
       </div>
     </main>

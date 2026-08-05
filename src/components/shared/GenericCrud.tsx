@@ -5,7 +5,7 @@
  * Usa GenericTable para la UI y useGenericApi para datos.
  * @see docs/ui/crud-tablas-genericas.md
  */
-import { useState, Key, useMemo, useEffect, useCallback } from "react";
+import { useState, Key, useMemo, useEffect, useCallback, useRef } from "react";
 import { modalMotionProps } from "@/lib/motionConfig";
 import {
   useDisclosure,
@@ -274,20 +274,97 @@ export default function GenericCrud<T extends { Id: number | string }>({
   const hasRowPreview = !!renderRowPreview || !!onRowClick;
 
   const [search, setSearch] = useState(() => searchParams?.get("q") || "");
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(initialLimit);
-  const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
-    column: "Descripcion",
-    direction: "ascending",
+
+  // Los 4 estados de abajo se siembran desde la URL para sobrevivir tanto a un
+  // refresh como a que este componente se desmonte al navegar a una página de
+  // edición de ruta completa (ej. /productos/[id]) y volver con router.back().
+  // Se asume una única instancia de GenericCrud por ruta: si en el futuro hay
+  // dos en la misma página, estos query params van a chocar entre ambas.
+  const [page, setPage] = useState(() => {
+    const parsed = parseInt(searchParams?.get("page") || "", 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
   });
+  const [limit, setLimit] = useState(() => {
+    const parsed = parseInt(searchParams?.get("limit") || "", 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : initialLimit;
+  });
+  const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>(() => ({
+    column: searchParams?.get("sort") || "Descripcion",
+    direction:
+      searchParams?.get("dir") === "descending" ? "descending" : "ascending",
+  }));
 
   // Debounce de búsqueda para evitar requests en cada keystroke
   const debouncedSearch = useDebounce(search, 300);
 
-  // Resetear página al cambiar filtro bajo stock (evita páginas vacías)
+  // Resetear página al cambiar filtro bajo stock (evita páginas vacías).
+  // Compara contra el valor anterior real (no un flag de "primera vez"): un
+  // flag se rompe con el doble-invoke de efectos de React Strict Mode en
+  // dev, que ejecuta este efecto dos veces en el mismo mount y pisaría el
+  // `page` recién restaurado desde la URL al volver de una edición.
+  const prevLowStockOnly = useRef(lowStockOnly);
   useEffect(() => {
-    setPage(1);
+    if (prevLowStockOnly.current !== lowStockOnly) {
+      prevLowStockOnly.current = lowStockOnly;
+      setPage(1);
+    }
   }, [lowStockOnly]);
+
+  // Refleja page/limit/orden/búsqueda en la URL (replace, no push, para no
+  // ensuciar el historial con cada cambio). Omite cada param si está en su
+  // valor por defecto, para mantener la URL limpia.
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams?.toString());
+
+    page > 1 ? newParams.set("page", String(page)) : newParams.delete("page");
+    limit !== initialLimit
+      ? newParams.set("limit", String(limit))
+      : newParams.delete("limit");
+    sortDescriptor.column !== "Descripcion"
+      ? newParams.set("sort", String(sortDescriptor.column))
+      : newParams.delete("sort");
+    sortDescriptor.direction === "descending"
+      ? newParams.set("dir", "descending")
+      : newParams.delete("dir");
+    debouncedSearch
+      ? newParams.set("q", debouncedSearch)
+      : newParams.delete("q");
+
+    const next = newParams.toString();
+    if (next === (searchParams?.toString() ?? "")) return; // evita replaces redundantes
+    router.replace(`${pathname}${next ? `?${next}` : ""}`, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit, sortDescriptor, debouncedSearch]);
+
+  // Sincroniza el estado local si la URL cambia "por afuera" (ej. router.back()
+  // restaura ?page=2 después de que este componente ya montó con sus valores
+  // por defecto, porque Next.js puede tardar un tick en actualizar
+  // useSearchParams tras una navegación hacia atrás). Sin este efecto, el de
+  // arriba terminaría borrando el ?page=2 recién restaurado.
+  useEffect(() => {
+    const urlPage = parseInt(searchParams?.get("page") || "", 10);
+    const validPage = Number.isFinite(urlPage) && urlPage > 0 ? urlPage : 1;
+    if (validPage !== page) setPage(validPage);
+
+    const urlLimit = parseInt(searchParams?.get("limit") || "", 10);
+    const validLimit =
+      Number.isFinite(urlLimit) && urlLimit > 0 ? urlLimit : initialLimit;
+    if (validLimit !== limit) setLimit(validLimit);
+
+    const urlSortColumn = searchParams?.get("sort") || "Descripcion";
+    const urlSortDir =
+      searchParams?.get("dir") === "descending" ? "descending" : "ascending";
+    if (
+      urlSortColumn !== sortDescriptor.column ||
+      urlSortDir !== sortDescriptor.direction
+    ) {
+      setSortDescriptor({ column: urlSortColumn, direction: urlSortDir });
+    }
+
+    const urlQ = searchParams?.get("q") || "";
+    if (urlQ !== search) setSearch(urlQ);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Firma de filtros para invalidar selección
   const currentSignature = useMemo(
@@ -391,20 +468,13 @@ export default function GenericCrud<T extends { Id: number | string }>({
     }
   }, [editId, data, isOpen, onOpen, router, pathname, searchParams]);
 
-  // Si la URL trae ?q= (ej. desde el buscador global), ya sembramos el
-  // estado "search" en el useState inicial de arriba. Lo sacamos de la URL
-  // para que no vuelva a aplicarse en un refresh futuro ni quede colgado
-  // si el usuario borra el término manualmente.
+  // Corrige `page` si viene fuera de rango desde la URL (bookmark viejo, o el
+  // total de resultados cambió por un filtro/búsqueda distinta).
   useEffect(() => {
-    if (searchParams?.get("q")) {
-      const newParams = new URLSearchParams(searchParams.toString());
-      newParams.delete("q");
-      const newUrl = `${pathname}${newParams.toString() ? `?${newParams.toString()}` : ""}`;
-      router.replace(newUrl, { scroll: false });
-    }
-    // Solo al montar: es una siembra única del valor inicial de la URL.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (isLoading) return;
+    const maxPage = Math.max(1, paginationMeta.totalPages);
+    if (page > maxPage) setPage(maxPage);
+  }, [isLoading, paginationMeta.totalPages, page]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);

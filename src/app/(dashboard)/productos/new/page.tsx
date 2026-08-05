@@ -56,7 +56,7 @@ export default function NuevoProductoPage() {
           <Button
             variant="light"
             startContent={<ArrowLeft className="w-4 h-4" />}
-            onPress={() => router.push("/productos")}
+            onPress={() => router.back()}
             className="text-slate-600 px-2 hover:bg-transparent hover:text-slate-900 ml-4 sm:ml-0"
           >
             Volver a productos
@@ -83,7 +83,7 @@ export default function NuevoProductoPage() {
         <Button
           variant="light"
           startContent={<ArrowLeft className="w-4 h-4" />}
-          onPress={() => router.push("/productos")}
+          onPress={() => router.back()}
           className="text-slate-600 px-2 hover:bg-transparent hover:text-slate-900 ml-4 sm:ml-0"
         >
           Volver a productos
@@ -96,7 +96,7 @@ export default function NuevoProductoPage() {
           initialData={null}
           onSubmit={(data) => createMutation.mutate(data)}
           isSaving={createMutation.isPending}
-          onCancel={() => router.push("/productos")}
+          onCancel={() => router.back()}
         />
       </div>
     </main>

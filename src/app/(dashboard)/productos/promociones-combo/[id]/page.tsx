@@ -37,7 +37,7 @@ export default function EditarComboPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["combos-generic"] });
       queryClient.invalidateQueries({ queryKey: ["producto-detail", Number(id)] });
-      router.push("/productos/promociones-combo");
+      router.back();
     },
     onError: (error: any) => {
       handleError(error, "Error al actualizar combo");
@@ -52,7 +52,7 @@ export default function EditarComboPage() {
         <Button
           variant="light"
           startContent={<ArrowLeft className="w-4 h-4" />}
-          onPress={() => router.push("/productos/promociones-combo")}
+          onPress={() => router.back()}
           className="text-slate-600 px-0 hover:bg-transparent hover:text-slate-900 ml-4 sm:ml-0"
         >
           Volver a Combos
@@ -64,7 +64,7 @@ export default function EditarComboPage() {
           initialData={{ Id: Number(id) } as any}
           onSubmit={(data) => editMutation.mutate(data)}
           isSaving={editMutation.isPending}
-          onCancel={() => router.push("/productos/promociones-combo")}
+          onCancel={() => router.back()}
         />
       </div>
     </main>

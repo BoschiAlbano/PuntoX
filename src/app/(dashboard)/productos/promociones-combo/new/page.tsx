@@ -54,7 +54,7 @@ export default function NuevoComboPage() {
           <Button
             variant="light"
             startContent={<ArrowLeft className="w-4 h-4" />}
-            onPress={() => router.push("/productos/promociones-combo")}
+            onPress={() => router.back()}
             className="text-slate-600 px-2 hover:bg-transparent hover:text-slate-900 ml-4 sm:ml-0"
           >
             Volver a Combos
@@ -82,7 +82,7 @@ export default function NuevoComboPage() {
         <Button
           variant="light"
           startContent={<ArrowLeft className="w-4 h-4" />}
-          onPress={() => router.push("/productos/promociones-combo")}
+          onPress={() => router.back()}
           className="text-slate-600 px-2 hover:bg-transparent hover:text-slate-900 ml-4 sm:ml-0"
         >
           Volver a Combos
@@ -95,7 +95,7 @@ export default function NuevoComboPage() {
           initialData={null}
           onSubmit={(data) => createMutation.mutate(data)}
           isSaving={createMutation.isPending}
-          onCancel={() => router.push("/productos/promociones-combo")}
+          onCancel={() => router.back()}
         />
       </div>
     </main>
