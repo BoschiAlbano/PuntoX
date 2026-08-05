@@ -1,8 +1,7 @@
 Ideas Nuevas de implementaciones a "futuro":
 
-1- optimización de imágenes en supabase .web
-2- un boton de reset, para borrar todos los datos de la tienda, o para limpiar la tienda desde una determinada fecha.
-3- Lo que existe en ARCA pero tu sistema todavía no tiene:
+1- un boton de reset, para borrar todos los datos de la tienda, o para limpiar la tienda desde una determinada fecha.
+2- Lo que existe en ARCA pero tu sistema todavía no tiene:
 
     Nota de Débito (A/B/C): es el "opuesto" de la Nota de Crédito — sirve para cargarle algo de más a una factura ya emitida (ej. intereses, diferencia de precio), en vez de restarle. Dato curioso: el código ya tiene los códigos AFIP reservados (NOTA_DEBITO_A/B/C = 2/7/12 en CBTE_TIPO_AFIP) pero no existe como tipo de comprobante local — nunca se implementó la creación de Notas de Débito en absoluto, ni siquiera a nivel local. Si alguna vez la necesitás, avisame y la agregamos con el mismo patrón que la NC.
     
@@ -12,3 +11,11 @@ Ideas Nuevas de implementaciones a "futuro":
 
 
 Erorres al hacer "Test" corregir:
+    1- revisar page dashboard, tarjeta stock bajo. dice 14 pero solo muestra 1 al redirigir a http://localhost:3000/productos?bajoStock=true
+    2- revisar page dashboard, tarjeta clientes activos dice 1 pero no tengo clientes registrados.
+    3- NOTA: modificar todo los datos que se muestran en dashboard. solo datos importantes del sistema actual y caja actual. si nececita ver mas estaditicas a nivel de meses o años ir a analiticas.
+Agregar en superadmin:
+    1- Cambiar planes a tiendas desde superadmin.
+    2- Que sea mas visible las tiendas con plan vencido, en Listado de Tiendas.
+    3- Solucionar el boton de la campanita del notificaciones del header del panel de superadmin, debe ser el mismo que el de la pagina de tiendas.
+    4- 

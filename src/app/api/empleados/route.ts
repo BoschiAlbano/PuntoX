@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
+import { optimizeImageToWebp } from "@/lib/utils/imageOptimizer";
 import { PermisoError } from "@/lib/requirePermiso";
 
 const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg"] as const;
@@ -17,13 +18,6 @@ function parseFotoMime(b64: string): string | null {
 function fotoToBuffer(b64: string): Buffer {
   const raw = b64.includes("base64,") ? b64.split("base64,")[1] : b64;
   return Buffer.from(raw, "base64");
-}
-
-/** Determina la extensión del archivo según el mime type detectado. */
-function extFromMime(mime: string | null): string {
-  if (mime === "image/png") return "png";
-  if (mime === "image/jpeg" || mime === "image/jpg") return "jpg";
-  return "jpg";
 }
 
 /** Elimina la foto de Supabase Storage si la URL pertenece al bucket "empleados". */
@@ -637,19 +631,22 @@ export async function POST(req: NextRequest) {
             { status: 400 },
           );
         }
-        const buffer = fotoToBuffer(data.foto);
-        if (buffer.length > MAX_FOTO_BYTES) {
+        const rawBuffer = fotoToBuffer(data.foto);
+        if (rawBuffer.length > MAX_FOTO_BYTES) {
           return NextResponse.json(
             { error: "La imagen no puede superar los 5 MB." },
             { status: 400 },
           );
         }
-        const ext = extFromMime(mime);
+        const optimized = await optimizeImageToWebp(rawBuffer);
         const supabase = getSupabaseServiceClient();
-        const fileName = `${tenantId}/emp-${Date.now()}.${ext}`;
+        const fileName = `${tenantId}/emp-${Date.now()}.${optimized.extension}`;
         const { error: uploadError } = await supabase.storage
           .from("empleados")
-          .upload(fileName, buffer, { contentType: mime, upsert: true });
+          .upload(fileName, optimized.buffer, {
+            contentType: optimized.contentType,
+            upsert: true,
+          });
         if (!uploadError) {
           const { data: urlData } = supabase.storage.from("empleados").getPublicUrl(fileName);
           fotoUrl = urlData.publicUrl;
@@ -1054,8 +1051,8 @@ export async function PUT(req: NextRequest) {
             { status: 400 },
           );
         }
-        const buffer = fotoToBuffer(data.foto);
-        if (buffer.length > MAX_FOTO_BYTES) {
+        const rawBuffer = fotoToBuffer(data.foto);
+        if (rawBuffer.length > MAX_FOTO_BYTES) {
           return NextResponse.json(
             { error: "La imagen no puede superar los 5 MB." },
             { status: 400 },
@@ -1068,13 +1065,16 @@ export async function PUT(req: NextRequest) {
         });
         await deleteEmpleadoFotoFromStorage(fotoActual?.Foto ?? null);
 
-        const ext = extFromMime(mime);
+        const optimized = await optimizeImageToWebp(rawBuffer);
         const supabase = getSupabaseServiceClient();
         const empleadoIdForPath = personaId.toString();
-        const fileName = `${tenantId}/emp-${empleadoIdForPath}-${Date.now()}.${ext}`;
+        const fileName = `${tenantId}/emp-${empleadoIdForPath}-${Date.now()}.${optimized.extension}`;
         const { error: uploadError } = await supabase.storage
           .from("empleados")
-          .upload(fileName, buffer, { contentType: mime, upsert: true });
+          .upload(fileName, optimized.buffer, {
+            contentType: optimized.contentType,
+            upsert: true,
+          });
         if (!uploadError) {
           const { data: urlData } = supabase.storage.from("empleados").getPublicUrl(fileName);
           nuevaFotoUrl = urlData.publicUrl;

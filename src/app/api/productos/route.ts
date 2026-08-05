@@ -20,6 +20,7 @@ import { resolveStockNotifications } from "@/lib/services/notificaciones";
 import { assertDentroDeLimite } from "@/lib/planes/features";
 import { guardarEnCacheSiCorresponde } from "@/lib/services/imagenProductoCache";
 import { ImagenCacheFuente } from "../../../../prisma/generated/prisma";
+import { optimizeImageToWebp } from "@/lib/utils/imageOptimizer";
 
 export async function GET(req: NextRequest) {
   try {
@@ -339,13 +340,17 @@ export async function POST(req: NextRequest) {
         const b64Data = validarProducto.Foto.includes("base64,")
           ? validarProducto.Foto.split("base64,")[1]
           : validarProducto.Foto;
-        const buffer = Buffer.from(b64Data, "base64");
+        const rawBuffer = Buffer.from(b64Data, "base64");
+        const optimized = await optimizeImageToWebp(rawBuffer);
         const supabase = getSupabaseServiceClient();
-        const fileName = `${tenantId}/art-${Date.now()}.png`;
+        const fileName = `${tenantId}/art-${Date.now()}.${optimized.extension}`;
 
         const { error } = await supabase.storage
           .from("articulos")
-          .upload(fileName, buffer, { contentType: "image/png", upsert: true });
+          .upload(fileName, optimized.buffer, {
+            contentType: optimized.contentType,
+            upsert: true,
+          });
 
         if (!error) {
           const { data } = supabase.storage.from("articulos").getPublicUrl(fileName);
@@ -355,7 +360,7 @@ export async function POST(req: NextRequest) {
             codigoBarra: validarProducto.CodigoBarra,
             codigoBarraGenerado: validarProducto.CodigoBarraGenerado ?? false,
             descripcion: validarProducto.Descripcion,
-            imageBuffer: buffer,
+            imageBuffer: optimized.buffer,
             fuente: ImagenCacheFuente.USUARIO,
             isSuperAdmin,
             tenantId: BigInt(tenantId),
@@ -677,12 +682,16 @@ export async function PATCH(req: NextRequest) {
             }
 
             const b64Data = b64.includes("base64,") ? b64.split("base64,")[1] : b64;
-            const buffer = Buffer.from(b64Data, "base64");
-            const fileName = `${tenantIdBigInt}/art-${Date.now()}.png`;
+            const rawBuffer = Buffer.from(b64Data, "base64");
+            const optimized = await optimizeImageToWebp(rawBuffer);
+            const fileName = `${tenantIdBigInt}/art-${Date.now()}.${optimized.extension}`;
 
             const { error } = await supabase.storage
               .from("articulos")
-              .upload(fileName, buffer, { contentType: "image/png", upsert: true });
+              .upload(fileName, optimized.buffer, {
+                contentType: optimized.contentType,
+                upsert: true,
+              });
 
             if (!error) {
               const { data } = supabase.storage.from("articulos").getPublicUrl(fileName);
@@ -693,7 +702,7 @@ export async function PATCH(req: NextRequest) {
                 codigoBarraGenerado:
                   validarProducto.CodigoBarraGenerado ?? articulo.CodigoBarraGenerado,
                 descripcion: validarProducto.Descripcion ?? articulo.Descripcion,
-                imageBuffer: buffer,
+                imageBuffer: optimized.buffer,
                 fuente: ImagenCacheFuente.USUARIO,
                 isSuperAdmin,
                 tenantId: tenantIdBigInt,

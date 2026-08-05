@@ -55,6 +55,8 @@
 | ------------------------------------------------------------------------------------------ | ------------------------------ |
 | [NOTA-TECNICA-SELECCION-MASIVA-CROSS-PAGE.md](NOTA-TECNICA-SELECCION-MASIVA-CROSS-PAGE.md) | Selección masiva entre páginas |
 | [productos/stock-por-sucursal.md](productos/stock-por-sucursal.md)                         | Stock por sucursal             |
+| [productos/cache-imagenes-plan.md](productos/cache-imagenes-plan.md)                       | Caché compartido de imágenes de producto por código de barra |
+| [productos/optimizacion-imagenes.md](productos/optimizacion-imagenes.md)                   | Resize + conversión a WebP antes de subir a Supabase |
 | [multi-sucursal/README.md](multi-sucursal/README.md)                                       | Multi-sucursal                 |
 | [auth/logout-handling.md](auth/logout-handling.md)                                         | Manejo de cierre de sesión     |
 

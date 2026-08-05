@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
+import { optimizeImageToWebp } from "@/lib/utils/imageOptimizer";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
 
@@ -86,16 +87,15 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Leer y validar tamaño
-    const buffer = Buffer.from(await file.arrayBuffer());
-    if (buffer.length > MAX_FOTO_BYTES) {
+    const rawBuffer = Buffer.from(await file.arrayBuffer());
+    if (rawBuffer.length > MAX_FOTO_BYTES) {
       return NextResponse.json(
         { error: "La imagen no puede superar los 5 MB." },
         { status: 400 },
       );
     }
 
-    // Determinar extensión
-    const ext = mime === "image/png" ? "png" : "jpg";
+    const optimized = await optimizeImageToWebp(rawBuffer);
 
     // Eliminar foto anterior si existe
     const actual = await prisma.persona_Empleado.findUnique({
@@ -106,10 +106,13 @@ export async function PATCH(req: NextRequest) {
 
     // Subir nueva foto a Supabase Storage
     const supabase = getSupabaseServiceClient();
-    const fileName = `${tenantId}/emp-${empleadoId.toString()}-${Date.now()}.${ext}`;
+    const fileName = `${tenantId}/emp-${empleadoId.toString()}-${Date.now()}.${optimized.extension}`;
     const { error: uploadError } = await supabase.storage
       .from("empleados")
-      .upload(fileName, buffer, { contentType: mime, upsert: true });
+      .upload(fileName, optimized.buffer, {
+        contentType: optimized.contentType,
+        upsert: true,
+      });
 
     if (uploadError) {
       console.error("Supabase upload error (PATCH perfil/foto):", uploadError);

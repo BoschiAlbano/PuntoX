@@ -95,11 +95,11 @@ export async function guardarEnCacheSiCorresponde(
     const supabase = getSupabaseServiceClient();
     // Nombre único por subida: si reusáramos siempre el mismo nombre, un reemplazo
     // no cambiaría la URL pública y el navegador/CDN seguiría sirviendo la imagen vieja.
-    const fileName = `${sanitizeCodigoBarra(codigoBarra)}-${Date.now()}.png`;
+    const fileName = `${sanitizeCodigoBarra(codigoBarra)}-${Date.now()}.webp`;
 
     const { error: uploadError } = await supabase.storage
       .from(CACHE_BUCKET)
-      .upload(fileName, imageBuffer, { contentType: "image/png" });
+      .upload(fileName, imageBuffer, { contentType: "image/webp" });
 
     if (uploadError) {
       console.error("Error subiendo imagen al caché de productos:", uploadError);

@@ -8,6 +8,10 @@ import {
   GET_PERMISSIONS,
 } from "@/lib/constants/comprobantes";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
+import { optimizeImageToWebp } from "@/lib/utils/imageOptimizer";
+
+const ALLOWED_LOGO_TYPES = ["image/png", "image/jpeg", "image/jpg"] as const;
+const MAX_LOGO_BYTES = 5 * 1024 * 1024; // 5 MB
 
 export async function GET(req: NextRequest) {
   const { tenantId } = await getAuthContext({
@@ -85,6 +89,20 @@ export async function PUT(req: NextRequest) {
     let fotoUrl: string | null = null;
 
     if (file) {
+      const mime = file.type.toLowerCase();
+      if (!ALLOWED_LOGO_TYPES.includes(mime as (typeof ALLOWED_LOGO_TYPES)[number])) {
+        return NextResponse.json(
+          { error: "Formato de imagen no válido. Use PNG, JPG o JPEG." },
+          { status: 400 },
+        );
+      }
+      if (file.size > MAX_LOGO_BYTES) {
+        return NextResponse.json(
+          { error: "La imagen no puede superar los 5 MB." },
+          { status: 400 },
+        );
+      }
+
       const supabase = getSupabaseServiceClient();
 
       // 2. Si existe un logo anterior, eliminarlo de Supabase Storage
@@ -111,13 +129,14 @@ export async function PUT(req: NextRequest) {
       }
 
       // 3. Subir el nuevo logo
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const fileName = `${tenantId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
+      const rawBuffer = Buffer.from(await file.arrayBuffer());
+      const optimized = await optimizeImageToWebp(rawBuffer, { quality: 90 });
+      const fileName = `${tenantId}/${Date.now()}.${optimized.extension}`;
 
       const { error: uploadError } = await supabase.storage
         .from("logos")
-        .upload(fileName, buffer, {
-          contentType: file.type,
+        .upload(fileName, optimized.buffer, {
+          contentType: optimized.contentType,
           upsert: true,
         });
 
