@@ -16,9 +16,13 @@ vi.mock("@/DB/prisma", () => ({
   default: {
     tenant: {
       findMany: vi.fn(),
-      update: vi.fn(),
       findUnique: vi.fn(),
+      update: vi.fn(),
+      count: vi.fn(),
       delete: vi.fn(),
+    },
+    planSaaS: {
+      findUnique: vi.fn(),
     },
     perfiles: {
       findMany: vi.fn(),
@@ -70,6 +74,7 @@ describe("GET /api/admin/tenants", () => {
       isSuperAdmin: true,
       permissions: [],
     });
+    vi.mocked(prisma.tenant.count).mockResolvedValue(1);
     vi.mocked(prisma.tenant.findMany).mockResolvedValue([
       {
         Id: BigInt(1),
@@ -145,6 +150,11 @@ describe("PATCH /api/admin/tenants", () => {
       isSuperAdmin: true,
       permissions: [],
     });
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      FechaVencimiento: null,
+      PlanId: BigInt(1),
+      Plan: { Nombre: "Base" },
+    } as any);
     vi.mocked(prisma.tenant.update).mockResolvedValue({
       Id: BigInt(1),
       Nombre: "Tenant 1",
@@ -175,9 +185,12 @@ describe("DELETE /api/admin/tenants", () => {
       isSuperAdmin: false,
       permissions: [],
     });
-    const req = new NextRequest("http://localhost:3000/api/admin/tenants?id=1", {
-      method: "DELETE",
-    });
+    const req = new NextRequest(
+      "http://localhost:3000/api/admin/tenants?id=1",
+      {
+        method: "DELETE",
+      },
+    );
     const res = await DELETE(req);
     const data = await res.json();
     expect(res.status).toBe(403);
@@ -212,9 +225,12 @@ describe("DELETE /api/admin/tenants", () => {
       permissions: [],
     });
     vi.mocked(prisma.tenant.findUnique).mockResolvedValue(null);
-    const req = new NextRequest("http://localhost:3000/api/admin/tenants?id=999", {
-      method: "DELETE",
-    });
+    const req = new NextRequest(
+      "http://localhost:3000/api/admin/tenants?id=999",
+      {
+        method: "DELETE",
+      },
+    );
     const res = await DELETE(req);
     const data = await res.json();
     expect(res.status).toBe(404);
@@ -236,9 +252,12 @@ describe("DELETE /api/admin/tenants", () => {
     } as any);
     vi.mocked(prisma.usuario.findMany).mockResolvedValue([]);
     vi.mocked(prisma.$transaction).mockResolvedValue(undefined);
-    const req = new NextRequest("http://localhost:3000/api/admin/tenants?id=1", {
-      method: "DELETE",
-    });
+    const req = new NextRequest(
+      "http://localhost:3000/api/admin/tenants?id=1",
+      {
+        method: "DELETE",
+      },
+    );
     const res = await DELETE(req);
     const data = await res.json();
     expect(res.status).toBe(200);

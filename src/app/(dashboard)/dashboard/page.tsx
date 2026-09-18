@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import { ShoppingCart, TrendingUp, Users, AlertTriangle } from "lucide-react";
+import { ShoppingCart, TrendingUp, AlertTriangle, Wallet } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import {
@@ -9,11 +9,13 @@ import {
   usePaymentMethods,
   useLowStock,
 } from "@/hooks/useDashboard";
+import { useCaja } from "@/hooks/useCaja";
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
+  Tooltip,
   useDisclosure,
 } from "@heroui/react";
 import Link from "next/link";
@@ -21,18 +23,61 @@ import Link from "next/link";
 export default function DashboardPage() {
   const { isOpen, onOpenChange } = useDisclosure();
   const { data: summaryData, isLoading } = useDashboardSummary();
+  const { data: lowStockData, isLoading: isLoadingLowStock } = useLowStock();
   const { data: topProductsData, isLoading: isLoadingTopProducts } =
     useTopProducts();
   const { data: paymentMethodsData, isLoading: isLoadingPaymentMethods } =
     usePaymentMethods();
-  const { data: lowStockData, isLoading: isLoadingLowStock } = useLowStock();
+  const {
+    cajaActual,
+    isLoading: isLoadingCaja,
+    isCajaAbierta,
+  } = useCaja({
+    enableCaja: true,
+  });
+
+  const totalCobranzaCajaActual = cajaActual
+    ? Number(cajaActual.TotalEntradaEfectivo || 0) +
+      Number(cajaActual.TotalEntradaTarjeta || 0) +
+      Number(cajaActual.TotalEntradaTransf || 0) +
+      Number(cajaActual.TotalEntradaCheque || 0) +
+      Number(cajaActual.TotalEntradaCtaCte || 0)
+    : 0;
+
+  const cajaActualEnEfectivo = cajaActual
+    ? Number(cajaActual.MontoInicial || 0) +
+      Number(cajaActual.TotalEntradaEfectivo || 0) -
+      Number(cajaActual.TotalSalidaEfectivo || 0)
+    : 0;
+
+  const totalCobranzaHoy =
+    paymentMethodsData?.paymentMethods?.reduce(
+      (sum, method) => sum + Number(method.money || 0),
+      0,
+    ) ?? 0;
+
+  const totalGastosCajaActual = cajaActual
+    ? Number(cajaActual.TotalSalidaEfectivo || 0) +
+      Number(cajaActual.TotalSalidaTarjeta || 0) +
+      Number(cajaActual.TotalSalidaTransf || 0) +
+      Number(cajaActual.TotalSalidaCheque || 0) +
+      Number(cajaActual.TotalSalidaCtaCte || 0)
+    : 0;
+
+  const infoBadge = (label: string) => (
+    <Tooltip content={label} placement="top" showArrow color="default">
+      <span className="inline-flex h-5 w-5 cursor-help items-center justify-center rounded-full border border-slate-300 text-[10px] font-bold text-slate-500 transition-colors hover:border-slate-400 hover:text-slate-700">
+        i
+      </span>
+    </Tooltip>
+  );
 
   return (
     <div className="flex flex-col items-stretch min-h-full relative space-y-4 sm:space-y-6">
       <PageHeader
         title="Dashboard"
         accentTitle="General"
-        description="Aquí puedes observar un panorama rápido del rendimiento actual."
+        description="Operación actual del negocio y estado de caja del día."
       />
 
       {/* Main App Container */}
@@ -43,251 +88,307 @@ export default function DashboardPage() {
         className="flex-1 rounded-3xl relative flex flex-col"
       >
         {/* Content */}
-        <div className="relative z-10 w-full flex flex-col gap-4">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
-              title="Ventas Hoy"
-              value={`$${(summaryData?.todaySales?.amount || 0).toLocaleString("es-AR")}`}
-              subtitle={`${summaryData?.todaySales?.transactions || 0} Transacciones`}
-              bottomText={
-                isLoading
-                  ? "Cargando..."
-                  : `${summaryData?.todaySales?.percentage! > 0 ? "+" : ""}${summaryData?.todaySales?.percentage || 0}% vs. ayer`
-              }
-              icon={ShoppingCart}
-              colorScheme="red"
-              chartType="line"
-              delay={0.1}
-            />
+        <div className="relative z-10 w-full flex flex-col gap-5">
+          <div className="space-y-3 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_12px_32px_rgba(15,23,42,0.04)] backdrop-blur-sm">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-slate-700">
+                Caja actual
+              </h2>
+              {infoBadge(
+                "Monto real disponible en la caja abierta en este momento.",
+              )}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard
+                title="Efectivo disponible"
+                value={
+                  isLoadingCaja
+                    ? "..."
+                    : `$${cajaActualEnEfectivo.toLocaleString("es-AR")}`
+                }
+                subtitle={
+                  isLoadingCaja
+                    ? "Cargando..."
+                    : isCajaAbierta
+                      ? "Caja abierta"
+                      : "Sin caja abierta"
+                }
+                bottomText={
+                  isLoadingCaja
+                    ? "Cargando..."
+                    : `Entradas: $${Number(cajaActual?.TotalEntradaEfectivo || 0).toLocaleString("es-AR")}`
+                }
+                icon={Wallet}
+                colorScheme="green"
+                chartType="bar"
+                delay={0.1}
+              />
 
-            <StatCard
-              title="Stock Bajo"
-              value={isLoading ? "..." : summaryData?.lowStock?.count || 0}
-              subtitle="Productos Críticos"
-              bottomText={
-                <Link
-                  href="/productos?bajoStock=true"
-                  className="underline cursor-pointer hover:text-orange-600 transition-colors"
-                >
-                  Ver todos
-                </Link>
-              }
-              icon={AlertTriangle}
-              colorScheme="orange"
-              chartType="none"
-              delay={0.2}
-            />
+              <StatCard
+                title="Entradas"
+                value={`$${Number(cajaActual?.TotalEntradaEfectivo || 0).toLocaleString("es-AR")}`}
+                subtitle={
+                  isLoadingCaja
+                    ? "Cargando..."
+                    : `${cajaActual?.Movimiento?.length || 0} movimientos`
+                }
+                bottomText={
+                  isLoadingCaja ? "Cargando..." : "Cobros del turno actual"
+                }
+                icon={TrendingUp}
+                colorScheme="blue"
+                chartType="line"
+                delay={0.15}
+              />
 
-            <StatCard
-              title="Ingresos Mes"
-              value={`$${(summaryData?.monthRevenue?.amount || 0).toLocaleString("es-AR")}`}
-              bottomText={
-                isLoading
-                  ? "Cargando..."
-                  : `${summaryData?.monthRevenue?.percentage! > 0 ? "+" : ""}${summaryData?.monthRevenue?.percentage || 0}% vs. mes anterior`
-              }
-              icon={TrendingUp}
-              colorScheme="green"
-              chartType="bar"
-              delay={0.3}
-            />
+              <StatCard
+                title="Salidas"
+                value={`$${Number(cajaActual?.TotalSalidaEfectivo || 0).toLocaleString("es-AR")}`}
+                subtitle={
+                  isLoadingCaja
+                    ? "Cargando..."
+                    : `${Number(cajaActual?.Gasto?.length || 0).toString()} gastos`
+                }
+                bottomText={isLoadingCaja ? "Cargando..." : "Egresos del turno"}
+                icon={AlertTriangle}
+                colorScheme="orange"
+                chartType="none"
+                delay={0.2}
+              />
 
-            <StatCard
-              title="Clientes Activos"
-              value={isLoading ? "..." : summaryData?.activeClients?.count || 0}
-              subtitle="Este Mes"
-              bottomText={
-                isLoading
-                  ? "Cargando..."
-                  : `${summaryData?.activeClients?.percentage! > 0 ? "+" : ""}${summaryData?.activeClients?.percentage || 0}% vs. mes anterior`
-              }
-              icon={Users}
-              colorScheme="blue"
-              chartType="line"
-              delay={0.4}
-            />
+              <StatCard
+                title="Cobranza actual"
+                value={`$${totalCobranzaCajaActual.toLocaleString("es-AR")}`}
+                subtitle={
+                  isLoadingCaja
+                    ? "Cargando..."
+                    : `${paymentMethodsData?.totalTransacciones || 0} pagos`
+                }
+                bottomText={
+                  isLoadingCaja ? "Cargando..." : "Total en caja actual"
+                }
+                icon={ShoppingCart}
+                colorScheme="red"
+                chartType="line"
+                delay={0.25}
+              />
+            </div>
           </div>
 
-          {/* Listados Medios */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* PRODUCTOS MÁS VENDIDOS */}
-            <div className="bg-white border text-sm border-slate-200 rounded-xl flex flex-col overflow-hidden shadow-sm">
-              <div className="flex items-center justify-between p-4 border-b border-slate-100">
-                <h3 className="font-bold text-slate-800 uppercase tracking-wide text-[13px]">
-                  Productos Más Vendidos (Top 10 del día)
-                </h3>
-                <span className="text-slate-500 text-xs font-medium">
-                  Total unidades:{" "}
-                  {isLoadingTopProducts
-                    ? "..."
-                    : topProductsData?.totalUnidades || 0}
-                </span>
-              </div>
-              <table className="w-full text-left">
-                <thead className="bg-slate-50/50 border-b border-slate-100">
-                  <tr>
-                    <th className="py-2.5 px-4 font-semibold text-slate-600 text-xs">
-                      Producto
-                    </th>
-                    <th className="py-2.5 px-4 font-semibold text-slate-600 text-xs text-center w-28">
-                      Unidades Vendidas
-                    </th>
-                    <th className="py-2.5 px-4 font-semibold text-slate-600 text-xs w-28">
-                      Volumen
-                    </th>
-                    <th className="py-2.5 px-4 font-semibold text-slate-600 text-xs text-right w-24">
-                      % total
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {!isLoadingTopProducts &&
-                    topProductsData?.topProducts?.map((p, i) => (
-                      <tr
-                        key={i}
-                        className="hover:bg-slate-50 transition-colors"
-                      >
-                        <td className="py-2.5 px-4">
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={p.imageUrl}
-                              alt={p.name}
-                              className="w-8 h-8 object-cover rounded-lg shrink-0 bg-slate-100 border border-slate-200"
-                              onError={(e) => {
-                                // Opcional: Fallback si la imagen no existe
-                                (e.target as HTMLImageElement).src =
-                                  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5NDkzYjgiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1wYWNrYWdlIj48bGluZSB4MT0iMTYuNSIgeTE9IjkuNCIgeDI9IjcuNSIgeTI9IjQuMjEiLz48cGF0aCBkPSJNMjEgMTdWNy4zYTIgMiAwIDAwLTEtMS43M2wtNy00YTIgMiAwIDAwLTIgMGwtNyA0QTIgMiAwIDAwMyA3LjNWMTdBMiAyIDAgMDA0IDE4LjcybDcgNGEyIDIgMCAwMDIgMGw3LTRBMiAyIDAgMDAyMSAxN1oiLz48cG9seWxpbmUgcG9pbnRzPSIzLjI3IDYuOTYgMTIgMTIgMjAuNzMgNi45NiIvPjxsaW5lIHgxPSIxMiIgeTE9IjIyLjA4IiB4Mj0iMTIiIHkyPSIxMiIvPjwvc3ZnPg==";
-                              }}
-                            />
-                            <span
-                              className="font-medium text-slate-700 max-w-[140px] truncate"
-                              title={p.name}
-                            >
-                              {p.name}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-2.5 px-4 text-center font-semibold text-slate-700">
-                          {p.uds}
-                        </td>
-                        <td className="py-2.5 px-4">
-                          <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-slate-500 rounded-full"
-                              style={{ width: `${p.pct}%` }}
-                            />
-                          </div>
-                        </td>
-                        <td className="py-2.5 px-4 text-right font-medium text-slate-600">
-                          {p.pct}%
-                        </td>
-                      </tr>
-                    ))}
-
-                  {isLoadingTopProducts && (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="py-8 text-center text-slate-400 text-sm"
-                      >
-                        Cargando productos...
-                      </td>
-                    </tr>
-                  )}
-
-                  {!isLoadingTopProducts &&
-                    topProductsData?.topProducts?.length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={4}
-                          className="py-8 text-center text-slate-400 text-sm"
-                        >
-                          No hay ventas registradas hoy
-                        </td>
-                      </tr>
-                    )}
-                </tbody>
-              </table>
-              <div className="p-4 border-t border-slate-100/50 bg-slate-50/20 mt-auto">
-                <span className="text-slate-600 font-semibold text-sm">
-                  Total unidades:{" "}
-                  {isLoadingTopProducts
-                    ? "..."
-                    : topProductsData?.totalUnidades || 0}
-                </span>
-              </div>
+          <div className="space-y-3 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_12px_32px_rgba(15,23,42,0.04)] backdrop-blur-sm">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-slate-700">
+                Caja del día
+              </h2>
+              {infoBadge(
+                "Totales acumulados del día, aunque haya más de un turno o caja abierta.",
+              )}
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard
+                title="Ventas del día"
+                value={`$${(summaryData?.todaySales?.amount || 0).toLocaleString("es-AR")}`}
+                subtitle={`${summaryData?.todaySales?.transactions || 0} Transacciones`}
+                bottomText={
+                  isLoading
+                    ? "Cargando..."
+                    : `${summaryData?.todaySales?.percentage! > 0 ? "+" : ""}${summaryData?.todaySales?.percentage || 0}% vs. ayer`
+                }
+                icon={ShoppingCart}
+                colorScheme="red"
+                chartType="line"
+                delay={0.3}
+              />
 
-            {/* MÉTODOS DE PAGO POPULARES */}
-            <div className="bg-white border text-sm border-slate-200 rounded-xl flex flex-col shadow-sm">
-              <div className="flex items-center justify-between p-4 border-b border-slate-100">
-                <h3 className="font-bold text-slate-800 uppercase tracking-wide text-[13px]">
-                  Métodos de Pago Populares (Top 10)
-                </h3>
-                {/* <button className="px-3 py-1 bg-white border border-slate-200 text-slate-600 rounded-md text-xs font-semibold hover:bg-slate-50">
-                  Ver detalles
-                </button> */}
-              </div>
-              <div className="p-4 bg-white grow flex flex-col gap-0.5 min-h-[300px]">
-                <span className="text-slate-500 text-xs font-medium mb-3 block">
-                  Total transacciones:{" "}
-                  {isLoadingPaymentMethods
+              <StatCard
+                title="Cobranza del día"
+                value={`$${totalCobranzaHoy.toLocaleString("es-AR")}`}
+                subtitle={
+                  isLoadingPaymentMethods
+                    ? "Cargando..."
+                    : `${paymentMethodsData?.totalTransacciones || 0} pagos`
+                }
+                bottomText={
+                  isLoadingPaymentMethods ? "Cargando..." : "Resumen por medios"
+                }
+                icon={TrendingUp}
+                colorScheme="blue"
+                chartType="bar"
+                delay={0.35}
+              />
+
+              <StatCard
+                title="Gastos del día"
+                value={`$${totalGastosCajaActual.toLocaleString("es-AR")}`}
+                subtitle={
+                  isLoadingCaja
+                    ? "Cargando..."
+                    : `${Number(cajaActual?.Gasto?.length || 0)} movimientos`
+                }
+                bottomText={
+                  isLoadingCaja ? "Cargando..." : "Egresos operativos"
+                }
+                icon={AlertTriangle}
+                colorScheme="orange"
+                chartType="none"
+                delay={0.4}
+              />
+
+              <StatCard
+                title="Neto del día"
+                value={`$${((summaryData?.todaySales?.amount || 0) - totalGastosCajaActual).toLocaleString("es-AR")}`}
+                subtitle={isLoading ? "Cargando..." : "Ventas menos egresos"}
+                bottomText={isLoading ? "Cargando..." : "Resultado operativo"}
+                icon={Wallet}
+                colorScheme="green"
+                chartType="bar"
+                delay={0.45}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_12px_32px_rgba(15,23,42,0.04)] backdrop-blur-sm">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-slate-700">
+                Inventario
+              </h2>
+              {infoBadge(
+                "Productos críticos y más vendidos del día, útiles para la operación actual.",
+              )}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard
+                title="Stock bajo"
+                value={isLoading ? "..." : summaryData?.lowStock?.count || 0}
+                subtitle="Productos críticos"
+                bottomText={
+                  <Link
+                    href="/productos?bajoStock=true"
+                    className="underline cursor-pointer hover:text-orange-600 transition-colors"
+                  >
+                    Ver todos
+                  </Link>
+                }
+                icon={AlertTriangle}
+                colorScheme="orange"
+                chartType="none"
+                delay={0.5}
+              />
+
+              <StatCard
+                title="Top vendido"
+                value={
+                  isLoadingTopProducts
                     ? "..."
-                    : paymentMethodsData?.totalTransacciones || 0}
-                </span>
+                    : topProductsData?.topProducts?.[0]?.name || "Sin ventas"
+                }
+                subtitle={
+                  isLoadingTopProducts
+                    ? "Cargando..."
+                    : topProductsData?.topProducts?.[0]
+                      ? `${topProductsData.topProducts[0].uds} unidades`
+                      : "Sin ventas aún"
+                }
+                bottomText={
+                  isLoadingTopProducts
+                    ? "Cargando..."
+                    : topProductsData?.topProducts?.[0]
+                      ? `${topProductsData.topProducts[0].pct}% del día`
+                      : "Sin ventas hoy"
+                }
+                icon={TrendingUp}
+                colorScheme="blue"
+                chartType="line"
+                delay={0.55}
+              />
 
-                {isLoadingPaymentMethods && (
-                  <div className="py-8 text-center text-slate-400 text-sm flex-1 flex items-center justify-center">
-                    Cargando métodos de pago...
-                  </div>
-                )}
-
-                {!isLoadingPaymentMethods &&
-                  paymentMethodsData?.paymentMethods?.length === 0 && (
-                    <div className="py-8 text-center text-slate-400 text-sm flex-1 flex items-center justify-center">
-                      No hay transacciones registradas hoy
-                    </div>
-                  )}
-
-                {!isLoadingPaymentMethods &&
-                  paymentMethodsData?.paymentMethods?.map((p, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-4 py-1 text-xs"
-                    >
-                      <span className="w-32 font-semibold text-slate-700 truncate min-w-0">
-                        {p.name}
-                      </span>
-                      <div className="flex-1 flex items-center">
-                        <div
-                          className="h-3.5 bg-[#478299] rounded-r-md"
-                          style={{ width: `${Math.max(p.pct, 1)}%` }}
-                        />
-                        <span className="text-slate-600 font-bold ml-2 w-10 shrink-0">
-                          {p.pct}%
-                        </span>
-                      </div>
-                      <span className="font-semibold text-slate-600 w-20 text-right shrink-0">
-                        ${p.money.toLocaleString("es-AR")}
-                      </span>
-                    </div>
-                  ))}
-              </div>
-              <div className="p-4 border-t border-slate-100 flex items-center justify-between mt-auto">
-                <span className="text-slate-600 font-semibold text-sm">
-                  Total transacciones:{" "}
-                  {isLoadingPaymentMethods
+              <StatCard
+                title="Productos vendidos"
+                value={
+                  isLoadingTopProducts
                     ? "..."
-                    : paymentMethodsData?.totalTransacciones || 0}
-                </span>
-                <Link
-                  href="/caja"
-                  className="px-3 py-1 bg-white border border-slate-200 text-slate-600 rounded-md text-xs font-semibold hover:bg-slate-50"
-                >
-                  Ver detalles
-                </Link>
-              </div>
+                    : topProductsData?.totalUnidades || 0
+                }
+                subtitle="Unidades hoy"
+                bottomText={
+                  isLoadingTopProducts ? "Cargando..." : "Top 10 del día"
+                }
+                icon={ShoppingCart}
+                colorScheme="red"
+                chartType="bar"
+                delay={0.6}
+              />
+
+              <StatCard
+                title="Alertas"
+                value={
+                  isLoadingLowStock ? "..." : lowStockData?.totalCount || 0
+                }
+                subtitle="Criticas de stock"
+                bottomText={
+                  isLoadingLowStock ? "Cargando..." : "Revisión rápida"
+                }
+                icon={AlertTriangle}
+                colorScheme="orange"
+                chartType="none"
+                delay={0.65}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_12px_32px_rgba(15,23,42,0.04)] backdrop-blur-sm">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-slate-700">
+                Comprobantes
+              </h2>
+              {infoBadge(
+                "Datos operativos de facturación y estado de emisión en el sistema actual.",
+              )}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard
+                title="Emitidas"
+                value={summaryData?.todaySales?.transactions || 0}
+                subtitle="Facturas / ventas"
+                bottomText={isLoading ? "Cargando..." : "En el día"}
+                icon={ShoppingCart}
+                colorScheme="green"
+                chartType="bar"
+                delay={0.7}
+              />
+
+              <StatCard
+                title="Pendientes"
+                value={0}
+                subtitle="Sin emisión"
+                bottomText="ARCA / emisión"
+                icon={AlertTriangle}
+                colorScheme="orange"
+                chartType="none"
+                delay={0.75}
+              />
+
+              <StatCard
+                title="Rechazadas"
+                value={0}
+                subtitle="Con observación"
+                bottomText="Ver detalle en AFIP"
+                icon={AlertTriangle}
+                colorScheme="red"
+                chartType="none"
+                delay={0.8}
+              />
+
+              <StatCard
+                title="Estado"
+                value={"OK"}
+                subtitle="Sistema actual"
+                bottomText="Conexión operativa"
+                icon={TrendingUp}
+                colorScheme="blue"
+                chartType="line"
+                delay={0.85}
+              />
             </div>
           </div>
         </div>

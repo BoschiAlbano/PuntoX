@@ -106,7 +106,6 @@ function LoadingSkeleton() {
       {/* Main content skeleton */}
       <div className="px-3 pt-4 pb-3 sm:p-6 sm:pb-6 lg:p-8 lg:pb-8">
         <div className="max-w-4xl mx-auto flex flex-col gap-4 sm:gap-6">
-
           {/* Info cards grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {[1, 2].map((i) => (
@@ -187,7 +186,6 @@ function LoadingSkeleton() {
               ))}
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -308,12 +306,8 @@ export default function ComprobanteDetalleScreen({
         ),
         formasPago:
           selectedTicket.FormaPago?.map((fp: any) => ({
-            tipo:
-              Object.keys(TIPO_PAGO).find(
-                (key) =>
-                  TIPO_PAGO[key as keyof typeof TIPO_PAGO] === fp.TipoPago,
-              ) || "OTRO",
-            monto: Number(fp.Monto),
+            tipoPago: Number(fp.TipoPago ?? 0),
+            monto: Number(fp.Monto ?? 0),
           })) || [],
         pie: "Gracias por su compra!",
         arcaStatus: fe?.Estado,
@@ -356,7 +350,10 @@ export default function ComprobanteDetalleScreen({
                   size="sm"
                   variant="flat"
                   className="font-semibold shadow-sm cursor-default shrink-0"
-                  style={{ backgroundColor: tipoColor.bg, color: tipoColor.text }}
+                  style={{
+                    backgroundColor: tipoColor.bg,
+                    color: tipoColor.text,
+                  }}
                 >
                   {getTipoComprobanteLabel(selectedTicket.TipoComprobante)}
                 </Chip>

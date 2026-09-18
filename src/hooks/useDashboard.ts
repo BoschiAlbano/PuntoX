@@ -10,8 +10,16 @@ interface DashboardSummaryData {
   lowStock: {
     count: number;
   };
+  todayRevenue?: {
+    amount: number;
+    percentage: number;
+  };
   monthRevenue: {
     amount: number;
+    percentage: number;
+  };
+  todayClients?: {
+    count: number;
     percentage: number;
   };
   activeClients: {
@@ -53,47 +61,59 @@ interface LowStockData {
   }>;
 }
 
-const fetchDashboardSummary = async (signal?: AbortSignal): Promise<DashboardSummaryData> => {
+const fetchDashboardSummary = async (
+  signal?: AbortSignal,
+): Promise<DashboardSummaryData> => {
   const response = await fetch("/api/dashboard/summary", { signal });
-  
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || "Error al cargar el resumen del dashboard");
+    throw new Error(
+      errorData.error || "Error al cargar el resumen del dashboard",
+    );
   }
-  
+
   return response.json();
 };
 
-const fetchTopProducts = async (signal?: AbortSignal): Promise<TopProductsData> => {
+const fetchTopProducts = async (
+  signal?: AbortSignal,
+): Promise<TopProductsData> => {
   const response = await fetch("/api/dashboard/top-products", { signal });
-  
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || "Error al cargar productos más vendidos");
+    throw new Error(
+      errorData.error || "Error al cargar productos más vendidos",
+    );
   }
-  
+
   return response.json();
 };
 
-const fetchPaymentMethods = async (signal?: AbortSignal): Promise<PaymentMethodsData> => {
+const fetchPaymentMethods = async (
+  signal?: AbortSignal,
+): Promise<PaymentMethodsData> => {
   const response = await fetch("/api/dashboard/payment-methods", { signal });
-  
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error || "Error al cargar métodos de pago");
   }
-  
+
   return response.json();
 };
 
 const fetchLowStock = async (signal?: AbortSignal): Promise<LowStockData> => {
   const response = await fetch("/api/dashboard/low-stock", { signal });
-  
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || "Error al cargar productos con bajo stock");
+    throw new Error(
+      errorData.error || "Error al cargar productos con bajo stock",
+    );
   }
-  
+
   return response.json();
 };
 

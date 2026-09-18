@@ -26,6 +26,22 @@ interface TicketProps {
   } | null;
 }
 
+export const normalizeTicketItem = (item: any = {}) => ({
+  ...item,
+  Descripcion: item.Descripcion ?? item.descripcion ?? "Producto",
+  cantidad: Number(item.cantidad ?? item.Cantidad ?? 1),
+  precio: Number(item.precio ?? item.Precio ?? item.precioUnitario ?? 0),
+  subtotal: Number(item.subtotal ?? item.SubTotal ?? 0),
+});
+
+export const normalizeFormaPago = (formaPago: any = {}) => ({
+  ...formaPago,
+  tipoPago: Number(
+    formaPago.tipoPago ?? formaPago.TipoPago ?? formaPago.tipo ?? 0,
+  ),
+  monto: Number(formaPago.monto ?? formaPago.Monto ?? 0),
+});
+
 // ════════════════════════════════════════════════════════════════════════
 //  Helpers de texto — réplica del TicketPrinter de C#
 //  48mm imprimibles → ~28 caracteres por línea con Arial 11px
@@ -90,7 +106,16 @@ function buildAfipQrUrl(params: {
   cae: string;
   caeFchVto: string; // YYYYMMDD
 }): string {
-  const { cuit, puntoVenta, cbteNro, tipoCbte, importe, moneda, cae, caeFchVto } = params;
+  const {
+    cuit,
+    puntoVenta,
+    cbteNro,
+    tipoCbte,
+    importe,
+    moneda,
+    cae,
+    caeFchVto,
+  } = params;
 
   // Parsear fecha de vencimiento YYYYMMDD → YYYY-MM-DD
   const vto =
@@ -171,13 +196,14 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
       const ivaMap: Record<number, number> = {};
 
       const netItems = datosVenta.items.map((item) => {
-        const ivaRate = Number(item.Iva?.Porcentaje || 0);
+        const normalizedItem = normalizeTicketItem(item);
+        const ivaRate = Number(normalizedItem.Iva?.Porcentaje || 0);
         const div = 1 + ivaRate / 100;
-        const net = item.subtotal / div;
+        const net = normalizedItem.subtotal / div;
         netSubtotal += net;
-        const iva = item.subtotal - net;
+        const iva = normalizedItem.subtotal - net;
         ivaMap[ivaRate] = (ivaMap[ivaRate] || 0) + iva;
-        return { ...item, subtotal: net };
+        return { ...normalizedItem, subtotal: net };
       });
 
       const discountRate =
@@ -256,17 +282,18 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
 
       // ── Artículos (formato apilado como en C#) ─────────────────────
       calculatedData.items.forEach((item: any) => {
+        const normalizedItem = normalizeTicketItem(item);
         const precioUnit =
-          item.cantidad > 0 ? item.subtotal / item.cantidad : item.subtotal;
+          normalizedItem.cantidad > 0
+            ? normalizedItem.subtotal / normalizedItem.cantidad
+            : normalizedItem.subtotal;
 
-        // Línea(s) de descripción con word-wrap
-        const descLines = wrapWords(item.Descripcion || "");
+        const descLines = wrapWords(normalizedItem.Descripcion || "");
         descLines.forEach((l) => push(l));
 
-        // Línea: cant X $precio = $subtotal
         push(
           addLine(
-            `${fmtCant(item.cantidad)} X ${fmt(precioUnit)} = ${fmt(item.subtotal)}`,
+            `${fmtCant(normalizedItem.cantidad)} X ${fmt(precioUnit)} = ${fmt(normalizedItem.subtotal)}`,
           ),
         );
         push(addLine());
@@ -304,14 +331,15 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
       // ── Formas de pago ─────────────────────────────────────────────
       push(addLine("Pagos"));
       datosVenta.formasPago.forEach((p: any) => {
+        const normalizedPayment = normalizeFormaPago(p);
         push(
           addCenter(
             (() => {
-              const s = getNombrePago(p.tipoPago).toLowerCase();
+              const s = getNombrePago(normalizedPayment.tipoPago).toLowerCase();
               return s.charAt(0).toUpperCase() + s.slice(1);
             })() +
               ": " +
-              fmt(p.monto),
+              fmt(normalizedPayment.monto),
           ),
         );
       });
@@ -348,11 +376,7 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
 
     // ── Generar URL del QR de AFIP ─────────────────────────────────
     const afipQrUrl = useMemo(() => {
-      if (
-        !datosVenta?.cae ||
-        !datosVenta?.caeFchVto ||
-        !datosVenta?.cuitEmisor
-      )
+      if (!datosVenta?.cae || !datosVenta?.caeFchVto || !datosVenta?.cuitEmisor)
         return null;
 
       try {
@@ -431,36 +455,52 @@ export const TicketImpresion = forwardRef<HTMLDivElement, TicketProps>(
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              marginTop: "6px",
-              marginBottom: "4px",
-              padding: "4px 0",
+              justifyContent: "center",
+              marginTop: "10px",
+              marginBottom: "6px",
+              padding: "8px 0 6px 0",
               borderTop: "1px dashed #000",
               borderBottom: "1px dashed #000",
+              width: "100%",
             }}
           >
             <p
               style={{
                 fontSize: "9px",
                 fontFamily: "Arial",
-                margin: "0 0 4px 0",
+                margin: "0 0 6px 0",
                 textAlign: "center",
                 color: "#000",
               }}
             >
               Verificá tu comprobante en AFIP
             </p>
-            <QRCodeSVG
-              value={afipQrUrl}
-              size={90}
-              bgColor="#ffffff"
-              fgColor="#000000"
-              level="M"
-            />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "100%",
+                padding: "4px 0",
+              }}
+            >
+              <QRCodeSVG
+                value={afipQrUrl}
+                size={124}
+                bgColor="#ffffff"
+                fgColor="#000000"
+                level="M"
+                style={{
+                  display: "block",
+                  margin: "0 auto",
+                }}
+              />
+            </div>
             <p
               style={{
                 fontSize: "8px",
                 fontFamily: "Arial",
-                margin: "4px 0 0 0",
+                margin: "6px 0 0 0",
                 textAlign: "center",
                 color: "#555",
               }}

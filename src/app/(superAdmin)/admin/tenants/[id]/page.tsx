@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Card,
   CardBody,
@@ -19,6 +19,8 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
+  Select,
+  SelectItem,
 } from "@heroui/react";
 import {
   Building2,
@@ -100,6 +102,7 @@ export default function TenantDetailPage() {
   const queryClient = useQueryClient();
   const tenantId = params.id as string;
   const [selectedTab, setSelectedTab] = useState("general");
+  const [selectedPlanId, setSelectedPlanId] = useState<string>("");
   const [passwordModal, setPasswordModal] = useState<{
     isOpen: boolean;
     usuarioId: number;
@@ -115,6 +118,25 @@ export default function TenantDetailPage() {
       return res.json();
     },
   });
+
+  const { data: plansData } = useQuery<{
+    data: { Id: number; Nombre: string; CostoMensual: number }[];
+  }>({
+    queryKey: ["admin-plans-options"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/planes?limit=100");
+      if (!res.ok) throw new Error("Error al cargar planes");
+      return res.json();
+    },
+  });
+
+  const availablePlans = useMemo(() => plansData?.data ?? [], [plansData]);
+
+  useEffect(() => {
+    if (tenant?.plan?.id && !selectedPlanId) {
+      setSelectedPlanId(String(tenant.plan.id));
+    }
+  }, [tenant, selectedPlanId]);
 
   // Users query
   const { data: usersData, isLoading: isLoadingUsers } = useQuery<{
@@ -170,11 +192,21 @@ export default function TenantDetailPage() {
 
   // Tenant action mutation
   const tenantActionMutation = useMutation({
-    mutationFn: async (action: string) => {
+    mutationFn: async ({
+      action,
+      planId,
+    }: {
+      action: string;
+      planId?: number;
+    }) => {
       const res = await fetch("/api/admin/tenants", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tenantId: Number(tenantId), action }),
+        body: JSON.stringify({
+          tenantId: Number(tenantId),
+          action,
+          ...(planId !== undefined && { planId }),
+        }),
       });
       if (!res.ok) {
         const error = await res.json();
@@ -190,6 +222,9 @@ export default function TenantDetailPage() {
       });
       queryClient.invalidateQueries({
         queryKey: ["admin-tenant", tenantId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["admin-tenants"],
       });
     },
     onError: (error: Error) => {
@@ -273,7 +308,9 @@ export default function TenantDetailPage() {
                 variant="flat"
                 size="sm"
                 startContent={<Lock className="w-4 h-4" />}
-                onPress={() => tenantActionMutation.mutate("deactivate")}
+                onPress={() =>
+                  tenantActionMutation.mutate({ action: "deactivate" })
+                }
                 isLoading={tenantActionMutation.isPending}
               >
                 Desactivar
@@ -284,7 +321,9 @@ export default function TenantDetailPage() {
                 variant="flat"
                 size="sm"
                 startContent={<Unlock className="w-4 h-4" />}
-                onPress={() => tenantActionMutation.mutate("activate")}
+                onPress={() =>
+                  tenantActionMutation.mutate({ action: "activate" })
+                }
                 isLoading={tenantActionMutation.isPending}
               >
                 Activar
@@ -297,7 +336,7 @@ export default function TenantDetailPage() {
                 size="sm"
                 startContent={<CheckCircle2 className="w-4 h-4" />}
                 onPress={() =>
-                  tenantActionMutation.mutate("completeOnboarding")
+                  tenantActionMutation.mutate({ action: "completeOnboarding" })
                 }
                 isLoading={tenantActionMutation.isPending}
               >
@@ -458,15 +497,66 @@ export default function TenantDetailPage() {
                 )}
                 <InfoRow
                   label="Vencimiento"
-                  value={tenant.fechaVencimiento ? new Date(tenant.fechaVencimiento).toLocaleDateString("es-AR") : "Sin vencimiento"}
+                  value={
+                    tenant.fechaVencimiento
+                      ? new Date(tenant.fechaVencimiento).toLocaleDateString(
+                          "es-AR",
+                        )
+                      : "Sin vencimiento"
+                  }
                   icon={<Clock className="w-3.5 h-3.5" />}
                 />
+                <div className="space-y-3 pt-2">
+                  <Select
+                    label="Cambiar plan"
+                    selectedKeys={
+                      selectedPlanId ? new Set([selectedPlanId]) : new Set()
+                    }
+                    onSelectionChange={(keys) => {
+                      const value = Array.from(keys)[0];
+                      setSelectedPlanId(value ? String(value) : "");
+                    }}
+                    placeholder="Seleccionar plan"
+                    size="sm"
+                    className="w-full"
+                  >
+                    {availablePlans.map((plan) => (
+                      <SelectItem key={String(plan.Id)} textValue={plan.Nombre}>
+                        {plan.Nombre} - $
+                        {plan.CostoMensual.toLocaleString("es-AR")}/mes
+                      </SelectItem>
+                    ))}
+                  </Select>
+
+                  <Button
+                    color="primary"
+                    variant="flat"
+                    size="sm"
+                    className="w-full"
+                    isDisabled={
+                      !selectedPlanId ||
+                      Number(selectedPlanId) === Number(tenant.plan?.id ?? 0)
+                    }
+                    onPress={() =>
+                      tenantActionMutation.mutate({
+                        action: "changePlan",
+                        planId: Number(selectedPlanId),
+                      })
+                    }
+                    isLoading={tenantActionMutation.isPending}
+                  >
+                    Guardar plan
+                  </Button>
+                </div>
+
                 <Button
                   color="primary"
-                  variant="flat"
+                  variant="light"
                   size="sm"
                   className="w-full mt-2"
-                  onPress={() => tenantActionMutation.mutate("renovar")}
+                  onPress={() =>
+                    tenantActionMutation.mutate({ action: "renovar" })
+                  }
                   isLoading={tenantActionMutation.isPending}
                 >
                   Renovar Suscripción (+30 días)
@@ -479,12 +569,15 @@ export default function TenantDetailPage() {
                 <InfoRow
                   label="Zona Horaria"
                   value={
-                    tenant.configuracion?.zonaHoraria || "America/Argentina/Buenos_Aires"
+                    tenant.configuracion?.zonaHoraria ||
+                    "America/Argentina/Buenos_Aires"
                   }
                 />
                 <Divider />
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600">2FA Obligatorio</span>
+                  <span className="text-sm text-slate-600">
+                    2FA Obligatorio
+                  </span>
                   <Chip
                     size="sm"
                     variant="flat"
@@ -607,25 +700,22 @@ export default function TenantDetailPage() {
                                   Bloqueado
                                 </Chip>
                               ) : (
-                                <Chip
-                                  size="sm"
-                                  variant="flat"
-                                  color="success"
-                                >
+                                <Chip size="sm" variant="flat" color="success">
                                   Activo
                                 </Chip>
                               )}
                             </td>
                             <td className="px-5 py-3 text-sm text-slate-600">
                               {user.ultimaActividad
-                                ? new Date(
-                                    user.ultimaActividad,
-                                  ).toLocaleString("es-AR", {
-                                    day: "2-digit",
-                                    month: "short",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })
+                                ? new Date(user.ultimaActividad).toLocaleString(
+                                    "es-AR",
+                                    {
+                                      day: "2-digit",
+                                      month: "short",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    },
+                                  )
                                 : "Sin actividad"}
                             </td>
                             <td className="px-5 py-3">
@@ -705,7 +795,8 @@ export default function TenantDetailPage() {
                       </tbody>
                     </table>
                   </div>
-                  {(!usersData?.usuarios || usersData.usuarios.length === 0) && (
+                  {(!usersData?.usuarios ||
+                    usersData.usuarios.length === 0) && (
                     <div className="text-center py-12 text-slate-500">
                       <Users className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                       <p>No hay usuarios en esta tienda</p>

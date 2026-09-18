@@ -24,7 +24,10 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get("status") || "todos";
     const plan = searchParams.get("plan") || "todos";
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "10")));
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(searchParams.get("limit") || "10")),
+    );
     const skip = (page - 1) * limit;
 
     // Construir where clause
@@ -66,6 +69,7 @@ export async function GET(req: NextRequest) {
         EstaActivo: true,
         OnboardingCompleto: true,
         PlanId: true,
+        FechaVencimiento: true,
         Plan: {
           select: {
             Nombre: true,
@@ -155,6 +159,11 @@ export async function GET(req: NextRequest) {
           ? "cancelado"
           : "pendiente";
       const configuracion = tenant.Configuraciones[0];
+      const planExpirationStatus = tenant.FechaVencimiento
+        ? tenant.FechaVencimiento < new Date()
+          ? "vencido"
+          : "al_dia"
+        : "sin_vencimiento";
 
       return {
         id: Number(tenant.Id),
@@ -164,6 +173,8 @@ export async function GET(req: NextRequest) {
         dominio: tenant.Dominio || "",
         status: status as "activo" | "pendiente" | "cancelado",
         plan: tenant.Plan?.Nombre || "Base",
+        fechaVencimiento: tenant.FechaVencimiento?.toISOString() || null,
+        planExpirationStatus,
         stores: 1, // Por ahora siempre 1, se puede calcular después
         admins: adminsCount,
         totalUsers: tenant._count.Usuarios,
@@ -188,6 +199,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       data: filteredTenants,
+      tenants: filteredTenants,
       pagination: {
         total: totalTenants,
         page,
@@ -216,7 +228,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { tenantId, action } = body;
+    const { tenantId, action, planId } = body;
 
     if (!tenantId || !action) {
       return NextResponse.json(
@@ -229,8 +241,23 @@ export async function PATCH(req: NextRequest) {
 
     const currentTenant = await prisma.tenant.findUnique({
       where: { Id: BigInt(tenantId) },
-      select: { FechaVencimiento: true }
+      select: {
+        FechaVencimiento: true,
+        PlanId: true,
+        Plan: {
+          select: {
+            Nombre: true,
+          },
+        },
+      },
     });
+
+    if (!currentTenant) {
+      return NextResponse.json(
+        { error: "Tenant no encontrado" },
+        { status: 404 },
+      );
+    }
 
     switch (action) {
       case "activate":
@@ -243,14 +270,54 @@ export async function PATCH(req: NextRequest) {
         updateData.OnboardingCompleto = true;
         break;
       case "renovar":
-        if (!currentTenant) return NextResponse.json({ error: "Tenant no encontrado" }, { status: 404 });
-        const baseDate = currentTenant.FechaVencimiento && currentTenant.FechaVencimiento > new Date() 
-          ? new Date(currentTenant.FechaVencimiento) 
-          : new Date();
+        const baseDate =
+          currentTenant.FechaVencimiento &&
+          currentTenant.FechaVencimiento > new Date()
+            ? new Date(currentTenant.FechaVencimiento)
+            : new Date();
         baseDate.setDate(baseDate.getDate() + 30);
         updateData.FechaVencimiento = baseDate;
-        updateData.EstaActivo = true; // Activar si estaba inactivo por falta de pago
+        updateData.EstaActivo = true;
         break;
+      case "changePlan": {
+        if (!planId) {
+          return NextResponse.json(
+            { error: "planId es requerido para cambiar el plan" },
+            { status: 400 },
+          );
+        }
+
+        const planIdNumber = Number(planId);
+        if (!Number.isInteger(planIdNumber) || planIdNumber <= 0) {
+          return NextResponse.json(
+            { error: "planId inválido" },
+            { status: 400 },
+          );
+        }
+
+        const selectedPlan = await prisma.planSaaS.findUnique({
+          where: { Id: BigInt(planIdNumber) },
+          select: { Id: true, Nombre: true },
+        });
+
+        if (!selectedPlan) {
+          return NextResponse.json(
+            { error: "Plan no encontrado" },
+            { status: 404 },
+          );
+        }
+
+        updateData.PlanId = BigInt(planIdNumber);
+        if (selectedPlan.Nombre !== "Plan Ilimitado") {
+          const nextDate = new Date();
+          nextDate.setDate(nextDate.getDate() + 30);
+          updateData.FechaVencimiento = nextDate;
+        } else {
+          updateData.FechaVencimiento = null;
+        }
+        updateData.EstaActivo = true;
+        break;
+      }
       default:
         return NextResponse.json(
           { error: "Acción no válida" },
@@ -586,7 +653,6 @@ export async function DELETE(req: NextRequest) {
       await tx.unidadMedida.deleteMany({
         where: { TenantId: tenantId },
       });
-
 
       // 38. Finalmente, eliminar el tenant
       await tx.tenant.delete({

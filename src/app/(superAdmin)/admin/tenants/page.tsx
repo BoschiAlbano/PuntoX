@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  AlertTriangle,
   Eye,
   Plus,
 } from "lucide-react";
@@ -39,6 +40,8 @@ type TenantSummary = {
   admins: number;
   totalUsers: number;
   onboardingCompleto: boolean;
+  fechaVencimiento: string | null;
+  planExpirationStatus: "al_dia" | "vencido" | "sin_vencimiento";
 };
 
 const statusConfig: Record<
@@ -92,6 +95,7 @@ function AdminTenantsContent() {
     { uid: "name", name: "Comercio", sortable: true },
     { uid: "status", name: "Estado", sortable: true },
     { uid: "plan", name: "Plan", sortable: true },
+    { uid: "suscripcion", name: "Suscripción", sortable: true },
     { uid: "usuarios", name: "Usuarios", sortable: true },
     { uid: "onboarding", name: "Onboarding", sortable: true },
     { uid: "ver", name: "Acciones", sortable: false, align: "center" as const },
@@ -133,6 +137,42 @@ function AdminTenantsContent() {
             {tenant.plan}
           </Chip>
         );
+      case "suscripcion": {
+        const expirationLabel = tenant.fechaVencimiento
+          ? new Date(tenant.fechaVencimiento).toLocaleDateString("es-AR")
+          : "Sin vencimiento";
+
+        if (tenant.planExpirationStatus === "sin_vencimiento") {
+          return (
+            <Chip color="primary" variant="flat" size="sm">
+              Sin vencimiento
+            </Chip>
+          );
+        }
+
+        return (
+          <Tooltip content={`Vencimiento: ${expirationLabel}`}>
+            <Chip
+              color={
+                tenant.planExpirationStatus === "vencido" ? "danger" : "success"
+              }
+              variant="flat"
+              size="sm"
+              startContent={
+                tenant.planExpirationStatus === "vencido" ? (
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                ) : (
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                )
+              }
+            >
+              {tenant.planExpirationStatus === "vencido"
+                ? `Vencida · ${expirationLabel}`
+                : `Al día · ${expirationLabel}`}
+            </Chip>
+          </Tooltip>
+        );
+      }
       case "usuarios":
         return (
           <div className="flex items-center gap-2">

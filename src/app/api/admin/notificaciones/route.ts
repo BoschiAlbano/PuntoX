@@ -5,16 +5,30 @@ import { handleError } from "@/lib/errors/handler";
 
 export async function GET(req: NextRequest) {
   try {
-    const { isSuperAdmin, tenantId } = await getAuthContext({ req });
+    const { isSuperAdmin } = await getAuthContext({ req });
 
     if (!isSuperAdmin) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    // Obtener notificaciones no leídas para el TenantId actual
+    const superAdminProfile = await prisma.perfiles.findFirst({
+      where: {
+        Tipo: "SUPERADMIN" as any,
+        EstaEliminado: false,
+      },
+      select: { TenantId: true },
+    });
+
+    if (!superAdminProfile) {
+      return NextResponse.json(
+        { error: "No se encontró un perfil SuperAdmin" },
+        { status: 404 },
+      );
+    }
+
     const notificaciones = await prisma.notificacion.findMany({
       where: {
-        TenantId: BigInt(tenantId),
+        TenantId: superAdminProfile.TenantId,
         Leida: false,
       },
       orderBy: {

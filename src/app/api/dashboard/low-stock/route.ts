@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
 
     // Using raw query to compare columns (Stock <= StockMinimo)
     // Since ArticuloStock.StockMinimo can be null and inherit from Articulo, we coalesce.
+    // The minimum must be positive; zero/negative minimums are not considered low stock.
     const lowStockItems = await prisma.$queryRaw`
       SELECT 
         a."Id" as "ArticuloId",
@@ -35,6 +36,7 @@ export async function GET(req: NextRequest) {
       WHERE ast."TenantId" = ${tenantIdBigInt}
         AND ast."SucursalId" = ${sucursalIdBigInt}
         AND a."EstaEliminado" = false
+        AND COALESCE(ast."StockMinimo", a."StockMinimo", 0) > 0
         AND ast."Stock" <= COALESCE(ast."StockMinimo", a."StockMinimo", 0)
       ORDER BY ast."Stock" ASC
       LIMIT 50
