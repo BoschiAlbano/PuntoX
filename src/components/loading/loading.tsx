@@ -1,72 +1,59 @@
 "use client";
-import { PuntoXLogo } from "../ui/PuntoXLogo";
 
-function LoadingSpinner({ message }: { message?: string }) {
+import Image from "next/image";
+
+interface LoadingViewProps {
+  message?: string;
+  className?: string;
+}
+
+/**
+ * Vista centralizada y unificada de loading para autenticación y cargas de aplicación.
+ * Utiliza el isotipo oficial de PuntoX con una respiración sutil (0.96 -> 1 -> 0.96).
+ */
+export function AuthLoadingView({
+  message = "Cargando...",
+  className = "",
+}: LoadingViewProps) {
   return (
-    <section className="min-h-75 h-full w-full bg-transparent flex flex-col items-center justify-center gap-2">
-      <PuntoXLogo spinner />
-      <p className="text-slate-600 font-medium tracking-wide">{message}</p>
-    </section>
+    <div
+      className={`flex flex-col items-center justify-center text-center select-none relative ${className}`}
+    >
+      {/* Halo ambiental suave que acompaña la respiración */}
+      <div
+        className="absolute w-32 h-32 bg-[#006AFC]/8 rounded-full blur-2xl pointer-events-none"
+        aria-hidden="true"
+      />
+
+      {/* Isotipo oficial con respiración sutil */}
+      <div className="relative w-16 h-14 sm:w-18 sm:h-16 flex items-center justify-center animate-puntox-breathe">
+        <Image
+          src="/brand/puntox-isotipo.png"
+          alt="PuntoX"
+          width={64}
+          height={54}
+          className="object-contain"
+          priority
+        />
+      </div>
+
+      {/* Texto de estado */}
+      {message && (
+        <p className="text-sm font-semibold text-slate-700 tracking-tight mt-5">
+          {message}
+        </p>
+      )}
+
+      {/* Línea de progreso sutil con colores de marca */}
+      <div className="w-28 h-1 bg-slate-200/60 rounded-full overflow-hidden mt-3.5">
+        <div className="h-full bg-linear-to-r from-[#006AFC] via-[#00B9D8] to-[#FC6A01] rounded-full w-full opacity-85 motion-safe:animate-pulse" />
+      </div>
+    </div>
   );
-  // return (
-  //   <motion.div
-  //     initial={{ opacity: 0, scale: 0.95 }}
-  //     animate={{ opacity: 1, scale: 1 }}
-  //     transition={{ duration: 0.5, ease: "easeOut" }}
-  //     className="text-center flex flex-col items-center"
-  //   >
-  //     <div className="relative w-24 h-24 mb-6 flex items-center justify-center">
-  //       {/* Glow de fondo */}
-  //       <div className="absolute inset-0  rounded-full blur-xl animate-pulse" />
+}
 
-  //       {/* Anillo giratorio principal */}
-  //       <motion.div
-  //         animate={{ rotate: 360 }}
-  //         transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-  //         className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-[#67afc3] border-r-[#2dd4bf]"
-  //       />
-
-  //       {/* Anillo giratorio secundario (inverso) */}
-  //       <motion.div
-  //         animate={{ rotate: -360 }}
-  //         transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
-  //         className="absolute inset-2 rounded-full border-[3px] border-transparent border-b-[#67afc3]/50 border-l-[#2dd4bf]/50"
-  //       />
-
-  //       {/* Contenedor central Glassmorphism */}
-  //       <PuntoXLogo spinner />
-  //     </div>
-
-  //     {message && (
-  //       <motion.div
-  //         initial={{ opacity: 0, y: 10 }}
-  //         animate={{ opacity: 1, y: 0 }}
-  //         transition={{ delay: 0.2 }}
-  //         className="flex flex-col items-center gap-3"
-  //       >
-  //         <p className="text-slate-600 font-medium tracking-wide">{message}</p>
-  //         {/* Puntos de carga animados */}
-  //         <div className="flex gap-1.5">
-  //           <motion.div
-  //             animate={{ y: [0, -4, 0] }}
-  //             transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
-  //             className="w-1.5 h-1.5 rounded-full bg-[#67afc3]"
-  //           />
-  //           <motion.div
-  //             animate={{ y: [0, -4, 0] }}
-  //             transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
-  //             className="w-1.5 h-1.5 rounded-full bg-[#67afc3]"
-  //           />
-  //           <motion.div
-  //             animate={{ y: [0, -4, 0] }}
-  //             transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
-  //             className="w-1.5 h-1.5 rounded-full bg-[#2dd4bf]"
-  //           />
-  //         </div>
-  //       </motion.div>
-  //     )}
-  //   </motion.div>
-  // );
+export function LoadingSpinner({ message }: { message?: string }) {
+  return <AuthLoadingView message={message} />;
 }
 
 export function LoadingPage({
@@ -75,10 +62,8 @@ export function LoadingPage({
   message?: string;
 }) {
   return (
-    <div className="min-h-screen bg-slate-50/50 flex items-center justify-center relative overflow-hidden">
-      <div className="relative z-10 flex flex-col items-center justify-center">
-        <LoadingSpinner message={message} />
-      </div>
+    <div className="min-h-screen w-full bg-[#F6FAFC] flex items-center justify-center relative overflow-hidden">
+      <AuthLoadingView message={message} />
     </div>
   );
 }
@@ -90,7 +75,7 @@ export function LoadingComponent({
 }) {
   return (
     <div className="min-h-75 h-full w-full bg-transparent flex items-center justify-center">
-      <LoadingSpinner message={message} />
+      <AuthLoadingView message={message} />
     </div>
   );
 }

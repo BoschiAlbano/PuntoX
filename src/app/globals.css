@@ -538,22 +538,47 @@ body {
   transform: translateZ(0);
 }
 
-/* Respetar preferencias de accesibilidad (prefers-reduced-motion) */
-/* @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+/* Respetar preferencias de accesibilidad y animaciones */
+@keyframes puntox-breathe {
+  0%, 100% {
+    transform: scale(0.96);
+    opacity: 0.90;
   }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
 
-  .parallax-bg {
-    animation: none !important;
-  }
+.animate-puntox-breathe {
+  animation: puntox-breathe 1.8s ease-in-out infinite;
+}
 
-  [data-slot="base"],
-  [data-slot="wrapper"] {
-    will-change: auto;
+@keyframes puntox-indeterminate {
+  0% {
+    transform: translateX(-100%);
   }
-} */
+  50% {
+    transform: translateX(40%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+.animate-puntox-indeterminate {
+  animation: puntox-indeterminate 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-puntox-breathe {
+    animation: none;
+    transform: scale(1);
+    opacity: 1;
+  }
+  .animate-puntox-indeterminate {
+    animation: none;
+    transform: none;
+    width: 100% !important;
+  }
+}

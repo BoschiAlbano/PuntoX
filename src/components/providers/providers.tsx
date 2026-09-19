@@ -7,6 +7,7 @@ import { I18nProvider } from "@react-aria/i18n";
 import React from "react";
 import QueryProvider from "../tanstack/QueryProvider";
 import SessionProviderComponent from "../auth/sessionProvider";
+import { AuthTransitionProvider } from "../auth/AuthTransitionContext";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -18,7 +19,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <HeroUIProvider disableAnimation={false}>
         <QueryProvider>
           <I18nProvider locale="es-AR">
-            <SessionProviderComponent>{children}</SessionProviderComponent>
+            <SessionProviderComponent>
+              <AuthTransitionProvider>{children}</AuthTransitionProvider>
+            </SessionProviderComponent>
           </I18nProvider>
         </QueryProvider>
       </HeroUIProvider>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useUserStore } from "@/store/useUserStore";
 import ProtectRoute from "@/components/auth/ProtectRoute";
-import { LoadingPage } from "@/components/loading/loading";
+import { useAuthTransition } from "@/components/auth/AuthTransitionContext";
 import { redirect, usePathname } from "next/navigation";
 import Sidebar from "@/components/dashboard/Sidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
@@ -26,6 +26,7 @@ export default function DashboardLayout({
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [show, setShow] = useState(true);
   const pathname = usePathname();
+  const { startVerifying, resetTransition } = useAuthTransition();
 
   useEffect(() => {
     initialize();
@@ -42,8 +43,17 @@ export default function DashboardLayout({
     };
   }, [initialize]);
 
+  // Coordinar estado del overlay global de autenticación
+  useEffect(() => {
+    if (isLoading && !isInitialized) {
+      startVerifying();
+    } else if (isInitialized) {
+      resetTransition();
+    }
+  }, [isLoading, isInitialized, startVerifying, resetTransition]);
+
   if (isLoading && !isInitialized) {
-    return <LoadingPage message="Verificando autenticación..." />;
+    return <div className="min-h-screen w-full bg-[#F6FAFC]" />;
   }
 
   // Verificar si el Onboarding está incompleto y redirigir

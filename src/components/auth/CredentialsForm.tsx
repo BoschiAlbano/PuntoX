@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
-import { User, Lock, Eye, EyeOff, Shield } from "lucide-react";
+import { Eye, EyeOff, Shield } from "lucide-react";
+import { useAuthTransition } from "./AuthTransitionContext";
 
 // Función para mapear errores de Supabase a mensajes específicos
 const getErrorMessage = (error: unknown): string => {
@@ -75,11 +76,40 @@ export default function CredentialsForm() {
   const [mfaCode, setMfaCode] = useState("");
   const [factorId, setFactorId] = useState("");
   const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const { startSigningIn, startVerifying, resetTransition } =
+    useAuthTransition();
+
+  const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Limpiar timer al desmontar el componente
+  useEffect(() => {
+    return () => {
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Helper para cancelar el timer de loading
+  const clearLoadingTimer = () => {
+    if (loadingTimerRef.current) {
+      clearTimeout(loadingTimerRef.current);
+      loadingTimerRef.current = null;
+    }
+  };
+
+  // Helper para iniciar el timer de 250ms hacia la fase global "signing-in"
+  const startDelayedLoadingTimer = () => {
+    clearLoadingTimer();
+    loadingTimerRef.current = setTimeout(() => {
+      startSigningIn();
+    }, 250);
+  };
 
   // Obtener callbackUrl de los parámetros de búsqueda
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
-
-  // Rate limiting por usuario: se evalúa en handleSubmit cuando ya conocemos el username
 
   // Validación de username en tiempo real
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,6 +146,7 @@ export default function CredentialsForm() {
     }
 
     setIsLoading(true);
+    startDelayedLoadingTimer();
 
     try {
       // Primero, obtener el email interno por username
@@ -166,8 +197,11 @@ export default function CredentialsForm() {
               throw new Error("ACCOUNT_BLOCKED");
             }
           }
-        } catch (intentoErr: any) {
-          if (intentoErr?.message === "ACCOUNT_BLOCKED") {
+        } catch (intentoErr: unknown) {
+          if (
+            intentoErr instanceof Error &&
+            intentoErr.message === "ACCOUNT_BLOCKED"
+          ) {
             throw intentoErr;
           }
         }
@@ -175,7 +209,7 @@ export default function CredentialsForm() {
         throw authError;
       }
 
-      // Login exitoso
+      // Login exitoso en Supabase
       setError("");
 
       // Verificar si requiere 2FA (MFA)
@@ -195,6 +229,8 @@ export default function CredentialsForm() {
               console.log(
                 "Login: Dispositivo confiable detectado, saltando 2FA.",
               );
+              clearLoadingTimer();
+              startVerifying();
               await processSuccessfulLogin(authData, normalizedUsername);
               return;
             }
@@ -213,24 +249,32 @@ export default function CredentialsForm() {
         if (!totpFactor) throw new Error("No se encontró factor TOTP activo");
 
         setFactorId(totpFactor.id);
+        clearLoadingTimer();
+        resetTransition();
         setShowMfa(true);
         setIsLoading(false);
         return; // Detenemos aquí, el usuario debe ingresar el código
       }
 
-      // Si no requiere 2FA, procesar como login exitoso normal
+      // Si no requiere 2FA, pasar a fase "verifying" y procesar login exitoso
+      clearLoadingTimer();
+      startVerifying();
       await processSuccessfulLogin(authData, normalizedUsername);
     } catch (err) {
       console.error("Error al iniciar sesion:", err);
+      clearLoadingTimer();
+      resetTransition();
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
     } finally {
-      if (!showMfa) setIsLoading(false);
+      if (!showMfa) {
+        setIsLoading(false);
+      }
     }
   };
 
   const processSuccessfulLogin = async (
-    authData: any,
+    authData: { user?: { id: string; email?: string } | null; session?: { access_token?: string } | null },
     normalizedUsername: string,
   ) => {
     // Login exitoso - registrar intento exitoso y sesión
@@ -238,10 +282,15 @@ export default function CredentialsForm() {
       // Obtener información del dispositivo
       let dispositivo = "Dispositivo desconocido";
       try {
-        const nav = navigator as any;
+        const nav = navigator as unknown as {
+          userAgentData?: {
+            platform?: string;
+            brands?: Array<{ brand: string }>;
+          };
+        };
         if (nav.userAgentData) {
           dispositivo = `${nav.userAgentData.platform || "Unknown"} - ${
-            nav.userAgentData.brands?.map((b: any) => b.brand).join(", ") ||
+            nav.userAgentData.brands?.map((b) => b.brand).join(", ") ||
             "Unknown"
           }`;
         } else {
@@ -256,7 +305,6 @@ export default function CredentialsForm() {
       // Intentar obtener ubicación aproximada (opcional, no bloqueante)
       let ubicacion = null;
       try {
-        // Esto es opcional y puede fallar, no bloqueamos si falla
         const geo = await fetch("https://ipapi.co/json/")
           .then((r) => r.json())
           .catch(() => null);
@@ -283,9 +331,6 @@ export default function CredentialsForm() {
       }
 
       // ── INHIBIR REGISTRO DUPLICADO EN sessionProvider ──────────────────────
-      // El evento SIGNED_IN del sessionProvider también llama a /api/auth/registrar-sesion.
-      // Para evitar dos INSERTs simultáneos, activamos su cooldown de 5 min ANTES
-      // de que llegue ese evento. El sessionProvider respeta el cooldown y lo saltea.
       const SESSION_REGISTER_KEY = `session_registered_${authData.user.id}`;
       localStorage.setItem(SESSION_REGISTER_KEY, String(Date.now()));
       // ───────────────────────────────────────────────────────────────────────
@@ -315,13 +360,13 @@ export default function CredentialsForm() {
       }
     }
 
-    // Redirigir después de login exitoso
+    // Redirigir mediante Next.js router SPA para mantener montado el layout y overlay continuo
     const safeCallbackUrl =
       callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
         ? callbackUrl
         : "/dashboard";
 
-    window.location.href = safeCallbackUrl;
+    router.replace(safeCallbackUrl);
   };
 
   const handleMfaSubmit = async (e: React.FormEvent) => {
@@ -334,10 +379,11 @@ export default function CredentialsForm() {
     }
 
     setIsLoading(true);
+    startDelayedLoadingTimer();
 
     try {
       const supabase = getSupabaseBrowserClient();
-      const { data: verifyData, error: verifyError } =
+      const { error: verifyError } =
         await supabase.auth.mfa.challengeAndVerify({
           factorId,
           code: mfaCode,
@@ -353,9 +399,13 @@ export default function CredentialsForm() {
         session: sessionData.session,
       };
 
+      clearLoadingTimer();
+      startVerifying();
       await processSuccessfulLogin(authData, username.trim().toLowerCase());
     } catch (err) {
       console.error("Error al verificar 2FA:", err);
+      clearLoadingTimer();
+      resetTransition();
       setError("Código incorrecto o expirado. Intenta de nuevo.");
       setIsLoading(false);
     }
@@ -365,16 +415,18 @@ export default function CredentialsForm() {
     return (
       <form onSubmit={handleMfaSubmit} className="space-y-5">
         <div className="text-center mb-6">
-          <Shield className="mx-auto h-12 w-12 text-[#67afc3] mb-3" />
-          <h3 className="text-xl font-bold text-slate-800">
+          <div className="w-12 h-12 rounded-full bg-[#006AFC]/10 text-[#006AFC] flex items-center justify-center mx-auto mb-3">
+            <Shield className="h-6 w-6" aria-hidden="true" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
             Autenticación de dos pasos
-          </h3>
-          <p className="text-sm text-slate-500 mt-2">
+          </h2>
+          <p className="text-sm text-slate-500 mt-2 leading-relaxed">
             Ingresa el código de 6 dígitos generado por tu aplicación
             autenticadora (ej. Google Authenticator).
           </p>
           {recordarDispositivo && (
-            <p className="text-xs text-[#67afc3] mt-2 font-medium">
+            <p className="text-xs text-[#006AFC] mt-2 font-medium">
               Este dispositivo será recordado al verificar
             </p>
           )}
@@ -383,7 +435,7 @@ export default function CredentialsForm() {
         <div>
           <label
             htmlFor="mfaCode"
-            className="block text-sm font-medium text-slate-700 mb-1.5 text-center"
+            className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2 text-center"
           >
             Código de verificación
           </label>
@@ -399,13 +451,13 @@ export default function CredentialsForm() {
             required
             disabled={isLoading}
             autoComplete="one-time-code"
-            className="w-full text-center text-2xl tracking-[0.5em] font-mono py-4 border rounded-xl bg-slate-50/60 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#67afc3]/50 focus:border-[#67afc3]/50 transition-all"
+            className="w-full text-center text-2xl tracking-[0.4em] font-mono py-3.5 px-4 border border-slate-200 hover:border-slate-300 rounded-xl sm:rounded-lg bg-white text-slate-900 focus:outline-none focus:border-[#006AFC] focus:ring-4 focus:ring-[#006AFC]/10 transition-colors shadow-2xs"
             placeholder="000000"
           />
         </div>
 
         {error && (
-          <div className="text-red-700 text-sm bg-red-50 p-3 rounded-xl border border-red-200 text-center">
+          <div className="text-red-700 text-sm bg-red-50 p-3.5 rounded-xl sm:rounded-lg border border-red-200 text-center">
             {error}
           </div>
         )}
@@ -413,11 +465,7 @@ export default function CredentialsForm() {
         <button
           type="submit"
           disabled={isLoading || mfaCode.length !== 6}
-          className={`w-full bg-linear-to-r from-[#0284c7] to-[#2dd4bf] text-white py-3 px-4 rounded-xl focus:outline-none transition-all duration-200 font-semibold shadow-lg shadow-[#0284c7]/20 ${
-            isLoading || mfaCode.length !== 6
-              ? "opacity-60 cursor-not-allowed"
-              : "hover:shadow-xl hover:shadow-[#0284c7]/30 hover:brightness-110 active:scale-[0.98]"
-          }`}
+          className="w-full min-h-[48px] sm:min-h-[44px] bg-[#FC6A01] hover:bg-[#E65E00] active:bg-[#CC5300] text-white py-3 px-4 rounded-xl sm:rounded-lg font-semibold text-base sm:text-sm transition-all shadow-sm hover:shadow-md focus:outline-none focus:ring-4 focus:ring-[#FC6A01]/25 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
         >
           {isLoading ? "Verificando..." : "Verificar código"}
         </button>
@@ -427,13 +475,15 @@ export default function CredentialsForm() {
           onClick={async () => {
             const supabase = getSupabaseBrowserClient();
             await supabase.auth.signOut();
+            clearLoadingTimer();
+            resetTransition();
             setShowMfa(false);
             setUsername("");
             setPassword("");
             setMfaCode("");
             setError("");
           }}
-          className="w-full text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors py-2"
+          className="w-full text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors py-2 text-center"
         >
           Volver e iniciar sesión con otro usuario
         </button>
@@ -450,38 +500,39 @@ export default function CredentialsForm() {
         >
           Nombre de usuario
         </label>
-        <div className="relative">
-          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
-          <input
-            id="username"
-            type="text"
-            value={username}
-            onChange={handleUsernameChange}
-            onBlur={() => {
-              if (username && username.trim().length < 2) {
-                setUsernameError(
-                  "El nombre de usuario debe tener al menos 2 caracteres",
-                );
-              } else if (username) {
-                const trusted = localStorage.getItem(
-                  `device_trusted_${username.trim().toLowerCase()}`,
-                );
-                if (trusted === "true") {
-                  setRecordarDispositivo(true);
-                }
+        <input
+          id="username"
+          type="text"
+          value={username}
+          onChange={handleUsernameChange}
+          onBlur={() => {
+            if (username && username.trim().length < 2) {
+              setUsernameError(
+                "El nombre de usuario debe tener al menos 2 caracteres",
+              );
+            } else if (username) {
+              const trusted = localStorage.getItem(
+                `device_trusted_${username.trim().toLowerCase()}`,
+              );
+              if (trusted === "true") {
+                setRecordarDispositivo(true);
               }
-            }}
-            required
-            disabled={isLoading}
-            className={`w-full pl-10 pr-3 py-3 border rounded-xl bg-slate-50/60 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#67afc3]/50 focus:border-[#67afc3]/50 transition-all ${
-              usernameError ? "border-red-300 bg-red-50/50" : "border-slate-200"
-            } ${isLoading ? "opacity-60 cursor-not-allowed" : ""}`}
-            placeholder="juan"
-            autoComplete="username"
-          />
-        </div>
+            }
+          }}
+          required
+          disabled={isLoading}
+          className={`w-full px-4 py-3.5 sm:py-3 border rounded-xl sm:rounded-lg bg-white text-slate-900 text-base sm:text-sm placeholder:text-slate-400 focus:outline-none focus:border-[#006AFC] focus:ring-4 focus:ring-[#006AFC]/10 transition-colors shadow-2xs ${
+            usernameError
+              ? "border-red-400 bg-red-50/30"
+              : "border-slate-200 hover:border-slate-300"
+          } ${isLoading ? "opacity-60 cursor-not-allowed" : ""}`}
+          placeholder="juan"
+          autoComplete="username"
+        />
         {usernameError && (
-          <p className="mt-1.5 text-sm text-red-400">{usernameError}</p>
+          <p className="mt-1.5 text-xs text-red-600 font-medium">
+            {usernameError}
+          </p>
         )}
       </div>
 
@@ -493,7 +544,6 @@ export default function CredentialsForm() {
           Contraseña
         </label>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
           <input
             id="password"
             type={showPassword ? "text" : "password"}
@@ -504,43 +554,45 @@ export default function CredentialsForm() {
             }}
             required
             disabled={isLoading}
-            className={`w-full pl-10 pr-10 py-3 border border-slate-200 rounded-xl bg-slate-50/60 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#67afc3]/50 focus:border-[#67afc3]/50 transition-all ${
+            className={`w-full pl-4 pr-11 py-3.5 sm:py-3 border border-slate-200 hover:border-slate-300 rounded-xl sm:rounded-lg bg-white text-slate-900 text-base sm:text-sm placeholder:text-slate-400 focus:outline-none focus:border-[#006AFC] focus:ring-4 focus:ring-[#006AFC]/10 transition-colors shadow-2xs ${
               isLoading ? "opacity-60 cursor-not-allowed" : ""
             }`}
             placeholder="••••••••"
+            autoComplete="current-password"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
             tabIndex={-1}
+            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
           >
             {showPassword ? (
-              <EyeOff className="h-5 w-5" />
+              <EyeOff className="h-4 w-4" />
             ) : (
-              <Eye className="h-5 w-5" />
+              <Eye className="h-4 w-4" />
             )}
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="text-red-700 text-sm bg-red-50 p-3 rounded-xl border border-red-200">
+        <div className="text-red-700 text-sm bg-red-50 p-3.5 rounded-xl sm:rounded-lg border border-red-200">
           {error}
         </div>
       )}
 
-      <div className="flex items-center">
+      <div className="flex items-center pt-1 pb-1">
         <input
           id="recordar-dispositivo"
           type="checkbox"
           checked={recordarDispositivo}
           onChange={(e) => setRecordarDispositivo(e.target.checked)}
-          className="w-4 h-4 bg-white border-slate-300 rounded text-[#67afc3] focus:ring-[#67afc3]/50 focus:ring-offset-0"
+          className="w-4.5 h-4.5 rounded border-slate-300 text-[#006AFC] focus:ring-[#006AFC]/20 focus:ring-offset-0 cursor-pointer accent-[#006AFC]"
         />
         <label
           htmlFor="recordar-dispositivo"
-          className="ml-2 text-sm text-slate-500 cursor-pointer hover:text-slate-700 transition-colors"
+          className="ml-2.5 text-sm text-slate-600 cursor-pointer select-none hover:text-slate-900 transition-colors"
         >
           Recordar este dispositivo
         </label>
@@ -549,16 +601,16 @@ export default function CredentialsForm() {
       <button
         type="submit"
         disabled={isLoading || !!usernameError}
-        className={`w-full bg-linear-to-r from-[#0284c7] to-[#2dd4bf] text-white py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#67afc3]/50 focus:ring-offset-2 focus:ring-offset-white transition-all duration-200 font-semibold shadow-lg shadow-[#0284c7]/20 ${
+        className={`w-full min-h-[48px] sm:min-h-[44px] bg-[#FC6A01] hover:bg-[#E65E00] active:bg-[#CC5300] text-white py-3 px-4 rounded-xl sm:rounded-lg font-semibold text-base sm:text-sm transition-all shadow-sm hover:shadow-md focus:outline-none focus:ring-4 focus:ring-[#FC6A01]/25 ${
           isLoading || usernameError
             ? "opacity-60 cursor-not-allowed"
-            : "hover:shadow-xl hover:shadow-[#0284c7]/30 hover:brightness-110 active:scale-[0.98]"
+            : "cursor-pointer"
         }`}
       >
         {isLoading ? (
           <span className="flex items-center justify-center gap-2">
             <svg
-              className="animate-spin h-5 w-5 text-white"
+              className="animate-spin h-4 w-4 text-white"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
