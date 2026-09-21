@@ -15,14 +15,22 @@ vi.mock("next/image", () => ({
 }));
 
 describe("LandingNavbar", () => {
-  it("renderiza navbar con logo o nombre del proyecto", () => {
+  it("renderiza navbar con logo o nombre del proyecto y navegación", () => {
     render(<LandingNavbar />);
 
-    expect(screen.getByText("Punto X")).toBeInTheDocument();
-    expect(screen.getByText("Iniciar Sesión")).toBeInTheDocument();
+    // Branding oficial con BrandLockup
+    expect(screen.getByText("Punto")).toBeInTheDocument();
+    expect(screen.getByAltText("PuntoX")).toBeInTheDocument();
+
+    // Enlaces de navegación
     expect(screen.getByText("Características")).toBeInTheDocument();
     expect(screen.getByText("Testimonios")).toBeInTheDocument();
     expect(screen.getByText("Precios")).toBeInTheDocument();
     expect(screen.getByText("Contacto")).toBeInTheDocument();
+
+    // CTA de Iniciar Sesión con destino /signin
+    const signinLinks = screen.getAllByRole("link", { name: /iniciar sesión/i });
+    expect(signinLinks.length).toBeGreaterThan(0);
+    expect(signinLinks.some((link) => link.getAttribute("href") === "/signin")).toBe(true);
   });
 });
