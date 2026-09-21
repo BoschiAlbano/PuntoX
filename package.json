@@ -68,8 +68,5 @@
     "typescript": "^5.9.3",
     "vitest": "^4.0.16"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "packageManager": "pnpm@11.9.0"
 }
