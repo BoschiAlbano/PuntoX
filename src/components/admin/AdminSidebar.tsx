@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useMemo, memo, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Tooltip } from "@heroui/react";
 import {
   LayoutDashboard,
@@ -133,10 +134,12 @@ function AdminSidebarComponent({ isCollapsed, onClose }: AdminSidebarProps) {
         {/* Header */}
         <div className="w-full flex items-center justify-center px-4 py-4 h-15.5">
           <div className="flex h-7.5 w-full flex-row items-center gap-2">
-            <img
-              src="/logo.svg"
-              className="w-11 rounded-lg border border-[#67afc3]/40 p-1.5 shadow-sm shadow-[#67afc3]/30 transition-all duration-300 hover:rotate-345"
-              alt="logo.svg"
+            <Image
+              src="/brand/puntox-isotipo.png"
+              width={48}
+              height={40}
+              className="h-11 w-11 shrink-0 object-contain"
+              alt="Punto X"
             />
 
             <div
@@ -226,9 +229,7 @@ function AdminSidebarComponent({ isCollapsed, onClose }: AdminSidebarProps) {
                   {(!isSectionCollapsed || isCollapsed) && (
                     <motion.div
                       key={`items-${section.title}`}
-                      initial={
-                        isCollapsed ? false : { height: 0, opacity: 0 }
-                      }
+                      initial={isCollapsed ? false : { height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={isCollapsed ? undefined : { height: 0, opacity: 0 }}
                       transition={{ duration: 0.25, ease: "easeInOut" }}
@@ -236,7 +237,9 @@ function AdminSidebarComponent({ isCollapsed, onClose }: AdminSidebarProps) {
                     >
                       <div className="space-y-0.5">
                         {section.items.map((item) => {
-                          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                          const isActive =
+                            pathname === item.href ||
+                            pathname.startsWith(item.href + "/");
                           const handleNavigationTrigger = () => {
                             if (window.innerWidth < 768 && onClose) {
                               onClose();
@@ -306,9 +309,7 @@ function AdminSidebarComponent({ isCollapsed, onClose }: AdminSidebarProps) {
                             );
                           }
 
-                          return (
-                            <div key={item.href}>{linkContent}</div>
-                          );
+                          return <div key={item.href}>{linkContent}</div>;
                         })}
                       </div>
                     </motion.div>

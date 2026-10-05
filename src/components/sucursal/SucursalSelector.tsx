@@ -87,13 +87,13 @@ export default function SucursalSelector({
           ${
             isCollapsed
               ? "min-w-[56px] w-[56px] h-[44px] p-0 justify-center text-(--nav-item-icon) bg-transparent rounded-xl hover:bg-(--nav-item-hover-bg) hover:text-(--nav-item-hover-text) mx-auto"
-              : "w-full gap-2 text-(--nav-item-text) bg-transparent border border-(--nav-divider) px-4 py-5 rounded-xl hover:bg-(--nav-item-hover-bg) hover:text-(--nav-item-hover-text)"
+              : "w-full gap-2 text-(--nav-item-text) bg-white/10 border border-white/10 px-4 py-5 rounded-xl hover:bg-white/15 hover:text-white"
           }
         `}
         startContent={
           isCollapsed ? null : (
             <IconSucursal
-              className={`group-hover:text-[#5fa7b8] transition-colors ${isOpen ? "text-[#5fa7b8]" : ""}`}
+              className={`group-hover:text-[#66a3ff] transition-colors ${isOpen ? "text-[#66a3ff]" : ""}`}
             />
           )
         }
@@ -102,7 +102,7 @@ export default function SucursalSelector({
             <Spinner size="sm" />
           ) : (
             <ChevronDown
-              className={`h-4 w-4 group-hover:text-[#5fa7b8] transition-transform duration-300 ${isOpen ? "rotate-180 text-[#5fa7b8]" : "text-(--nav-item-icon)"}`}
+              className={`h-4 w-4 group-hover:text-[#66a3ff] transition-transform duration-300 ${isOpen ? "rotate-180 text-[#66a3ff]" : "text-(--nav-item-icon)"}`}
             />
           )
         }
@@ -110,7 +110,7 @@ export default function SucursalSelector({
       >
         {isCollapsed ? (
           <IconSucursal
-            className={`group-hover:text-[#5fa7b8] transition-colors ${isOpen ? "text-[#5fa7b8]" : ""}`}
+            className={`group-hover:text-[#66a3ff] transition-colors ${isOpen ? "text-[#66a3ff]" : ""}`}
           />
         ) : (
           <span className="truncate flex-1 text-left font-medium">
@@ -128,7 +128,7 @@ export default function SucursalSelector({
             transition={{ duration: 0.25, ease: "easeInOut" }}
             className={`overflow-hidden ${isCollapsed ? "px-0" : "px-0"} pt-1`}
           >
-            <div className="flex flex-col gap-1 bg-[#1D2F3F] rounded-xl border">
+            <div className="flex flex-col gap-1 rounded-xl border border-white/10 bg-[#252a2e] p-1">
               {sucursales.map((sucursal) => {
                 const isSelected = sucursalActiva?.Id === sucursal.Id;
                 return (
@@ -139,8 +139,8 @@ export default function SucursalSelector({
                       ${isCollapsed ? "justify-center w-11 h-11" : "px-3 py-1.5"}
                       ${
                         isSelected
-                          ? "bg-[#5fa7b8]/10 text-[#5fa7b8]"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
+                          ? "bg-[#0066ff] text-white"
+                          : "text-slate-200 hover:bg-white/10 hover:text-white"
                       }
                     `}
                     title={isCollapsed ? sucursal.Nombre : ""}
@@ -148,7 +148,7 @@ export default function SucursalSelector({
                     {!isCollapsed && (
                       <div className="shrink-0">
                         {isSelected ? (
-                          <Check className="h-4 w-4 text-[#5fa7b8]" />
+                          <Check className="h-4 w-4 text-white" />
                         ) : (
                           <IconSucursal className="w-4 h-4 text-slate-400 opacity-60" />
                         )}
@@ -166,7 +166,7 @@ export default function SucursalSelector({
                         >
                           {sucursal.Nombre}
                         </span>
-                        <span className="text-[10px] text-slate-500 truncate">
+                        <span className="text-[10px] text-slate-300 truncate">
                           {sucursal.EsPrincipal
                             ? "Casa Central"
                             : sucursal.Direccion || "Sin dirección"}

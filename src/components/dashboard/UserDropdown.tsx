@@ -19,7 +19,7 @@ import {
 } from "@/lib/auth/clearClientState";
 import { TIPO_PERFIL } from "@/lib/constants/comprobantes";
 
-const ACCENT = "#67afc3";
+const ACCENT = "#0066ff";
 
 export function UserDropdown() {
   const { user, roles } = useUserStore();
@@ -93,15 +93,15 @@ export function UserDropdown() {
       <DropdownTrigger>
         <button
           className="flex cursor-pointer items-center gap-2 rounded-lg py-1 pl-1 pr-2 sm:pr-3
-                     hover:bg-(--nav-btn-hover-bg) transition-all duration-200 group
-                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#67afc3]/50"
+                     hover:bg-(--header-btn-hover-bg) transition-all duration-200 group
+                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0066ff]/40"
           aria-label="Menú de perfil de usuario"
           aria-haspopup="true"
         >
           {/* Avatar */}
           <div
             className="relative flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold text-white
-                        shrink-0 shadow-sm ring-2 ring-white/10 group-hover:ring-[#67afc3]/30
+                        shrink-0 shadow-sm ring-2 ring-slate-200 group-hover:ring-[#0066ff]/30
                         transition-all duration-200 overflow-hidden"
             style={!fotoUrl || fotoError ? { backgroundColor: ACCENT } : {}}
             aria-hidden="true"
@@ -122,10 +122,10 @@ export function UserDropdown() {
 
           {/* Info usuario — md+ */}
           <div className="hidden md:flex flex-col items-start min-w-0">
-            <span className="text-[12.5px] font-semibold text-(--nav-logo-title) leading-tight truncate max-w-[130px]">
+            <span className="text-[12.5px] font-semibold text-(--header-text) leading-tight truncate max-w-[130px]">
               {displayName}
             </span>
-            <span className="text-[11px] text-(--nav-item-text) leading-tight truncate max-w-[130px]">
+            <span className="text-[11px] text-(--header-muted) leading-tight truncate max-w-[130px]">
               {displayRol}
             </span>
           </div>
@@ -133,7 +133,7 @@ export function UserDropdown() {
           {/* Chevron — md+ */}
           <ChevronDown
             size={13}
-            className="hidden md:block text-(--nav-btn-text) group-hover:text-(--nav-btn-hover-text)
+            className="hidden md:block text-(--header-btn-text) group-hover:text-(--header-btn-hover-text)
                        transition-colors duration-200 shrink-0 ml-0.5"
             strokeWidth={2.5}
             aria-hidden="true"
@@ -170,11 +170,21 @@ export function UserDropdown() {
         <DropdownItem
           key="superadmin_dashboard"
           startContent={<Shield size={16} className="text-slate-500" />}
-          textValue={pathname.startsWith("/admin") ? "Dashboard Tienda" : "Panel Superadmin"}
-          onPress={() => router.push(pathname.startsWith("/admin") ? "/dashboard" : "/admin/dashboard")}
+          textValue={
+            pathname.startsWith("/admin")
+              ? "Dashboard Tienda"
+              : "Panel Superadmin"
+          }
+          onPress={() =>
+            router.push(
+              pathname.startsWith("/admin") ? "/dashboard" : "/admin/dashboard",
+            )
+          }
           className={isSuperAdmin ? "" : "hidden"}
         >
-          {pathname.startsWith("/admin") ? "Dashboard Tienda" : "Panel Superadmin"}
+          {pathname.startsWith("/admin")
+            ? "Dashboard Tienda"
+            : "Panel Superadmin"}
         </DropdownItem>
 
         <DropdownItem

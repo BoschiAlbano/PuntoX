@@ -722,9 +722,9 @@ export default function GenericTable<T extends { Id: number | string }>({
 
   return (
     <section className="w-full min-w-0 min-h-0 flex flex-col gap-4 flex-1">
-      <div className="rounded-lg flex flex-col gap-4 bg-[#F5F8FD] w-full min-w-0 min-h-0 flex-1">
+      <div className="rounded-lg flex flex-col gap-4  w-full min-w-0 min-h-0 flex-1">
         {/* Barra de herramientas: mobile = búsqueda + refresh + más opciones */}
-        <section className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-2 sm:p-4 rounded-xl bg-[#F5F8FD]">
+        <section className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-2 sm:p-4 rounded-xl ">
           {/* Búsqueda + Refresh + Más opciones (mobile) */}
           <div className="w-full sm:flex-1 sm:min-w-0 order-1 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
             <div className="flex items-center sm:gap-2 gap-1.25 flex-1 min-w-0 sm:max-w-120">
@@ -893,7 +893,7 @@ export default function GenericTable<T extends { Id: number | string }>({
         {/* Barra de selección masiva eliminada — acciones movidas al menú "Más opciones" */}
 
         {/* Table/Cards + Pagination */}
-        <div className="w-full min-w-0 flex flex-col rounded-xl bg-[#F5F8FD] flex-1">
+        <div className="w-full min-w-0 flex flex-col rounded-xl flex-1">
           <div className="w-full overflow-x-auto overflow-y-auto flex-1 min-h-0">
             {viewMode === "cards" && renderCards ? (
               isLoading ? (
@@ -956,13 +956,13 @@ export default function GenericTable<T extends { Id: number | string }>({
                     // Disable row-click selection: only the checkbox should trigger it
                     onRowAction: () => {},
                   })}
-                className="bg-[#F5F8FD] border-none min-h-full"
+                className="border-none min-h-full"
                 checkboxesProps={{
                   classNames: { wrapper: "table-cb-accent" },
                 }}
                 classNames={{
                   wrapper:
-                    "bg-[#F5F8FD] shadow-none border-none sm:p-4 p-0 min-h-full flex flex-col",
+                    "shadow-none border-none sm:p-4 p-0 min-h-full flex flex-col",
                   th: "bg-[var(--crud-accent)] text-white text-[11px] sm:text-[13px] font-semibold border-b border-slate-200/60 px-2 sm:px-4 whitespace-nowrap",
                   base: "bg-transparent shadow-none border-none flex-1",
                   td: "border-b border-slate-200/80 text-slate-800 text-[12px] sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2.5 whitespace-nowrap",
@@ -1092,7 +1092,7 @@ export default function GenericTable<T extends { Id: number | string }>({
               </Table>
             )}
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-2 sm:p-4 bg-[#F5F8FD] rounded-b-xl print:hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-2 sm:p-4 rounded-b-xl print:hidden">
             {isLoading ? (
               <section className="relative w-full flex flex-col sm:gap-0 gap-2 items-center">
                 <div className="flex gap-2">

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Quote, Star } from "lucide-react";
+import { LandingReveal } from "@/components/landing/LandingReveal";
 
 // Duplicamos la data para que el efecto marquee sea continuo sin cortes
 const testimonialsData = [
@@ -28,98 +29,68 @@ const testimonialsData = [
   },
 ];
 
-const testimonials = [...testimonialsData, ...testimonialsData]; // Duplicado para loop
-
 export const LandingTestimonials = () => {
   return (
     <section
       id="testimonials"
-      className="py-24 bg-slate-50 text-slate-900 overflow-hidden relative"
+      className="relative bg-landing-surface-low py-20 text-landing-on-surface sm:py-24"
     >
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-4xl md:text-5xl font-extrabold mb-6"
-          >
-            Lo que dicen nuestros{" "}
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-[#67afc3] to-[#4a6fa5]">
-              clientes
-            </span>
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-lg text-slate-500"
-          >
-            Descubre por qué cientos de negocios eligen Punto X para gestionar
-            su crecimiento día a día.
-          </motion.p>
+      <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-12">
+        <div className="mx-auto mb-12 max-w-3xl text-center">
+          <LandingReveal mode="view">
+            <motion.h2 className="mb-5 text-3xl font-extrabold text-landing-on-surface sm:text-4xl">
+              Lo que dicen nuestros{" "}
+              <span className="text-landing-primary-container">clientes</span>
+            </motion.h2>
+          </LandingReveal>
+          <LandingReveal mode="view" delay={0.1}>
+            <p className="text-base leading-7 text-landing-on-surface-variant sm:text-lg">
+              Descubre por qué cientos de negocios eligen Punto X para gestionar
+              su crecimiento día a día.
+            </p>
+          </LandingReveal>
         </div>
       </div>
 
-      {/* Marquee Wrapper */}
-      <div className="relative w-full max-w-7xl mx-auto px-4 group">
-        {/* Gradient fades for edges */}
-        <div className="absolute top-0 bottom-0 left-0 w-32 bg-linear-to-r from-slate-50 to-transparent z-20 pointer-events-none" />
-        <div className="absolute top-0 bottom-0 right-0 w-32 bg-linear-to-l from-slate-50 to-transparent z-20 pointer-events-none" />
-
-        <div className="flex overflow-hidden relative">
-          <motion.div
-            animate={{ x: [0, -1035] }} // Adjust depending on card width + gap. (345px * 3 = 1035px)
-            transition={{
-              x: {
-                repeat: Infinity,
-                repeatType: "loop",
-                duration: 20,
-                ease: "linear",
-              },
-            }}
-            className="flex gap-6 py-4 px-2 hover:[animation-play-state:paused]"
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-5 px-6 md:grid-cols-3 lg:gap-6 lg:px-12">
+        {testimonialsData.map((testimonial) => (
+          <LandingReveal
+            key={testimonial.name}
+            delay={0.08}
+            className="relative flex flex-col justify-between rounded-xl bg-landing-surface-lowest p-6 transition-shadow hover:shadow-[0_16px_36px_-18px_rgba(15,23,42,0.16)] sm:p-7"
           >
-            {testimonials.map((testimonial, index) => (
-              <div
-                key={index}
-                className="w-[320px] md:w-[400px] shrink-0 p-8 rounded-3xl bg-white/60 backdrop-blur-md border border-slate-200/60 relative hover:border-[#67afc3]/40 transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-[0_15px_30px_-10px_rgba(103,175,195,0.2)]"
-              >
-                <div className="absolute top-6 right-8 text-[#67afc3]/10 transition-colors">
-                  <Quote className="w-12 h-12" />
-                </div>
+            <div className="absolute top-6 right-8 text-landing-primary-container/10 transition-colors">
+              <Quote className="w-12 h-12" />
+            </div>
 
-                <div className="flex gap-1 mb-6">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className="w-5 h-5 fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"
-                    />
-                  ))}
-                </div>
+            <div className="flex gap-1 mb-6">
+              {[...Array(testimonial.rating)].map((_, i) => (
+                <Star
+                  key={i}
+                  className="h-5 w-5 fill-amber-500 text-amber-500"
+                />
+              ))}
+            </div>
 
-                <blockquote className="text-slate-600 mb-8 relative z-10 text-base leading-relaxed h-32 overflow-hidden">
-                  {testimonial.content}
-                </blockquote>
+            <blockquote className="relative z-10 mb-8 text-sm leading-6 text-landing-on-surface-variant sm:text-base">
+              {testimonial.content}
+            </blockquote>
 
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#67afc3] to-[#4a6fa5] flex items-center justify-center text-white font-bold text-lg shadow-md shadow-[#67afc3]/20">
-                    {testimonial.name.charAt(0)}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-900">
-                      {testimonial.name}
-                    </h4>
-                    <p className="text-[#4a6fa5] text-sm font-medium">
-                      {testimonial.role}
-                    </p>
-                  </div>
-                </div>
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-landing-primary-container text-lg font-bold text-landing-on-primary shadow-md">
+                {testimonial.name.charAt(0)}
               </div>
-            ))}
-          </motion.div>
-        </div>
+              <div>
+                <h4 className="font-bold text-landing-on-surface">
+                  {testimonial.name}
+                </h4>
+                <p className="text-sm font-medium text-landing-primary">
+                  {testimonial.role}
+                </p>
+              </div>
+            </div>
+          </LandingReveal>
+        ))}
       </div>
     </section>
   );

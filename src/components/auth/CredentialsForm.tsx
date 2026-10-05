@@ -274,7 +274,10 @@ export default function CredentialsForm() {
   };
 
   const processSuccessfulLogin = async (
-    authData: { user?: { id: string; email?: string } | null; session?: { access_token?: string } | null },
+    authData: {
+      user?: { id: string; email?: string } | null;
+      session?: { access_token?: string } | null;
+    },
     normalizedUsername: string,
   ) => {
     // Login exitoso - registrar intento exitoso y sesión
@@ -383,11 +386,12 @@ export default function CredentialsForm() {
 
     try {
       const supabase = getSupabaseBrowserClient();
-      const { error: verifyError } =
-        await supabase.auth.mfa.challengeAndVerify({
+      const { error: verifyError } = await supabase.auth.mfa.challengeAndVerify(
+        {
           factorId,
           code: mfaCode,
-        });
+        },
+      );
 
       if (verifyError) throw verifyError;
 
@@ -415,18 +419,18 @@ export default function CredentialsForm() {
     return (
       <form onSubmit={handleMfaSubmit} className="space-y-5">
         <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-full bg-[#006AFC]/10 text-[#006AFC] flex items-center justify-center mx-auto mb-3">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-landing-primary-container/10 text-landing-primary-container">
             <Shield className="h-6 w-6" aria-hidden="true" />
           </div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+          <h2 className="text-xl font-bold tracking-tight text-landing-on-surface">
             Autenticación de dos pasos
           </h2>
-          <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+          <p className="mt-2 text-sm leading-relaxed text-landing-on-surface-variant">
             Ingresa el código de 6 dígitos generado por tu aplicación
             autenticadora (ej. Google Authenticator).
           </p>
           {recordarDispositivo && (
-            <p className="text-xs text-[#006AFC] mt-2 font-medium">
+            <p className="mt-2 text-xs font-medium text-landing-primary">
               Este dispositivo será recordado al verificar
             </p>
           )}
@@ -435,7 +439,7 @@ export default function CredentialsForm() {
         <div>
           <label
             htmlFor="mfaCode"
-            className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2 text-center"
+            className="mb-2 block text-center text-xs font-semibold uppercase tracking-wider text-landing-on-surface-variant"
           >
             Código de verificación
           </label>
@@ -451,13 +455,13 @@ export default function CredentialsForm() {
             required
             disabled={isLoading}
             autoComplete="one-time-code"
-            className="w-full text-center text-2xl tracking-[0.4em] font-mono py-3.5 px-4 border border-slate-200 hover:border-slate-300 rounded-xl sm:rounded-lg bg-white text-slate-900 focus:outline-none focus:border-[#006AFC] focus:ring-4 focus:ring-[#006AFC]/10 transition-colors shadow-2xs"
+            className="w-full rounded-lg border border-landing-outline-variant bg-landing-surface-lowest px-4 py-3.5 text-center font-mono text-2xl tracking-[0.4em] text-landing-on-surface transition-colors hover:border-landing-outline focus:border-landing-primary-container focus:outline-none focus:ring-4 focus:ring-landing-primary-container/10"
             placeholder="000000"
           />
         </div>
 
         {error && (
-          <div className="text-red-700 text-sm bg-red-50 p-3.5 rounded-xl sm:rounded-lg border border-red-200 text-center">
+          <div className="rounded-lg border border-landing-error/20 bg-landing-error-container p-3.5 text-center text-sm text-landing-on-error-container">
             {error}
           </div>
         )}
@@ -465,7 +469,7 @@ export default function CredentialsForm() {
         <button
           type="submit"
           disabled={isLoading || mfaCode.length !== 6}
-          className="w-full min-h-[48px] sm:min-h-[44px] bg-[#FC6A01] hover:bg-[#E65E00] active:bg-[#CC5300] text-white py-3 px-4 rounded-xl sm:rounded-lg font-semibold text-base sm:text-sm transition-all shadow-sm hover:shadow-md focus:outline-none focus:ring-4 focus:ring-[#FC6A01]/25 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+          className="w-full min-h-[48px] sm:min-h-[44px] rounded-lg bg-landing-secondary-container px-4 py-3 text-base font-semibold text-landing-on-secondary shadow-sm transition-colors hover:bg-landing-secondary focus:outline-none focus:ring-4 focus:ring-landing-secondary-container/25 disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
         >
           {isLoading ? "Verificando..." : "Verificar código"}
         </button>
@@ -483,7 +487,7 @@ export default function CredentialsForm() {
             setMfaCode("");
             setError("");
           }}
-          className="w-full text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors py-2 text-center"
+          className="w-full py-2 text-center text-sm font-medium text-landing-outline transition-colors hover:text-landing-on-surface"
         >
           Volver e iniciar sesión con otro usuario
         </button>
@@ -496,7 +500,7 @@ export default function CredentialsForm() {
       <div>
         <label
           htmlFor="username"
-          className="block text-sm font-medium text-slate-700 mb-1.5"
+          className="mb-1.5 block text-sm font-medium text-landing-on-surface-variant"
         >
           Nombre de usuario
         </label>
@@ -521,16 +525,16 @@ export default function CredentialsForm() {
           }}
           required
           disabled={isLoading}
-          className={`w-full px-4 py-3.5 sm:py-3 border rounded-xl sm:rounded-lg bg-white text-slate-900 text-base sm:text-sm placeholder:text-slate-400 focus:outline-none focus:border-[#006AFC] focus:ring-4 focus:ring-[#006AFC]/10 transition-colors shadow-2xs ${
+          className={`w-full rounded-lg border bg-landing-surface-lowest px-4 py-3.5 text-base text-landing-on-surface placeholder:text-landing-outline focus:border-landing-primary-container focus:outline-none focus:ring-4 focus:ring-landing-primary-container/10 sm:py-3 sm:text-sm ${
             usernameError
-              ? "border-red-400 bg-red-50/30"
-              : "border-slate-200 hover:border-slate-300"
+              ? "border-landing-error bg-landing-error-container/30"
+              : "border-landing-outline-variant hover:border-landing-outline"
           } ${isLoading ? "opacity-60 cursor-not-allowed" : ""}`}
           placeholder="juan"
           autoComplete="username"
         />
         {usernameError && (
-          <p className="mt-1.5 text-xs text-red-600 font-medium">
+          <p className="mt-1.5 text-xs font-medium text-landing-error">
             {usernameError}
           </p>
         )}
@@ -539,7 +543,7 @@ export default function CredentialsForm() {
       <div>
         <label
           htmlFor="password"
-          className="block text-sm font-medium text-slate-700 mb-1.5"
+          className="mb-1.5 block text-sm font-medium text-landing-on-surface-variant"
         >
           Contraseña
         </label>
@@ -554,7 +558,7 @@ export default function CredentialsForm() {
             }}
             required
             disabled={isLoading}
-            className={`w-full pl-4 pr-11 py-3.5 sm:py-3 border border-slate-200 hover:border-slate-300 rounded-xl sm:rounded-lg bg-white text-slate-900 text-base sm:text-sm placeholder:text-slate-400 focus:outline-none focus:border-[#006AFC] focus:ring-4 focus:ring-[#006AFC]/10 transition-colors shadow-2xs ${
+            className={`w-full rounded-lg border border-landing-outline-variant bg-landing-surface-lowest py-3.5 pr-11 pl-4 text-base text-landing-on-surface placeholder:text-landing-outline transition-colors hover:border-landing-outline focus:border-landing-primary-container focus:outline-none focus:ring-4 focus:ring-landing-primary-container/10 sm:py-3 sm:text-sm ${
               isLoading ? "opacity-60 cursor-not-allowed" : ""
             }`}
             placeholder="••••••••"
@@ -563,9 +567,11 @@ export default function CredentialsForm() {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
+            className="absolute top-1/2 right-3 -translate-y-1/2 p-1.5 text-landing-outline transition-colors hover:text-landing-on-surface focus:outline-none"
             tabIndex={-1}
-            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            aria-label={
+              showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+            }
           >
             {showPassword ? (
               <EyeOff className="h-4 w-4" />
@@ -577,7 +583,7 @@ export default function CredentialsForm() {
       </div>
 
       {error && (
-        <div className="text-red-700 text-sm bg-red-50 p-3.5 rounded-xl sm:rounded-lg border border-red-200">
+        <div className="rounded-lg border border-landing-error/20 bg-landing-error-container p-3.5 text-sm text-landing-on-error-container">
           {error}
         </div>
       )}
@@ -588,11 +594,11 @@ export default function CredentialsForm() {
           type="checkbox"
           checked={recordarDispositivo}
           onChange={(e) => setRecordarDispositivo(e.target.checked)}
-          className="w-4.5 h-4.5 rounded border-slate-300 text-[#006AFC] focus:ring-[#006AFC]/20 focus:ring-offset-0 cursor-pointer accent-[#006AFC]"
+          className="h-4.5 w-4.5 cursor-pointer rounded border-landing-outline-variant accent-landing-primary-container focus:ring-landing-primary-container/20 focus:ring-offset-0"
         />
         <label
           htmlFor="recordar-dispositivo"
-          className="ml-2.5 text-sm text-slate-600 cursor-pointer select-none hover:text-slate-900 transition-colors"
+          className="ml-2.5 cursor-pointer select-none text-sm text-landing-on-surface-variant transition-colors hover:text-landing-on-surface"
         >
           Recordar este dispositivo
         </label>
@@ -601,7 +607,7 @@ export default function CredentialsForm() {
       <button
         type="submit"
         disabled={isLoading || !!usernameError}
-        className={`w-full min-h-[48px] sm:min-h-[44px] bg-[#FC6A01] hover:bg-[#E65E00] active:bg-[#CC5300] text-white py-3 px-4 rounded-xl sm:rounded-lg font-semibold text-base sm:text-sm transition-all shadow-sm hover:shadow-md focus:outline-none focus:ring-4 focus:ring-[#FC6A01]/25 ${
+        className={`w-full min-h-[48px] sm:min-h-[44px] rounded-lg bg-landing-secondary-container px-4 py-3 text-base font-semibold text-landing-on-secondary shadow-sm transition-colors hover:bg-landing-secondary focus:outline-none focus:ring-4 focus:ring-landing-secondary-container/25 sm:text-sm ${
           isLoading || usernameError
             ? "opacity-60 cursor-not-allowed"
             : "cursor-pointer"

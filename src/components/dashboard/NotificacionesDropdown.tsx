@@ -92,7 +92,7 @@ export function NotificacionesDropdown() {
     >
       <PopoverTrigger>
         <button
-          className="relative flex h-8 w-8 items-center justify-center rounded-lg p-1.5 text-(--nav-btn-text) transition-colors hover:bg-(--nav-btn-hover-bg) hover:text-(--nav-btn-hover-text)"
+          className="relative flex h-8 w-8 items-center justify-center rounded-lg p-1.5 text-(--header-btn-text) transition-colors hover:bg-(--header-btn-hover-bg) hover:text-(--header-btn-hover-text)"
           aria-label="Ver notificaciones"
         >
           {unreadCount > 0 ? (
@@ -100,6 +100,7 @@ export function NotificacionesDropdown() {
               content={unreadCount > 99 ? "99+" : unreadCount}
               placement="top-right"
               size="sm"
+              classNames={{ badge: "bg-[#FA6900] text-white" }}
             >
               <Bell strokeWidth={2} />
             </Badge>
@@ -185,7 +186,7 @@ export function NotificacionesDropdown() {
                           {notif.AccionUrl && (
                             <Link
                               href={notif.AccionUrl}
-                              className="text-xs font-semibold text-[#67afc3] hover:underline"
+                              className="text-xs font-semibold text-[#0050cb] hover:underline"
                               onClick={() => setIsOpen(false)}
                             >
                               Ver detalle

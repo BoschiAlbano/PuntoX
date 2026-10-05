@@ -67,7 +67,7 @@ export default function DashboardLayout({
 
   return (
     <ProtectRoute>
-      <div className=" bg-(--fondo) relative flex h-dvh w-full overflow-hidden print:h-auto print:overflow-visible">
+      <div className=" bg-white relative flex h-dvh w-full overflow-hidden print:h-auto print:overflow-visible">
         <section
           onClick={() => setShow(false)}
           className={`print:hidden z-50 transition-transform duration-400 ease-in-out sm:relative absolute sm:w-auto w-screen sm:h-auto h-dvh shrink-0 ${
@@ -101,11 +101,11 @@ export default function DashboardLayout({
           <div className="relative flex min-h-0 flex-1 print:p-0 overflow-y-auto min-w-0">
             <div className=" relative flex min-h-0 flex-1 flex-col min-w-0">
               <div className="relative z-10 flex min-h-0 flex-1 flex-col print:overflow-visible print:h-auto min-w-0">
-                <main className=" bg-[#F5F8FD] rounded-tl-4xl  relative z-10 flex w-full min-h-0 flex-1 print:m-0 print:bg-white print:p-0 min-w-0 overflow-hidden pb-2.5">
+                <main className=" bg-white rounded-tl-4xl  relative z-10 flex w-full min-h-0 flex-1 print:m-0 print:bg-white print:p-0 min-w-0 overflow-hidden pb-2.5">
                   <div className="shell-content-frame">
                     <ProgressProvider
                       height="3px"
-                      color="#67AFC3"
+                      color="#0066FF"
                       options={{ showSpinner: false }}
                       shallowRouting
                     >

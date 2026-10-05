@@ -1,123 +1,140 @@
 "use client";
 
 import Link from "next/link";
-import { Facebook, Twitter, Instagram } from "lucide-react";
+import { Facebook, Linkedin, Twitter } from "lucide-react";
 import Image from "next/image";
-import { PuntoXLogo } from "../ui/PuntoXLogo";
+import { LandingReveal } from "@/components/landing/LandingReveal";
 export const LandingFooter = () => {
   return (
-    <footer className="bg-white pt-20 pb-10 border-t border-slate-200 text-slate-900">
+    <footer className="border-t border-landing-outline-variant/60 bg-landing-surface-lowest pt-20 pb-10 text-landing-on-surface">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-          <div className="col-span-1 md:col-span-2">
+          <LandingReveal mode="view" className="col-span-1 md:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-6">
-              <PuntoXLogo className="relative w-12 h-12 border border-slate-200/60 rounded-xl p-1.5 bg-white/80 backdrop-blur-sm shadow-lg shadow-slate-300/50" />
-              <span className="text-xl font-bold">Punto X Saas</span>
+              <Image
+                src="/brand/puntox-isotipo.png"
+                alt="PuntoX"
+                width={42}
+                height={42}
+                className="w-10 h-10 object-contain"
+              />
+              <span className="text-xl font-bold text-landing-on-surface">
+                Punto X Saas
+              </span>
             </Link>
-            <p className="text-slate-500 text-sm max-w-sm leading-relaxed mb-6">
+            <p className="mb-6 max-w-sm text-sm leading-relaxed text-landing-on-surface-variant">
               La plataforma integral para la gestión de negocios modernos.
               Simplifica, optimiza y crece con Punto X.
             </p>
             <div className="flex gap-4">
               <a
-                href="#"
-                className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center hover:bg-[#1d293d] hover:text-white transition-all"
+                href="https://www.facebook.com/puntox"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Punto X en Facebook"
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-landing-surface-low text-landing-on-surface-variant transition-colors hover:bg-landing-tertiary hover:text-landing-on-tertiary"
               >
                 <Facebook className="w-5 h-5" />
               </a>
               <a
-                href="#"
-                className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center hover:bg-[#1d293d] hover:text-white transition-all"
+                href="https://twitter.com/puntox"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Punto X en X"
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-landing-surface-low text-landing-on-surface-variant transition-colors hover:bg-landing-tertiary hover:text-landing-on-tertiary"
               >
                 <Twitter className="w-5 h-5" />
               </a>
               <a
-                href="#"
-                className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center hover:bg-[#1d293d] hover:text-white transition-all"
+                href="https://www.linkedin.com/company/puntox"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Punto X en LinkedIn"
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-landing-surface-low text-landing-on-surface-variant transition-colors hover:bg-landing-tertiary hover:text-landing-on-tertiary"
               >
-                <Instagram className="w-5 h-5" />
+                <Linkedin className="w-5 h-5" />
               </a>
             </div>
-          </div>
+          </LandingReveal>
 
-          <div>
+          <LandingReveal mode="view" delay={0.08}>
             <h4 className="font-semibold mb-6">Producto</h4>
-            <ul className="space-y-4 text-sm text-slate-500">
+            <ul className="space-y-4 text-sm text-landing-on-surface-variant">
               <li>
                 <Link
-                  href="#"
-                  className="hover:text-[#1d293d] transition-colors"
+                  href="#features"
+                  className="transition-colors hover:text-landing-primary"
                 >
                   Características
                 </Link>
               </li>
               <li>
                 <Link
-                  href="#"
-                  className="hover:text-[#1d293d] transition-colors"
+                  href="#pricing"
+                  className="transition-colors hover:text-landing-primary"
                 >
                   Precios
                 </Link>
               </li>
               <li>
                 <Link
-                  href="#"
-                  className="hover:text-[#1d293d] transition-colors"
+                  href="#testimonials"
+                  className="transition-colors hover:text-landing-primary"
                 >
                   Testimonios
                 </Link>
               </li>
               <li>
                 <Link
-                  href="#"
-                  className="hover:text-[#1d293d] transition-colors"
+                  href="#features"
+                  className="transition-colors hover:text-landing-primary"
                 >
                   API
                 </Link>
               </li>
             </ul>
-          </div>
+          </LandingReveal>
 
-          <div>
+          <LandingReveal mode="view" delay={0.16}>
             <h4 className="font-semibold mb-6">Compañía</h4>
-            <ul className="space-y-4 text-sm text-slate-500">
+            <ul className="space-y-4 text-sm text-landing-on-surface-variant">
               <li>
                 <Link
-                  href="#"
-                  className="hover:text-[#1d293d] transition-colors"
+                  href="#contact"
+                  className="transition-colors hover:text-landing-primary"
                 >
                   Sobre Nosotros
                 </Link>
               </li>
               <li>
                 <Link
-                  href="#"
-                  className="hover:text-[#1d293d] transition-colors"
+                  href="#contact"
+                  className="transition-colors hover:text-landing-primary"
                 >
                   Contacto
                 </Link>
               </li>
               <li>
                 <Link
-                  href="#"
-                  className="hover:text-[#1d293d] transition-colors"
+                  href="#contact"
+                  className="transition-colors hover:text-landing-primary"
                 >
                   Privacidad
                 </Link>
               </li>
               <li>
                 <Link
-                  href="#"
-                  className="hover:text-[#1d293d] transition-colors"
+                  href="#contact"
+                  className="transition-colors hover:text-landing-primary"
                 >
                   Términos
                 </Link>
               </li>
             </ul>
-          </div>
+          </LandingReveal>
         </div>
 
-        <div className="pt-8 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between text-xs text-gray-500">
+        <div className="flex flex-col items-center justify-between border-t border-landing-outline-variant/60 pt-8 text-xs text-landing-on-surface-variant md:flex-row">
           <p>
             &copy; {new Date().getFullYear()} Punto X Saas. Todos los derechos
             reservados.

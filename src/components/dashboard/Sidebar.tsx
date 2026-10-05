@@ -3,9 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useMemo, memo, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { SucursalSelector } from "@/components/sucursal";
 import { useUserStore } from "@/store/useUserStore";
-import { PuntoXLogo } from "@/components/ui/PuntoXLogo";
 import { Tooltip } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
@@ -647,7 +647,7 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
 
   // Solo una sección abierta a la vez (acordeón). Por defecto "Principal".
   const [openSection, setOpenSection] = useState<string | null>(null);
-  
+
   const isOnboardingComplete = tenant?.OnboardingCompleto;
 
   const toggleSection = useCallback((title: string) => {
@@ -724,10 +724,12 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
 
         <div className="w-full flex items-center justify-center px-4 py-4 h-15.5">
           <div className="flex h-7.5 w-full flex-row items-center gap-2">
-            <img
-              src="/logo.svg"
-              className="w-11 rounded-lg border border-[#67afc3]/40 p-1.5 shadow-sm shadow-[#67afc3]/30 transition-all duration-300 hover:rotate-345"
-              alt="logo.svg"
+            <Image
+              src="/brand/puntox-isotipo.png"
+              width={32}
+              height={32}
+              className="h-8 w-8 shrink-0 object-contain"
+              alt="Punto X"
             />
 
             <div
@@ -862,7 +864,7 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                                       ${isCollapsed ? "justify-center p-2" : "gap-3 px-3 py-2"}
                                       ${
                                         isActive
-                                          ? "bg-(--nav-item-active-bg) text-(--nav-item-active-text) shadow-[inset_0_0_0_1px_rgba(103,175,195,0.2)]"
+                                          ? " text-(--nav-item-active-text) "
                                           : "text-(--nav-item-text) hover:bg-(--nav-item-hover-bg) hover:text-(--nav-item-hover-text)"
                                       }
                                     `}
@@ -870,7 +872,7 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                                 {isActive && (
                                   <motion.div
                                     layoutId="activeIndicator"
-                                    className="absolute left-1.5 h-5 w-[3px] rounded-full bg-[#67afc3]"
+                                    className="absolute left-1.5 h-5 w-0.75 rounded-full bg-(--nav-item-active-indicator)"
                                     transition={{
                                       type: "spring",
                                       stiffness: 300,
@@ -886,11 +888,11 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
                                       : "text-(--nav-item-icon)"
                                   }`}
                                 >
-                                  <div className="transition-colors group-hover:text-[#67afc3]">
+                                  <div className="transition-colors group-hover:text-[#66a3ff]">
                                     {item.icon}
                                   </div>
                                   {item.badge && (
-                                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-linear-to-b from-blue-500 to-[#90c472] px-1 text-[10px] text-white">
+                                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-linear-to-b from-[#0066ff] to-[#0050cb] px-1 text-[10px] text-white">
                                       {item.badge}
                                     </span>
                                   )}

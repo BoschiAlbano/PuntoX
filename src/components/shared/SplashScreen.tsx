@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 /**
  * SplashScreen — aparece al abrir la PWA en modo standalone.
@@ -51,78 +52,13 @@ export default function SplashScreen() {
       <div className="splash-content">
         {/* Logo icon */}
         <div className="splash-logo-wrapper">
-          <svg
-            viewBox="0 0 100 100"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="splash-logo-svg"
-          >
-            <defs>
-              <linearGradient
-                id="splashGrad"
-                x1="20"
-                y1="80"
-                x2="80"
-                y2="20"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop offset="0%" stopColor="#0284c7" />
-                <stop offset="100%" stopColor="#2dd4bf" />
-              </linearGradient>
-            </defs>
-
-            {/* Ghost arms */}
-            <path
-              d="M50 50 L25 25"
-              stroke="url(#splashGrad)"
-              strokeWidth="14"
-              strokeLinecap="round"
-              opacity="0.35"
-              className="splash-arm splash-arm-1"
-            />
-            <path
-              d="M50 50 L75 75"
-              stroke="url(#splashGrad)"
-              strokeWidth="14"
-              strokeLinecap="round"
-              opacity="0.35"
-              className="splash-arm splash-arm-2"
-            />
-
-            {/* Main arms */}
-            <path
-              d="M50 50 L25 75"
-              stroke="url(#splashGrad)"
-              strokeWidth="14"
-              strokeLinecap="round"
-              className="splash-arm splash-arm-3"
-            />
-            <path
-              d="M50 50 L75 25"
-              stroke="url(#splashGrad)"
-              strokeWidth="14"
-              strokeLinecap="round"
-              className="splash-arm splash-arm-4"
-            />
-
-            {/* Center dot */}
-            <circle
-              cx="50"
-              cy="50"
-              r="7"
-              fill="url(#splashGrad)"
-              className="splash-center-dot"
-            />
-
-            {/* Accent dot top-right */}
-            <circle
-              cx="75"
-              cy="25"
-              r="9"
-              fill="#2dd4bf"
-              className="splash-accent-dot"
-            />
-          </svg>
+          <Image
+            src="/brand/puntox-isotipo.png"
+            alt=""
+            width={827}
+            height={688}
+            className="splash-logo-image"
+          />
 
           {/* Pulse ring */}
           <div className="splash-pulse-ring" />
@@ -179,8 +115,8 @@ export default function SplashScreen() {
           position: absolute;
           inset: 0;
           background:
-            radial-gradient(ellipse 60% 45% at 50% 42%, rgba(103,175,195,0.14) 0%, transparent 70%),
-            radial-gradient(ellipse 40% 30% at 75% 25%, rgba(45,212,191,0.10) 0%, transparent 60%);
+            radial-gradient(ellipse 60% 45% at 50% 42%, rgba(0,106,252,0.14) 0%, transparent 70%),
+            radial-gradient(ellipse 40% 30% at 75% 25%, rgba(250,105,0,0.10) 0%, transparent 60%);
           pointer-events: none;
         }
 
@@ -190,8 +126,8 @@ export default function SplashScreen() {
           inset: 0;
           opacity: 0.07;
           background-image:
-            linear-gradient(to right, rgba(103,175,195,0.5) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(103,175,195,0.5) 1px, transparent 1px);
+            linear-gradient(to right, rgba(0,106,252,0.35) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(0,106,252,0.35) 1px, transparent 1px);
           background-size: 3rem 3rem;
           pointer-events: none;
         }
@@ -215,12 +151,19 @@ export default function SplashScreen() {
           justify-content: center;
         }
 
-        .splash-logo-svg {
+        .splash-logo-image {
           width: 90px;
-          height: 90px;
+          height: auto;
+          max-height: 90px;
           position: relative;
           z-index: 2;
-          filter: drop-shadow(0 0 18px rgba(103,175,195,0.45));
+          filter: drop-shadow(0 0 18px rgba(0,106,252,0.35)) drop-shadow(0 0 12px rgba(250,105,0,0.2));
+          animation: splashLogoEnter 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes splashLogoEnter {
+          from { opacity: 0; transform: scale(0.88); }
+          to { opacity: 1; transform: scale(1); }
         }
 
         /* Pulse ring behind logo */
@@ -228,43 +171,13 @@ export default function SplashScreen() {
           position: absolute;
           inset: -8px;
           border-radius: 50%;
-          border: 2px solid rgba(103,175,195,0.25);
+          border: 2px solid rgba(0,106,252,0.28);
           animation: splashPulse 2s ease-in-out infinite;
         }
 
         @keyframes splashPulse {
           0%, 100% { transform: scale(1);    opacity: 0.4; }
           50%       { transform: scale(1.12); opacity: 0.15; }
-        }
-
-        /* SVG arm draw animation */
-        .splash-arm {
-          stroke-dasharray: 40;
-          stroke-dashoffset: 40;
-          animation: drawArm 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-        .splash-arm-1 { animation-delay: 0.1s; }
-        .splash-arm-2 { animation-delay: 0.2s; }
-        .splash-arm-3 { animation-delay: 0.05s; }
-        .splash-arm-4 { animation-delay: 0.15s; }
-
-        @keyframes drawArm {
-          to { stroke-dashoffset: 0; }
-        }
-
-        .splash-center-dot {
-          transform-origin: 50px 50px;
-          animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s both;
-        }
-
-        .splash-accent-dot {
-          transform-origin: 75px 25px;
-          animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.65s both;
-        }
-
-        @keyframes popIn {
-          from { transform: scale(0); opacity: 0; }
-          to   { transform: scale(1); opacity: 1; }
         }
 
         /* Text group */
@@ -295,7 +208,7 @@ export default function SplashScreen() {
           font-weight: 500;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: #67afc3;
+          color: #FA6900;
           margin: 0;
         }
 
@@ -310,9 +223,10 @@ export default function SplashScreen() {
           width: 6px;
           height: 6px;
           border-radius: 50%;
-          background: #67afc3;
+          background: #006AFC;
           animation: dotBounce 1.2s ease-in-out infinite;
         }
+        .splash-dot:nth-child(2) { background: #FA6900; }
         .splash-dot-1 { animation-delay: 0s;    }
         .splash-dot-2 { animation-delay: 0.18s; }
         .splash-dot-3 { animation-delay: 0.36s; }
@@ -324,9 +238,7 @@ export default function SplashScreen() {
 
         /* Reduced motion */
         @media (prefers-reduced-motion: reduce) {
-          .splash-arm,
-          .splash-center-dot,
-          .splash-accent-dot,
+          .splash-logo-image,
           .splash-text-group,
           .splash-dots,
           .splash-pulse-ring,

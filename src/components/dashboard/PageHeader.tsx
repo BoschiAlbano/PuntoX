@@ -30,11 +30,7 @@ export function PageHeader({
       <div className="flex flex-col">
         <h1 className="text-lg sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">
           {title}{" "}
-          {accentTitle && (
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-[#67afc3] to-[#2dd4bf]">
-              {accentTitle}
-            </span>
-          )}
+          {accentTitle && <span className="text-[#0050cb]">{accentTitle}</span>}
         </h1>
         {description && (
           <p className="text-slate-400 text-[11px] sm:text-xs leading-tight ">
@@ -42,7 +38,9 @@ export function PageHeader({
           </p>
         )}
       </div>
-      {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+      {actions && (
+        <div className="flex items-center gap-2 shrink-0">{actions}</div>
+      )}
     </motion.div>
   );
 }

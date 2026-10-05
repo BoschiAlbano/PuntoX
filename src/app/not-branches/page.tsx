@@ -11,7 +11,7 @@ export default function page() {
   return (
     <section className="flex flex-col items-center justify-center h-screen gap-4">
       <Image
-        src="/favicon-light.ico"
+        src="/brand/puntox-isotipo.png"
         alt="Punto X"
         className="w-24 h-24 object-contain"
         width={96}

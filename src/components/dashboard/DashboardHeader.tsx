@@ -52,8 +52,8 @@ const routeNames: Record<string, string> = {
   "/configuracion/fiscal": "Facturación",
 };
 
-// ─── Accent color (fijo en toda la app) ──────────────────────────────────────
-const ACCENT = "#67afc3";
+// ─── Accent color del shell ──────────────────────────────────────────────────
+const ACCENT = "#0066ff";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface DashboardHeaderProps {
@@ -81,9 +81,9 @@ function MobileMenuButton({
       aria-label={show ? "Cerrar menú lateral" : "Abrir menú lateral"}
       aria-expanded={show}
       className="sm:hidden relative flex items-center justify-center h-8 w-8 rounded-lg cursor-pointer
-                 text-(--nav-btn-text) hover:text-(--nav-btn-hover-text) hover:bg-(--nav-btn-hover-bg)
+             text-(--header-btn-text) hover:text-(--header-btn-hover-text) hover:bg-(--header-btn-hover-bg)
                   transition-all duration-200 shrink-0 focus-visible:outline-none
-                  focus-visible:ring-2 focus-visible:ring-[#67afc3]/40"
+          focus-visible:ring-2 focus-visible:ring-[#0066ff]/40"
     >
       <AnimatePresence mode="wait" initial={false}>
         {show ? (
@@ -129,9 +129,9 @@ function DesktopSidebarButton({
         isCollapsed ? "Expandir menú lateral" : "Colapsar menú lateral"
       }
       className="hidden sm:flex items-center justify-center h-8 w-8 rounded-lg cursor-pointer
-                 text-(--nav-btn-text) hover:text-(--nav-btn-hover-text) hover:bg-(--nav-btn-hover-bg)
+             text-(--header-btn-text) hover:text-(--header-btn-hover-text) hover:bg-(--header-btn-hover-bg)
                  transition-all duration-200 shrink-0 focus-visible:outline-none
-                 focus-visible:ring-2 focus-visible:ring-[#67afc3]/40"
+             focus-visible:ring-2 focus-visible:ring-[#0066ff]/40"
     >
       {isCollapsed ? (
         <PanelLeftOpen size={17} strokeWidth={2} />
@@ -163,7 +163,7 @@ function Breadcrumbs({
               {idx > 0 && (
                 <ChevronRight
                   size={12}
-                  className="text-(--nav-breadcrumb-sep) shrink-0 mx-0.5"
+                  className="text-(--header-breadcrumb-sep) shrink-0 mx-0.5"
                   strokeWidth={2.5}
                   aria-hidden="true"
                 />
@@ -172,20 +172,20 @@ function Breadcrumbs({
                 <Link
                   href="/dashboard"
                   className="flex items-center justify-center w-6 h-6 rounded-lg
-                             text-(--nav-breadcrumb-home) hover:text-[#67afc3] hover:bg-(--nav-btn-hover-bg)
+                             text-(--header-breadcrumb-home) hover:text-[#0050cb] hover:bg-(--header-btn-hover-bg)
                              transition-colors duration-200"
                   aria-label="Ir al inicio"
                 >
                   <Home size={13} strokeWidth={2} />
                 </Link>
               ) : isLast ? (
-                <span className="text-[13px] font-semibold text-(--nav-breadcrumb-current) truncate max-w-50">
+                <span className="text-[13px] font-semibold text-(--header-breadcrumb-current) truncate max-w-50">
                   {crumb.label}
                 </span>
               ) : (
                 <Link
                   href={crumb.path}
-                  className="text-[12.5px] font-medium text-(--nav-breadcrumb-mid) hover:text-(--nav-breadcrumb-current)
+                  className="text-[12.5px] font-medium text-(--header-breadcrumb-mid) hover:text-(--header-breadcrumb-current)
                              transition-colors duration-200 truncate max-w-30"
                 >
                   {crumb.label}
@@ -261,7 +261,7 @@ function DashboardHeaderComponent({
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className="top-0 left-0 right-0 z-40 w-full bg-(--fondo)"
+      className="top-0 left-0 right-0 z-40 w-full bg-(--header-bg)"
       role="banner"
     >
       {/* ── Barra principal ── */}
@@ -279,7 +279,7 @@ function DashboardHeaderComponent({
 
           {/* Separador visual */}
           <div
-            className="h-5 w-px bg-(--nav-divider) mx-0.5 shrink-0"
+            className="h-5 w-px bg-(--header-divider) mx-0.5 shrink-0"
             aria-hidden="true"
           />
 
@@ -294,7 +294,7 @@ function DashboardHeaderComponent({
               style={{ backgroundColor: ACCENT }}
               aria-hidden="true"
             />
-            <span className="text-[14px] font-bold text-(--nav-page-title-mobile) truncate">
+            <span className="text-[14px] font-bold text-(--header-page-title-mobile) truncate">
               {currentPage}
             </span>
           </div>
@@ -309,24 +309,24 @@ function DashboardHeaderComponent({
             aria-label="Buscar en el sistema"
             onClick={() => setIsSearchOpen(true)}
             className="pointer-events-auto flex items-center gap-2.5 h-9 w-72 xl:w-96 px-4 rounded-xl cursor-pointer
-                       text-(--nav-search-text) hover:text-(--nav-btn-hover-text)
-                       bg-(--nav-search-bg) hover:bg-(--nav-search-hover-bg)
-                       border border-(--nav-search-border) hover:border-(--nav-search-hover-border)
+                       text-(--header-search-text) hover:text-(--header-btn-hover-text)
+                       bg-(--header-search-bg) hover:bg-(--header-search-hover-bg)
+                       border border-(--header-search-border) hover:border-(--header-search-hover-border)
                        transition-all duration-200 text-[13px] font-medium
-                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#67afc3]/40
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0066ff]/40
                        group"
           >
             <Search
               size={14}
               strokeWidth={2}
-              className="shrink-0 text-(--nav-search-placeholder) group-hover:text-(--nav-btn-hover-text) transition-colors"
+              className="shrink-0 text-(--header-search-placeholder) group-hover:text-(--header-btn-hover-text) transition-colors"
             />
-            <span className="flex-1 text-left text-(--nav-search-placeholder) group-hover:text-(--nav-btn-hover-text) transition-colors">
+            <span className="flex-1 text-left text-(--header-search-placeholder) group-hover:text-(--header-btn-hover-text) transition-colors">
               Buscar...
             </span>
             <kbd
               className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md
-                         bg-(--nav-kbd-bg) text-(--nav-kbd-text) text-[10px] font-mono border border-(--nav-kbd-border)"
+                         bg-(--header-kbd-bg) text-(--header-kbd-text) text-[10px] font-mono border border-(--header-kbd-border)"
             >
               Ctrl+K
             </kbd>
@@ -340,9 +340,9 @@ function DashboardHeaderComponent({
             aria-label="Buscar en el sistema"
             onClick={() => setIsSearchOpen(true)}
             className="lg:hidden flex items-center justify-center h-8 w-8 rounded-lg cursor-pointer
-                       text-(--nav-btn-text) hover:text-(--nav-btn-hover-text) hover:bg-(--nav-btn-hover-bg)
+                       text-(--header-btn-text) hover:text-(--header-btn-hover-text) hover:bg-(--header-btn-hover-bg)
                        transition-all duration-200 shrink-0 focus-visible:outline-none
-                       focus-visible:ring-2 focus-visible:ring-[#67afc3]/40"
+                       focus-visible:ring-2 focus-visible:ring-[#0066ff]/40"
           >
             <Search size={16} strokeWidth={2} />
           </button>
@@ -352,7 +352,7 @@ function DashboardHeaderComponent({
 
           {/* Separador */}
           <div
-            className="h-5 w-px bg-(--nav-divider) mx-0.5 sm:mx-1 shrink-0"
+            className="h-5 w-px bg-(--header-divider) mx-0.5 sm:mx-1 shrink-0"
             aria-hidden="true"
           />
 

@@ -1,9 +1,13 @@
 import { Metadata } from "next";
+import { MotionConfig } from "framer-motion";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { LandingHero } from "@/components/landing/LandingHero";
+import { LandingMetrics } from "@/components/landing/LandingMetrics";
 import { LandingFeatures } from "@/components/landing/LandingFeatures";
+import { LandingComparison } from "@/components/landing/LandingComparison";
 import { LandingPricing } from "@/components/landing/LandingPricing";
 import { LandingTestimonials } from "@/components/landing/LandingTestimonials";
+import { LandingFinalCta } from "@/components/landing/LandingFinalCta";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 
 export const metadata: Metadata = {
@@ -130,7 +134,7 @@ export default function LandingPage() {
   };
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       {/* JSON-LD Structured Data */}
       <script
         type="application/ld+json"
@@ -141,14 +145,17 @@ export default function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
       />
 
-      <main className="min-h-screen bg-white text-slate-900 selection:bg-[#67afc3] selection:text-white overflow-x-hidden">
+      <main className="landing-page min-h-screen overflow-x-hidden bg-landing-surface text-landing-on-surface selection:bg-landing-primary-container selection:text-landing-on-primary">
         <LandingNavbar />
         <LandingHero />
+        <LandingMetrics />
         <LandingFeatures />
-        <LandingPricing />
+        <LandingComparison />
         <LandingTestimonials />
+        <LandingPricing />
+        <LandingFinalCta />
         <LandingFooter />
       </main>
-    </>
+    </MotionConfig>
   );
 }
