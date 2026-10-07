@@ -78,7 +78,11 @@ const TIPOS_FACTURA = [
   { key: TIPO_COMPROBANTE_VENTA.FACTURA_C, label: "Factura C" },
 ];
 
-export function CobrarModal({ isOpen, onClose, comprobante }: CobrarModalProps) {
+export function CobrarModal({
+  isOpen,
+  onClose,
+  comprobante,
+}: CobrarModalProps) {
   const queryClient = useQueryClient();
   const { configuracion } = useConfiguracion({ enableConfiguracion: true });
 
@@ -93,7 +97,9 @@ export function CobrarModal({ isOpen, onClose, comprobante }: CobrarModalProps) 
   const [clienteQuery, setClienteQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [nuevoCliente, setNuevoCliente] = useState<ClienteResult | null>(null);
-  const [nuevoTipo, setNuevoTipo] = useState<number>(comprobante.tipoComprobante);
+  const [nuevoTipo, setNuevoTipo] = useState<number>(
+    comprobante.tipoComprobante,
+  );
   const [showClientSearch, setShowClientSearch] = useState(false);
 
   const [lastTicketData, setLastTicketData] = useState<any>(null);
@@ -185,21 +191,31 @@ export function CobrarModal({ isOpen, onClose, comprobante }: CobrarModalProps) 
 
   const getTipoLabel = (tipo: number) => {
     switch (tipo) {
-      case TIPO_PAGO.EFECTIVO: return "Efectivo";
-      case TIPO_PAGO.TARJETA: return "Tarjeta";
-      case TIPO_PAGO.CHEQUE: return "Cheque";
-      case TIPO_PAGO.CUENTA_CORRIENTE: return "Cta. Cte.";
-      case TIPO_PAGO.TRANSFERENCIA: return "Transf.";
-      default: return "Otro";
+      case TIPO_PAGO.EFECTIVO:
+        return "Efectivo";
+      case TIPO_PAGO.TARJETA:
+        return "Tarjeta";
+      case TIPO_PAGO.CHEQUE:
+        return "Cheque";
+      case TIPO_PAGO.CUENTA_CORRIENTE:
+        return "Cta. Cte.";
+      case TIPO_PAGO.TRANSFERENCIA:
+        return "Transf.";
+      default:
+        return "Otro";
     }
   };
 
   const getTipoIcon = (tipo: number) => {
     switch (tipo) {
-      case TIPO_PAGO.EFECTIVO: return <Banknote size={13} className="text-emerald-500" />;
-      case TIPO_PAGO.TARJETA: return <CreditCard size={13} className="text-blue-500" />;
-      case TIPO_PAGO.TRANSFERENCIA: return <ArrowRightLeft size={13} className="text-purple-500" />;
-      default: return <Wallet size={13} className="text-slate-500" />;
+      case TIPO_PAGO.EFECTIVO:
+        return <Banknote size={13} className="text-emerald-500" />;
+      case TIPO_PAGO.TARJETA:
+        return <CreditCard size={13} className="text-blue-500" />;
+      case TIPO_PAGO.TRANSFERENCIA:
+        return <ArrowRightLeft size={13} className="text-purple-500" />;
+      default:
+        return <Wallet size={13} className="text-slate-500" />;
     }
   };
 
@@ -279,16 +295,22 @@ export function CobrarModal({ isOpen, onClose, comprobante }: CobrarModalProps) 
     if (Math.abs(restante) > 0.01) {
       addToast({
         title: "Error",
-        description: "El pago debe cubrir exactamente el total del comprobante.",
+        description:
+          "El pago debe cubrir exactamente el total del comprobante.",
         color: "danger",
       });
       return;
     }
-    const payload: { formasPago: Pago[]; clienteId?: number; tipoComprobante?: number } = {
+    const payload: {
+      formasPago: Pago[];
+      clienteId?: number;
+      tipoComprobante?: number;
+    } = {
       formasPago: pagos,
     };
     if (nuevoCliente) payload.clienteId = nuevoCliente.id;
-    if (nuevoTipo !== comprobante.tipoComprobante) payload.tipoComprobante = nuevoTipo;
+    if (nuevoTipo !== comprobante.tipoComprobante)
+      payload.tipoComprobante = nuevoTipo;
     cobrarMutation.mutate(payload);
   };
 
@@ -480,8 +502,8 @@ export function CobrarModal({ isOpen, onClose, comprobante }: CobrarModalProps) 
                               className={[
                                 "px-3 py-1.5 rounded-lg text-xs font-bold border transition-all",
                                 nuevoTipo === t.key
-                                  ? "bg-[#67afc3] border-[#67afc3] text-white shadow-sm"
-                                  : "bg-white border-slate-200 text-slate-600 hover:border-[#67afc3] hover:text-[#67afc3]",
+                                  ? "bg-[#0066ff] border-[#0066ff] text-white shadow-sm"
+                                  : "bg-white border-slate-200 text-slate-600 hover:border-[#0066ff] hover:text-[#0050cb]",
                               ].join(" ")}
                             >
                               {t.key === nuevoTipo ? (
@@ -560,7 +582,7 @@ export function CobrarModal({ isOpen, onClose, comprobante }: CobrarModalProps) 
                     <button
                       onClick={handleAddPayment}
                       aria-label="Agregar pago"
-                      className="h-10 w-10 min-w-10 bg-[#67afc3] hover:bg-[#5a9eb1] active:scale-95 text-white rounded-lg flex items-center justify-center transition-all shrink-0"
+                      className="h-10 w-10 min-w-10 bg-[#0066ff] hover:bg-[#0050cb] active:scale-95 text-white rounded-lg flex items-center justify-center transition-all shrink-0"
                     >
                       <Plus size={18} />
                     </button>
@@ -648,7 +670,7 @@ export function CobrarModal({ isOpen, onClose, comprobante }: CobrarModalProps) 
                   Cancelar
                 </Button>
                 <Button
-                  className="flex-1 bg-[#182337] text-white font-bold rounded-xl h-11"
+                  className="modal-primary-action flex-1 font-bold rounded-xl h-11"
                   onPress={handleCobrar}
                   isLoading={cobrarMutation.isPending}
                   isDisabled={pagos.length === 0 || Math.abs(restante) > 0.01}

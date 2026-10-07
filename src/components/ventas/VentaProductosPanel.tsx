@@ -59,12 +59,12 @@ export default function VentaProductosPanel({
         <div className="flex items-center shrink-0 pb-2">
           <button
             onClick={() => onTabChange("carrito")}
-            className="flex items-center gap-1.5 text-sm font-semibold text-[#67afc3] hover:text-[#5293a5] transition-colors"
+            className="flex items-center gap-1.5 text-sm font-semibold text-[#0050cb] hover:text-[#003fa4] transition-colors"
           >
             <ArrowLeft size={16} />
             <span>Volver al carrito</span>
             {items.length > 0 && (
-              <span className="min-w-4.5 h-4.5 rounded-full bg-[#67afc3] text-white text-[10px] font-bold flex items-center justify-center px-1">
+              <span className="min-w-4.5 h-4.5 rounded-full bg-[#0066ff] text-white text-[10px] font-bold flex items-center justify-center px-1">
                 {items.length}
               </span>
             )}
@@ -89,7 +89,7 @@ export default function VentaProductosPanel({
           <div className="flex-1 min-h-0 h-full w-full overflow-y-auto">
             {isSearching ? (
               <div className="flex flex-col items-center justify-center h-40 gap-3 text-slate-400">
-                <Spinner size="sm" color="current" className="text-[#67afc3]" />
+                <Spinner size="sm" color="current" className="text-[#0066ff]" />
                 <p className="text-sm font-medium">Buscando productos...</p>
               </div>
             ) : searchQuery.trim().length === 0 ? (

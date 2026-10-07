@@ -62,7 +62,7 @@ export default function VentasScreen() {
     if (product.DescuentaStock && !product.PermiteStockNegativo) {
       if (product.Stock < newQuantity) {
         throw new Error(
-          `"${product.Descripcion || 'El artÃ­culo'}" no tiene suficiente stock disponible. (Stock actual: ${product.Stock})`,
+          `"${product.Descripcion || "El artÃ­culo"}" no tiene suficiente stock disponible. (Stock actual: ${product.Stock})`,
         );
       }
     }
@@ -264,14 +264,14 @@ export default function VentasScreen() {
           onClick={() => setMobileTab("productos")}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold border-b-2 transition-all duration-200 ${
             mobileTab === "productos"
-              ? "border-[#67afc3] text-[#67afc3]"
+              ? "border-[#0066ff] text-[#0050cb]"
               : "border-transparent text-slate-400 hover:text-slate-600"
           }`}
         >
           <ShoppingCart size={15} />
           <span>Productos</span>
           {items.length > 0 && (
-            <span className="ml-1 min-w-[20px] h-5 rounded-full bg-[#67afc3] text-white text-[10px] font-bold flex items-center justify-center px-1.5">
+            <span className="ml-1 min-w-[20px] h-5 rounded-full bg-[#0066ff] text-white text-[10px] font-bold flex items-center justify-center px-1.5">
               {items.length}
             </span>
           )}
@@ -280,7 +280,7 @@ export default function VentasScreen() {
           onClick={() => setMobileTab("pago")}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold border-b-2 transition-all duration-200 ${
             mobileTab === "pago"
-              ? "border-[#67afc3] text-[#67afc3]"
+              ? "border-[#0066ff] text-[#0050cb]"
               : "border-transparent text-slate-400 hover:text-slate-600"
           }`}
         >
@@ -299,7 +299,7 @@ export default function VentasScreen() {
       </div>
 
       {/* ── MAIN LAYOUT ── */}
-      <div className="flex flex-col lg:flex-row flex-1 min-h-0 h-full gap-2 overflow-auto lg:overflow-hidden p-2 px-0">
+      <div className="flex flex-col lg:flex-row flex-1 min-h-0 h-full gap-3 overflow-auto lg:overflow-hidden p-2 sm:p-3 xl:gap-4 xl:p-4">
         {/* ── LEFT PANEL: PRODUCTS ── */}
         <div
           className={`flex-1 min-h-0 h-full flex flex-col gap-2 lg:overflow-hidden ${

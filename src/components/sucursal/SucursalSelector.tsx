@@ -139,7 +139,7 @@ export default function SucursalSelector({
                       ${isCollapsed ? "justify-center w-11 h-11" : "px-3 py-1.5"}
                       ${
                         isSelected
-                          ? "bg-[#0066ff] text-white"
+                          ? "bg-[#0066ff98] text-white"
                           : "text-slate-200 hover:bg-white/10 hover:text-white"
                       }
                     `}

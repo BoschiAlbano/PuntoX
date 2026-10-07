@@ -1,13 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import {
-  Modal,
-  ModalContent,
-  ModalBody,
-  Input,
-  Spinner,
-} from "@heroui/react";
+import { Modal, ModalContent, ModalBody, Input, Spinner } from "@heroui/react";
 import {
   Search,
   Home,
@@ -57,42 +51,227 @@ interface SearchItem {
 
 const STATIC_PAGES: SearchItem[] = [
   // Principal
-  { id: "p-dash",             type: "page", title: "Dashboard",                    subtitle: "Inicio y resumen",                          icon: Home,        href: "/dashboard" },
+  {
+    id: "p-dash",
+    type: "page",
+    title: "Dashboard",
+    subtitle: "Inicio y resumen",
+    icon: Home,
+    href: "/dashboard",
+  },
   // Ventas
-  { id: "p-pos",              type: "page", title: "Punto de Venta",               subtitle: "Nueva venta / POS",                         icon: ShoppingCart, href: "/ventas" },
-  { id: "p-caja",             type: "page", title: "Caja Actual",                  subtitle: "Operaciones de caja del día",               icon: DollarSign,  href: "/caja" },
-  { id: "p-caja-hist",        type: "page", title: "Historial de Cajas",           subtitle: "Cajas anteriores cerradas",                 icon: History,     href: "/caja/historial" },
-  { id: "p-cobros",           type: "page", title: "Cobros Pendientes",            subtitle: "Cobros diferidos sin saldar",               icon: Clock,       href: "/caja/cobros" },
+  {
+    id: "p-pos",
+    type: "page",
+    title: "Punto de Venta",
+    subtitle: "Nueva venta / POS",
+    icon: ShoppingCart,
+    href: "/ventas",
+  },
+  {
+    id: "p-caja",
+    type: "page",
+    title: "Caja Actual",
+    subtitle: "Operaciones de caja del día",
+    icon: DollarSign,
+    href: "/caja",
+  },
+  {
+    id: "p-caja-hist",
+    type: "page",
+    title: "Historial de Cajas",
+    subtitle: "Cajas anteriores cerradas",
+    icon: History,
+    href: "/caja/historial",
+  },
+  {
+    id: "p-cobros",
+    type: "page",
+    title: "Cobros Pendientes",
+    subtitle: "Cobros diferidos sin saldar",
+    icon: Clock,
+    href: "/caja/cobros",
+  },
   // Artículos
-  { id: "p-prod",             type: "page", title: "Productos",                    subtitle: "Inventario y stock",                        icon: Package,     href: "/productos" },
-  { id: "p-marcas",           type: "page", title: "Marcas",                       subtitle: "Gestión de marcas de productos",            icon: Tag,         href: "/productos/marcas" },
-  { id: "p-rubros",           type: "page", title: "Rubros",                       subtitle: "Categorías y rubros de productos",          icon: Box,         href: "/productos/rubros" },
-  { id: "p-unidades",         type: "page", title: "Unidades de Medida",           subtitle: "Kg, litros, unidades, etc.",                icon: Ruler,       href: "/productos/unidades" },
-  { id: "p-listas",           type: "page", title: "Listas de Precios",            subtitle: "Gestión de listas de precios",              icon: Receipt,     href: "/productos/listas-precios" },
-  { id: "p-precios",          type: "page", title: "Actualizar Precios",           subtitle: "Actualización masiva de precios",           icon: TrendingUp,  href: "/productos/actualizar-precios" },
-  { id: "p-compras",          type: "page", title: "Compras",                      subtitle: "Órdenes de compra a proveedores",           icon: Truck,       href: "/compras" },
+  {
+    id: "p-prod",
+    type: "page",
+    title: "Productos",
+    subtitle: "Inventario y stock",
+    icon: Package,
+    href: "/productos",
+  },
+  {
+    id: "p-marcas",
+    type: "page",
+    title: "Marcas",
+    subtitle: "Gestión de marcas de productos",
+    icon: Tag,
+    href: "/productos/marcas",
+  },
+  {
+    id: "p-rubros",
+    type: "page",
+    title: "Rubros",
+    subtitle: "Categorías y rubros de productos",
+    icon: Box,
+    href: "/productos/rubros",
+  },
+  {
+    id: "p-unidades",
+    type: "page",
+    title: "Unidades de Medida",
+    subtitle: "Kg, litros, unidades, etc.",
+    icon: Ruler,
+    href: "/productos/unidades",
+  },
+  {
+    id: "p-listas",
+    type: "page",
+    title: "Listas de Precios",
+    subtitle: "Gestión de listas de precios",
+    icon: Receipt,
+    href: "/productos/listas-precios",
+  },
+  {
+    id: "p-precios",
+    type: "page",
+    title: "Actualizar Precios",
+    subtitle: "Actualización masiva de precios",
+    icon: TrendingUp,
+    href: "/productos/actualizar-precios",
+  },
+  {
+    id: "p-compras",
+    type: "page",
+    title: "Compras",
+    subtitle: "Órdenes de compra a proveedores",
+    icon: Truck,
+    href: "/compras",
+  },
   // Clientes
-  { id: "p-client",           type: "page", title: "Clientes",                     subtitle: "Gestión de clientes",                       icon: Users,       href: "/clientes" },
-  { id: "p-cta-cte-cli",      type: "page", title: "Cuentas Corrientes Clientes",  subtitle: "Saldos y movimientos de clientes",          icon: CreditCard,  href: "/clientes/cuentas-corrientes" },
+  {
+    id: "p-client",
+    type: "page",
+    title: "Clientes",
+    subtitle: "Gestión de clientes",
+    icon: Users,
+    href: "/clientes",
+  },
+  {
+    id: "p-cta-cte-cli",
+    type: "page",
+    title: "Cuentas Corrientes Clientes",
+    subtitle: "Saldos y movimientos de clientes",
+    icon: CreditCard,
+    href: "/clientes/cuentas-corrientes",
+  },
   // Proveedores
-  { id: "p-prov",             type: "page", title: "Proveedores",                  subtitle: "Gestión de proveedores",                    icon: Truck,       href: "/proveedores" },
-  { id: "p-cta-cte-prov",     type: "page", title: "Cuentas Corrientes Proveedores", subtitle: "Saldos y movimientos de proveedores",    icon: CreditCard,  href: "/proveedores/cuentas-corrientes" },
+  {
+    id: "p-prov",
+    type: "page",
+    title: "Proveedores",
+    subtitle: "Gestión de proveedores",
+    icon: Truck,
+    href: "/proveedores",
+  },
+  {
+    id: "p-cta-cte-prov",
+    type: "page",
+    title: "Cuentas Corrientes Proveedores",
+    subtitle: "Saldos y movimientos de proveedores",
+    icon: CreditCard,
+    href: "/proveedores/cuentas-corrientes",
+  },
   // Analíticas
-  { id: "p-analit",           type: "page", title: "Analíticas",                   subtitle: "Métricas, gráficos y reportes",             icon: PieChart,    href: "/analiticas" },
+  {
+    id: "p-analit",
+    type: "page",
+    title: "Analíticas",
+    subtitle: "Métricas, gráficos y reportes",
+    icon: PieChart,
+    href: "/analiticas",
+  },
   // Gestión
-  { id: "p-empleados",        type: "page", title: "Empleados",                    subtitle: "Personal y gestión de usuarios",            icon: UserCircle,  href: "/empleados" },
-  { id: "p-roles",            type: "page", title: "Roles y Permisos",             subtitle: "Roles de acceso para empleados",            icon: Shield,      href: "/empleados/roles" },
-  { id: "p-auditoria",        type: "page", title: "Auditoría de Empleados",       subtitle: "Registro de actividad del personal",        icon: FileText,    href: "/empleados/auditoria" },
+  {
+    id: "p-empleados",
+    type: "page",
+    title: "Empleados",
+    subtitle: "Personal y gestión de usuarios",
+    icon: UserCircle,
+    href: "/empleados",
+  },
+  {
+    id: "p-roles",
+    type: "page",
+    title: "Roles y Permisos",
+    subtitle: "Roles de acceso para empleados",
+    icon: Shield,
+    href: "/empleados/roles",
+  },
+  {
+    id: "p-auditoria",
+    type: "page",
+    title: "Auditoría de Empleados",
+    subtitle: "Registro de actividad del personal",
+    icon: FileText,
+    href: "/empleados/auditoria",
+  },
   // Sistema
-  { id: "p-sucursal",         type: "page", title: "Sucursales",                   subtitle: "Gestión de locales y sucursales",           icon: Building2,   href: "/sucursales" },
-  { id: "p-config",           type: "page", title: "Configuración",                subtitle: "Perfil del negocio",                        icon: Settings,    href: "/configuracion" },
-  { id: "p-config-ventas",    type: "page", title: "Preferencias de Venta",        subtitle: "Configuración del proceso de venta",        icon: ShoppingCart, href: "/configuracion/ventas" },
-  { id: "p-config-fiscal",    type: "page", title: "Facturación y Región",         subtitle: "Datos fiscales, AFIP y región",             icon: Scale,       href: "/configuracion/fiscal" },
-  { id: "p-config-notif",     type: "page", title: "Notificaciones",               subtitle: "Alertas y configuración de avisos",         icon: Bell,        href: "/configuracion/notificaciones" },
-  { id: "p-config-seg",       type: "page", title: "Seguridad y Acceso",           subtitle: "Contraseñas, sesiones y dispositivos",      icon: Shield,      href: "/configuracion/seguridad" },
+  {
+    id: "p-sucursal",
+    type: "page",
+    title: "Sucursales",
+    subtitle: "Gestión de locales y sucursales",
+    icon: Building2,
+    href: "/sucursales",
+  },
+  {
+    id: "p-config",
+    type: "page",
+    title: "Configuración",
+    subtitle: "Perfil del negocio",
+    icon: Settings,
+    href: "/configuracion",
+  },
+  {
+    id: "p-config-ventas",
+    type: "page",
+    title: "Preferencias de Venta",
+    subtitle: "Configuración del proceso de venta",
+    icon: ShoppingCart,
+    href: "/configuracion/ventas",
+  },
+  {
+    id: "p-config-fiscal",
+    type: "page",
+    title: "Facturación y Región",
+    subtitle: "Datos fiscales, AFIP y región",
+    icon: Scale,
+    href: "/configuracion/fiscal",
+  },
+  {
+    id: "p-config-notif",
+    type: "page",
+    title: "Notificaciones",
+    subtitle: "Alertas y configuración de avisos",
+    icon: Bell,
+    href: "/configuracion/notificaciones",
+  },
+  {
+    id: "p-config-seg",
+    type: "page",
+    title: "Seguridad y Acceso",
+    subtitle: "Contraseñas, sesiones y dispositivos",
+    icon: Shield,
+    href: "/configuracion/seguridad",
+  },
 ];
 
-export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
+export default function GlobalSearchModal({
+  isOpen,
+  onClose,
+}: GlobalSearchModalProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 500);
@@ -112,7 +291,10 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
     queryKey: ["global-search-products", debouncedQuery],
     queryFn: async ({ signal }) => {
       if (debouncedQuery.length < 2) return [];
-      const res = await fetch(`/api/ventas/productos?q=${encodeURIComponent(debouncedQuery)}&limit=5`, { signal });
+      const res = await fetch(
+        `/api/ventas/productos?q=${encodeURIComponent(debouncedQuery)}&limit=5`,
+        { signal },
+      );
       if (!res.ok) return [];
       const json = await res.json();
       return json.data || [];
@@ -126,7 +308,10 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
     queryKey: ["global-search-clients", debouncedQuery],
     queryFn: async ({ signal }) => {
       if (debouncedQuery.length < 2) return [];
-      const res = await fetch(`/api/ventas/clientes?q=${encodeURIComponent(debouncedQuery)}`, { signal });
+      const res = await fetch(
+        `/api/ventas/clientes?q=${encodeURIComponent(debouncedQuery)}`,
+        { signal },
+      );
       if (!res.ok) return [];
       const json = await res.json();
       // limit to 5 manually if endpoint doesn't support limit
@@ -145,7 +330,7 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
     const filteredPages = STATIC_PAGES.filter(
       (p) =>
         p.title.toLowerCase().includes(lowerQ) ||
-        p.subtitle?.toLowerCase().includes(lowerQ)
+        p.subtitle?.toLowerCase().includes(lowerQ),
     );
     result.push(...filteredPages); // all matching pages
 
@@ -198,12 +383,16 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
       // Navegar a productos: la tabla busca por Descripción/CodigoBarra
       // (no por Codigo), así que usamos la Descripción para que el término
       // efectivamente filtre la lista además de abrir el modal de edición.
-      router.push(`/productos?q=${encodeURIComponent(item.data.Descripcion)}&editId=${item.data.Id}`);
+      router.push(
+        `/productos?q=${encodeURIComponent(item.data.Descripcion)}&editId=${item.data.Id}`,
+      );
     } else if (item.type === "client") {
       // Navegar a clientes y abrir el modal
       const searchDni = item.data.dni || item.data.cuit;
       if (searchDni) {
-        router.push(`/clientes?q=${encodeURIComponent(searchDni)}&editId=${item.data.id}`);
+        router.push(
+          `/clientes?q=${encodeURIComponent(searchDni)}&editId=${item.data.id}`,
+        );
       } else {
         router.push(`/clientes?editId=${item.data.id}`);
       }
@@ -291,7 +480,7 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
               className="flex-1 w-full bg-transparent border-none outline-none text-[15px] font-medium text-slate-700 placeholder:text-slate-400"
             />
             {isFetching && (
-              <Spinner size="sm" color="current" className="text-[#67afc3]" />
+              <Spinner size="sm" color="current" className="text-[#0066ff98]" />
             )}
             <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-1 rounded-lg bg-slate-100 text-slate-400 text-[10px] font-mono font-medium border border-slate-200">
               ESC
@@ -312,10 +501,15 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
                   Intenta buscar con otros términos
                 </p>
               </div>
-            ) : items.length === 0 && !isFetching && debouncedQuery.length > 0 && debouncedQuery.length < 2 ? (
-               <div className="py-6 px-4 text-center">
-                 <p className="text-slate-500 text-sm">Escribe al menos 2 caracteres para buscar en base de datos...</p>
-               </div>
+            ) : items.length === 0 &&
+              !isFetching &&
+              debouncedQuery.length > 0 &&
+              debouncedQuery.length < 2 ? (
+              <div className="py-6 px-4 text-center">
+                <p className="text-slate-500 text-sm">
+                  Escribe al menos 2 caracteres para buscar en base de datos...
+                </p>
+              </div>
             ) : (
               items.map((item, index) => {
                 const isSelected = index === selectedIndex;
@@ -326,7 +520,8 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
 
                 // Get type label
                 let typeLabel = "Navegación";
-                if (item.type === "product") typeLabel = "Artículos / Productos";
+                if (item.type === "product")
+                  typeLabel = "Artículos / Productos";
                 if (item.type === "client") typeLabel = "Clientes";
 
                 return (
@@ -342,7 +537,7 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
                       className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-150 group outline-none
                         ${
                           isSelected
-                            ? "bg-[#67afc3]/10 text-[#67afc3]"
+                            ? "bg-[#0066ff98]/10 text-[#0066ff98]"
                             : "hover:bg-slate-50 text-slate-600"
                         }
                       `}
@@ -354,17 +549,19 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
                           className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 transition-colors
                             ${
                               isSelected
-                                ? "bg-[#67afc3] text-white"
+                                ? "bg-[#0066ff98] text-white"
                                 : "bg-slate-100 text-slate-400 group-hover:bg-slate-200"
                             }
                           `}
                         >
-                          {item.icon && <item.icon size={16} strokeWidth={2.5} />}
+                          {item.icon && (
+                            <item.icon size={16} strokeWidth={2.5} />
+                          )}
                         </div>
                         <div className="flex flex-col min-w-0 pr-4">
                           <span
                             className={`font-semibold text-[14px] leading-tight truncate
-                              ${isSelected ? "text-[#67afc3]" : "text-slate-800"}
+                              ${isSelected ? "text-[#0066ff98]" : "text-slate-800"}
                             `}
                           >
                             {item.title}
@@ -372,7 +569,7 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
                           {item.subtitle && (
                             <span
                               className={`text-[12px] mt-0.5 truncate leading-tight
-                                ${isSelected ? "text-[#67afc3]/80" : "text-slate-500"}
+                                ${isSelected ? "text-[#0066ff98]/80" : "text-slate-500"}
                               `}
                             >
                               {item.subtitle}
@@ -380,35 +577,51 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
                           )}
                         </div>
                       </div>
-                      
+
                       {isSelected ? (
                         <div className="shrink-0 flex items-center gap-2">
-                           <span className="text-[10px] uppercase font-bold tracking-wider text-[#67afc3]/60 hidden sm:inline-block">Select</span>
-                           <ChevronRight size={16} strokeWidth={2.5} className="text-[#67afc3]" />
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-[#0066ff98]/60 hidden sm:inline-block">
+                            Select
+                          </span>
+                          <ChevronRight
+                            size={16}
+                            strokeWidth={2.5}
+                            className="text-[#0066ff98]"
+                          />
                         </div>
                       ) : (
-                         <ChevronRight size={16} strokeWidth={2.5} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
-                       )}
+                        <ChevronRight
+                          size={16}
+                          strokeWidth={2.5}
+                          className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                        />
+                      )}
                     </button>
                   </React.Fragment>
                 );
               })
             )}
           </div>
-          
+
           <div className="border-t border-slate-100 bg-slate-50/50 px-4 py-2 flex items-center gap-4 text-[11px] text-slate-400 font-medium">
-             <div className="flex items-center gap-1.5">
-               <kbd className="px-1.5 py-0.5 rounded-md bg-white border border-slate-200 font-mono shadow-sm">↑↓</kbd>
-               <span>Navegar</span>
-             </div>
-             <div className="flex items-center gap-1.5">
-               <kbd className="px-1.5 py-0.5 rounded-md bg-white border border-slate-200 font-mono shadow-sm">↵</kbd>
-               <span>Seleccionar</span>
-             </div>
-             <div className="flex items-center gap-1.5 ml-auto">
-               <kbd className="px-1.5 py-0.5 rounded-md bg-white border border-slate-200 font-mono shadow-sm">ESC</kbd>
-               <span>Cerrar</span>
-             </div>
+            <div className="flex items-center gap-1.5">
+              <kbd className="px-1.5 py-0.5 rounded-md bg-white border border-slate-200 font-mono shadow-sm">
+                ↑↓
+              </kbd>
+              <span>Navegar</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <kbd className="px-1.5 py-0.5 rounded-md bg-white border border-slate-200 font-mono shadow-sm">
+                ↵
+              </kbd>
+              <span>Seleccionar</span>
+            </div>
+            <div className="flex items-center gap-1.5 ml-auto">
+              <kbd className="px-1.5 py-0.5 rounded-md bg-white border border-slate-200 font-mono shadow-sm">
+                ESC
+              </kbd>
+              <span>Cerrar</span>
+            </div>
           </div>
         </ModalBody>
       </ModalContent>

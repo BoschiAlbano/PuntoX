@@ -38,7 +38,12 @@ export default function ListaPrecioForm({
     if (initialData) {
       setFormData(initialData);
     } else {
-      setFormData({ Nombre: "", PorDefecto: false, Activa: true, EstaEliminado: false });
+      setFormData({
+        Nombre: "",
+        PorDefecto: false,
+        Activa: true,
+        EstaEliminado: false,
+      });
     }
   }, [initialData, isOpen]);
 
@@ -95,7 +100,9 @@ export default function ListaPrecioForm({
             placeholder="Ej: Mayorista, Lista VIP"
             autoFocus
             value={formData.Nombre || ""}
-            onChange={(e) => setFormData({ ...formData, Nombre: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, Nombre: e.target.value })
+            }
             isRequired
             isDisabled={isSaving}
             classNames={inputClassNames}
@@ -103,7 +110,9 @@ export default function ListaPrecioForm({
           <div className="flex flex-col gap-3 px-1">
             <Switch
               isSelected={formData.Activa}
-              onValueChange={(checked) => setFormData({ ...formData, Activa: checked })}
+              onValueChange={(checked) =>
+                setFormData({ ...formData, Activa: checked })
+              }
               isDisabled={isSaving}
               color="success"
               size="sm"
@@ -116,10 +125,16 @@ export default function ListaPrecioForm({
             </Switch>
             <Switch
               isSelected={formData.PorDefecto}
-              onValueChange={(checked) => setFormData({ ...formData, PorDefecto: checked })}
+              onValueChange={(checked) =>
+                setFormData({ ...formData, PorDefecto: checked })
+              }
               isDisabled={isSaving}
               size="sm"
-              classNames={{ thumb: "bg-white", wrapper: "bg-[#67afc3]/30 group-data-[selected=true]:bg-[#67afc3]" }}
+              classNames={{
+                thumb: "bg-white",
+                wrapper:
+                  "bg-[#67afc3]/30 group-data-[selected=true]:bg-[#67afc3]",
+              }}
             >
               <span className="text-sm font-medium text-slate-700">
                 Lista por defecto
@@ -141,7 +156,7 @@ export default function ListaPrecioForm({
           <Button
             onPress={() => onSubmit(formData)}
             isLoading={isSaving}
-            className="bg-[#67afc3] hover:bg-[#4899b0] text-white font-bold rounded-xl shadow-md shadow-[#67afc3]/30 h-10 px-6"
+            className="modal-primary-action font-bold rounded-xl h-10 px-6"
           >
             {isEdit ? "Guardar Cambios" : "Crear"}
           </Button>

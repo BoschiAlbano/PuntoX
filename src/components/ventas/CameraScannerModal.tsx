@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { modalMotionProps } from "@/lib/motionConfig";
 import {
   Modal,
   ModalContent,
@@ -68,7 +69,7 @@ export default function CameraScannerModal({
             },
             (errorMessage) => {
               // Ignorar errores de frame
-            }
+            },
           );
         } else if (isMounted) {
           setHasCameras(false);
@@ -84,15 +85,18 @@ export default function CameraScannerModal({
     return () => {
       isMounted = false;
       clearTimeout(timeout);
-      
+
       if (html5QrCode && html5QrCode.isScanning) {
         // Envolver en try/catch y evitar crasheo si ya está transicionando
         try {
-          html5QrCode.stop().then(() => {
-            html5QrCode?.clear();
-          }).catch((err) => {
-            console.warn("Error asíncrono al detener cámara:", err);
-          });
+          html5QrCode
+            .stop()
+            .then(() => {
+              html5QrCode?.clear();
+            })
+            .catch((err) => {
+              console.warn("Error asíncrono al detener cámara:", err);
+            });
         } catch (err) {
           console.warn("Fallo síncrono al detener cámara:", err);
         }
@@ -106,9 +110,11 @@ export default function CameraScannerModal({
       onOpenChange={(open) => !open && onClose()}
       placement="center"
       backdrop="opaque"
+      motionProps={modalMotionProps}
       classNames={{
-        base: "bg-white",
-        backdrop: "bg-slate-900/60 backdrop-blur-sm",
+        base: "bg-white border border-[#E2E8F0] rounded-xl shadow-[0_20px_25px_-5px_rgba(15,23,42,0.08),0_8px_10px_-6px_rgba(15,23,42,0.04)]",
+        backdrop: "bg-slate-900/60",
+        header: "border-b border-[#E2E8F0]",
       }}
     >
       <ModalContent>
@@ -139,7 +145,8 @@ export default function CameraScannerModal({
               )}
               <p className="text-xs text-slate-400 mt-2 text-center">
                 Apunta la cámara al código de barras. <br />
-                Si quieres escanear varias unidades del mismo producto, mantenlo a la vista.
+                Si quieres escanear varias unidades del mismo producto, mantenlo
+                a la vista.
               </p>
             </ModalBody>
           </>

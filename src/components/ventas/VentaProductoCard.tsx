@@ -46,10 +46,10 @@ export function VentaProductoCard({
       ref={buttonRef}
       onClick={() => onAdd(item)}
       onMouseEnter={onMouseEnter}
-      className={`group w-full text-left bg-white rounded-xl border overflow-hidden hover:border-[#67afc3]/60 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#67afc3]/40 ${
+      className={`group w-full text-left bg-white rounded-lg border overflow-hidden hover:border-[#0066ff]/50 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#0066ff]/30 ${
         isHighlighted
-          ? "border-[#67afc3] ring-2 ring-[#67afc3]/40 shadow-md"
-          : "border-slate-200"
+          ? "border-[#0066ff] ring-2 ring-[#0066ff]/20 shadow-md"
+          : "border-[#E2E8F0]"
       }`}
     >
       {/* Foto */}
@@ -77,8 +77,8 @@ export function VentaProductoCard({
           </span>
         </div>
         {/* Botón agregar overlay */}
-        <div className="absolute inset-0 bg-[#67afc3]/0 group-hover:bg-[#67afc3]/10 transition-colors duration-200 flex items-center justify-center">
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-[#67afc3] text-white rounded-full p-2 shadow-lg">
+        <div className="absolute inset-0 bg-[#0066ff]/0 group-hover:bg-[#0066ff]/10 transition-colors duration-200 flex items-center justify-center">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-[#0066ff] text-white rounded-full p-2 shadow-lg">
             <Plus size={16} />
           </div>
         </div>
@@ -87,7 +87,7 @@ export function VentaProductoCard({
       {/* Info */}
       <div className="p-2.5">
         <p
-          className="text-xs font-semibold text-slate-700 leading-tight line-clamp-2 group-hover:text-[#67afc3] transition-colors min-h-[2.4em]"
+          className="text-xs font-semibold text-slate-700 leading-tight line-clamp-2 group-hover:text-[#0050cb] transition-colors min-h-[2.4em]"
           title={item.Descripcion}
         >
           {item.Descripcion}

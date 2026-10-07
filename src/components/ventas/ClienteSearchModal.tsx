@@ -61,7 +61,9 @@ export default function ClienteSearchModal({
   const { isLoading, isFetching } = useQuery({
     queryKey: ["clientes_ventas", debouncedSearch],
     queryFn: async ({ signal }) => {
-      const res = await fetch(`/api/ventas/clientes?q=${debouncedSearch}`, { signal });
+      const res = await fetch(`/api/ventas/clientes?q=${debouncedSearch}`, {
+        signal,
+      });
       if (!res.ok) return [];
       const data = await res.json();
       setItems(data);
@@ -95,11 +97,13 @@ export default function ClienteSearchModal({
         backdrop="opaque"
         motionProps={modalMotionProps}
         classNames={{
-          base: "bg-white shadow-2xl border border-slate-200 sm:rounded-[24px] rounded-none m-0 sm:m-auto h-full sm:h-auto sm:max-h-[85vh]",
-          header: "border-b border-slate-100 pb-3 pt-4 sm:pb-4 sm:pt-6 px-4 sm:px-8",
+          base: "bg-white shadow-[0_20px_25px_-5px_rgba(15,23,42,0.08),0_8px_10px_-6px_rgba(15,23,42,0.04)] border border-[#E2E8F0] sm:rounded-2xl rounded-none m-0 sm:m-auto h-full sm:h-auto sm:max-h-[85vh]",
+          header:
+            "border-b border-[#E2E8F0] pb-3 pt-4 sm:pb-4 sm:pt-6 px-4 sm:px-8",
           body: "py-3 sm:py-6 px-3 sm:px-8 flex-1 overflow-hidden flex flex-col",
-          footer: "border-t border-slate-100 py-3 sm:py-4 px-4 sm:px-8",
-          closeButton: "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
+          footer: "border-t border-[#E2E8F0] py-3 sm:py-4 px-4 sm:px-8",
+          closeButton:
+            "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
         }}
       >
         <ModalContent>
@@ -107,8 +111,8 @@ export default function ClienteSearchModal({
             <>
               <ModalHeader className="flex flex-col gap-1">
                 <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-[#67afc3]/10 border border-[#67afc3]/20">
-                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-[#67afc3]" />
+                  <div className="p-2 sm:p-2.5 rounded-lg bg-[#EFF6FF] border border-[#DBEAFE]">
+                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-[#0050cb]" />
                   </div>
                   <div>
                     <h2 className="text-base sm:text-xl font-extrabold text-slate-800 tracking-tight">
@@ -124,7 +128,9 @@ export default function ClienteSearchModal({
               <ModalBody>
                 <Input
                   placeholder="Buscar por Nombre, DNI, Email..."
-                  startContent={<Search className="text-slate-400 mr-1 sm:mr-2" size={16} />}
+                  startContent={
+                    <Search className="text-slate-400 mr-1 sm:mr-2" size={16} />
+                  }
                   value={searchQuery}
                   onValueChange={setSearchQuery}
                   onClear={() => setSearchQuery("")}
@@ -132,7 +138,7 @@ export default function ClienteSearchModal({
                   isClearable
                   classNames={{
                     inputWrapper:
-                      "bg-slate-50 hover:bg-slate-100 focus-within:!bg-white border-2 border-transparent focus-within:!border-[#67afc3]/40 transition-all shadow-sm rounded-xl h-11 sm:h-14",
+                      "bg-[#F8FAFC] hover:bg-slate-100 focus-within:!bg-white border border-[#CBD5E1] focus-within:!border-[#0066ff] focus-within:ring-2 focus-within:ring-[#0066ff]/15 transition-all shadow-none rounded-lg h-11 sm:h-14",
                     input: "text-slate-700 font-medium text-sm sm:text-[15px]",
                     clearButton: "text-slate-400",
                   }}
@@ -152,10 +158,13 @@ export default function ClienteSearchModal({
                         {items.map((item: any) => (
                           <button
                             key={item.id}
-                            onClick={() => { handleSelect(item); onClose(); }}
-                            className="w-full px-3 py-3 flex items-center gap-3 hover:bg-[#67afc3]/5 active:bg-[#67afc3]/10 transition-colors text-left"
+                            onClick={() => {
+                              handleSelect(item);
+                              onClose();
+                            }}
+                            className="w-full px-3 py-3 flex items-center gap-3 hover:bg-[#EFF6FF] active:bg-[#DBEAFE] transition-colors text-left"
                           >
-                            <div className="w-8 h-8 rounded-full bg-[#67afc3] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-[#0066ff] text-white flex items-center justify-center font-bold text-xs shrink-0">
                               {item.nombreCompleto?.charAt(0).toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
@@ -166,18 +175,21 @@ export default function ClienteSearchModal({
                                 {item.dni || item.cuit || "-"}
                               </span>
                               {item.mail && (
-                                <span className="text-[10px] text-slate-400 truncate">{item.mail}</span>
+                                <span className="text-[10px] text-slate-400 truncate">
+                                  {item.mail}
+                                </span>
                               )}
                             </div>
-                            <div className="shrink-0 w-8 h-8 rounded-lg bg-[#67afc3]/10 flex items-center justify-center">
-                              <Plus size={16} className="text-[#67afc3]" />
+                            <div className="shrink-0 w-8 h-8 rounded-lg bg-[#EFF6FF] flex items-center justify-center">
+                              <Plus size={16} className="text-[#0050cb]" />
                             </div>
                           </button>
                         ))}
                         {items.length >= 50 && (
                           <div className="flex w-full justify-center p-3 bg-slate-50/50">
                             <span className="text-[10px] font-semibold text-slate-400">
-                              Mostrando primeros 50 resultados. Afina tu búsqueda.
+                              Mostrando primeros 50 resultados. Afina tu
+                              búsqueda.
                             </span>
                           </div>
                         )}
@@ -189,15 +201,20 @@ export default function ClienteSearchModal({
                         removeWrapper
                         selectionMode="single"
                         onRowAction={(key) => {
-                          const selectedItem = items.find((item: any) => item.id == key);
-                          if (selectedItem) { handleSelect(selectedItem); onClose(); }
+                          const selectedItem = items.find(
+                            (item: any) => item.id == key,
+                          );
+                          if (selectedItem) {
+                            handleSelect(selectedItem);
+                            onClose();
+                          }
                         }}
                         classNames={{
                           base: "h-full flex-col overflow-auto scrollbar-hide hidden sm:flex",
                           table: "min-h-0",
                           thead: "sticky top-0 z-20 shrink-0",
                           th: "bg-slate-50/90 backdrop-blur-md text-slate-400 font-bold text-xs tracking-wider border-b border-slate-100 h-11 first:rounded-l-none last:rounded-r-none uppercase",
-                          tr: "hover:bg-[#67afc3]/5 transition-colors border-b border-slate-50 last:border-none cursor-pointer group",
+                          tr: "hover:bg-[#EFF6FF] transition-colors border-b border-[#F1F5F9] last:border-none cursor-pointer group",
                           td: "py-3.5 text-sm text-slate-600 font-medium",
                           emptyWrapper: "h-full w-full block",
                         }}
@@ -205,7 +222,8 @@ export default function ClienteSearchModal({
                           items?.length >= 50 && (
                             <div className="flex w-full justify-center p-3 border-t border-slate-100 bg-slate-50/50">
                               <span className="text-xs font-semibold text-slate-400">
-                                Mostrando primeros 50 resultados. Afina tu búsqueda.
+                                Mostrando primeros 50 resultados. Afina tu
+                                búsqueda.
                               </span>
                             </div>
                           )
@@ -217,15 +235,22 @@ export default function ClienteSearchModal({
                           <TableColumn>CONTACTO</TableColumn>
                           <TableColumn align="center">ACCIÓN</TableColumn>
                         </TableHeader>
-                        <TableBody items={items} loadingState={isLoading || isFetching ? "loading" : "idle"}>
+                        <TableBody
+                          items={items}
+                          loadingState={
+                            isLoading || isFetching ? "loading" : "idle"
+                          }
+                        >
                           {(item: any) => (
                             <TableRow key={item.id}>
                               <TableCell>
                                 <div className="flex items-center gap-3">
-                                  <div className="w-7 h-7 rounded-full bg-[#67afc3] text-white flex items-center justify-center font-bold text-xs shrink-0">
-                                    {item.nombreCompleto?.charAt(0).toUpperCase()}
+                                  <div className="w-7 h-7 rounded-full bg-[#0066ff] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                                    {item.nombreCompleto
+                                      ?.charAt(0)
+                                      .toUpperCase()}
                                   </div>
-                                  <span className="group-hover:text-[#67afc3] transition-colors font-semibold truncate max-w-[180px]">
+                                  <span className="group-hover:text-[#0050cb] transition-colors font-semibold truncate max-w-[180px]">
                                     {item.nombreCompleto}
                                   </span>
                                 </div>
@@ -243,8 +268,11 @@ export default function ClienteSearchModal({
                               <TableCell>
                                 <Button
                                   size="sm"
-                                  className="bg-slate-100 text-slate-600 font-semibold group-hover:bg-[#67afc3] group-hover:text-white transition-all shadow-sm w-full"
-                                  onPress={() => { handleSelect(item); onClose(); }}
+                                  className="bg-slate-100 text-slate-600 font-semibold group-hover:bg-[#0066ff] group-hover:text-white transition-all shadow-sm w-full"
+                                  onPress={() => {
+                                    handleSelect(item);
+                                    onClose();
+                                  }}
                                 >
                                   Seleccionar
                                 </Button>
@@ -293,11 +321,11 @@ export default function ClienteSearchModal({
                     Cancelar
                   </Button>
                   <Button
-                    className="flex-1 sm:flex-none bg-[#67afc3] text-white font-semibold shadow-md shadow-[#67afc3]/20 text-sm h-11 sm:h-10 px-3"
+                    className="flex-1 sm:flex-none bg-[#0066ff] hover:bg-[#0050cb] text-white font-semibold shadow-md shadow-[#0066ff]/20 text-sm h-11 sm:h-10 px-3"
                     startContent={<Plus size={16} strokeWidth={2.5} />}
                     onPress={() => {
                       onClose();
-                      router.push('/clientes/new');
+                      router.push("/clientes/new");
                     }}
                   >
                     Nuevo Cliente

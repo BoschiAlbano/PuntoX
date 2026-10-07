@@ -55,7 +55,10 @@ export default function CajaHistorialDetalleScreen({ id }: { id: number }) {
   const movLimit = 10;
 
   const movimientosConGastos = useMemo(() => {
-    const movs = (cajaActual?.Movimiento || []).map((m: any) => ({ ...m, _esGasto: false }));
+    const movs = (cajaActual?.Movimiento || []).map((m: any) => ({
+      ...m,
+      _esGasto: false,
+    }));
     const gas = (cajaActual?.Gasto || []).map((g: any) => ({
       Id: `gasto-${g.Id}`,
       Fecha: g.Fecha,
@@ -140,7 +143,9 @@ export default function CajaHistorialDetalleScreen({ id }: { id: number }) {
             </div>
           );
         case "tipo":
-          const isEntradaTipo = mov._esGasto ? false : mov.TipoMovimiento === TIPO_MOVIMIENTO.ENTRADA;
+          const isEntradaTipo = mov._esGasto
+            ? false
+            : mov.TipoMovimiento === TIPO_MOVIMIENTO.ENTRADA;
           return (
             <Chip
               className="capitalize"
@@ -159,7 +164,9 @@ export default function CajaHistorialDetalleScreen({ id }: { id: number }) {
             </Chip>
           );
         case "monto":
-          const isPos = mov._esGasto ? false : mov.TipoMovimiento === TIPO_MOVIMIENTO.ENTRADA;
+          const isPos = mov._esGasto
+            ? false
+            : mov.TipoMovimiento === TIPO_MOVIMIENTO.ENTRADA;
           return (
             <span
               className={`font-semibold ${isPos ? "text-success" : "text-danger"}`}

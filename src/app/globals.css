@@ -133,6 +133,24 @@
      ──────────────────────────────────────────────────────── */
   --crud-accent: #0f2233; /* botones, headers de tabla, badges  */
   --crud-accent-hover: #2d3f5c; /* hover de botones y bordes          */
+  --crud-action: #ff6100;
+  --crud-action-hover: #e65700;
+  --crud-action-shadow: rgba(255, 97, 0, 0.35);
+  --modal-primary-action: #ff6100;
+  --modal-primary-action-hover: #e65700;
+  --modal-primary-action-ring: rgba(255, 97, 0, 0.3);
+  --modal-primary-action: #ff6100;
+  --modal-primary-action-hover: #e65700;
+  --modal-primary-action-shadow: rgba(255, 97, 0, 0.35);
+
+  .crud-action-button:hover:not(:disabled):not([aria-disabled="true"]) {
+    background-color: var(--crud-action-hover) !important;
+  }
+
+  .crud-action-button:focus-visible {
+    outline: 2px solid var(--crud-action);
+    outline-offset: 2px;
+  }
   --crud-accent-muted: rgba(
     29,
     41,
@@ -166,6 +184,41 @@
   --table-row-hover-bg: #ffffff; /* fondo hover de fila              */
   --table-row-selected-bg: #ffffff;
   --table-checkbox-accent: #0f2233; /* color del checkbox al marcar     */
+}
+
+.modal-primary-action,
+.modal-primary-action[aria-disabled="false"] {
+  background-color: var(--modal-primary-action) !important;
+  border-color: var(--modal-primary-action) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px var(--modal-primary-action-shadow) !important;
+}
+
+.modal-primary-action:hover:not(:disabled) {
+  background-color: var(--modal-primary-action-hover) !important;
+  border-color: var(--modal-primary-action-hover) !important;
+}
+
+.modal-primary-action:focus-visible {
+  outline: 2px solid var(--modal-primary-action);
+  outline-offset: 2px;
+}
+
+.modal-primary-action {
+  background-color: var(--modal-primary-action) !important;
+  border-color: var(--modal-primary-action) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(255, 97, 0, 0.35) !important;
+}
+
+.modal-primary-action:hover:not(:disabled):not([aria-disabled="true"]) {
+  background-color: var(--modal-primary-action-hover) !important;
+  border-color: var(--modal-primary-action-hover) !important;
+}
+
+.modal-primary-action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--modal-primary-action-ring) !important;
 }
 
 /* Enable dark mode variables when .dark class is present */

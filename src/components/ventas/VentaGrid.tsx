@@ -13,7 +13,23 @@ import {
   SelectItem,
   Switch,
 } from "@heroui/react";
-import { Trash2, Minus, Plus, ShoppingBag, DollarSign, PenLine, Scale, Tag, Check, X, Percent, AlertTriangle, ScanBarcode, Gift, Package } from "lucide-react";
+import {
+  Trash2,
+  Minus,
+  Plus,
+  ShoppingBag,
+  DollarSign,
+  PenLine,
+  Scale,
+  Tag,
+  Check,
+  X,
+  Percent,
+  AlertTriangle,
+  ScanBarcode,
+  Gift,
+  Package,
+} from "lucide-react";
 import { TiposVenta } from "../../../prisma/generated/prisma";
 import { OrigenPrecio } from "@/store/ventaStore";
 import { useQuery } from "@tanstack/react-query";
@@ -39,19 +55,33 @@ interface ItemWarning {
 }
 
 function getItemWarning(item: any): ItemWarning {
-  if (item.DescuentaStock && !item.PermiteStockNegativo && item.Stock !== null) {
+  if (
+    item.DescuentaStock &&
+    !item.PermiteStockNegativo &&
+    item.Stock !== null
+  ) {
     const stock = parseFloat(item.Stock);
     if (!isNaN(stock)) {
       if (item.cantidad > stock) {
-        return { type: "stock", message: `Sin stock suficiente (disponible: ${stock})` };
+        return {
+          type: "stock",
+          message: `Sin stock suficiente (disponible: ${stock})`,
+        };
       }
       if (item.cantidad >= stock && stock > 0) {
         return { type: "stock", message: `Último stock disponible (${stock})` };
       }
     }
   }
-  if (item.ActivarLimiteVenta && item.LimiteVenta > 0 && item.cantidad >= item.LimiteVenta) {
-    return { type: "limit", message: `Límite de venta alcanzado (máx. ${item.LimiteVenta})` };
+  if (
+    item.ActivarLimiteVenta &&
+    item.LimiteVenta > 0 &&
+    item.cantidad >= item.LimiteVenta
+  ) {
+    return {
+      type: "limit",
+      message: `Límite de venta alcanzado (máx. ${item.LimiteVenta})`,
+    };
   }
   return { type: null, message: "" };
 }
@@ -68,7 +98,9 @@ export default function VentaGrid({
 }: VentaGridProps) {
   const [selectedIds, setSelectedIds] = React.useState<Set<number>>(new Set());
   const [bulkLista, setBulkLista] = React.useState<string>("");
-  const [bulkMode, setBulkMode] = React.useState<"lista" | "descuento">("lista");
+  const [bulkMode, setBulkMode] = React.useState<"lista" | "descuento">(
+    "lista",
+  );
   const [bulkDescuento, setBulkDescuento] = React.useState<string>("");
 
   // Clear selection when items change (product removed)
@@ -140,28 +172,29 @@ export default function VentaGrid({
   };
 
   return (
-    <div className="bg-white flex-1 h-full w-full overflow-hidden rounded-lg border border-slate-300 flex flex-col justify-start min-h-[150px]">
+    <div className="bg-white flex-1 h-full w-full overflow-hidden rounded-lg border border-[#E2E8F0] flex flex-col justify-start min-h-[150px]">
       {/* ── Bulk Action Bar ── */}
       {selectedIds.size > 0 && (
-        <div className="shrink-0 flex flex-col gap-2 px-3 py-2.5 bg-[#67afc3]/10 border-b border-[#67afc3]/20">
+        <div className="shrink-0 flex flex-col gap-2 px-3 py-2.5 bg-[#eff6ff] border-b border-[#bfdbfe]">
           {/* Row 1: count + action tabs + delete + cancel */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-semibold text-[#4a8fa3] shrink-0">
-              {selectedIds.size} {selectedIds.size === 1 ? "seleccionado" : "seleccionados"}
+            <span className="text-xs font-semibold text-[#1d4ed8] shrink-0">
+              {selectedIds.size}{" "}
+              {selectedIds.size === 1 ? "seleccionado" : "seleccionados"}
             </span>
 
             {/* Action tabs */}
-            <div className="flex items-center rounded-lg overflow-hidden border border-[#67afc3]/30 bg-white shrink-0">
+            <div className="flex items-center rounded-lg overflow-hidden border border-[#bfdbfe] bg-white shrink-0">
               <button
                 onClick={() => setBulkMode("lista")}
-                className={`flex items-center gap-1 px-2.5 h-7 text-[11px] font-semibold transition-colors ${bulkMode === "lista" ? "bg-[#67afc3] text-white" : "text-slate-500 hover:bg-slate-50"}`}
+                className={`flex items-center gap-1 px-2.5 h-7 text-[11px] font-semibold transition-colors ${bulkMode === "lista" ? "bg-[#0066ff] text-white" : "text-slate-500 hover:bg-slate-50"}`}
               >
                 <Tag size={11} />
                 Lista precios
               </button>
               <button
                 onClick={() => setBulkMode("descuento")}
-                className={`flex items-center gap-1 px-2.5 h-7 text-[11px] font-semibold transition-colors ${bulkMode === "descuento" ? "bg-[#67afc3] text-white" : "text-slate-500 hover:bg-slate-50"}`}
+                className={`flex items-center gap-1 px-2.5 h-7 text-[11px] font-semibold transition-colors ${bulkMode === "descuento" ? "bg-[#0066ff] text-white" : "text-slate-500 hover:bg-slate-50"}`}
               >
                 <Percent size={11} />
                 Descuento
@@ -204,15 +237,21 @@ export default function VentaGrid({
                   selectedKeys={bulkLista ? [bulkLista] : []}
                   onChange={(e) => setBulkLista(e.target.value)}
                   size="sm"
-                  startContent={<Tag size={13} className="text-[#67afc3]" />}
+                  startContent={<Tag size={13} className="text-[#0050cb]" />}
                   classNames={{
-                    trigger: "bg-white border border-[#67afc3]/40 shadow-none h-8 min-h-8",
+                    trigger:
+                      "bg-white border border-[#CBD5E1] focus-visible:ring-2 focus-visible:ring-[#0066ff]/15 shadow-none h-8 min-h-8",
                     value: "font-semibold text-slate-700 text-[12px]",
                   }}
                 >
                   {listas.map((lista: any) => (
-                    <SelectItem key={lista.Id.toString()} textValue={lista.Nombre}>
-                      <span className="text-[13px] font-medium">{lista.Nombre}</span>
+                    <SelectItem
+                      key={lista.Id.toString()}
+                      textValue={lista.Nombre}
+                    >
+                      <span className="text-[13px] font-medium">
+                        {lista.Nombre}
+                      </span>
                     </SelectItem>
                   ))}
                 </Select>
@@ -221,7 +260,7 @@ export default function VentaGrid({
                 size="sm"
                 isDisabled={!bulkLista}
                 onPress={handleApplyBulkLista}
-                className="shrink-0 h-8 px-3 bg-[#67afc3] text-white text-[12px] font-semibold hover:bg-[#4a8fa3] transition-colors"
+                className="shrink-0 h-8 px-3 bg-[#0066ff] text-white text-[12px] font-semibold hover:bg-[#0050cb] transition-colors"
                 startContent={<Check size={13} />}
               >
                 Aplicar
@@ -240,15 +279,21 @@ export default function VentaGrid({
                   placeholder="% descuento"
                   value={bulkDescuento}
                   onChange={(e) => setBulkDescuento(e.target.value)}
-                  className="w-full h-8 pl-3 pr-8 rounded-lg border border-[#67afc3]/40 bg-white text-[12px] font-semibold text-slate-700 outline-none focus:border-[#67afc3] transition-colors appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full h-8 pl-3 pr-8 rounded-lg border border-[#CBD5E1] bg-white text-[12px] font-semibold text-slate-700 outline-none focus:border-[#0066ff] focus:ring-2 focus:ring-[#0066ff]/15 transition-colors appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
-                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400">%</span>
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400">
+                  %
+                </span>
               </div>
               <Button
                 size="sm"
-                isDisabled={!bulkDescuento || parseFloat(bulkDescuento) <= 0 || parseFloat(bulkDescuento) > 100}
+                isDisabled={
+                  !bulkDescuento ||
+                  parseFloat(bulkDescuento) <= 0 ||
+                  parseFloat(bulkDescuento) > 100
+                }
                 onPress={handleApplyDiscount}
-                className="shrink-0 h-8 px-3 bg-[#67afc3] text-white text-[12px] font-semibold hover:bg-[#4a8fa3] transition-colors"
+                className="shrink-0 h-8 px-3 bg-[#0066ff] text-white text-[12px] font-semibold hover:bg-[#0050cb] transition-colors"
                 startContent={<Check size={13} />}
               >
                 Aplicar
@@ -265,7 +310,9 @@ export default function VentaGrid({
             <ShoppingBag size={26} className="text-slate-300" />
           </div>
           <div className="flex flex-col items-center gap-1 text-center">
-            <p className="text-sm font-semibold text-slate-500">Sin productos</p>
+            <p className="text-sm font-semibold text-slate-500">
+              Sin productos
+            </p>
             <p className="text-xs text-slate-400 max-w-[200px] leading-relaxed">
               Escanea o busca un producto para comenzar
             </p>
@@ -277,8 +324,8 @@ export default function VentaGrid({
               Atajos de teclado
             </p>
             {[
-              { key: "F2",  label: "Buscar producto" },
-              { key: "F6",  label: "Buscar cliente" },
+              { key: "F2", label: "Buscar producto" },
+              { key: "F6", label: "Buscar cliente" },
               { key: "F10", label: "Confirmar venta" },
               { key: "Esc", label: "Cancelar venta" },
             ].map(({ key, label }) => (
@@ -303,10 +350,10 @@ export default function VentaGrid({
                   key={item.Id}
                   className={`px-3 py-2.5 flex flex-col gap-1.5 transition-colors cursor-pointer ${
                     isSelected
-                      ? "bg-[#67afc3]/8"
+                      ? "bg-[#EFF6FF]"
                       : warning.type
-                      ? "bg-yellow-50/40"
-                      : "hover:bg-slate-50/50"
+                        ? "bg-yellow-50/40"
+                        : "hover:bg-slate-50/50"
                   }`}
                   onClick={() => toggleSelectOne(item.Id)}
                 >
@@ -317,7 +364,7 @@ export default function VentaGrid({
                       checked={isSelected}
                       onChange={() => toggleSelectOne(item.Id)}
                       onClick={(e) => e.stopPropagation()}
-                      className="mt-0.5 shrink-0 h-3.5 w-3.5 rounded accent-[#67afc3] cursor-pointer"
+                      className="mt-0.5 shrink-0 h-3.5 w-3.5 rounded accent-[#0066ff] cursor-pointer"
                     />
                     <ItemIcons item={item} warning={warning} />
                     <div className="flex-1 flex flex-col gap-0.5 min-w-0">
@@ -331,7 +378,10 @@ export default function VentaGrid({
                       </span>
                     </div>
                     <button
-                      onClick={(e) => { e.stopPropagation(); onRemoveItem(item.Id); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveItem(item.Id);
+                      }}
                       aria-label={`Eliminar ${item.Descripcion}`}
                       className="shrink-0 p-1 rounded-md text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
                     >
@@ -340,9 +390,15 @@ export default function VentaGrid({
                   </div>
 
                   {/* Row 2: Price · Quantity · Subtotal */}
-                  <div className="flex items-center gap-2 pl-[30px]" onClick={(e) => e.stopPropagation()}>
+                  <div
+                    className="flex items-center gap-2 pl-[30px]"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <span className="text-[11px] text-slate-500 font-medium min-w-[55px]">
-                      ${item.precio.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                      $
+                      {item.precio.toLocaleString("es-AR", {
+                        minimumFractionDigits: 2,
+                      })}
                     </span>
                     <div className="flex-1 flex justify-center">
                       <QuantitySelector
@@ -358,7 +414,10 @@ export default function VentaGrid({
                       />
                     </div>
                     <span className="text-[11px] font-bold text-slate-800 min-w-[55px] text-right">
-                      ${(item.precio * item.cantidad).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                      $
+                      {(item.precio * item.cantidad).toLocaleString("es-AR", {
+                        minimumFractionDigits: 2,
+                      })}
                     </span>
                   </div>
                 </div>
@@ -386,24 +445,36 @@ export default function VentaGrid({
                 <input
                   type="checkbox"
                   checked={allSelected}
-                  ref={(el) => { if (el) el.indeterminate = someSelected; }}
+                  ref={(el) => {
+                    if (el) el.indeterminate = someSelected;
+                  }}
                   onChange={toggleSelectAll}
                   aria-label="Seleccionar todos"
-                  className="h-3.5 w-3.5 rounded accent-[#67afc3] cursor-pointer"
+                  className="h-3.5 w-3.5 rounded accent-[#0066ff] cursor-pointer"
                 />
               </TableColumn>
-              <TableColumn width={100} align="center">CÓDIGO</TableColumn>
+              <TableColumn width={100} align="center">
+                CÓDIGO
+              </TableColumn>
               <TableColumn>DESCRIPCIÓN</TableColumn>
-              <TableColumn width={115} align="center">CANT.</TableColumn>
-              <TableColumn width={90} align="end">PRECIO</TableColumn>
-              <TableColumn width={70} align="end">DTO %</TableColumn>
-              <TableColumn width={90} align="end">SUBTOTAL</TableColumn>
+              <TableColumn width={115} align="center">
+                CANT.
+              </TableColumn>
+              <TableColumn width={90} align="end">
+                PRECIO
+              </TableColumn>
+              <TableColumn width={70} align="end">
+                DTO %
+              </TableColumn>
+              <TableColumn width={90} align="end">
+                SUBTOTAL
+              </TableColumn>
               <TableColumn width={40} align="center">
                 <span className="sr-only">ACCIONES</span>
               </TableColumn>
             </TableHeader>
             <TableBody>
-            {items.map((item) => {
+              {items.map((item) => {
                 const isSelected = selectedIds.has(item.Id);
                 const warning = getItemWarning(item);
                 return (
@@ -411,10 +482,10 @@ export default function VentaGrid({
                     key={item.Id}
                     className={
                       isSelected
-                        ? "!bg-[#67afc3]/8"
+                        ? "!bg-[#EFF6FF]"
                         : warning.type
-                        ? "!bg-yellow-50/40"
-                        : ""
+                          ? "!bg-yellow-50/40"
+                          : ""
                     }
                   >
                     <TableCell>
@@ -423,7 +494,7 @@ export default function VentaGrid({
                         checked={isSelected}
                         onChange={() => toggleSelectOne(item.Id)}
                         aria-label={`Seleccionar ${item.Descripcion}`}
-                        className="h-3.5 w-3.5 rounded accent-[#67afc3] cursor-pointer"
+                        className="h-3.5 w-3.5 rounded accent-[#0066ff] cursor-pointer"
                       />
                     </TableCell>
 
@@ -462,7 +533,10 @@ export default function VentaGrid({
 
                     <TableCell>
                       <span className="font-medium text-slate-600 text-xs">
-                        ${item.precio.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                        $
+                        {item.precio.toLocaleString("es-AR", {
+                          minimumFractionDigits: 2,
+                        })}
                       </span>
                     </TableCell>
 
@@ -471,7 +545,7 @@ export default function VentaGrid({
                         <div
                           className={`flex items-center border rounded-md px-1 transition-colors ${
                             item.precioOverride == null
-                              ? "bg-cyan-50 border-[#67afc3]/30"
+                              ? "bg-[#EFF6FF] border-[#BFDBFE]"
                               : "bg-white border-slate-200"
                           }`}
                         >
@@ -479,7 +553,7 @@ export default function VentaGrid({
                             type="number"
                             min="0"
                             max="100"
-                            value={item.porcentajeDescuentoAplicado || ''}
+                            value={item.porcentajeDescuentoAplicado || ""}
                             placeholder="0"
                             onChange={(e) => {
                               let val = parseFloat(e.target.value);
@@ -488,36 +562,55 @@ export default function VentaGrid({
                               onUpdateDiscount(item.Id, val);
                             }}
                             className={`w-10 h-7 text-right text-[11px] font-bold outline-none bg-transparent ${
-                              item.precioOverride == null ? "text-[#5293a5]" : "text-slate-700"
+                              item.precioOverride == null
+                                ? "text-[#0050cb]"
+                                : "text-slate-700"
                             }`}
                           />
-                          <span className={`text-[10px] font-bold ml-0.5 ${
-                            item.precioOverride == null ? "text-[#67afc3]/70" : "text-slate-400"
-                          }`}>
+                          <span
+                            className={`text-[10px] font-bold ml-0.5 ${
+                              item.precioOverride == null
+                                ? "text-[#0050cb]/70"
+                                : "text-slate-400"
+                            }`}
+                          >
                             %
                           </span>
                         </div>
-                        
+
                         <Button
                           isIconOnly
                           size="sm"
                           variant="flat"
                           className={`w-7 h-7 min-w-7 rounded-md transition-all ${
                             item.precioOverride == null
-                              ? "bg-[#67afc3] text-white hover:bg-[#5293a5]"
+                              ? "bg-[#0066ff] text-white hover:bg-[#0050cb]"
                               : "bg-slate-100 text-slate-400 hover:bg-slate-200"
                           }`}
-                          title={item.precioOverride == null ? "Promo Automática (Click para fijar manual)" : "Descuento Manual (Click para usar promo automática)"}
-                          onPress={() => onTogglePromo(item.Id, item.precioOverride != null)}
+                          title={
+                            item.precioOverride == null
+                              ? "Promo Automática (Click para fijar manual)"
+                              : "Descuento Manual (Click para usar promo automática)"
+                          }
+                          onPress={() =>
+                            onTogglePromo(item.Id, item.precioOverride != null)
+                          }
                         >
-                          {item.precioOverride == null ? <Tag size={13} /> : <PenLine size={13} />}
+                          {item.precioOverride == null ? (
+                            <Tag size={13} />
+                          ) : (
+                            <PenLine size={13} />
+                          )}
                         </Button>
                       </div>
                     </TableCell>
 
                     <TableCell>
                       <span className="font-bold text-slate-800 text-xs">
-                        ${(item.precio * item.cantidad).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                        $
+                        {(item.precio * item.cantidad).toLocaleString("es-AR", {
+                          minimumFractionDigits: 2,
+                        })}
                       </span>
                     </TableCell>
 
@@ -582,9 +675,13 @@ function QuantitySelector({
   const effectiveMax =
     stockMax !== null && limitMax !== null
       ? Math.min(stockMax, limitMax)
-      : stockMax ?? limitMax ?? null;
+      : (stockMax ?? limitMax ?? null);
   const atMax = effectiveMax !== null && value >= effectiveMax;
-  const showStockLabel = descuentaStock && !permiteStockNegativo && stock !== null && !isNaN(parseFloat(stock));
+  const showStockLabel =
+    descuentaStock &&
+    !permiteStockNegativo &&
+    stock !== null &&
+    !isNaN(parseFloat(stock));
 
   React.useEffect(() => {
     const parsedLocal = parseFloat(localValue);
@@ -634,7 +731,9 @@ function QuantitySelector({
 
   return (
     <div className="flex flex-col items-center gap-0.5">
-      <div className={`flex flex-row items-center border rounded-lg overflow-hidden ${height} transition-colors ${atMax ? "border-yellow-300 bg-yellow-50/40" : "border-slate-200 bg-white"}`}>
+      <div
+        className={`flex flex-row items-center border rounded-lg overflow-hidden ${height} transition-colors ${atMax ? "border-yellow-300 bg-yellow-50/40" : "border-slate-200 bg-white"}`}
+      >
         <button
           onClick={handleMinus}
           aria-label="Reducir cantidad"
@@ -642,7 +741,9 @@ function QuantitySelector({
         >
           <Minus size={iconSize} strokeWidth={2.5} />
         </button>
-        <div className={`h-4 w-px ${atMax ? "bg-yellow-200" : "bg-slate-200"}`} />
+        <div
+          className={`h-4 w-px ${atMax ? "bg-yellow-200" : "bg-slate-200"}`}
+        />
         <input
           type="number"
           className={`${inputWidth} h-full text-center ${fontSize} font-semibold focus:ring-0 p-0 outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-300 bg-transparent border-none transition-colors ${atMax ? "text-yellow-600 focus:bg-yellow-50/50" : "text-slate-700 focus:bg-blue-50/50"}`}
@@ -652,7 +753,9 @@ function QuantitySelector({
           min={0}
           placeholder="0"
         />
-        <div className={`h-4 w-px ${atMax ? "bg-yellow-200" : "bg-slate-200"}`} />
+        <div
+          className={`h-4 w-px ${atMax ? "bg-yellow-200" : "bg-slate-200"}`}
+        />
         <button
           onClick={handlePlus}
           disabled={atMax}
@@ -663,7 +766,9 @@ function QuantitySelector({
         </button>
       </div>
       {showStockLabel && (
-        <span className={`text-[9px] font-semibold leading-none ${atMax ? "text-yellow-500" : "text-slate-400"}`}>
+        <span
+          className={`text-[9px] font-semibold leading-none ${atMax ? "text-yellow-500" : "text-slate-400"}`}
+        >
           Stock: {parseFloat(stock).toLocaleString("es-AR")}
         </span>
       )}
@@ -673,77 +778,111 @@ function QuantitySelector({
 
 // ─── Item Status Icons ──────────────────────────────────────────────────────────
 
-function ItemIcons({ item, warning }: { item: any; warning: ReturnType<typeof getItemWarning> }) {
+function ItemIcons({
+  item,
+  warning,
+}: {
+  item: any;
+  warning: ReturnType<typeof getItemWarning>;
+}) {
   const icons = [];
 
   if (item.ingresadoPorBalanza) {
     icons.push(
-      <div key="scale-scan" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-indigo-50 text-indigo-500 border border-indigo-200" title="Ingresado desde escáner de balanza">
+      <div
+        key="scale-scan"
+        className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-indigo-50 text-indigo-500 border border-indigo-200"
+        title="Ingresado desde escáner de balanza"
+      >
         <ScanBarcode size={11} strokeWidth={2.5} />
-      </div>
+      </div>,
     );
   }
 
   if (item.TipoVenta === TiposVenta.PESO) {
     icons.push(
-      <div key="scale-weight" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-violet-50 text-violet-500 border border-violet-200" title="Venta por peso">
+      <div
+        key="scale-weight"
+        className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-violet-50 text-violet-500 border border-violet-200"
+        title="Venta por peso"
+      >
         <Scale size={11} strokeWidth={2.5} />
-      </div>
+      </div>,
     );
   }
 
   if (item.precioOverride != null) {
     icons.push(
-      <div key="override" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-amber-50 text-amber-500 border border-amber-200" title="Descuento/Precio fijado manualmente">
+      <div
+        key="override"
+        className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-amber-50 text-amber-500 border border-amber-200"
+        title="Descuento/Precio fijado manualmente"
+      >
         <PenLine size={11} strokeWidth={2.5} />
-      </div>
+      </div>,
     );
   }
 
   if (item.esPromo) {
     icons.push(
-      <div key="promo" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-pink-50 text-pink-500 border border-pink-200" title={`Promoción automática aplicada (-${item.porcentajeDescuentoAplicado}%)`}>
+      <div
+        key="promo"
+        className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-pink-50 text-pink-500 border border-pink-200"
+        title={`Promoción automática aplicada (-${item.porcentajeDescuentoAplicado}%)`}
+      >
         <Tag size={11} strokeWidth={2.5} />
-      </div>
+      </div>,
     );
   }
 
   if (item.esParteDeCombo) {
     icons.push(
-      <div key="combo" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-emerald-50 text-emerald-500 border border-emerald-200" title={`Promoción Combo aplicada: ${item.nombreCombo}`}>
+      <div
+        key="combo"
+        className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-emerald-50 text-emerald-500 border border-emerald-200"
+        title={`Promoción Combo aplicada: ${item.nombreCombo}`}
+      >
         <Gift size={11} strokeWidth={2.5} />
-      </div>
+      </div>,
     );
   }
 
   if (item.EsCombo) {
     icons.push(
-      <div key="es-combo" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-blue-50 text-blue-500 border border-blue-200" title="Artículo Combo (Kit)">
+      <div
+        key="es-combo"
+        className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-blue-50 text-blue-500 border border-blue-200"
+        title="Artículo Combo (Kit)"
+      >
         <Package size={11} strokeWidth={2.5} />
-      </div>
+      </div>,
     );
   }
 
   if (warning.type) {
     icons.push(
-      <div key="warning" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-yellow-50 text-yellow-600 border border-yellow-200" title={warning.message}>
+      <div
+        key="warning"
+        className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-yellow-50 text-yellow-600 border border-yellow-200"
+        title={warning.message}
+      >
         <AlertTriangle size={11} strokeWidth={2.5} />
-      </div>
+      </div>,
     );
   }
 
   // If no icons, show a default standard price icon
   if (icons.length === 0) {
     icons.push(
-      <div key="normal" className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-slate-50 text-slate-400 border border-slate-200" title="Precio estándar de lista">
+      <div
+        key="normal"
+        className="flex items-center justify-center w-[18px] h-[18px] rounded-sm bg-slate-50 text-slate-400 border border-slate-200"
+        title="Precio estándar de lista"
+      >
         <DollarSign size={11} strokeWidth={2.5} />
-      </div>
+      </div>,
     );
   }
 
-  return (
-    <div className="flex flex-col gap-1 shrink-0">
-      {icons}
-    </div>
-  );
+  return <div className="flex flex-col gap-1 shrink-0">{icons}</div>;
 }

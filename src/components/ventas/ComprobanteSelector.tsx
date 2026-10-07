@@ -94,7 +94,7 @@ export default function ComprobanteSelector({
         onChange={(e) => setTipoComprobante(Number(e.target.value))}
         classNames={{
           trigger:
-            "h-10 min-h-10 rounded-lg shadow-none bg-white border border-slate-300 hover:border-[#67afc3] hover:bg-slate-50 text-black transition-colors",
+            "h-10 min-h-10 rounded-lg shadow-none bg-white border border-[#CBD5E1] hover:border-[#0066ff] focus-visible:ring-2 focus-visible:ring-[#0066ff]/15 hover:bg-slate-50 text-slate-900 transition-colors",
         }}
       >
         {allowedTipos.includes(TIPO_COMPROBANTE_VENTA.FACTURA_A) ? (

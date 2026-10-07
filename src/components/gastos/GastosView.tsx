@@ -18,7 +18,16 @@ import {
   useDisclosure,
 } from "@heroui/react";
 import { modalMotionProps } from "@/lib/motionConfig";
-import { Lock, Pencil, Plus, Receipt, Tag, Trash2, TrendingDown, Unlock } from "lucide-react";
+import {
+  Lock,
+  Pencil,
+  Plus,
+  Receipt,
+  Tag,
+  Trash2,
+  TrendingDown,
+  Unlock,
+} from "lucide-react";
 import React, { useState, useCallback, useMemo } from "react";
 import { handleNumberInput } from "@/lib/input/number";
 import { TIPO_PAGO, TIPO_PAGO_LABELS } from "@/lib/constants/comprobantes";
@@ -78,10 +87,7 @@ export default function GastosView() {
   } = useGastos({ enableConceptos: true });
 
   // ── Modales ──────────────────────────────────────────────────────────────
-  const {
-    isOpen: isAbrirOpen,
-    onOpenChange: onAbrirChange,
-  } = useDisclosure();
+  const { isOpen: isAbrirOpen, onOpenChange: onAbrirChange } = useDisclosure();
 
   const {
     isOpen: isGastoOpen,
@@ -564,7 +570,7 @@ export default function GastosView() {
                   Cancelar
                 </Button>
                 <Button
-                  className="bg-[#67afc3] hover:bg-[#4899b0] text-white font-bold rounded-xl shadow-md shadow-[#67afc3]/30"
+                  className="modal-primary-action font-bold rounded-xl"
                   onPress={handleAgregarGasto}
                   isLoading={isAddingGasto || isEditingGasto}
                   isDisabled={
@@ -639,7 +645,7 @@ export default function GastosView() {
                   Cancelar
                 </Button>
                 <Button
-                  className="bg-[#67afc3] hover:bg-[#4899b0] text-white font-bold rounded-xl shadow-md shadow-[#67afc3]/30"
+                  className="modal-primary-action font-bold rounded-xl"
                   onPress={handleAgregarConcepto}
                   isLoading={isAddingConcepto}
                 >

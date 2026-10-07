@@ -122,7 +122,7 @@ export function BulkPrintBarcodesModal({
             Cancelar
           </Button>
           <Button
-            className="bg-[#67afc3] text-white font-bold shadow-md"
+            className="modal-primary-action font-bold"
             onPress={() => handlePrint()}
             startContent={<Printer size={18} />}
           >

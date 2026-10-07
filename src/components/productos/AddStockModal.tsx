@@ -69,7 +69,8 @@ export default function AddStockModal({
     let filtered =
       sepIdx === -1
         ? clean
-        : clean.slice(0, sepIdx + 1) + clean.slice(sepIdx + 1).replace(/[.,]/g, "");
+        : clean.slice(0, sepIdx + 1) +
+          clean.slice(sepIdx + 1).replace(/[.,]/g, "");
 
     // Para PESO: limitar a 3 decimales después del separador
     if (isPeso && sepIdx !== -1) {
@@ -86,7 +87,10 @@ export default function AddStockModal({
 
   const handleMinus = () => {
     const step = isPeso ? 0.001 : 1;
-    const next = Math.max(isPeso ? 0.001 : 1, parseFloat((quantity - step).toFixed(3)));
+    const next = Math.max(
+      isPeso ? 0.001 : 1,
+      parseFloat((quantity - step).toFixed(3)),
+    );
     setQuantity(next);
   };
 
@@ -240,7 +244,7 @@ export default function AddStockModal({
           <Button
             onPress={handleConfirm}
             isLoading={isLoading}
-            className="bg-[#67afc3] hover:bg-[#4899b0] text-white font-bold rounded-xl shadow-md shadow-[#67afc3]/30 h-10 px-6"
+            className="modal-primary-action font-bold rounded-xl h-10 px-6"
           >
             Sumar Stock
           </Button>

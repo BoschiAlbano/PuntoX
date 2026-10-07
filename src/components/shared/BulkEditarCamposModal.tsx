@@ -34,7 +34,7 @@ interface BulkEditarCamposModalProps<T extends BulkEditarCamposItem> {
   }>;
   onConfirm: (
     ids: (number | string)[],
-    values: Record<string, string | number>
+    values: Record<string, string | number>,
   ) => Promise<void>;
   onSuccess?: () => void;
 }
@@ -49,14 +49,14 @@ export function BulkEditarCamposModal<T extends BulkEditarCamposItem>({
   onSuccess,
 }: BulkEditarCamposModalProps<T>) {
   const [values, setValues] = useState<Record<string, string>>(
-    Object.fromEntries(fields.map((f) => [f.key, ""]))
+    Object.fromEntries(fields.map((f) => [f.key, ""])),
   );
   const [isLoading, setIsLoading] = useState(false);
 
   const handleConfirm = async () => {
     if (items.length === 0) return;
     const filled = Object.fromEntries(
-      Object.entries(values).filter(([, v]) => v !== "")
+      Object.entries(values).filter(([, v]) => v !== ""),
     );
     if (Object.keys(filled).length === 0) {
       addToast({
@@ -71,14 +71,11 @@ export function BulkEditarCamposModal<T extends BulkEditarCamposItem>({
       const parsed: Record<string, string | number> = {};
       for (const [k, v] of Object.entries(filled)) {
         const field = fields.find((f) => f.key === k);
-        parsed[k] =
-          field?.type === "number"
-            ? (Number(v) || 0)
-            : v;
+        parsed[k] = field?.type === "number" ? Number(v) || 0 : v;
       }
       await onConfirm(
         items.map((i) => i.Id),
-        parsed
+        parsed,
       );
       addToast({
         title: "Campos actualizados",
@@ -133,7 +130,7 @@ export function BulkEditarCamposModal<T extends BulkEditarCamposItem>({
             Cancelar
           </Button>
           <Button
-            className="bg-[#67afc3] hover:bg-[#5a9db0] text-white"
+            className="modal-primary-action"
             onPress={handleConfirm}
             isLoading={isLoading}
           >

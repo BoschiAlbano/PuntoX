@@ -94,22 +94,23 @@ export default function VentaFooter({
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       const tag = target?.tagName;
-      const isProductSearch = target?.id === 'product-search-input';
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) && !isProductSearch) return;
+      const isProductSearch = target?.id === "product-search-input";
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(tag) && !isProductSearch)
+        return;
       if (document.querySelector('[data-slot="backdrop"]')) return;
 
-      if (e.key === 'F10') {
+      if (e.key === "F10") {
         e.preventDefault();
         handleFinalizeSaleRef.current();
       }
-      if (e.key === 'Escape' && itemsLengthRef.current > 0) {
+      if (e.key === "Escape" && itemsLengthRef.current > 0) {
         e.preventDefault();
         setIsCancelModalOpen(true);
       }
     };
-    window.addEventListener('keydown', handler, true);
-    return () => window.removeEventListener('keydown', handler, true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    window.addEventListener("keydown", handler, true);
+    return () => window.removeEventListener("keydown", handler, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Ticket Printing
@@ -257,9 +258,11 @@ export default function VentaFooter({
         cae: data.comprobante.cae,
         caeFchVto: data.comprobante.caeFchVto,
         cuitEmisor: fiscal?.cuit || configuracion?.cuit || "",
-        puntoVentaNum: currentBranch?.PuntoVentaAfip 
-          ? Number(currentBranch.PuntoVentaAfip) 
-          : (fiscal?.puntoVenta ? Number(fiscal.puntoVenta) : 1),
+        puntoVentaNum: currentBranch?.PuntoVentaAfip
+          ? Number(currentBranch.PuntoVentaAfip)
+          : fiscal?.puntoVenta
+            ? Number(fiscal.puntoVenta)
+            : 1,
         cbteNro: data.comprobante.numero,
       };
 
@@ -267,13 +270,16 @@ export default function VentaFooter({
 
       // Determinar tipo de error de ARCA para la notificación
       const arcaError = data.comprobante.arcaErrores;
-      const esConexionFallida = arcaError?.includes("conexión") || arcaError?.includes("conectar");
-      const esRechazado = data.comprobante.arcaStatus === 'RECHAZADO';
+      const esConexionFallida =
+        arcaError?.includes("conexión") || arcaError?.includes("conectar");
+      const esRechazado = data.comprobante.arcaStatus === "RECHAZADO";
 
       if (esRechazado || esConexionFallida) {
         // ARCA falló o rechazó: imprimir ticket SIN QR pero notificar al usuario
         addToast({
-          title: esRechazado ? "⚠️ ARCA rechazó el comprobante" : "⚠️ ARCA no respondió",
+          title: esRechazado
+            ? "⚠️ ARCA rechazó el comprobante"
+            : "⚠️ ARCA no respondió",
           description: arcaError
             ? `La venta se registró pero la FE tuvo un problema: ${arcaError}. El ticket se imprime sin QR.`
             : "La venta se registró pero la FE no se completó. El ticket se imprime sin QR.",
@@ -450,10 +456,10 @@ export default function VentaFooter({
   return (
     <section className="flex-1 min-h-0 flex flex-col gap-2">
       {/* Payment Methods Section */}
-      <div className="bg-white border border-slate-300 rounded-lg overflow-hidden flex-1 min-h-0 flex flex-col">
+      <div className="bg-white border border-[#E2E8F0] rounded-lg overflow-hidden flex-1 min-h-0 flex flex-col">
         {/* Section header */}
-        <div className="px-4 py-3 border-b border-slate-100/60 bg-slate-50/50 flex items-center gap-2.5 shrink-0">
-          <div className="p-1.5 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 text-[#67afc3]">
+        <div className="px-4 py-3 border-b border-[#E2E8F0] bg-[#F8FAFC] flex items-center gap-2.5 shrink-0">
+          <div className="p-1.5 rounded-lg bg-[#EFF6FF] border border-[#DBEAFE] text-[#0050cb]">
             <CreditCard size={14} strokeWidth={2.5} />
           </div>
           <h3 className="text-xs font-bold text-slate-600 tracking-tight">
@@ -566,7 +572,7 @@ export default function VentaFooter({
                 <button
                   onClick={handleAddPayment}
                   aria-label="Agregar pago"
-                  className="h-10 w-10 min-w-10 bg-[#67afc3] hover:bg-[#5a9eb1] active:scale-95 text-white rounded-lg flex items-center justify-center transition-all shrink-0"
+                  className="h-10 w-10 min-w-10 bg-[#0066ff] hover:bg-[#0050cb] active:scale-95 text-white rounded-lg flex items-center justify-center transition-all shrink-0"
                 >
                   <Plus size={18} />
                 </button>
@@ -662,13 +668,13 @@ export default function VentaFooter({
                   <>
                     <span
                       className="text-[10px] font-semibold uppercase tracking-widest"
-                      style={{ color: "#67afc3" }}
+                      style={{ color: "#047857" }}
                     >
                       Vuelto
                     </span>
                     <span
                       className="text-base font-bold"
-                      style={{ color: "#67afc3" }}
+                      style={{ color: "#047857" }}
                     >
                       $
                       {Math.abs(restante).toLocaleString("es-AR", {
@@ -684,10 +690,10 @@ export default function VentaFooter({
       </div>
 
       {/* Totals & Actions Card */}
-      <div className="bg-white border border-slate-300 rounded-lg overflow-hidden shrink-0 relative z-10">
+      <div className="bg-white border border-[#E2E8F0] rounded-lg overflow-hidden shrink-0 relative z-10">
         {/* Section header */}
-        <div className="px-4 py-3 border-b border-slate-100/60 bg-slate-50/50 flex items-center gap-2.5 shrink-0">
-          <div className="p-1.5 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 text-[#67afc3]">
+        <div className="px-4 py-3 border-b border-[#E2E8F0] bg-[#F8FAFC] flex items-center gap-2.5 shrink-0">
+          <div className="p-1.5 rounded-lg bg-[#EFF6FF] border border-[#DBEAFE] text-[#0050cb]">
             <DollarSign size={14} strokeWidth={2.5} />
           </div>
           <h3 className="text-xs font-bold text-slate-600 tracking-tight">
@@ -744,7 +750,7 @@ export default function VentaFooter({
               <span className="text-sm font-bold text-slate-500">Total</span>
               <span
                 className="text-2xl font-extrabold tracking-tight"
-                style={{ color: "#67afc3" }}
+                style={{ color: "#0F172A" }}
               >
                 ${total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
               </span>
@@ -769,7 +775,7 @@ export default function VentaFooter({
             ) : cajaActual ? (
               <Button
                 size="sm"
-                className="flex-1 h-11 bg-[#67afc3] hover:bg-[#5a9eb1] text-white font-bold rounded-xl transition-all active:scale-[0.98] text-sm tracking-wide shadow-[0_4px_14px_rgba(103,175,195,0.35)] hover:shadow-[0_6px_20px_rgba(103,175,195,0.45)]"
+                className="flex-1 h-12 bg-[#FF6100] hover:bg-[#E65700] text-white font-bold rounded-lg transition-all active:scale-[0.98] text-sm tracking-wide shadow-[0_4px_14px_rgba(255,97,0,0.35)] hover:shadow-[0_6px_20px_rgba(255,97,0,0.4)]"
                 onPress={handleFinalizeSale}
                 isLoading={isSaving}
                 isDisabled={
@@ -786,8 +792,7 @@ export default function VentaFooter({
             ) : (
               <Button
                 size="sm"
-                color="warning"
-                className="flex-1 h-11 font-bold text-white rounded-xl text-sm tracking-wide"
+                className="flex-1 h-12 bg-[#FF6100] hover:bg-[#E65700] font-bold text-white rounded-lg text-sm tracking-wide shadow-[0_4px_14px_rgba(255,97,0,0.35)]"
                 onPress={() => setOpenModalAbrirCaja(true)}
               >
                 Abrir Caja
@@ -803,10 +808,10 @@ export default function VentaFooter({
         size="md"
         backdrop="blur"
         classNames={{
-          base: "bg-white/95 backdrop-blur-3xl shadow-2xl border border-white/60 rounded-[24px]",
-          header: "border-b border-slate-100/60 pb-4 pt-6 px-6 sm:px-8",
+          base: "bg-white shadow-[0_20px_25px_-5px_rgba(15,23,42,0.08),0_8px_10px_-6px_rgba(15,23,42,0.04)] border border-[#E2E8F0] rounded-xl",
+          header: "border-b border-[#E2E8F0] pb-4 pt-6 px-6 sm:px-8",
           body: "py-6 px-4 sm:px-8 text-center",
-          footer: "border-t border-slate-100/60 py-4 px-4 sm:px-8",
+          footer: "border-t border-[#E2E8F0] py-4 px-4 sm:px-8",
           closeButton:
             "hover:bg-slate-100 active:bg-slate-200 text-slate-400 mt-2 mr-2",
         }}

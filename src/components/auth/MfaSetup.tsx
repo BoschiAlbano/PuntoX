@@ -3,7 +3,15 @@
 import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
-import { Shield, ShieldAlert, Smartphone, KeyRound, AlertCircle, CheckCircle2, Lock } from "lucide-react";
+import {
+  Shield,
+  ShieldAlert,
+  Smartphone,
+  KeyRound,
+  AlertCircle,
+  CheckCircle2,
+  Lock,
+} from "lucide-react";
 import { Button, Input, Spinner, addToast } from "@heroui/react";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
 import { useUserStore } from "@/store/useUserStore";
@@ -32,7 +40,8 @@ export function MfaSetup() {
   const supabase = getSupabaseBrowserClient();
 
   // Verificar si el 2FA es obligatorio a nivel global
-  const { seguridad, isLoadingSeguridad, saveSeguridad, isSavingSeguridad } = useConfiguracion({ enableSeguridad: true });
+  const { seguridad, isLoadingSeguridad, saveSeguridad, isSavingSeguridad } =
+    useConfiguracion({ enableSeguridad: true });
   const isGloballyEnforced = seguridad?.dobleFactor === true;
   const { isSuperAdmin } = useUserStore();
 
@@ -91,7 +100,7 @@ export function MfaSetup() {
       // 2. Iniciar el nuevo enrolamiento
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: "totp",
-        friendlyName: `Dispositivo ${new Date().getTime()}`
+        friendlyName: `Dispositivo ${new Date().getTime()}`,
       });
 
       if (error) throw error;
@@ -118,16 +127,18 @@ export function MfaSetup() {
       setIsVerifying(true);
       setError(null);
 
-      const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
-        factorId,
-      });
+      const { data: challengeData, error: challengeError } =
+        await supabase.auth.mfa.challenge({
+          factorId,
+        });
       if (challengeError) throw challengeError;
 
-      const { data: verifyData, error: verifyError } = await supabase.auth.mfa.verify({
-        factorId,
-        challengeId: challengeData.id,
-        code: verifyCode,
-      });
+      const { data: verifyData, error: verifyError } =
+        await supabase.auth.mfa.verify({
+          factorId,
+          challengeId: challengeData.id,
+          code: verifyCode,
+        });
 
       if (verifyError) throw verifyError;
 
@@ -152,13 +163,18 @@ export function MfaSetup() {
    */
   const initDisableMfa = async () => {
     if (!factorId) return;
-    if (!window.confirm("¿Estás seguro de que deseas desactivar la autenticación de dos pasos? Tu cuenta será menos segura.")) {
+    if (
+      !window.confirm(
+        "¿Estás seguro de que deseas desactivar la autenticación de dos pasos? Tu cuenta será menos segura.",
+      )
+    ) {
       return;
     }
 
     try {
       setError(null);
-      const { data: aalData, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      const { data: aalData, error: aalError } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (aalError) throw aalError;
 
       if (aalData.currentLevel === "aal2") {
@@ -172,7 +188,9 @@ export function MfaSetup() {
       }
     } catch (err) {
       console.error("Error al verificar nivel de sesión:", err);
-      setError("No se pudo verificar el estado de la sesión. Intenta de nuevo.");
+      setError(
+        "No se pudo verificar el estado de la sesión. Intenta de nuevo.",
+      );
     }
   };
 
@@ -188,10 +206,12 @@ export function MfaSetup() {
       setError(null);
 
       // Elevar la sesión a AAL2
-      const { error: verifyError } = await supabase.auth.mfa.challengeAndVerify({
-        factorId,
-        code: disableCode,
-      });
+      const { error: verifyError } = await supabase.auth.mfa.challengeAndVerify(
+        {
+          factorId,
+          code: disableCode,
+        },
+      );
 
       if (verifyError) {
         setError("Código incorrecto o expirado. Intenta de nuevo.");
@@ -241,7 +261,7 @@ export function MfaSetup() {
     }
   };
 
-  if (loading && !setupData || isLoadingSeguridad && !setupData) {
+  if ((loading && !setupData) || (isLoadingSeguridad && !setupData)) {
     return (
       <div className="flex items-center justify-center p-8">
         <Spinner size="md" color="primary" />
@@ -258,15 +278,20 @@ export function MfaSetup() {
             <Lock size={24} strokeWidth={2} />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-800">Confirmar identidad</h2>
-            <p className="text-sm text-slate-500">Ingresá tu código 2FA para desactivarlo</p>
+            <h2 className="text-lg font-bold text-slate-800">
+              Confirmar identidad
+            </h2>
+            <p className="text-sm text-slate-500">
+              Ingresá tu código 2FA para desactivarlo
+            </p>
           </div>
         </div>
 
         <form onSubmit={handleDisableWithVerification} className="space-y-5">
           <div className="bg-amber-50/60 border border-amber-100 rounded-xl p-4">
             <p className="text-sm text-amber-800">
-              Por seguridad, necesitás verificar tu identidad con el código de tu aplicación autenticadora antes de poder desactivar el 2FA.
+              Por seguridad, necesitás verificar tu identidad con el código de
+              tu aplicación autenticadora antes de poder desactivar el 2FA.
             </p>
           </div>
 
@@ -285,7 +310,7 @@ export function MfaSetup() {
               type="text"
               value={disableCode}
               onChange={(e) => {
-                setDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6));
+                setDisableCode(e.target.value.replace(/\D/g, "").slice(0, 6));
                 setError(null);
               }}
               placeholder="000000"
@@ -326,12 +351,18 @@ export function MfaSetup() {
   return (
     <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-        <div className={`p-2 rounded-xl ${isEnrolled ? 'bg-emerald-50 text-emerald-500' : 'bg-slate-50 text-slate-400'}`}>
+        <div
+          className={`p-2 rounded-xl ${isEnrolled ? "bg-emerald-50 text-emerald-500" : "bg-slate-50 text-slate-400"}`}
+        >
           <Shield size={24} strokeWidth={2} />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-slate-800">Autenticación de Dos Pasos (2FA)</h2>
-          <p className="text-sm text-slate-500">Agrega una capa adicional de seguridad a tu cuenta</p>
+          <h2 className="text-lg font-bold text-slate-800">
+            Autenticación de Dos Pasos (2FA)
+          </h2>
+          <p className="text-sm text-slate-500">
+            Agrega una capa adicional de seguridad a tu cuenta
+          </p>
         </div>
       </div>
 
@@ -341,7 +372,8 @@ export function MfaSetup() {
           <Shield size={18} className="mt-0.5 shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-medium">
-              La autenticación de dos pasos es <strong>obligatoria</strong> en esta organización. No es posible desactivarla.
+              La autenticación de dos pasos es <strong>obligatoria</strong> en
+              esta organización. No es posible desactivarla.
             </p>
             {isSuperAdmin && (
               <Button
@@ -375,7 +407,8 @@ export function MfaSetup() {
             </p>
           </div>
           <p className="text-sm text-slate-600">
-            Se te pedirá un código de verificación de tu aplicación autenticadora cada vez que inicies sesión.
+            Se te pedirá un código de verificación de tu aplicación
+            autenticadora cada vez que inicies sesión.
           </p>
           {/* Solo se muestra el botón de desactivar si el 2FA NO es obligatorio globalmente */}
           {!isGloballyEnforced && (
@@ -398,13 +431,17 @@ export function MfaSetup() {
               Paso 1: Escanea el código QR
             </h3>
             <p className="text-sm text-slate-600">
-              Abre tu aplicación autenticadora (como Google Authenticator o Authy) y escanea este código.
+              Abre tu aplicación autenticadora (como Google Authenticator o
+              Authy) y escanea este código.
             </p>
             <div className="flex justify-center p-4 bg-white rounded-xl border-2 border-dashed border-slate-200">
               <QRCodeSVG value={setupData.uri} size={200} />
             </div>
             <p className="text-xs text-center text-slate-500 mt-2 break-all">
-              O ingresa este código manualmente: <strong className="font-mono bg-slate-100 px-2 py-1 rounded">{setupData.secret}</strong>
+              O ingresa este código manualmente:{" "}
+              <strong className="font-mono bg-slate-100 px-2 py-1 rounded">
+                {setupData.secret}
+              </strong>
             </p>
           </div>
 
@@ -414,13 +451,16 @@ export function MfaSetup() {
               Paso 2: Verifica el código
             </h3>
             <p className="text-sm text-slate-600">
-              Ingresa el código de 6 dígitos que muestra tu aplicación para confirmar la configuración.
+              Ingresa el código de 6 dígitos que muestra tu aplicación para
+              confirmar la configuración.
             </p>
             <div className="max-w-xs mx-auto">
               <Input
                 type="text"
                 value={verifyCode}
-                onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                onChange={(e) =>
+                  setVerifyCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                }
                 placeholder="000000"
                 className="font-mono text-center text-lg tracking-[0.2em]"
                 size="lg"
@@ -441,8 +481,7 @@ export function MfaSetup() {
               Cancelar
             </Button>
             <Button
-              color="primary"
-              className="bg-[#67afc3] text-white font-medium"
+              className="modal-primary-action font-medium"
               type="submit"
               isLoading={isVerifying}
               isDisabled={verifyCode.length !== 6}
@@ -462,8 +501,7 @@ export function MfaSetup() {
             </p>
           </div>
           <Button
-            color="primary"
-            className="bg-[#67afc3] text-white font-medium"
+            className="modal-primary-action font-medium"
             onPress={startEnrollment}
           >
             Activar Autenticación 2FA

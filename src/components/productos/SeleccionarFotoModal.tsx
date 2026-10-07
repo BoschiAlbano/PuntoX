@@ -1,7 +1,13 @@
 "use client";
 
 import { modalMotionProps } from "@/lib/motionConfig";
-import { Modal, ModalContent, ModalHeader, ModalBody, Spinner } from "@heroui/react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  Spinner,
+} from "@heroui/react";
 import Image from "next/image";
 
 export interface FotoCandidato {
@@ -61,7 +67,7 @@ export default function SeleccionarFotoModal({
                   key={candidato.code}
                   type="button"
                   onClick={() => onSelect(candidato)}
-                  className="group flex flex-col items-center gap-2 p-3 rounded-xl border border-slate-200 hover:border-[#67afc3] hover:bg-[#67afc3]/5 transition-colors text-left"
+                  className="group flex flex-col items-center gap-2 p-3 rounded-lg border border-[#E2E8F0] hover:border-[#0066ff]/50 hover:bg-[#EFF6FF] transition-colors text-left"
                 >
                   <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-slate-50 border border-slate-100">
                     <Image
@@ -75,7 +81,7 @@ export default function SeleccionarFotoModal({
                       <span
                         className={`absolute top-1 left-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
                           candidato.fuente === "PUNTO_X"
-                            ? "bg-[#67afc3] text-white"
+                            ? "bg-[#0066ff] text-white"
                             : "bg-slate-600 text-white"
                         }`}
                       >

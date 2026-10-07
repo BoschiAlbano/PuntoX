@@ -56,8 +56,9 @@ export default function PriceListSelector({
         size="sm"
         startContent={<Tag size={14} className="text-slate-400" />}
         classNames={{
-          trigger: "h-10 min-h-10 bg-white border border-slate-300 hover:border-[#67afc3] hover:bg-slate-50 rounded-lg shadow-none transition-colors",
-          value: "font-semibold text-slate-700 text-[13px]"
+          trigger:
+            "h-10 min-h-10 bg-white border border-[#CBD5E1] hover:border-[#0066ff] focus-visible:ring-2 focus-visible:ring-[#0066ff]/15 hover:bg-slate-50 rounded-lg shadow-none transition-colors",
+          value: "font-semibold text-slate-700 text-[13px]",
         }}
       >
         {listas.map((lista: any) => (
@@ -66,18 +67,18 @@ export default function PriceListSelector({
               <span className="font-medium text-[13px]">{lista.Nombre}</span>
               <div className="flex gap-1">
                 {cliente?.ListaPrecioId === lista.Id && lista.PorDefecto ? (
-                  <span className="text-[10px] text-[#67afc3] font-bold bg-[#67afc3]/10 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] text-[#1d4ed8] font-bold bg-[#eff6ff] px-1.5 py-0.5 rounded">
                     Defecto
                   </span>
                 ) : (
                   <>
                     {cliente?.ListaPrecioId === lista.Id && (
-                      <span className="text-[10px] text-[#67afc3] font-bold bg-[#67afc3]/10 px-1.5 py-0.5 rounded">
+                      <span className="text-[10px] text-[#1d4ed8] font-bold bg-[#eff6ff] px-1.5 py-0.5 rounded">
                         Cliente
                       </span>
                     )}
                     {lista.PorDefecto && (
-                      <span className="text-[10px] text-[#67afc3] font-bold bg-[#67afc3]/10 px-1.5 py-0.5 rounded">
+                      <span className="text-[10px] text-[#1d4ed8] font-bold bg-[#eff6ff] px-1.5 py-0.5 rounded">
                         Sistema
                       </span>
                     )}

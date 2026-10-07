@@ -150,7 +150,7 @@ export default function ProveedorSearchModal({
                             });
                             onClose();
                           }}
-                          className="w-full px-3 py-3 flex items-center gap-3 hover:bg-[#67afc3]/5 active:bg-[#67afc3]/10 transition-colors text-left"
+                          className="w-full px-3 py-3 flex items-center gap-3 hover:bg-[#EFF6FF] active:bg-[#DBEAFE] transition-colors text-left"
                         >
                           <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#67afc3] to-[#2dd4bf] text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
                             {item.RazonSocial?.charAt(0).toUpperCase()}
@@ -163,8 +163,8 @@ export default function ProveedorSearchModal({
                               CUIT: {item.CUIT || "-"}
                             </span>
                           </div>
-                          <div className="shrink-0 w-8 h-8 rounded-lg bg-[#67afc3]/10 flex items-center justify-center">
-                            <Plus size={16} className="text-[#67afc3]" />
+                          <div className="shrink-0 w-8 h-8 rounded-lg bg-[#EFF6FF] flex items-center justify-center">
+                            <Plus size={16} className="text-[#0050cb]" />
                           </div>
                         </button>
                       ))}
@@ -192,7 +192,7 @@ export default function ProveedorSearchModal({
                         table: "min-h-0",
                         thead: "sticky top-0 z-20 shrink-0",
                         th: "bg-slate-50/90 backdrop-blur-md text-slate-400 font-bold text-xs tracking-wider border-b border-slate-100 h-11 first:rounded-l-none last:rounded-r-none uppercase",
-                        tr: "hover:bg-[#67afc3]/5 transition-colors border-b border-slate-50 last:border-none cursor-pointer group",
+                        tr: "hover:bg-[#EFF6FF] transition-colors border-b border-slate-50 last:border-none cursor-pointer group",
                         td: "py-3.5 text-sm text-slate-600 font-medium",
                       }}
                     >
@@ -215,7 +215,7 @@ export default function ProveedorSearchModal({
                                 <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#67afc3] to-[#2dd4bf] text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
                                   {item.RazonSocial?.charAt(0).toUpperCase()}
                                 </div>
-                                <span className="group-hover:text-[#67afc3] transition-colors font-semibold truncate max-w-[200px]">
+                                <span className="group-hover:text-[#0050cb] transition-colors font-semibold truncate max-w-[200px]">
                                   {item.RazonSocial}
                                 </span>
                               </div>
@@ -233,7 +233,7 @@ export default function ProveedorSearchModal({
                             <TableCell>
                               <Button
                                 size="sm"
-                                className="bg-slate-100 text-slate-600 font-semibold group-hover:bg-[#67afc3] group-hover:text-white transition-all shadow-sm w-full"
+                                className="bg-slate-100 text-slate-600 font-semibold group-hover:bg-[#0066ff] group-hover:text-white transition-all shadow-sm w-full"
                                 onPress={() => {
                                   handleSelect({
                                     Id: Number(item.Id),

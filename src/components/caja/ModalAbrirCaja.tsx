@@ -37,7 +37,7 @@ function ModalShell({
         aria-label="Cerrar modal"
       />
       <div
-        className={`relative w-full ${sizeClass} rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl transform transition-all`}
+        className={`relative w-full ${sizeClass} rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-[0_20px_25px_-5px_rgba(15,23,42,0.08),0_8px_10px_-6px_rgba(15,23,42,0.04)] transform transition-all`}
         role="dialog"
         aria-modal="true"
       >
@@ -71,8 +71,9 @@ function ModalShell({
 export function ModalAbrirCaja({ open, onClose }: ModalAbrirCajaProps) {
   const { abrirCaja } = useCaja({ enableCaja: true });
   const { configuracion } = useConfiguracion({ enableConfiguracion: true });
-  
-  const ingresoManualHabilitado = configuracion?.ingresoManualCajaInicial ?? false;
+
+  const ingresoManualHabilitado =
+    configuracion?.ingresoManualCajaInicial ?? false;
   const [montoInicial, setMontoInicial] = useState<string>("0");
   const [isOpening, setIsOpening] = useState(false);
 
@@ -118,7 +119,7 @@ export function ModalAbrirCaja({ open, onClose }: ModalAbrirCajaProps) {
           <button
             onClick={handleAbrirCaja}
             disabled={isOpening}
-            className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-lg bg-[#FF6100] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#E65700] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isOpening ? "Abriendo..." : "Abrir Caja"}
           </button>
@@ -135,9 +136,9 @@ export function ModalAbrirCaja({ open, onClose }: ModalAbrirCajaProps) {
           onChange={(e) => setMontoInicial(e.target.value)}
           placeholder="0.00"
           disabled={!ingresoManualHabilitado}
-          className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 ${
+          className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0066ff]/15 ${
             ingresoManualHabilitado
-              ? "border-slate-200 text-slate-700 focus:border-slate-800"
+              ? "border-[#CBD5E1] text-slate-700 focus:border-[#0066ff]"
               : "border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed"
           }`}
           aria-label="Monto inicial para abrir la caja"

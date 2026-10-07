@@ -17,13 +17,19 @@ vi.mock("react-to-print", () => ({
 
 vi.mock("lucide-react", () => ({
   Check: () => <span data-testid="icon-check" />,
+  ChevronRight: () => <span data-testid="icon-chevron-right" />,
   ChevronDown: () => <span data-testid="icon-chevron-down" />,
   Columns2: () => <span data-testid="icon-columns" />,
   Download: () => <span data-testid="icon-download" />,
   FileSpreadsheet: () => <span data-testid="icon-file-spreadsheet" />,
+  LayoutGrid: () => <span data-testid="icon-layout-grid" />,
   Menu: () => <span data-testid="icon-menu" />,
+  Plus: () => <span data-testid="icon-plus" />,
   Printer: () => <span data-testid="icon-printer" />,
   RefreshCcw: () => <span data-testid="icon-refresh" />,
+  Search: () => <span data-testid="icon-search" />,
+  Table: () => <span data-testid="icon-table" />,
+  X: () => <span data-testid="icon-x" />,
 }));
 
 vi.mock("@/hooks/useDebounce", () => ({
@@ -105,6 +111,11 @@ describe("GenericTable", () => {
 
     const newButton = screen.getByLabelText("Nuevo");
     expect(newButton).toBeInTheDocument();
+    expect(newButton).toHaveClass("crud-action-button");
+    expect(newButton).toHaveStyle({
+      backgroundColor: "var(--crud-action)",
+      color: "rgb(255, 255, 255)",
+    });
   });
 
   it("renderiza datos en la tabla", () => {

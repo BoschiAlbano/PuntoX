@@ -72,22 +72,22 @@ export default function ClienteSearch({
         <button
           onClick={onOpen}
           data-shortcut="cliente-trigger"
-          className="w-full h-10 bg-white rounded-lg border border-slate-300 flex items-center justify-start gap-2 px-3 hover:border-[#67afc3] hover:bg-slate-50 transition-colors cursor-pointer"
+          className="w-full h-10 bg-white rounded-lg border border-[#CBD5E1] flex items-center justify-start gap-2 px-3 hover:border-[#0066ff] focus-visible:ring-2 focus-visible:ring-[#0066ff]/15 hover:bg-slate-50 transition-colors cursor-pointer"
           aria-label="Seleccionar cliente"
         >
-          <User size={15} className="text-[#67afc3] shrink-0" />
+          <User size={15} className="text-[#0050cb] shrink-0" />
           <span className="text-xs font-medium text-slate-500">
             Buscar cliente...
           </span>
         </button>
       ) : (
-        <div className="flex bg-white rounded-lg border border-slate-300 items-center justify-between px-3 h-10">
+        <div className="flex bg-white rounded-lg border border-[#E2E8F0] items-center justify-between px-3 h-10">
           <div
             className="flex items-center gap-2.5 min-w-0 cursor-pointer flex-1"
             onClick={onOpen}
             data-shortcut="cliente-trigger"
           >
-            <div className="w-7 h-7 rounded-lg bg-[#67afc3]/15 border border-[#67afc3]/20 flex items-center justify-center text-[#67afc3] font-bold text-sm shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-[#EFF6FF] border border-[#DBEAFE] flex items-center justify-center text-[#0050cb] font-bold text-sm shrink-0">
               {selected.Nombre.charAt(0).toUpperCase()}
             </div>
             <span className="text-xs font-semibold text-slate-800 truncate">

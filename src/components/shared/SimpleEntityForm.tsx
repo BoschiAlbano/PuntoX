@@ -175,7 +175,7 @@ export function SimpleEntityForm<T extends SimpleEntity>({
           <Button
             onPress={() => onSubmit(formData as Partial<T>)}
             isLoading={isSaving}
-            className="bg-[#67afc3] hover:bg-[#4899b0] text-white font-bold rounded-xl shadow-md shadow-[#67afc3]/30 h-10 px-6"
+            className="modal-primary-action font-bold rounded-xl h-10 px-6"
           >
             {isEdit ? "Guardar Cambios" : "Crear"}
           </Button>

@@ -432,7 +432,7 @@ export default function CuentasCorrientesCRUD() {
                 <Button
                   onPress={handleSavePayment}
                   isLoading={isRegistrandoPago}
-                  className="bg-[#67afc3] hover:bg-[#5a9db0] text-white font-semibold h-11 px-6 rounded-[10px] shadow-sm hover:shadow transition-all"
+                  className="modal-primary-action font-semibold h-11 px-6 rounded-[10px] transition-all"
                 >
                   Registrar Pago
                 </Button>

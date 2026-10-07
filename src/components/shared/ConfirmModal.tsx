@@ -42,7 +42,7 @@ export default function ConfirmModal({
   const iconColor = isDanger ? "text-rose-600" : "text-[#67afc3]";
   const confirmBtnClass = isDanger
     ? "bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-md shadow-rose-500/30 h-10 px-6"
-    : "bg-[#67afc3] hover:bg-[#4899b0] text-white font-bold rounded-xl shadow-md shadow-[#67afc3]/30 h-10 px-6";
+    : "modal-primary-action font-bold rounded-xl h-10 px-6";
 
   return (
     <Modal
@@ -60,7 +60,9 @@ export default function ConfirmModal({
       <ModalContent>
         {/* ── Header ── */}
         <ModalHeader className="flex items-center gap-3 py-4 px-5 border-b border-slate-100">
-          <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>
+          <div
+            className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}
+          >
             <Icon size={17} className={iconColor} />
           </div>
           <div className="flex flex-col flex-1 min-w-0">
@@ -68,7 +70,9 @@ export default function ConfirmModal({
               {title}
             </span>
             <span className="text-xs text-slate-400 font-normal">
-              {isDanger ? "Esta acción no se puede deshacer" : "Confirmá la acción"}
+              {isDanger
+                ? "Esta acción no se puede deshacer"
+                : "Confirmá la acción"}
             </span>
           </div>
           <Button

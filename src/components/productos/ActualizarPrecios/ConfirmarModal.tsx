@@ -1,11 +1,11 @@
-import { 
-  Modal, 
-  ModalContent, 
-  ModalHeader, 
-  ModalBody, 
-  ModalFooter, 
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
   Button,
-  Chip
+  Chip,
 } from "@heroui/react";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { ReglaActualizacion } from "@/hooks/useActualizarPrecios";
@@ -19,23 +19,34 @@ interface Props {
   isApplying: boolean;
 }
 
-export function ConfirmarModal({ isOpen, onClose, onConfirm, regla, count, isApplying }: Props) {
-  
+export function ConfirmarModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  regla,
+  count,
+  isApplying,
+}: Props) {
   const getTipoLabel = () => {
     switch (regla.tipo) {
-      case "incremento_porcentaje": return "incremento en porcentaje";
-      case "decremento_porcentaje": return "descuento en porcentaje";
-      case "incremento_fijo": return "incremento fijo";
-      case "decremento_fijo": return "descuento fijo";
-      default: return "";
+      case "incremento_porcentaje":
+        return "incremento en porcentaje";
+      case "decremento_porcentaje":
+        return "descuento en porcentaje";
+      case "incremento_fijo":
+        return "incremento fijo";
+      case "decremento_fijo":
+        return "descuento fijo";
+      default:
+        return "";
     }
   };
 
   const isPorcentaje = regla.tipo.includes("porcentaje");
 
   return (
-    <Modal 
-      isOpen={isOpen} 
+    <Modal
+      isOpen={isOpen}
       onClose={onClose}
       placement="center"
       backdrop="blur"
@@ -52,13 +63,17 @@ export function ConfirmarModal({ isOpen, onClose, onConfirm, regla, count, isApp
         <ModalBody className="py-6">
           <div className="flex flex-col gap-4 text-slate-600">
             <p>
-              Estás por actualizar los precios de <strong className="text-slate-900">{count} artículos</strong> en todas sus listas de precio activas.
+              Estás por actualizar los precios de{" "}
+              <strong className="text-slate-900">{count} artículos</strong> en
+              todas sus listas de precio activas.
             </p>
-            
+
             <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex flex-col gap-2">
               <div className="flex justify-between items-center text-sm">
                 <span>Tipo de ajuste:</span>
-                <span className="font-semibold text-slate-900 capitalize">{getTipoLabel()}</span>
+                <span className="font-semibold text-slate-900 capitalize">
+                  {getTipoLabel()}
+                </span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span>Valor:</span>
@@ -69,15 +84,23 @@ export function ConfirmarModal({ isOpen, onClose, onConfirm, regla, count, isApp
               {regla.redondear && (
                 <div className="flex justify-between items-center text-sm">
                   <span>Redondeo:</span>
-                  <Chip size="sm" color="primary" variant="flat" className="font-bold">
-                    {regla.redondeoTipo === 'ceil_99' ? '★ Ceil $99' : regla.redondeoTipo}
+                  <Chip
+                    size="sm"
+                    color="primary"
+                    variant="flat"
+                    className="font-bold"
+                  >
+                    {regla.redondeoTipo === "ceil_99"
+                      ? "★ Ceil $99"
+                      : regla.redondeoTipo}
                   </Chip>
                 </div>
               )}
             </div>
 
             <p className="text-xs text-slate-400 italic">
-              Esta operación no se puede deshacer de forma automática. Se recomienda haber verificado los cambios en la vista previa.
+              Esta operación no se puede deshacer de forma automática. Se
+              recomienda haber verificado los cambios en la vista previa.
             </p>
           </div>
         </ModalBody>
@@ -85,12 +108,11 @@ export function ConfirmarModal({ isOpen, onClose, onConfirm, regla, count, isApp
           <Button variant="light" onPress={onClose} isDisabled={isApplying}>
             Cancelar
           </Button>
-          <Button 
-            color="primary" 
-            onPress={onConfirm} 
+          <Button
+            onPress={onConfirm}
             isLoading={isApplying}
             startContent={!isApplying && <CheckCircle2 className="w-4 h-4" />}
-            className="font-bold"
+            className="modal-primary-action font-bold"
           >
             Confirmar y Aplicar
           </Button>

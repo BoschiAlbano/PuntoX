@@ -370,7 +370,7 @@ export default function GenericTable<T extends { Id: number | string }>({
           isDisabled: newButtonDisabled,
           className: newButtonDisabled
             ? "rounded-md px-3 py-2.5 font-medium text-slate-400"
-            : "rounded-md px-3 py-2.5 font-semibold bg-[var(--crud-accent)] text-white data-[hover=true]:bg-[var(--crud-accent-hover)] data-[focus=true]:bg-[var(--crud-accent-hover)] shadow-sm",
+            : "crud-action-button rounded-md px-3 py-2.5 font-semibold text-white shadow-[0_4px_14px_var(--crud-action-shadow)]",
           onPress: newButtonDisabled ? undefined : onNewClick,
         });
         items.push({
@@ -706,10 +706,15 @@ export default function GenericTable<T extends { Id: number | string }>({
                 : undefined
             }
             textValue={item.textValue ?? item.label}
+            style={
+              item.isPrimaryAction && !item.isDisabled
+                ? { backgroundColor: "var(--crud-action)", color: "#ffffff" }
+                : undefined
+            }
             className={
               item.className ??
               (item.isPrimaryAction
-                ? "rounded-md px-3 py-2.5 font-semibold bg-[var(--crud-accent)] text-white"
+                ? "crud-action-button rounded-md px-3 py-2.5 font-semibold text-white"
                 : "")
             }
           >
@@ -790,7 +795,15 @@ export default function GenericTable<T extends { Id: number | string }>({
                 onClick={newButtonDisabled ? undefined : onNewClick}
                 disabled={newButtonDisabled}
                 title={newButtonDisabled ? newButtonDisabledMessage : undefined}
-                className="px-4 h-9 rounded-lg bg-[var(--crud-accent)] hover:bg-[var(--crud-accent-hover)] text-white font-medium text-sm shadow-sm transition-all duration-150 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-sm flex items-center justify-center whitespace-nowrap"
+                style={
+                  newButtonDisabled
+                    ? undefined
+                    : {
+                        backgroundColor: "var(--crud-action)",
+                        color: "#ffffff",
+                      }
+                }
+                className="crud-action-button px-4 h-9 rounded-lg text-white font-semibold text-sm shadow-[0_4px_14px_var(--crud-action-shadow)] transition-all duration-150 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-sm flex items-center justify-center whitespace-nowrap"
                 aria-label={newButtonText}
               >
                 {newButtonText}

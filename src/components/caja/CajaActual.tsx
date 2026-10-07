@@ -756,7 +756,6 @@ export default function CajaActual({
           paginationMeta={{ total: 0, page: 1, limit: 10, totalPages: 1 }}
           renderCell={() => null}
         />
-
       </div>
     );
   }
@@ -1210,7 +1209,7 @@ export default function CajaActual({
                   <Button
                     onPress={handleCerrarCaja}
                     isLoading={isClosing}
-                    className="flex-1 bg-[#67afc3] hover:bg-[#4899b0] text-white font-bold px-6 rounded-xl shadow-md shadow-[#67afc3]/30 transition-all"
+                    className="modal-primary-action flex-1 font-bold px-6 rounded-xl transition-all"
                     startContent={
                       !isClosing && <Lock size={15} strokeWidth={2.5} />
                     }
@@ -1406,7 +1405,7 @@ export default function CajaActual({
               onPress={handleConfirmBulkEmitirArca}
               isLoading={isReprocesando}
               isDisabled={!isDateInArcaRange(fechaBulk) || isReprocesando}
-              className="font-semibold bg-[#67afc3] hover:bg-[#4899b0] text-white disabled:opacity-50"
+              className="modal-primary-action font-semibold disabled:opacity-50"
             >
               {isReprocesando
                 ? "Procesando..."

@@ -142,7 +142,11 @@ export default function PaymentModal({
       motionProps={modalMotionProps}
       classNames={{
         wrapper: "items-end sm:items-center",
-        base: "rounded-t-2xl rounded-b-none sm:rounded-2xl w-full sm:w-auto m-0 sm:m-auto max-h-[92vh]",
+        base: "bg-white border border-[#E2E8F0] shadow-[0_20px_25px_-5px_rgba(15,23,42,0.08),0_8px_10px_-6px_rgba(15,23,42,0.04)] rounded-t-2xl rounded-b-none sm:rounded-xl w-full sm:w-auto m-0 sm:m-auto max-h-[92vh]",
+        header:
+          "border-b border-[#E2E8F0] px-5 py-4 font-semibold text-[#0F172A]",
+        body: "px-5 py-4",
+        footer: "border-t border-[#E2E8F0] px-5 py-4",
       }}
     >
       <ModalContent>
@@ -150,10 +154,10 @@ export default function PaymentModal({
           Confirmar Pago
         </ModalHeader>
         <ModalBody>
-          <div className="flex justify-between items-center mb-4 p-4 bg-default-100 rounded-lg">
+          <div className="flex justify-between items-center mb-4 p-4 bg-[#F4F7FB] border border-[#E2E8F0] rounded-lg">
             <div className="flex flex-col">
               <span className="text-small text-default-500">Total a Pagar</span>
-              <span className="text-2xl font-bold text-primary">
+              <span className="text-2xl font-bold font-landing-display tabular-nums text-[#0F172A]">
                 ${total.toFixed(2)}
               </span>
             </div>
@@ -162,7 +166,7 @@ export default function PaymentModal({
               <span
                 className={`text-2xl font-bold ${
                   restante > 0.01
-                    ? "text-warning"
+                    ? "text-[#C2410C]"
                     : restante < -0.01
                       ? "text-success"
                       : "text-success"
@@ -187,6 +191,10 @@ export default function PaymentModal({
               onChange={(e) => setCurrentTipo(Number(e.target.value))}
               className="w-1/2"
               size="sm"
+              classNames={{
+                trigger:
+                  "border border-[#CBD5E1] bg-white data-[hover=true]:border-[#0066ff] data-[focus=true]:border-[#0066ff]",
+              }}
             >
               <SelectItem key={TIPO_PAGO.EFECTIVO} textValue="Efectivo">
                 Efectivo
@@ -218,11 +226,20 @@ export default function PaymentModal({
               startContent="$"
               className="w-1/3"
               size="sm"
+              classNames={{
+                inputWrapper:
+                  "border border-[#CBD5E1] bg-white data-[hover=true]:border-[#0066ff] data-[focus=true]:border-[#0066ff]",
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAddPayment();
               }}
             />
-            <Button isIconOnly color="primary" onPress={handleAddPayment}>
+            <Button
+              isIconOnly
+              aria-label="Agregar pago"
+              className="bg-[#0066ff] text-white hover:bg-[#0050cb]"
+              onPress={handleAddPayment}
+            >
               <Plus />
             </Button>
           </div>
@@ -281,14 +298,13 @@ export default function PaymentModal({
           )}
         </ModalBody>
         <ModalFooter>
-          <Button variant="flat" color="danger" onPress={onClose}>
+          <Button variant="flat" onPress={onClose}>
             Cancelar
           </Button>
           <Button
-            color="success"
             onPress={handleConfirm}
             isDisabled={Math.abs(restante) > 0.01}
-            className="font-bold text-white"
+            className="h-12 rounded-lg bg-[#FF6100] px-5 font-bold text-white shadow-[0_4px_14px_0_rgba(255,97,0,0.35)] hover:bg-[#E65700] disabled:bg-slate-300 disabled:shadow-none"
           >
             FINALIZAR VENTA
           </Button>

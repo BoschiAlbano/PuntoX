@@ -891,7 +891,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
         addToast({
           title: "No se puede eliminar",
           description:
-            "Los registros seleccionados no están inactivos. Desactivalos primero desde \"Eliminar\".",
+            'Los registros seleccionados no están inactivos. Desactivalos primero desde "Eliminar".',
           color: "warning",
         });
         onHardDeleteClose();
@@ -1181,7 +1181,11 @@ export default function GenericCrud<T extends { Id: number | string }>({
               </Button>
               {showEditInPreview && (
                 <Button
-                  className="bg-[var(--crud-accent)] hover:bg-[var(--crud-accent-hover)] text-white"
+                  style={{
+                    backgroundColor: "var(--crud-action)",
+                    color: "#ffffff",
+                  }}
+                  className="crud-action-button text-white shadow-[0_4px_14px_var(--crud-action-shadow)]"
                   onPress={() => {
                     handleEdit(previewItem);
                     setPreviewItem(null);

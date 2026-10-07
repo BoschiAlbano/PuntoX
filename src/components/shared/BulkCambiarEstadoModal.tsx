@@ -104,7 +104,7 @@ export function BulkCambiarEstadoModal<T extends BulkEstadoItem>({
             Cancelar
           </Button>
           <Button
-            className="bg-[#67afc3] hover:bg-[#5a9db0] text-white"
+            className="modal-primary-action"
             onPress={handleConfirm}
             isLoading={isLoading}
           >

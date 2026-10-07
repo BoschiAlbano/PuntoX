@@ -94,7 +94,7 @@ export default function SucursalForm({
       if (res.ok) {
         const data = await res.json();
         const savedSucursal = data?.sucursal;
-        
+
         if (savedSucursal) {
           if (sucursal) {
             userStore.updateBranch({
@@ -166,7 +166,9 @@ export default function SucursalForm({
                   {sucursal ? "Editar Sucursal" : "Nueva Sucursal"}
                 </h3>
                 <p className="text-xs text-slate-500 font-medium">
-                  {sucursal ? "Modifica los datos de la sucursal" : "Registra un nuevo punto de venta"}
+                  {sucursal
+                    ? "Modifica los datos de la sucursal"
+                    : "Registra un nuevo punto de venta"}
                 </p>
               </div>
             </ModalHeader>
@@ -180,11 +182,15 @@ export default function SucursalForm({
                 value={formData.nombre}
                 onValueChange={(v) => setFormData({ ...formData, nombre: v })}
                 classNames={{
-                  label: "text-slate-500 font-bold uppercase text-[10px] tracking-widest ml-1",
-                  inputWrapper: "h-12 border-slate-200 hover:border-[#67afc3] focus-within:!border-[#67afc3] transition-all rounded-xl bg-slate-50/50",
+                  label:
+                    "text-slate-500 font-bold uppercase text-[10px] tracking-widest ml-1",
+                  inputWrapper:
+                    "h-12 border-slate-200 hover:border-[#67afc3] focus-within:!border-[#67afc3] transition-all rounded-xl bg-slate-50/50",
                   input: "text-sm",
                 }}
-                startContent={<Building2 size={18} className="text-slate-400 mr-1" />}
+                startContent={
+                  <Building2 size={18} className="text-slate-400 mr-1" />
+                }
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -194,13 +200,19 @@ export default function SucursalForm({
                   variant="bordered"
                   labelPlacement="outside"
                   value={formData.direccion}
-                  onValueChange={(v) => setFormData({ ...formData, direccion: v })}
+                  onValueChange={(v) =>
+                    setFormData({ ...formData, direccion: v })
+                  }
                   classNames={{
-                    label: "text-slate-500 font-bold uppercase text-[10px] tracking-widest ml-1",
-                    inputWrapper: "h-12 border-slate-200 hover:border-[#67afc3] focus-within:!border-[#67afc3] transition-all rounded-xl bg-slate-50/50",
+                    label:
+                      "text-slate-500 font-bold uppercase text-[10px] tracking-widest ml-1",
+                    inputWrapper:
+                      "h-12 border-slate-200 hover:border-[#67afc3] focus-within:!border-[#67afc3] transition-all rounded-xl bg-slate-50/50",
                     input: "text-sm",
                   }}
-                  startContent={<MapPin size={18} className="text-slate-400 mr-1" />}
+                  startContent={
+                    <MapPin size={18} className="text-slate-400 mr-1" />
+                  }
                 />
                 <Input
                   label="Teléfono"
@@ -208,29 +220,44 @@ export default function SucursalForm({
                   variant="bordered"
                   labelPlacement="outside"
                   value={formData.telefono}
-                  onValueChange={(v) => setFormData({ ...formData, telefono: v })}
+                  onValueChange={(v) =>
+                    setFormData({ ...formData, telefono: v })
+                  }
                   classNames={{
-                    label: "text-slate-500 font-bold uppercase text-[10px] tracking-widest ml-1",
-                    inputWrapper: "h-12 border-slate-200 hover:border-[#67afc3] focus-within:!border-[#67afc3] transition-all rounded-xl bg-slate-50/50",
+                    label:
+                      "text-slate-500 font-bold uppercase text-[10px] tracking-widest ml-1",
+                    inputWrapper:
+                      "h-12 border-slate-200 hover:border-[#67afc3] focus-within:!border-[#67afc3] transition-all rounded-xl bg-slate-50/50",
                     input: "text-sm",
                   }}
-                  startContent={<Phone size={18} className="text-slate-400 mr-1" />}
+                  startContent={
+                    <Phone size={18} className="text-slate-400 mr-1" />
+                  }
                 />
               </div>
 
               <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 border border-slate-100 transition-all hover:bg-white hover:shadow-sm">
                 <div className="flex gap-3 items-center">
                   <div className="p-2 rounded-xl bg-amber-50 text-amber-500">
-                    <Star size={20} fill={formData.esPrincipal ? "currentColor" : "none"} />
+                    <Star
+                      size={20}
+                      fill={formData.esPrincipal ? "currentColor" : "none"}
+                    />
                   </div>
                   <div className="flex flex-col">
-                    <p className="text-sm font-bold text-slate-700">Sucursal Principal</p>
-                    <p className="text-[11px] text-slate-500 font-medium">Define esta sede como la predeterminada</p>
+                    <p className="text-sm font-bold text-slate-700">
+                      Sucursal Principal
+                    </p>
+                    <p className="text-[11px] text-slate-500 font-medium">
+                      Define esta sede como la predeterminada
+                    </p>
                   </div>
                 </div>
-                <Switch 
-                  isSelected={formData.esPrincipal} 
-                  onValueChange={(v) => setFormData({ ...formData, esPrincipal: v })}
+                <Switch
+                  isSelected={formData.esPrincipal}
+                  onValueChange={(v) =>
+                    setFormData({ ...formData, esPrincipal: v })
+                  }
                   color="warning"
                 />
               </div>
@@ -238,25 +265,35 @@ export default function SucursalForm({
               {sucursal && (
                 <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 border border-slate-100 transition-all hover:bg-white hover:shadow-sm">
                   <div className="flex gap-3 items-center">
-                    <div className={`p-2 rounded-xl ${formData.estaActiva ? 'bg-emerald-50 text-emerald-500' : 'bg-slate-100 text-slate-400'}`}>
+                    <div
+                      className={`p-2 rounded-xl ${formData.estaActiva ? "bg-emerald-50 text-emerald-500" : "bg-slate-100 text-slate-400"}`}
+                    >
                       <Building2 size={20} />
                     </div>
                     <div className="flex flex-col">
-                      <p className="text-sm font-bold text-slate-700">Estado de Operación</p>
-                      <p className="text-[11px] text-slate-500 font-medium">{formData.estaActiva ? 'Activa y recibiendo ventas' : 'Inactiva temporalmente'}</p>
+                      <p className="text-sm font-bold text-slate-700">
+                        Estado de Operación
+                      </p>
+                      <p className="text-[11px] text-slate-500 font-medium">
+                        {formData.estaActiva
+                          ? "Activa y recibiendo ventas"
+                          : "Inactiva temporalmente"}
+                      </p>
                     </div>
                   </div>
-                  <Switch 
-                    isSelected={formData.estaActiva} 
-                    onValueChange={(v) => setFormData({ ...formData, estaActiva: v })}
+                  <Switch
+                    isSelected={formData.estaActiva}
+                    onValueChange={(v) =>
+                      setFormData({ ...formData, estaActiva: v })
+                    }
                     color="success"
                   />
                 </div>
               )}
             </ModalBody>
             <ModalFooter className="gap-3">
-              <Button 
-                variant="light" 
+              <Button
+                variant="light"
                 onPress={onClose}
                 className="font-bold text-slate-500 hover:bg-slate-100 rounded-xl"
               >
@@ -266,7 +303,7 @@ export default function SucursalForm({
                 color="primary"
                 onPress={handleGuardar}
                 isLoading={isSaving}
-                className="bg-linear-to-r from-[#67afc3] to-[#2dd4bf] text-white font-bold px-8 shadow-lg shadow-[#67afc3]/30 rounded-xl transform transition-transform active:scale-95"
+                className="modal-primary-action font-bold px-8 rounded-xl transform transition-transform active:scale-95"
               >
                 {sucursal ? "Actualizar Cambios" : "Crear Sucursal"}
               </Button>
