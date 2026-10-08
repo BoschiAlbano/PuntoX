@@ -723,18 +723,18 @@ function SidebarComponent({ isCollapsed, onClose }: SidebarProps) {
         {/* Header del Sidebar */}
 
         <div className="w-full flex items-center justify-center px-4 py-4 h-15.5">
-          <div className="flex h-7.5 w-full flex-row items-center gap-2">
+          <div
+            className={`flex h-auto w-full flex-row items-center gap-2 ${isCollapsed ? "justify-start pl-2" : "justify-start"} animate-fade-in duration-300`}
+          >
             <Image
               src="/brand/puntox-isotipo.png"
-              width={32}
-              height={32}
-              className="h-8 w-8 shrink-0 object-contain"
+              width={40}
+              height={40}
+              className={`$w-9 h-9 shrink-0 object-contain`}
               alt="Punto X"
             />
 
-            <div
-              className={` flex flex-col items-start truncate  ${isCollapsed ? "opacity-0" : "opacity-100"}`}
-            >
+            <div className={` flex flex-col items-start truncate  `}>
               <span className="text-lg font-bold tracking-tight text-(--nav-logo-title)">
                 Punto X
               </span>

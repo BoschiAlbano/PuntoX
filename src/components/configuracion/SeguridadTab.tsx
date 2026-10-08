@@ -54,7 +54,7 @@ interface DispositivoConfiable {
 
 const selectCls = {
   trigger:
-    "h-9 border-slate-200 bg-white hover:border-[#67afc3]/60 data-[focus=true]:border-[#67afc3] rounded-xl text-sm",
+    "h-9 border-slate-200 bg-white hover:border-[#0066ff]/60 data-[focus=true]:border-[#0066ff] rounded-xl text-sm",
 };
 
 const formatFecha = (fecha: string) => {
@@ -263,7 +263,7 @@ export function SeguridadTab() {
                     className="max-w-[90px]"
                     classNames={{
                       input: "text-center font-semibold text-sm",
-                      inputWrapper: "border-[#67afc3]/40",
+                      inputWrapper: "border-[#0066ff]/40",
                     }}
                     aria-label="Días de inactividad"
                     endContent={
@@ -305,7 +305,7 @@ export function SeguridadTab() {
                 <Button
                   onPress={() => saveSeguridad(seguridad)}
                   isLoading={isSavingSeguridad}
-                  className="bg-linear-to-r from-[#67afc3] to-[#2dd4bf] text-white font-bold px-6 h-10 shadow-md shadow-[#67afc3]/20 rounded-xl gap-2"
+                  className="bg-linear-to-r from-[#0066ff] to-[#0050cb] text-white font-bold px-6 h-10 shadow-md shadow-[#0066ff]/20 rounded-xl gap-2"
                   startContent={!isSavingSeguridad && <Save size={15} />}
                 >
                   Guardar seguridad
@@ -321,19 +321,19 @@ export function SeguridadTab() {
                 <button
                   key={label}
                   onClick={() => modal && setModalDetalle(modal)}
-                  className={`text-left p-4 rounded-2xl bg-linear-to-br from-[#67afc3]/8 to-[#2dd4bf]/8 border border-[#67afc3]/15 transition-all hover:shadow-sm ${modal ? "cursor-pointer hover:scale-[1.01] hover:border-[#67afc3]/30" : "cursor-default"}`}
+                  className={`text-left p-4 rounded-2xl bg-linear-to-br from-[#0066ff]/8 to-[#0050cb]/8 border border-[#0066ff]/15 transition-all hover:shadow-sm ${modal ? "cursor-pointer hover:scale-[1.01] hover:border-[#0066ff]/30" : "cursor-default"}`}
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <Icon
                       size={14}
                       strokeWidth={2.5}
-                      className="text-[#67afc3]"
+                      className="text-[#0050cb]"
                     />
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                       {label}
                     </span>
                   </div>
-                  <p className="text-3xl font-extrabold leading-none text-[#67afc3]">
+                  <p className="text-3xl font-extrabold leading-none text-[#0066ff] font-display tabular-nums">
                     {value}
                   </p>
                   {modal && (
@@ -377,7 +377,7 @@ export function SeguridadTab() {
               {(onClose) => (
                 <>
                   <ModalHeader className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 text-[#67afc3]">
+                    <div className="p-2 rounded-xl bg-linear-to-br from-[#0066ff]/15 to-[#0050cb]/15 border border-[#0066ff]/20 text-[#0050cb]">
                       {modalDetalle === "sesiones" ? (
                         <Shield size={18} />
                       ) : (
@@ -401,15 +401,15 @@ export function SeguridadTab() {
                           sesionesActivas.map((s) => (
                             <div
                               key={s.id}
-                              className={`flex items-center justify-between p-3.5 rounded-2xl border ${s.esActual ? "bg-[#67afc3]/5 border-[#67afc3]/30" : "bg-slate-50 border-slate-100"}`}
+                              className={`flex items-center justify-between p-3.5 rounded-2xl border ${s.esActual ? "bg-[#0066ff]/5 border-[#0066ff]/30" : "bg-slate-50 border-slate-100"}`}
                             >
                               <div className="flex items-center gap-3">
                                 <div
-                                  className={`p-2 rounded-xl border ${s.esActual ? "bg-linear-to-br from-[#67afc3]/20 to-[#2dd4bf]/20 border-[#67afc3]/30" : "bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border-[#67afc3]/20"}`}
+                                  className={`p-2 rounded-xl border ${s.esActual ? "bg-linear-to-br from-[#0066ff]/20 to-[#0050cb]/20 border-[#0066ff]/30" : "bg-linear-to-br from-[#0066ff]/15 to-[#0050cb]/15 border-[#0066ff]/20"}`}
                                 >
                                   <Shield
                                     size={14}
-                                    className="text-[#67afc3]"
+                                    className="text-[#0050cb]"
                                   />
                                 </div>
                                 <div>
@@ -448,10 +448,10 @@ export function SeguridadTab() {
                               className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100"
                             >
                               <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20">
+                                <div className="p-2 rounded-xl bg-linear-to-br from-[#0066ff]/15 to-[#0050cb]/15 border border-[#0066ff]/20">
                                   <Smartphone
                                     size={14}
-                                    className="text-[#67afc3]"
+                                    className="text-[#0050cb]"
                                   />
                                 </div>
                                 <div>

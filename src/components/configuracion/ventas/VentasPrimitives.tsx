@@ -6,8 +6,8 @@ import { Switch } from "@heroui/react";
 /** Fila de toggle reutilizable para todas las secciones de ventas */
 export function ToggleRow({
   icon: Icon,
-  iconColor = "text-[#67afc3]",
-  iconBg = "from-[#67afc3]/15 to-[#2dd4bf]/15 border-[#67afc3]/20",
+  iconColor = "text-[#0050cb]",
+  iconBg = "from-[#0066ff]/15 to-[#0050cb]/15 border-[#0066ff]/20",
   title,
   description,
   isSelected,
@@ -50,7 +50,7 @@ export function ToggleRow({
           size="sm"
           color="primary"
           aria-label={title}
-          classNames={{ wrapper: "group-data-[selected=true]:bg-[#67afc3]" }}
+          classNames={{ wrapper: "group-data-[selected=true]:bg-[#0066ff]" }}
         />
       )}
     </div>
@@ -70,10 +70,10 @@ export function VentasSection({
   return (
     <div className="bg-white/90 backdrop-blur-xl border border-slate-100 rounded-[20px] shadow-sm overflow-hidden">
       <div className="px-6 py-4 border-b border-slate-100/60 bg-slate-50/50 flex items-center gap-3">
-        <div className="p-2 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 text-[#67afc3]">
+        <div className="p-2 rounded-xl bg-linear-to-br from-[#0066ff]/15 to-[#0050cb]/15 border border-[#0066ff]/20 text-[#0050cb]">
           <Icon size={16} strokeWidth={2.5} />
         </div>
-        <h3 className="text-sm font-bold text-slate-700 tracking-tight">{title}</h3>
+        <h3 className="text-sm font-bold text-slate-700 tracking-tight font-display">{title}</h3>
       </div>
       <div className="px-5 py-4 space-y-2">{children}</div>
     </div>

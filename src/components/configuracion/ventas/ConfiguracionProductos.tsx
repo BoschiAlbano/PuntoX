@@ -60,7 +60,7 @@ export function ConfiguracionProductos() {
           <Button
             onPress={handleSave}
             isLoading={isSavingConfiguracion}
-            className="bg-linear-to-r from-[#67afc3] to-[#2dd4bf] text-white font-bold px-6 h-10 shadow-md shadow-[#67afc3]/20 rounded-xl gap-2"
+            className="bg-linear-to-r from-[#0066ff] to-[#0050cb] text-white font-bold px-6 h-10 shadow-md shadow-[#0066ff]/20 rounded-xl gap-2"
             startContent={!isSavingConfiguracion && <Save size={15} />}
           >
             Guardar productos

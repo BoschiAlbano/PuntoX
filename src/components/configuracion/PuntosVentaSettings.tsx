@@ -80,7 +80,7 @@ export function PuntosVentaSettings() {
             {localData.map((pdv) => (
               <div key={pdv.sucursalId} className="flex flex-col sm:flex-row gap-4 p-4 bg-slate-50 border border-slate-100 rounded-xl items-start sm:items-center">
                 <div className="flex-1">
-                  <h4 className="font-bold text-slate-700 text-sm flex items-center gap-2">
+                  <h4 className="font-bold text-slate-700 text-sm flex items-center gap-2 font-display">
                     <Store size={14} className="text-slate-400" />
                     {pdv.nombre}
                   </h4>
@@ -130,7 +130,7 @@ export function PuntosVentaSettings() {
             isDisabled={!hasChanges}
             className={`font-bold px-6 h-10 rounded-xl gap-2 transition-all ${
               hasChanges
-                ? "bg-[#67afc3] text-white shadow-md hover:shadow-lg"
+                ? "bg-[#0066ff] text-white shadow-md hover:shadow-lg"
                 : "bg-slate-100 text-slate-400 cursor-not-allowed"
             }`}
             startContent={!mutation.isPending && <Save size={14} />}

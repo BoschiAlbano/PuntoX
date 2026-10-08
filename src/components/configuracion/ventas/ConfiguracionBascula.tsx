@@ -10,7 +10,7 @@ import { useReportDirty } from "../OnboardingDirtyContext";
 const inputCls = {
   label: "text-slate-500 font-bold uppercase text-[10px] tracking-widest",
   inputWrapper:
-    "h-10 border-slate-200 bg-white hover:border-[#67afc3]/60 focus-within:!border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/20 transition-all rounded-xl",
+    "h-10 border-slate-200 bg-white hover:border-[#0066ff]/60 focus-within:!border-[#0066ff] focus-within:ring-1 focus-within:ring-[#0066ff]/20 transition-all rounded-xl",
   input: "text-sm text-slate-700 font-medium",
 };
 
@@ -83,8 +83,8 @@ export function ConfiguracionBascula() {
       {configBascula.activarBascula && (
         <div className="px-5 py-4 rounded-2xl bg-slate-50/60 border border-slate-100 space-y-3">
           <div className="flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 shrink-0 mt-0.5">
-              <Hash size={15} strokeWidth={2.5} className="text-[#67afc3]" />
+            <div className="p-2 rounded-xl bg-linear-to-br from-[#0066ff]/15 to-[#0050cb]/15 border border-[#0066ff]/20 shrink-0 mt-0.5">
+              <Hash size={15} strokeWidth={2.5} className="text-[#0050cb]" />
             </div>
             <div>
               <p className="text-sm font-bold text-slate-700">Prefijo de código de báscula</p>
@@ -106,9 +106,9 @@ export function ConfiguracionBascula() {
             className="max-w-[160px]"
             startContent={<Hash size={14} className="text-slate-400 shrink-0" />}
           />
-          <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-[#67afc3]/5 border border-[#67afc3]/15">
-            <Info size={13} className="text-[#67afc3] shrink-0 mt-0.5" />
-            <p className="text-[10px] text-[#67afc3] font-medium leading-relaxed">
+          <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-[#0066ff]/5 border border-[#0066ff]/15">
+            <Info size={13} className="text-[#0050cb] shrink-0 mt-0.5" />
+            <p className="text-[10px] text-[#0050cb] font-medium leading-relaxed">
               Ejemplo: <span className="font-mono font-bold">2000002005001</span>
               <br />
               <span className="font-mono">PP·IIIII·VVVVV·C</span> — PP: prefijo · IIIII: código · VVVVV: peso/precio · C: verificador
@@ -122,7 +122,7 @@ export function ConfiguracionBascula() {
           <Button
             onPress={handleSave}
             isLoading={isSavingConfiguracion}
-            className="bg-linear-to-r from-[#67afc3] to-[#2dd4bf] text-white font-bold px-6 h-10 shadow-md shadow-[#67afc3]/20 rounded-xl gap-2"
+            className="bg-linear-to-r from-[#0066ff] to-[#0050cb] text-white font-bold px-6 h-10 shadow-md shadow-[#0066ff]/20 rounded-xl gap-2"
             startContent={!isSavingConfiguracion && <Save size={15} />}
           >
             Guardar báscula

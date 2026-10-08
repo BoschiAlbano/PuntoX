@@ -370,6 +370,12 @@ html {
   font-variant-numeric: tabular-nums;
 }
 
+/* DESIGN.md (Kinetic Retail Ops): Plus Jakarta Sans para encabezados
+   estructurales y numéricos (métricas, totales). Usar con .font-display */
+.font-display {
+  font-family: var(--font-plus-jakarta), sans-serif;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     /* Fallback to system preference if no class present (optional, or keep generic default) */

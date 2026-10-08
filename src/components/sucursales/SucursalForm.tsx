@@ -158,7 +158,7 @@ export default function SucursalForm({
         {(onClose) => (
           <>
             <ModalHeader className="flex gap-3 items-center">
-              <div className="p-2.5 rounded-2xl   bg-linear-to-br from-[#FB6900] to-[#fb6900a1]text-white shadow-lg shadow-[#67afc3]/20">
+              <div className="p-2.5 rounded-2xl   bg-linear-to-br from-[#FB6900] to-[#fb6900a1] text-white shadow-lg shadow-[#67afc3]/20">
                 <Building2 size={22} strokeWidth={2.5} />
               </div>
               <div className="flex flex-col">

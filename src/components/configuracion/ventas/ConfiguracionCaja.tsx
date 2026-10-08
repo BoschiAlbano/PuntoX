@@ -17,7 +17,7 @@ import { useReportDirty } from "../OnboardingDirtyContext";
 
 const selectCls = {
   trigger:
-    "h-9 border-slate-200 bg-white hover:border-[#67afc3]/60 data-[focus=true]:border-[#67afc3] rounded-xl text-sm",
+    "h-9 border-slate-200 bg-white hover:border-[#0066ff]/60 data-[focus=true]:border-[#0066ff] rounded-xl text-sm",
 };
 
 const paymentOptions = [
@@ -148,7 +148,7 @@ export function ConfiguracionCaja() {
           <Button
             onPress={handleSave}
             isLoading={isSavingConfiguracion}
-            className="bg-linear-to-r from-[#67afc3] to-[#2dd4bf] text-white font-bold px-6 h-10 shadow-md shadow-[#67afc3]/20 rounded-xl gap-2"
+            className="bg-linear-to-r from-[#0066ff] to-[#0050cb] text-white font-bold px-6 h-10 shadow-md shadow-[#0066ff]/20 rounded-xl gap-2"
             startContent={!isSavingConfiguracion && <Save size={15} />}
           >
             Guardar caja

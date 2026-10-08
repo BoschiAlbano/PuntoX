@@ -134,7 +134,7 @@ export function ArcaSettings() {
 
         {/* Certificados */}
         <div className="space-y-3">
-          <h4 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+          <h4 className="text-sm font-semibold text-slate-700 flex items-center gap-2 font-display">
             Certificados Digitales
             {fiscal.afipCertificadoCargado ? (
               <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-wider">Instalado</span>
@@ -151,7 +151,7 @@ export function ArcaSettings() {
                   type="file" 
                   accept=".crt,.pem" 
                   onChange={(e) => setCertFile(e.target.files?.[0] || null)}
-                  className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#67afc3]/10 file:text-[#67afc3] hover:file:bg-[#67afc3]/20"
+                  className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#0066ff]/10 file:text-[#0050cb] hover:file:bg-[#0066ff]/20"
                 />
               </div>
               <div>
@@ -160,14 +160,14 @@ export function ArcaSettings() {
                   type="file" 
                   accept=".key,.pem" 
                   onChange={(e) => setKeyFile(e.target.files?.[0] || null)}
-                  className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#67afc3]/10 file:text-[#67afc3] hover:file:bg-[#67afc3]/20"
+                  className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#0066ff]/10 file:text-[#0050cb] hover:file:bg-[#0066ff]/20"
                 />
               </div>
               <div className="md:col-span-2 flex justify-end">
                 <Button 
                   size="sm" 
                   color="primary" 
-                  className="bg-[#67afc3]" 
+                  className="bg-[#0066ff]" 
                   startContent={<Upload size={14} />}
                   isDisabled={!certFile || !keyFile}
                   isLoading={isUploading}

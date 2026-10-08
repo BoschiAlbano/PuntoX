@@ -31,7 +31,7 @@ const inputCls = {
   label:
     "text-slate-500 font-bold uppercase text-[10px] tracking-widest ml-0.5",
   inputWrapper:
-    "h-11 border-slate-200 bg-slate-50/50 hover:border-[#67afc3]/60 focus-within:!border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/20 transition-all rounded-xl",
+    "h-11 border-slate-200 bg-slate-50/50 hover:border-[#0066ff]/60 focus-within:!border-[#0066ff] focus-within:ring-1 focus-within:ring-[#0066ff]/20 transition-all rounded-xl",
   input: "text-sm text-slate-700 font-medium",
 };
 
@@ -39,7 +39,7 @@ const selectCls = {
   label:
     "text-slate-500 font-bold uppercase text-[10px] tracking-widest ml-0.5",
   trigger:
-    "h-11 border-slate-200 bg-slate-50/50 hover:border-[#67afc3]/60 data-[focus=true]:border-[#67afc3] rounded-xl",
+    "h-11 border-slate-200 bg-slate-50/50 hover:border-[#0066ff]/60 data-[focus=true]:border-[#0066ff] rounded-xl",
 };
 
 function FormSection({
@@ -54,10 +54,10 @@ function FormSection({
   return (
     <div className="bg-white/90 backdrop-blur-xl border border-slate-100 rounded-[20px] shadow-sm h-full">
       <div className="px-6 py-4 border-b border-slate-100/60 bg-slate-50/50 flex items-center gap-3">
-        <div className="p-2 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 text-[#67afc3]">
+        <div className="p-2 rounded-xl bg-linear-to-br from-[#0066ff]/15 to-[#0050cb]/15 border border-[#0066ff]/20 text-[#0050cb]">
           <Icon size={16} strokeWidth={2.5} />
         </div>
-        <h3 className="text-sm font-bold text-slate-700 tracking-tight">
+        <h3 className="text-sm font-bold text-slate-700 tracking-tight font-display">
           {title}
         </h3>
       </div>
@@ -269,7 +269,7 @@ export function PerfilTab() {
                       />
                       {logoPreview ? (
                         <div className="relative">
-                          <div className="w-40 h-40 rounded-2xl border-2 border-slate-200 bg-white overflow-hidden flex items-center justify-center shadow-sm group-hover:border-[#67afc3] transition-all">
+                          <div className="w-40 h-40 rounded-2xl border-2 border-slate-200 bg-white overflow-hidden flex items-center justify-center shadow-sm group-hover:border-[#0066ff] transition-all">
                             <Image
                               src={logoPreview}
                               alt="Logo preview"
@@ -302,12 +302,12 @@ export function PerfilTab() {
                           )}
                         </div>
                       ) : (
-                        <div className="w-40 h-40 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-2 text-slate-300 group-hover:border-[#67afc3] group-hover:bg-[#67afc3]/5 transition-all">
+                        <div className="w-40 h-40 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-2 text-slate-300 group-hover:border-[#0066ff] group-hover:bg-[#0066ff]/5 transition-all">
                           <Upload
                             size={32}
-                            className="group-hover:text-[#67afc3] transition-colors shrink-0"
+                            className="group-hover:text-[#0050cb] transition-colors shrink-0"
                           />
-                          <span className="text-xs font-bold uppercase tracking-wider group-hover:text-[#67afc3] transition-colors">
+                          <span className="text-xs font-bold uppercase tracking-wider group-hover:text-[#0050cb] transition-colors">
                             Subir logo
                           </span>
                           <span className="text-[10px]">
@@ -335,7 +335,7 @@ export function PerfilTab() {
                         size="sm"
                         color="primary"
                         classNames={{
-                          wrapper: "group-data-[selected=true]:bg-[#67afc3]",
+                          wrapper: "group-data-[selected=true]:bg-[#0066ff]",
                         }}
                       />
                     </div>
@@ -659,7 +659,7 @@ export function PerfilTab() {
           <Button
             onPress={handleSave}
             isLoading={isSaving}
-            className="bg-linear-to-r from-[#67afc3] to-[#2dd4bf] text-white font-bold px-8 h-11 shadow-lg shadow-[#67afc3]/30 rounded-xl transform transition-all active:scale-95 hover:shadow-xl gap-2"
+            className="bg-linear-to-r from-[#0066ff] to-[#0050cb] text-white font-bold px-8 h-11 shadow-lg shadow-[#0066ff]/30 rounded-xl transform transition-all active:scale-95 hover:shadow-xl gap-2"
             startContent={!isSaving && <Save size={16} />}
           >
             Guardar cambios

@@ -87,7 +87,7 @@ export default function ProveedoresCrud() {
         renderRowPreview={(item) => (
           <div className="space-y-6 text-sm">
             <div className="p-4 rounded-xl bg-linear-to-br from-slate-50 to-white border border-slate-100 shadow-sm flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full   bg-linear-to-br from-[#FB6900] to-[#fb6900a1]text-white flex items-center justify-center font-bold text-lg shadow-sm shrink-0">
+              <div className="w-12 h-12 rounded-full   bg-linear-to-br from-[#FB6900] to-[#fb6900a1] text-white flex items-center justify-center font-bold text-lg shadow-sm shrink-0">
                 {item.RazonSocial?.charAt(0).toUpperCase()}
               </div>
               <div>
@@ -211,7 +211,7 @@ export default function ProveedoresCrud() {
             case "razonSocial":
               return (
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full   bg-linear-to-br from-[#FB6900] to-[#fb6900a1]text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+                  <div className="w-9 h-9 rounded-full   bg-linear-to-br from-[#FB6900] to-[#fb6900a1] text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
                     {item.RazonSocial?.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex flex-col">

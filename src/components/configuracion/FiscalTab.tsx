@@ -43,13 +43,13 @@ const idiomas = [
 const selectCls = {
   label: "text-slate-500 font-bold uppercase text-[10px] tracking-widest",
   trigger:
-    "h-11 border-slate-200 bg-slate-50/50 hover:border-[#67afc3]/60 data-[focus=true]:border-[#67afc3] rounded-xl",
+    "h-11 border-slate-200 bg-slate-50/50 hover:border-[#0066ff]/60 data-[focus=true]:border-[#0066ff] rounded-xl",
 };
 
 const inputCls = {
   label: "text-slate-500 font-bold uppercase text-[10px] tracking-widest",
   inputWrapper:
-    "h-11 border-slate-200 bg-slate-50/50 hover:border-[#67afc3]/60 focus-within:!border-[#67afc3] focus-within:ring-1 focus-within:ring-[#67afc3]/20 transition-all rounded-xl",
+    "h-11 border-slate-200 bg-slate-50/50 hover:border-[#0066ff]/60 focus-within:!border-[#0066ff] focus-within:ring-1 focus-within:ring-[#0066ff]/20 transition-all rounded-xl",
   input: "text-sm text-slate-700 font-medium",
 };
 
@@ -291,7 +291,7 @@ export function FiscalTab() {
               isDisabled={!hasChanges}
               className={`font-bold px-8 h-11 rounded-xl gap-2 transition-all ${
                 hasChanges
-                  ? "bg-linear-to-r from-[#67afc3] to-[#2dd4bf] text-white shadow-lg shadow-[#67afc3]/30 hover:shadow-xl"
+                  ? "bg-linear-to-r from-[#0066ff] to-[#0050cb] text-white shadow-lg shadow-[#0066ff]/30 hover:shadow-xl"
                   : "bg-slate-100 text-slate-400 cursor-not-allowed"
               }`}
               startContent={!isSavingFiscal && <Save size={16} />}
