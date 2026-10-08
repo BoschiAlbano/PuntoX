@@ -790,3 +790,334 @@ body {
     width: 100% !important;
   }
 }
+
+/* logo */
+
+.punto-loading {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  flex-shrink: 0;
+  color: #1683ff;
+}
+
+.punto-loading__logo-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.punto-loading__svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+/* =========================================================
+HALOS
+========================================================= */
+
+.punto-loading__ring {
+  transform-origin: 10050px 13000px;
+  opacity: 0.25;
+}
+
+.punto-loading__ring--outer {
+  animation: punto-ring-outer 3.8s linear infinite;
+}
+
+.punto-loading__ring--inner {
+  opacity: 0.18;
+  animation: punto-ring-inner 2.8s linear infinite reverse;
+}
+
+@keyframes punto-ring-outer {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes punto-ring-inner {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+PIEZAS DEL LOGO
+========================================================= */
+
+.punto-loading__piece {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/*
+
+* Azul
+  */
+.punto-loading__piece--blue {
+  opacity: 0;
+  animation: punto-piece-blue 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+/*
+
+* Naranja superior
+  */
+.punto-loading__piece--top {
+  opacity: 0;
+  animation: punto-piece-top 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+/*
+
+* Naranja inferior
+  */
+.punto-loading__piece--bottom {
+  opacity: 0;
+  animation: punto-piece-bottom 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+/* Azul */
+@keyframes punto-piece-blue {
+  0% {
+    opacity: 0;
+    transform: translateX(-7%) scale(0.94);
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  27% {
+    transform: translateX(0) scale(1);
+  }
+
+  72% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  90% {
+    opacity: 1;
+    transform: scale(1.015);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+/* Naranja superior */
+@keyframes punto-piece-top {
+  0%,
+  14% {
+    opacity: 0;
+    transform: translateY(-8%) scale(0.94);
+  }
+
+  27% {
+    opacity: 1;
+  }
+
+  39% {
+    transform: translateY(0) scale(1);
+  }
+
+  72% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  90% {
+    opacity: 1;
+    transform: scale(1.015);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+/* Naranja inferior */
+@keyframes punto-piece-bottom {
+  0%,
+  25% {
+    opacity: 0;
+    transform: translateY(8%) scale(0.94);
+  }
+
+  38% {
+    opacity: 1;
+  }
+
+  50% {
+    transform: translateY(0) scale(1);
+  }
+
+  72% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  90% {
+    opacity: 1;
+    transform: scale(1.015);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+/* =========================================================
+DESTELLO SOBRE LOS BORDES
+========================================================= */
+
+.punto-loading__edge {
+  opacity: 0;
+  stroke-dasharray: 700 9000;
+  stroke-dashoffset: 9000;
+  animation: punto-edge-shine 2.8s ease-in-out infinite;
+}
+
+.punto-loading__piece--top .punto-loading__edge {
+  animation-delay: 0.15s;
+}
+
+.punto-loading__piece--bottom .punto-loading__edge {
+  animation-delay: 0.3s;
+}
+
+@keyframes punto-edge-shine {
+  0% {
+    opacity: 0;
+    stroke-dashoffset: 9000;
+  }
+
+  25% {
+    opacity: 0;
+  }
+
+  40% {
+    opacity: 0.9;
+  }
+
+  58% {
+    opacity: 0.9;
+    stroke-dashoffset: 0;
+  }
+
+  72% {
+    opacity: 0;
+    stroke-dashoffset: -700;
+  }
+
+  100% {
+    opacity: 0;
+    stroke-dashoffset: -700;
+  }
+}
+
+/* =========================================================
+MENSAJE
+========================================================= */
+
+.punto-loading__message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #526274;
+  white-space: nowrap;
+}
+
+.punto-loading__dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+}
+
+.punto-loading__dots i {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #1683ff;
+  opacity: 0.25;
+  animation: punto-dot 1.2s ease-in-out infinite;
+}
+
+.punto-loading__dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.punto-loading__dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes punto-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.2;
+    transform: translateY(0);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+/* =========================================================
+REDUCIR MOVIMIENTO
+========================================================= */
+
+/* @media (prefers-reduced-motion: reduce) {
+.punto-loading__ring,
+.punto-loading__piece,
+.punto-loading__edge,
+.punto-loading__dots i {
+animation: none;
+}
+
+.punto-loading__piece {
+opacity: 1;
+transform: none;
+}
+
+.punto-loading__edge {
+opacity: 0;
+}
+} */
