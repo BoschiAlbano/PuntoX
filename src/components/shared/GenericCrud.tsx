@@ -81,6 +81,12 @@ interface GenericCrudProps<T> {
   newButtonDisabled?: boolean;
   /** Mensaje mostrado junto al botón "Nuevo X" cuando está deshabilitado */
   newButtonDisabledMessage?: string;
+  /**
+   * Oculta completamente el botón "Nuevo X" (toolbar y "Más opciones").
+   * Úsalo en entidades solo lectura que no se crean de forma manual
+   * (ej. auditorías).
+   */
+  showNewButton?: boolean;
   searchPlaceholder?: string;
   initialLimit?: number;
   transformer?: (data: any) => T[];
@@ -207,6 +213,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
   newButtonText,
   newButtonDisabled,
   newButtonDisabledMessage,
+  showNewButton = true,
   defaultVisibleUidsMobile,
   softDeleteEntity = true,
   enableInactiveFilter = false,
@@ -994,7 +1001,7 @@ export default function GenericCrud<T extends { Id: number | string }>({
         limitOptions={[10, 30, 50, 100]}
         sortDescriptor={sortDescriptor}
         onSortChange={setSortDescriptor}
-        onNewClick={handleCreate}
+        onNewClick={showNewButton ? handleCreate : undefined}
         newButtonText={newButtonText}
         newButtonDisabled={newButtonDisabled}
         newButtonDisabledMessage={newButtonDisabledMessage}

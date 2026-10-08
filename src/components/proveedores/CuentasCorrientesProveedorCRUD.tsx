@@ -291,7 +291,7 @@ export default function CuentasCorrientesProveedorCRUD() {
                         }}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#67afc3] to-[#2dd4bf] text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
+                          <div className="w-8 h-8 rounded-full   bg-linear-to-br from-[#FB6900] to-[#fb6900a1]text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
                             {prov.RazonSocial?.[0] || ""}
                           </div>
                           <div>

@@ -47,9 +47,9 @@ export default function ProveedorSearch({ selected, onSelect }: ProveedorSearchP
       <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Proveedor *</p>
 
       {selected ? (
-        <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-[#67afc3]/8 border border-[#67afc3]/25">
+        <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-[#EFF6FF] border border-[#DBEAFE]">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-[#67afc3]/15 border border-[#67afc3]/20 flex items-center justify-center text-[#67afc3] font-bold text-sm shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-[#EFF6FF] border border-[#DBEAFE] flex items-center justify-center text-[#0050cb] font-bold text-sm shrink-0">
               {selected.RazonSocial.charAt(0).toUpperCase()}
             </div>
             <span className="text-sm font-semibold text-slate-800 truncate">
@@ -91,7 +91,7 @@ export default function ProveedorSearch({ selected, onSelect }: ProveedorSearchP
                     onClick={() => handleSelect(p)}
                     className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-none"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-[#67afc3]/10 text-[#67afc3] font-bold text-sm flex items-center justify-center shrink-0">
+                    <div className="w-7 h-7 rounded-lg bg-[#EFF6FF] text-[#0050cb] font-bold text-sm flex items-center justify-center shrink-0">
                       {p.RazonSocial.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex flex-col min-w-0">

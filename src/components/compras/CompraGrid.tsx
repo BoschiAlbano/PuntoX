@@ -96,7 +96,7 @@ export default function CompraGrid({
                                 key={pl.ListaPrecioId}
                                 className={`text-[9px] px-1.5 py-px rounded font-medium ${
                                   changed
-                                    ? "bg-[#67afc3]/10 text-[#67afc3] border border-[#67afc3]/25"
+                                    ? "bg-[#EFF6FF] text-[#0050cb] border border-[#DBEAFE]"
                                     : "bg-slate-50 text-slate-400"
                                 }`}
                               >
@@ -205,7 +205,7 @@ export default function CompraGrid({
                                   key={pl.ListaPrecioId}
                                   className={`text-[9px] px-1.5 py-px rounded font-medium ${
                                     changed
-                                      ? "bg-[#67afc3]/10 text-[#67afc3] border border-[#67afc3]/25"
+                                      ? "bg-[#EFF6FF] text-[#0050cb] border border-[#DBEAFE]"
                                       : "bg-slate-50 text-slate-400"
                                   }`}
                                   title={`${pl.PorcentajeGanancia}% ganancia`}
@@ -304,12 +304,12 @@ function CostoInput({
     <div
       className={`inline-flex flex-row items-center border rounded-lg overflow-hidden ${height} ${containerWidth} shrink-0 transition-colors ${
         isFocused
-          ? "border-[#67afc3] bg-[#67afc3]/5 shadow-sm shadow-[#67afc3]/20"
-          : "border-[#67afc3]/30 bg-[#67afc3]/5"
+          ? "border-[#0066ff] bg-[#0066ff]/5 shadow-sm shadow-[#0066ff]/20"
+          : "border-[#0066ff]/30 bg-[#0066ff]/5"
       }`}
     >
       <span
-        className={`${fontSize} text-[#67afc3] font-semibold pl-1.5 pr-0.5 shrink-0 select-none leading-none`}
+        className={`${fontSize} text-[#0050cb] font-semibold pl-1.5 pr-0.5 shrink-0 select-none leading-none`}
       >
         $
       </span>
@@ -398,7 +398,7 @@ function QuantitySelector({
         <div className="h-4 w-px bg-slate-200" />
         <input
           type="number"
-          className={`${inputWidth} h-full text-center ${fontSize} font-semibold focus:ring-0 focus:bg-[#67afc3]/5 p-0 outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none text-slate-700 placeholder:text-slate-300 bg-transparent border-none transition-colors`}
+          className={`${inputWidth} h-full text-center ${fontSize} font-semibold focus:ring-0 focus:bg-blue-50/50 p-0 outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none text-slate-700 placeholder:text-slate-300 bg-transparent border-none transition-colors`}
           value={localValue}
           onChange={handleInputChange}
           step={esPeso ? "0.001" : "1"}

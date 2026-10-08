@@ -136,7 +136,7 @@ export default function ProductSearchCompras({
           mainWrapper: "h-full",
           input: "text-xs",
           inputWrapper:
-            "h-10 min-h-[40px] font-normal text-default-500 bg-white outline-none hover:border-[#67afc3] focus-within:border-[#67afc3] data-[hover=true]:bg-white rounded-lg border border-slate-300 shadow-none transition-colors",
+            "h-10 min-h-[40px] font-normal text-default-500 bg-white outline-none hover:border-[#0066ff] focus-within:border-[#0066ff] data-[hover=true]:bg-white rounded-lg border border-[#CBD5E1] shadow-none transition-colors focus-within:ring-2 focus-within:ring-[#0066ff]/15",
         }}
         placeholder="Código o nombre del producto (Enter para buscar)"
         size="sm"
@@ -159,9 +159,9 @@ export default function ProductSearchCompras({
             }}
           >
             {isSearching ? (
-              <Spinner size="sm" className="text-[#67afc3]" color="current" />
+              <Spinner size="sm" className="text-[#0066ff]" color="current" />
             ) : (
-              <Search className="text-[#67afc3] hover:text-[#5293a5] transition-colors" />
+              <Search className="text-[#0050cb] hover:text-[#003fa4] transition-colors" />
             )}
           </Button>
         }
@@ -174,7 +174,7 @@ export default function ProductSearchCompras({
             onPress={() => setIsScannerOpen(true)}
             title="Escanear con cámara"
           >
-            <ScanBarcode className="text-slate-400 hover:text-[#67afc3] transition-colors" size={18} />
+            <ScanBarcode className="text-slate-400 hover:text-[#0050cb] transition-colors" size={18} />
           </Button>
         }
       />

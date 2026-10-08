@@ -48,12 +48,12 @@ export default function CompraProductosPanel({
         <div className="flex items-center shrink-0 pb-2">
           <button
             onClick={() => onTabChange("carrito")}
-            className="flex items-center gap-1.5 text-sm font-semibold text-[#67afc3] hover:text-[#5293a5] transition-colors"
+            className="flex items-center gap-1.5 text-sm font-semibold text-[#0050cb] hover:text-[#003fa4] transition-colors"
           >
             <ArrowLeft size={16} />
             <span>Volver al carrito</span>
             {items.length > 0 && (
-              <span className="min-w-4.5 h-4.5 rounded-full bg-[#67afc3] text-white text-[10px] font-bold flex items-center justify-center px-1">
+              <span className="min-w-4.5 h-4.5 rounded-full bg-[#0066ff] text-white text-[10px] font-bold flex items-center justify-center px-1">
                 {items.length}
               </span>
             )}

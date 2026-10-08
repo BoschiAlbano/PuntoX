@@ -221,7 +221,7 @@ export default function CompraFooter({
       case TIPO_PAGO.CHEQUE:
         return <Wallet size={size} className="text-orange-500" />;
       case TIPO_PAGO.CUENTA_CORRIENTE:
-        return <Building2 size={size} className="text-[#67afc3]" />;
+        return <Building2 size={size} className="text-[#0050cb]" />;
       default:
         return <Wallet size={size} className="text-slate-500" />;
     }
@@ -266,7 +266,7 @@ export default function CompraFooter({
         {proveedor ? (
           <div className="flex bg-white rounded-lg border border-slate-300 items-center justify-between px-3 h-10">
             <div className="flex items-center gap-2.5 min-w-0 flex-1">
-              <div className="w-7 h-7 rounded-lg bg-[#67afc3]/15 border border-[#67afc3]/20 flex items-center justify-center text-[#67afc3] font-bold text-sm shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-[#EFF6FF] border border-[#DBEAFE] flex items-center justify-center text-[#0050cb] font-bold text-sm shrink-0">
                 {proveedor.RazonSocial.charAt(0).toUpperCase()}
               </div>
               <span className="text-xs font-semibold text-slate-800 truncate">
@@ -284,9 +284,9 @@ export default function CompraFooter({
         ) : (
           <Button
             variant="flat"
-            className="bg-white rounded-lg border border-slate-300 justify-start gap-2 px-3 h-10 min-h-10 hover:border-[#67afc3] hover:bg-slate-50 transition-colors"
+            className="bg-white rounded-lg border border-[#CBD5E1] justify-start gap-2 px-3 h-10 min-h-10 hover:border-[#0066ff] hover:bg-slate-50 transition-colors"
             onPress={() => setIsProveedorModalOpen(true)}
-            startContent={<Building2 size={15} className="text-[#67afc3]" />}
+            startContent={<Building2 size={15} className="text-[#0050cb]" />}
           >
             <span className="text-xs font-medium text-slate-500">Buscar proveedor...</span>
           </Button>
@@ -354,7 +354,7 @@ export default function CompraFooter({
             />
             <button
               onClick={handleAddPayment}
-              className="h-10 w-10 min-w-10 bg-[#67afc3] hover:bg-[#5a9eb1] active:scale-95 text-white rounded-lg flex items-center justify-center transition-all shrink-0"
+              className="h-10 w-10 min-w-10 bg-[#0066ff] hover:bg-[#0050cb] active:scale-95 text-white rounded-lg flex items-center justify-center transition-all shrink-0"
             >
               <Plus size={18} />
             </button>
@@ -462,7 +462,7 @@ export default function CompraFooter({
           ) : cajaActual ? (
             <Button
               size="sm"
-              className="flex-1 h-11 bg-[#182337] hover:bg-[#0f1929] text-white font-bold rounded-xl transition-all active:scale-[0.98] text-sm tracking-wide shadow-sm"
+              className="flex-1 h-11 bg-[#FF6100] hover:bg-[#E65700] text-white font-bold rounded-xl transition-all active:scale-[0.98] text-sm tracking-wide shadow-[0_4px_14px_rgba(255,97,0,0.35)]"
               onPress={handleFinalizeCompra}
               isLoading={realizarCompra.isPending}
               isDisabled={

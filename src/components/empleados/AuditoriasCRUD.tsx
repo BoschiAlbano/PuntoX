@@ -61,6 +61,7 @@ export default function AuditoriasCRUD() {
       queryKey="auditorias-crud"
       searchPlaceholder="Buscar por usuario, acción o IP..."
       initialLimit={10}
+      showNewButton={false}
       transformer={transformer}
       showEditInPreview={false}
       defaultVisibleUidsMobile={["usuario", "detalles"]}
@@ -88,7 +89,7 @@ export default function AuditoriasCRUD() {
       renderRowPreview={(item) => (
         <div className="space-y-6 text-sm">
           <div className="p-4 rounded-xl bg-linear-to-br from-slate-50 to-white border border-slate-100 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#67afc3] to-[#2dd4bf] text-white flex items-center justify-center font-bold text-lg shadow-sm shrink-0 uppercase">
+            <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#0066ff] to-[#0050cb] text-white flex items-center justify-center font-bold text-lg shadow-sm shrink-0 uppercase">
               {item.usuario?.charAt(0) || "-"}
             </div>
             <div>
@@ -176,7 +177,7 @@ export default function AuditoriasCRUD() {
           case "usuario":
             return (
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#67afc3] to-[#2dd4bf] text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0 uppercase">
+                <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#FB6900] to-[#fb6900a1] text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0 uppercase">
                   {item.usuario?.charAt(0) || "-"}
                 </div>
                 <span className="font-semibold text-slate-800">

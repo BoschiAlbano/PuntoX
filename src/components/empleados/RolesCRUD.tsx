@@ -66,7 +66,7 @@ export default function RolesCRUD() {
           case "nombre":
             return (
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-linear-to-br from-[#67afc3] to-[#2dd4bf] text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+                <div className="w-9 h-9 rounded-full bg-linear-to-br from-[#FB6900] to-[#fb6900a1] text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
                   {item.nombre.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex flex-col">

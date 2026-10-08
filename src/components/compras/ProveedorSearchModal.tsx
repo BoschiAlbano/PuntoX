@@ -97,8 +97,8 @@ export default function ProveedorSearchModal({
           <>
             <ModalHeader className="flex flex-col gap-1">
               <div className="flex items-center gap-3 sm:gap-4">
-                <div className="p-2 sm:p-2.5 rounded-xl bg-linear-to-br from-[#67afc3]/15 to-[#2dd4bf]/15 border border-[#67afc3]/20 shadow-sm">
-                  <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#67afc3]" />
+                <div className="p-2 sm:p-2.5 rounded-xl bg-[#EFF6FF] border border-[#DBEAFE] shadow-sm">
+                  <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#0050cb]" />
                 </div>
                 <div>
                   <h2 className="text-base sm:text-xl font-extrabold text-slate-800 tracking-tight">
@@ -123,7 +123,7 @@ export default function ProveedorSearchModal({
                 autoFocus
                 classNames={{
                   inputWrapper:
-                    "bg-slate-50 hover:bg-slate-100 focus-within:!bg-white border-2 border-transparent focus-within:!border-[#67afc3]/40 transition-all shadow-sm rounded-xl h-11 sm:h-14",
+                    "bg-slate-50 hover:bg-slate-100 focus-within:!bg-white border-2 border-transparent focus-within:!border-[#0066ff] transition-all shadow-sm rounded-xl h-11 sm:h-14",
                   input: "text-slate-700 font-medium text-sm sm:text-[15px]",
                   clearButton: "text-slate-400",
                 }}
@@ -152,7 +152,7 @@ export default function ProveedorSearchModal({
                           }}
                           className="w-full px-3 py-3 flex items-center gap-3 hover:bg-[#EFF6FF] active:bg-[#DBEAFE] transition-colors text-left"
                         >
-                          <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#67afc3] to-[#2dd4bf] text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-[#0066ff] text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
                             {item.RazonSocial?.charAt(0).toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0 flex flex-col gap-0.5">
@@ -212,7 +212,7 @@ export default function ProveedorSearchModal({
                           <TableRow key={item.Id}>
                             <TableCell>
                               <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#67afc3] to-[#2dd4bf] text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
+                                <div className="w-8 h-8 rounded-full bg-[#0066ff] text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
                                   {item.RazonSocial?.charAt(0).toUpperCase()}
                                 </div>
                                 <span className="group-hover:text-[#0050cb] transition-colors font-semibold truncate max-w-[200px]">

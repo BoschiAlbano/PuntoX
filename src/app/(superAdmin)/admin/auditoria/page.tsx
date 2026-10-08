@@ -165,6 +165,7 @@ export default function AuditoriaPage() {
         renderCell={renderCell}
         FormComponent={DummyForm as any}
         searchPlaceholder="Buscar acciones, detalles..."
+        showNewButton={false}
         initialLimit={20}
         getApiExtraParams={() => extraParams}
         exportConfig={{

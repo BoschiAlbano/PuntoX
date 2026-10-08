@@ -169,14 +169,14 @@ export default function ComprasScreen() {
           onClick={() => setMobileTab("productos")}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold border-b-2 transition-all duration-200 ${
             mobileTab === "productos"
-              ? "border-[#67afc3] text-[#67afc3]"
+              ? "border-[#0066ff] text-[#0050cb]"
               : "border-transparent text-slate-400 hover:text-slate-600"
           }`}
         >
           <ShoppingCart size={15} />
           <span>Productos</span>
           {items.length > 0 && (
-            <span className="ml-1 min-w-5 h-5 rounded-full bg-[#67afc3] text-white text-[10px] font-bold flex items-center justify-center px-1.5">
+            <span className="ml-1 min-w-5 h-5 rounded-full bg-[#0066ff] text-white text-[10px] font-bold flex items-center justify-center px-1.5">
               {items.length}
             </span>
           )}
@@ -185,7 +185,7 @@ export default function ComprasScreen() {
           onClick={() => setMobileTab("pago")}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold border-b-2 transition-all duration-200 ${
             mobileTab === "pago"
-              ? "border-[#67afc3] text-[#67afc3]"
+              ? "border-[#0066ff] text-[#0050cb]"
               : "border-transparent text-slate-400 hover:text-slate-600"
           }`}
         >
