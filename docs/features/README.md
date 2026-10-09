@@ -11,6 +11,7 @@ Este directorio reúne las especificaciones detalladas, análisis técnicos y pl
 | 🔔 **Notificaciones In-App** | [notificaciones.md](notificaciones.md) | 🟢 Implementado | Alertas automáticas para stock crítico, límites de cuenta corriente superados y descuadres de caja, con deduplicación y auto-resolución |
 | 🧾 **Notas de Crédito AFIP** | [nota-credito-afip.md](nota-credito-afip.md) | 🟢 Implementado | Autorización de Notas de Crédito A/B/C en Web Services ARCA con comprobantes asociados (`CbtesAsoc`), reversión de stock y egreso de caja |
 | 🔍 **Búsqueda en Pestañas POS** | [ventas-busqueda-tabs.md](ventas-busqueda-tabs.md) | 🟡 En diseño | Unificación de la búsqueda de productos y carrito de ventas en pestañas alternables ("Carrito (N)" / "Buscar productos") para desktop y mobile |
+| 🏬 **Portal Proveedores & Marketplace B2B** | [portal-proveedores-marketplace.md](portal-proveedores-marketplace.md) | 🟡 Propuesto (SDD) | Portal dedicado para distribuidores, catálogo Público/Privado, sistema de seguidores, pedidos B2B y auto-conversión a compras |
 
 ---
 

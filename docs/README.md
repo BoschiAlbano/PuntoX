@@ -105,6 +105,7 @@ Documentación técnica y funcional de cada módulo del sistema:
 | [features/notificaciones.md](features/notificaciones.md) | Alertas internas en tiempo real para stock crítico, límites de crédito superados y auto-resolución. |
 | [features/nota-credito-afip.md](features/nota-credito-afip.md) | Especificación de Notas de Crédito electrónicas ARCA con comprobantes asociados (`CbtesAsoc`). |
 | [features/ventas-busqueda-tabs.md](features/ventas-busqueda-tabs.md) | Plan de unificación en pestañas alternables ("Carrito" / "Buscar productos") para la pantalla de ventas. |
+| [features/portal-proveedores-marketplace.md](features/portal-proveedores-marketplace.md) | **Spec SDD**: Portal B2B para proveedores, catálogos públicos/privados, seguidores y pedidos a compras. |
 
 ---
 

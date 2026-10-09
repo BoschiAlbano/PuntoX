@@ -375,7 +375,7 @@ export async function POST(req: NextRequest) {
 
 **Sugerencia:** Dividir en componentes más pequeños cuando sea posible.
 
-### Mejoras Futuras y Backlog
+- [ ] **Portal de Proveedores & Marketplace B2B** (ver [docs/features/portal-proveedores-marketplace.md](features/portal-proveedores-marketplace.md)): Portal exclusivo de distribuidores, catálogo público/privado, pedidos B2B y auto-conversión a compras de stock.
 - [ ] **Búsqueda en Pestañas POS** (ver [docs/features/ventas-busqueda-tabs.md](features/ventas-busqueda-tabs.md)): Alternar Carrito y Buscador de productos en tabs fluidas.
 - [ ] **Enforcement de Planes SaaS** (ver [docs/saas/planes-saas-implementacion.md](saas/planes-saas-implementacion.md)): Bloqueo estricto de sucursales, usuarios, catálogo y AFIP según plan.
 - [ ] **Botón de Reset / Purga de Tienda**: Herramienta administrativa para limpiar datos transaccionales de prueba o restablecer tienda desde una fecha determinada.
