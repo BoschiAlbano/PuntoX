@@ -1,62 +1,92 @@
-# Estado Actual del Proyecto PuntoX
+# 📍 Estado Actual del Proyecto — PuntoX
 
-## 1. Panorama general
-- **Stack y arquitectura**: Es un SaaS multi‑tenant construido sobre Next.js 15, TypeScript estricto, Prisma + PostgreSQL (Supabase), HeroUI, TanStack Query, Zod y Vitest. Toda la lógica se organiza en `src/app/` (app router, páginas, API routes, acciones del servidor), `src/lib` (helpers, validaciones, autenticación/errores) y `prisma/` (schema + migraciones) tal como describe `docs/ARCHITECTURE.md` (`docs/ARCHITECTURE.md:11-74`).
-- **Módulos documentados**: Hay documentación específica para los módulos principales:
-  - Clientes: CRUD completo con transacciones, esquemas Zod y flujo frontend/API (`docs/modules/clientes.md`).
-  - Empleados y roles: APIs, auditorías, experiencia de UI y mejoras de UX (`docs/modules/empleados-roles.md`).
-  - Configuración: Panel de tenant, preferencias de venta, seguridad y branding con transacciones y server actions (`docs/modules/configuracion.md`).
-  - Ventas: Página de ventas con carrito, formas de pago, APIs de comprobantes/productos/tarjetas/contadores (`docs/modules/ventas.md`).
-  - Analíticas: APIs de KPIs, gráficas, alertas, hooks con polling/caching y componentes HeroUI (`docs/ANALITICAS.md`).
-  - Autenticación y permisos: Flujo Supabase + middleware + `requirePermiso`, SuperAdmin y permisos por rol (`docs/modules/autenticacion.md`, `docs/modules/permisos.md`).
-- **Documentación general**: Además de los módulos, hay un README central con guía rápida y scripts (`docs/README.md`), un análisis de arquitectura (`docs/ARCHITECTURE.md`) y una roadmap priorizada (`docs/ROADMAP.md`), más docs de seguridad, testing y mejoras de UX (`docs/SECURITY.md`, `docs/TESTING.md`, `docs/UX_IMPROVEMENTS.md`).
+**Última actualización:** Febrero 2026 / Actual  
+**Versión:** `0.1.0` (Pre-producción avanzada)  
+**Calificación general:** 🟢 **9.0 / 10**
 
-## 2. Funcionalidades implementadas
-1. **Clientes**: CRUD, validaciones Zod, transacciones (`Persona` + `Persona_Cliente`), cascada de localidades, filtros, modales y toasts (`docs/modules/clientes.md:42-201`).
-2. **Empleados/Roles**: Endpoints para roles, empleados, auditoría, invitaciones, cambio de rol/estado y UI responsiva con tabs, modales y tablas reutilizables (`docs/modules/empleados-roles.md:1-250`).
-3. **Configuración**: Páginas de dashboard/admin conectadas con APIs (perfil, preferencias de venta, branding, seguridad, fiscal) y server actions que usan transacciones (`docs/modules/configuracion.md:1-200`).
-4. **Ventas y comprobantes**: Página moderna con carrito, productos, descuentos, formas de pago y API que crea comprobantes con relaciones completas y control de stock (`docs/modules/ventas.md:1-200`).
-5. **Analíticas**: KPIs, gráficos, alertas y complementarios; hooks con polling/caching y componentes visuales listos para usar (`docs/ANALITICAS.md:15-680`).
-6. **Autenticación/Permisos**: Supabase Auth + middleware, `requirePermiso`, sistema de roles/permisos, auditoría, y scripts de asignación (`docs/modules/autenticacion.md`, `docs/modules/permisos.md`).
-7. **Base de datos y helpers**: Schema Prisma amplio con 50+ modelos, helpers de errores, paginación, autenticación y librerías en `src/lib`.
+---
 
-## 3. Documentación existente
-- `docs/README.md`: guía de inicio, scripts y estructura general (`docs/README.md`).
-- `docs/ARCHITECTURE.md`: análisis completo con fortalezas, vulnerabilidades, métricas y prioridades (`docs/ARCHITECTURE.md`).
-- `docs/ROADMAP.md`: pasos prioritarios (seguridad, testing, performance, calidad) con checklists detalladas (`docs/ROADMAP.md`).
-- Documentos de módulos (`docs/modules/*.md`) cubren el estado actual del backend/frontend de cada dominio.
-- Otros recursos: `docs/SECURITY.md`, `docs/TESTING.md`, `docs/UX_IMPROVEMENTS.md`, `docs/CSRF_IMPLEMENTATION.md`, `docs/CHANGELOG.md`.
+## 1. Resumen Ejecutivo y Stack
 
-## 4. Informe detallado de la documentación
-1. **README general (`docs/README.md`)**: ofrece un índice del proyecto, quick-start (`npm install`, `.env`, migraciones, `npm run dev`), estructura de carpetas y enlaces directos a los módulos principales. También enumera scripts útiles (lint, prisma, seeds) y una breve guía de contribución.
-2. **Architecture (`docs/ARCHITECTURE.md`)**: describe el stack (Next.js 15, TypeScript estricto, Prisma/Supabase), la estructura de carpetas, el modelo de datos (50+ modelos con BigInt, `TenantId`, soft deletes) y el sistema de autenticación/permisos. Enumera vulnerabilidades registradas (tenant fallbacks, rate limiting, permisos), métricas de calidad, prioridades por categoría (seguridad, performance, testing) y planes de acción inmediato/mediano/largo plazo. Incluye referencias a `PROXIMOS_PASOS.md`.
-3. **Roadmap (`docs/ROADMAP.md`)**: reconoce el estado 8/10 y prioriza seguridad, pruebas, performance y calidad con tiempos estimados. Ofrece checklist concreto para eliminaciones de fallbacks, rate limiting, permisos, migración a `handleError`, tests (errors, adapters, hooks), optimizaciones y documentación adicional, además de planes semanales y recomendaciones de seguimiento.
-4. **Módulos (`docs/modules/*.md`)**:
-   - **Analíticas**: cubre KPIs, gráficas, alertas, componentes, hooks y permisos; incluye ejemplos de uso, troubleshooting y mejoras futuras (`docs/ANALITICAS.md`).
-   - **Clientes**: detalla tablas (Persona, Persona_Cliente, CondicionIva), endpoints CRUD, validaciones Zod, transacciones, UI (modales, filtros) y mejoras pendientes (exportaciones, importaciones, historial) (`docs/modules/clientes.md`).
-   - **Empleados y roles**: lista endpoints (roles, empleados, auditoría, invitaciones), auditoría de acciones y renovaciones (modals, tabs, refresh) más notas de seguridad (`docs/modules/empleados-roles.md`).
-   - **Configuración**: describe dashboard/admin/tab sets, APIs por sección (perfil, preferencias, branding, fiscal, seguridad), server actions, transacciones, dependencias y patrones de autenticación `resolveTenantId` (`docs/modules/configuracion.md`).
-   - **Ventas**: explica interfaz (carrito, productos, formas de pago) y APIs (comprobantes, puestos, contadores, tarjetas) con transacciones, validaciones y cálculos (`docs/modules/ventas.md`).
-   - **Autenticación/Permisos**: detalla Flujo Supabase → middleware → `requirePermiso`, SuperAdmin, tablas (`Usuario`, `Perfiles`, etc.), scripts de asignación y ejemplos de uso (`docs/modules/autenticacion.md`, `docs/modules/permisos.md`).
-5. **Security doc (`docs/SECURITY.md`)**: enumera correcciones aplicadas (eliminación de fallbacks de tenantId, handling de errores con `handleError`), pendientes críticos (rate limiting en login, logging de intentos, validación exhaustiva de permisos), mejores prácticas (validaciones, `requirePermiso`, error handling) y el estado actual (multi-tenancy, logging, CSRF, detección de actividad).
-6. **Testing (`docs/TESTING.md`)**: resume los 19 tests actuales (permisos, cálculos de ventas, serialización, permisos JWT), el comando para ejecutar/consultar, convenciones de test (Vitest+`vi.mock`), y el plan de crecimiento (tests de API, componentes, E2E con objetivos de cobertura 30-40/60-70/80%+).
-7. **UX Improvements (`docs/UX_IMPROVEMENTS.md`)**: documenta mejoras visuales (headers, skeleton loaders, micro-animaciones), accesibilidad (focus states, aria-labels), responsive design (tabs scrollables, scrollbar hide), performance (debounce, GPU acceleration) y tabs tematizadas; además describe CSS/JSX de ejemplo y componentes modificados (`productos`, `empleados`, `clientes`, etc.).
-8. **CSRF implementation (`docs/CSRF_IMPLEMENTATION.md`)**: explica por qué se necesita CSRF, muestra la tabla `TokenCsrf`, utilidades (`generate`, `validate`, cleanup), pasos para crear endpoint `/api/csrf-token`, cómo consumirlo desde el frontend y cómo validar tokens en endpoints crí­ticos; también lista qué falta integrar en formularios sensibles.
-9. **Changelog (`docs/CHANGELOG.md`)**: registra las sesiones de diciembre 2024 (analíticas completo, mejoras UI/UX, scripts y dependencias) —sirve como línea de tiempo del proyecto y muestra el origen de los módulos documentados.
-10. **Otros recursos**: existen adicionales (`docs/CSRF_IMPLEMENTATION.md`, `docs/SECURITY.md`, `docs/TESTING.md`, `docs/UX_IMPROVEMENTS.md`) que cubren temas específicos, pero aún quedan documentos por crear sobre APIs administrativas y auditoría secundaria.
+**PuntoX** es una plataforma SaaS multi-tenant y multi-sucursal de gestión comercial y punto de venta (POS / ERP liviano) desarrollada para comercios minoristas y mayoristas. Proporciona aislamiento estricto de datos por tenant, facturación electrónica integrada con ARCA (ex AFIP), control de stock por local físico, cuentas corrientes y analíticas financieras en tiempo real.
 
-## 5. Áreas pendientes / brechas
-1. **Seguridad crítica**: `tenantId || 1` en `src/app/api/productos/route.ts` y otros endpoints aún permiten reubicar datos a tenant 1; se debe reemplazar con `tenantIdBigInt` ya validado para evitar fugas (`docs/ARCHITECTURE.md:138-158`, `docs/ROADMAP.md:22-69`).
-2. **Rate limiting y permisos**: Ningún endpoint aplica rate limiting y todavía faltan llamados a `requirePermiso()` en rutas críticas (productos, clientes, comprobantes, caja) (`docs/ARCHITECTURE.md:152-158`, `docs/ROADMAP.md:70-127`).
-3. **Testing**: Cobertura ~5-10%, solo 5 tests actuales; roadmap sugiere tests para handler de errores, `getAuthUser`, adapters y validaciones (`docs/ARCHITECTURE.md:255-272`, `docs/ROADMAP.md:172-193`).
-4. **Manejo de errores**: quedan ~22 endpoints con `console.log`/error en lugar de `handleError`, lo que complica debugging (`docs/ROADMAP.md:132-168`).
-5. **Performance y limpieza**: Queries sin `select`, falta paginación en algunos listados, componentes muy extensos (ventas/page.tsx, empleados/page.tsx, configuracion/page.tsx), y advertencias de ESLint (~80 warnings) deben resolverse (`docs/ARCHITECTURE.md:255-277`, `docs/ROADMAP.md:198-279`).
-6. **Documentación faltante**: Aunque hay módulos documentados, algunos endpoints (p.ej. admin, auditoría secundaria) carecen de docs; roadmap sugiere agregar JSDoc y ejemplos en APIs (`docs/ROADMAP.md:273-296`).
-7. **Analíticas**: Aunque implementadas, las mejoras (exportaciones, períodos múltiples, alertas configurables) permanecen en la lista de mejoras futuras (`docs/ANALITICAS.md:791-799`).
+| Capa | Tecnología | Versión | Estado |
+|---|---|---|---|
+| **Framework Web** | Next.js (App Router) | `16.1.6` | 🟢 Moderno y optimizado |
+| **Librería UI** | React | `19.1.0` | 🟢 Estable |
+| **Componentes** | HeroUI (NextUI) | `2.8.5` | 🟢 Estandarizado con slots y overrides |
+| **Estilos & CSS** | TailwindCSS + Vanilla CSS tokens | `v4` | 🟢 Sistema Kinetic Retail Ops |
+| **Estado & Caching** | TanStack Query (React Query) + Zustand | `5.90.12` | 🟢 Configurado con staleTime y debounce |
+| **Base de Datos** | PostgreSQL (Supabase) + Prisma ORM | `6.14.0` | 🟢 50+ modelos, índices y soft deletes |
+| **Autenticación** | Supabase Auth + JWT + TOTP (2FA) | `@supabase/ssr 0.8` | 🟢 Sesiones seguras, cookies HttpOnly |
+| **Facturación Fiscal** | ARCA / AFIP WSFE SDK | `@arcasdk/core 1.3.1` | 🟢 Facturas A/B/C y Notas de Crédito A/B/C |
+| **Validaciones** | Zod | `4.1.13` | 🟢 Schemas en todos los endpoints clave |
+| **Testing** | Vitest + Playwright | `Vitest 4` / `Playwright 1.58` | 🟢 Suite unitaria + 14 fases E2E |
 
-## 6. Próximos pasos recomendados
-1. **Seguridad urgente**: eliminar fallbacks `tenantId || 1`, asegurar transacciones en productos y agregar rate limiting/`requirePermiso` en API críticas (1-2 horas, según roadmap) (`docs/ARCHITECTURE.md:378-453`).
-2. **Consistencia y pruebas**: migrar más endpoints a `handleError`, ampliar Vitest y limpiar ESLint para llegar a cobertura +70% y cero warnings (`docs/ROADMAP.md:132-193`, `docs/ARCHITECTURE.md:255-272`).
-3. **Performance y documentación**: optimizar queries (selects, índices, paginación), dividir componentes largos y enriquecer documentación de API con ejemplos/JSdoc (`docs/ROADMAP.md:198-296`).
+---
 
-Con este estado general tienes un panorama completo de lo implementado y lo pendiente; si quieres puedo ayudarte a priorizar una de estas áreas o definir tareas específicas.
+## 2. Matriz de Estado por Módulo
+
+| Módulo | Documentación | Estado | Funcionalidades Clave |
+|---|---|---|---|
+| 🛒 **Ventas y POS** | [modules/ventas.md](modules/ventas.md) | 🟢 **100%** | Carrito rápido, atajos de teclado, descuentos, cálculo de IVA, múltiples formas de pago simultáneas, numeración correlativa por punto de venta. |
+| 👥 **Clientes** | [modules/clientes.md](modules/clientes.md) | 🟢 **100%** | CRUD con `GenericCrud`, cascada de localidades/provincias, cuenta corriente, límites de crédito, registro de cobros e imputación de saldos. |
+| 🚚 **Proveedores** | [modules/proveedores.md](modules/proveedores.md) | 🟢 **100%** | Directorio de proveedores, CUIT validado, cuenta corriente de compras a plazo y registro de pagos. |
+| 📦 **Compras** | [modules/compras.md](modules/compras.md) | 🟢 **100%** | Recepción de mercaderías, incremento de stock por sucursal, actualización automática de costos y recalculo de listas de precios. |
+| 💰 **Caja y Gastos** | [modules/caja.md](modules/caja.md) | 🟢 **100%** | Apertura/cierre por sucursal, arqueo físico vs. teórico, desglose por medio de pago, cálculo de ganancias y gastos clasificados por conceptos. |
+| 🏷️ **Catálogo y Stock** | [productos/README.md](productos/README.md) | 🟢 **95%** | Artículos, marcas, rubros, unidades de medida, stock por sucursal (`ArticuloStock`), optimización WebP y catálogo compartido por código de barras. |
+| 🏢 **Multi-Sucursal** | [multi-sucursal/README.md](multi-sucursal/README.md) | 🟢 **100%** | Aislamiento por sucursal, selector de sucursal activa en topbar, cajas independientes y asignación de empleados por sucursal. |
+| ⚡ **Facturación AFIP/ARCA** | [modules/facturacion-afip.md](modules/facturacion-afip.md) | 🟢 **95%** | Facturas A/B/C, Notas de Crédito A/B/C con comprobante asociado, obtención de CAE, reintentos en lote (`bulk-reprocesar`) y gating por plan. |
+| 🔐 **Auth & Seguridad** | [modules/autenticacion.md](modules/autenticacion.md) | 🟢 **95%** | Supabase Auth, login/registro, 2FA con TOTP y códigos de backup, dispositivos confiables, CSRF tokens y auditoría administrativa. |
+| 🛡️ **Permisos y Roles** | [modules/permisos.md](modules/permisos.md) | 🟢 **100%** | `requirePermiso()` en backend, matriz de permisos granulares por módulo, rol SuperAdmin, Administrador y Empleado. |
+| 👔 **Empleados & Auditoría** | [modules/empleados-roles.md](modules/empleados-roles.md) | 🟢 **100%** | CRUD de empleados, vinculación a cuentas de usuario, asignación de roles y bitácora de auditoría administrativa. |
+| ⚙️ **Configuración** | [modules/configuracion.md](modules/configuracion.md) | 🟢 **100%** | Perfil comercial, preferencias de venta (stock negativo, venta sin caja), certificados fiscales (.crt/.key), branding y políticas de seguridad. |
+| 📊 **Analíticas** | [modules/analiticas.md](modules/analiticas.md) | 🟢 **90%** | Dashboard con KPIs ejecutivos, gráficos de facturación diaria/mensual, alertas de stock y métricas financieras. |
+| 💎 **Planes SaaS** | [saas/planes-saas.md](saas/planes-saas.md) | 🟡 **85%** | Tiers definidos (Básico, Premium, Ilimitado). Helper de validación `PlanFeatures` implementado, pendiente completar enforcement en todas las UI de creación. |
+| 🔔 **Notificaciones** | [features/notificaciones.md](features/notificaciones.md) | 🟢 **100%** | Polling liviano, alertas de stock bajo y límites de crédito con auto-resolución al corregir condición. |
+
+---
+
+## 3. Estado de la Suite de Pruebas
+
+### Pruebas Unitarias y de Integración (Vitest)
+- **Suite**: 19+ archivos de test en `src/test/`.
+- **Áreas Cubiertas**:
+  - Validaciones de schemas Zod (Caja, Gastos, Comprobantes, Clientes, Productos, Proveedores).
+  - Cálculo de precios, IVA, totales y balances de cuentas corrientes.
+  - Lógica de permisos y middleware de autenticación.
+  - Formateadores y utilidades de serialización BigInt.
+
+### Pruebas E2E de Viaje de Usuario (Playwright)
+- **Matriz de Cobertura**: 14 fases documentadas en [`e2e/journey/README.md`](../e2e/journey/README.md).
+- **Fases Completadas (Smoke & Core)**:
+  - Fase 0: Setup y creación de Tenant E2E vía panel SuperAdmin.
+  - Fase 1: Autenticación completa y control de sesiones.
+  - Fase 2: Onboarding y configuración de tienda.
+  - Fase 3: Maestros (Marcas, Rubros, Unidades, Listas de Precios).
+  - Fase 4: Catálogo de Productos y Stock.
+- **Fases en Curso**: Clientes, Proveedores, Caja, Ventas, Compras, Sucursales, Analytics y Viaje Completo.
+
+---
+
+## 4. Arquitectura y Patrones del Código
+
+1. **Patrón CRUD Genérico**:
+   - `GenericCrud` + `GenericTable` orquesta el 90% de las pantallas maestras.
+   - Soporta búsqueda debounced del lado del servidor, filtros combinados, exportación CSV/XLS y acciones masivas (`BulkSelectionContext`).
+2. **Manejo de Errores Unificado**:
+   - Helper `handleError()` en `src/lib/errors/handler.ts` normaliza errores de Zod, Prisma, Auth y llamadas externas en respuestas JSON estandarizadas.
+3. **Manejo Seguro de Identificadores y Multi-Tenancy**:
+   - Validación estricta de `tenantId` en `getAuthContext()`. Sin fallbacks inseguros.
+   - IDs representados como `BigInt` en Prisma, serializados a string/number en los adaptadores.
+4. **Optimización de Peticiones y Caching**:
+   - React Query configurado con `staleTime: 60s` para datos operativos y `5m` para tablas maestras.
+   - Mutaciones invalidan selectivamente las query keys afectadas.
+
+---
+
+## 5. Próximas Tareas Prioritarias
+
+1. **Gating de Planes SaaS**: Completar el bloqueo visual y en API cuando un comercio supera el límite de sucursales, usuarios o productos de su plan ([saas/planes-saas-implementacion.md](saas/planes-saas-implementacion.md)).
+2. **Búsqueda en Pestañas POS**: Integrar el modo alternado de pestaña "Carrito" / "Buscar productos" en `VentasScreen` ([features/ventas-busqueda-tabs.md](features/ventas-busqueda-tabs.md)).
+3. **Completar Fases E2E restantes**: Continuar la ejecución de los specs de viaje de usuario (Caja, Ventas, Cuentas Corrientes).

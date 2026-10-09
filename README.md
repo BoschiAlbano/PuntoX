@@ -120,15 +120,22 @@ PuntoX/
 └── testing/               # Guías y planes de testing
 ```
 
-## Documentación
+## Documentación del Proyecto
 
-Toda la documentación está en **[docs/](docs/README.md)**:
+El centro de documentación integral está en **[docs/](docs/README.md)**:
 
-- **[Índice general](docs/README.md)** — Punto de entrada
-- **[Arquitectura](docs/ARCHITECTURE.md)** — Stack, estructura, modelo de datos
-- **[CRUD y tablas genéricas](docs/ui/crud-tablas-genericas.md)** — GenericCrud, GenericTable, export
-- **[Módulos](docs/modules/)** — Ventas, clientes, empleados, configuración
-- **[Multi-sucursal](docs/multi-sucursal/README.md)** — Manejo de sucursales
-- **[Estado actual](docs/ESTADO_ACTUAL.md)** — Funcionalidades y pendientes
-
-Para desarrolladores y agentes IA: **[AGENTS.md](AGENTS.md)**
+| Documento | Descripción |
+|---|---|
+| 🧭 **[Índice Maestro de Documentación](docs/README.md)** | Punto de entrada único categorizado por dominio y funcionalidad |
+| 📍 **[Estado Actual del Proyecto](docs/ESTADO_ACTUAL.md)** | Panorama completo de funcionalidades terminadas, en curso y métricas |
+| 🏗️ **[Arquitectura y Stack](docs/ARCHITECTURE.md)** | Diseño del sistema, multi-tenancy, modelos Prisma y flujo de datos |
+| 📦 **[Módulos de Negocio](docs/modules/README.md)** | Ventas, Clientes, Proveedores, Compras, Caja, Facturación AFIP, Auth |
+| 🏷️ **[Catálogo y Stock](docs/productos/README.md)** | Artículos, stock por sucursal, optimización WebP y fotos por barcode |
+| 🏢 **[Multi-Sucursal](docs/multi-sucursal/README.md)** | Manejo de locales independientes, cajas y selector de sucursal |
+| 🎨 **[UI & Componentes](docs/ui/README.md)** | GenericCrud, GenericTable, modales y tablas HeroUI |
+| 💎 **[Planes SaaS](docs/saas/README.md)** | Definición de planes, tiers de suscripción y feature gating |
+| 🚀 **[Especificaciones de Features](docs/features/README.md)** | Notas de crédito AFIP, notificaciones in-app y búsqueda en tabs |
+| ⚡ **[Rendimiento y Caching](docs/optimizaciones/README.md)** | React Query, debounce, cache de permisos y optimización de Auth |
+| 🧪 **[Testing & Playwright E2E](docs/TESTING.md)** | Pruebas unitarias en Vitest y 14 fases de viaje de usuario en Playwright |
+| 🤖 **[Guía para Desarrolladores y Agentes IA](AGENTS.md)** | Convenciones, arquitectura de componentes, hooks y reglas críticas |
+| 🎨 **[Sistema de Diseño](DESIGN.md)** | Tokens de diseño, colores, tipografía y componentes Kinetic Retail Ops |

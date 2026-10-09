@@ -270,5 +270,5 @@ Por defecto, Stock, StockMinimo, Costo, Minorista y Mayorista se alinean a la de
 ## Referencias
 
 - [Formato CRUD (formularios)](./formato-crud.md)
-- [Optimizaciones de peticiones](../OPTIMIZACIONES_PETICIONES.md)
+- [Optimizaciones de peticiones](../optimizaciones/peticiones-http.md)
 - [Consistencia de formato páginas](./consistencia-formato-paginas.md)

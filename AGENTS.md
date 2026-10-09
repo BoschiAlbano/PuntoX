@@ -1,74 +1,97 @@
 # Guía para Agentes y Desarrolladores — PuntoX
 
-Este documento resume convenciones, estructura y patrones del proyecto para mantener consistencia al modificar código.
+Este documento resume convenciones, arquitectura de componentes, hooks, base de datos y patrones del proyecto para mantener consistencia estricta al modificar o añadir código.
 
-## Estructura de componentes CRUD
+---
 
-Los CRUDs usan **GenericCrud** + **GenericTable**:
+## 🧭 Mapa de Documentación Rápida
+
+- **[docs/README.md](docs/README.md)** — Índice Maestro con búsqueda por categoría.
+- **[docs/ESTADO_ACTUAL.md](docs/ESTADO_ACTUAL.md)** — Estado real y matriz de completitud del sistema.
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — Análisis de arquitectura técnica y dependencias.
+- **[DESIGN.md](DESIGN.md)** — Sistema de diseño visual Kinetic Retail Ops (tokens, colores, tipografía).
+- **[docs/modules/README.md](docs/modules/README.md)** — Documentación de todos los módulos de negocio.
+- **[docs/TESTING.md](docs/TESTING.md)** — Guía unificada de testing (Vitest + Playwright).
+
+---
+
+## 📋 Estructura de Componentes CRUD
+
+Los CRUDs de administración utilizan la dupla **GenericCrud** + **GenericTable**:
 
 ```
-GenericCrud (orquesta estado, API, modales)
-  └── GenericTable (tabla, búsqueda, paginación, "Más opciones")
+GenericCrud (orquesta estado, API, modales, toasts)
+  └── GenericTable (tabla, búsqueda debounced, paginación, bulk selection, "Más opciones")
 ```
 
 ### Props clave de GenericCrud
 
 | Prop | Tipo | Uso |
-|------|------|-----|
-| `apiPath` | string | Endpoint base (GET paginado, POST, PATCH, DELETE con ?Id=) |
-| `queryKey` | string | Clave React Query |
-| `columns` | Column[] | Columnas de la tabla |
-| `renderCell` | fn | Renderiza cada celda; `default` debe retornar `null` |
-| `FormComponent` | Component | Modal de crear/editar |
-| `exportConfig` | { filename, columns, mapItem } | Export CSV/XLS desde "Más opciones" |
-| `bulkActionsDropdown` | Array | Opciones al seleccionar filas |
-| `enableBulkActions` | boolean | Activa checkboxes y barra de selección |
+|---|---|---|
+| `apiPath` | `string` | Endpoint base (GET paginado con `?q=`, POST, PATCH, DELETE con `?Id=`) |
+| `queryKey` | `string` | Clave única de TanStack React Query |
+| `columns` | `Column[]` | Columnas de la tabla (`key`, `label`, `sortable`) |
+| `renderCell` | `(item, columnKey) => ReactNode` | Renderizado personalizado por celda (`default` debe retornar `null`) |
+| `FormComponent` | `Component` | Modal de creación y edición |
+| `exportConfig` | `{ filename, columns, mapItem }` | Exportación CSV/XLS desde "Más opciones" |
+| `bulkActionsDropdown` | `Array` | Opciones de acción masiva al seleccionar filas |
+| `enableBulkActions` | `boolean` | Habilita checkboxes y barra flotante de selección |
 
-### Exportación
+### Exportación de Datos
 
-- **Más opciones:** Export CSV y XLS exportan los datos **visibles** (filtro/orden aplicados).
-- **Acciones masivas:** "Exportar como CSV" y "Exportar como XLS" exportan solo los elementos **seleccionados**.
-- No existe importación; el menú "Importar" fue eliminado.
+- **Menú "Más opciones":** Exporta los datos **visibles** filtrados y ordenados.
+- **Acciones masivas:** "Exportar como CSV" y "Exportar como XLS" exportan exclusivamente los elementos **seleccionados**.
+- **Utilidades:** Usar `exportToCsv()` y `exportToXls()` de `src/lib/utils/exportCsv.ts`.
 
-### Acciones masivas
+### Selección Masiva
 
-`onAction` recibe `BulkSelectionContext<T>` con `ids`, `items`, `totalCount`, `mode`, `clearSelection`.
+`onAction` recibe un objeto `BulkSelectionContext<T>` con `{ ids, items, totalCount, mode, clearSelection }`.  
+Al cambiar búsqueda, filtros o página, la selección se reinicia automáticamente.
 
-Al cambiar búsqueda, filtro o orden, la selección se invalida automáticamente.
+---
 
-## API y hooks
+## ⚡ API y Hooks
 
-- **useGenericApi:** Fetch paginado, mutations, `extraParams` para filtros.
-- **Endpoints CRUD estándar:** GET con `?q=`, `page`, `limit`; POST/PATCH body JSON; DELETE con `?Id=`.
-- **Respuesta paginada:** `{ data: T[], pagination: { total, page, limit, totalPages } }`.
+- **Hook Principal:** `useGenericApi` (`src/hooks/useGenericApi.ts`) para consultas paginadas, mutaciones optimistas y `extraParams`.
+- **Endpoints Estándar:**
+  - `GET`: Parámetros `?q=`, `page=1`, `limit=10`, `sortBy=`, `sortOrder=`.
+  - `POST` / `PATCH`: Body en JSON validado con Zod.
+  - `DELETE`: `?Id={id}` ejecutando baja lógica (`EstaEliminado: true`).
+- **Formato de Respuesta Paginada:**
+  ```json
+  {
+    "data": [ ... ],
+    "pagination": {
+      "total": 120,
+      "page": 1,
+      "limit": 10,
+      "totalPages": 12
+    }
+  }
+  ```
 
-## Validación y errores
+---
 
-- Schemas Zod en `src/lib/validations/*.schema.ts`.
-- Manejo de errores: `handleError()` de `@/lib/errors/handler`.
-- Nunca usar `tenantId || 1`; validar `tenantId` antes.
+## 🛡️ Validación, Seguridad y Errores
 
-## Base de datos
+- **Zod Schemas:** Definidos en `src/lib/validations/*.schema.ts`.
+- **Manejo de Errores:** Usar siempre `handleError(error)` de `@/lib/errors/handler`.
+- **Multi-Tenancy:** **NUNCA usar fallbacks** como `tenantId || 1`. Validar la sesión con `getAuthContext({ req, permission })`.
+- **Permisos:** Proteger endpoints de backend con constantes de `src/lib/constants/comprobantes.ts` (`GET_PERMISSIONS`, `SET_PERMISSIONS`).
 
-- **Prisma:** Modelos con `TenantId`, `EstaEliminado`, IDs como `BigInt`.
-- **Productos:** `Articulo` + `Precio`; stock por sucursal en `ArticuloStock`.
-- **Marcas:** Incluyen `CantidadProductos` calculado con `_count` de Prisma.
+---
 
-## Utilidades de export
+## 🗄️ Base de Datos (Prisma)
 
-- `src/lib/utils/exportCsv.ts`: `exportToCsv()` y `exportToXls()`.
-- Misma firma: `(data, columns, filename)`.
-- Columnas: `{ key: keyof T, header: string }[]`.
+- **Modelos:** Identificadores primarios como `BigInt` (`Id`), campo `TenantId` obligatorio, y borrado lógico con `EstaEliminado: Boolean`.
+- **Multi-Sucursal:**
+  - `Articulo` es global por tenant; las existencias físicas se guardan en `ArticuloStock` (`ArticuloId`, `SucursalId`, `CantidadStock`).
+  - Las `Caja` y `Comprobante` siempre referencian a una `SucursalId`.
 
-## Estilo y UI
+---
 
-- Color acento: `#67afc3`.
-- Formularios: modales con `placement="center"`, `backdrop="opaque"`.
-- Ver `docs/ui/formato-crud.md` para classNames y paleta.
+## 🎨 Estilo y UI
 
-## Documentación
-
-- **docs/README.md** — Índice general.
-- **docs/ui/crud-tablas-genericas.md** — CRUD genérico, export, acciones masivas.
-- **docs/ARCHITECTURE.md** — Análisis completo del proyecto.
-- **docs/modules/** — Documentación por módulo.
+- **Tokens y Colores:** Acento primario `#0066FF` / `#67afc3`, acento secundario de acción `#FF6100` (ver [DESIGN.md](DESIGN.md)).
+- **Modales:** Siempre configurar `placement="center"`, `backdrop="opaque"` y `motionProps` estandarizados.
+- **HeroUI Table:** Ver [docs/ui/heroui-table-overrides.md](docs/ui/heroui-table-overrides.md) para las clases de slots y estilos.

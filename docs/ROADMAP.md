@@ -375,12 +375,16 @@ export async function POST(req: NextRequest) {
 
 **Sugerencia:** Dividir en componentes más pequeños cuando sea posible.
 
-### Mejoras Futuras (No Urgentes)
-- Monitoreo con Sentry
-- Documentación API interactiva (Swagger)
-- Logging estructurado profesional
-- Tests E2E con Playwright
-- Implementar caché (Redis)
+### Mejoras Futuras y Backlog
+- [ ] **Búsqueda en Pestañas POS** (ver [docs/features/ventas-busqueda-tabs.md](features/ventas-busqueda-tabs.md)): Alternar Carrito y Buscador de productos en tabs fluidas.
+- [ ] **Enforcement de Planes SaaS** (ver [docs/saas/planes-saas-implementacion.md](saas/planes-saas-implementacion.md)): Bloqueo estricto de sucursales, usuarios, catálogo y AFIP según plan.
+- [ ] **Botón de Reset / Purga de Tienda**: Herramienta administrativa para limpiar datos transaccionales de prueba o restablecer tienda desde una fecha determinada.
+- [ ] **Notas de Débito Electrónicas (ARCA)**: Emisión de ND A/B/C asociadas para recargos o correcciones fiscales.
+- [ ] **Factura E y Factura M (ARCA)**: Comprobantes para exportación y régimen especial con retención.
+- [ ] Monitoreo con Sentry
+- [ ] Documentación API interactiva (Swagger / OpenAPI)
+- [ ] Logging estructurado profesional
+- [ ] Implementar caché distribuido (Redis / Upstash)
 
 ---
 
@@ -391,6 +395,4 @@ export async function POST(req: NextRequest) {
 1. **Mínimo crítico:** 30-40 horas enfocadas en seguridad y testing básico
 2. **Excelencia completa:** 68-91 horas para cubrir todas las áreas
 
-**Recomendación:** Empezar con las críticas (1-2 horas) y luego seguir con las importantes según prioridad.
-
-**Prioridad absoluta:** Eliminar fallbacks tenantId - **NO negociable** para producción.
+**Recomendación:** Empezar con las críticas y luego seguir con las importantes según prioridad.

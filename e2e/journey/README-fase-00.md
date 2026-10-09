@@ -23,10 +23,10 @@ Crear la tienda de testing dedicada **"Tienda E2E PuntoX"** usando el panel de S
 
 ## Archivos implementados
 
-- [e2e/global-setup.ts](../e2e/global-setup.ts) — Crea el tenant automáticamente antes de la suite
-- [e2e/fixtures/e2e-tenant.ts](../e2e/fixtures/e2e-tenant.ts) — Credenciales centralizadas
-- [e2e/fixtures/auth.ts](../e2e/fixtures/auth.ts) — Fixtures `e2ePage` y `superAdminPage`
-- [playwright.config.ts](../playwright.config.ts) — Referencia al globalSetup
+- [e2e/global-setup.ts](../global-setup.ts) — Crea el tenant automáticamente antes de la suite
+- [e2e/fixtures/e2e-tenant.ts](../fixtures/e2e-tenant.ts) — Credenciales centralizadas
+- [e2e/fixtures/auth.ts](../fixtures/auth.ts) — Fixtures `e2ePage` y `superAdminPage`
+- [playwright.config.ts](../../playwright.config.ts) — Referencia al globalSetup
 
 ## Tareas
 

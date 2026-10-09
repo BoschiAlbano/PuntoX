@@ -472,5 +472,5 @@ Las áreas de mejora prioritarias son:
 
 ---
 
-**Próximos pasos:** Ver `PROXIMOS_PASOS.md` para plan detallado de acción.
+**Próximos pasos:** Ver [ROADMAP.md](ROADMAP.md) para el plan detallado de acción.
 

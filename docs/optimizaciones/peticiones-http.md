@@ -479,7 +479,7 @@ Sin embargo, esto no es recomendado ya que aumentará significativamente el núm
 ---
 
 **Última actualización**: Febrero 2025  
-**Ver también**: [CRUD y tablas genéricas](./ui/crud-tablas-genericas.md) para queryKey, extraParams y keepPreviousData  
+**Ver también**: [CRUD y tablas genéricas](../ui/crud-tablas-genericas.md) para queryKey, extraParams y keepPreviousData  
 **Mantenido por**: Equipo de Desarrollo  
 **Revisión recomendada**: Trimestral o cuando se agreguen nuevas queries
 
