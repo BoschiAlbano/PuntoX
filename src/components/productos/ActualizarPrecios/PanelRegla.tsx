@@ -1,4 +1,4 @@
-﻿import {
+import {
   Card,
   CardBody,
   Input,
@@ -72,11 +72,46 @@ const OBJETIVOS: {
 ];
 
 // 4 tipos en una grilla 2x2: signo + unidad
-const TIPOS: { key: TipoAjustePrecio; label: string; icon: string }[] = [
-  { key: "incremento_porcentaje", label: "+%", icon: "+" },
-  { key: "decremento_porcentaje", label: "-%", icon: "-" },
-  { key: "incremento_fijo", label: "+$", icon: "+" },
-  { key: "decremento_fijo", label: "-$", icon: "-" },
+const TIPOS: {
+  key: TipoAjustePrecio;
+  label: string;
+  icon: string;
+  desc: string;
+  ejemplo: string;
+  color: string;
+}[] = [
+  {
+    key: "incremento_porcentaje",
+    label: "+%",
+    icon: "+",
+    desc: "Sube en %",
+    ejemplo: "$100 → $115",
+    color: "#10B981",
+  },
+  {
+    key: "decremento_porcentaje",
+    label: "-%",
+    icon: "-",
+    desc: "Baja en %",
+    ejemplo: "$100 → $85",
+    color: "#EF4444",
+  },
+  {
+    key: "incremento_fijo",
+    label: "+$",
+    icon: "+",
+    desc: "Sube monto fijo",
+    ejemplo: "$100 → $115",
+    color: "#10B981",
+  },
+  {
+    key: "decremento_fijo",
+    label: "-$",
+    icon: "-",
+    desc: "Baja monto fijo",
+    ejemplo: "$100 → $85",
+    color: "#EF4444",
+  },
 ];
 
 const TIPOS_REDONDEO: { key: TipoRedondeo; label: string; desc: string }[] = [
@@ -126,20 +161,39 @@ export function PanelRegla({
     );
 
   return (
-    <Card className="border border-[#67afc3]/20 shadow-lg shadow-[#67afc3]/5">
+    <Card
+      className="border"
+      style={{
+        borderColor: "#E2E8F0",
+        boxShadow: "0 4px 6px -1px rgba(15,34,51,0.06), 0 2px 4px -2px rgba(15,34,51,0.04)",
+      }}
+    >
       <CardBody className="p-5 flex flex-col gap-5">
         {/* Header */}
-        <div className="flex items-center gap-2 text-[#67afc3]">
-          <TrendingUp className="w-5 h-5" />
-          <h3 className="font-bold text-lg">Regla de Ajuste</h3>
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+            style={{
+              background: "#0F2233",
+              boxShadow: "0 2px 8px 0 rgba(15,34,51,0.25)",
+            }}
+          >
+            <TrendingUp className="w-4 h-4 text-[#F59E0B]" />
+          </div>
+          <h3
+            className="font-bold text-base text-[#0F2233]"
+            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          >
+            Regla de Ajuste
+          </h3>
         </div>
 
         {/* Objetivo */}
         <div className="flex flex-col gap-2">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          <span className="text-[10px] font-semibold text-[#64748B] uppercase tracking-widest">
             Que actualizar
           </span>
-          <div className="flex rounded-xl border border-slate-200 overflow-hidden">
+          <div className="flex rounded-xl border border-[#E2E8F0] overflow-hidden">
             {OBJETIVOS.map((obj) => (
               <button
                 key={obj.key}
@@ -147,8 +201,8 @@ export function PanelRegla({
                 onClick={() => handleChange("objetivo", obj.key)}
                 className={`flex-1 flex flex-col items-center gap-1 py-2.5 px-1 text-[11px] font-medium transition-colors leading-tight ${
                   regla.objetivo === obj.key
-                    ? "bg-[#67afc3] text-white"
-                    : "bg-white text-slate-500 hover:bg-slate-50"
+                    ? "bg-[#0F2233] text-white font-semibold shadow-sm"
+                    : "bg-white text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F2233]"
                 }`}
               >
                 {obj.icon}
@@ -157,7 +211,7 @@ export function PanelRegla({
             ))}
           </div>
           {selectedObjetivo && (
-            <p className="text-[11px] text-slate-500 leading-relaxed">
+            <p className="text-[11px] text-[#94A3B8] leading-relaxed">
               {selectedObjetivo.desc}
             </p>
           )}
@@ -190,24 +244,63 @@ export function PanelRegla({
 
         {/* Tipo de ajuste: grilla 2x2 */}
         <div className="flex flex-col gap-2">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          <span className="text-[10px] font-semibold text-[#64748B] uppercase tracking-widest">
             Tipo de ajuste
           </span>
           <div className="grid grid-cols-2 gap-2">
-            {TIPOS.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => handleChange("tipo", t.key)}
-                className={`flex items-center justify-center gap-1.5 rounded-lg border py-2.5 text-sm font-bold transition-colors ${
-                  regla.tipo === t.key
-                    ? "border-[#67afc3] bg-[#67afc3]/10 text-[#67afc3]"
-                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
+            {TIPOS.map((t) => {
+              const isSelected = regla.tipo === t.key;
+              const isSubida = t.icon === "+";
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => handleChange("tipo", t.key)}
+                  className="flex flex-col items-center gap-1 rounded-lg border py-3 px-2 transition-all duration-150"
+                  style={{
+                    borderColor: isSelected
+                      ? isSubida ? "#10B981" : "#EF4444"
+                      : "#E2E8F0",
+                    background: isSelected
+                      ? isSubida ? "#ECFDF5" : "#FEF2F2"
+                      : "#FFFFFF",
+                  }}
+                >
+                  <span
+                    className="text-lg font-extrabold leading-none"
+                    style={{
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      color: isSelected
+                        ? isSubida ? "#047857" : "#DC2626"
+                        : "#475569",
+                    }}
+                  >
+                    {t.label}
+                  </span>
+                  <span
+                    className="text-[10px] font-medium leading-none"
+                    style={{
+                      color: isSelected
+                        ? isSubida ? "#047857" : "#DC2626"
+                        : "#94A3B8",
+                    }}
+                  >
+                    {t.desc}
+                  </span>
+                  {isSelected && (
+                    <span
+                      className="text-[9px] font-mono mt-0.5 px-1.5 py-0.5 rounded"
+                      style={{
+                        background: isSubida ? "#D1FAE5" : "#FEE2E2",
+                        color: isSubida ? "#047857" : "#DC2626",
+                      }}
+                    >
+                      ej: {t.ejemplo.replace("$15", `$${regla.valor}`).replace("$100 → $115", `$100 → $${100 + (regla.tipo.includes("porcentaje") ? Math.round(100 * regla.valor / 100) : regla.valor)}`).replace("$100 → $85", `$100 → $${100 - (regla.tipo.includes("porcentaje") ? Math.round(100 * regla.valor / 100) : regla.valor)}`)}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -286,12 +379,27 @@ export function PanelRegla({
         <div className="flex flex-col gap-3 mt-auto">
           <Button
             variant={previewModo && previewEstaActualizada ? "solid" : "flat"}
-            color={
-              previewModo && previewEstaActualizada ? "primary" : "default"
-            }
             onPress={onGenerarPreview}
-            startContent={previewButtonIcon}
-            className="font-semibold"
+            startContent={
+              previewModo && previewEstaActualizada ? (
+                <RefreshCcw className="w-4 h-4 text-[#FBBF24]" />
+              ) : (
+                <Calculator className="w-4 h-4 text-[#0F2233]" />
+              )
+            }
+            className="font-semibold transition-all duration-150"
+            style={
+              previewModo && previewEstaActualizada
+                ? {
+                    background: "#0F2233",
+                    color: "#FFFFFF",
+                    boxShadow: "0 4px 12px 0 rgba(15,34,51,0.25)",
+                  }
+                : {
+                    background: "#F1F5F9",
+                    color: "#0F2233",
+                  }
+            }
           >
             {previewButtonLabel}
           </Button>
@@ -307,28 +415,49 @@ export function PanelRegla({
           )}
 
           <Button
-            color="success"
-            className="text-white font-bold"
-            startContent={<Save className="w-4 h-4" />}
             onPress={onAplicar}
             isLoading={isApplying}
+            startContent={<Save className="w-4 h-4" />}
             isDisabled={
               seleccionadosCount === 0 ||
               !previewModo ||
               !previewEstaActualizada
             }
+            className="font-bold text-white"
+            style={{
+              background:
+                seleccionadosCount === 0 || !previewModo || !previewEstaActualizada
+                  ? undefined
+                  : "#FF6100",
+              boxShadow:
+                seleccionadosCount === 0 || !previewModo || !previewEstaActualizada
+                  ? undefined
+                  : "0 4px 14px 0 rgba(255,97,0,0.35)",
+            }}
           >
             Aplicar a {seleccionadosCount} seleccionados
           </Button>
 
           {seleccionadosCount === 0 ? (
-            <p className="text-[10px] text-center text-slate-400 italic">
-              Selecciona articulos en la tabla para aplicar cambios
-            </p>
+            <div
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-[11px]"
+              style={{ background: "#FFFBEB", border: "1px solid #FDE68A" }}
+            >
+              <span className="text-base">☝️</span>
+              <p className="text-[#92400E]">
+                Seleccioná artículos en la tabla para continuar
+              </p>
+            </div>
           ) : !previewModo || !previewEstaActualizada ? (
-            <p className="text-[10px] text-center text-slate-400 italic">
-              Genera la vista previa antes de aplicar los cambios
-            </p>
+            <div
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-[11px]"
+              style={{ background: "#FEFCE8", border: "1px solid #FEF08A" }}
+            >
+              <span className="text-base text-[#D97706]">⚡</span>
+              <p className="text-[#854D0E]">
+                Presioná <strong>Ver Vista Previa</strong> antes de aplicar
+              </p>
+            </div>
           ) : null}
         </div>
       </CardBody>

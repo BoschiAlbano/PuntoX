@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
     }
 
     // ── Paginación ────────────────────────────────────────────────────────
-    const pagination = parsePaginationParams(req);
+    const pagination = parsePaginationParams(req, 10000);
 
     // ── Contar total (para paginación) ────────────────────────────────────
     const total = await prisma.articulo.count({ where });

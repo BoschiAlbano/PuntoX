@@ -34,6 +34,14 @@ describe("parsePaginationParams", () => {
     expect(r.limit).toBe(100);
   });
 
+  it("permite un maxLimit superior cuando se pasa como argumento", () => {
+    const req = {
+      nextUrl: { searchParams: new URLSearchParams({ limit: "5000" }) },
+    };
+    const r = parsePaginationParams(req, 10000);
+    expect(r.limit).toBe(5000);
+  });
+
   it("acota page a mínimo 1", () => {
     const req = {
       nextUrl: { searchParams: new URLSearchParams({ page: "0" }) },

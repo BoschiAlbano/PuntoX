@@ -18,6 +18,8 @@ import {
   ListFilter,
   Search,
   SlidersHorizontal,
+  TrendingUp,
+  Columns3,
 } from "lucide-react";
 import GenericTable, { Column } from "@/components/shared/GenericTable";
 import { Producto } from "@/lib/validations/producto.schema";
@@ -29,6 +31,8 @@ type MobileTab = "busqueda" | "precios";
 export default function ActualizarPreciosContainer() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<MobileTab>("busqueda");
+  const [listasVisibles, setListasVisibles] = useState<Set<number>>(new Set());
+  const [listasMenuOpen, setListasMenuOpen] = useState(false);
 
   const {
     filtros,
@@ -104,6 +108,38 @@ export default function ActualizarPreciosContainer() {
     },
   });
 
+  // Inicializar listasVisibles con todas cuando se cargan
+  const listasInicializadas = useMemo(() => {
+    if (listas.length > 0 && listasVisibles.size === 0) {
+      setListasVisibles(new Set(listas.map((l: any) => l.Id as number)));
+    }
+    return true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listas]);
+  void listasInicializadas;
+
+  const toggleLista = (id: number) => {
+    setListasVisibles((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        if (next.size === 1) return prev; // al menos 1 visible
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleTodasListas = () => {
+    if (listasVisibles.size === listas.length) {
+      // dejar solo la primera
+      setListasVisibles(new Set([listas[0]?.Id]));
+    } else {
+      setListasVisibles(new Set(listas.map((l: any) => l.Id as number)));
+    }
+  };
+
   const { data: marcas = [] } = useQuery({
     queryKey: ["marcas-generic"],
     queryFn: async () => {
@@ -127,14 +163,16 @@ export default function ActualizarPreciosContainer() {
       { uid: "PrecioCosto", name: "Costo", align: "end" },
     ];
 
-    const listasCols = listas.map((l: any) => ({
-      uid: `lista-${l.Id}`,
-      name: l.Nombre,
-      align: "end" as const,
-    }));
+    const listasCols = listas
+      .filter((l: any) => listasVisibles.has(l.Id))
+      .map((l: any) => ({
+        uid: `lista-${l.Id}`,
+        name: l.Nombre,
+        align: "end" as const,
+      }));
 
     return [...base, ...listasCols];
-  }, [listas]);
+  }, [listas, listasVisibles]);
 
   // ─── Renderizado de Celdas ─────────────────────────────────────────────
   const renderCell = useCallback(
@@ -144,15 +182,15 @@ export default function ActualizarPreciosContainer() {
       if (key === "Descripcion") {
         return (
           <div className="flex flex-col">
-            <span className="font-medium text-slate-700 leading-snug">
+            <span className="font-semibold text-[#0F172A] leading-snug text-sm">
               {articulo.Descripcion}
             </span>
-            <div className="flex gap-1 mt-0.5">
-              <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-px rounded">
+            <div className="flex gap-1.5 mt-0.5">
+              <span className="text-[10px] text-[#64748B] bg-[#F1F5F9] border border-[#E2E8F0] px-1.5 py-px rounded font-mono tracking-wide">
                 {articulo.CodigoBarra}
               </span>
               {articulo.Marca && (
-                <span className="text-[10px] text-[#67afc3] bg-[#67afc3]/10 px-1.5 py-px rounded">
+                <span className="text-[10px] text-[#0F2233] bg-[#EAEFF5] border border-[#D5DFE9] px-1.5 py-px rounded font-semibold">
                   {articulo.Marca.Descripcion}
                 </span>
               )}
@@ -178,16 +216,14 @@ export default function ActualizarPreciosContainer() {
           <div className="flex flex-col items-end gap-0.5">
             <span
               className={`font-mono text-sm ${
-                costoCambio
-                  ? "font-medium text-sky-600"
-                  : "text-slate-400 font-normal"
+                costoCambio ? "text-[#B45309] font-bold" : "text-[#64748B] font-semibold"
               }`}
             >
               ${costoActual.toLocaleString()}
             </span>
             {costoCambio && (
-              <span className="text-[10px] text-slate-500">
-                Antes: ${costoOriginal!.toLocaleString()}
+              <span className="text-[10px] text-[#94A3B8] line-through">
+                ${costoOriginal!.toLocaleString()}
               </span>
             )}
           </div>
@@ -200,7 +236,8 @@ export default function ActualizarPreciosContainer() {
           (p) => p.ListaPrecioId === listaId,
         );
 
-        if (!precioActual) return <span className="text-slate-300">—</span>;
+        if (!precioActual)
+          return <span className="text-[#CBD5E1] font-mono">—</span>;
 
         const precioOriginal = (
           articulo as Producto & {
@@ -212,14 +249,16 @@ export default function ActualizarPreciosContainer() {
         return (
           <div className="flex flex-col items-end gap-0.5">
             <span
-              className={`font-mono text-sm ${previewModo ? "font-medium text-sky-600" : "font-normal text-slate-600"}`}
+              className={`font-mono text-sm ${
+                previewModo ? "text-[#B45309] font-bold" : "text-[#475569] font-semibold"
+              }`}
             >
               ${precioActual.PrecioFinal.toLocaleString()}
             </span>
 
             {previewModo && precioOriginal && (
-              <span className="text-[10px] text-slate-500">
-                Antes: ${precioOriginal.PrecioFinal.toLocaleString()}
+              <span className="text-[10px] text-[#94A3B8] line-through">
+                ${precioOriginal.PrecioFinal.toLocaleString()}
               </span>
             )}
           </div>
@@ -238,73 +277,51 @@ export default function ActualizarPreciosContainer() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      {/* ── MOBILE TABS ── solo visible en pantallas < xl */}
-      <div className="xl:hidden flex items-center bg-transparent border-b border-slate-100 shrink-0 px-3 pt-1 mb-2">
+      <div className="xl:hidden flex items-center bg-white border-b border-[#E2E8F0] shrink-0">
         <button
           onClick={() => setMobileTab("busqueda")}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold border-b-2 transition-all duration-200 ${
+          className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold border-b-2 transition-all duration-200 ${
             mobileTab === "busqueda"
-              ? "border-[#67afc3] text-[#67afc3]"
-              : "border-transparent text-slate-400 hover:text-slate-600"
+              ? "border-[#0F2233] text-[#0F2233]"
+              : "border-transparent text-[#64748B] hover:text-[#0F172A]"
           }`}
         >
           <Search size={15} />
           <span>Búsqueda</span>
           {seleccionados.size > 0 && (
-            <span className="ml-1 min-w-5 h-5 rounded-full bg-[#67afc3] text-white text-[10px] font-bold flex items-center justify-center px-1.5">
+            <span
+              className="ml-1 min-w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center px-1.5"
+              style={{ background: "#0F2233" }}
+            >
               {seleccionados.size}
             </span>
           )}
         </button>
         <button
           onClick={() => setMobileTab("precios")}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold border-b-2 transition-all duration-200 ${
+          className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold border-b-2 transition-all duration-200 ${
             mobileTab === "precios"
-              ? "border-[#67afc3] text-[#67afc3]"
-              : "border-transparent text-slate-400 hover:text-slate-600"
+              ? "border-[#0F2233] text-[#0F2233]"
+              : "border-transparent text-[#64748B] hover:text-[#0F172A]"
           }`}
         >
           <SlidersHorizontal size={15} />
-          <span>Precios</span>
+          <span>Regla</span>
           {previewModo && (
-            <span className="ml-1 text-[10px] font-bold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded-full">
+            <span className="ml-1 text-[10px] font-bold text-[#92400E] bg-[#FEF3C7] border border-[#FDE68A] px-1.5 py-0.5 rounded-full">
               Activo
             </span>
           )}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 flex-1 min-h-0">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-0 xl:gap-6 flex-1 min-h-0 p-0">
         {/* Panel Izquierdo: Tabla Genérica */}
         <div
           className={`xl:col-span-3 flex flex-col min-h-0 ${
             mobileTab === "busqueda" ? "flex" : "hidden xl:flex"
           }`}
         >
-          {previewModo && (
-            <div
-              className={`mb-3 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-sm ${
-                previewEstaActualizada
-                  ? "border-sky-200 bg-sky-50 text-sky-900"
-                  : "border-amber-200 bg-amber-50 text-amber-900"
-              }`}
-            >
-              <Eye className="mt-0.5 size-4 shrink-0" />
-              <div className="space-y-1">
-                <p className="font-semibold">
-                  {previewEstaActualizada
-                    ? "Vista previa activa en la grilla"
-                    : "La vista previa quedó desactualizada"}
-                </p>
-                <p className="text-xs leading-relaxed">
-                  {previewEstaActualizada
-                    ? `Se simularon ${previewResumen.precios} precios sobre ${previewResumen.articulos} artículos. ${previewResumen.preciosConCambio} cambian respecto del valor actual.`
-                    : "Cambiaron los parámetros de la regla. Presiona nuevamente el botón para refrescar los valores simulados."}
-                </p>
-              </div>
-            </div>
-          )}
-
           <div className="flex-1 min-h-0 flex flex-col">
             <GenericTable
               data={previewModo ? articulosPreview : articulos}
@@ -339,7 +356,7 @@ export default function ActualizarPreciosContainer() {
               onExportCsvSelected={() => handleExport("csv", true)}
               onExportXlsSelected={() => handleExport("xls", true)}
               extraSearchContent={
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
                   <Autocomplete
                     aria-label="Filtrar por Marca"
                     placeholder="Marca"
@@ -411,6 +428,136 @@ export default function ActualizarPreciosContainer() {
                       Todos
                     </SelectItem>
                   </Select>
+
+                  {/* ── Selector de columnas de listas (solo si hay más de 1) ── */}
+                  {listas.length > 1 && (
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setListasMenuOpen((v) => !v)}
+                        className="h-8 flex items-center gap-1.5 px-3 rounded-lg border text-sm font-medium transition-colors"
+                        style={{
+                          borderColor:
+                            listasVisibles.size < listas.length
+                              ? "#0F2233"
+                              : "#CBD5E1",
+                          color:
+                            listasVisibles.size < listas.length
+                              ? "#0F2233"
+                              : "#475569",
+                          background:
+                            listasVisibles.size < listas.length
+                              ? "#F1F5F9"
+                              : "#FFFFFF",
+                        }}
+                      >
+                        <Columns3 className="size-3.5" />
+                        <span>Listas</span>
+                        {listasVisibles.size < listas.length && (
+                          <span
+                            className="min-w-4 h-4 rounded-full text-white text-[9px] font-bold flex items-center justify-center px-1"
+                            style={{ background: "#0F2233" }}
+                          >
+                            {listasVisibles.size}
+                          </span>
+                        )}
+                      </button>
+
+                      {listasMenuOpen && (
+                        <>
+                          {/* overlay para cerrar */}
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setListasMenuOpen(false)}
+                          />
+                          <div
+                            className="absolute right-0 top-full mt-1 z-50 rounded-xl border p-1 min-w-48"
+                            style={{
+                              background: "#FFFFFF",
+                              borderColor: "#E2E8F0",
+                              boxShadow:
+                                "0 4px 6px -1px rgba(15,34,51,0.08), 0 2px 4px -2px rgba(15,34,51,0.06)",
+                            }}
+                          >
+                            {/* Encabezado con toggle todo */}
+                            <div className="flex items-center justify-between px-2 py-1.5 mb-1">
+                              <span
+                                className="text-[10px] font-bold uppercase tracking-widest"
+                                style={{
+                                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                  color: "#64748B",
+                                }}
+                              >
+                                Columnas visibles
+                              </span>
+                              <button
+                                type="button"
+                                onClick={toggleTodasListas}
+                                className="text-[10px] font-semibold text-[#0F2233] hover:underline"
+                              >
+                                {listasVisibles.size === listas.length
+                                  ? "Quitar todas"
+                                  : "Ver todas"}
+                              </button>
+                            </div>
+                            <div
+                              className="w-full h-px mb-1"
+                              style={{ background: "#F1F5F9" }}
+                            />
+                            {/* Lista de checkboxes */}
+                            {listas.map((l: any) => {
+                              const visible = listasVisibles.has(l.Id);
+                              return (
+                                <button
+                                  key={l.Id}
+                                  type="button"
+                                  onClick={() => toggleLista(l.Id)}
+                                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors hover:bg-[#F8FAFC]"
+                                >
+                                  {/* Checkbox custom */}
+                                  <span
+                                    className="w-4 h-4 rounded flex items-center justify-center shrink-0 border transition-colors"
+                                    style={{
+                                      borderColor: visible
+                                        ? "#0F2233"
+                                        : "#CBD5E1",
+                                      background: visible
+                                        ? "#0F2233"
+                                        : "transparent",
+                                    }}
+                                  >
+                                    {visible && (
+                                      <svg
+                                        viewBox="0 0 10 8"
+                                        fill="none"
+                                        className="w-2.5 h-2"
+                                      >
+                                        <path
+                                          d="M1 4l2.5 2.5L9 1"
+                                          stroke="white"
+                                          strokeWidth="1.5"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        />
+                                      </svg>
+                                    )}
+                                  </span>
+                                  <span
+                                    className="truncate text-left font-medium"
+                                    style={{
+                                      color: visible ? "#0F2233" : "#94A3B8",
+                                    }}
+                                  >
+                                    {l.Nombre}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               }
             />
@@ -420,10 +567,10 @@ export default function ActualizarPreciosContainer() {
         {/* Panel Derecho: Configuración de la Regla */}
         <div
           className={`xl:col-span-1 ${
-            mobileTab === "precios" ? "block" : "hidden xl:block"
+            mobileTab === "precios" ? "h-max top-0 sticky" : "hidden xl:block"
           }`}
         >
-          <div className="sticky top-6">
+          <div className="sticky top-6 flex flex-col gap-4">
             <PanelRegla
               regla={regla}
               setRegla={setRegla}
@@ -436,20 +583,6 @@ export default function ActualizarPreciosContainer() {
               seleccionadosCount={seleccionados.size}
               listas={listas}
             />
-
-            <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-500 leading-relaxed shadow-sm">
-              <p className="font-bold mb-1 text-slate-700">💡 Tips de uso:</p>
-              <ul className="list-disc list-inside space-y-1">
-                <li>
-                  Activa <strong>Vista Previa</strong> para ver el impacto en
-                  color.
-                </li>
-                <li>Los artículos sin precio en una lista se ignoran.</li>
-                <li>
-                  <strong>Ceil $99</strong> es ideal para precios psicológicos.
-                </li>
-              </ul>
-            </div>
           </div>
         </div>
       </div>
