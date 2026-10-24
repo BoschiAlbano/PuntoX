@@ -56,7 +56,7 @@ const gastosColumns: Column[] = [
 const GASTO_LIMIT = 10;
 
 function formatMoney(val: number) {
-  return val.toLocaleString("es-AR", { style: "currency", currency: "ARS" });
+  return Number(val).toLocaleString("es-AR", { style: "currency", currency: "ARS" });
 }
 
 function formatDate(date: string) {

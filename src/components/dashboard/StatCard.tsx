@@ -113,7 +113,7 @@ export default function StatCard({
             {title}
           </p>
           <h3
-            className={`${textColor} text-3xl font-extrabold leading-none tracking-[-0.04em]`}
+            className={`${textColor} ${String(value).length > 10 ? "text-2xl" : "text-3xl"} font-extrabold leading-none tracking-[-0.04em]`}
           >
             {value}
           </h3>

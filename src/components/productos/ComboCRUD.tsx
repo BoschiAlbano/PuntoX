@@ -52,18 +52,18 @@ function ProductoPreviewContent({ item }: { item: Producto }) {
     <div className="space-y-5 text-sm">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-slate-500 text-xs mb-0.5">CÃ³digo / Barras</p>
+          <p className="text-slate-500 text-xs mb-0.5">Código / Barras</p>
           <p className="font-medium">
             {p?.Codigo ?? "-"} / {p?.CodigoBarra ?? "-"}
           </p>
         </div>
         <div>
-          <p className="text-slate-500 text-xs mb-0.5">CategorizaciÃ³n</p>
+          <p className="text-slate-500 text-xs mb-0.5">Categorización</p>
           <p className="font-medium">
-            {p?.Marca?.Descripcion ?? "-"} Â· {p?.Rubro?.Descripcion ?? "-"}
+            {p?.Marca?.Descripcion ?? "-"} · {p?.Rubro?.Descripcion ?? "-"}
           </p>
           <p className="text-slate-400 text-xs mt-0.5">
-            {p?.UnidadMedida?.Descripcion ?? "-"} Â· IVA{" "}
+            {p?.UnidadMedida?.Descripcion ?? "-"} · IVA{" "}
             {p?.Iva?.Porcentaje ?? "-"}%
           </p>
         </div>
@@ -134,7 +134,7 @@ function ProductoPreviewContent({ item }: { item: Producto }) {
         )}
         {p?.ActivarLimiteVenta && (
           <span className="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-600">
-            LÃ­mite: {p?.LimiteVenta}
+            Límite: {p?.LimiteVenta}
           </span>
         )}
         {p?.ActivarHoraVenta && (
@@ -178,7 +178,7 @@ function CopyableCode({ value }: { value: string }) {
       setCopied(true);
       addToast({
         title: "Copiado",
-        description: "CÃ³digo copiado al portapapeles",
+        description: "Código copiado al portapapeles",
         color: "success",
         timeout: 1500,
       });
@@ -192,7 +192,7 @@ function CopyableCode({ value }: { value: string }) {
     }
   }, [value]);
 
-  if (!value) return <span className="text-slate-500">â€”</span>;
+  if (!value) return <span className="text-slate-500">—</span>;
 
   return (
     <button
@@ -289,7 +289,7 @@ export default function ComboCRUD() {
 
     addToast({
       title: "Stock actualizado",
-      description: `Se agregÃ³ ${qty} al stock. Nuevo total: ${newStock}`,
+      description: `Se agregó ${qty} al stock. Nuevo total: ${newStock}`,
       color: "success",
     });
   };
@@ -303,7 +303,7 @@ export default function ComboCRUD() {
         showBulkSoftDelete={false}
         getApiExtraParams={() => ({ tipo: "combo" })}
         queryKey="combos-generic"
-        searchPlaceholder="Buscar por nombre, cÃ³digo o barras..."
+        searchPlaceholder="Buscar por nombre, código o barras..."
         title="Promociones y Combos"
         newButtonText="Nuevo Combo"
         onNewClick={() => router.push("/productos/promociones-combo/new")}
@@ -381,12 +381,12 @@ export default function ComboCRUD() {
         exportConfig={{
           filename: "productos",
           columns: [
-            { key: "CodigoBarra", header: "CÃ³digo" },
-            { key: "Descripcion", header: "DescripciÃ³n" },
+            { key: "CodigoBarra", header: "Código" },
+            { key: "Descripcion", header: "Descripción" },
             { key: "Marca", header: "Marca" },
             { key: "Rubro", header: "Rubro" },
             { key: "Stock", header: "Stock" },
-            { key: "StockMinimo", header: "Stock mÃ­nimo" },
+            { key: "StockMinimo", header: "Stock mínimo" },
             { key: "Costo", header: "Costo" },
             { key: "Precios", header: "Precios" },
           ],
@@ -531,7 +531,7 @@ export default function ComboCRUD() {
                   )}
                   {(item.PreciosLista?.length || 0) > 2 && (
                     <span className="text-[10px] text-gray-400">
-                      +{item.PreciosLista!.length - 2} mÃ¡s
+                      +{item.PreciosLista!.length - 2} más
                     </span>
                   )}
                 </div>

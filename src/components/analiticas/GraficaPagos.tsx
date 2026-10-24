@@ -53,6 +53,7 @@ export default function GraficaPagos({ datos }: GraficaPagosProps) {
             paddingAngle={5}
             labelLine={false}
             dataKey="monto"
+            nameKey="nombre"
           >
             {datosConPorcentaje.map((entry, index) => (
               <Cell

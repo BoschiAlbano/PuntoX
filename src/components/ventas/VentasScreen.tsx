@@ -62,7 +62,7 @@ export default function VentasScreen() {
     if (product.DescuentaStock && !product.PermiteStockNegativo) {
       if (product.Stock < newQuantity) {
         throw new Error(
-          `"${product.Descripcion || "El artÃ­culo"}" no tiene suficiente stock disponible. (Stock actual: ${product.Stock})`,
+          `"${product.Descripcion || "El artículo"}" no tiene suficiente stock disponible. (Stock actual: ${product.Stock})`,
         );
       }
     }
@@ -71,7 +71,7 @@ export default function VentasScreen() {
     if (product.ActivarLimiteVenta && product.LimiteVenta > 0) {
       if (newQuantity > product.LimiteVenta) {
         throw new Error(
-          `Supera el lÃ­mite de venta permitido (${product.LimiteVenta} unidades).`,
+          `Supera el límite de venta permitido (${product.LimiteVenta} unidades).`,
         );
       }
     }
@@ -193,8 +193,8 @@ export default function VentasScreen() {
   const total = calculateTotal();
   const subtotal = items.reduce((acc, item) => acc + item.subtotal, 0);
 
-  // Handler para bÃºsquedas ambiguas desde ProductSearch:
-  // guarda los resultados y activa la pestaÃ±a "buscar"
+  // Handler para búsquedas ambiguas desde ProductSearch:
+  // guarda los resultados y activa la pestaña "buscar"
   const handleAmbiguousSearch = (results: Producto[], query: string) => {
     setSearchResults(results);
     setSearchQuery(query);
@@ -202,7 +202,7 @@ export default function VentasScreen() {
     setHighlightedIndex(0);
   };
 
-  // â”€â”€ Keyboard shortcuts â”€â”€
+  // ── Keyboard shortcuts ──
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -258,7 +258,7 @@ export default function VentasScreen() {
 
   return (
     <div className="flex-1 min-h-0 w-full flex flex-col gap-0">
-      {/* â”€â”€ MOBILE TABS â”€â”€ solo visible en pantallas < lg */}
+      {/* ── MOBILE TABS ── solo visible en pantallas < lg */}
       <div className="lg:hidden flex items-center shrink-0 px-0 pt-1">
         <button
           onClick={() => setMobileTab("productos")}
@@ -325,7 +325,7 @@ export default function VentasScreen() {
             />
           </div>
 
-          {/* Panel con pestaÃ±as Carrito / Buscar */}
+          {/* Panel con pestañas Carrito / Buscar */}
           <VentaProductosPanel
             items={items}
             onUpdateQuantity={handleUpdateQuantity}
@@ -346,7 +346,7 @@ export default function VentasScreen() {
           />
         </div>
 
-        {/* â”€â”€ RIGHT PANEL: CLIENT + PAYMENT â”€â”€ */}
+        {/* ── RIGHT PANEL: CLIENT + PAYMENT ── */}
         <div
           className={`w-full lg:w-[320px] xl:w-[350px] flex flex-col gap-2 shrink-0 lg:h-full lg:overflow-hidden ${
             mobileTab === "pago" ? "flex" : "hidden lg:flex"

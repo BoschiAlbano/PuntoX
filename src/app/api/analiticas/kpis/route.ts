@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
+import { parseFechaDesde, parseFechaHasta } from "@/lib/utils/rangoFechas";
 import { handleError } from "@/lib/errors/handler";
 import { TIPO_COMPROBANTE_VENTA, GET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { PERMISSIONS } from "@/lib/constants/comprobantes";
+
+// Solo comprobantes de venta: los renglones de compras, notas de crédito y cobros de cuenta corriente
+// no son ventas y distorsionan margen, unidades vendidas y rankings.
+const TIPOS_VENTA_ANALITICA = [
+  TIPO_COMPROBANTE_VENTA.FACTURA_A,
+  TIPO_COMPROBANTE_VENTA.FACTURA_B,
+  TIPO_COMPROBANTE_VENTA.FACTURA_C,
+  TIPO_COMPROBANTE_VENTA.PRESUPUESTO,
+  TIPO_COMPROBANTE_VENTA.REMITO,
+];
 
 /**
  * GET /api/analiticas/kpis
@@ -25,13 +36,13 @@ export async function GET(req: NextRequest) {
 
     // Parsear fechas
     const fechaHasta = searchParams.get("fechaHasta")
-      ? new Date(searchParams.get("fechaHasta")!)
+      ? parseFechaHasta(searchParams.get("fechaHasta")!)
       : new Date();
 
     const periodo = searchParams.get("periodo") || "mensual";
     const diasAtras = periodo === "semanal" ? 7 : 30;
     const fechaDesde = searchParams.get("fechaDesde")
-      ? new Date(searchParams.get("fechaDesde")!)
+      ? parseFechaDesde(searchParams.get("fechaDesde")!)
       : new Date(Date.now() - diasAtras * 24 * 60 * 60 * 1000);
 
     // Período anterior para comparación
@@ -267,6 +278,7 @@ export async function GET(req: NextRequest) {
         TenantId: tenantIdBigInt,
         EstaEliminado: false,
         Comprobante: {
+          TipoComprobante: { in: TIPOS_VENTA_ANALITICA },
           Fecha: {
             gte: fechaDesde,
             lte: fechaHasta,
@@ -285,6 +297,7 @@ export async function GET(req: NextRequest) {
         TenantId: tenantIdBigInt,
         EstaEliminado: false,
         Comprobante: {
+          TipoComprobante: { in: TIPOS_VENTA_ANALITICA },
           Fecha: {
             gte: fechaDesdeAnterior,
             lte: fechaHastaAnterior,
@@ -329,6 +342,7 @@ export async function GET(req: NextRequest) {
         TenantId: tenantIdBigInt,
         EstaEliminado: false,
         Comprobante: {
+          TipoComprobante: { in: TIPOS_VENTA_ANALITICA },
           Fecha: {
             gte: fechaDesde,
             lte: fechaHasta,
@@ -347,6 +361,7 @@ export async function GET(req: NextRequest) {
           TenantId: tenantIdBigInt,
           EstaEliminado: false,
           Comprobante: {
+            TipoComprobante: { in: TIPOS_VENTA_ANALITICA },
             Fecha: {
               gte: fechaDesdeAnterior,
               lte: fechaHastaAnterior,

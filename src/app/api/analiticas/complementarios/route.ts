@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
+import { parseFechaDesde, parseFechaHasta } from "@/lib/utils/rangoFechas";
 import { handleError } from "@/lib/errors/handler";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { PERMISSIONS, GET_PERMISSIONS } from "@/lib/constants/comprobantes";
@@ -23,10 +24,10 @@ export async function GET(req: NextRequest) {
     const tipo = searchParams.get("tipo") || "todos";
 
     const fechaDesde = searchParams.get("fechaDesde")
-      ? new Date(searchParams.get("fechaDesde")!)
+      ? parseFechaDesde(searchParams.get("fechaDesde")!)
       : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const fechaHasta = searchParams.get("fechaHasta")
-      ? new Date(searchParams.get("fechaHasta")!)
+      ? parseFechaHasta(searchParams.get("fechaHasta")!)
       : new Date();
 
     const tenantIdBigInt = BigInt(tenantId);

@@ -19,9 +19,9 @@ interface ProductSearchProps {
     origenPrecio?: OrigenPrecio,
     ingresadoPorBalanza?: boolean,
   ) => void;
-  /** Llamado cuando la bÃºsqueda es ambigua o no hay match exacto.
-   *  Recibe los resultados y el tÃ©rmino buscado para que el padre
-   *  los muestre en el panel de bÃºsqueda y active la pestaÃ±a correspondiente. */
+  /** Llamado cuando la búsqueda es ambigua o no hay match exacto.
+   *  Recibe los resultados y el término buscado para que el padre
+   *  los muestre en el panel de búsqueda y active la pestaña correspondiente. */
   onAmbiguousSearch?: (results: Producto[], query: string) => void;
 }
 
@@ -39,7 +39,7 @@ export default function ProductSearch({
   const isSearchingRef = useRef(false);
   const queryClient = useQueryClient();
 
-  // ConfiguraciÃ³n para bÃ¡scula
+  // Configuración para báscula
   const { configuracion } = useConfiguracion({ enableConfiguracion: true });
 
   const setSearchingState = (value: boolean) => {
@@ -50,14 +50,14 @@ export default function ProductSearch({
   const processSearchTerm = async (rawTerm: string) => {
     const term = rawTerm.trim();
     if (!term) {
-      // BÃºsqueda vacÃ­a â†’ mostrar panel sin resultados
+      // Búsqueda vacía → mostrar panel sin resultados
       onAmbiguousSearch?.([], "");
       return;
     }
 
     if (isSearchingRef.current) return;
 
-    // â”€â”€ Parsear sintaxis cÃ³digo*precio â”€â”€
+    // ── Parsear sintaxis código*precio ──
     const altPriceMatch = term.match(/^(\d+)\*(\d+\.?\d*)$/);
     if (altPriceMatch) {
       const codigo = altPriceMatch[1];
@@ -65,7 +65,7 @@ export default function ProductSearch({
 
       if (precioAlternativo <= 0) {
         addToast({
-          title: "Precio invÃ¡lido",
+          title: "Precio inválido",
           description: "El precio alternativo debe ser mayor a 0.",
           color: "warning",
         });
@@ -94,7 +94,7 @@ export default function ProductSearch({
         } else {
           addToast({
             title: "Producto no encontrado",
-            description: `No se encontrÃ³ un producto con cÃ³digo ${codigo}.`,
+            description: `No se encontró un producto con código ${codigo}.`,
             color: "warning",
           });
         }
@@ -109,7 +109,7 @@ export default function ProductSearch({
     setSearchingState(true);
 
     try {
-      // 1. Validar si es cÃ³digo de bÃ¡scula pero estÃ¡ desactivada
+      // 1. Validar si es código de báscula pero está desactivada
       if (
         configuracion?.codigoBascula &&
         term.length === 13 &&
@@ -117,15 +117,15 @@ export default function ProductSearch({
         !configuracion.activarBascula
       ) {
         addToast({
-          title: "BÃ¡scula desactivada",
+          title: "Báscula desactivada",
           description:
-            "Se detectÃ³ un cÃ³digo de bÃ¡scula, pero la funciÃ³n estÃ¡ desactivada en la configuraciÃ³n.",
+            "Se detectó un código de báscula, pero la función está desactivada en la configuración.",
           color: "warning",
         });
         return;
       }
 
-      // 2. Intentar parsear como cÃ³digo de balanza
+      // 2. Intentar parsear como código de balanza
       let scaleResult = null;
       if (
         configuracion?.activarBascula &&
@@ -142,8 +142,8 @@ export default function ProductSearch({
 
         if (!scaleResult) {
           addToast({
-            title: "Error al leer cÃ³digo",
-            description: "No se pudo leer el cÃ³digo de bÃ¡scula.",
+            title: "Error al leer código",
+            description: "No se pudo leer el código de báscula.",
             color: "danger",
           });
           return;
@@ -151,7 +151,7 @@ export default function ProductSearch({
       }
 
       if (scaleResult) {
-        // Buscar producto por PLU (usando el cÃ³digo parseado)
+        // Buscar producto por PLU (usando el código parseado)
         const result = await queryClient.fetchQuery({
           queryKey: ["productos-ventas-scale", scaleResult.plu],
           queryFn: ({ signal }) =>
@@ -194,7 +194,7 @@ export default function ProductSearch({
         }
       }
 
-      // 3. BÃºsqueda normal si no es bÃ¡scula o no se encontrÃ³
+      // 3. Búsqueda normal si no es báscula o no se encontró
       const isNumeric = /^\d+$/.test(term);
 
       if (isNumeric) {
@@ -219,11 +219,11 @@ export default function ProductSearch({
           if (exactMatch) {
             handleSelectProduct(exactMatch);
           } else {
-            // MÃºltiples sin cÃ³digo exacto â†’ panel de bÃºsqueda
+            // Múltiples sin código exacto → panel de búsqueda
             onAmbiguousSearch?.(result.data, term);
           }
         } else {
-          // Sin coincidencias â†’ buscar con mÃ¡s resultados y mostrar en panel
+          // Sin coincidencias → buscar con más resultados y mostrar en panel
           const broadResult = await queryClient.fetchQuery({
             queryKey: ["productos-ventas-ambiguous", term],
             queryFn: ({ signal }) =>
@@ -238,7 +238,7 @@ export default function ProductSearch({
           onAmbiguousSearch?.(broadResult.data, term);
         }
       } else {
-        // Contiene letras â†’ buscar y mostrar en panel
+        // Contiene letras → buscar y mostrar en panel
         const result = await queryClient.fetchQuery({
           queryKey: ["productos-ventas-text", term],
           queryFn: ({ signal }) =>
@@ -267,7 +267,7 @@ export default function ProductSearch({
     }
   };
 
-  // Al cerrarse el escÃ¡ner, reafirmar foco en el input
+  // Al cerrarse el escáner, reafirmar foco en el input
   useEffect(() => {
     if (!isScannerOpen) {
       const raf = requestAnimationFrame(() => inputRef.current?.focus());
@@ -311,7 +311,7 @@ export default function ProductSearch({
           inputWrapper:
             "h-10 min-h-[40px] font-normal text-default-500 bg-white outline-none hover:border-[#0066ff] focus-within:border-[#0066ff] data-[hover=true]:bg-white rounded-lg border border-[#CBD5E1] shadow-none transition-colors focus-within:ring-2 focus-within:ring-[#0066ff]/15",
         }}
-        placeholder="CÃ³digo, nombre o cÃ³digo*precio (ej: 2*350)"
+        placeholder="Código, nombre o código*precio (ej: 2*350)"
         size="sm"
         autoFocus
         value={inputValue}
@@ -345,7 +345,7 @@ export default function ProductSearch({
             size="sm"
             isDisabled={isSearching}
             onPress={() => setIsScannerOpen(true)}
-            title="Escanear con cÃ¡mara"
+            title="Escanear con cámara"
           >
             <ScanBarcode
               className="text-slate-400 hover:text-[#0050cb] transition-colors"

@@ -709,7 +709,7 @@ export default function CajaActual({
   );
 
   const formatMoney = (val: number) =>
-    val.toLocaleString("es-AR", {
+    Number(val).toLocaleString("es-AR", {
       style: "currency",
       currency: "ARS",
     });

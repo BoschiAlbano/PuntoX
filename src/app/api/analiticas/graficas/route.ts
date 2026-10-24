@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
+import { parseFechaDesde, parseFechaHasta } from "@/lib/utils/rangoFechas";
 import { handleError } from "@/lib/errors/handler";
 import { TIPO_COMPROBANTE_VENTA, TIPO_PAGO, GET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { PERMISSIONS } from "@/lib/constants/comprobantes";
+
+// Solo comprobantes de venta: los renglones de compras, notas de crédito y cobros de cuenta corriente
+// no son ventas y distorsionan margen, unidades vendidas y rankings.
+const TIPOS_VENTA_ANALITICA = [
+  TIPO_COMPROBANTE_VENTA.FACTURA_A,
+  TIPO_COMPROBANTE_VENTA.FACTURA_B,
+  TIPO_COMPROBANTE_VENTA.FACTURA_C,
+  TIPO_COMPROBANTE_VENTA.PRESUPUESTO,
+  TIPO_COMPROBANTE_VENTA.REMITO,
+];
 
 /**
  * GET /api/analiticas/graficas
@@ -25,10 +36,10 @@ export async function GET(req: NextRequest) {
 
     const tipo = searchParams.get("tipo") || "ingresos";
     const fechaDesde = searchParams.get("fechaDesde")
-      ? new Date(searchParams.get("fechaDesde")!)
+      ? parseFechaDesde(searchParams.get("fechaDesde")!)
       : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const fechaHasta = searchParams.get("fechaHasta")
-      ? new Date(searchParams.get("fechaHasta")!)
+      ? parseFechaHasta(searchParams.get("fechaHasta")!)
       : new Date();
     const agrupacion = searchParams.get("agrupacion") || "dia";
 
@@ -173,6 +184,7 @@ export async function GET(req: NextRequest) {
             TenantId: tenantIdBigInt,
             EstaEliminado: false,
             Comprobante: {
+              TipoComprobante: { in: TIPOS_VENTA_ANALITICA },
               EstaEliminado: false,
               Fecha: {
                 gte: fechaDesde,
@@ -251,6 +263,7 @@ export async function GET(req: NextRequest) {
             TenantId: tenantIdBigInt,
             EstaEliminado: false,
             Comprobante: {
+              TipoComprobante: { in: TIPOS_VENTA_ANALITICA },
               EstaEliminado: false,
               Fecha: {
                 gte: fechaDesde,
