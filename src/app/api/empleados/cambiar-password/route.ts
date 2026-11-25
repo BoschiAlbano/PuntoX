@@ -5,7 +5,7 @@ import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
-import { PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
+import { SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 
 const cambiarPasswordSchema = z.object({
   usuarioId: z.union([z.number(), z.string()]),
@@ -19,6 +19,7 @@ export async function PUT(req: NextRequest) {
       usuarioId: currentUserId,
       permissions,
       isSuperAdmin,
+      isAdministrador,
     } = await getAuthContext({
       req,
       permission: SET_PERMISSIONS.EMPLEADOS,
@@ -41,10 +42,14 @@ export async function PUT(req: NextRequest) {
     const currentUserIdBig = BigInt(currentUserId);
 
     // Verificar permisos
-    // Permitir si es el mismo usuario O si tiene permiso de admin
+    // Permitir si es el mismo usuario, o si puede escribir sobre empleados.
+    // El Administrador tiene acceso completo por su Tipo y su perfil NO lleva
+    // permisos explícitos (ver register-tenant.ts), por eso se chequea aparte.
     const isSelf = currentUserIdBig === targetUserIdBig;
     const canChangeOthers =
-      isSuperAdmin || permissions.includes(PERMISSIONS.EMPLEADOS);
+      isSuperAdmin ||
+      isAdministrador ||
+      permissions.includes(SET_PERMISSIONS.EMPLEADOS);
 
     const hasPermission = isSelf || canChangeOthers;
 

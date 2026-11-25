@@ -24,14 +24,6 @@ vi.mock("@/lib/supabase/serviceClient", () => ({
 vi.mock("@/lib/auditoria/registrarAuditoria", () => ({
   registrarAuditoria: vi.fn().mockResolvedValue(undefined),
 }));
-vi.mock("@/lib/errors/handler", () => ({
-  handleError: vi.fn((error: unknown) => {
-    const msg = error instanceof PermisoError ? error.message : "Error interno";
-    const status = error instanceof PermisoError ? error.status : 500;
-    return new Response(JSON.stringify({ error: msg }), { status });
-  }),
-}));
-
 describe("PUT /api/empleados/cambiar-password", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -63,7 +55,7 @@ describe("PUT /api/empleados/cambiar-password", () => {
       user: {} as any,
       sucursalId: 0,
       isSuperAdmin: false,
-      permissions: ["empleados"],
+      permissions: ["empleados:set"],
     });
     const req = new NextRequest("http://localhost:3000/api/empleados/cambiar-password", {
       method: "PUT",
@@ -82,7 +74,7 @@ describe("PUT /api/empleados/cambiar-password", () => {
       user: {} as any,
       sucursalId: 0,
       isSuperAdmin: false,
-      permissions: ["empleados"],
+      permissions: ["empleados:set"],
     });
     const req = new NextRequest("http://localhost:3000/api/empleados/cambiar-password", {
       method: "PUT",
@@ -101,7 +93,7 @@ describe("PUT /api/empleados/cambiar-password", () => {
       user: {} as any,
       sucursalId: 0,
       isSuperAdmin: false,
-      permissions: ["empleados"],
+      permissions: ["empleados:set"],
     });
     vi.mocked(prisma.usuario.findFirst).mockResolvedValue(null);
     const req = new NextRequest("http://localhost:3000/api/empleados/cambiar-password", {
@@ -121,7 +113,7 @@ describe("PUT /api/empleados/cambiar-password", () => {
       user: {} as any,
       sucursalId: 0,
       isSuperAdmin: false,
-      permissions: ["empleados"],
+      permissions: ["empleados:set"],
     });
     vi.mocked(prisma.usuario.findFirst).mockResolvedValue({
       Id: 1n,
@@ -136,5 +128,47 @@ describe("PUT /api/empleados/cambiar-password", () => {
     const data = await res.json();
     expect(res.status).toBe(200);
     expect(data.message).toBe("Contraseña actualizada correctamente");
+  });
+
+  it("permite al Administrador cambiar la contraseña de otro usuario (perfil sin permisos explícitos)", async () => {
+    vi.mocked(getAuthContext).mockResolvedValue({
+      tenantId: 1,
+      usuarioId: 1,
+      user: {} as any,
+      sucursalId: 0,
+      isSuperAdmin: false,
+      isAdministrador: true,
+      permissions: [],
+    } as any);
+    vi.mocked(prisma.usuario.findFirst).mockResolvedValue({
+      Id: 2n,
+      AuthUserId: "auth-otro",
+      Persona_Empleado: { Id: 2, Persona: { Nombre: "Ana", Apellido: "Paz", Mail: "ana@test.com" } },
+    } as any);
+    const req = new NextRequest("http://localhost:3000/api/empleados/cambiar-password", {
+      method: "PUT",
+      body: JSON.stringify({ usuarioId: 2, nuevaPassword: "nueva1234" }),
+    });
+    const res = await PUT(req);
+    expect(res.status).toBe(200);
+  });
+
+  it("retorna 403 si un empleado sin empleados:set intenta cambiar la contraseña de otro", async () => {
+    vi.mocked(getAuthContext).mockResolvedValue({
+      tenantId: 1,
+      usuarioId: 1,
+      user: {} as any,
+      sucursalId: 0,
+      isSuperAdmin: false,
+      isAdministrador: false,
+      permissions: ["empleados:page", "empleados:get"],
+    } as any);
+    const req = new NextRequest("http://localhost:3000/api/empleados/cambiar-password", {
+      method: "PUT",
+      body: JSON.stringify({ usuarioId: 2, nuevaPassword: "nueva1234" }),
+    });
+    const res = await PUT(req);
+    expect(res.status).toBe(403);
+    expect(prisma.usuario.findFirst).not.toHaveBeenCalled();
   });
 });
