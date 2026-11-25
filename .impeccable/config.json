@@ -1,0 +1,20 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "plus jakarta sans",
+        "createdAt": "2026-11-25T22:08:53.645Z",
+        "reason": "DESIGN.md (design system del proyecto) define Plus Jakarta Sans para títulos; emails y app deben coincidir con la marca"
+      },
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-11-25T22:08:54.040Z",
+        "reason": "DESIGN.md (design system del proyecto) define Inter para texto; emails y app deben coincidir con la marca"
+      }
+    ]
+  }
+}

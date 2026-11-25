@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <title>Confirmá tu nuevo email en PuntoX</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f4f8;">
+  <span style="display:none;max-height:0;overflow:hidden;opacity:0;">Confirmá el cambio de email de tu cuenta de PuntoX.</span>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1f4f8;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+          <!-- Logo -->
+          <tr>
+            <td align="center" style="padding:0 0 20px 0;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="vertical-align:middle;padding-right:10px;">
+                    <img src="https://www.puntox.com.ar/icon-192.png" width="36" height="36" alt="" style="display:block;border:0;">
+                  </td>
+                  <td style="vertical-align:middle;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;color:#181c1f;letter-spacing:-0.3px;">
+                    PuntoX
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Tarjeta -->
+          <tr>
+            <td style="background-color:#ffffff;border:1px solid #e0e3e7;border-radius:16px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="height:4px;line-height:4px;font-size:0;background-color:#FF6100;border-radius:16px 16px 0 0;">&nbsp;</td>
+                </tr>
+                <tr>
+                  <td style="padding:36px 40px 32px 40px;font-family:Inter,'Segoe UI',Helvetica,Arial,sans-serif;">
+                    <h1 style="margin:0 0 12px 0;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;font-size:24px;line-height:32px;font-weight:700;color:#181c1f;">
+                      Confirmá tu nuevo email
+                    </h1>
+                    <p style="margin:0 0 24px 0;font-size:15px;line-height:24px;color:#424656;">
+                      Pediste cambiar el email de tu cuenta de PuntoX de <strong style="color:#181c1f;">{{ .Email }}</strong> a <strong style="color:#181c1f;">{{ .NewEmail }}</strong>. Confirmalo para completar el cambio.
+                    </p>
+                    <!-- Botón -->
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">
+                      <tr>
+                        <td align="center" bgcolor="#0050cb" style="border-radius:10px;">
+                          <a href="{{ .ConfirmationURL }}" target="_blank" style="display:inline-block;padding:14px 28px;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;">
+                            Confirmar cambio de email
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                    <p style="margin:0 0 8px 0;font-size:13px;line-height:20px;color:#5f6371;">
+                      Por seguridad, el link vence pronto y sirve una sola vez.
+                    </p>
+                    <p style="margin:0;font-size:13px;line-height:20px;color:#5f6371;">
+                      Si no pediste este cambio, ignorá este email y revisá la seguridad de tu cuenta: tu email no se va a modificar.
+                    </p>
+                  </td>
+                </tr>
+                <!-- Link alternativo -->
+                <tr>
+                  <td style="padding:20px 40px 28px 40px;border-top:1px solid #ebeef2;font-family:Inter,'Segoe UI',Helvetica,Arial,sans-serif;">
+                    <p style="margin:0 0 6px 0;font-size:12px;line-height:18px;color:#5f6371;">
+                      ¿El botón no funciona? Copiá y pegá este link en tu navegador:
+                    </p>
+                    <p style="margin:0;font-size:12px;line-height:18px;word-break:break-all;">
+                      <a href="{{ .ConfirmationURL }}" target="_blank" style="color:#0050cb;text-decoration:underline;">{{ .ConfirmationURL }}</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Pie -->
+          <tr>
+            <td align="center" style="padding:24px 16px 0 16px;font-family:Inter,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#5f6371;">
+              Este es un email automático de PuntoX, por favor no lo respondas.<br>
+              <a href="{{ .SiteURL }}" target="_blank" style="color:#5f6371;text-decoration:underline;">www.puntox.com.ar</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
