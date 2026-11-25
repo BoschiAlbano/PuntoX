@@ -20,18 +20,6 @@ vi.mock("@heroui/react", async () => {
   };
 });
 
-vi.mock("recharts", () => ({
-  ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
-  BarChart: ({ children }: any) => <div data-testid="bar-chart">{children}</div>,
-  Bar: () => null,
-  Cell: () => null,
-  XAxis: () => null,
-  YAxis: () => null,
-  Tooltip: () => null,
-  CartesianGrid: () => null,
-  Legend: () => null,
-}));
-
 describe("GraficaProductos", () => {
   it("renderiza sin crash con datos vacíos", () => {
     render(<GraficaProductos datos={[]} />);
@@ -44,6 +32,10 @@ describe("GraficaProductos", () => {
       { id: 2, nombre: "Producto B", cantidad: 80, monto: 4000, margen: 800, margenPorcentaje: 20 },
     ];
     render(<GraficaProductos datos={datos} />);
-    expect(screen.getByTestId("bar-chart")).toBeDefined();
+    // Ranking con barras propias (ya no usa recharts), ordenado como llegan los datos
+    expect(screen.getByText("Ranking de Productos por Ventas")).toBeDefined();
+    const nombres = screen.getAllByText(/^Producto [AB]$/).map((el) => el.textContent);
+    expect(nombres).toEqual(["Producto A", "Producto B"]);
+    expect(screen.getByText("100 un.")).toBeDefined();
   });
 });

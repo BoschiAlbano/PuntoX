@@ -3,7 +3,8 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithQueryClient } from "@/test/render";
 import CajaActual from "./CajaActual";
 
 vi.mock("@/hooks/useCaja", () => ({
@@ -47,7 +48,7 @@ describe("CajaActual", () => {
   });
 
   it("renderiza sin crash y muestra opción de abrir caja cuando no hay caja abierta", () => {
-    render(<CajaActual />);
+    renderWithQueryClient(<CajaActual />);
     expect(screen.getByText(/Abrir Caja/i)).toBeInTheDocument();
   });
 });

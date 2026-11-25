@@ -5,6 +5,8 @@
 import { describe, it, expect } from "vitest";
 import { createProductoSchema } from "@/lib/validations/producto.schema";
 
+// Precios: PrecioCosto en el artículo + un precio final por lista (PreciosLista).
+// Reemplaza al antiguo objeto único "Precio" { PrecioCosto, PrecioPublico, ... }.
 const productoValido = {
   MarcaId: 1,
   RubroId: 1,
@@ -13,13 +15,8 @@ const productoValido = {
   Codigo: 1,
   CodigoBarra: "789000000001",
   Descripcion: "Producto test",
-  Precio: {
-    PrecioCosto: 10,
-    PorcentajeGanancia: 21,
-    PrecioPublico: 12.1,
-    PorcentajeGanancia2: 0,
-    PrecioPublico2: 0,
-  },
+  PrecioCosto: 10,
+  PreciosLista: [{ ListaPrecioId: 1, PorcentajeGanancia: 21, PrecioFinal: 12.1 }],
 };
 
 describe("Producto - createProductoSchema", () => {
@@ -28,13 +25,18 @@ describe("Producto - createProductoSchema", () => {
     expect(r.success).toBe(true);
   });
 
-  it("debe rechazar PrecioPublico negativo", () => {
+  it("debe rechazar PrecioFinal negativo en una lista de precios", () => {
     const r = createProductoSchema.safeParse({
       ...productoValido,
-      Precio: {
-        ...productoValido.Precio,
-        PrecioPublico: -1,
-      },
+      PreciosLista: [{ ...productoValido.PreciosLista[0], PrecioFinal: -1 }],
+    });
+    expect(r.success).toBe(false);
+  });
+
+  it("debe rechazar PorcentajeGanancia negativo", () => {
+    const r = createProductoSchema.safeParse({
+      ...productoValido,
+      PreciosLista: [{ ...productoValido.PreciosLista[0], PorcentajeGanancia: -5 }],
     });
     expect(r.success).toBe(false);
   });
@@ -42,10 +44,7 @@ describe("Producto - createProductoSchema", () => {
   it("debe rechazar PrecioCosto negativo", () => {
     const r = createProductoSchema.safeParse({
       ...productoValido,
-      Precio: {
-        ...productoValido.Precio,
-        PrecioCosto: -1,
-      },
+      PrecioCosto: -1,
     });
     expect(r.success).toBe(false);
   });

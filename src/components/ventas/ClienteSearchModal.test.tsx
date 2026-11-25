@@ -3,7 +3,7 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ClienteSearchModal from "./ClienteSearchModal";
 
@@ -14,7 +14,10 @@ vi.mock("@heroui/react", async () => {
     addToast: vi.fn(),
     Modal: ({ children, isOpen }: any) =>
       isOpen ? <div data-testid="modal">{children}</div> : null,
-    ModalContent: ({ children }: any) => <div>{children}</div>,
+    // ModalContent recibe una render-function (onClose) => ...
+    ModalContent: ({ children }: any) => (
+      <div>{typeof children === "function" ? children(() => {}) : children}</div>
+    ),
     ModalHeader: ({ children }: any) => <div>{children}</div>,
     ModalBody: ({ children }: any) => <div>{children}</div>,
     ModalFooter: ({ children }: any) => <div>{children}</div>,
@@ -45,14 +48,9 @@ vi.mock("../loading/loading", () => ({
   LoadingComponent: ({ message }: any) => <div>{message}</div>,
 }));
 
-vi.mock("../clientes/ClienteForm", () => ({
-  default: ({ isOpen }: any) =>
-    isOpen ? <div data-testid="cliente-form">ClienteForm</div> : null,
-}));
-
-vi.mock("lucide-react", () => ({
-  Search: () => <div data-testid="search-icon" />,
-  Plus: () => <div data-testid="plus-icon" />,
+const push = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push, replace: vi.fn(), prefetch: vi.fn() }),
 }));
 
 function renderWithProviders(ui: React.ReactElement) {
@@ -64,58 +62,46 @@ function renderWithProviders(ui: React.ReactElement) {
   );
 }
 
+const renderModal = (handleSelect = vi.fn(), onOpenChange = vi.fn()) =>
+  renderWithProviders(
+    <ClienteSearchModal
+      isOpen={true}
+      onOpenChange={onOpenChange}
+      handleSelect={handleSelect}
+    />
+  );
+
 describe("ClienteSearchModal", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("renderiza modal con búsqueda de clientes", () => {
-    renderWithProviders(
-      <ClienteSearchModal
-        isOpen={true}
-        onOpenChange={vi.fn()}
-        handleSelect={vi.fn()}
-      />
-    );
-
+  it("renderiza el título y el buscador de clientes", () => {
+    renderModal();
     expect(screen.getByText("Buscar Cliente")).toBeInTheDocument();
-  });
-
-  it("muestra input de búsqueda con placeholder", () => {
-    renderWithProviders(
-      <ClienteSearchModal
-        isOpen={true}
-        onOpenChange={vi.fn()}
-        handleSelect={vi.fn()}
-      />
-    );
-
     expect(
       screen.getByPlaceholderText("Buscar por Nombre, DNI, Email...")
     ).toBeInTheDocument();
   });
 
-  it("muestra botón Agregar Cliente", () => {
+  it("no renderiza nada cuando isOpen es false", () => {
     renderWithProviders(
-      <ClienteSearchModal
-        isOpen={true}
-        onOpenChange={vi.fn()}
-        handleSelect={vi.fn()}
-      />
+      <ClienteSearchModal isOpen={false} onOpenChange={vi.fn()} handleSelect={vi.fn()} />
     );
-
-    expect(screen.getByText("Agregar Cliente")).toBeInTheDocument();
+    expect(screen.queryByTestId("modal")).toBeNull();
   });
 
-  it("muestra botón Usar Consumidor Final", () => {
-    renderWithProviders(
-      <ClienteSearchModal
-        isOpen={true}
-        onOpenChange={vi.fn()}
-        handleSelect={vi.fn()}
-      />
-    );
+  it("\"Consumidor Final\" selecciona al cliente genérico (id 0)", () => {
+    const handleSelect = vi.fn();
+    renderModal(handleSelect);
+    fireEvent.click(screen.getByRole("button", { name: "Consumidor Final" }));
+    expect(handleSelect).toHaveBeenCalledTimes(1);
+    expect(handleSelect.mock.calls[0][0]).toMatchObject({ id: 0, activarCtaCte: false });
+  });
 
-    expect(screen.getByText("Usar Consumidor Final")).toBeInTheDocument();
+  it("\"Nuevo Cliente\" navega al alta de clientes", () => {
+    renderModal();
+    fireEvent.click(screen.getByRole("button", { name: /Nuevo Cliente/ }));
+    expect(push).toHaveBeenCalledWith("/clientes/new");
   });
 });

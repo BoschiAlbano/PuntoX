@@ -1,5 +1,6 @@
 /**
- * Tests para los hooks useAnaliticas: useKPIs, useGraficas, useAlertas, useComplementarios.
+ * Tests para los hooks useAnaliticas: useKPIs, useGraficas, useComplementarios.
+ * (useAlertas se eliminó junto con PanelAlertas en a1f372a.)
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -9,7 +10,6 @@ import type { ReactNode } from "react";
 import {
   useKPIs,
   useGraficas,
-  useAlertas,
   useComplementarios,
 } from "./useAnaliticas";
 
@@ -111,35 +111,6 @@ describe("useGraficas", () => {
     expect(result.current.data).toBeDefined();
     expect(result.current.data?.tipo).toBe("ingresos");
     expect(Array.isArray(result.current.data?.datos)).toBe(true);
-  });
-});
-
-describe("useAlertas", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("devuelve alertas cuando fetch resuelve", async () => {
-    const mockAlertas = {
-      alertas: { stock: [], cobranzas: [] },
-      resumen: { stock: 0, stockUrgentes: 0, cobranzas: 0 },
-    };
-
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockAlertas),
-      })
-    );
-
-    const { result } = renderHook(() => useAlertas({ enabled: true }), {
-      wrapper: createWrapper(),
-    });
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    expect(result.current.data).toBeDefined();
-    expect(result.current.data?.alertas).toBeDefined();
-    expect(result.current.data?.resumen).toBeDefined();
   });
 });
 

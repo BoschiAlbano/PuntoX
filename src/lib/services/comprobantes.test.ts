@@ -108,13 +108,24 @@ describe("createComprobanteBaseSchema", () => {
     expect(r.success).toBe(false);
   });
 
-  it("rechaza formasPago vacías", () => {
+  // Cobro diferido (a041197): una factura puede emitirse sin cobrar y cobrarse
+  // luego desde Caja › Cobros. Si NO es diferida, la ruta api/comprobantes
+  // exige que las formas de pago sumen el total (rechaza una lista vacía).
+  it("acepta formasPago vacías (cobro diferido)", () => {
     const r = createComprobanteBaseSchema.safeParse({
       tipoComprobante: 1,
       detalles: [baseDetalle],
       formasPago: [],
     });
-    expect(r.success).toBe(false);
+    expect(r.success).toBe(true);
+  });
+
+  it("usa [] como formasPago por defecto", () => {
+    const r = createComprobanteBaseSchema.safeParse({
+      tipoComprobante: 1,
+      detalles: [baseDetalle],
+    });
+    expect(r.success && r.data.formasPago).toEqual([]);
   });
 });
 

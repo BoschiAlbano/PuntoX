@@ -26,10 +26,13 @@ vi.mock("@/hooks/useGenericApi", () => ({
     data: [],
     paginationMeta: { page: 1, limit: 10, total: 0, totalPages: 0 },
     isLoading: false,
+    isFetching: false,
     isError: false,
-    saveMutation: { mutateAsync: vi.fn() },
-    deleteMutation: { mutateAsync: vi.fn() },
+    saveMutation: { mutateAsync: vi.fn(), isPending: false },
+    deleteMutation: { mutateAsync: vi.fn(), isPending: false },
+    hardDeleteMutation: { mutateAsync: vi.fn(), isPending: false },
     refetch: vi.fn(),
+    prefetchWithParams: vi.fn(),
   })),
 }));
 
@@ -61,6 +64,6 @@ describe("ProductoCRUD", () => {
 
   it("renderiza sin crash", () => {
     renderWithProviders(<ProductoCRUD />);
-    expect(screen.getByPlaceholderText(/buscar productos/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/buscar por nombre, código o barras/i)).toBeInTheDocument();
   });
 });

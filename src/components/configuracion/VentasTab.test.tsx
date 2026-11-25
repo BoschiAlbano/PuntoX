@@ -1,10 +1,16 @@
 /**
- * Tests mínimos para VentasTab: render sin crash.
+ * Tests para VentasTab: skeleton mientras carga y las 4 secciones al terminar.
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { VentasTab } from "./VentasTab";
+import { useConfiguracion } from "@/hooks/useConfiguracion";
+
+vi.mock("@/hooks/useConfiguracion", () => ({ useConfiguracion: vi.fn() }));
+vi.mock("./ConfiguracionSkeleton", () => ({
+  VentasTabSkeleton: () => <div data-testid="ventas-skeleton" />,
+}));
 
 vi.mock("@heroui/react", async () => {
   const actual = await vi.importActual("@heroui/react");
@@ -21,9 +27,6 @@ vi.mock("@heroui/react", async () => {
 });
 
 // Mock all sub-components used by VentasTab
-vi.mock("./ventas/PreferenciasBasicas", () => ({
-  PreferenciasBasicas: () => <div data-testid="preferencias-basicas">PreferenciasBasicas</div>,
-}));
 vi.mock("./ventas/ConfiguracionStock", () => ({
   ConfiguracionStock: () => <div data-testid="configuracion-stock">ConfiguracionStock</div>,
 }));
@@ -38,8 +41,23 @@ vi.mock("./ventas/ConfiguracionBascula", () => ({
 }));
 
 describe("VentasTab", () => {
-  it("renderiza sin crash", () => {
+  it("muestra el skeleton mientras carga la configuración", () => {
+    vi.mocked(useConfiguracion).mockReturnValue({ isLoadingConfiguracion: true } as any);
     render(<VentasTab />);
-    expect(screen.getByText("Preferencias de venta")).toBeDefined();
+    expect(screen.getByTestId("ventas-skeleton")).toBeInTheDocument();
+    expect(screen.queryByTestId("configuracion-stock")).toBeNull();
+  });
+
+  it("renderiza las 4 secciones de configuración cuando terminó de cargar", () => {
+    vi.mocked(useConfiguracion).mockReturnValue({ isLoadingConfiguracion: false } as any);
+    render(<VentasTab />);
+    for (const id of [
+      "configuracion-stock",
+      "configuracion-caja",
+      "configuracion-productos",
+      "configuracion-bascula",
+    ]) {
+      expect(screen.getByTestId(id)).toBeInTheDocument();
+    }
   });
 });

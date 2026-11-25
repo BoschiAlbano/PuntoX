@@ -16,7 +16,7 @@
 | Eliminar fallbacks `tenantId \|\| 1` | ✅ No queda ninguno en `src/` |
 | Transacciones en productos (POST/PATCH) | ✅ |
 | Migrar endpoints a `handleError` | ✅ 86 de 94 rutas (las 8 restantes son auth internas, cron y `api/test`) |
-| Tests unitarios básicos | ✅ 148 archivos de test en `src/` |
+| Tests unitarios | ✅ 596/596 en verde (146 archivos en `src/`) |
 | Enforcement de Planes SaaS (API + UI) | ✅ Implementado, falta prueba manual |
 | Búsqueda en pestañas POS (Carrito / Buscar) | ✅ Commit `4cdefce` |
 | Notas de Crédito A/B/C (ARCA) | ✅ |
@@ -39,7 +39,7 @@
 ## 🟡 Prioridad 3 — Testing
 
 - [x] **Tests de rutas de API** — 266/266 en verde (25/11/2026). Destapó un bug real ya corregido: un Administrador no podía cambiar la contraseña de otro empleado (`api/empleados/cambiar-password`).
-- [ ] **Reparar 42 tests de componentes y `lib/` desactualizados** (24 archivos; ver [ESTADO_ACTUAL.md §3](ESTADO_ACTUAL.md)). Más afectados: ventas, empleados, productos, clientes, caja, analíticas.
+- [x] **Tests de componentes y `lib/`** — suite completa 596/596 en verde (25/11/2026).
 - [ ] Tipo `Sucursal` en `src/hooks/useSucursales.ts` declara `id` pero la API devuelve `Id` (los consumidores usan `s.Id || s.id`, sin impacto en runtime).
 - [ ] Sin tests para `api/configuracion/seguridad/sesiones/cerrar-otras` (reemplazó al DELETE por sesión).
 

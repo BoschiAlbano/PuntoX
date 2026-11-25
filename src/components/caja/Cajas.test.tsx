@@ -31,6 +31,9 @@ vi.mock("@/components/shared/GenericTable", () => ({
   default: (props: any) => (
     <div data-testid="generic-table">
       <input placeholder={props.searchPlaceholder || "Buscar..."} />
+      <p>{props.emptyText}</p>
+      {/* Los filtros de Cajas se inyectan en la barra de la tabla */}
+      {props.extraRightContent}
     </div>
   ),
   Column: {},
@@ -52,23 +55,20 @@ function renderWithProviders(ui: React.ReactElement) {
 describe("Cajas", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("renderiza título Cajas", () => {
-    renderWithProviders(<Cajas />);
-    expect(screen.getByText("Cajas")).toBeInTheDocument();
-  });
-
-  it("muestra selector de estado", () => {
-    renderWithProviders(<Cajas />);
-    const label = screen.getByText("Estado");
-    const select = label.parentElement?.querySelector("select");
-    expect(select).toBeInTheDocument();
-    expect(screen.getByText("Todas")).toBeInTheDocument();
-    expect(screen.getByText("Abiertas")).toBeInTheDocument();
-    expect(screen.getByText("Cerradas")).toBeInTheDocument();
-  });
-
-  it("renderiza GenericTable", () => {
+  it("renderiza la tabla con búsqueda por usuario y texto vacío propio", () => {
     renderWithProviders(<Cajas />);
     expect(screen.getByPlaceholderText("Buscar por usuario...")).toBeInTheDocument();
+    expect(
+      screen.getByText("No se encontraron cajas con los filtros seleccionados"),
+    ).toBeInTheDocument();
+  });
+
+  it("muestra los filtros de estado (Todas por defecto) y rango de fechas", () => {
+    renderWithProviders(<Cajas />);
+    expect(screen.getAllByText("Todas").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("Desde")).toBeInTheDocument();
+    expect(screen.getByLabelText("Hasta")).toBeInTheDocument();
+    // "Limpiar fechas" solo aparece con alguna fecha cargada
+    expect(screen.queryByLabelText("Limpiar fechas")).toBeNull();
   });
 });

@@ -22,8 +22,8 @@ vi.mock("@heroui/react", async () => {
 
 vi.mock("recharts", () => ({
   ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
-  LineChart: ({ children }: any) => <div data-testid="line-chart">{children}</div>,
-  Line: () => null,
+  AreaChart: ({ children }: any) => <div data-testid="area-chart">{children}</div>,
+  Area: () => null,
   XAxis: () => null,
   YAxis: () => null,
   Tooltip: () => null,
@@ -43,6 +43,6 @@ describe("GraficaIngresos", () => {
       { fecha: "2025-01-02", ingresos: 2000, descuentos: 100, facturas: 8, todos: 2100 },
     ];
     render(<GraficaIngresos datos={datos} />);
-    expect(screen.getByTestId("line-chart")).toBeDefined();
+    expect(screen.getByTestId("area-chart")).toBeDefined();
   });
 });

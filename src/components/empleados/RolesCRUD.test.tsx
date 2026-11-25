@@ -3,7 +3,8 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithQueryClient } from "@/test/render";
 import RolesCRUD from "./RolesCRUD";
 
 vi.mock("@heroui/react", async () => {
@@ -53,7 +54,8 @@ describe("RolesCRUD", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("renderiza sin crash y muestra botón de crear rol", () => {
-    render(<RolesCRUD />);
-    expect(screen.getByText(/nuevo rol/i)).toBeInTheDocument();
+    renderWithQueryClient(<RolesCRUD />);
+    // GenericCrud muestra el botón genérico "Nuevo"; navega a /empleados/roles/nuevo
+    expect(screen.getByLabelText("Nuevo")).toBeInTheDocument();
   });
 });

@@ -5,20 +5,20 @@ import { describe, it, expect } from "vitest";
 import {
   getPermisoForRoute,
   tienePermisoParaRuta,
-  PERMISO_NAME_TO_KEY,
   PERMISO_KEY_TO_NAME,
+  ROUTE_TO_PERMISO_KEY,
 } from "./routePermissions";
 
 describe("getPermisoForRoute", () => {
   it("retorna el permiso para rutas exactas", () => {
-    expect(getPermisoForRoute("/ventas")).toBe("ventas");
-    expect(getPermisoForRoute("/caja")).toBe("caja");
-    expect(getPermisoForRoute("/productos")).toBe("productos");
-    expect(getPermisoForRoute("/clientes")).toBe("clientes");
+    expect(getPermisoForRoute("/ventas")).toBe("ventas:page");
+    expect(getPermisoForRoute("/caja")).toBe("caja:page");
+    expect(getPermisoForRoute("/productos")).toBe("productos:page");
+    expect(getPermisoForRoute("/clientes")).toBe("clientes:page");
   });
 
   it("retorna permiso para rutas anidadas por prefijo", () => {
-    expect(getPermisoForRoute("/configuracion/seguridad")).toBe("configuracion");
+    expect(getPermisoForRoute("/configuracion/seguridad")).toBe("configuracion:page");
   });
 
   it("retorna null para rutas sin permiso mapeado", () => {
@@ -26,18 +26,18 @@ describe("getPermisoForRoute", () => {
   });
 
   it("normaliza la ruta (quita query y trailing slash)", () => {
-    expect(getPermisoForRoute("/ventas?foo=1")).toBe("ventas");
-    expect(getPermisoForRoute("/ventas/")).toBe("ventas");
+    expect(getPermisoForRoute("/ventas?foo=1")).toBe("ventas:page");
+    expect(getPermisoForRoute("/ventas/")).toBe("ventas:page");
   });
 });
 
 describe("tienePermisoParaRuta", () => {
   it("retorna true cuando el usuario tiene el permiso", () => {
-    expect(tienePermisoParaRuta(["ventas", "productos"], "/ventas")).toBe(true);
+    expect(tienePermisoParaRuta(["ventas:page", "productos:page"], "/ventas")).toBe(true);
   });
 
   it("retorna false cuando el usuario no tiene el permiso", () => {
-    expect(tienePermisoParaRuta(["productos"], "/ventas")).toBe(false);
+    expect(tienePermisoParaRuta(["productos:page"], "/ventas")).toBe(false);
   });
 
   it("retorna true para rutas sin permiso requerido", () => {
@@ -45,9 +45,11 @@ describe("tienePermisoParaRuta", () => {
   });
 });
 
-describe("PERMISO_NAME_TO_KEY y PERMISO_KEY_TO_NAME", () => {
-  it("mapean correctamente entre nombres y claves", () => {
-    expect(PERMISO_NAME_TO_KEY["Ventas"]).toBe("ventas");
-    expect(PERMISO_KEY_TO_NAME["ventas"]).toBe("Ventas");
+describe("PERMISO_KEY_TO_NAME", () => {
+  it("tiene un nombre legible para cada permiso de página de ROUTE_TO_PERMISO_KEY", () => {
+    expect(PERMISO_KEY_TO_NAME["ventas:page"]).toBe("Ventas");
+    for (const key of Object.values(ROUTE_TO_PERMISO_KEY)) {
+      expect(PERMISO_KEY_TO_NAME[key]).toBeTruthy();
+    }
   });
 });

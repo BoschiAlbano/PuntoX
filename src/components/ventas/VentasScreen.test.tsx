@@ -2,7 +2,7 @@
  * Tests para VentasScreen
  * @vitest-environment jsdom
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import VentasScreen from "./VentasScreen";
@@ -68,6 +68,21 @@ function renderWithProviders(ui: React.ReactElement) {
 describe("VentasScreen", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Listas de precios desde la API; el resto de los fetch devuelve vacío
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => ({
+        ok: true,
+        json: async () =>
+          url === "/api/listas-precios"
+            ? { data: [{ Id: 1, Nombre: "General", PorDefecto: true }] }
+            : {},
+      })),
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("renderiza sin crash", () => {
@@ -77,11 +92,14 @@ describe("VentasScreen", () => {
 
   it("muestra el selector de comprobante", () => {
     renderWithProviders(<VentasScreen />);
-    expect(screen.getByText("Comprobante")).toBeInTheDocument();
+    // El selector no tiene etiqueta visible: se identifica por aria-label
+    expect(screen.getAllByLabelText("Comprobante").length).toBeGreaterThan(0);
   });
 
-  it("muestra el selector de lista de precios", () => {
+  it("carga las listas de precios desde la API y muestra la seleccionada", async () => {
     renderWithProviders(<VentasScreen />);
-    expect(screen.getByText("L1: General")).toBeInTheDocument();
+    expect(screen.getAllByLabelText("Lista de Precios").length).toBeGreaterThan(0);
+    expect(fetch).toHaveBeenCalledWith("/api/listas-precios");
+    expect((await screen.findAllByText("General")).length).toBeGreaterThan(0);
   });
 });

@@ -24,7 +24,7 @@
 | **Autenticación** | Supabase Auth + JWT + TOTP (2FA) | `@supabase/ssr 0.8` | 🟢 Sesiones seguras, cookies HttpOnly |
 | **Facturación Fiscal** | ARCA / AFIP WSFE SDK | `@arcasdk/core 1.3.1` | 🟢 Facturas A/B/C y Notas de Crédito A/B/C |
 | **Validaciones** | Zod | `4.1.13` | 🟢 Schemas en todos los endpoints clave |
-| **Testing** | Vitest + Playwright | `Vitest 4` / `Playwright 1.58` | 🟡 Unitarios amplios; E2E 5 de 14 fases |
+| **Testing** | Vitest + Playwright | `Vitest 4` / `Playwright 1.58` | 🟢 Unitarios 596/596; 🟡 E2E 5 de 14 fases |
 
 ---
 
@@ -54,9 +54,9 @@
 
 ### Pruebas Unitarias y de Integración (Vitest)
 - **Suite**: 146 archivos `*.test.ts(x)` dentro de `src/` (co-ubicados junto al código y en `src/test/`), 591 tests. Corre completa en ~100 s.
-- **Estado (25/11/2026)**: 🟡 **553 pasan / 42 fallan** (en 24 archivos).
-  - ✅ **Rutas de API: 266/266 en verde.** Los tests de API usan el `handleError` real (antes lo mockeaban con un stub que devolvía siempre 500 y ocultaba errores).
-  - 🟡 **Pendiente**: componentes (ventas, empleados, productos, clientes, caja, analíticas…) y algunos `lib/`. Son tests desactualizados: mocks sin exports nuevos (`lucide-react`, `recharts`, `react-query`) y falta de mock de `next/navigation`.
+- **Estado (25/11/2026)**: 🟢 **596/596 en verde** (146 archivos).
+  - Los tests de API usan el `handleError` real (antes lo mockeaban con un stub que devolvía siempre 500 y ocultaba errores).
+  - `next/navigation` está mockeado globalmente en `src/test/setup.ts`; `src/test/render.tsx` provee `renderWithQueryClient()` para componentes que usan React Query.
 - **Áreas Cubiertas**:
   - Validaciones de schemas Zod (Caja, Gastos, Comprobantes, Clientes, Productos, Proveedores).
   - Endpoints de API (sucursales, empleados, productos, auth/me, facturación, etc.).

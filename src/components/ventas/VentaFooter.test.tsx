@@ -1,9 +1,9 @@
 /**
- * Test mínimo para VentaFooter: render sin crash y texto clave.
+ * Tests para VentaFooter: totales, formato es-AR y descuento porcentual.
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import VentaFooter from "./VentaFooter";
@@ -70,13 +70,17 @@ describe("VentaFooter", () => {
     } as any);
   });
 
-  it("renderiza sin crash y muestra texto clave de total y venta", () => {
+  it("muestra los totales y el botón de pago", () => {
     renderWithProviders(<VentaFooter {...defaultProps} />);
-    expect(screen.getByText(/Subtotal:/i)).toBeInTheDocument();
-    expect(screen.getByText(/CONFIRMAR VENTA/i)).toBeInTheDocument();
+    expect(screen.getByText("Totales")).toBeInTheDocument();
+    expect(screen.getByText("Subtotal")).toBeInTheDocument();
+    expect(screen.getByText("Descuento")).toBeInTheDocument();
+    expect(screen.getByText("Total")).toBeInTheDocument();
+    // Sin items el botón principal no se puede confirmar
+    expect(screen.getByRole("button", { name: /Completar pago/i })).toBeDisabled();
   });
 
-  it("muestra subtotal, descuento y total correctos", () => {
+  it("formatea subtotal, descuento (%) y total en es-AR", () => {
     renderWithProviders(
       <VentaFooter
         {...defaultProps}
@@ -85,17 +89,30 @@ describe("VentaFooter", () => {
         total={900}
       />
     );
-    expect(screen.getByText(/1\.000,00|1000/)).toBeInTheDocument();
-    expect(screen.getByText(/\$100\.00|\$100/)).toBeInTheDocument();
-    expect(screen.getByText("$900.00")).toBeInTheDocument();
+    expect(screen.getByText("$1.000,00")).toBeInTheDocument();
+    // El descuento es un porcentaje: 10% de 1000
+    expect(screen.getByText("− $100,00")).toBeInTheDocument();
+    // El total destacado está junto a la etiqueta "Total" (el monto también
+    // aparece en el resumen de pagos)
+    expect(screen.getByText("Total").nextElementSibling).toHaveTextContent("$900,00");
   });
 
-  it("muestra sección de descuento y total", () => {
+  it("el input de descuento muestra el % y lo limita a 0..100", () => {
+    const setDescuento = vi.fn();
     renderWithProviders(
-      <VentaFooter {...defaultProps} subtotal={100} descuento={25} total={75} />
+      <VentaFooter
+        {...defaultProps}
+        subtotal={100}
+        descuento={25}
+        total={75}
+        setDescuento={setDescuento}
+      />
     );
-    expect(screen.getByText(/descuento/i)).toBeInTheDocument();
-    expect(screen.getByText(/^Total:/i)).toBeInTheDocument();
-    expect(screen.getByDisplayValue("25")).toBeInTheDocument();
+    const input = screen.getByTestId("descuento-input");
+    expect(input).toHaveValue(25);
+    fireEvent.change(input, { target: { value: "150" } });
+    expect(setDescuento).toHaveBeenLastCalledWith(100);
+    fireEvent.change(input, { target: { value: "-5" } });
+    expect(setDescuento).toHaveBeenLastCalledWith(0);
   });
 });

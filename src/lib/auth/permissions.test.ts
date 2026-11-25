@@ -11,12 +11,12 @@ import { PERMISSIONS } from "@/lib/constants/comprobantes";
 
 describe("permissions - hasPermission", () => {
   it("retorna true si el usuario tiene el permiso", () => {
-    expect(hasPermission(["ventas", "productos"], PERMISSIONS.VENTAS)).toBe(true);
-    expect(hasPermission(["empleados"], PERMISSIONS.EMPLEADOS)).toBe(true);
+    expect(hasPermission(["ventas:page", "productos:page"], PERMISSIONS.VENTAS)).toBe(true);
+    expect(hasPermission(["empleados:page"], PERMISSIONS.EMPLEADOS)).toBe(true);
   });
 
   it("retorna false si el usuario no tiene el permiso", () => {
-    expect(hasPermission(["ventas"], PERMISSIONS.EMPLEADOS)).toBe(false);
+    expect(hasPermission(["ventas:page"], PERMISSIONS.EMPLEADOS)).toBe(false);
     expect(hasPermission([], PERMISSIONS.CAJA)).toBe(false);
   });
 
@@ -27,7 +27,7 @@ describe("permissions - hasPermission", () => {
 
 describe("permissions - hasAnyPermission", () => {
   it("retorna true si tiene al menos uno de los requeridos", () => {
-    const user = ["ventas", "caja"];
+    const user = ["ventas:page", "caja:page"];
     expect(
       hasAnyPermission(user, [PERMISSIONS.VENTAS, PERMISSIONS.EMPLEADOS])
     ).toBe(true);
@@ -37,33 +37,33 @@ describe("permissions - hasAnyPermission", () => {
   });
 
   it("retorna false si no tiene ninguno", () => {
-    const user = ["ventas"];
+    const user = ["ventas:page"];
     expect(
       hasAnyPermission(user, [PERMISSIONS.EMPLEADOS, PERMISSIONS.CONFIGURACION])
     ).toBe(false);
   });
 
   it("retorna false si requiredPermissions está vacío", () => {
-    expect(hasAnyPermission(["ventas"], [])).toBe(false);
+    expect(hasAnyPermission(["ventas:page"], [])).toBe(false);
   });
 });
 
 describe("permissions - hasAllPermissions", () => {
   it("retorna true si tiene todos los requeridos", () => {
-    const user = ["ventas", "productos", "empleados"];
+    const user = ["ventas:page", "productos:page", "empleados:page"];
     expect(
       hasAllPermissions(user, [PERMISSIONS.VENTAS, PERMISSIONS.PRODUCTOS])
     ).toBe(true);
   });
 
   it("retorna false si falta al menos uno", () => {
-    const user = ["ventas", "productos"];
+    const user = ["ventas:page", "productos:page"];
     expect(
       hasAllPermissions(user, [PERMISSIONS.VENTAS, PERMISSIONS.EMPLEADOS])
     ).toBe(false);
   });
 
   it("retorna true si requiredPermissions está vacío", () => {
-    expect(hasAllPermissions(["ventas"], [])).toBe(true);
+    expect(hasAllPermissions(["ventas:page"], [])).toBe(true);
   });
 });

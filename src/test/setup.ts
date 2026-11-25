@@ -13,12 +13,24 @@ process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY =
 process.env.DATABASE_URL =
   process.env.DATABASE_URL ?? "postgresql://test:test@localhost:5432/test";
 
-// ——— Mocks globales opcionales (descomentar si un test lo necesita) ———
-// vi.mock("next/navigation", () => ({
-//   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
-//   usePathname: () => "/",
-//   useSearchParams: () => new URLSearchParams(),
-// }));
+// ——— Mocks globales ———
+// El App Router nunca está montado en tests unitarios; sin este mock cualquier
+// componente que use useRouter/useSearchParams (ej. GenericCrud, que sincroniza
+// filtros con la URL) falla con "invariant expected app router to be mounted".
+// Un vi.mock("next/navigation") dentro de un test tiene prioridad sobre este.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+    refresh: vi.fn(),
+  }),
+  usePathname: () => "/",
+  useSearchParams: () => new URLSearchParams(),
+  redirect: vi.fn(),
+  notFound: vi.fn(),
+}));
 
 beforeAll(() => {
   // Configuración antes de todos los tests

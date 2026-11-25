@@ -3,7 +3,7 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import Sidebar from "./Sidebar";
 
 vi.mock("next/navigation", () => ({
@@ -12,7 +12,13 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ invalidateQueries: vi.fn() }),
+  // Badge de cobros pendientes (solo activo con cobro diferido)
+  useQuery: () => ({ data: undefined }),
 }));
+vi.mock("@/hooks/useConfiguracion", () => {
+  const value = { configuracion: { puestoCajaSeparado: false } };
+  return { useConfiguracion: () => value };
+});
 vi.mock("@/components/auth/sessionProvider", () => ({
   useSupabaseAuthContext: () => ({ session: { user: {} } }),
 }));
@@ -27,6 +33,8 @@ vi.mock("@/store/useUserStore", () => ({
     branches: [{ Id: 1, Nombre: "Central" }],
     roles: [{ Tipo: "EMPLEADO" }],
     canAccessRoute: () => true,
+    tenant: { OnboardingCompleto: true }, // sin esto los links apuntan a "#"
+    isSuperAdmin: false,
   }),
 }));
 vi.mock("@/hooks/useTheme", () => ({
@@ -44,9 +52,13 @@ describe("Sidebar", () => {
     expect(screen.getByRole("button", { name: /ventas/i })).toBeInTheDocument();
   });
 
-  it("muestra enlaces Productos y Clientes", () => {
+  it("agrupa la navegación en secciones y muestra Productos al abrir Artículos", async () => {
     render(<Sidebar isCollapsed={false} onToggle={vi.fn()} />);
-    expect(screen.getByRole("button", { name: /productos/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /clientes/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^clientes$/i })).toBeInTheDocument();
+    const articulos = screen.getByRole("button", { name: /^artículos$/i });
+    fireEvent.click(articulos);
+    expect(
+      await screen.findByRole("link", { name: /^productos$/i }),
+    ).toHaveAttribute("href", "/productos");
   });
 });

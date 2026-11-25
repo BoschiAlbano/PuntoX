@@ -12,17 +12,22 @@ describe("productoAdapter", () => {
       RubroId: 3,
       UnidadMedidaId: 1,
       IvaId: 1,
-      PrecioId: 1,
       Codigo: 100,
       CodigoBarra: "789123",
       Descripcion: "Producto Test",
-      Precio: { PrecioPublico: 100.5, PrecioCosto: 50, PorcentajeGanancia: 10 },
+      PrecioCosto: "50",
+      PreciosLista: [
+        { ListaPrecioId: "1", PorcentajeGanancia: "10", PrecioFinal: "100.5" },
+      ],
       Stock: 25,
     };
     const result = productoAdapter(apiData);
     expect(result.Id).toBe(1);
     expect(result.Descripcion).toBe("Producto Test");
-    expect(result.Precio.PrecioPublico).toBe(100.5);
+    expect(result.PrecioCosto).toBe(50);
+    expect(result.PreciosLista).toEqual([
+      { ListaPrecioId: 1, PorcentajeGanancia: 10, PrecioFinal: 100.5, ListaPrecio: undefined },
+    ]);
     expect(result.Stock).toBe(25);
     expect(result.CodigoBarra).toBe("789123");
   });
@@ -32,6 +37,8 @@ describe("productoAdapter", () => {
     expect(result.CodigoBarra).toBe("");
     expect(result.Descripcion).toBe("");
     expect(result.Stock).toBe(0);
+    expect(result.PrecioCosto).toBe(0);
+    expect(result.PreciosLista).toEqual([]);
   });
 });
 

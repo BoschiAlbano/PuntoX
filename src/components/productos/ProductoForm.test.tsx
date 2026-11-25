@@ -3,7 +3,7 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ProductoForm from "./ProductoForm";
 
@@ -57,33 +57,33 @@ function renderWithProviders(ui: React.ReactElement) {
   );
 }
 
+// ProductoForm es un formulario de página completa (/new y /[id]), ya no un modal.
 describe("ProductoForm", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("no renderiza cuando isOpen es false", () => {
+  it("muestra el título \"Nuevo Producto\" cuando no hay initialData", () => {
     renderWithProviders(
       <ProductoForm
-        isOpen={false}
-        onClose={vi.fn()}
         initialData={null}
         onSubmit={vi.fn()}
+        onCancel={vi.fn()}
         isSaving={false}
       />
     );
-    expect(screen.queryByTestId("modal")).not.toBeInTheDocument();
+    expect(screen.getByText("Nuevo Producto")).toBeInTheDocument();
   });
 
-  it("renderiza modal con título cuando isOpen es true", () => {
+  it("llama a onCancel al tocar Cancelar", () => {
+    const onCancel = vi.fn();
     renderWithProviders(
       <ProductoForm
-        isOpen={true}
-        onClose={vi.fn()}
         initialData={null}
         onSubmit={vi.fn()}
+        onCancel={onCancel}
         isSaving={false}
       />
     );
-    expect(screen.getByTestId("modal")).toBeInTheDocument();
-    expect(screen.getByText(/nuevo producto|editar producto/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    expect(onCancel).toHaveBeenCalledTimes(1);
   });
 });
