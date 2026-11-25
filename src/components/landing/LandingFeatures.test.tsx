@@ -6,8 +6,8 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { LandingFeatures } from "./LandingFeatures";
 
-vi.mock("framer-motion", () => {
-  const React = require("react");
+vi.mock("framer-motion", async () => {
+  const React = await import("react");
   const createMockComponent = (tag: string) => {
     const MockComponent = ({ children, ...props }: any) => {
       const { initial, animate, transition, whileInView, whileHover, viewport, ...restProps } = props;

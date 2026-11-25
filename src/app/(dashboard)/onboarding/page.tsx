@@ -86,7 +86,7 @@ function OnboardingWizard() {
         <div>
           <h1 className="text-xl font-bold text-slate-800">¡Bienvenido a Punto X!</h1>
           <p className="text-slate-500 text-sm mt-1">
-            Por favor, completa esta configuración inicial. <b>Haz clic en "Guardar cambios" en cada paso</b> antes de avanzar.
+            Por favor, completa esta configuración inicial. <b>Haz clic en &quot;Guardar cambios&quot; en cada paso</b> antes de avanzar.
           </p>
         </div>
       </div>

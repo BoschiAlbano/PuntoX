@@ -1,398 +1,75 @@
-# 🎯 Próximos Pasos y Mejoras - PuntoX
+# 🎯 Roadmap y Próximos Pasos — PuntoX
 
-**Estado Actual:** 🟢 8/10  
-**Objetivo:** 🟢 10/10  
-**Última actualización:** Diciembre 2024
+**Estado Actual:** 🟢 9/10
+**Objetivo:** 🟢 10/10
+**Última actualización:** 25 de noviembre de 2026
 
----
-
-## 📊 Resumen Ejecutivo
-
-Para llegar a **10/10**, necesitamos enfocarnos en:
-1. **Seguridad** (crítico) - 2 puntos
-2. **Testing** (importante) - 1 punto  
-3. **Performance** (importante) - 0.5 puntos
-4. **Calidad de Código** (mejora) - 0.5 puntos
-
-**Tiempo estimado mínimo:** 30-40 horas  
-**Tiempo estimado completo:** 68-91 horas
+> Para el detalle módulo por módulo ver [ESTADO_ACTUAL.md](ESTADO_ACTUAL.md).
+> Este documento lista solo lo que falta y en qué orden conviene hacerlo.
 
 ---
 
-## 🔴 PRIORIDAD 1: Seguridad Crítica (Hacer YA)
+## ✅ Resuelto desde el roadmap anterior (dic. 2024)
 
-### 1.1 Eliminar Fallbacks Peligrosos de TenantId ⚠️ CRÍTICO
-**Impacto:** 🔴 CRÍTICO - Riesgo de fuga de datos entre tenants  
-**Tiempo:** 30 minutos  
-**Dificultad:** Fácil
-
-**Problema:**
-```typescript
-// src/app/api/productos/route.ts - Líneas 279 y 308
-TenantId: Number(tenantId) || 1,  // ⚠️ PELIGROSO
-Id: Number(tenantId) || 1,        // ⚠️ PELIGROSO
-```
-
-**Riesgo:**
-- Si `tenantId` es `0`, `null`, `undefined` → asigna al tenant 1
-- **Fuga de datos entre tenants** (violación de multi-tenancy)
-
-**Solución:**
-```typescript
-// Ya tienes tenantIdBigInt validado arriba (línea 250)
-// Reemplazar:
-TenantId: tenantIdBigInt,  // Sin fallback
-Id: tenantIdBigInt,         // Sin fallback
-```
-
-**Checklist:**
-- [ ] Buscar todos los `tenantId || 1` en el proyecto
-- [ ] Reemplazar por `tenantIdBigInt` (ya validado)
-- [ ] Agregar test para validar que falla si tenantId es inválido
+| Ítem | Estado |
+|---|---|
+| Eliminar fallbacks `tenantId \|\| 1` | ✅ No queda ninguno en `src/` |
+| Transacciones en productos (POST/PATCH) | ✅ |
+| Migrar endpoints a `handleError` | ✅ 86 de 94 rutas (las 8 restantes son auth internas, cron y `api/test`) |
+| Tests unitarios básicos | ✅ 148 archivos de test en `src/` |
+| Enforcement de Planes SaaS (API + UI) | ✅ Implementado, falta prueba manual |
+| Búsqueda en pestañas POS (Carrito / Buscar) | ✅ Commit `4cdefce` |
+| Notas de Crédito A/B/C (ARCA) | ✅ |
+| Paginación, filtros por URL, actualización masiva de precios | ✅ |
+| Errores de TypeScript | ✅ `npx tsc --noEmit` limpio (25/11/2026) |
 
 ---
 
-### 1.2 Verificar Transacciones en Productos
-**Impacto:** 🔴 ALTO - Integridad de datos  
-**Tiempo:** 30 minutos  
-**Dificultad:** Fácil
+## 🔴 Prioridad 1 — Cerrar cabos sueltos
 
-**Estado:**
-- ✅ POST ya tiene transacción
-- ✅ PATCH ya está en transacción
-- ⚠️ Solo falta eliminar fallbacks (ver #1.1)
+- [ ] **Prueba manual de planes**: tenant Básico (bloquear 2da sucursal, 4to usuario, artículo 101, FA) y tenant Ilimitado (nada bloqueado). Checklist en [saas/planes-saas-implementacion.md](saas/planes-saas-implementacion.md).
+- [ ] **Email real de invitación a empleados**: `src/app/api/empleados/reenviar-invitacion/route.ts` hoy solo audita (TODO con `inviteUserByEmail`).
+- [ ] **Landing / SEO**: crear `public/og-image.png` y reemplazar el handle `@puntox` de ejemplo en `src/app/page.tsx`.
 
-**Archivos:**
-- `src/app/api/productos/route.ts`
+## 🔴 Prioridad 2 — Seguridad
 
----
+- [ ] **Rate limiting** — no implementado. Empezar por `/api/auth/*` (≈5 req/min), luego `/api/*` general y `/api/admin/*`. Opción: `@upstash/ratelimit`.
+- [ ] **Revisión de permisos granulares** — todas las rutas privadas validan sesión/tenant, pero solo 51 de 94 declaran un permiso explícito. Revisar que las restantes no lo necesiten.
 
-### 1.3 Rate Limiting en APIs
-**Impacto:** 🟡 MEDIO - Seguridad  
-**Tiempo:** 4-6 horas  
-**Dificultad:** Media
+## 🟡 Prioridad 3 — Testing
 
-**Problema:**
-- Sin rate limiting, vulnerable a ataques de fuerza bruta
-- Sin protección contra DoS
+- [x] **Tests de rutas de API** — 266/266 en verde (25/11/2026). Destapó un bug real ya corregido: un Administrador no podía cambiar la contraseña de otro empleado (`api/empleados/cambiar-password`).
+- [ ] **Reparar 42 tests de componentes y `lib/` desactualizados** (24 archivos; ver [ESTADO_ACTUAL.md §3](ESTADO_ACTUAL.md)). Más afectados: ventas, empleados, productos, clientes, caja, analíticas.
+- [ ] Tipo `Sucursal` en `src/hooks/useSucursales.ts` declara `id` pero la API devuelve `Id` (los consumidores usan `s.Id || s.id`, sin impacto en runtime).
+- [ ] Sin tests para `api/configuracion/seguridad/sesiones/cerrar-otras` (reemplazó al DELETE por sesión).
 
-**Solución:**
-```typescript
-// Instalar: npm install @upstash/ratelimit
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+### E2E
 
-const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(100, "15 m"),
-});
+Estado en [e2e/journey/README.md](../e2e/journey/README.md): fases 0–4 completas, 5–13 pendientes.
 
-// En cada endpoint:
-const { success } = await ratelimit.limit(identifier);
-if (!success) {
-  return NextResponse.json({ error: "Too many requests" }, { status: 429 });
-}
-```
+- [ ] Fase 7 — Caja
+- [ ] Fase 8 — Ventas
+- [ ] Fases 5, 6 — Clientes, Proveedores
+- [ ] Fases 9, 10, 11 — Compras, Empleados y Roles, Sucursales
+- [ ] Fases 12, 13 — Analytics y Viaje completo
 
-**Endpoints prioritarios:**
-- `/api/auth/*` - Más restrictivo (5 req/min)
-- `/api/*` - General (100 req/15min)
-- `/api/admin/*` - Admin (50 req/15min)
+## 🟡 Prioridad 4 — Funcionalidades nuevas
 
----
+- [ ] **Portal de Proveedores & Marketplace B2B** — spec `SPEC-PROV-001` escrita, sin código ([features/portal-proveedores-marketplace.md](features/portal-proveedores-marketplace.md)).
+- [ ] **Notas de Débito A/B/C (ARCA)** — códigos AFIP ya reservados en `src/lib/constants/afip.ts` (2/7/12); falta el tipo de comprobante local y la emisión. Reutilizar el patrón de la Nota de Crédito.
+- [ ] **Botón de Reset / Purga de Tienda** — limpiar datos transaccionales (total o desde una fecha).
+- [ ] **Factura E / Factura M (ARCA)** — solo si algún cliente exporta o está en ese régimen.
 
-### 1.4 Validación de Permisos Completa
-**Impacto:** 🟡 MEDIO - Seguridad  
-**Tiempo:** 4-6 horas  
-**Dificultad:** Media
+## 🟢 Prioridad 5 — Calidad de código
 
-**Problema:**
-- Algunos endpoints no validan permisos
+- [ ] **ESLint**: 13 errores y 1116 warnings (25/11/2026). Los errores son triviales (comillas sin escapar, `prefer-const`, `require()` en 2 tests, un `?.!` en `dashboard/page.tsx`).
+- [ ] Quitar `console.log/error` que quedan en 14 rutas de API.
+- [ ] Refactor de pantallas largas: ventas, empleados, configuración.
+- [ ] Optimización de queries (N+1, índices faltantes).
 
-**Solución:**
-```typescript
-import { requirePermiso } from "@/lib/requirePermiso";
+## ⚪ Infraestructura (backlog)
 
-export async function POST(req: NextRequest) {
-  const { tenantId } = await requirePermiso("productos:crear");
-  // Continuar con la lógica...
-}
-```
-
-**Endpoints a revisar:**
-- `/api/productos` - POST/PATCH/DELETE
-- `/api/clientes` - POST/PATCH/DELETE
-- `/api/comprobantes` - POST
-- `/api/caja` - Operaciones críticas
-
----
-
-## 🟡 PRIORIDAD 2: Testing y Calidad
-
-### 2.1 Migrar Más Endpoints a `handleError`
-**Impacto:** 🟡 MEDIO - Mantenibilidad  
-**Tiempo:** 2-3 horas  
-**Dificultad:** Fácil
-
-**Estado:**
-- ✅ Ya migrados: productos, clientes, empleados, tenant, configuracion
-- ⚠️ Pendientes: 22 archivos con `console.log/error`
-
-**Archivos pendientes:**
-- `src/app/api/unidades-medidas/route.ts`
-- `src/app/api/rubros/route.ts`
-- `src/app/api/marcas/route.ts`
-- `src/app/api/ivas/route.ts`
-- `src/app/api/roles/route.ts`
-- `src/app/api/condiciones-iva/route.ts`
-- Y otros 16 archivos...
-
-**Solución:**
-```typescript
-// Antes:
-try {
-  // código
-} catch (error) {
-  console.error("Error:", error);
-  return NextResponse.json({ error: "Error" }, { status: 500 });
-}
-
-// Después:
-import { handleError } from "@/lib/errors/handler";
-
-try {
-  // código
-} catch (error) {
-  return handleError(error);
-}
-```
-
----
-
-### 2.2 Tests Unitarios Básicos
-**Impacto:** 🟡 MEDIO - Confiabilidad  
-**Tiempo:** 8-10 horas  
-**Dificultad:** Media
-
-**Estado actual:**
-- ✅ Tests existentes: 5 archivos
-- ⚠️ Cobertura: ~5-10%
-
-**Tests prioritarios:**
-- [ ] `src/lib/errors/handler.ts` - Manejo de errores
-- [ ] `src/lib/auth/getAuthUser.ts` - Obtención de usuario
-- [ ] `src/lib/adapters/*.ts` - Adapters
-- [ ] `src/lib/validations/*.schema.ts` - Validaciones Zod
-- [ ] `src/hooks/useGenericApi.ts` - Hook genérico
-
-**Checklist:**
-- [ ] Configurar BD de test
-- [ ] Setup de mocks (Supabase, etc.)
-- [ ] Tests unitarios para lógica crítica
-- [ ] Configurar coverage reporting
-
----
-
-## 🟢 PRIORIDAD 3: Performance y Optimización
-
-### 3.1 Optimizar Queries de Base de Datos
-**Impacto:** 🟡 MEDIO - Performance  
-**Tiempo:** 6-8 horas  
-**Dificultad:** Media
-
-**Problemas:**
-- Posibles queries N+1 en algunos endpoints
-- Falta de índices en algunas relaciones
-- Queries sin paginación en algunos casos
-
-**Soluciones:**
-
-#### Agregar Índices Faltantes
-```prisma
-// Revisar schema.prisma
-@@index([TenantId, EstaEliminado])
-@@index([TenantId, CodigoBarra])
-```
-
-#### Optimizar Queries N+1
-```typescript
-// Antes (N+1):
-const usuarios = await prisma.usuario.findMany();
-for (const usuario of usuarios) {
-  const perfiles = await prisma.perfilUsuario.findMany({
-    where: { Usuario_Id: usuario.Id }
-  });
-}
-
-// Después (1 query):
-const usuarios = await prisma.usuario.findMany({
-  include: {
-    PerfilUsuario: true
-  }
-});
-```
-
-#### Paginación en Todos los Listados
-- Todos los GET que retornan listas deben tener paginación
-- Límite máximo de items por página
-
----
-
-### 3.2 Resolver Warnings de ESLint
-**Impacto:** 🟢 BAJO - Calidad  
-**Tiempo:** 4-6 horas  
-**Dificultad:** Fácil
-
-**Estado:**
-- ~80 warnings de ESLint
-- Variables no usadas
-- Tipos `any`
-- Hooks con dependencias faltantes
-
-**Solución:**
-```typescript
-// Antes:
-const [data, setData] = useState(null); // ⚠️ No usado
-
-// Después:
-// Eliminar o usar
-
-// Antes:
-function processData(data: any) { // ⚠️ any
-  // ...
-}
-
-// Después:
-function processData(data: Producto) {
-  // ...
-}
-```
-
----
-
-### 3.3 Documentación de APIs
-**Impacto:** 🟢 BAJO - Mantenibilidad  
-**Tiempo:** 6-8 horas  
-**Dificultad:** Fácil
-
-**Falta:**
-- JSDoc en funciones complejas
-- Documentación de APIs con ejemplos
-
-**Solución:**
-```typescript
-/**
- * Crea un nuevo producto en el sistema.
- * 
- * @param req - Request con datos del producto
- * @returns Producto creado o error
- * 
- * @throws {PermisoError} Si no tiene permiso "productos:crear"
- * @throws {ValidationError} Si los datos son inválidos
- */
-export async function POST(req: NextRequest) {
-  // ...
-}
-```
-
----
-
-## 📊 Resumen de Prioridades
-
-| Prioridad | Mejora | Impacto | Tiempo | Dificultad |
-|-----------|--------|---------|--------|------------|
-| 🔴 1.1 | Eliminar fallbacks tenantId | CRÍTICO | 30min | Fácil |
-| 🔴 1.2 | Verificar transacciones | ALTO | 30min | Fácil |
-| 🔴 1.3 | Rate limiting | MEDIO | 4-6h | Media |
-| 🔴 1.4 | Validación permisos | MEDIO | 4-6h | Media |
-| 🟡 2.1 | Migrar a handleError | MEDIO | 2-3h | Fácil |
-| 🟡 2.2 | Tests unitarios | MEDIO | 8-10h | Media |
-| 🟢 3.1 | Optimizar queries BD | MEDIO | 6-8h | Media |
-| 🟢 3.2 | Resolver ESLint | BAJO | 4-6h | Fácil |
-| 🟢 3.3 | Documentación APIs | BAJO | 6-8h | Fácil |
-
----
-
-## 🎯 Plan de Acción Recomendado
-
-### Semana 1: Críticas (1-2 horas)
-1. ✅ Eliminar fallbacks tenantId (30min) - **CRÍTICO**
-2. ✅ Verificar transacciones (30min)
-3. ✅ Migrar 5-10 endpoints a handleError (1h)
-
-### Semana 2: Importantes (12-16 horas)
-1. ✅ Rate limiting básico (4-6h)
-2. ✅ Validación permisos en endpoints críticos (4-6h)
-3. ✅ Tests unitarios básicos (8-10h)
-
-### Semana 3: Mejoras (14-20 horas)
-1. ✅ Optimizar queries BD (6-8h)
-2. ✅ Resolver ESLint warnings (4-6h)
-3. ✅ Documentación APIs (6-8h)
-
-**Total estimado:** 27-38 horas
-
----
-
-## 💡 Top 3 Prioridades Absolutas
-
-1. **Eliminar fallbacks tenantId** (30min) - 🔴 **RIESGO DE SEGURIDAD**
-2. **Rate limiting** (4-6h) - 🟡 **PROTECCIÓN BÁSICA**
-3. **Tests unitarios** (8-10h) - 🟡 **CONFIABILIDAD**
-
----
-
-## ✅ Checklist General
-
-### Seguridad
-- [ ] Sin fallbacks peligrosos de tenantId
-- [ ] Todas las operaciones críticas en transacciones
-- [ ] Rate limiting implementado
-- [ ] Validación de permisos completa
-- [ ] Validación Zod en todos los endpoints
-
-### Calidad
-- [ ] Sin warnings críticos de ESLint
-- [ ] Sin tipos `any` en código crítico
-- [ ] Documentación de APIs
-- [ ] Manejo de errores consistente
-- [ ] Tests unitarios básicos
-
-### Performance
-- [ ] Queries optimizadas (sin N+1)
-- [ ] Índices en relaciones frecuentes
-- [ ] Paginación en todos los listados
-- [ ] Bundle size optimizado
-
----
-
-## 📝 Notas Adicionales
-
-### Archivos Largos que Podrían Refactorizarse
-- `src/app/(dashboard)/ventas/page.tsx` (~1400 líneas)
-- `src/app/(dashboard)/empleados/page.tsx` (~2000 líneas)
-- `src/app/(dashboard)/configuracion/page.tsx` (~2000 líneas)
-
-**Sugerencia:** Dividir en componentes más pequeños cuando sea posible.
-
-- [ ] **Portal de Proveedores & Marketplace B2B** (ver [docs/features/portal-proveedores-marketplace.md](features/portal-proveedores-marketplace.md)): Portal exclusivo de distribuidores, catálogo público/privado, pedidos B2B y auto-conversión a compras de stock.
-- [ ] **Búsqueda en Pestañas POS** (ver [docs/features/ventas-busqueda-tabs.md](features/ventas-busqueda-tabs.md)): Alternar Carrito y Buscador de productos en tabs fluidas.
-- [ ] **Enforcement de Planes SaaS** (ver [docs/saas/planes-saas-implementacion.md](saas/planes-saas-implementacion.md)): Bloqueo estricto de sucursales, usuarios, catálogo y AFIP según plan.
-- [ ] **Botón de Reset / Purga de Tienda**: Herramienta administrativa para limpiar datos transaccionales de prueba o restablecer tienda desde una fecha determinada.
-- [ ] **Notas de Débito Electrónicas (ARCA)**: Emisión de ND A/B/C asociadas para recargos o correcciones fiscales.
-- [ ] **Factura E y Factura M (ARCA)**: Comprobantes para exportación y régimen especial con retención.
 - [ ] Monitoreo con Sentry
+- [ ] Logging estructurado
+- [ ] Caché distribuido (Redis / Upstash)
 - [ ] Documentación API interactiva (Swagger / OpenAPI)
-- [ ] Logging estructurado profesional
-- [ ] Implementar caché distribuido (Redis / Upstash)
-
----
-
-## 🎉 Conclusión
-
-**Para llegar a 10/10 necesitas:**
-
-1. **Mínimo crítico:** 30-40 horas enfocadas en seguridad y testing básico
-2. **Excelencia completa:** 68-91 horas para cubrir todas las áreas
-
-**Recomendación:** Empezar con las críticas y luego seguir con las importantes según prioridad.

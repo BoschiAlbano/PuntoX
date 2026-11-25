@@ -71,7 +71,7 @@ interface VentaState {
 
 
 const calcularPrecio = (producto: Producto, cantidad: number, listaPrecios: number | null) => {
-  let precioBase = (() => {
+  const precioBase = (() => {
     const pl = producto.PreciosLista?.find(p => Number(p.ListaPrecioId) === Number(listaPrecios));
     return pl ? Number(pl.PrecioFinal) : Number(producto.PrecioCosto || 0);
   })();

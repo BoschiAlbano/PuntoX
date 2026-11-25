@@ -1,6 +1,6 @@
 /**
  * Tests para la API de analíticas complementarios (GET).
- * Requiere PERMISSIONS.ANALITICAS.
+ * Requiere el permiso de lectura de analíticas (GET_PERMISSIONS.ANALITICAS).
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
@@ -11,9 +11,6 @@ import { PermisoError } from "@/lib/requirePermiso";
 
 vi.mock("@/lib/auth/getAuthUser", () => ({
   getAuthContext: vi.fn(),
-}));
-vi.mock("@/lib/constants/comprobantes", () => ({
-  PERMISSIONS: { ANALITICAS: "analiticas" },
 }));
 vi.mock("@/DB/prisma", () => ({
   default: {
@@ -31,14 +28,6 @@ vi.mock("@/DB/prisma", () => ({
     },
   },
 }));
-vi.mock("@/lib/errors/handler", () => ({
-  handleError: vi.fn((error: unknown) => {
-    const msg = error instanceof PermisoError ? error.message : "Error interno";
-    const status = error instanceof PermisoError ? error.status : 500;
-    return new Response(JSON.stringify({ error: msg }), { status });
-  }),
-}));
-
 describe("GET /api/analiticas/complementarios", () => {
   beforeEach(() => vi.clearAllMocks());
 

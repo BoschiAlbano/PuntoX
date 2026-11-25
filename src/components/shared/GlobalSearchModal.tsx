@@ -495,7 +495,7 @@ export default function GlobalSearchModal({
               <div className="py-12 px-6 text-center">
                 <Search className="w-8 h-8 text-slate-300 mx-auto mb-3" />
                 <p className="text-slate-500 font-medium text-sm">
-                  No encontramos resultados para "{query}"
+                  No encontramos resultados para &quot;{query}&quot;
                 </p>
                 <p className="text-slate-400 text-xs mt-1">
                   Intenta buscar con otros términos

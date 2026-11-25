@@ -21,14 +21,6 @@ vi.mock("@/DB/prisma", () => ({
     },
   },
 }));
-vi.mock("@/lib/errors/handler", () => ({
-  handleError: vi.fn((error: unknown) => {
-    const msg = error instanceof PermisoError ? error.message : "Error interno";
-    const status = error instanceof PermisoError ? error.status : 500;
-    return new Response(JSON.stringify({ error: msg }), { status });
-  }),
-}));
-
 describe("GET /api/configuracion/seguridad", () => {
   beforeEach(() => vi.clearAllMocks());
 
@@ -79,10 +71,9 @@ describe("GET /api/configuracion/seguridad", () => {
     vi.mocked(prisma.configuracion.findFirst).mockResolvedValue({
       Forzar2FA: true,
       ExpirarSesiones30Dias: false,
+      DiasExpiracionSesion: 15,
       BloquearTrasIntentos: 10,
       AlertarNuevoDispositivo: false,
-      BloquearPorInactividad: true,
-      TiempoInactividadMinutos: 15,
       RecordarSesion30Dias: false,
     } as any);
     const req = new NextRequest("http://localhost:3000/api/configuracion/seguridad");
@@ -91,7 +82,9 @@ describe("GET /api/configuracion/seguridad", () => {
     expect(res.status).toBe(200);
     expect(data.dobleFactor).toBe(true);
     expect(data.bloquearTrasIntentos).toBe("10");
-    expect(data.tiempoInactividadMinutos).toBe(15);
+    expect(data.diasExpiracionSesion).toBe(15);
+    // El bloqueo por inactividad se eliminó (commit 861a107)
+    expect(data).not.toHaveProperty("tiempoInactividadMinutos");
   });
 });
 

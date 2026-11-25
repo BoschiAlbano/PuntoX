@@ -3,7 +3,7 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import GenericTable, { Column } from "./GenericTable";
 
 vi.mock("@heroui/react", async () => {
@@ -102,7 +102,10 @@ describe("GenericTable", () => {
     const emptyText = "No hay registros disponibles";
     render(<GenericTable {...defaultProps} data={[]} emptyText={emptyText} />);
 
-    expect(screen.getByText(emptyText)).toBeInTheDocument();
+    // Se busca dentro de la tabla visible: el componente también renderiza
+    // una tabla de impresión oculta (aria-hidden) con el mismo contenido.
+    const table = screen.getByLabelText("Tabla de datos");
+    expect(within(table).getByText(emptyText)).toBeInTheDocument();
   });
 
   it("muestra botón Nuevo cuando onNewClick es proporcionado", () => {
@@ -121,10 +124,12 @@ describe("GenericTable", () => {
   it("renderiza datos en la tabla", () => {
     render(<GenericTable {...defaultProps} />);
 
-    // Verificar que los datos se renderizan
-    expect(screen.getByText("1")).toBeInTheDocument();
-    expect(screen.getByText("Item 1")).toBeInTheDocument();
-    expect(screen.getByText("2")).toBeInTheDocument();
-    expect(screen.getByText("Item 2")).toBeInTheDocument();
+    // Verificar que los datos se renderizan en la tabla visible
+    // (no en la tabla de impresión oculta, que duplica el contenido).
+    const table = within(screen.getByLabelText("Tabla de datos"));
+    expect(table.getByText("1")).toBeInTheDocument();
+    expect(table.getByText("Item 1")).toBeInTheDocument();
+    expect(table.getByText("2")).toBeInTheDocument();
+    expect(table.getByText("Item 2")).toBeInTheDocument();
   });
 });

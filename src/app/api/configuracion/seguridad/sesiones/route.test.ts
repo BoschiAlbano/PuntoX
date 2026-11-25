@@ -1,10 +1,11 @@
 /**
- * Tests para la API de sesiones activas (GET, DELETE).
+ * Tests para la API de sesiones activas (GET).
+ * El cierre de sesiones se hace desde ./cerrar-otras (el DELETE por id se eliminó en 43cbc70).
  * Estructura de referencia: src/app/api/marcas/route.test.ts
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import { GET, DELETE } from "./route";
+import { GET } from "./route";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
@@ -23,16 +24,24 @@ vi.mock("@/DB/prisma", () => ({
     $executeRawUnsafe: vi.fn(),
   },
 }));
-vi.mock("@/lib/errors/handler", () => ({
-  handleError: vi.fn((error: unknown) => {
-    const msg = error instanceof PermisoError ? error.message : "Error interno";
-    const status = error instanceof PermisoError ? error.status : 500;
-    return new Response(JSON.stringify({ error: msg }), { status });
-  }),
-}));
+/** Arma un JWT falso con el claim session_id (solo se decodifica el payload). */
+const fakeJwt = (sessionId: string) =>
+  `h.${Buffer.from(JSON.stringify({ session_id: sessionId })).toString("base64url")}.s`;
+
+const mockSupabaseSession = (accessToken: string | null) =>
+  vi.mocked(getSupabaseServerClient).mockResolvedValue({
+    auth: {
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: accessToken ? { access_token: accessToken } : null },
+      }),
+    },
+  } as any);
 
 describe("GET /api/configuracion/seguridad/sesiones", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSupabaseSession(null);
+  });
 
   it("retorna 403 si no tiene permiso CONFIGURACION", async () => {
     vi.mocked(getAuthContext).mockRejectedValue(new PermisoError("Permiso denegado", 403));
@@ -107,23 +116,8 @@ describe("GET /api/configuracion/seguridad/sesiones", () => {
     expect(data.sesiones[0].id).toBe(1);
     expect(data.sesiones[0].usuarioNombre).toBe("admin");
   });
-});
 
-describe("DELETE /api/configuracion/seguridad/sesiones", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("retorna 403 si no tiene permiso CONFIGURACION", async () => {
-    vi.mocked(getAuthContext).mockRejectedValue(new PermisoError("Permiso denegado", 403));
-    const req = new NextRequest("http://localhost:3000/api/configuracion/seguridad/sesiones?id=1", {
-      method: "DELETE",
-    });
-    const res = await DELETE(req);
-    const data = await res.json();
-    expect(res.status).toBe(403);
-    expect(data.error).toBeDefined();
-  });
-
-  it("retorna 400 cuando falta el id de sesión", async () => {
+  it("marca esActual en la sesión cuyo SupabaseSessionId coincide con el token", async () => {
     vi.mocked(getAuthContext).mockResolvedValue({
       tenantId: 1,
       usuarioId: 1,
@@ -132,60 +126,27 @@ describe("DELETE /api/configuracion/seguridad/sesiones", () => {
       isSuperAdmin: false,
       permissions: ["configuracion"],
     });
-    const req = new NextRequest("http://localhost:3000/api/configuracion/seguridad/sesiones", {
-      method: "DELETE",
-    });
-    const res = await DELETE(req);
-    const data = await res.json();
-    expect(res.status).toBe(400);
-    expect(data.error).toBe("ID de sesión requerido");
-  });
-
-  it("retorna 404 cuando la sesión no existe", async () => {
-    vi.mocked(getAuthContext).mockResolvedValue({
-      tenantId: 1,
-      usuarioId: 1,
-      user: {} as any,
-      sucursalId: 0,
-      isSuperAdmin: false,
-      permissions: ["configuracion"],
-    });
-    vi.mocked(getSupabaseServerClient).mockResolvedValue({
-      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "auth-1" } } }) },
-    } as any);
-    vi.mocked(prisma.usuario.findFirst).mockResolvedValue({ Id: 1n } as any);
-    vi.mocked(prisma.$queryRawUnsafe).mockResolvedValue([]);
-    const req = new NextRequest("http://localhost:3000/api/configuracion/seguridad/sesiones?id=999", {
-      method: "DELETE",
-    });
-    const res = await DELETE(req);
-    const data = await res.json();
-    expect(res.status).toBe(404);
-    expect(data.error).toBe("Sesión no encontrada o ya cerrada");
-  });
-
-  it("retorna 200 al cerrar sesión correctamente", async () => {
-    vi.mocked(getAuthContext).mockResolvedValue({
-      tenantId: 1,
-      usuarioId: 1,
-      user: {} as any,
-      sucursalId: 0,
-      isSuperAdmin: false,
-      permissions: ["configuracion"],
-    });
-    vi.mocked(getSupabaseServerClient).mockResolvedValue({
-      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "auth-1" } } }) },
-    } as any);
-    vi.mocked(prisma.usuario.findFirst).mockResolvedValue({ Id: 1n } as any);
-    vi.mocked(prisma.$queryRawUnsafe)
-      .mockResolvedValueOnce([{ UsuarioId: 1n, Dispositivo: null, IpAddress: "127.0.0.1", TokenHash: "xxx" }] as any);
-    vi.mocked(prisma.$executeRawUnsafe).mockResolvedValue(1 as any);
-    const req = new NextRequest("http://localhost:3000/api/configuracion/seguridad/sesiones?id=1", {
-      method: "DELETE",
-    });
-    const res = await DELETE(req);
+    mockSupabaseSession(fakeJwt("sess-actual"));
+    const base = {
+      UsuarioId: 1n,
+      UsuarioNombre: "admin",
+      IpAddress: null,
+      UserAgent: null,
+      Dispositivo: null,
+      Ubicacion: null,
+      FechaInicio: new Date("2025-01-01"),
+      FechaUltimaActividad: new Date("2025-01-01"),
+      EsConfiable: false,
+    };
+    vi.mocked(prisma.$queryRawUnsafe).mockResolvedValue([
+      { ...base, Id: 1n, SupabaseSessionId: "sess-actual" },
+      { ...base, Id: 2n, SupabaseSessionId: "sess-otra" },
+    ] as any);
+    const res = await GET(
+      new NextRequest("http://localhost:3000/api/configuracion/seguridad/sesiones"),
+    );
     const data = await res.json();
     expect(res.status).toBe(200);
-    expect(data.message).toBeDefined();
+    expect(data.sesiones.map((x: any) => x.esActual)).toEqual([true, false]);
   });
 });

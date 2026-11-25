@@ -20,17 +20,21 @@ vi.mock("@heroui/react", async () => {
   };
 });
 
-vi.mock("@/hooks/useConfiguracion", () => ({
-  useConfiguracion: vi.fn(() => ({
+vi.mock("@/hooks/useConfiguracion", () => {
+  // Objeto estable: el hook real devuelve query.data (misma referencia entre
+  // renders). Crear un objeto nuevo en cada llamada dispara un loop infinito
+  // en los useEffect([xxxData]) del componente.
+  const mockValue = {
     notificaciones: { push: true, resumenDiario: false, stockBajo: true },
     saveNotificaciones: vi.fn(),
     isSavingNotificaciones: false,
-  })),
-}));
+  };
+  return { useConfiguracion: vi.fn(() => mockValue) };
+});
 
 describe("NotificacionesTab", () => {
   it("renderiza sin crash", () => {
     render(<NotificacionesTab />);
-    expect(screen.getByText("Notificaciones")).toBeDefined();
+    expect(screen.getByText("Canales de notificación")).toBeDefined();
   });
 });

@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
       {} as Record<number, string>,
     );
 
-    let paymentMethods = Object.keys(mapTipoPago).map((key) => ({
+    const paymentMethods = Object.keys(mapTipoPago).map((key) => ({
       TipoPago: Number(key),
       name: mapTipoPago[Number(key)],
       pct: 0,

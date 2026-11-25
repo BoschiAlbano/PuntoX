@@ -19,6 +19,7 @@ vi.mock("@/DB/prisma", () => ({
   default: {
     perfiles: {
       findMany: vi.fn(),
+      count: vi.fn(), // GET paginado
       findFirst: vi.fn(),
       create: vi.fn(),
     },
@@ -27,14 +28,6 @@ vi.mock("@/DB/prisma", () => ({
     $transaction: vi.fn(),
   },
 }));
-vi.mock("@/lib/errors/handler", () => ({
-  handleError: vi.fn((error: unknown) => {
-    const msg = error instanceof PermisoError ? error.message : "Error interno";
-    const status = error instanceof PermisoError ? error.status : 500;
-    return new Response(JSON.stringify({ error: msg }), { status });
-  }),
-}));
-
 describe("GET /api/roles", () => {
   beforeEach(() => vi.clearAllMocks());
 
@@ -56,6 +49,7 @@ describe("GET /api/roles", () => {
       isSuperAdmin: false,
       permissions: ["empleados"],
     });
+    vi.mocked(prisma.perfiles.count).mockResolvedValue(1);
     vi.mocked(prisma.perfiles.findMany).mockResolvedValue([
       {
         Id: 1,
@@ -143,6 +137,7 @@ describe("POST /api/roles", () => {
     expect(res.status).toBe(201);
     expect(data.rol).toBeDefined();
     expect(data.rol.nombre).toBe("Rol Test");
-    expect(data.rol.id).toBe(1);
+    // La respuesta usa "Id" (estándar GenericCrud); useRoles acepta id o Id
+    expect(data.rol.Id).toBe(1);
   });
 });

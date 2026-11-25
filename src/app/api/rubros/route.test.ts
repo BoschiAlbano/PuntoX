@@ -23,19 +23,6 @@ vi.mock("@/DB/prisma", () => ({
     },
   },
 }));
-vi.mock("@/lib/errors/handler", () => ({
-  handleError: vi.fn((err: unknown) => {
-    if (err instanceof AppErrorClass) {
-      return new Response(
-        JSON.stringify({ error: { code: err.code, message: err.message } }),
-        { status: err.statusCode },
-      );
-    }
-    const msg = err instanceof PermisoError ? err.message : "Error interno";
-    const status = err instanceof PermisoError ? err.status : 500;
-    return new Response(JSON.stringify({ error: msg }), { status });
-  }),
-}));
 vi.mock("@/lib/pagination", () => ({
   parsePaginationParams: vi.fn(() => ({ page: 1, limit: 20, skip: 0 })),
   createPaginationResponse: vi.fn((data: unknown[], total: number) => ({
@@ -108,9 +95,11 @@ describe("POST /api/rubros", () => {
     });
     const res = await POST(req);
     const data = await res.json();
+    // Formato estándar de handleError para ZodError: { error: { code, message, details } }
     expect(res.status).toBe(400);
-    expect(data.error).toBe("Datos inválidos");
-    expect(data.details).toBeDefined();
+    expect(data.error.code).toBe("VALIDATION_ERROR");
+    expect(data.error.message).toBe("Datos inválidos");
+    expect(data.error.details).toBeDefined();
   });
 
   it("retorna 201 con rubro creado", async () => {

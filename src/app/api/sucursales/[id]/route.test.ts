@@ -21,14 +21,6 @@ vi.mock("@/DB/prisma", () => ({
     },
   },
 }));
-vi.mock("@/lib/errors/handler", () => ({
-  handleError: vi.fn((err: unknown) =>
-    new Response(JSON.stringify({ error: err instanceof PermisoError ? err.message : "Error interno" }), {
-      status: err instanceof PermisoError ? 403 : 500,
-    })
-  ),
-}));
-
 describe("GET /api/sucursales/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -86,7 +78,7 @@ describe("GET /api/sucursales/[id]", () => {
     expect(res.status).toBe(200);
     expect(data.sucursal).toBeDefined();
     expect(data.sucursal.nombre).toBe("Sucursal Central");
-    expect(data.sucursal.id).toBe(1);
+    expect(data.sucursal.Id).toBe(1);
   });
 });
 

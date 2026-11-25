@@ -192,7 +192,7 @@ export default function DashboardPage() {
                 bottomText={
                   isLoading
                     ? "Cargando..."
-                    : `${summaryData?.todaySales?.percentage! > 0 ? "+" : ""}${summaryData?.todaySales?.percentage || 0}% vs. ayer`
+                    : `${(summaryData?.todaySales?.percentage ?? 0) > 0 ? "+" : ""}${summaryData?.todaySales?.percentage || 0}% vs. ayer`
                 }
                 icon={ShoppingCart}
                 colorScheme="red"

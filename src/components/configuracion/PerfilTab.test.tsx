@@ -24,8 +24,11 @@ vi.mock("next/image", () => ({
   default: (props: any) => <img {...props} />,
 }));
 
-vi.mock("@/hooks/useConfiguracion", () => ({
-  useConfiguracion: vi.fn(() => ({
+vi.mock("@/hooks/useConfiguracion", () => {
+  // Objeto estable: el hook real devuelve query.data (misma referencia entre
+  // renders). Crear un objeto nuevo en cada llamada dispara un loop infinito
+  // en los useEffect([xxxData]) del componente.
+  const mockValue = {
     tenant: { nombre: "TestTenant", dominio: "test.com" },
     configuracion: {
       razonSocial: "",
@@ -50,12 +53,13 @@ vi.mock("@/hooks/useConfiguracion", () => ({
     useProvincias: () => ({ data: [], isLoading: false }),
     useDepartamentos: () => ({ data: [], isLoading: false }),
     useLocalidades: () => ({ data: [], isLoading: false }),
-  })),
-}));
+  };
+  return { useConfiguracion: vi.fn(() => mockValue) };
+});
 
 describe("PerfilTab", () => {
   it("renderiza sin crash", () => {
     render(<PerfilTab />);
-    expect(screen.getByText("Perfil del negocio")).toBeDefined();
+    expect(screen.getByText("Identidad de marca")).toBeDefined();
   });
 });

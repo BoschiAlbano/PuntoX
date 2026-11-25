@@ -937,7 +937,6 @@ export default function GenericTable<T extends { Id: number | string }>({
                 </div>
               )
             ) : (
-              // @ts-ignore
               <Table
                 aria-label="Tabla de datos"
                 sortDescriptor={sortDescriptor}
@@ -947,9 +946,9 @@ export default function GenericTable<T extends { Id: number | string }>({
                 }
                 {...(enableSelection &&
                   !isLoading && {
-                    selectedKeys: new Set(
+                    selectedKeys: new Set<string>(
                       Array.from(selectedKeys ?? []).map((k) => String(k)),
-                    ) as unknown as Set<Key>,
+                    ),
                     onSelectionChange: (keys: unknown) => {
                       if (!onSelectionChange) return;
                       if (keys === "all") {

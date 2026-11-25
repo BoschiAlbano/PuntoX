@@ -20,8 +20,11 @@ vi.mock("@heroui/react", async () => {
   };
 });
 
-vi.mock("@/hooks/useConfiguracion", () => ({
-  useConfiguracion: vi.fn(() => ({
+vi.mock("@/hooks/useConfiguracion", () => {
+  // Objeto estable: el hook real devuelve query.data (misma referencia entre
+  // renders). Crear un objeto nuevo en cada llamada dispara un loop infinito
+  // en los useEffect([xxxData]) del componente.
+  const mockValue = {
     seguridad: {
       dobleFactor: false,
       expirarSesiones: true,
@@ -34,8 +37,9 @@ vi.mock("@/hooks/useConfiguracion", () => ({
     },
     saveSeguridad: vi.fn(),
     isSavingSeguridad: false,
-  })),
-}));
+  };
+  return { useConfiguracion: vi.fn(() => mockValue) };
+});
 
 // Mock global fetch for the API calls inside the component
 const mockFetch = vi.fn(() =>
@@ -67,6 +71,6 @@ beforeEach(() => {
 describe("SeguridadTab", () => {
   it("renderiza sin crash", () => {
     render(<SeguridadTab />);
-    expect(screen.getByText("Seguridad y acceso")).toBeDefined();
+    expect(screen.getByText("Acceso y autenticación")).toBeDefined();
   });
 });

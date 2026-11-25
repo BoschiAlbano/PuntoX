@@ -25,13 +25,22 @@ vi.mock("@/hooks/useGenericApi", () => ({
     data: [],
     paginationMeta: { page: 1, limit: 10, total: 0, totalPages: 0 },
     isLoading: false,
+    isFetching: false,
     isError: false,
-    saveMutation: { mutateAsync: vi.fn() },
-    deleteMutation: { mutateAsync: vi.fn() },
+    saveMutation: { mutateAsync: vi.fn(), isPending: false },
+    deleteMutation: { mutateAsync: vi.fn(), isPending: false },
+    hardDeleteMutation: { mutateAsync: vi.fn(), isPending: false },
     refetch: vi.fn(),
+    prefetchWithParams: vi.fn(),
   })),
 }));
 vi.mock("@/lib/auth/errorHandler", () => ({ handleError: vi.fn() }));
+// GenericCrud sincroniza filtros con la URL (useRouter/useSearchParams/usePathname).
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
+  usePathname: () => "/marcas",
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 const mockForm = ({ isOpen }: { isOpen: boolean }) => (isOpen ? <div>Form</div> : null);
 const columns = [{ uid: "Descripcion", name: "Descripción" }];

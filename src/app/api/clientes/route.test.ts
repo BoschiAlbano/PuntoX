@@ -18,14 +18,10 @@ vi.mock("@/DB/prisma", () => ({
     localidad: { findFirst: vi.fn() },
     condicionIva: { findFirst: vi.fn() },
     persona_Cliente: { create: vi.fn() },
+    // Saldo de cuenta corriente: ventas a cuenta (formaPago) - pagos (comprobante)
+    formaPago: { findMany: vi.fn() },
+    comprobante: { findMany: vi.fn() },
   },
-}));
-vi.mock("@/lib/errors/handler", () => ({
-  handleError: vi.fn((error: unknown) => {
-    const msg = error instanceof PermisoError ? error.message : "Error interno";
-    const status = error instanceof PermisoError ? error.status : 500;
-    return new Response(JSON.stringify({ error: msg }), { status });
-  }),
 }));
 vi.mock("@/lib/pagination", () => ({
   parsePaginationParams: vi.fn(() => ({ page: 1, limit: 20, skip: 0 })),
@@ -65,6 +61,8 @@ describe("GET /api/clientes", () => {
     });
     vi.mocked(prisma.persona.count).mockResolvedValue(0);
     vi.mocked(prisma.persona.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.formaPago.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.comprobante.findMany).mockResolvedValue([]);
     const req = new NextRequest("http://localhost:3000/api/clientes");
     const res = await GET(req);
     const data = await res.json();
@@ -72,6 +70,32 @@ describe("GET /api/clientes", () => {
     expect(data.data).toBeDefined();
     expect(data.pagination).toBeDefined();
     expect(Array.isArray(data.data)).toBe(true);
+  });
+
+  it("calcula SaldoCtaCte como ventas a cuenta menos pagos", async () => {
+    vi.mocked(getAuthContext).mockResolvedValue({
+      tenantId: 1,
+      usuarioId: 1,
+      user: {} as any,
+      sucursalId: 0,
+      isSuperAdmin: false,
+      permissions: ["clientes"],
+    });
+    vi.mocked(prisma.persona.count).mockResolvedValue(1);
+    vi.mocked(prisma.persona.findMany).mockResolvedValue([
+      { Id: 7n, Nombre: "Ana", Apellido: "Paz", LocalidadId: 1n },
+    ] as any);
+    vi.mocked(prisma.formaPago.findMany).mockResolvedValue([
+      { Monto: 1000, FormaPago_CtaCte: { ClienteId: 7n } },
+      { Monto: 500.5, FormaPago_CtaCte: { ClienteId: 7n } },
+    ] as any);
+    vi.mocked(prisma.comprobante.findMany).mockResolvedValue([
+      { Total: 300, Comprobante_CuentaCorriente: { ClienteId: 7n } },
+    ] as any);
+    const res = await GET(new NextRequest("http://localhost:3000/api/clientes"));
+    const data = await res.json();
+    expect(res.status).toBe(200);
+    expect(data.data[0].SaldoCtaCte).toBe(1200.5);
   });
 });
 

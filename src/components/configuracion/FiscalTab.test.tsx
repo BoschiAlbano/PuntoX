@@ -21,8 +21,11 @@ vi.mock("@heroui/react", async () => {
   };
 });
 
-vi.mock("@/hooks/useConfiguracion", () => ({
-  useConfiguracion: vi.fn(() => ({
+vi.mock("@/hooks/useConfiguracion", () => {
+  // Objeto estable: el hook real devuelve query.data (misma referencia entre
+  // renders). Crear un objeto nuevo en cada llamada dispara un loop infinito
+  // en los useEffect([xxxData]) del componente.
+  const mockValue = {
     fiscal: {
       moneda: "ARS",
       zonaHoraria: "America/Argentina/Buenos_Aires",
@@ -35,8 +38,9 @@ vi.mock("@/hooks/useConfiguracion", () => ({
     },
     saveFiscal: vi.fn(),
     isSavingFiscal: false,
-  })),
-}));
+  };
+  return { useConfiguracion: vi.fn(() => mockValue) };
+});
 
 function renderWithProviders(ui: React.ReactElement) {
   const queryClient = new QueryClient({
@@ -50,6 +54,6 @@ function renderWithProviders(ui: React.ReactElement) {
 describe("FiscalTab", () => {
   it("renderiza sin crash", () => {
     renderWithProviders(<FiscalTab />);
-    expect(screen.getByText("Facturacion y region")).toBeDefined();
+    expect(screen.getByText("Configuración regional")).toBeDefined();
   });
 });

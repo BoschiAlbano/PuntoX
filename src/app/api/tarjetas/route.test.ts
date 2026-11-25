@@ -15,13 +15,6 @@ vi.mock("@/DB/prisma", () => ({
     },
   },
 }));
-vi.mock("@/lib/errors/handler", () => ({
-  handleError: vi.fn(
-    (err: unknown) =>
-      new Response(JSON.stringify({ error: "Error interno" }), { status: 500 }),
-  ),
-}));
-
 describe("GET /api/tarjetas", () => {
   beforeEach(() => {
     vi.clearAllMocks();

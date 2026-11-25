@@ -1,7 +1,9 @@
 # Búsqueda de productos en pestaña (Ventas) — Plan de implementación
 
-> Estado: **🔴 No iniciado** — plan cerrado y confirmado, listo para
-> implementar.
+> Estado: **🟢 Implementado** (commit `4cdefce`, 29/07/2026). Pestañas
+> `InnerTab = "carrito" | "buscar"` en `VentasScreen.tsx`, unificadas para
+> desktop y mobile. El resto de este documento es el plan original y se
+> conserva como referencia histórica.
 
 ## 0. Decisiones confirmadas con el usuario
 

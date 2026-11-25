@@ -13,7 +13,7 @@ vi.mock("@/lib/supabase/serverClient", () => ({
 }));
 vi.mock("@/DB/prisma", () => ({
   default: {
-    usuario: { findFirst: vi.fn() },
+    usuario: { findFirst: vi.fn(), update: vi.fn() },
     $queryRawUnsafe: vi.fn(),
     $executeRawUnsafe: vi.fn(),
   },
@@ -60,6 +60,8 @@ describe("POST /api/auth/registrar-sesion", () => {
         getUser: vi.fn().mockResolvedValue({
           data: { user: { id: "auth-1", app_metadata: { tenantId: 1 } } },
         }),
+        // La ruta lee el session_id del access token cuando no viene en el body.
+        getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
       },
     } as any);
     vi.mocked(prisma.usuario.findFirst).mockResolvedValue(null);
@@ -79,6 +81,8 @@ describe("POST /api/auth/registrar-sesion", () => {
         getUser: vi.fn().mockResolvedValue({
           data: { user: { id: "auth-1", app_metadata: { tenantId: 1 } } },
         }),
+        // La ruta lee el session_id del access token cuando no viene en el body.
+        getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
       },
     } as any);
     vi.mocked(prisma.usuario.findFirst).mockResolvedValue({

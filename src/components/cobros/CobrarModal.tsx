@@ -477,7 +477,7 @@ export function CobrarModal({
                           !buscandoCliente &&
                           clienteResults.length === 0 && (
                             <p className="text-[10px] text-slate-400 text-center py-2">
-                              Sin resultados para "{debouncedQuery}"
+                              Sin resultados para &quot;{debouncedQuery}&quot;
                             </p>
                           )}
                       </div>

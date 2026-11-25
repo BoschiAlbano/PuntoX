@@ -23,12 +23,6 @@ vi.mock("@/DB/prisma", () => ({
     },
   },
 }));
-vi.mock("@/lib/errors/handler", () => ({
-  handleError: vi.fn(
-    (err: unknown) =>
-      new Response(JSON.stringify({ error: "Error interno" }), { status: 500 }),
-  ),
-}));
 vi.mock("@/lib/pagination", () => ({
   parsePaginationParams: vi.fn(() => ({ page: 1, limit: 20, skip: 0 })),
   createPaginationResponse: vi.fn((data: unknown[], total: number) => ({

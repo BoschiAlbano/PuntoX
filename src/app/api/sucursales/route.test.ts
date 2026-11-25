@@ -24,19 +24,6 @@ vi.mock("@/DB/prisma", () => ({
     },
   },
 }));
-vi.mock("@/lib/errors/handler", () => ({
-  handleError: vi.fn((err: unknown) => {
-    if (err instanceof AppErrorClass) {
-      return new Response(JSON.stringify({ error: err.message }), {
-        status: err.statusCode,
-      });
-    }
-    const msg = err instanceof PermisoError ? err.message : "Error interno";
-    const status = err instanceof PermisoError ? err.status : 500;
-    return new Response(JSON.stringify({ error: msg }), { status });
-  }),
-}));
-
 const authOk = {
   tenantId: 1,
   usuarioId: 1,
@@ -77,8 +64,9 @@ describe("GET /api/sucursales", () => {
     const res = await GET(req);
     const data = await res.json();
     expect(res.status).toBe(200);
-    expect(data.sucursales).toBeDefined();
-    expect(Array.isArray(data.sucursales)).toBe(true);
+    // Formato paginado estándar (GenericCrud): { data, pagination }
+    expect(Array.isArray(data.data)).toBe(true);
+    expect(data.pagination).toBeDefined();
   });
 });
 
@@ -141,7 +129,7 @@ describe("POST /api/sucursales", () => {
     const data = await res.json();
     expect(res.status).toBe(201);
     expect(data.sucursal).toBeDefined();
-    expect(data.sucursal.id).toBe(1);
+    expect(data.sucursal.Id).toBe(1);
     expect(data.sucursal.nombre).toBe("Nueva Sucursal");
   });
 

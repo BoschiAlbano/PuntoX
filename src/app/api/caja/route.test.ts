@@ -24,6 +24,10 @@ vi.mock("@/DB/prisma", () => ({
       update: vi.fn(),
     },
     usuario: { findFirst: vi.fn() },
+    // Guard de cierre: comprobantes pendientes de cobro
+    comprobante: { count: vi.fn() },
+    // Al cerrar, se marcan como leídas las notificaciones de la caja
+    notificacion: { updateMany: vi.fn() },
   },
 }));
 vi.mock("@/lib/sucursal/verifyUserBranch", () => ({
@@ -43,14 +47,6 @@ vi.mock("@/lib/pagination", () => ({
     },
   })),
 }));
-vi.mock("@/lib/errors/handler", () => ({
-  handleError: vi.fn((error: unknown) => {
-    const msg = error instanceof PermisoError ? error.message : "Error interno";
-    const status = error instanceof PermisoError ? error.status : 500;
-    return new Response(JSON.stringify({ error: msg }), { status });
-  }),
-}));
-
 const authOk = {
   user: { id: "auth-1" },
   tenantId: 1,
@@ -143,7 +139,11 @@ describe("POST /api/caja", () => {
 });
 
 describe("PATCH /api/caja", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Por defecto no hay comprobantes pendientes de cobro (no bloquea el cierre)
+    vi.mocked(prisma.comprobante.count).mockResolvedValue(0);
+  });
 
   it("retorna 401 si no está autenticado", async () => {
     vi.mocked(getAuthContext).mockRejectedValue(
@@ -177,7 +177,29 @@ describe("PATCH /api/caja", () => {
     const res = await PATCH(req);
     const data = await res.json();
     expect(res.status).toBe(400);
-    expect(data.error).toBe("No tienes una caja abierta");
+    expect(data.error).toBe("No hay una caja abierta en esta sucursal");
+  });
+
+  it("retorna 400 cuando hay comprobantes pendientes de cobro", async () => {
+    vi.mocked(getAuthContext).mockResolvedValue(authOk as any);
+    vi.mocked(prisma.usuario.findFirst).mockResolvedValue({ Id: 1 } as any);
+    vi.mocked(verifyUserBranchAccess).mockResolvedValue({
+      sucursal: { Id: 1n, Nombre: "Suc1" },
+    } as any);
+    vi.mocked(prisma.caja.findFirst).mockResolvedValue({ Id: 1 } as any);
+    vi.mocked(prisma.comprobante.count).mockResolvedValue(2);
+    const req = new NextRequest(
+      "http://localhost:3000/api/caja?accion=cerrar",
+      {
+        method: "PATCH",
+        body: JSON.stringify({ montoCierre: 100 }),
+      },
+    );
+    const res = await PATCH(req);
+    const data = await res.json();
+    expect(res.status).toBe(400);
+    expect(data.pendientesCount).toBe(2);
+    expect(prisma.caja.update).not.toHaveBeenCalled();
   });
 
   it("retorna 400 con error cuando el body para cerrar es inválido", async () => {

@@ -18,6 +18,7 @@ vi.mock("@/DB/prisma", () => ({
       count: vi.fn(),
       findMany: vi.fn(),
       findFirst: vi.fn(),
+      findUnique: vi.fn(), // DELETE: lee el estado actual
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -27,18 +28,6 @@ vi.mock("@/DB/prisma", () => ({
     tenant: { findUnique: vi.fn() },
     $transaction: vi.fn(),
   },
-}));
-vi.mock("@/lib/errors/handler", () => ({
-  handleError: vi.fn((error: unknown) => {
-    if (error instanceof AppErrorClass) {
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: error.statusCode,
-      });
-    }
-    const msg = error instanceof PermisoError ? error.message : "Error interno";
-    const status = error instanceof PermisoError ? error.status : 500;
-    return new Response(JSON.stringify({ error: msg }), { status });
-  }),
 }));
 vi.mock("@/lib/pagination", () => ({
   parsePaginationParams: vi.fn(() => ({ page: 1, limit: 20, skip: 0 })),
@@ -89,11 +78,16 @@ const articuloConPrecio = {
   Descripcion: "Producto test",
   EstaEliminado: false,
   Stock: 10,
-  Precio: {
-    PrecioCosto: 50,
-    PrecioPublico: 60,
-    PrecioPublico2: 58,
-  },
+  PrecioCosto: 50,
+  // Precios por lista (PrecioLista[]), reemplaza al antiguo objeto único "Precio"
+  Precios: [
+    {
+      ListaPrecioId: BigInt(1),
+      PorcentajeGanancia: 20,
+      PrecioFinal: 60,
+      ListaPrecio: { Nombre: "General" },
+    },
+  ],
   ArticuloStock: [
     {
       Stock: 10,
@@ -131,6 +125,10 @@ describe("GET /api/productos", () => {
     expect(data.data).toBeDefined();
     expect(data.pagination).toBeDefined();
     expect(Array.isArray(data.data)).toBe(true);
+    expect(data.data[0].PreciosLista[0]).toMatchObject({
+      ListaPrecioId: 1,
+      PrecioFinal: 60,
+    });
   });
 });
 
@@ -335,13 +333,46 @@ describe("DELETE /api/productos", () => {
     expect(data.error).toBeDefined();
   });
 
-  it("retorna 201 cuando el producto se elimina correctamente", async () => {
+  it("retorna 201 y desactiva el producto (baja lógica)", async () => {
+    vi.mocked(prisma.articulo.findUnique).mockResolvedValue({
+      EstaEliminado: false,
+    } as any);
+    vi.mocked(prisma.articulo.update).mockResolvedValue({
+      Id: 1,
+      EstaEliminado: true,
+    } as any);
     const req = new NextRequest("http://localhost:3000/api/productos?Id=1", {
       method: "DELETE",
     });
     const res = await DELETE(req);
     const data = await res.json();
-    expect([200, 201]).toContain(res.status);
+    expect(res.status).toBe(201);
     expect(data.producto).toBeDefined();
+    // DELETE es un toggle: invierte EstaEliminado
+    expect(prisma.articulo.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { EstaEliminado: true } }),
+    );
+  });
+
+  it("retorna 404 cuando el producto no existe", async () => {
+    vi.mocked(prisma.articulo.findUnique).mockResolvedValue(null);
+    const req = new NextRequest("http://localhost:3000/api/productos?Id=99", {
+      method: "DELETE",
+    });
+    const res = await DELETE(req);
+    expect(res.status).toBe(404);
+  });
+
+  it("retorna 400 al borrar definitivamente un producto todavía activo", async () => {
+    vi.mocked(prisma.articulo.findUnique).mockResolvedValue({
+      EstaEliminado: false,
+    } as any);
+    const req = new NextRequest(
+      "http://localhost:3000/api/productos?Id=1&permanente=true",
+      { method: "DELETE" },
+    );
+    const res = await DELETE(req);
+    expect(res.status).toBe(400);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 });
