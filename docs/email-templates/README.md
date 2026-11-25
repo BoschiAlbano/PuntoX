@@ -16,20 +16,32 @@ por el contenido del `.html` correspondiente.
 
 ## Variables de Supabase usadas
 
-- `{{ .ConfirmationURL }}` — link de acción (botón y link alternativo).
+- `{{ .SiteURL }}` — Site URL configurada en Authentication › URL Configuration.
+- `{{ .TokenHash }}` — token del link (en *Reset Password* e *Invite user*).
+- `{{ .ConfirmationURL }}` — link estándar de Supabase (en *Confirm signup* y *Change Email Address*).
 - `{{ .Email }}` — email del usuario.
 - `{{ .NewEmail }}` — email nuevo (solo en *Change Email Address*).
-- `{{ .SiteURL }}` — Site URL configurada en Authentication › URL Configuration.
 
-> Los links usan `{{ .ConfirmationURL }}` (flujo estándar de Supabase). Si más
-> adelante se implementa una ruta propia `/auth/confirm` con `verifyOtp`
-> (recomendado para SSR), cambiar el `href` a
-> `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=<tipo>`.
+### Links de *Reset Password* e *Invite user*
+
+Apuntan a la ruta propia [`/auth/confirm`](../../src/app/auth/confirm/route.ts):
+
+```
+{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery   (Reset Password)
+{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite     (Invite user)
+```
+
+La ruta valida el token con `verifyOtp` (funciona aunque el email se abra en
+otro dispositivo, a diferencia del flujo PKCE de `{{ .ConfirmationURL }}`) y
+redirige a `/restablecer-contrasena`. Como usa `{{ .SiteURL }}`, el link
+siempre apunta a producción; para probar en local, copiar `token_hash` y abrir
+`http://localhost:3000/auth/confirm?token_hash=...&type=recovery`.
 
 ## Cuándo se envía cada una (estado al 25/11/2026)
 
-- **Reset Password**: al llamar `resetPasswordForEmail` (pendiente: "Olvidé mi
-  contraseña" en el login) o desde Authentication › Users › *Send password recovery*.
+- **Reset Password**: "¿Olvidaste tu contraseña?" en el login
+  (`/recuperar-contrasena` → `POST /api/auth/recuperar-contrasena`) o desde
+  Authentication › Users › *Send password recovery*.
 - **Invite user**: al llamar `inviteUserByEmail` (pendiente: reenvío de invitación).
 - **Confirm signup**: solo si el alta no usa `email_confirm: true`. Hoy el
   registro de comercios y empleados auto-confirma, así que no se envía.

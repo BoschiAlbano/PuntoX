@@ -25,6 +25,11 @@ export async function proxy(req: NextRequest) {
     "/favicon-light.ico",
     "/favicon-dark.ico",
     "/new-tenant",
+    // Recuperación de contraseña: /auth/confirm valida el link del email y
+    // /restablecer-contrasena maneja por sí misma el caso sin sesión.
+    "/auth/confirm",
+    "/recuperar-contrasena",
+    "/restablecer-contrasena",
     // /seleccionar-sucursal requiere autenticación, no está en publicPaths
   ];
 

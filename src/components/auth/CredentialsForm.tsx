@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
-import { Eye, EyeOff, Shield } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle2, Eye, EyeOff, Shield } from "lucide-react";
 import { useAuthTransition } from "./AuthTransitionContext";
 
 // Función para mapear errores de Supabase a mensajes específicos
@@ -497,6 +498,18 @@ export default function CredentialsForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {searchParams.get("reason") === "password_reset" && !error && (
+        <div
+          role="status"
+          className="flex items-start gap-2.5 rounded-lg border border-landing-primary-container/20 bg-landing-primary-container/5 p-3.5 text-sm text-landing-on-surface"
+        >
+          <CheckCircle2
+            className="mt-0.5 h-4 w-4 shrink-0 text-landing-primary"
+            aria-hidden="true"
+          />
+          <span>Tu contraseña se actualizó. Iniciá sesión con la nueva.</span>
+        </div>
+      )}
       <div>
         <label
           htmlFor="username"
@@ -541,12 +554,20 @@ export default function CredentialsForm() {
       </div>
 
       <div>
-        <label
-          htmlFor="password"
-          className="mb-1.5 block text-sm font-medium text-landing-on-surface-variant"
-        >
-          Contraseña
-        </label>
+        <div className="mb-1.5 flex items-center justify-between gap-3">
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-landing-on-surface-variant"
+          >
+            Contraseña
+          </label>
+          <Link
+            href="/recuperar-contrasena"
+            className="rounded text-sm font-medium text-landing-primary transition-colors hover:text-landing-primary-container hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-landing-primary-container"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
         <div className="relative">
           <input
             id="password"

@@ -27,6 +27,23 @@ const SupabaseAuthContext = createContext<SupabaseAuthContextValue | undefined>(
   undefined,
 );
 
+/**
+ * Páginas del flujo de autenticación (login, registro y recuperación de
+ * contraseña). En ellas NO se registra la sesión, no se sincronizan permisos
+ * ni corre el heartbeat: la sesión de recuperación es temporal y no debe
+ * aparecer como sesión activa ni ser expulsada por el chequeo periódico.
+ */
+const AUTH_FLOW_PATHS = [
+  "/signin",
+  "/signup",
+  "/recuperar-contrasena",
+  "/restablecer-contrasena",
+];
+
+function isAuthFlowPath(path: string | null | undefined): boolean {
+  return !!path && AUTH_FLOW_PATHS.some((p) => path.startsWith(p));
+}
+
 function resolveTenantId(metadata: Record<string, unknown> | undefined) {
   const hasKey = (key: string) =>
     metadata && Object.prototype.hasOwnProperty.call(metadata, key);
@@ -106,7 +123,7 @@ export const SessionProviderComponent = ({
       if (response.status === 401 && !isHandlingLogout) {
         try {
           const currentPath = window.location.pathname;
-          const publicPagePaths = ["/signin", "/signup", "/new-tenant"];
+          const publicPagePaths = [...AUTH_FLOW_PATHS, "/new-tenant"];
           const isOnPublicPage = publicPagePaths.some((path) =>
             currentPath.startsWith(path),
           );
@@ -192,7 +209,7 @@ export const SessionProviderComponent = ({
             metadata.permissions.length > 0;
 
           const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
-          const isLoginPage = currentPath.startsWith("/signin") || currentPath.startsWith("/signup");
+          const isLoginPage = isAuthFlowPath(currentPath);
 
           // Si no tiene permisos en JWT, sincronizar en background (no bloquea)
           // NO sincronizar en la página de login para evitar que un refreshSession()
@@ -249,7 +266,7 @@ export const SessionProviderComponent = ({
             metadata.permissions.length > 0;
 
           const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
-          const isLoginPage = currentPath.startsWith("/signin") || currentPath.startsWith("/signup");
+          const isLoginPage = isAuthFlowPath(currentPath);
 
           // Sincronizar permisos después del login - forzar refresh del JWT para que el nuevo token incluya los permisos.
           // NUNCA disparar esto en la página de login porque el refreshSession() es asíncrono y puede 
@@ -376,7 +393,7 @@ export const SessionProviderComponent = ({
     // NO iniciar el heartbeat en la página de login (ej: mientras ingresa 2FA)
     // porque la sesión AAL1 aún no está registrada en DB y el chequeo 
     // fallaría haciendo que lo expulse al login form de nuevo.
-    const isLoginPage = pathname?.startsWith("/signin") || pathname?.startsWith("/signup");
+    const isLoginPage = isAuthFlowPath(pathname);
     if (isLoginPage) return;
 
     const HEARTBEAT_INTERVAL = 30 * 1000; // 30 segundos

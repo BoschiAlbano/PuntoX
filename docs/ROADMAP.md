@@ -42,10 +42,10 @@
 Hoy la app **no envía ningún email**: altas y registros usan `email_confirm: true` y no hay SMTP configurado. El SMTP integrado de Supabase no sirve para producción (2 emails/hora por proyecto y solo a direcciones autorizadas).
 
 **Requisito previo**
-- [ ] Dominio propio con SPF/DKIM + proveedor transaccional configurado como SMTP en Supabase (Authentication › SMTP Settings) y ajustar Authentication › Rate Limits.
+- [x] Dominio `mail.puntox.com.ar` verificado en Resend (SPF/DKIM/DMARC en Vercel DNS) y conectado como SMTP de Supabase; plantillas en `docs/email-templates/`.
 
 **1. Acceso y cuenta** — vía Supabase Auth (plantillas de Supabase + SMTP propio)
-- [ ] 🔴 **"Olvidé mi contraseña"** en el login (no existe; hoy el admin cambia la contraseña a mano).
+- [x] **"Olvidé mi contraseña"** — `/recuperar-contrasena` → `POST /api/auth/recuperar-contrasena` → email → `/auth/confirm` (`verifyOtp`) → `/restablecer-contrasena` (pide 2FA si está activo y cierra todas las sesiones). Usuarios con email interno (`@puntox.com`) siguen dependiendo del admin.
 - [ ] 🔴 **Invitación de empleados** para que elijan su contraseña (`inviteUserByEmail`; `reenviar-invitacion` es un TODO).
 - [ ] **Confirmación de email al registrar comercio** (hoy se auto-confirma).
 - [ ] **Cambio de email** (confirmar la dirección nueva).
