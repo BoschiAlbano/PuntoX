@@ -28,13 +28,47 @@
 ## 🔴 Prioridad 1 — Cerrar cabos sueltos
 
 - [ ] **Prueba manual de planes**: tenant Básico (bloquear 2da sucursal, 4to usuario, artículo 101, FA) y tenant Ilimitado (nada bloqueado). Checklist en [saas/planes-saas-implementacion.md](saas/planes-saas-implementacion.md).
-- [ ] **Email real de invitación a empleados**: `src/app/api/empleados/reenviar-invitacion/route.ts` hoy solo audita (TODO con `inviteUserByEmail`).
+- [ ] **Email real de invitación a empleados** — ver sección [📧 Envío de emails](#-envío-de-emails).
+- [ ] **Interruptor "Alertar nuevo dispositivo" sin efecto** — se guarda en Configuración › Seguridad (`AlertarNuevoDispositivo`) pero ningún código lo lee. Implementarlo (ver 📧) u ocultarlo.
 - [ ] **Landing / SEO**: crear `public/og-image.png` y reemplazar el handle `@puntox` de ejemplo en `src/app/page.tsx`.
 
 ## 🔴 Prioridad 2 — Seguridad
 
 - [ ] **Rate limiting** — no implementado. Empezar por `/api/auth/*` (≈5 req/min), luego `/api/*` general y `/api/admin/*`. Opción: `@upstash/ratelimit`.
 - [ ] **Revisión de permisos granulares** — todas las rutas privadas validan sesión/tenant, pero solo 51 de 94 declaran un permiso explícito. Revisar que las restantes no lo necesiten.
+
+## 📧 Envío de emails
+
+Hoy la app **no envía ningún email**: altas y registros usan `email_confirm: true` y no hay SMTP configurado. El SMTP integrado de Supabase no sirve para producción (2 emails/hora por proyecto y solo a direcciones autorizadas).
+
+**Requisito previo**
+- [ ] Dominio propio con SPF/DKIM + proveedor transaccional configurado como SMTP en Supabase (Authentication › SMTP Settings) y ajustar Authentication › Rate Limits.
+
+**1. Acceso y cuenta** — vía Supabase Auth (plantillas de Supabase + SMTP propio)
+- [ ] 🔴 **"Olvidé mi contraseña"** en el login (no existe; hoy el admin cambia la contraseña a mano).
+- [ ] 🔴 **Invitación de empleados** para que elijan su contraseña (`inviteUserByEmail`; `reenviar-invitacion` es un TODO).
+- [ ] **Confirmación de email al registrar comercio** (hoy se auto-confirma).
+- [ ] **Cambio de email** (confirmar la dirección nueva).
+
+**2. Seguridad**
+- [ ] 🟡 **Inicio de sesión desde dispositivo nuevo** (cablear `AlertarNuevoDispositivo`).
+- [ ] **Cuenta bloqueada por intentos fallidos** (el bloqueo existe en `registrar-intento-fallido`, falta el aviso).
+- [ ] **Contraseña cambiada por un admin** (aviso al empleado).
+- [ ] **2FA activado / desactivado**.
+
+**3. Notificaciones operativas** — envío desde la app (hoy solo in-app)
+- [ ] 🟡 **Resumen diario por email** (ya existen el cron de las 23:00 `cron/resumen-diario` y la preferencia `NotificacionesResumenDiario`).
+- [ ] Stock bajo, límite de crédito superado, caja abierta o con diferencia (idealmente agrupados en el resumen).
+
+**4. Suscripción SaaS (PuntoX → comercios)**
+- [ ] 🔴 **Aviso de vencimiento previo** y de plan vencido/suspendido (`check-subscriptions` hoy solo avisa in-app al SuperAdmin, post-vencimiento).
+- [ ] Bienvenida al registrar el comercio.
+- [ ] Límite del plan alcanzado.
+
+**5. Comercio → clientes finales** (funcionalidades nuevas)
+- [ ] Enviar factura/comprobante por email (el cliente ya tiene `Mail`).
+- [ ] Estado de cuenta corriente / recordatorio de saldo.
+- [ ] Notificaciones de pedidos B2B (cuando se implemente el Portal de Proveedores).
 
 ## 🟡 Prioridad 3 — Testing
 
@@ -62,7 +96,8 @@ Estado en [e2e/journey/README.md](../e2e/journey/README.md): fases 0–4 complet
 
 ## 🟢 Prioridad 5 — Calidad de código
 
-- [ ] **ESLint**: 13 errores y 1116 warnings (25/11/2026). Los errores son triviales (comillas sin escapar, `prefer-const`, `require()` en 2 tests, un `?.!` en `dashboard/page.tsx`).
+- [x] **ESLint — errores**: 13 → 0 (25/11/2026).
+- [ ] **ESLint — warnings**: ~1100, mayormente `any` y variables sin usar.
 - [ ] Quitar `console.log/error` que quedan en 14 rutas de API.
 - [ ] Refactor de pantallas largas: ventas, empleados, configuración.
 - [ ] Optimización de queries (N+1, índices faltantes).
