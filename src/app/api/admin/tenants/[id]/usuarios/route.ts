@@ -176,7 +176,10 @@ export async function PATCH(
       }
 
       case "resetPassword": {
-        // Send password reset email via Supabase Admin API
+        // Genera un link de recuperación con la Admin API de Supabase.
+        // OJO: auth.admin.generateLink NO envía ningún email; solo devuelve el
+        // link (action_link) para que lo mande un proveedor propio o se comparta
+        // a mano. Por eso se devuelve el link en la respuesta.
         const supabaseAdmin = getSupabaseServiceClient();
 
         // Get user email from Supabase
@@ -190,23 +193,25 @@ export async function PATCH(
           );
         }
 
-        // Generate a password reset link
-        const { error: resetError } =
+        const { data: linkData, error: resetError } =
           await supabaseAdmin.auth.admin.generateLink({
             type: "recovery",
             email: authUser.user.email,
           });
 
-        if (resetError) {
+        const link = linkData?.properties?.action_link;
+        // generate_link puede fallar sin error y devolver action_link vacío
+        if (resetError || !link) {
           return NextResponse.json(
-            { error: "No se pudo enviar el email de reseteo" },
+            { error: "No se pudo generar el link de recuperación" },
             { status: 500 },
           );
         }
 
         return NextResponse.json({
           success: true,
-          message: `Email de reseteo enviado a ${authUser.user.email}`,
+          message: `Link de recuperación generado para ${authUser.user.email}. No se envió ningún email: compartilo con el usuario.`,
+          link,
         });
       }
 
