@@ -37,6 +37,7 @@
 4. `ComprobanteSelector.tsx` ya filtra tipos por `allowedTipos` — ocultar
    Factura A/B/C para planes sin AFIP usa ese mecanismo existente.
 5. **Agujero detectado**: `POST /api/auth/register` (público) también crea
+   > **Actualización 26/11/2026:** la ruta se eliminó (junto con `RegistrationForm`, que no se usaba en ninguna página): al ser pública permitía crear un empleado confirmado en cualquier comercio. El alta de usuarios es solo por `POST /api/empleados`.
    `Usuario` → debe llevar el mismo chequeo de `maxUsuarios`.
 6. **Parser permisivo obligatorio**: el Plan Ilimitado hoy tiene
    `{"unlimited":true}` sin claves de límites. Ante JSON faltante/inválido,

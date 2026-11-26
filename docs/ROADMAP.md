@@ -33,6 +33,14 @@
 
 ## 🔴 Prioridad 2 — Seguridad
 
+**Incidente 26/11/2026** — `.env` con credenciales reales estuvo en el repo público desde el 08/12/2025:
+- [x] Credenciales rotadas (contraseña de la base, claves de Supabase con las *legacy* desactivadas, `CRON_SECRET`) y `.env` fuera del repo.
+- [x] Revisión de la base: tabla de sondeo `hermes_probe_1a3f99ad` creada con acceso directo a Postgres (entre 18/03/2026 y 26/11/2026) y usuario de Auth de Burp Collaborator (`oastify.com`, 25/07/2026): ambos borrados. Sin roles, funciones, triggers ni esquemas ajenos. La API REST pública de Supabase no expone tablas (`anon`/`authenticated` sin permisos).
+- [x] Eliminada `POST /api/auth/register`: era pública y permitía crear un empleado confirmado en cualquier comercio (no se usaba).
+- [ ] Desactivar el registro público de Supabase (Authentication › Sign In / Providers › "Allow new users to sign up").
+- [ ] Pedir a los usuarios que cambien su contraseña (los hashes pudieron copiarse).
+- [ ] Evaluar aviso a titulares de datos (Ley 25.326) si la base contiene datos reales de clientes.
+
 - [ ] **Rate limiting** — no implementado. Empezar por `/api/auth/*` (≈5 req/min), luego `/api/*` general y `/api/admin/*`. Opción: `@upstash/ratelimit`.
 - [ ] **Revisión de permisos granulares** — todas las rutas privadas validan sesión/tenant, pero solo 51 de 94 declaran un permiso explícito. Revisar que las restantes no lo necesiten.
 
