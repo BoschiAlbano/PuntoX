@@ -7,6 +7,7 @@ import { useAuthTransition } from "@/components/auth/AuthTransitionContext";
 import { redirect, usePathname } from "next/navigation";
 import Sidebar from "@/components/dashboard/Sidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import SuscripcionBanner from "@/components/dashboard/SuscripcionBanner";
 import { AppProgressProvider as ProgressProvider } from "@bprogress/next";
 
 export default function DashboardLayout({
@@ -97,6 +98,8 @@ export default function DashboardLayout({
               onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             />
           </div>
+
+          <SuscripcionBanner />
 
           <div className="relative flex min-h-0 flex-1 print:p-0 overflow-y-auto min-w-0">
             <div className=" relative flex min-h-0 flex-1 flex-col min-w-0">

@@ -61,7 +61,9 @@ Hoy la app **no envía ningún email**: altas y registros usan `email_confirm: t
 - [ ] Stock bajo, límite de crédito superado, caja abierta o con diferencia (idealmente agrupados en el resumen).
 
 **4. Suscripción SaaS (PuntoX → comercios)**
-- [ ] 🔴 **Aviso de vencimiento previo** y de plan vencido/suspendido (`check-subscriptions` hoy solo avisa in-app al SuperAdmin, post-vencimiento).
+- [x] **Aviso de vencimiento** — email + notificación + banner a los 7 días, 1 día y al vencer, con botón "Renovar por WhatsApp" ([saas/avisos-vencimiento.md](saas/avisos-vencimiento.md)). Política: solo avisos, sin bloqueo.
+- [ ] **Bloqueo al vencer / al desactivar**: hoy ni el vencimiento ni `Tenant.EstaActivo = false` restringen el acceso (decisión de negocio pendiente).
+- [ ] Proteger `GET /api/admin/check-subscriptions` (hoy no requiere autenticación).
 - [ ] Bienvenida al registrar el comercio.
 - [ ] Límite del plan alcanzado.
 
