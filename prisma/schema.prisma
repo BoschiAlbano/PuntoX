@@ -594,6 +594,8 @@ model Configuracion {
   NumerarPedidosPantalla                 Boolean       @default(true)
   NotificacionesPush                     Boolean       @default(true)
   NotificacionesResumenDiario            Boolean       @default(false)
+  /// Email a los administradores al cerrar una caja (arqueo y ventas)
+  NotificacionesCierreCaja               Boolean       @default(false)
   NotificacionesStockBajo                Boolean       @default(true)
   Moneda                                 String?       @default("ARS") @db.VarChar(10)
   ZonaHoraria                            String?       @default("America/Argentina/Buenos_Aires") @db.VarChar(100)

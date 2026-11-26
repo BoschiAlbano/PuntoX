@@ -8,6 +8,8 @@ import { handleError } from "@/lib/errors/handler";
 const saveNotificacionesSchema = z.object({
   resumenDiario: z.boolean(),
   stockBajo: z.boolean(),
+  /** Email a los administradores al cerrar una caja. */
+  cierreCaja: z.boolean().optional(),
 });
 
 export async function GET(req: NextRequest) {
@@ -28,6 +30,7 @@ export async function GET(req: NextRequest) {
       select: {
         NotificacionesResumenDiario: true,
         NotificacionesStockBajo: true,
+        NotificacionesCierreCaja: true,
       },
       orderBy: {
         Id: "desc",
@@ -40,6 +43,7 @@ export async function GET(req: NextRequest) {
           notificaciones: {
             resumenDiario: false,
             stockBajo: true,
+            cierreCaja: false,
           },
         },
         { status: 200 },
@@ -51,6 +55,7 @@ export async function GET(req: NextRequest) {
         notificaciones: {
           resumenDiario: config.NotificacionesResumenDiario ?? false,
           stockBajo: config.NotificacionesStockBajo ?? true,
+          cierreCaja: config.NotificacionesCierreCaja ?? false,
         },
       },
       { status: 200 },
@@ -105,10 +110,14 @@ export async function PUT(req: NextRequest) {
       data: {
         NotificacionesResumenDiario: data.resumenDiario,
         NotificacionesStockBajo: data.stockBajo,
+        ...(data.cierreCaja !== undefined
+          ? { NotificacionesCierreCaja: data.cierreCaja }
+          : {}),
       },
       select: {
         NotificacionesResumenDiario: true,
         NotificacionesStockBajo: true,
+        NotificacionesCierreCaja: true,
       },
     });
 
@@ -117,6 +126,7 @@ export async function PUT(req: NextRequest) {
         notificaciones: {
           resumenDiario: updated.NotificacionesResumenDiario,
           stockBajo: updated.NotificacionesStockBajo,
+          cierreCaja: updated.NotificacionesCierreCaja,
         },
       },
       { status: 200 },

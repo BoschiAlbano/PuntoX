@@ -8,9 +8,8 @@
  *   vuelve a avisar (aunque esté leída).
  */
 import prisma from "@/DB/prisma";
-import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { sendEmail } from "@/lib/email/send";
-import { esEmailInterno } from "@/lib/auth/generateInternalEmail";
+import { destinatariosAdministradores } from "@/lib/email/destinatarios";
 import { escapeHtml, renderEmailLayout } from "@/lib/email/layout";
 import {
   DIAS_MAX_AVISO_VENCIDO,
@@ -43,41 +42,6 @@ interface TenantAviso {
   Nombre: string;
   FechaVencimiento: Date;
   Plan: { Nombre: string } | null;
-}
-
-/** Administradores activos del tenant con su email real (no interno). */
-async function obtenerDestinatarios(tenantId: bigint) {
-  const admins = await prisma.usuario.findMany({
-    where: {
-      TenantId: tenantId,
-      EstaEliminado: false,
-      EstaBloqueado: false,
-      PerfilUsuario: {
-        some: { Perfiles: { Tipo: "ADMINISTRADOR", EstaEliminado: false } },
-      },
-    },
-    select: { Id: true, AuthUserId: true },
-  });
-
-  const supabase = getSupabaseServiceClient();
-  const emails = new Set<string>();
-  for (const admin of admins) {
-    const { data } = await supabase.auth.admin.getUserById(admin.AuthUserId);
-    const email = data?.user?.email?.toLowerCase();
-    if (email && !esEmailInterno(email)) emails.add(email);
-  }
-
-  // Sin admins con email real: usar el email del comercio (Configuración).
-  if (emails.size === 0) {
-    const config = await prisma.configuracion.findFirst({
-      where: { TenantId: tenantId, EstaEliminado: false },
-      select: { Email: true },
-    });
-    const email = config?.Email?.trim().toLowerCase();
-    if (email && !esEmailInterno(email)) emails.add(email);
-  }
-
-  return { adminIds: admins.map((a) => a.Id), emails: [...emails] };
 }
 
 /** Asunto, título y textos del aviso según la etapa. */
@@ -176,7 +140,7 @@ export async function procesarAvisosVencimiento(
     });
     if (yaAvisado) continue;
 
-    const { adminIds, emails } = await obtenerDestinatarios(tenant.Id);
+    const { adminIds, emails } = await destinatariosAdministradores(tenant.Id);
     const contenido = contenidoAviso(etapa, tenant, dias);
     const urlWhatsapp = urlRenovacionWhatsapp(tenant.Nombre);
 

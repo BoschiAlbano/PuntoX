@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@heroui/react";
-import { Bell, Mail, AlertTriangle, Save } from "lucide-react";
+import { Bell, Mail, AlertTriangle, Save, Landmark } from "lucide-react";
 import { useConfiguracion, Notificaciones } from "@/hooks/useConfiguracion";
 import { VentasSection, ToggleRow } from "./ventas/VentasPrimitives";
 import { NotificacionesTabSkeleton } from "./ConfiguracionSkeleton";
@@ -19,6 +19,7 @@ export function NotificacionesTab() {
   const [notificaciones, setNotificaciones] = useState<Notificaciones>({
     resumenDiario: false,
     stockBajo: true,
+    cierreCaja: false,
   });
 
   useEffect(() => {
@@ -27,7 +28,8 @@ export function NotificacionesTab() {
 
   const hasChanges = notificacionesData
     ? notificaciones.resumenDiario !== notificacionesData.resumenDiario ||
-      notificaciones.stockBajo !== notificacionesData.stockBajo
+      notificaciones.stockBajo !== notificacionesData.stockBajo ||
+      notificaciones.cierreCaja !== notificacionesData.cierreCaja
     : false;
 
   useReportDirty("notificaciones", hasChanges);
@@ -44,10 +46,20 @@ export function NotificacionesTab() {
             <ToggleRow
               icon={Mail}
               title="Resumen diario"
-              description="Recibí un informe consolidado de la actividad del día: ventas, movimientos de caja y novedades"
+              description="Todos los días a las 7:00 recibís el resumen del día anterior: ventas, stock bajo y cajas abiertas. Por email a los administradores (solo si hubo ventas) y en las notificaciones."
               isSelected={notificaciones.resumenDiario}
               onValueChange={(v) =>
                 setNotificaciones((p) => ({ ...p, resumenDiario: v }))
+              }
+              isDisabled={isSavingNotificaciones}
+            />
+            <ToggleRow
+              icon={Landmark}
+              title="Email al cerrar caja"
+              description="Cada vez que se cierra una caja, los administradores reciben por email el arqueo (efectivo esperado, contado y diferencia) y las ventas por medio de pago."
+              isSelected={notificaciones.cierreCaja}
+              onValueChange={(v) =>
+                setNotificaciones((p) => ({ ...p, cierreCaja: v }))
               }
               isDisabled={isSavingNotificaciones}
             />

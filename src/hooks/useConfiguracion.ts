@@ -60,6 +60,8 @@ export interface PreferenciasVenta {
 export interface Notificaciones {
   resumenDiario: boolean;
   stockBajo: boolean;
+  /** Email a los administradores al cerrar una caja. */
+  cierreCaja: boolean;
 }
 
 export interface Seguridad {
@@ -318,6 +320,7 @@ const fetchNotificaciones = async ({
     return {
       resumenDiario: false,
       stockBajo: true,
+      cierreCaja: false,
     };
   }
 
@@ -326,6 +329,7 @@ const fetchNotificaciones = async ({
   return {
     resumenDiario: notifs.resumenDiario ?? false,
     stockBajo: notifs.stockBajo ?? true,
+    cierreCaja: notifs.cierreCaja ?? false,
   };
 };
 

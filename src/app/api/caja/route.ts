@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
+import { enviarEmailCierreCaja } from "@/lib/caja/emailCierre";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
@@ -989,6 +990,10 @@ export async function PATCH(req: NextRequest) {
         },
         data: { Leida: true },
       });
+
+      // Email "Caja cerrada" a los administradores (si está activado), en
+      // segundo plano: no demora la respuesta ni hace fallar el cierre.
+      after(() => enviarEmailCierreCaja(cajaAbierta.Id, BigInt(tenantId)));
 
       // Formatear nombre completo del usuario
       const formatearNombreUsuario = (usuario: any) => {

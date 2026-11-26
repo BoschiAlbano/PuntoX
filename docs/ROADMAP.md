@@ -56,7 +56,9 @@ Hoy la app **no envía ningún email**: altas y registros usan `email_confirm: t
 - [ ] **2FA activado / desactivado**.
 
 **3. Notificaciones operativas** — envío desde la app (hoy solo in-app)
-- [ ] 🟡 **Resumen diario por email** (ya existen el cron de las 23:00 `cron/resumen-diario` y la preferencia `NotificacionesResumenDiario`).
+- [x] **Resumen diario por email** — 07:00 (Argentina) con el día anterior completo (antes resumía un día corrido 3 h por usar UTC). Email a administradores solo si hubo ventas; la notificación in-app siempre (`src/lib/resumen/diario.ts`).
+- [x] **Email al cerrar caja** — arqueo (efectivo esperado/contado/diferencia), ventas por medio de pago, salidas y ganancia; interruptor propio `NotificacionesCierreCaja` (migración `20261126220000_notificaciones_cierre_caja`); se envía en segundo plano con `after()` (`src/lib/caja/emailCierre.ts`).
+- [ ] Elegir la hora del resumen diario por comercio (requiere cron horario: Vercel Pro o `pg_cron` de Supabase).
 - [ ] Stock bajo, límite de crédito superado, caja abierta o con diferencia (idealmente agrupados en el resumen).
 
 **4. Suscripción SaaS (PuntoX → comercios)**

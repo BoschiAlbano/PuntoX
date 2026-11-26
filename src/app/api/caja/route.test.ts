@@ -4,7 +4,8 @@
  * Usa getAuthContext; mismo patrón de mocks y casos 401/400/200.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { NextRequest } from "next/server";
+import { NextRequest, after } from "next/server";
+import { enviarEmailCierreCaja } from "@/lib/caja/emailCierre";
 import { GET, POST, PATCH } from "./route";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import prisma from "@/DB/prisma";
@@ -30,6 +31,12 @@ vi.mock("@/DB/prisma", () => ({
     notificacion: { updateMany: vi.fn() },
   },
 }));
+// after() de Next solo funciona dentro de un request real: se captura el callback.
+vi.mock("next/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/server")>()),
+  after: vi.fn(),
+}));
+vi.mock("@/lib/caja/emailCierre", () => ({ enviarEmailCierreCaja: vi.fn() }));
 vi.mock("@/lib/sucursal/verifyUserBranch", () => ({
   verifyUserBranchAccess: vi.fn(),
 }));
@@ -200,6 +207,7 @@ describe("PATCH /api/caja", () => {
     expect(res.status).toBe(400);
     expect(data.pendientesCount).toBe(2);
     expect(prisma.caja.update).not.toHaveBeenCalled();
+    expect(after).not.toHaveBeenCalled();
   });
 
   it("retorna 400 con error cuando el body para cerrar es inválido", async () => {
@@ -260,5 +268,9 @@ describe("PATCH /api/caja", () => {
     expect(res.status).toBe(200);
     expect(data.caja).toBeDefined();
     expect(data.caja.UsuarioCierreId).toBe(1);
+    // El email de cierre se programa en segundo plano para la caja cerrada
+    expect(after).toHaveBeenCalledTimes(1);
+    await (vi.mocked(after).mock.calls[0][0] as () => Promise<unknown>)();
+    expect(enviarEmailCierreCaja).toHaveBeenCalledWith(1, 1n);
   });
 });

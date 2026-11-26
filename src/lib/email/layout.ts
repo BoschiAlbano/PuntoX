@@ -24,15 +24,44 @@ export interface EmailLayoutOptions {
   titulo: string;
   /** Párrafos ya escapados (pueden incluir <strong>). */
   parrafosHtml: string[];
+  /** Tabla de datos etiqueta/valor (texto plano, se escapan). */
+  datos?: DatoEmail[];
   cta?: { label: string; url: string };
   /** Notas al pie de la tarjeta (texto plano, se escapan). */
   notas?: string[];
+}
+
+export interface DatoEmail {
+  label: string;
+  valor: string;
+  /** Resalta el valor: "alerta" en rojo, "ok" en verde. */
+  tono?: "alerta" | "ok";
+  /** Fila separadora con el label como subtítulo (sin valor). */
+  seccion?: boolean;
+}
+
+const COLOR_TONO = { alerta: "#ba1a1a", ok: "#047857" } as const;
+
+function renderDatos(datos: DatoEmail[]): string {
+  if (datos.length === 0) return "";
+  const filas = datos
+    .map((d) =>
+      d.seccion
+        ? `<tr><td colspan="2" style="padding:14px 0 6px 0;font-size:12px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;color:#5f6371;">${escapeHtml(d.label)}</td></tr>`
+        : `<tr>
+  <td style="padding:8px 0;border-bottom:1px solid #ebeef2;font-size:14px;line-height:20px;color:#424656;">${escapeHtml(d.label)}</td>
+  <td align="right" style="padding:8px 0;border-bottom:1px solid #ebeef2;font-size:14px;line-height:20px;font-weight:700;color:${d.tono ? COLOR_TONO[d.tono] : "#181c1f"};white-space:nowrap;">${escapeHtml(d.valor)}</td>
+</tr>`,
+    )
+    .join("\n");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">${filas}</table>`;
 }
 
 export function renderEmailLayout({
   preheader,
   titulo,
   parrafosHtml,
+  datos = [],
   cta,
   notas = [],
 }: EmailLayoutOptions): string {
@@ -96,6 +125,7 @@ export function renderEmailLayout({
                   <td style="padding:36px 40px 32px 40px;font-family:${FONT_TEXTO};">
                     <h1 style="margin:0 0 12px 0;font-family:${FONT_TITULO};font-size:24px;line-height:32px;font-weight:700;color:#181c1f;">${escapeHtml(titulo)}</h1>
                     ${parrafos}
+                    ${renderDatos(datos)}
                     ${boton}
                     ${notasHtml}
                   </td>
