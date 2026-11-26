@@ -8,6 +8,7 @@ import {
   DeleteButton,
   PasswordButton,
   LockButton,
+  InviteButton,
 } from "../shared/TableActions";
 import { useQueryClient } from "@tanstack/react-query";
 import ChangePasswordModal from "./ChangePasswordModal";
@@ -69,6 +70,34 @@ export default function UsuariosCRUD() {
     bloquear: boolean;
   } | null>(null);
   const [isLocking, setIsLocking] = useState(false);
+  const [reenviandoId, setReenviandoId] = useState<Usuario["usuarioId"] | null>(null);
+
+  const reenviarInvitacion = async (item: Usuario) => {
+    setReenviandoId(item.usuarioId);
+    try {
+      const res = await fetch("/api/empleados/reenviar-invitacion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usuarioId: item.usuarioId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "No se pudo reenviar la invitación");
+      addToast({
+        title: "Invitación reenviada",
+        description: `Le enviamos a ${item.email} un link para elegir su contraseña.`,
+        color: "success",
+      });
+    } catch (err: any) {
+      addToast({
+        title: "No se reenvió la invitación",
+        description: err.message,
+        color: "warning",
+        timeout: 7000,
+      });
+    } finally {
+      setReenviandoId(null);
+    }
+  };
 
   const handleLockToggle = async () => {
     if (!lockConfirm) return;
@@ -410,6 +439,13 @@ export default function UsuariosCRUD() {
               const canBlock =
                 currentUserIsAdmin && !isCurrentUser && !!item.usuarioId;
               const estaActivo = item.estado !== "Suspendido";
+              // 4. Reenviar invitación: solo admins, sobre otros, con email real
+              const canInvite =
+                currentUserIsAdmin &&
+                !isCurrentUser &&
+                !!item.usuarioId &&
+                !!item.email &&
+                !item.email.toLowerCase().endsWith("@puntox.com");
 
               return (
                 <div className="flex sm:gap-2 gap-0 w-full justify-center items-center">
@@ -429,6 +465,14 @@ export default function UsuariosCRUD() {
                     label={`Editar ${item.nombreCompleto || "usuario"}`}
                     isDisabled={!canEditOrPass}
                   />
+
+                  {canInvite && (
+                    <InviteButton
+                      onPress={() => reenviarInvitacion(item)}
+                      isDisabled={reenviandoId === item.usuarioId}
+                      tooltipContent={`Reenviar invitación a ${item.email}`}
+                    />
+                  )}
 
                   {canBlock && (
                     <LockButton

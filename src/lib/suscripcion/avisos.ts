@@ -10,6 +10,7 @@
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { sendEmail } from "@/lib/email/send";
+import { esEmailInterno } from "@/lib/auth/generateInternalEmail";
 import { escapeHtml, renderEmailLayout } from "@/lib/email/layout";
 import {
   DIAS_MAX_AVISO_VENCIDO,
@@ -23,7 +24,6 @@ import {
 } from "./vencimiento";
 
 export const ENTIDAD_TIPO_AVISO = "SUSCRIPCION_VENCIMIENTO";
-const INTERNAL_EMAIL_DOMAIN = "@puntox.com";
 const MS_POR_DIA = 24 * 60 * 60 * 1000;
 
 export interface ResultadoAviso {
@@ -64,7 +64,7 @@ async function obtenerDestinatarios(tenantId: bigint) {
   for (const admin of admins) {
     const { data } = await supabase.auth.admin.getUserById(admin.AuthUserId);
     const email = data?.user?.email?.toLowerCase();
-    if (email && !email.endsWith(INTERNAL_EMAIL_DOMAIN)) emails.add(email);
+    if (email && !esEmailInterno(email)) emails.add(email);
   }
 
   // Sin admins con email real: usar el email del comercio (Configuración).
@@ -74,7 +74,7 @@ async function obtenerDestinatarios(tenantId: bigint) {
       select: { Email: true },
     });
     const email = config?.Email?.trim().toLowerCase();
-    if (email && !email.endsWith(INTERNAL_EMAIL_DOMAIN)) emails.add(email);
+    if (email && !esEmailInterno(email)) emails.add(email);
   }
 
   return { adminIds: admins.map((a) => a.Id), emails: [...emails] };

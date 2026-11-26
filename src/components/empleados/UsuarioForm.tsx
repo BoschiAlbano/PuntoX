@@ -5,6 +5,8 @@ import Image from "next/image";
 import {
   Button,
   Input,
+  Radio,
+  RadioGroup,
   Select,
   SelectItem,
 } from "@heroui/react";
@@ -26,6 +28,8 @@ interface UsuarioFormData {
   departamentoId?: number | string | null;
   provinciaId?: number | string | null;
   nombreUsuario?: string;
+  /** Solo en alta: definir contraseña ahora o invitar por email. */
+  modoAcceso: "password" | "invitacion";
   password?: string;
   rolId?: number | string | null;
   sucursales?: SucursalUsuario[] | null;
@@ -44,6 +48,7 @@ const defaultFormData: UsuarioFormData = {
   departamentoId: null,
   provinciaId: null,
   nombreUsuario: "",
+  modoAcceso: "password",
   password: "",
   rolId: null,
   sucursales: null,
@@ -104,6 +109,7 @@ export default function UsuarioForm({
         sucursales: initialData.sucursales || null,
         personaId: initialData.personaId || initialData.id,
         nombreUsuario: initialData.username || "", // Aunque no se edite, para mantener consistencia
+        modoAcceso: "password", // Solo aplica al alta
         foto: initialData.foto || null,
       });
       setFotoPreview(initialData.foto || null);
@@ -160,6 +166,12 @@ export default function UsuarioForm({
       "bg-white border border-[#e5e7eb] shadow-none hover:border-[#e0e0e0] focus-within:!border-[#0F2233] focus-within:ring-1 focus-within:ring-[#0F2233]/20",
   };
 
+  const esInvitacion = !isEdit && formData.modoAcceso === "invitacion";
+  const mailValido =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.mail ?? "") &&
+    !(formData.mail ?? "").toLowerCase().endsWith("@puntox.com");
+  const accesoIncompleto = esInvitacion ? !mailValido : !formData.password;
+
   const handleSubmit = () => {
     // Preparar payload según si es creación o edición
     if (isEdit) {
@@ -191,8 +203,9 @@ export default function UsuarioForm({
         direccion: formData.direccion,
         localidadId: formData.localidadId,
         nombreUsuario: formData.nombreUsuario,
-        password: formData.password,
+        modoAcceso: formData.modoAcceso,
       };
+      if (!esInvitacion) payload.password = formData.password;
 
       if (formData.dni) payload.dni = formData.dni;
       if (formData.telefono) payload.telefono = formData.telefono;
@@ -247,11 +260,11 @@ export default function UsuarioForm({
               !formData.apellido ||
               !formData.direccion ||
               !formData.localidadId ||
-              (!isEdit && (!formData.nombreUsuario || !formData.password))
+              (!isEdit && (!formData.nombreUsuario || accesoIncompleto))
             }
             className="flex-1 sm:flex-none bg-[#0F2233] hover:bg-[#1a364d] text-white font-semibold shadow-md shadow-[#0F2233]/20"
           >
-            {isEdit ? "Actualizar" : "Guardar"}
+            {isEdit ? "Actualizar" : esInvitacion ? "Guardar e invitar" : "Guardar"}
           </Button>
         </div>
       </div>
@@ -411,29 +424,73 @@ export default function UsuarioForm({
                     isDisabled={isSaving}
                     classNames={inputClassNames}
                   />
-                  <Input
-                    label="Contraseña"
-                    placeholder="Mínimo 8 caracteres"
-                    type="password"
-                    value={formData.password || ""}
-                    onValueChange={(value) => handleChange("password", value)}
-                    isRequired
-                    isDisabled={isSaving}
-                    classNames={inputClassNames}
-                  />
-                  <Input
-                    label="Email (Opcional)"
-                    placeholder="Ingrese el email (opcional)"
-                    type="email"
-                    value={formData.mail || ""}
+                  <RadioGroup
+                    label="¿Cómo va a ingresar?"
+                    orientation="horizontal"
+                    value={formData.modoAcceso}
                     onValueChange={(value) =>
-                      handleChange("mail", value || undefined)
+                      handleChange("modoAcceso", value as UsuarioFormData["modoAcceso"])
                     }
                     isDisabled={isSaving}
                     className="sm:col-span-2"
-                    description="Si no se proporciona, se generará automáticamente"
-                    classNames={inputClassNames}
-                  />
+                    classNames={{ label: "text-sm font-medium text-slate-700" }}
+                  >
+                    <Radio
+                      value="password"
+                      description="Le pasás vos la contraseña al empleado"
+                    >
+                      Definir contraseña ahora
+                    </Radio>
+                    <Radio
+                      value="invitacion"
+                      description="Recibe un email para elegir su contraseña"
+                    >
+                      Invitar por email
+                    </Radio>
+                  </RadioGroup>
+                  {esInvitacion ? (
+                    <Input
+                      label="Email"
+                      placeholder="email@ejemplo.com"
+                      type="email"
+                      value={formData.mail || ""}
+                      onValueChange={(value) =>
+                        handleChange("mail", value || undefined)
+                      }
+                      isRequired
+                      isDisabled={isSaving}
+                      className="sm:col-span-2"
+                      isInvalid={!!formData.mail && !mailValido}
+                      errorMessage="Ingresá un email real del empleado"
+                      description="Le enviamos la invitación a este email, con su nombre de usuario."
+                      classNames={inputClassNames}
+                    />
+                  ) : (
+                    <>
+                      <Input
+                        label="Contraseña"
+                        placeholder="Mínimo 8 caracteres"
+                        type="password"
+                        value={formData.password || ""}
+                        onValueChange={(value) => handleChange("password", value)}
+                        isRequired
+                        isDisabled={isSaving}
+                        classNames={inputClassNames}
+                      />
+                      <Input
+                        label="Email (Opcional)"
+                        placeholder="Ingrese el email (opcional)"
+                        type="email"
+                        value={formData.mail || ""}
+                        onValueChange={(value) =>
+                          handleChange("mail", value || undefined)
+                        }
+                        isDisabled={isSaving}
+                        description="Si no se proporciona, se generará automáticamente"
+                        classNames={inputClassNames}
+                      />
+                    </>
+                  )}
                 </>
               )}
               <Select

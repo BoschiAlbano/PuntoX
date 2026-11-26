@@ -39,9 +39,21 @@
                     <h1 style="margin:0 0 12px 0;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;font-size:24px;line-height:32px;font-weight:700;color:#181c1f;">
                       Te invitaron a PuntoX
                     </h1>
-                    <p style="margin:0 0 24px 0;font-size:15px;line-height:24px;color:#424656;">
-                      Te dieron acceso a PuntoX con la cuenta <strong style="color:#181c1f;">{{ .Email }}</strong>. Aceptá la invitación y creá tu contraseña para empezar.
+                    <p style="margin:0 0 16px 0;font-size:15px;line-height:24px;color:#424656;">
+                      Te dieron acceso a PuntoX{{ if .Data.comercio }} en <strong style="color:#181c1f;">{{ .Data.comercio }}</strong>{{ end }}. Aceptá la invitación y creá tu contraseña para empezar.
                     </p>
+                    {{ if .Data.username }}
+                    <!-- Usuario para ingresar (el login de PuntoX es por nombre de usuario) -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">
+                      <tr>
+                        <td style="padding:14px 16px;background-color:#f1f4f8;border-radius:10px;font-size:14px;line-height:22px;color:#424656;">
+                          Tu usuario para ingresar es <strong style="color:#181c1f;font-size:15px;">{{ .Data.username }}</strong>
+                        </td>
+                      </tr>
+                    </table>
+                    {{ else }}
+                    <div style="height:8px;line-height:8px;font-size:0;">&nbsp;</div>
+                    {{ end }}
                     <!-- Botón -->
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">
                       <tr>

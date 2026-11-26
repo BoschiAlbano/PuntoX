@@ -66,7 +66,11 @@ const getErrorMessage = (error: unknown): string => {
 };
 
 export default function CredentialsForm() {
-  const [username, setUsername] = useState("");
+  const searchParams = useSearchParams();
+  // ?usuario= llega al activar una cuenta por invitación
+  const [username, setUsername] = useState(
+    () => searchParams.get("usuario") ?? "",
+  );
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [usernameError, setUsernameError] = useState("");
@@ -76,7 +80,6 @@ export default function CredentialsForm() {
   const [showMfa, setShowMfa] = useState(false);
   const [mfaCode, setMfaCode] = useState("");
   const [factorId, setFactorId] = useState("");
-  const searchParams = useSearchParams();
   const router = useRouter();
 
   const { startSigningIn, startVerifying, resetTransition } =
@@ -498,7 +501,7 @@ export default function CredentialsForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {searchParams.get("reason") === "password_reset" && !error && (
+      {["password_reset", "cuenta_activada"].includes(searchParams.get("reason") ?? "") && !error && (
         <div
           role="status"
           className="flex items-start gap-2.5 rounded-lg border border-landing-primary-container/20 bg-landing-primary-container/5 p-3.5 text-sm text-landing-on-surface"
@@ -507,7 +510,11 @@ export default function CredentialsForm() {
             className="mt-0.5 h-4 w-4 shrink-0 text-landing-primary"
             aria-hidden="true"
           />
-          <span>Tu contraseña se actualizó. Iniciá sesión con la nueva.</span>
+          <span>
+            {searchParams.get("reason") === "cuenta_activada"
+              ? "¡Tu cuenta está lista! Iniciá sesión con tu usuario y la contraseña que elegiste."
+              : "Tu contraseña se actualizó. Iniciá sesión con la nueva."}
+          </span>
         </div>
       )}
       <div>

@@ -3,13 +3,11 @@ import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
+import { esEmailInterno } from "@/lib/auth/generateInternalEmail";
 
 const bodySchema = z.object({
   username: z.string().trim().min(2).max(100),
 });
-
-/** Dominio de los emails internos generados (no son casillas reales). */
-const INTERNAL_EMAIL_DOMAIN = "@puntox.com";
 
 /**
  * Respuesta única para todos los casos válidos: no revela si el usuario
@@ -59,7 +57,7 @@ export async function POST(req: NextRequest) {
       );
     const email = authUser?.user?.email?.toLowerCase();
 
-    if (authError || !email || email.endsWith(INTERNAL_EMAIL_DOMAIN)) {
+    if (authError || !email || esEmailInterno(email)) {
       return NextResponse.json(GENERIC_RESPONSE);
     }
 

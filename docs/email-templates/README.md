@@ -21,6 +21,7 @@ por el contenido del `.html` correspondiente.
 - `{{ .ConfirmationURL }}` — link estándar de Supabase (en *Confirm signup* y *Change Email Address*).
 - `{{ .Email }}` — email del usuario.
 - `{{ .NewEmail }}` — email nuevo (solo en *Change Email Address*).
+- `{{ .Data.username }}` / `{{ .Data.comercio }}` — usuario de login y nombre del comercio (solo en *Invite user*; los envía `inviteUserByEmail` en `user_metadata`).
 
 ### Links de *Reset Password* e *Invite user*
 
@@ -42,7 +43,7 @@ siempre apunta a producción; para probar en local, copiar `token_hash` y abrir
 - **Reset Password**: "¿Olvidaste tu contraseña?" en el login
   (`/recuperar-contrasena` → `POST /api/auth/recuperar-contrasena`) o desde
   Authentication › Users › *Send password recovery*.
-- **Invite user**: al llamar `inviteUserByEmail` (pendiente: reenvío de invitación).
+- **Invite user**: al crear un empleado con "Invitar por email" (`POST /api/empleados`, `modoAcceso: "invitacion"`) o con el botón "Reenviar invitación" de la tabla de empleados. El link abre `/restablecer-contrasena?modo=invitacion` ("Creá tu contraseña").
 - **Confirm signup**: solo si el alta no usa `email_confirm: true`. Hoy el
   registro de comercios y empleados auto-confirma, así que no se envía.
 - **Change Email Address**: al cambiar el email con `updateUser({ email })`.

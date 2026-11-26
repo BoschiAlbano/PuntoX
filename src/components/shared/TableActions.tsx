@@ -12,6 +12,7 @@ import {
   LockKeyholeOpen,
   ToggleLeft,
   ToggleRight,
+  MailPlus,
 } from "lucide-react";
 import { ReactNode } from "react";
 
@@ -229,6 +230,33 @@ export const PasswordButton = ({
       className={`${baseButtonClass} bg-transparent text-violet-500 ${className ?? ""}`}
     >
       <KeyRound size={ICON_SIZE} strokeWidth={ICON_STROKE} />
+    </Button>
+  </ActionTooltip>
+);
+
+// ---------------------------------------------------------------------------
+// InviteButton (reenviar invitación por email)
+// ---------------------------------------------------------------------------
+export const InviteButton = ({
+  onPress,
+  label = "Reenviar invitación",
+  tooltipContent,
+  isDisabled,
+  className,
+  ...props
+}: ActionButtonProps) => (
+  <ActionTooltip content={tooltipContent ?? label}>
+    <Button
+      isIconOnly
+      size="sm"
+      variant="flat"
+      onPress={onPress}
+      isDisabled={isDisabled}
+      aria-label={label}
+      {...props}
+      className={`${baseButtonClass} bg-transparent text-sky-600 ${className ?? ""}`}
+    >
+      <MailPlus size={ICON_SIZE} strokeWidth={ICON_STROKE} />
     </Button>
   </ActionTooltip>
 );

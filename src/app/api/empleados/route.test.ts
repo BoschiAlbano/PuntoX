@@ -168,6 +168,69 @@ describe("POST /api/empleados", () => {
     expect(data.error).toBeDefined();
   });
 
+  it("retorna 400 si se invita por email sin un email real", async () => {
+    vi.mocked(getAuthContext).mockResolvedValue({
+      tenantId: 1,
+      usuarioId: 1,
+      user: {} as any,
+      sucursalId: 0,
+      isSuperAdmin: false,
+      permissions: ["empleados"],
+    });
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      Plan: { Caracteristicas: null },
+    } as any);
+    const res = await POST(
+      new NextRequest("http://localhost:3000/api/empleados", {
+        method: "POST",
+        body: JSON.stringify({ nombre: "Juan", apellido: "Pérez", direccion: "Calle 123", localidadId: 1, nombreUsuario: "juan.perez", modoAcceso: "invitacion" }),
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("retorna 400 si se invita con un email interno (@puntox.com)", async () => {
+    vi.mocked(getAuthContext).mockResolvedValue({
+      tenantId: 1,
+      usuarioId: 1,
+      user: {} as any,
+      sucursalId: 0,
+      isSuperAdmin: false,
+      permissions: ["empleados"],
+    });
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      Plan: { Caracteristicas: null },
+    } as any);
+    const res = await POST(
+      new NextRequest("http://localhost:3000/api/empleados", {
+        method: "POST",
+        body: JSON.stringify({ nombre: "Juan", apellido: "Pérez", direccion: "Calle 123", localidadId: 1, nombreUsuario: "juan.perez", modoAcceso: "invitacion", mail: "juan2026@puntox.com" }),
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("retorna 400 si se elige contraseña pero no se envía", async () => {
+    vi.mocked(getAuthContext).mockResolvedValue({
+      tenantId: 1,
+      usuarioId: 1,
+      user: {} as any,
+      sucursalId: 0,
+      isSuperAdmin: false,
+      permissions: ["empleados"],
+    });
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      Plan: { Caracteristicas: null },
+    } as any);
+    const res = await POST(
+      new NextRequest("http://localhost:3000/api/empleados", {
+        method: "POST",
+        body: JSON.stringify({ nombre: "Juan", apellido: "Pérez", direccion: "Calle 123", localidadId: 1, nombreUsuario: "juan.perez", modoAcceso: "password" }),
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
   it("retorna 403 cuando se alcanzó el límite de usuarios del plan", async () => {
     vi.mocked(getAuthContext).mockResolvedValue({
       tenantId: 1,

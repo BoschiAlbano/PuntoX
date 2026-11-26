@@ -1,104 +1,99 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requirePermiso, PermisoError } from "@/lib/requirePermiso";
+import { z } from "zod";
+import prisma from "@/DB/prisma";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
-import prisma from "@/DB/prisma";
-import { z } from "zod";
 import { handleError } from "@/lib/errors/handler";
+import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
+import { esEmailInterno } from "@/lib/auth/generateInternalEmail";
+import { reenviarInvitacionEmpleado } from "@/lib/empleados/invitacion";
 
-const reenviarInvitacionSchema = z.object({
-  email: z.string().email(),
-  personaId: z.number(),
-  usuarioId: z.number().nullable().optional(),
+const schema = z.object({
+  usuarioId: z.union([z.number(), z.string()]).transform(Number),
 });
 
+/**
+ * POST /api/empleados/reenviar-invitacion  { usuarioId }
+ *
+ * Reenvía el email para que el empleado elija su contraseña, si todavía no
+ * activó su cuenta. Responde 409 si ya la activó (debe usar "¿Olvidaste tu
+ * contraseña?") y 400 si no tiene un email real.
+ */
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId, usuarioId } = await requirePermiso(
-      SET_PERMISSIONS.EMPLEADOS,
-    );
+    const { tenantId, usuarioId: usuarioAccionId } = await getAuthContext({
+      req,
+      permission: SET_PERMISSIONS.EMPLEADOS,
+    });
 
-    const json = await req.json().catch(() => null);
-    const parsed = reenviarInvitacionSchema.safeParse(json);
+    const parsed = schema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success || !Number.isInteger(parsed.data.usuarioId)) {
+      return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
+    }
 
-    if (!parsed.success) {
+    const tenantIdBigInt = BigInt(tenantId);
+    const usuario = await prisma.usuario.findFirst({
+      where: {
+        Id: BigInt(parsed.data.usuarioId),
+        TenantId: tenantIdBigInt,
+        EstaEliminado: false,
+      },
+      select: {
+        Id: true,
+        Nombre: true,
+        AuthUserId: true,
+        EmpleadoId: true,
+        Tenant: { select: { Nombre: true } },
+      },
+    });
+    if (!usuario) {
+      return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+    }
+
+    const { data: authData } =
+      await getSupabaseServiceClient().auth.admin.getUserById(usuario.AuthUserId);
+    const authUser = authData?.user;
+    if (!authUser || esEmailInterno(authUser.email)) {
       return NextResponse.json(
-        { error: "Datos inválidos", details: parsed.error.issues },
+        { error: "El empleado no tiene un email real. Cambiale la contraseña desde la lista de empleados." },
         { status: 400 },
       );
     }
 
-    const { email, personaId, usuarioId: usuarioAfectadoId } = parsed.data;
-    const tenantIdBigInt = BigInt(tenantId);
-
-    // Verificar que la persona existe y pertenece al tenant
-    const persona = await prisma.persona.findFirst({
-      where: {
-        Id: BigInt(personaId),
-        TenantId: tenantIdBigInt,
-        EstaEliminado: false,
-      },
-      include: {
-        Persona_Empleado: {
-          include: {
-            Usuario: {
-              where: { EstaEliminado: false },
-              take: 1,
-            },
-          },
-        },
-      },
+    const resultado = await reenviarInvitacionEmpleado(authUser, {
+      username: usuario.Nombre,
+      comercio: usuario.Tenant.Nombre,
     });
 
-    if (!persona) {
+    if (!resultado.ok) {
+      if (resultado.motivo === "ya_activo") {
+        return NextResponse.json(
+          { error: "El empleado ya activó su cuenta. Si olvidó la contraseña, puede usar \"¿Olvidaste tu contraseña?\" en el login." },
+          { status: 409 },
+        );
+      }
       return NextResponse.json(
-        { error: "Persona no encontrada o no pertenece a este tenant" },
-        { status: 404 },
+        { error: "No se pudo enviar la invitación. Probá de nuevo en unos minutos." },
+        { status: 502 },
       );
     }
 
-    const empleado = persona.Persona_Empleado;
-    if (!empleado) {
-      return NextResponse.json(
-        { error: "No se encontró información de empleado" },
-        { status: 404 },
-      );
-    }
-
-    // TODO: Aquí se implementaría el envío real del email de invitación
-    // Por ahora, solo registramos la auditoría
-    // Ejemplo de implementación futura:
-    // const supabase = getSupabaseServiceClient();
-    // await supabase.auth.admin.inviteUserByEmail(email, {
-    //   data: { tenant_id: tenantId.toString() }
-    // });
-
-    // Registrar auditoría de reenvío
     await registrarAuditoria({
       tenantId: tenantIdBigInt,
-      usuarioId,
+      usuarioId: usuarioAccionId,
       accion: "REENVIAR_INVITACION",
-      empleadoId: empleado.Id,
-      usuarioAfectadoId: usuarioAfectadoId ? BigInt(usuarioAfectadoId) : null,
-      detalle: `Invitación reenviada a: ${persona.Nombre} ${persona.Apellido} (${email})`,
+      empleadoId: usuario.EmpleadoId,
+      usuarioAfectadoId: usuario.Id,
+      detalle: `Invitación reenviada a ${usuario.Nombre} (${authUser.email})`,
       req,
     });
 
-    return NextResponse.json(
-      {
-        message: "Invitación reenviada exitosamente",
-        email,
-        personaId: Number(persona.Id),
-      },
-      { status: 200 },
-    );
+    return NextResponse.json({
+      message: `Invitación reenviada a ${authUser.email}`,
+      email: authUser.email,
+    });
   } catch (error) {
-    if (error instanceof PermisoError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: error.status },
-      );
-    }
     return handleError(error);
   }
 }

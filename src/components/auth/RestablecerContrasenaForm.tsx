@@ -24,8 +24,15 @@ function mensajeDeError(error: { code?: string; message?: string }): string {
   return "No se pudo cambiar la contraseña. Probá de nuevo.";
 }
 
-export default function RestablecerContrasenaForm() {
+interface Props {
+  /** "invitacion": primer ingreso de un empleado invitado. */
+  modo?: "recuperacion" | "invitacion";
+}
+
+export default function RestablecerContrasenaForm({ modo = "recuperacion" }: Props) {
+  const esInvitacion = modo === "invitacion";
   const [paso, setPaso] = useState<Paso>("cargando");
+  const [username, setUsername] = useState("");
   const [factorId, setFactorId] = useState("");
   const [codigo, setCodigo] = useState("");
   const [password, setPassword] = useState("");
@@ -44,6 +51,9 @@ export default function RestablecerContrasenaForm() {
         setPaso("sin-sesion");
         return;
       }
+      // El usuario invitado trae su nombre de usuario en user_metadata.
+      const meta = data.session.user.user_metadata as { username?: string } | undefined;
+      if (meta?.username) setUsername(meta.username);
 
       // Con 2FA activo, la recuperación no debe saltear el segundo factor.
       const { data: aal } =
@@ -108,7 +118,9 @@ export default function RestablecerContrasenaForm() {
     // Cierra todas las sesiones (incluida esta): quien tuviera la contraseña
     // anterior pierde el acceso. Se vuelve a entrar con la nueva.
     await supabase.auth.signOut({ scope: "global" }).catch(() => {});
-    window.location.replace("/signin?reason=password_reset");
+    const reason = esInvitacion ? "cuenta_activada" : "password_reset";
+    const q = username ? `&usuario=${encodeURIComponent(username)}` : "";
+    window.location.replace(`/signin?reason=${reason}${q}`);
   };
 
   if (paso === "cargando") {
@@ -123,14 +135,18 @@ export default function RestablecerContrasenaForm() {
     return (
       <div className="space-y-5">
         <div className="rounded-lg border border-landing-error/20 bg-landing-error-container p-3.5 text-sm text-landing-on-error-container">
-          El link no es válido o ya venció.
+          {esInvitacion
+            ? "La invitación no es válida o ya venció. Pedile a quien te invitó que te la reenvíe."
+            : "El link no es válido o ya venció."}
         </div>
-        <Link
-          href="/recuperar-contrasena"
-          className={`${authSubmitClass} inline-flex items-center justify-center`}
-        >
-          Pedir un link nuevo
-        </Link>
+        {!esInvitacion && (
+          <Link
+            href="/recuperar-contrasena"
+            className={`${authSubmitClass} inline-flex items-center justify-center`}
+          >
+            Pedir un link nuevo
+          </Link>
+        )}
       </div>
     );
   }
@@ -187,9 +203,15 @@ export default function RestablecerContrasenaForm() {
 
   return (
     <form onSubmit={guardar} className="space-y-5" noValidate>
+      {username && (
+        <div className="rounded-lg border border-landing-outline-variant/60 bg-landing-surface-low p-3.5 text-sm text-landing-on-surface">
+          Tu usuario para ingresar es{" "}
+          <strong className="font-semibold">{username}</strong>
+        </div>
+      )}
       <div>
         <label htmlFor="password" className={authLabelClass}>
-          Contraseña nueva
+          {esInvitacion ? "Contraseña" : "Contraseña nueva"}
         </label>
         <div className="relative">
           <input
@@ -250,7 +272,11 @@ export default function RestablecerContrasenaForm() {
         disabled={guardando || !password || !confirmacion}
         className={authSubmitClass}
       >
-        {guardando ? "Guardando..." : "Guardar contraseña"}
+        {guardando
+          ? "Guardando..."
+          : esInvitacion
+            ? "Crear contraseña"
+            : "Guardar contraseña"}
       </button>
     </form>
   );

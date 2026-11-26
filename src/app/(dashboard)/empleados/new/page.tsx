@@ -31,12 +31,17 @@ export default function NuevoEmpleadoPage() {
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (_res, variables) => {
+      // El payload del alta usa "mail" y "modoAcceso" (no están en el tipo Usuario)
+      const payload = variables as { modoAcceso?: string; mail?: string };
+      const invitado = payload.modoAcceso === "invitacion";
       addToast({
-        title: "Éxito",
-        description: "Empleado creado correctamente.",
+        title: invitado ? "Invitación enviada" : "Éxito",
+        description: invitado
+          ? `Empleado creado. Le enviamos un email a ${payload.mail} para que elija su contraseña.`
+          : "Empleado creado correctamente.",
         color: "success",
-        timeout: 3000,
+        timeout: invitado ? 6000 : 3000,
       });
       queryClient.invalidateQueries({ queryKey: ["empleados-generic"] });
       refreshUserData();

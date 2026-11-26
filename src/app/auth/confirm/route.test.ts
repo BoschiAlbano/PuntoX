@@ -42,6 +42,12 @@ describe("GET /auth/confirm", () => {
     expect(destino).toBe("/restablecer-contrasena");
   });
 
+  it("las invitaciones van a crear la contraseña en modo invitación", async () => {
+    expect(await abrir("token_hash=abc&type=invite")).toBe(
+      "/restablecer-contrasena?modo=invitacion",
+    );
+  });
+
   it("respeta un `next` interno", async () => {
     expect(await abrir("token_hash=abc&type=email_change&next=/perfil")).toBe(
       "/perfil",

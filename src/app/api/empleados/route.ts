@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
+import type { User } from "@supabase/supabase-js";
+import { esEmailInterno } from "@/lib/auth/generateInternalEmail";
+import { invitarEmpleado } from "@/lib/empleados/invitacion";
 import { optimizeImageToWebp } from "@/lib/utils/imageOptimizer";
 import { PermisoError } from "@/lib/requirePermiso";
 
@@ -43,13 +46,23 @@ const createEmpleadoSchema = z.object({
   departamentoId: z.union([z.number(), z.string()]).optional().nullable(),
   provinciaId: z.union([z.number(), z.string()]).optional().nullable(),
   nombreUsuario: z.string().min(1), // Requerido: se usa para generar email interno
-  password: z.string().min(8),
+  // "password": el admin define la contraseña ahora.
+  // "invitacion": se envía un email para que el empleado elija su contraseña.
+  modoAcceso: z.enum(["password", "invitacion"]).optional().default("password"),
+  password: z.string().min(8).optional(),
   rolId: z.union([z.number(), z.string()]).optional().nullable(),
   sucursalId: z
     .array(z.union([z.number(), z.string()]))
     .optional()
     .nullable(), // Sucursales a las que pertenece el empleado
   foto: z.string().optional().nullable(), // Base64 de la foto (data-URL o raw base64)
+}).superRefine((data, ctx) => {
+  if (data.modoAcceso === "password" && !data.password) {
+    ctx.addIssue({ code: "custom", path: ["password"], message: "La contraseña es obligatoria" });
+  }
+  if (data.modoAcceso === "invitacion" && esEmailInterno(data.mail)) {
+    ctx.addIssue({ code: "custom", path: ["mail"], message: "Para invitar por email se necesita un email real" });
+  }
 });
 const updateEstadoSchema = z.object({
   usuarioId: z.union([z.number(), z.string()]),
@@ -659,36 +672,69 @@ export async function POST(req: NextRequest) {
     }
 
     const supabaseService = getSupabaseServiceClient();
-    const { data: authUser, error: authError } =
-      await supabaseService.auth.admin.createUser({
-        email: mailNormalized,
-        password: data.password,
-        email_confirm: true, // Siempre confirmar email automáticamente
-        app_metadata: {
-          tenant_id: tenantId.toString(),
-          role: rolTipo === "ADMINISTRADOR" ? "Administrador" : "Empleado",
-        },
-      });
+    const appMetadata = {
+      tenant_id: tenantId.toString(),
+      role: rolTipo === "ADMINISTRADOR" ? "Administrador" : "Empleado",
+    };
+    const esInvitacion = data.modoAcceso === "invitacion";
 
-    if (authError || !authUser?.user) {
-      // Detectar si el error es por correo duplicado
-      if (
-        authError?.code === "email_exists" ||
-        authError?.message?.toLowerCase().includes("already been registered") ||
-        authError?.message?.toLowerCase().includes("email address has already")
-      ) {
+    let authUser: { user: User } | null = null;
+    if (esInvitacion) {
+      // Crea el usuario de Auth y envía el email de invitación.
+      const tenant = await prisma.tenant.findUnique({
+        where: { Id: tenantIdBigInt },
+        select: { Nombre: true },
+      });
+      const invitacion = await invitarEmpleado({
+        email: mailNormalized,
+        username: finalUsername,
+        comercio: tenant?.Nombre ?? "",
+      });
+      if (!invitacion.ok) {
         return NextResponse.json(
-          { error: "Este correo ya se encuentra registrado" },
-          { status: 400 },
+          invitacion.motivo === "email_registrado"
+            ? { error: "Este correo ya se encuentra registrado" }
+            : { error: "No se pudo enviar la invitación. Probá de nuevo en unos minutos." },
+          { status: invitacion.motivo === "email_registrado" ? 400 : 502 },
         );
       }
+      // inviteUserByEmail no acepta app_metadata: se completa después.
+      await supabaseService.auth.admin.updateUserById(invitacion.user.id, {
+        app_metadata: appMetadata,
+      });
+      authUser = { user: invitacion.user };
+    } else {
+      const { data: created, error: authError } =
+        await supabaseService.auth.admin.createUser({
+          email: mailNormalized,
+          password: data.password,
+          email_confirm: true, // Siempre confirmar email automáticamente
+          app_metadata: appMetadata,
+        });
 
-      return NextResponse.json(
-        { error: "No se pudo crear el usuario en Supabase" },
-        { status: 500 },
-      );
+      if (authError || !created?.user) {
+        // Detectar si el error es por correo duplicado
+        if (
+          authError?.code === "email_exists" ||
+          authError?.message?.toLowerCase().includes("already been registered") ||
+          authError?.message?.toLowerCase().includes("email address has already")
+        ) {
+          return NextResponse.json(
+            { error: "Este correo ya se encuentra registrado" },
+            { status: 400 },
+          );
+        }
+
+        return NextResponse.json(
+          { error: "No se pudo crear el usuario en Supabase" },
+          { status: 500 },
+        );
+      }
+      authUser = { user: created.user };
     }
 
+    // Si la base falla, se borra el usuario de Auth para no dejarlo huérfano
+    // (y, en una invitación, el link enviado deja de servir).
     const created = await prisma.$transaction(async (tx) => {
       const persona = await tx.persona.create({
         data: {
@@ -748,6 +794,11 @@ export async function POST(req: NextRequest) {
       }
 
       return { persona, personaEmpleado, usuario };
+    }).catch(async (txError) => {
+      await supabaseService.auth.admin
+        .deleteUser(authUser.user.id)
+        .catch((err) => console.error("No se pudo borrar el usuario de Auth huérfano:", err));
+      throw txError;
     });
 
     const empleadoResponse = {

@@ -5,6 +5,14 @@
  * @param username - Nombre de usuario (se normaliza automáticamente)
  * @returns Email interno generado
  */
+/** Dominio de los emails internos generados (no son casillas reales). */
+export const INTERNAL_EMAIL_DOMAIN = "@puntox.com";
+
+/** true si el email es interno (generado) y por lo tanto no recibe correo. */
+export function esEmailInterno(email: string | null | undefined): boolean {
+  return !email || email.trim().toLowerCase().endsWith(INTERNAL_EMAIL_DOMAIN);
+}
+
 export function generateInternalEmail(username: string): string {
   // Normalizar username: lowercase, sin espacios, caracteres especiales permitidos: . _ -
   const normalized = username

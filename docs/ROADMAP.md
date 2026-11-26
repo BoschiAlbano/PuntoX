@@ -28,7 +28,6 @@
 ## 🔴 Prioridad 1 — Cerrar cabos sueltos
 
 - [ ] **Prueba manual de planes**: tenant Básico (bloquear 2da sucursal, 4to usuario, artículo 101, FA) y tenant Ilimitado (nada bloqueado). Checklist en [saas/planes-saas-implementacion.md](saas/planes-saas-implementacion.md).
-- [ ] **Email real de invitación a empleados** — ver sección [📧 Envío de emails](#-envío-de-emails).
 - [ ] **Interruptor "Alertar nuevo dispositivo" sin efecto** — se guarda en Configuración › Seguridad (`AlertarNuevoDispositivo`) pero ningún código lo lee. Implementarlo (ver 📧) u ocultarlo.
 - [ ] **Landing / SEO**: crear `public/og-image.png` y reemplazar el handle `@puntox` de ejemplo en `src/app/page.tsx`.
 
@@ -46,7 +45,7 @@ Hoy la app **no envía ningún email**: altas y registros usan `email_confirm: t
 
 **1. Acceso y cuenta** — vía Supabase Auth (plantillas de Supabase + SMTP propio)
 - [x] **"Olvidé mi contraseña"** — `/recuperar-contrasena` → `POST /api/auth/recuperar-contrasena` → email → `/auth/confirm` (`verifyOtp`) → `/restablecer-contrasena` (pide 2FA si está activo y cierra todas las sesiones). Usuarios con email interno (`@puntox.com`) siguen dependiendo del admin.
-- [ ] 🔴 **Invitación de empleados** para que elijan su contraseña (`inviteUserByEmail`; `reenviar-invitacion` es un TODO).
+- [x] **Invitación de empleados** — en el alta, "Invitar por email" (`inviteUserByEmail` con usuario y comercio en el email) → `/auth/confirm` → "Creá tu contraseña" → login con el usuario precargado. Botón "Reenviar invitación" en la tabla (si Supabase rechaza la reinvitación, envía un link de recuperación). Si falla la base al crear el empleado, se borra el usuario de Auth.
 - [ ] **Confirmación de email al registrar comercio** (hoy se auto-confirma).
 - [ ] **Cambio de email** (confirmar la dirección nueva).
 

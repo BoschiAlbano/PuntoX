@@ -6,7 +6,7 @@ import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 /** Tipos de link de email que acepta esta ruta y su destino por defecto. */
 const DEFAULT_NEXT: Partial<Record<EmailOtpType, string>> = {
   recovery: "/restablecer-contrasena",
-  invite: "/restablecer-contrasena",
+  invite: "/restablecer-contrasena?modo=invitacion",
   signup: "/dashboard",
   email_change: "/dashboard",
   email: "/dashboard",
