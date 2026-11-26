@@ -45,3 +45,10 @@ next-env.d.ts
 
 # prisma
 /prisma/generated
+
+# Variables de entorno: contienen credenciales, NUNCA al repositorio.
+# Solo se versionan las plantillas *.example.
+.env
+.env.*
+!.env.example
+!.env.*.example
