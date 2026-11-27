@@ -1,10 +1,18 @@
 import { NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
+import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 
-// Este endpoint puede ser llamado diariamente por un CRON job (ej. Vercel Cron, EasyCron, etc)
-// o de manera manual/oculta desde el frontend del superadmin al iniciar sesión por primera vez en el día.
+/**
+ * GET /api/admin/check-subscriptions
+ * Crea una notificación para el superadmin por cada tienda vencida (sin
+ * repetirla mientras haya una sin leer). La llama el panel del superadmin
+ * (AdminNotifications) al cargar. Solo superadmin: antes era pública.
+ */
 export async function GET() {
+  const auth = await requireSuperAdmin();
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const today = new Date();
 

@@ -1,16 +1,16 @@
 /**
  * Tests para la API de perfil del negocio (GET, PUT).
- * Usa resolveTenantId con Supabase server client.
+ * Solo superadmin (requireSuperAdmin; el tenant sale de app_metadata).
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { GET, PUT } from "./route";
 import prisma from "@/DB/prisma";
-import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 import { PermisoError } from "@/lib/requirePermiso";
 
-vi.mock("@/lib/supabase/serverClient", () => ({
-  getSupabaseServerClient: vi.fn(),
+vi.mock("@/lib/auth/requireSuperAdmin", () => ({
+  requireSuperAdmin: vi.fn(),
 }));
 vi.mock("@/DB/prisma", () => ({
   default: {
@@ -37,16 +37,10 @@ vi.mock("@/lib/errors/handler", () => ({
 describe("GET /api/admin/configuracion/perfil", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("retorna 401 cuando no hay tenantId", async () => {
-    vi.mocked(getSupabaseServerClient).mockResolvedValue({
-      auth: {
-        getUser: vi.fn(() =>
-          Promise.resolve({
-            data: { user: null },
-          })
-        ),
-      },
-    } as any);
+  it("retorna 401 sin sesión de superadmin", async () => {
+    vi.mocked(requireSuperAdmin).mockResolvedValue(
+      NextResponse.json({ error: "No autenticado" }, { status: 401 }),
+    );
     const res = await GET();
     const data = await res.json();
     expect(res.status).toBe(401);
@@ -54,15 +48,7 @@ describe("GET /api/admin/configuracion/perfil", () => {
   });
 
   it("retorna 404 cuando el tenant no existe", async () => {
-    vi.mocked(getSupabaseServerClient).mockResolvedValue({
-      auth: {
-        getUser: vi.fn(() =>
-          Promise.resolve({
-            data: { user: { user_metadata: { tenantId: 1 } } },
-          })
-        ),
-      },
-    } as any);
+    vi.mocked(requireSuperAdmin).mockResolvedValue({ tenantId: 1, isSuperAdmin: true } as any);
     vi.mocked(prisma.tenant.findUnique).mockResolvedValue(null);
     const res = await GET();
     const data = await res.json();
@@ -71,15 +57,7 @@ describe("GET /api/admin/configuracion/perfil", () => {
   });
 
   it("retorna 200 con datos del perfil cuando existe", async () => {
-    vi.mocked(getSupabaseServerClient).mockResolvedValue({
-      auth: {
-        getUser: vi.fn(() =>
-          Promise.resolve({
-            data: { user: { user_metadata: { tenantId: 1 } } },
-          })
-        ),
-      },
-    } as any);
+    vi.mocked(requireSuperAdmin).mockResolvedValue({ tenantId: 1, isSuperAdmin: true } as any);
     vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
       Nombre: "Mi Negocio",
       Dominio: "minegocio",
@@ -102,16 +80,10 @@ describe("GET /api/admin/configuracion/perfil", () => {
 describe("PUT /api/admin/configuracion/perfil", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("retorna 401 cuando no hay tenantId", async () => {
-    vi.mocked(getSupabaseServerClient).mockResolvedValue({
-      auth: {
-        getUser: vi.fn(() =>
-          Promise.resolve({
-            data: { user: null },
-          })
-        ),
-      },
-    } as any);
+  it("retorna 401 sin sesión de superadmin", async () => {
+    vi.mocked(requireSuperAdmin).mockResolvedValue(
+      NextResponse.json({ error: "No autenticado" }, { status: 401 }),
+    );
     const req = new NextRequest("http://localhost:3000/api/admin/configuracion/perfil", {
       method: "PUT",
       body: JSON.stringify({
@@ -127,15 +99,7 @@ describe("PUT /api/admin/configuracion/perfil", () => {
   });
 
   it("retorna 400 cuando el body es inválido (falta nombre, razonSocial o cuit)", async () => {
-    vi.mocked(getSupabaseServerClient).mockResolvedValue({
-      auth: {
-        getUser: vi.fn(() =>
-          Promise.resolve({
-            data: { user: { user_metadata: { tenantId: 1 } } },
-          })
-        ),
-      },
-    } as any);
+    vi.mocked(requireSuperAdmin).mockResolvedValue({ tenantId: 1, isSuperAdmin: true } as any);
     const req = new NextRequest("http://localhost:3000/api/admin/configuracion/perfil", {
       method: "PUT",
       body: JSON.stringify({
@@ -150,15 +114,7 @@ describe("PUT /api/admin/configuracion/perfil", () => {
   });
 
   it("retorna 200 con perfil actualizado cuando el body es válido", async () => {
-    vi.mocked(getSupabaseServerClient).mockResolvedValue({
-      auth: {
-        getUser: vi.fn(() =>
-          Promise.resolve({
-            data: { user: { user_metadata: { tenantId: 1 } } },
-          })
-        ),
-      },
-    } as any);
+    vi.mocked(requireSuperAdmin).mockResolvedValue({ tenantId: 1, isSuperAdmin: true } as any);
     vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
       return await callback({
         tenant: {

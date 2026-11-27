@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
-import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 import { handleError } from "@/lib/errors/handler";
 
 const savePreferenciasSchema = z.object({
@@ -29,23 +29,13 @@ const savePreferenciasSchema = z.object({
   numerarPedidosPantalla: z.boolean(),
 });
 
-async function resolveTenantId() {
-  const supabase = await getSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const tenantId = user?.user_metadata?.tenantId;
-  return tenantId ? Number(tenantId) : null;
-}
+// Solo superadmin. El tenant sale de app_metadata (antes se leía de
+// user_metadata, que el propio usuario puede modificar).
 
 export async function GET() {
-  const tenantId = await resolveTenantId();
-  if (!tenantId) {
-    return NextResponse.json(
-      { error: "No autenticado", code: "TENANT_MISSING" },
-      { status: 401 }
-    );
-  }
+  const auth = await requireSuperAdmin();
+  if (auth instanceof NextResponse) return auth;
+  const { tenantId } = auth;
 
   try {
     // Obtener Configuracion vigente
@@ -116,13 +106,9 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
-  const tenantId = await resolveTenantId();
-  if (!tenantId) {
-    return NextResponse.json(
-      { error: "No autenticado", code: "TENANT_MISSING" },
-      { status: 401 }
-    );
-  }
+  const auth = await requireSuperAdmin();
+  if (auth instanceof NextResponse) return auth;
+  const { tenantId } = auth;
 
   const json = await req.json().catch(() => null);
   const parsed = savePreferenciasSchema.safeParse(json);
