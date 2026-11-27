@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import prisma from "@/DB/prisma";
 import { sessionIdDesdeCookies } from "@/lib/auth/sesionActual";
+import { getCachedEstadoSuscripcion } from "@/lib/auth/getAuthUser";
+import { suscripcionBloqueada } from "@/lib/suscripcion/vencimiento";
 
 /**
  * GET /api/auth/session-status
@@ -57,6 +59,12 @@ export async function GET(req: NextRequest) {
       user.app_metadata?.tenantId || user.app_metadata?.tenant_id;
     if (!tenantId) {
       return NextResponse.json({ activa: false }, { status: 200 });
+    }
+
+    // Suscripción vencida (pasada la gracia) o comercio desactivado: el
+    // cliente lleva al usuario a /suscripcion-vencida.
+    if (suscripcionBloqueada(await getCachedEstadoSuscripcion(Number(tenantId)))) {
+      return NextResponse.json({ activa: true, suscripcionBloqueada: true }, { status: 200 });
     }
 
     // Identificar ESTA sesión por el session_id del JWT (cookie de Supabase).

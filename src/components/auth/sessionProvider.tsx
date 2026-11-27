@@ -10,7 +10,7 @@ import React, {
 import type { Session } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
 import type { TenantUser } from "@/types/auth";
-import { useUserStore } from "@/store/useUserStore";
+import { RUTA_SUSCRIPCION_VENCIDA, useUserStore } from "@/store/useUserStore";
 import { clearAllClientState, getStoredSesionId } from "@/lib/auth/clearClientState";
 import { usePathname } from "next/navigation";
 
@@ -412,6 +412,14 @@ export const SessionProviderComponent = ({
         if (!res.ok) return; // Error de red → ignorar, no desloguear
 
         const data = await res.json();
+
+        if (
+          data.suscripcionBloqueada === true &&
+          window.location.pathname !== RUTA_SUSCRIPCION_VENCIDA
+        ) {
+          window.location.replace(RUTA_SUSCRIPCION_VENCIDA);
+          return;
+        }
 
         if (data.sesionCerrada === true) {
           console.warn(

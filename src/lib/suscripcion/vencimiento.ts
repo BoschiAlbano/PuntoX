@@ -1,9 +1,13 @@
 /**
  * Reglas de vencimiento de la suscripción SaaS (compartidas por el cron de
- * avisos, el banner del dashboard y los emails).
+ * avisos, el banner, el bloqueo de acceso y el panel del superadmin).
  *
- * Política actual: solo avisos, sin bloqueo. Se avisa 7 días antes, 1 día
- * antes y el día que vence.
+ * Política (27/11/2026):
+ * - Se avisa 7 días antes, 1 día antes y el día que vence.
+ * - Después de vencer hay DIAS_GRACIA días de gracia: se usa normal, con aviso.
+ * - Pasada la gracia, bloqueo total hasta que el superadmin renueva.
+ * - Un comercio desactivado a mano (EstaActivo = false) también queda bloqueado.
+ * - Sin FechaVencimiento (ej. Plan Ilimitado) nunca vence.
  */
 
 const ZONA_HORARIA = "America/Argentina/Buenos_Aires";
@@ -12,10 +16,26 @@ const MS_POR_DIA = 24 * 60 * 60 * 1000;
 /** A partir de cuántos días antes se muestra el banner / se envía el 1er aviso. */
 export const DIAS_PRIMER_AVISO = 7;
 
-/** Un vencido solo se avisa si venció hace como máximo estos días. */
-export const DIAS_MAX_AVISO_VENCIDO = 7;
+/** Días de uso normal después de vencer, antes del bloqueo. */
+export const DIAS_GRACIA = 7;
 
-export type EtapaAviso = "7d" | "1d" | "vencido";
+/** Hasta cuántos días después de vencer puede corresponder un aviso. */
+export const DIAS_MAX_AVISO_VENCIDO = DIAS_GRACIA + 1;
+
+/**
+ * - "7d" / "1d": antes de vencer.
+ * - "vencido": vence hoy o está en gracia.
+ * - "ultimo_dia": último día de gracia (mañana se bloquea).
+ * - "bloqueado": primer día de bloqueo.
+ */
+export type EtapaAviso = "7d" | "1d" | "vencido" | "ultimo_dia" | "bloqueado";
+
+export type EstadoSuscripcion =
+  | "activa" // sin vencimiento o faltan más de DIAS_PRIMER_AVISO días
+  | "por_vencer" // vence dentro de DIAS_PRIMER_AVISO días (o hoy)
+  | "en_gracia" // venció hace 1..DIAS_GRACIA días: se usa con aviso
+  | "vencida" // pasó la gracia: acceso bloqueado
+  | "desactivada"; // EstaActivo = false: acceso bloqueado
 
 /** Fecha calendario (YYYY-MM-DD) en hora de Argentina. */
 export function fechaArgentina(fecha: Date): string {
@@ -43,10 +63,51 @@ export function diasHastaVencimiento(vencimiento: Date, ahora: Date): number {
  * que avisar. Si el cron se saltea un día, igual se envía la etapa vigente.
  */
 export function etapaAviso(dias: number): EtapaAviso | null {
-  if (dias <= 0) return dias >= -DIAS_MAX_AVISO_VENCIDO ? "vencido" : null;
+  if (dias === -(DIAS_GRACIA + 1)) return "bloqueado";
+  if (dias === -DIAS_GRACIA) return "ultimo_dia";
+  if (dias <= 0) return dias > -DIAS_GRACIA ? "vencido" : null;
   if (dias === 1) return "1d";
   if (dias <= DIAS_PRIMER_AVISO) return "7d";
   return null;
+}
+
+/** Suma días calendario a una fecha (sin tocar la hora). */
+function sumarDias(fecha: Date, dias: number): Date {
+  return new Date(fecha.getTime() + dias * MS_POR_DIA);
+}
+
+/** Último día en que se puede usar el sistema vencido (fin de la gracia). */
+export function ultimoDiaDeGracia(vencimiento: Date): Date {
+  return sumarDias(vencimiento, DIAS_GRACIA);
+}
+
+/** Estado de la suscripción de un comercio en este momento. */
+export function estadoSuscripcion(
+  tenant: { EstaActivo: boolean; FechaVencimiento: Date | null },
+  ahora: Date = new Date(),
+): EstadoSuscripcion {
+  if (!tenant.EstaActivo) return "desactivada";
+  if (!tenant.FechaVencimiento) return "activa";
+  const dias = diasHastaVencimiento(tenant.FechaVencimiento, ahora);
+  if (dias >= 0) return dias <= DIAS_PRIMER_AVISO ? "por_vencer" : "activa";
+  if (dias >= -DIAS_GRACIA) return "en_gracia";
+  return "vencida";
+}
+
+/** El comercio no puede usar el sistema (vencida pasada la gracia, o desactivada). */
+export const suscripcionBloqueada = (estado: EstadoSuscripcion) =>
+  estado === "vencida" || estado === "desactivada";
+
+/**
+ * Desde qué fecha se suman los días al renovar:
+ * - al día o en gracia: desde el vencimiento (pagar tarde no regala días);
+ * - ya bloqueado (o sin fecha): desde hoy (los días bloqueados no se usaron).
+ */
+export function baseRenovacion(vencimiento: Date | null, ahora: Date = new Date()): Date {
+  if (vencimiento && diasHastaVencimiento(vencimiento, ahora) >= -DIAS_GRACIA) {
+    return new Date(vencimiento);
+  }
+  return new Date(ahora);
 }
 
 /** Fecha legible para el usuario, ej. "3/12/2026". */

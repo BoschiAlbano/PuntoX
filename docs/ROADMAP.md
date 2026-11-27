@@ -86,7 +86,13 @@ Emails de Auth (recuperar contraseña, invitaciones) vía Supabase con SMTP de R
 
 **4. Suscripción SaaS (PuntoX → comercios)**
 - [x] **Aviso de vencimiento** — email + notificación + banner a los 7 días, 1 día y al vencer, con botón "Renovar por WhatsApp" ([saas/avisos-vencimiento.md](saas/avisos-vencimiento.md)). Política: solo avisos, sin bloqueo.
-- [ ] **Bloqueo al vencer / al desactivar**: hoy ni el vencimiento ni `Tenant.EstaActivo = false` restringen el acceso (decisión de negocio pendiente).
+- [x] **Bloqueo al vencer / al desactivar** (27/11/2026) — reglas en `src/lib/suscripcion/vencimiento.ts`:
+  - Vence → 7 días de gracia con el banner rojo y el botón de WhatsApp; el sistema se usa normal.
+  - Día 8 → **bloqueo total**: `getAuthContext` responde 403 (`SUSCRIPCION_BLOQUEADA`), el login lo rechaza con el botón de WhatsApp, y los usuarios conectados van a `/suscripcion-vencida` (heartbeat o al cargar). El superadmin nunca se bloquea.
+  - Desactivado a mano (`EstaActivo = false`) → bloqueo total igual.
+  - Avisos: 7 días antes, 1 día antes, al vencer (con fecha de bloqueo), último día de gracia y el día del bloqueo.
+  - **Renovar** (+30 días): al día o en gracia, desde el vencimiento; ya bloqueado, desde hoy. Al renovar, el acceso vuelve en menos de 30 s (cache).
+  - Los pagos se arreglan por fuera (sin pasarela) y el superadmin renueva desde `/admin/tenants/[id]`.
 - [x] `GET /api/admin/check-subscriptions` y `configuracion/perfil` / `preferencias-venta` solo para superadmin (27/11/2026). Las dos últimas tomaban el comercio de `user_metadata`, editable por el usuario.
 - [x] Bienvenida al registrar el comercio — cubierta por el alta por invitación.
 - [x] **Límite del plan alcanzado** — notificación in-app a los administradores al llegar al máximo de sucursales, usuarios o artículos (sin email; no se repite mientras esté sin leer).

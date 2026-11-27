@@ -32,7 +32,10 @@ vi.mock("@/lib/supabase/serviceClient", () => ({
 }));
 
 vi.mock("@/DB/prisma", () => ({
-  default: { usuario: { findFirst: vi.fn(), update: vi.fn() } },
+  default: {
+    usuario: { findFirst: vi.fn(), update: vi.fn() },
+    tenant: { findUnique: vi.fn() },
+  },
 }));
 vi.mock("@/lib/rateLimit", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/rateLimit")>()),
@@ -70,6 +73,11 @@ describe("POST /api/auth/login", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://x.supabase.co");
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "sb_secret_test");
     vi.mocked(prisma.usuario.findFirst).mockResolvedValue(usuarioBase as any);
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      Nombre: "Kiosco Ana",
+      EstaActivo: true,
+      FechaVencimiento: null,
+    } as any);
     getUserById.mockResolvedValue({ data: { user: { email: "juan@empresa.com" } } });
     signInWithPassword.mockResolvedValue({
       data: { session: { access_token: "at", refresh_token: "rt" } },
@@ -135,6 +143,31 @@ describe("POST /api/auth/login", () => {
     } as any);
     await login({ username: "juan", password: "secreta" });
     expect(reiniciarLimite).not.toHaveBeenCalled();
+  });
+
+  it("suscripción vencida pasada la gracia: revoca la sesión y responde 403 con el comercio", async () => {
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      Nombre: "Kiosco Ana",
+      EstaActivo: true,
+      FechaVencimiento: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+    } as any);
+    adminSignOut.mockResolvedValue({ error: null });
+    const res = await login({ username: "juan", password: "secreta" });
+    expect(res.status).toBe(403);
+    const data = await res.json();
+    expect(data).toMatchObject({ suscripcionBloqueada: true, comercio: "Kiosco Ana" });
+    expect(data).not.toHaveProperty("access_token");
+    expect(adminSignOut).toHaveBeenCalledWith("at", "local");
+  });
+
+  it("en la semana de gracia entra normalmente", async () => {
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      Nombre: "Kiosco Ana",
+      EstaActivo: true,
+      FechaVencimiento: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    } as any);
+    const res = await login({ username: "juan", password: "secreta" });
+    expect(res.status).toBe(200);
   });
 
   it("usuario inexistente responde igual que contraseña incorrecta", async () => {

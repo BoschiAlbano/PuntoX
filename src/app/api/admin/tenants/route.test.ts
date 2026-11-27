@@ -173,6 +173,46 @@ describe("PATCH /api/admin/tenants", () => {
   });
 });
 
+describe("PATCH /api/admin/tenants - renovar", () => {
+  const DIA = 24 * 60 * 60 * 1000;
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getAuthContext).mockResolvedValue({ tenantId: 1, isSuperAdmin: true } as any);
+    vi.mocked(prisma.tenant.update).mockResolvedValue({ Id: 1n, Nombre: "T", EstaActivo: true } as any);
+  });
+
+  const renovar = async (vencimiento: Date | null) => {
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      FechaVencimiento: vencimiento,
+      PlanId: 2n,
+      Plan: { Nombre: "Plan Básico" },
+    } as any);
+    await PATCH(
+      new NextRequest("http://localhost:3000/api/admin/tenants", {
+        method: "PATCH",
+        body: JSON.stringify({ tenantId: 1, action: "renovar" }),
+      }),
+    );
+    return vi.mocked(prisma.tenant.update).mock.calls[0][0].data as {
+      FechaVencimiento: Date;
+      EstaActivo: boolean;
+    };
+  };
+
+  it("en la semana de gracia suma 30 días desde el vencimiento (no desde hoy)", async () => {
+    const vencio = new Date(Date.now() - 4 * DIA);
+    const data = await renovar(vencio);
+    expect(data.FechaVencimiento.getTime()).toBe(vencio.getTime() + 30 * DIA);
+    expect(data.EstaActivo).toBe(true);
+  });
+
+  it("ya bloqueado (pasada la gracia) suma 30 días desde hoy", async () => {
+    const antes = Date.now();
+    const data = await renovar(new Date(Date.now() - 40 * DIA));
+    expect(data.FechaVencimiento.getTime()).toBeGreaterThanOrEqual(antes + 30 * DIA - 1000);
+  });
+});
+
 describe("DELETE /api/admin/tenants", () => {
   beforeEach(() => vi.clearAllMocks());
 

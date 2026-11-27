@@ -41,7 +41,8 @@ type TenantSummary = {
   totalUsers: number;
   onboardingCompleto: boolean;
   fechaVencimiento: string | null;
-  planExpirationStatus: "al_dia" | "vencido" | "sin_vencimiento";
+  suscripcion: "activa" | "por_vencer" | "en_gracia" | "vencida" | "desactivada";
+  ultimoDiaDeGracia: string | null;
 };
 
 const statusConfig: Record<
@@ -138,11 +139,18 @@ function AdminTenantsContent() {
           </Chip>
         );
       case "suscripcion": {
-        const expirationLabel = tenant.fechaVencimiento
-          ? new Date(tenant.fechaVencimiento).toLocaleDateString("es-AR")
-          : "Sin vencimiento";
+        const fecha = (iso: string | null) =>
+          iso ? new Date(iso).toLocaleDateString("es-AR") : "";
+        const vence = fecha(tenant.fechaVencimiento);
 
-        if (tenant.planExpirationStatus === "sin_vencimiento") {
+        if (tenant.suscripcion === "desactivada") {
+          return (
+            <Chip color="default" variant="flat" size="sm">
+              Desactivado
+            </Chip>
+          );
+        }
+        if (!tenant.fechaVencimiento) {
           return (
             <Chip color="primary" variant="flat" size="sm">
               Sin vencimiento
@@ -150,25 +158,36 @@ function AdminTenantsContent() {
           );
         }
 
+        const chip = {
+          activa: { color: "success", texto: `Al día · ${vence}`, tip: `Vence el ${vence}` },
+          por_vencer: { color: "warning", texto: `Vence ${vence}`, tip: "Vence en 7 días o menos" },
+          en_gracia: {
+            color: "warning",
+            texto: `En gracia hasta ${fecha(tenant.ultimoDiaDeGracia)}`,
+            tip: `Venció el ${vence}; se bloquea después del ${fecha(tenant.ultimoDiaDeGracia)}`,
+          },
+          vencida: { color: "danger", texto: `Bloqueado · venció ${vence}`, tip: "Sin acceso hasta renovar" },
+        }[tenant.suscripcion] as {
+          color: "success" | "warning" | "danger";
+          texto: string;
+          tip: string;
+        };
+
         return (
-          <Tooltip content={`Vencimiento: ${expirationLabel}`}>
+          <Tooltip content={chip.tip}>
             <Chip
-              color={
-                tenant.planExpirationStatus === "vencido" ? "danger" : "success"
-              }
+              color={chip.color}
               variant="flat"
               size="sm"
               startContent={
-                tenant.planExpirationStatus === "vencido" ? (
-                  <AlertTriangle className="w-3.5 h-3.5" />
-                ) : (
+                chip.color === "success" ? (
                   <CheckCircle2 className="w-3.5 h-3.5" />
+                ) : (
+                  <AlertTriangle className="w-3.5 h-3.5" />
                 )
               }
             >
-              {tenant.planExpirationStatus === "vencido"
-                ? `Vencida · ${expirationLabel}`
-                : `Al día · ${expirationLabel}`}
+              {chip.texto}
             </Chip>
           </Tooltip>
         );

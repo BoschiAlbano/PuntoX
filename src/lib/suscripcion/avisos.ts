@@ -19,6 +19,7 @@ import {
   etapaAviso,
   fechaArgentina,
   formatearFecha,
+  ultimoDiaDeGracia,
   urlRenovacionWhatsapp,
 } from "./vencimiento";
 
@@ -54,6 +55,7 @@ export function contenidoAviso(
   const comercio = tenant.Nombre;
   const plan = tenant.Plan?.Nombre;
   const delPlan = plan ? ` (${plan})` : "";
+  const hastaGracia = formatearFecha(ultimoDiaDeGracia(tenant.FechaVencimiento));
 
   switch (etapa) {
     case "7d":
@@ -72,7 +74,19 @@ export function contenidoAviso(
       return {
         asunto: "Tu suscripción a PuntoX venció",
         titulo: "Tu suscripción venció",
-        mensaje: `La suscripción de "${comercio}"${delPlan} venció el ${fecha}. Renovala para mantener el servicio de PuntoX.`,
+        mensaje: `La suscripción de "${comercio}"${delPlan} venció el ${fecha}. Podés seguir usando PuntoX hasta el ${hastaGracia}; después se bloquea el acceso hasta que la renueves.`,
+      };
+    case "ultimo_dia":
+      return {
+        asunto: "Mañana se bloquea tu acceso a PuntoX",
+        titulo: "Último día para renovar",
+        mensaje: `La suscripción de "${comercio}"${delPlan} venció el ${fecha} y hoy es el último día de uso. Si no la renovás, mañana se bloquea el acceso a PuntoX.`,
+      };
+    case "bloqueado":
+      return {
+        asunto: "Se bloqueó el acceso a PuntoX",
+        titulo: "Acceso bloqueado",
+        mensaje: `La suscripción de "${comercio}"${delPlan} venció el ${fecha} y se bloqueó el acceso a PuntoX. Tus datos se conservan: renovala para volver a usar el sistema.`,
       };
   }
 }
@@ -161,7 +175,7 @@ export async function procesarAvisosVencimiento(
       data: usuarios.map((usuarioId) => ({
         TenantId: tenant.Id,
         UsuarioId: usuarioId,
-        Tipo: etapa === "vencido" ? "ERROR" : "WARNING",
+        Tipo: etapa === "7d" || etapa === "1d" ? "WARNING" : "ERROR",
         Titulo: contenido.titulo,
         Mensaje: contenido.mensaje.slice(0, 500),
         EntidadTipo: ENTIDAD_TIPO_AVISO,

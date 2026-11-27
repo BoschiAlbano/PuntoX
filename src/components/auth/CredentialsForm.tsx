@@ -6,7 +6,8 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserStore } from "@/store/useUserStore";
 import Link from "next/link";
-import { CheckCircle2, Eye, EyeOff, Shield } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, MessageCircle, Shield } from "lucide-react";
+import { urlRenovacionWhatsapp } from "@/lib/suscripcion/vencimiento";
 import { useAuthTransition } from "./AuthTransitionContext";
 
 /** Error de /api/auth/login: su mensaje ya está listo para mostrar. */
@@ -102,6 +103,8 @@ export default function CredentialsForm() {
   // Límite de pedidos: momento a partir del cual se puede reintentar
   const [esperaHasta, setEsperaHasta] = useState<number | null>(null);
   const [segundosEspera, setSegundosEspera] = useState(0);
+  // Suscripción del comercio vencida o desactivado: nombre para el WhatsApp
+  const [comercioBloqueado, setComercioBloqueado] = useState<string | null>(null);
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -163,6 +166,7 @@ export default function CredentialsForm() {
     setUsernameError(""); // Limpiar error de username
     // El límite puede ser por usuario: con otro usuario se vuelve a consultar
     setEsperaHasta(null);
+    setComercioBloqueado(null);
 
     // Validar que el username no esté vacío
     if (value && value.length < 2) {
@@ -208,6 +212,9 @@ export default function CredentialsForm() {
         if (segundos > 0) throw new EsperaError(segundos);
       }
       if (!loginRes.ok) {
+        setComercioBloqueado(
+          loginData?.suscripcionBloqueada ? String(loginData.comercio ?? "") : null,
+        );
         throw new LoginError(
           loginData?.error || "No se pudo iniciar sesión. Probá de nuevo.",
         );
@@ -634,6 +641,18 @@ export default function CredentialsForm() {
         <div className="rounded-lg border border-landing-error/20 bg-landing-error-container p-3.5 text-sm text-landing-on-error-container">
           {error}
         </div>
+      )}
+
+      {error && comercioBloqueado !== null && urlRenovacionWhatsapp(comercioBloqueado) && (
+        <a
+          href={urlRenovacionWhatsapp(comercioBloqueado)!}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-landing-outline-variant px-4 py-2.5 text-sm font-semibold text-landing-on-surface transition-colors hover:bg-landing-surface-container focus:outline-none focus:ring-4 focus:ring-landing-primary-container/20"
+        >
+          <MessageCircle className="h-4 w-4" aria-hidden="true" />
+          Renovar por WhatsApp
+        </a>
       )}
 
       {esperaHasta !== null && segundosEspera > 0 && (

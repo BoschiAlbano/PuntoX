@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { estadoSuscripcion, ultimoDiaDeGracia } from "@/lib/suscripcion/vencimiento";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
@@ -86,6 +87,10 @@ export async function GET(
       onboardingCompleto: tenant.OnboardingCompleto,
       estaEliminado: tenant.EstaEliminado,
       fechaVencimiento: tenant.FechaVencimiento ? tenant.FechaVencimiento.toISOString() : null,
+      suscripcion: estadoSuscripcion(tenant),
+      ultimoDiaDeGracia: tenant.FechaVencimiento
+        ? ultimoDiaDeGracia(tenant.FechaVencimiento).toISOString()
+        : null,
       plan: tenant.Plan
         ? {
             id: Number(tenant.Plan.Id),

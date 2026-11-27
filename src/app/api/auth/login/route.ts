@@ -13,6 +13,8 @@ import {
   registrarIntentoFallido,
   selectUsuarioIntentos,
 } from "@/lib/auth/intentosFallidos";
+import { estadoSuscripcion, suscripcionBloqueada } from "@/lib/suscripcion/vencimiento";
+import { PerfilTipo } from "../../../../../prisma/generated/prisma";
 
 const bodySchema = z.object({
   username: z.string().trim().min(2).max(100),
@@ -106,6 +108,29 @@ export async function POST(req: NextRequest) {
       // sesión recién creada para que el token no quede vivo.
       await admin.auth.admin.signOut(data.session.access_token, "local").catch(() => {});
       return responder(403, CUENTA_BLOQUEADA, { bloqueado: true });
+    }
+
+    // Suscripción del comercio vencida (pasada la gracia) o desactivado: no
+    // entra. Se informa con el nombre del comercio para el botón de WhatsApp.
+    const esSuperAdmin = usuario.PerfilUsuario.some(
+      (pu) => pu.Perfiles.Tipo === PerfilTipo.SUPERADMIN,
+    );
+    if (!esSuperAdmin) {
+      const tenant = await prisma.tenant.findUnique({
+        where: { Id: usuario.TenantId },
+        select: { Nombre: true, EstaActivo: true, FechaVencimiento: true },
+      });
+      const estado = tenant ? estadoSuscripcion(tenant) : "activa";
+      if (suscripcionBloqueada(estado)) {
+        await admin.auth.admin.signOut(data.session.access_token, "local").catch(() => {});
+        return responder(
+          403,
+          estado === "desactivada"
+            ? `El comercio "${tenant!.Nombre}" está desactivado. Contactá a PuntoX para reactivarlo.`
+            : `La suscripción de "${tenant!.Nombre}" está vencida. Renovala para volver a usar PuntoX.`,
+          { suscripcionBloqueada: true, comercio: tenant!.Nombre },
+        );
+      }
     }
 
     // Quien acertó la contraseña no tiene por qué seguir frenado. El límite

@@ -16,20 +16,21 @@ vi.mock("./requestContext", () => ({
 vi.mock("next/headers", () => ({
   cookies: vi.fn().mockResolvedValue({ get: vi.fn().mockReturnValue(null) }),
 }));
+const { getUser } = vi.hoisted(() => ({ getUser: vi.fn() }));
 vi.mock("@/lib/supabase/serverClient", () => ({
-  getSupabaseServerClient: vi.fn().mockResolvedValue({
-    auth: {
-      getUser: vi.fn().mockResolvedValue({
-        data: { user: { id: "auth-1", app_metadata: { tenantId: 1, permissions: [] } } },
-      }),
-    },
-  }),
+  getSupabaseServerClient: vi.fn().mockResolvedValue({ auth: { getUser } }),
 }));
+/** El estado de suscripción se cachea por tenant: cada caso usa uno distinto. */
+const conTenant = (tenantId: number) =>
+  getUser.mockResolvedValue({
+    data: { user: { id: "auth-1", app_metadata: { tenantId, permissions: [] } } },
+  });
 vi.mock("@/DB/prisma", () => ({
   default: {
     usuario: { findFirst: vi.fn() },
     usuarioSucursal: { count: vi.fn() },
     sucursal: { count: vi.fn() },
+    tenant: { findUnique: vi.fn() },
     $queryRaw: vi.fn(),
   },
 }));
@@ -50,6 +51,11 @@ describe("getAuthContext - x-sucursal-id", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     invalidateUserCache("auth-1");
+    conTenant(1);
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      EstaActivo: true,
+      FechaVencimiento: null,
+    } as any);
   });
 
   it("administrador: rechaza una sucursal que no es de su comercio", async () => {
@@ -86,5 +92,53 @@ describe("getAuthContext - x-sucursal-id", () => {
       "No tienes acceso a la sucursal solicitada",
     );
     expect(prisma.sucursal.count).not.toHaveBeenCalled();
+  });
+});
+
+describe("getAuthContext - suscripción del comercio", () => {
+  const hace = (dias: number) => new Date(Date.now() - dias * 24 * 60 * 60 * 1000);
+  let tenant = 500;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    conTenant(++tenant);
+  });
+
+  const conSuscripcion = (EstaActivo: boolean, FechaVencimiento: Date | null) =>
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({ EstaActivo, FechaVencimiento } as any);
+
+  it("en la semana de gracia sigue funcionando", async () => {
+    conPerfil("ADMINISTRADOR");
+    conSuscripcion(true, hace(5));
+    await expect(getAuthContext()).resolves.toMatchObject({ tenantId: tenant });
+  });
+
+  it("pasada la gracia responde 403 con el motivo para el cliente", async () => {
+    conPerfil("EMPLEADO");
+    conSuscripcion(true, hace(10));
+    await expect(getAuthContext()).rejects.toMatchObject({
+      statusCode: 403,
+      details: { motivo: "SUSCRIPCION_BLOQUEADA", estado: "vencida" },
+    });
+  });
+
+  it("un comercio desactivado a mano también queda bloqueado", async () => {
+    conPerfil("ADMINISTRADOR");
+    conSuscripcion(false, null);
+    await expect(getAuthContext()).rejects.toMatchObject({
+      details: { estado: "desactivada" },
+    });
+  });
+
+  it("el superadmin nunca queda bloqueado", async () => {
+    conPerfil("SUPERADMIN");
+    conSuscripcion(false, hace(30));
+    await expect(getAuthContext()).resolves.toMatchObject({ isSuperAdmin: true });
+  });
+
+  it("permitirSuscripcionBloqueada deja pasar (pantalla de suscripción vencida)", async () => {
+    conPerfil("ADMINISTRADOR");
+    conSuscripcion(true, hace(30));
+    await expect(getAuthContext({ permitirSuscripcionBloqueada: true })).resolves.toBeTruthy();
   });
 });

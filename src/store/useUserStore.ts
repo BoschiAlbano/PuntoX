@@ -3,6 +3,9 @@ import { devtools } from "zustand/middleware";
 import { tienePermisoParaRuta } from "@/lib/permissions/routePermissions";
 import { addToast } from "@heroui/react";
 
+/** Pantalla para comercios con la suscripción vencida o desactivados. */
+export const RUTA_SUSCRIPCION_VENCIDA = "/suscripcion-vencida";
+
 // Define simplified types matching API response (which converts BigInt to string)
 interface User {
   Id: string;
@@ -115,6 +118,11 @@ export const useUserStore = create<UserState>()(
           const res = await fetch("/api/auth/me");
           if (res.ok) {
             const data = await res.json();
+            // Suscripción vencida (pasada la gracia) o comercio desactivado
+            if (data.suscripcion?.bloqueada && typeof window !== "undefined") {
+              window.location.replace(RUTA_SUSCRIPCION_VENCIDA);
+              return;
+            }
             let branchToUse = data.currentBranch;
             // Client-side restoration of selected branch
             if (typeof window !== "undefined") {

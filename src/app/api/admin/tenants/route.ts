@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  baseRenovacion,
+  estadoSuscripcion,
+  ultimoDiaDeGracia,
+} from "@/lib/suscripcion/vencimiento";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { handleError } from "@/lib/errors/handler";
@@ -159,11 +164,8 @@ export async function GET(req: NextRequest) {
           ? "cancelado"
           : "pendiente";
       const configuracion = tenant.Configuraciones[0];
-      const planExpirationStatus = tenant.FechaVencimiento
-        ? tenant.FechaVencimiento < new Date()
-          ? "vencido"
-          : "al_dia"
-        : "sin_vencimiento";
+      // activa / por_vencer / en_gracia / vencida (bloqueada) / desactivada
+      const suscripcion = estadoSuscripcion(tenant);
 
       return {
         id: Number(tenant.Id),
@@ -174,7 +176,10 @@ export async function GET(req: NextRequest) {
         status: status as "activo" | "pendiente" | "cancelado",
         plan: tenant.Plan?.Nombre || "Base",
         fechaVencimiento: tenant.FechaVencimiento?.toISOString() || null,
-        planExpirationStatus,
+        suscripcion,
+        ultimoDiaDeGracia: tenant.FechaVencimiento
+          ? ultimoDiaDeGracia(tenant.FechaVencimiento).toISOString()
+          : null,
         stores: 1, // Por ahora siempre 1, se puede calcular después
         admins: adminsCount,
         totalUsers: tenant._count.Usuarios,
@@ -270,11 +275,9 @@ export async function PATCH(req: NextRequest) {
         updateData.OnboardingCompleto = true;
         break;
       case "renovar":
-        const baseDate =
-          currentTenant.FechaVencimiento &&
-          currentTenant.FechaVencimiento > new Date()
-            ? new Date(currentTenant.FechaVencimiento)
-            : new Date();
+        // Al día o en gracia: +30 desde el vencimiento (pagar tarde no
+        // regala días). Ya bloqueado: +30 desde hoy.
+        const baseDate = baseRenovacion(currentTenant.FechaVencimiento);
         baseDate.setDate(baseDate.getDate() + 30);
         updateData.FechaVencimiento = baseDate;
         updateData.EstaActivo = true;

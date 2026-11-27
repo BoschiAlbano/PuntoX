@@ -57,6 +57,8 @@ type TenantDetail = {
   onboardingCompleto: boolean;
   estaEliminado: boolean;
   fechaVencimiento: string | null;
+  suscripcion: "activa" | "por_vencer" | "en_gracia" | "vencida" | "desactivada";
+  ultimoDiaDeGracia: string | null;
   plan: { id: number; nombre: string; costoMensual: number } | null;
   configuracion: {
     razonSocial: string;
@@ -506,6 +508,22 @@ export default function TenantDetailPage() {
                   }
                   icon={<Clock className="w-3.5 h-3.5" />}
                 />
+                <InfoRow
+                  label="Estado"
+                  value={
+                    {
+                      activa: "Al día",
+                      por_vencer: "Vence en 7 días o menos",
+                      en_gracia: `En gracia: se bloquea después del ${
+                        tenant.ultimoDiaDeGracia
+                          ? new Date(tenant.ultimoDiaDeGracia).toLocaleDateString("es-AR")
+                          : ""
+                      }`,
+                      vencida: "Bloqueado (venció y pasó la semana de gracia)",
+                      desactivada: "Desactivado (sin acceso)",
+                    }[tenant.suscripcion]
+                  }
+                />
                 <div className="space-y-3 pt-2">
                   <Select
                     label="Cambiar plan"
@@ -561,6 +579,13 @@ export default function TenantDetailPage() {
                 >
                   Renovar Suscripción (+30 días)
                 </Button>
+                <p className="text-xs text-slate-500">
+                  {tenant.suscripcion === "vencida" || !tenant.fechaVencimiento
+                    ? "Se suman 30 días desde hoy."
+                    : `Se suman 30 días desde el vencimiento (${new Date(
+                        tenant.fechaVencimiento,
+                      ).toLocaleDateString("es-AR")}).`}
+                </p>
                 <Divider className="my-2" />
                 <InfoRow
                   label="Moneda"

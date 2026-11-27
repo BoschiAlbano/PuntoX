@@ -4,17 +4,21 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, MessageCircle, X } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
 import {
+  DIAS_GRACIA,
   DIAS_PRIMER_AVISO,
   describirVencimiento,
   diasHastaVencimiento,
   fechaArgentina,
+  formatearFecha,
+  ultimoDiaDeGracia,
   urlRenovacionWhatsapp,
 } from "@/lib/suscripcion/vencimiento";
 
 /**
  * Aviso de vencimiento de la suscripción para administradores del comercio.
- * Se muestra desde DIAS_PRIMER_AVISO días antes y después de vencida.
- * Solo informa: el sistema no se bloquea al vencer.
+ * Se muestra desde DIAS_PRIMER_AVISO días antes y durante la semana de
+ * gracia después de vencida. Pasada la gracia, el acceso se bloquea y el
+ * usuario va a /suscripcion-vencida (ver lib/suscripcion/vencimiento).
  */
 export default function SuscripcionBanner() {
   const { tenant, isAdministrador } = useUserStore();
@@ -53,9 +57,11 @@ export default function SuscripcionBanner() {
           <span className="font-semibold">
             Tu suscripción {describirVencimiento(vencimiento, ahora)}.
           </span>{" "}
-          {vencido
-            ? "Renovala para mantener el servicio."
-            : "Renovala para seguir usando PuntoX sin interrupciones."}
+          {!vencido
+            ? "Renovala para seguir usando PuntoX sin interrupciones."
+            : dias === -DIAS_GRACIA
+              ? "Hoy es el último día: si no la renovás, mañana se bloquea el acceso."
+              : `Podés seguir usando PuntoX hasta el ${formatearFecha(ultimoDiaDeGracia(vencimiento))}; después se bloquea el acceso.`}
         </p>
       </div>
       <div className="flex items-center gap-2">

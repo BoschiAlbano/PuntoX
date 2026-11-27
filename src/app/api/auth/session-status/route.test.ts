@@ -12,6 +12,8 @@ const getUser = vi.fn();
 vi.mock("@supabase/ssr", () => ({
   createServerClient: vi.fn(() => ({ auth: { getUser } })),
 }));
+const { estadoSuscripcion } = vi.hoisted(() => ({ estadoSuscripcion: vi.fn() }));
+vi.mock("@/lib/auth/getAuthUser", () => ({ getCachedEstadoSuscripcion: estadoSuscripcion }));
 vi.mock("@/DB/prisma", () => ({
   default: {
     $queryRawUnsafe: vi.fn(),
@@ -42,6 +44,23 @@ describe("GET /api/auth/session-status", () => {
       error: null,
     });
     vi.mocked(prisma.configuracion.findFirst).mockResolvedValue(null);
+    estadoSuscripcion.mockResolvedValue("activa");
+  });
+
+  it("con la suscripción bloqueada avisa al cliente (sin cerrar la sesión)", async () => {
+    estadoSuscripcion.mockResolvedValue("vencida");
+    const data = await (await consultar(cookieSesion("sess-pc"))).json();
+    expect(data).toEqual({ activa: true, suscripcionBloqueada: true });
+    expect(prisma.$queryRawUnsafe).not.toHaveBeenCalled();
+  });
+
+  it("en la semana de gracia no avisa nada", async () => {
+    estadoSuscripcion.mockResolvedValue("en_gracia");
+    vi.mocked(prisma.$queryRawUnsafe).mockResolvedValue([
+      { Id: 5n, FechaUltimaActividad: new Date(), EstaActiva: true },
+    ] as any);
+    const data = await (await consultar(cookieSesion("sess-pc"))).json();
+    expect(data).toEqual({ activa: true });
   });
 
   it("busca SU sesión por el session_id de la cookie (formato base64-)", async () => {

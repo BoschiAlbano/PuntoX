@@ -8,6 +8,11 @@ import { createError } from "@/lib/errors/types";
 import { Permission } from "./permissions";
 import { getRequestAuthContext, setRequestAuthContext } from "./requestContext";
 import { cookies } from "next/headers";
+import {
+  estadoSuscripcion,
+  suscripcionBloqueada,
+  type EstadoSuscripcion,
+} from "@/lib/suscripcion/vencimiento";
 
 // Definimos el tipo del resultado de la consulta de usuario
 type UserContextData = Prisma.UsuarioGetPayload<{
@@ -42,6 +47,12 @@ const branchAccessCache = new Map<
   { valid: boolean; timestamp: number }
 >();
 
+// Cache del estado de suscripción por tenant
+const suscripcionCache = new Map<
+  number,
+  { estado: EstadoSuscripcion; timestamp: number }
+>();
+
 // Cache de sesiones activas (para logout forzado)
 const sessionCache = new Map<string, { valid: boolean; timestamp: number }>();
 
@@ -65,7 +76,16 @@ interface GetAuthContextOptions {
   req?: NextRequest; // Para leer headers (x-sucursal-id)
   permission?: Permission; // Permiso requerido (tipo estricto)
   checkActiveSession?: boolean; // Verificar en DB si la sesión sigue activa
+  /**
+   * No rechazar si la suscripción del comercio está bloqueada (vencida o
+   * desactivada). Solo para lo que tiene que andar igual: ver el estado de
+   * la suscripción, cerrar sesión.
+   */
+  permitirSuscripcionBloqueada?: boolean;
 }
+
+/** Motivo en `details` del 403 por suscripción bloqueada (lo usa el cliente). */
+export const MOTIVO_SUSCRIPCION_BLOQUEADA = "SUSCRIPCION_BLOQUEADA";
 
 // ============================================================================
 // FUNCIÓN PRINCIPAL DE AUTENTICACIÓN
@@ -148,7 +168,21 @@ export async function getAuthContext(
       (pu) => pu.Perfiles.Tipo === PerfilTipo.ADMINISTRADOR,
     );
 
-  // 5. 🚀 Validar Sucursal con cache (Si se provee request)
+  // 5. Suscripción del comercio: vencida (pasada la gracia) o desactivada
+  //    → sin acceso. El superadmin nunca queda bloqueado.
+  if (!isSuperAdmin && !options.permitirSuscripcionBloqueada) {
+    const estado = await getCachedEstadoSuscripcion(tenantId);
+    if (suscripcionBloqueada(estado)) {
+      throw createError.forbidden(
+        estado === "desactivada"
+          ? "El comercio está desactivado. Contactá a PuntoX para reactivarlo."
+          : "La suscripción del comercio está vencida. Renovala para volver a usar PuntoX.",
+        { motivo: MOTIVO_SUSCRIPCION_BLOQUEADA, estado },
+      );
+    }
+  }
+
+  // 5b. 🚀 Validar Sucursal con cache (Si se provee request)
   let sucursalId = 0;
   if (req) {
     const sucursalHeader = req.headers.get("x-sucursal-id");
@@ -338,6 +372,27 @@ async function getCachedBranchAccess(
   const isValid = count > 0;
   branchAccessCache.set(cacheKey, { valid: isValid, timestamp: now });
   return isValid;
+}
+
+/**
+ * Estado de la suscripción del tenant (con cache de 30 s: al renovar, el
+ * acceso vuelve en menos de medio minuto).
+ */
+export async function getCachedEstadoSuscripcion(
+  tenantId: number,
+): Promise<EstadoSuscripcion> {
+  const now = Date.now();
+  const cached = suscripcionCache.get(tenantId);
+  if (cached && now - cached.timestamp < DB_CACHE_TTL) return cached.estado;
+
+  const tenant = await prisma.tenant.findUnique({
+    where: { Id: BigInt(tenantId) },
+    select: { EstaActivo: true, FechaVencimiento: true },
+  });
+  // Sin tenant no hay a quién bloquear: lo rechaza el resto de la validación.
+  const estado = tenant ? estadoSuscripcion(tenant) : "activa";
+  suscripcionCache.set(tenantId, { estado, timestamp: now });
+  return estado;
 }
 
 /**

@@ -2,6 +2,7 @@ import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
 import prisma from "@/DB/prisma";
 import { NextResponse } from "next/server";
 import { parsePlanFeatures } from "@/lib/planes/features";
+import { estadoSuscripcion, suscripcionBloqueada } from "@/lib/suscripcion/vencimiento";
 
 export async function GET() {
   try {
@@ -125,9 +126,17 @@ export async function GET() {
       articulos: dbUser.Tenant._count.Articulos,
     };
 
+    // El superadmin nunca queda bloqueado (igual que en getAuthContext).
+    const estado = estadoSuscripcion(dbUser.Tenant);
+    const suscripcion = {
+      estado,
+      bloqueada: !isSuperAdmin && suscripcionBloqueada(estado),
+    };
+
     return NextResponse.json({
       user: usuarioDTO,
       tenant: dbUser.Tenant,
+      suscripcion,
       branches,
       currentBranch,
       permissions,
