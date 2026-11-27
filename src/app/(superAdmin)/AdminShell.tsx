@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { AppProgressProvider as ProgressProvider } from "@bprogress/next";
+import { useUserStore } from "@/store/useUserStore";
 
 /**
  * Client-side shell for the SuperAdmin area.
- * Provides sidebar + header + scrollable content area.
+ * Mismo aspecto que el layout de las tiendas (app/(dashboard)/layout.tsx):
+ * header y contenido blancos, acento #0066FF.
  */
 export default function AdminShell({
   children,
@@ -16,6 +18,14 @@ export default function AdminShell({
 }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [show, setShow] = useState(true);
+
+  // Datos del usuario (nombre, roles) para el menú de usuario. Antes solo los
+  // cargaba el layout de las tiendas y acá se veía "Usuario / Operador" sin la
+  // opción "Dashboard Tienda".
+  const initialize = useUserStore((s) => s.initialize);
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   useEffect(() => {
     const syncSidebarVisibility = () => {
@@ -31,7 +41,7 @@ export default function AdminShell({
   }, []);
 
   return (
-    <div className="bg-(--fondo) relative flex h-dvh w-full overflow-hidden">
+    <div className="bg-white relative flex h-dvh w-full overflow-hidden">
       <section
         onClick={() => setShow(false)}
         className={`z-50 transition-transform duration-400 ease-in-out sm:relative absolute sm:w-auto w-screen sm:h-auto h-dvh shrink-0 ${
@@ -65,11 +75,11 @@ export default function AdminShell({
         <div className="relative flex min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
           <div className="relative flex min-h-0 flex-1 flex-col">
             <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-              <main className="bg-[#F5F8FD] overflow-hidden rounded-tl-4xl relative z-10 flex w-full min-h-0 flex-1">
+              <main className="bg-white rounded-tl-4xl relative z-10 flex w-full min-h-0 flex-1 min-w-0 overflow-hidden pb-2.5">
                 <div className="shell-content-frame">
                   <ProgressProvider
                     height="3px"
-                    color="#f59e0b"
+                    color="#0066FF"
                     options={{ showSpinner: false }}
                     shallowRouting
                   >

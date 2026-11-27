@@ -92,8 +92,8 @@ export default function NewTenantPage() {
         {/* Header / Nav */}
         <div className="space-y-4 mb-8">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-gradient-to-br from-[#67afc3] to-[#4b8a9e] rounded-xl shadow-lg shadow-[#67afc3]/20">
-              <Building2 className="w-6 h-6 text-white" />
+            <div className="p-2.5 bg-[#0066ff]/10 rounded-xl">
+              <Building2 className="w-6 h-6 text-[#0050cb]" />
             </div>
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
@@ -292,7 +292,7 @@ export default function NewTenantPage() {
           <div className="flex justify-end pt-4">
             <Button
               type="submit"
-              className="w-full lg:w-auto px-10 font-medium bg-gradient-to-r from-[#67afc3] to-[#4b8a9e] text-white shadow-lg shadow-[#67afc3]/30"
+              className="w-full lg:w-auto px-10 font-medium bg-[#0066ff] text-white hover:bg-[#0050cb]"
               size="lg"
               isLoading={isPending}
             >

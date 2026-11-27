@@ -261,8 +261,8 @@ export default function TenantDetailPage() {
 
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg shadow-blue-500/20">
-              <Building2 className="w-7 h-7 text-white" />
+            <div className="p-3 bg-[#0066ff]/10 rounded-xl">
+              <Building2 className="w-7 h-7 text-[#0050cb]" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-slate-900">

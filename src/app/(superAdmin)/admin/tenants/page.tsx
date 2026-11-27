@@ -1,31 +1,16 @@
 "use client";
 
-import { useMemo, useState, useEffect, Suspense } from "react";
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Button, Chip, Tooltip } from "@heroui/react";
 import {
-  Button,
-  Card,
-  CardBody,
-  Select,
-  SelectItem,
-  Chip,
-  Tooltip,
-} from "@heroui/react";
-import {
-  Building2,
-  Users,
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
   CheckCircle2,
-  XCircle,
   Clock,
   AlertTriangle,
   Eye,
   Plus,
 } from "lucide-react";
 import GenericCrud, { GenericFormProps } from "@/components/shared/GenericCrud";
-import StatCard from "@/components/dashboard/StatCard";
 
 type TenantSummary = {
   Id: number;
@@ -73,25 +58,6 @@ function TenantForm(props: GenericFormProps<TenantSummary>) {
 function AdminTenantsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [totals, setTotals] = useState({
-    active: 0,
-    pending: 0,
-    canceled: 0,
-    total: 0,
-  });
-
-  // Fetch totals independientemente para las tarjetas
-  useEffect(() => {
-    fetch("/api/admin/tenants?limit=1")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.totals) {
-          setTotals(data.totals);
-        }
-      })
-      .catch(console.error);
-  }, []);
-
   const columns = [
     { uid: "name", name: "Comercio", sortable: true },
     { uid: "status", name: "Estado", sortable: true },
@@ -276,41 +242,6 @@ function AdminTenantsContent() {
 
   return (
     <main className="min-h-screen sm:p-6 space-y-8">
-      {/* Cards de métricas */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Tiendas Activas"
-          value={totals.active}
-          subtitle={`${totals.total > 0 ? Math.round((totals.active / totals.total) * 100) : 0}% del total`}
-          icon={Building2}
-          colorScheme="green"
-          delay={0}
-        />
-        <StatCard
-          title="Pendientes"
-          value={totals.pending}
-          subtitle="Requieren atención"
-          icon={Clock}
-          colorScheme="orange"
-          delay={0.05}
-        />
-        <StatCard
-          title="Canceladas"
-          value={totals.canceled}
-          subtitle="Accesos suspendidos"
-          icon={XCircle}
-          colorScheme="red"
-          delay={0.1}
-        />
-        <StatCard
-          title="Total Tiendas"
-          value={totals.total}
-          subtitle="En el sistema"
-          icon={Building2}
-          colorScheme="blue"
-          delay={0.15}
-        />
-      </section>
 
       {/* CRUD Genérico */}
       <section className="bg-white rounded-xl shadow-lg p-4 md:p-6 overflow-hidden">
@@ -327,7 +258,7 @@ function AdminTenantsContent() {
             color="primary"
             onPress={() => router.push("/admin/tenants/new")}
             startContent={<Plus className="w-4 h-4" />}
-            className="font-medium bg-gradient-to-r from-[#67afc3] to-[#4b8a9e]"
+            className="font-medium bg-[#0066ff] hover:bg-[#0050cb]"
           >
             Nueva Tienda
           </Button>

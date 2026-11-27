@@ -105,7 +105,7 @@ export function AdminNotifications() {
     >
       <PopoverTrigger>
         <button
-          className="relative flex h-8 w-8 items-center justify-center rounded-lg p-1.5 text-(--nav-btn-text) transition-colors hover:bg-(--nav-btn-hover-bg) hover:text-(--nav-btn-hover-text)"
+          className="relative flex h-8 w-8 items-center justify-center rounded-lg p-1.5 text-(--header-btn-text) transition-colors hover:bg-(--header-btn-hover-bg) hover:text-(--header-btn-hover-text)"
           aria-label="Ver notificaciones"
         >
           {unreadCount > 0 ? (
@@ -199,7 +199,7 @@ export function AdminNotifications() {
                         </button>
                       </div>
                     </div>
-                    <div className="w-2 h-2 rounded-full bg-amber-400 shrink-0 mt-2" />
+                    <div className="w-2 h-2 rounded-full bg-[#0066ff] shrink-0 mt-2" />
                   </div>
                 ))}
               </div>

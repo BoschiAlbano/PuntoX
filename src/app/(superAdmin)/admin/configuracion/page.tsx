@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Button,
@@ -459,54 +460,31 @@ export default function AdminConfiguracionPage() {
 
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-linear-to-r from-slate-900 via-blue-800 to-[#90c472] text-white shadow-xl">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_40%)]" />
-        <div className="relative p-4 md:p-5 space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="space-y-2">
-              <Chip variant="flat" color="success" className="bg-white/10">
-                Panel de control
+      {/* Mismo encabezado que la configuración de las tiendas. Antes había
+          un botón "Ver actividad" que en realidad guardaba todo. */}
+      <PageHeader
+        title="Configuración"
+        accentTitle="de la plataforma"
+        description="Identidad del negocio, preferencias de venta y seguridad. Los cambios afectan a todas las sucursales activas."
+        actions={
+          <div className="flex flex-wrap items-center gap-3">
+            {hasAnyChanges && (
+              <Chip size="sm" variant="flat" color="warning">
+                Cambios sin guardar
               </Chip>
-              <h1 className="text-3xl md:text-[32px] font-bold">
-                Configuracion
-              </h1>
-              <p className="text-white/70 max-w-3xl">
-                Ajusta la identidad del negocio, preferencias de venta y
-                seguridad desde un solo lugar. Los cambios afectan a todas las
-                sucursales activas.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              {hasAnyChanges && (
-                <Chip
-                  size="sm"
-                  variant="flat"
-                  color="warning"
-                  className="bg-yellow-100 text-yellow-800"
-                >
-                  Cambios sin guardar
-                </Chip>
-              )}
-              <Button
-                color="primary"
-                className="bg-white text-slate-900"
-                isLoading={isSaving}
-                isDisabled={!hasAnyChanges}
-                onPress={handleSaveAll}
-              >
-                Guardar todo
-              </Button>
-              <Button
-                variant="bordered"
-                className="border-white/40 text-white"
-                onPress={() => handleSaveAll()}
-              >
-                Ver actividad
-              </Button>
-            </div>
+            )}
+            <Button
+              color="primary"
+              className="bg-[#0066ff] hover:bg-[#0050cb]"
+              isLoading={isSaving}
+              isDisabled={!hasAnyChanges}
+              onPress={handleSaveAll}
+            >
+              Guardar todo
+            </Button>
           </div>
-        </div>
-      </section>
+        }
+      />
 
       <main className="max-w-5xl mx-auto space-y-4 pb-10">
         <AccordionSection

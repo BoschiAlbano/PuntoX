@@ -15,7 +15,6 @@ import {
   Users,
   Store,
   Package,
-  TrendingUp,
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
@@ -24,6 +23,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 
 type DashboardData = {
   metricas: {
@@ -81,22 +81,12 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6 pb-8">
-      {/* Header */}
-      <header className="space-y-2">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl shadow-lg shadow-amber-500/20">
-            <TrendingUp className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">
-              Panel de Control
-            </h1>
-            <p className="text-sm text-slate-500">
-              Vista general de la plataforma Punto X
-            </p>
-          </div>
-        </div>
-      </header>
+      {/* Mismo encabezado que el dashboard de las tiendas */}
+      <PageHeader
+        title="Panel"
+        accentTitle="de Control"
+        description="Vista general de la plataforma Punto X."
+      />
 
       {/* KPI Cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -200,8 +190,8 @@ export default function AdminDashboardPage() {
                   onClick={() => router.push(`/admin/tenants/${tenant.id}`)}
                   className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50 transition-colors text-left cursor-pointer"
                 >
-                  <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg shrink-0">
-                    <Building2 className="w-4 h-4 text-white" />
+                  <div className="p-2 bg-[#0066ff]/10 rounded-lg shrink-0">
+                    <Building2 className="w-4 h-4 text-[#0050cb]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-slate-900 text-sm truncate">
@@ -269,7 +259,7 @@ export default function AdminDashboardPage() {
                     </div>
                     <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
+                        className="h-full bg-[#0066ff] rounded-full transition-all duration-500"
                         style={{ width: `${percentage}%` }}
                       />
                     </div>

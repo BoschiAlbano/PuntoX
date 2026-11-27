@@ -12,7 +12,7 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/react";
-import { ChevronDown, LogOut, Settings, User, Shield } from "lucide-react";
+import { ChevronDown, LogOut, Settings, User, Shield, Store } from "lucide-react";
 import {
   clearAllClientState,
   getStoredSesionId,
@@ -41,18 +41,17 @@ export function UserDropdown() {
   useEffect(() => {
     setFotoError(false);
   }, [fotoUrl]);
-  const displayName = email.trim() || usuario || "Usuario";
+  // El nombre de usuario es con el que se inicia sesión: se muestra primero.
+  const displayName = usuario || email.trim() || "Usuario";
   const displayRol = roles.map((r) => r.Descripcion).join(" · ") || "Operador";
   const isSuperAdmin = roles.some((r) => r.Tipo === TIPO_PERFIL.SUPERADMIN);
+  // "jose.cortez" → "JC"; "superadmin" → "SU"
+  const partesNombre = (usuario || email).split(/[\s@._-]/).filter(Boolean);
   const userInitials =
-    email
-      .split(/[\s@.]/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((n) => n[0].toUpperCase())
-      .join("") ||
-    usuario?.[0]?.toUpperCase() ||
-    "U";
+    (partesNombre.length > 1
+      ? partesNombre[0][0] + partesNombre[1][0]
+      : (partesNombre[0] ?? "U").slice(0, 2)
+    ).toUpperCase();
 
   const handleLogout = async () => {
     try {
@@ -171,7 +170,13 @@ export function UserDropdown() {
 
         <DropdownItem
           key="superadmin_dashboard"
-          startContent={<Shield size={16} className="text-slate-500" />}
+          startContent={
+            pathname.startsWith("/admin") ? (
+              <Store size={16} className="text-slate-500" />
+            ) : (
+              <Shield size={16} className="text-slate-500" />
+            )
+          }
           textValue={
             pathname.startsWith("/admin")
               ? "Dashboard Tienda"
@@ -193,7 +198,11 @@ export function UserDropdown() {
           key="config"
           startContent={<Settings size={16} className="text-slate-500" />}
           textValue="Configuración"
-          onPress={() => router.push("/configuracion")}
+          onPress={() =>
+            router.push(
+              pathname.startsWith("/admin") ? "/admin/configuracion" : "/configuracion",
+            )
+          }
         >
           Configuración
         </DropdownItem>
