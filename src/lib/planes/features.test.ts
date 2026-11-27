@@ -4,7 +4,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import prisma from "@/DB/prisma";
 import { notificarAdministradores } from "@/lib/notificaciones/notificar";
-import { notificarSiAlcanzoLimite, parsePlanFeatures } from "./features";
+import {
+  assertDentroDeLimite,
+  notificarSiAlcanzoLimite,
+  parsePlanFeatures,
+  serializarPlanFeatures,
+} from "./features";
 
 vi.mock("@/DB/prisma", () => ({
   default: {
@@ -18,6 +23,27 @@ vi.mock("@/DB/prisma", () => ({
 vi.mock("@/lib/notificaciones/notificar", () => ({
   notificarAdministradores: vi.fn(),
 }));
+
+describe("serializarPlanFeatures", () => {
+  it("es el inverso de parsePlanFeatures (incluye los ilimitados como null)", () => {
+    const f = { maxSucursales: 1, maxUsuarios: null, maxArticulos: 1000, incluyeAFIP: false };
+    expect(parsePlanFeatures(serializarPlanFeatures(f))).toEqual(f);
+  });
+});
+
+describe("assertDentroDeLimite - mensaje", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("usa singular con 1 ('1 sucursal', no '1 sucursales')", async () => {
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      Plan: { Caracteristicas: JSON.stringify({ maxSucursales: 1 }) },
+    } as any);
+    vi.mocked(prisma.sucursal.count).mockResolvedValue(1);
+    await expect(assertDentroDeLimite(1, "sucursales")).rejects.toThrow(
+      "Tu plan permite hasta 1 sucursal. Actualizá tu plan para agregar más.",
+    );
+  });
+});
 
 describe("parsePlanFeatures", () => {
   it("parsea un JSON completo y válido", () => {
@@ -130,7 +156,7 @@ describe("notificarSiAlcanzoLimite", () => {
       1n,
       expect.objectContaining({
         titulo: "Llegaste al límite de tu plan",
-        mensaje: "Tu plan permite hasta 3 usuarios y ya los usaste todos. Para agregar más, cambiá a un plan superior.",
+        mensaje: "Tu plan permite hasta 3 usuarios y ya llegaste al máximo. Para agregar más, cambiá a un plan superior.",
         entidadTipo: "PLAN_LIMITE",
         entidadId: "usuarios:3",
       }),

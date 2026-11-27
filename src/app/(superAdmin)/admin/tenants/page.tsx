@@ -54,9 +54,9 @@ const statusConfig: Record<
 };
 
 const planColors: Record<string, "primary" | "secondary" | "default"> = {
-  Base: "default",
-  Growth: "secondary",
-  Premium: "primary",
+  "Plan Básico": "default",
+  "Plan Intermedio": "secondary",
+  "Plan Pro": "primary",
 };
 
 // Dummy form, no se usa para crear o editar desde aquí por ahora (se usa la vista de detalles / nueva tienda).

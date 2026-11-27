@@ -2,6 +2,31 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { parsePlanFeatures, serializarPlanFeatures } from "@/lib/planes/features";
+import { createPlanSchema, updatePlanSchema } from "@/lib/validations/planSaas.schema";
+
+/** Forma en que la API devuelve un plan: los límites ya parseados. */
+function aRespuesta(p: {
+  Id: bigint;
+  Nombre: string;
+  Descripcion: string | null;
+  CostoMensual: unknown;
+  Caracteristicas: string | null;
+  _count?: { Tenants: number };
+}) {
+  return {
+    Id: Number(p.Id),
+    Nombre: p.Nombre,
+    Descripcion: p.Descripcion || "",
+    CostoMensual: Number(p.CostoMensual),
+    Limites: parsePlanFeatures(p.Caracteristicas),
+    CantidadTenants: p._count?.Tenants ?? 0,
+  };
+}
+
+/** Primer mensaje de error de Zod, para mostrarlo en el formulario. */
+const errorValidacion = (issues: { message: string }[]) =>
+  NextResponse.json({ error: issues[0]?.message ?? "Datos inválidos" }, { status: 400 });
 
 /**
  * GET /api/admin/planes
@@ -46,14 +71,7 @@ export async function GET(req: NextRequest) {
       prisma.planSaaS.count({ where }),
     ]);
 
-    const formatted = data.map((p) => ({
-      Id: Number(p.Id),
-      Nombre: p.Nombre,
-      Descripcion: p.Descripcion || "",
-      CostoMensual: Number(p.CostoMensual),
-      Caracteristicas: p.Caracteristicas || "",
-      CantidadTenants: p._count.Tenants,
-    }));
+    const formatted = data.map(aRespuesta);
 
     return NextResponse.json({
       data: formatted,
@@ -71,7 +89,9 @@ export async function GET(req: NextRequest) {
 
 /**
  * POST /api/admin/planes
- * Creates a new SaaS plan
+ * Crea un plan. Body: { Nombre, Descripcion?, CostoMensual, Limites }.
+ * Los límites se validan con Zod (antes eran texto libre: un JSON mal
+ * escrito dejaba el plan sin ningún límite).
  */
 export async function POST(req: NextRequest) {
   try {
@@ -80,15 +100,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const body = await req.json();
-    const { Nombre, Descripcion, CostoMensual, Caracteristicas } = body;
-
-    if (!Nombre) {
-      return NextResponse.json(
-        { error: "El nombre es requerido" },
-        { status: 400 },
-      );
-    }
+    const parsed = createPlanSchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) return errorValidacion(parsed.error.issues);
+    const { Nombre, Descripcion, CostoMensual, Limites } = parsed.data;
 
     // Check unique name
     const existing = await prisma.planSaaS.findUnique({
@@ -105,19 +119,12 @@ export async function POST(req: NextRequest) {
       data: {
         Nombre,
         Descripcion: Descripcion || null,
-        CostoMensual: CostoMensual || 0,
-        Caracteristicas: Caracteristicas || null,
+        CostoMensual,
+        Caracteristicas: serializarPlanFeatures(Limites),
       },
     });
 
-    return NextResponse.json({
-      Id: Number(plan.Id),
-      Nombre: plan.Nombre,
-      Descripcion: plan.Descripcion || "",
-      CostoMensual: Number(plan.CostoMensual),
-      Caracteristicas: plan.Caracteristicas || "",
-      CantidadTenants: 0,
-    });
+    return NextResponse.json(aRespuesta(plan));
   } catch (error) {
     return handleError(error);
   }
@@ -125,7 +132,7 @@ export async function POST(req: NextRequest) {
 
 /**
  * PATCH /api/admin/planes
- * Updates an existing plan
+ * Actualiza un plan (mismos campos que POST, todos opcionales salvo Id).
  */
 export async function PATCH(req: NextRequest) {
   try {
@@ -134,15 +141,9 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const body = await req.json();
-    const { Id, Nombre, Descripcion, CostoMensual, Caracteristicas } = body;
-
-    if (!Id) {
-      return NextResponse.json(
-        { error: "El ID es requerido" },
-        { status: 400 },
-      );
-    }
+    const parsed = updatePlanSchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) return errorValidacion(parsed.error.issues);
+    const { Id, Nombre, Descripcion, CostoMensual, Limites } = parsed.data;
 
     // Check unique name if changed
     if (Nombre) {
@@ -166,8 +167,8 @@ export async function PATCH(req: NextRequest) {
         ...(Nombre !== undefined && { Nombre }),
         ...(Descripcion !== undefined && { Descripcion: Descripcion || null }),
         ...(CostoMensual !== undefined && { CostoMensual }),
-        ...(Caracteristicas !== undefined && {
-          Caracteristicas: Caracteristicas || null,
+        ...(Limites !== undefined && {
+          Caracteristicas: serializarPlanFeatures(Limites),
         }),
       },
       include: {
@@ -175,14 +176,7 @@ export async function PATCH(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      Id: Number(plan.Id),
-      Nombre: plan.Nombre,
-      Descripcion: plan.Descripcion || "",
-      CostoMensual: Number(plan.CostoMensual),
-      Caracteristicas: plan.Caracteristicas || "",
-      CantidadTenants: plan._count.Tenants,
-    });
+    return NextResponse.json(aRespuesta(plan));
   } catch (error) {
     return handleError(error);
   }

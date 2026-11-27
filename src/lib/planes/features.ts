@@ -51,6 +51,16 @@ export function parsePlanFeatures(
   };
 }
 
+/** JSON que se guarda en PlanSaaS.Caracteristicas (inverso de parsePlanFeatures). */
+export function serializarPlanFeatures(features: PlanFeatures): string {
+  return JSON.stringify({
+    maxSucursales: features.maxSucursales,
+    maxUsuarios: features.maxUsuarios,
+    maxArticulos: features.maxArticulos,
+    incluyeAFIP: features.incluyeAFIP,
+  });
+}
+
 export async function getPlanFeaturesDeTenant(
   tenantId: number,
 ): Promise<PlanFeatures> {
@@ -60,6 +70,10 @@ export async function getPlanFeaturesDeTenant(
   });
   return parsePlanFeatures(tenant?.Plan?.Caracteristicas ?? null);
 }
+
+/** "1 sucursal", "3 sucursales". */
+const cantidad = (n: number, [singular, plural]: [string, string]) =>
+  `${n} ${n === 1 ? singular : plural}`;
 
 type LimiteTipo = "sucursales" | "usuarios" | "articulos";
 
@@ -71,7 +85,8 @@ const LIMITE_CONFIG: Record<
       "maxSucursales" | "maxUsuarios" | "maxArticulos"
     >;
     contar: (tenantId: bigint) => Promise<number>;
-    etiqueta: string;
+    /** [singular, plural] */
+    etiqueta: [string, string];
   }
 > = {
   sucursales: {
@@ -80,7 +95,7 @@ const LIMITE_CONFIG: Record<
       prisma.sucursal.count({
         where: { TenantId: tenantId, EstaEliminado: false },
       }),
-    etiqueta: "sucursales",
+    etiqueta: ["sucursal", "sucursales"],
   },
   usuarios: {
     featureKey: "maxUsuarios",
@@ -88,7 +103,7 @@ const LIMITE_CONFIG: Record<
       prisma.usuario.count({
         where: { TenantId: tenantId, EstaEliminado: false },
       }),
-    etiqueta: "usuarios",
+    etiqueta: ["usuario", "usuarios"],
   },
   articulos: {
     featureKey: "maxArticulos",
@@ -96,7 +111,7 @@ const LIMITE_CONFIG: Record<
       prisma.articulo.count({
         where: { TenantId: tenantId, EstaEliminado: false },
       }),
-    etiqueta: "artículos",
+    etiqueta: ["artículo", "artículos"],
   },
 };
 
@@ -117,7 +132,7 @@ export async function assertDentroDeLimite(
   const actual = await config.contar(BigInt(tenantId));
   if (actual >= max) {
     throw createError.forbidden(
-      `Tu plan permite hasta ${max} ${config.etiqueta}. Actualizá tu plan para agregar más.`,
+      `Tu plan permite hasta ${cantidad(max, config.etiqueta)}. Actualizá tu plan para agregar más.`,
     );
   }
 }
@@ -149,7 +164,7 @@ export async function notificarSiAlcanzoLimite(
     await notificarAdministradores(tenant, {
       tipo: "WARNING",
       titulo: "Llegaste al límite de tu plan",
-      mensaje: `Tu plan permite hasta ${max} ${config.etiqueta} y ya los usaste todos. Para agregar más, cambiá a un plan superior.`,
+      mensaje: `Tu plan permite hasta ${cantidad(max, config.etiqueta)} y ya llegaste al máximo. Para agregar más, cambiá a un plan superior.`,
       entidadTipo: "PLAN_LIMITE",
       entidadId,
     });

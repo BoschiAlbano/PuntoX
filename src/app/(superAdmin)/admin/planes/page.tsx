@@ -11,20 +11,28 @@ import {
 } from "lucide-react";
 import GenericCrud, { CrudActions } from "@/components/shared/GenericCrud";
 import { Column } from "@/components/shared/GenericTable";
-import PlanForm from "@/components/admin/PlanForm";
+import PlanForm, { type Plan, type PlanLimites } from "@/components/admin/PlanForm";
 
-type Plan = {
-  Id: number;
-  Nombre: string;
-  Descripcion: string;
-  CostoMensual: number;
-  Caracteristicas: string;
-  CantidadTenants: number;
-};
+/** Textos de cada límite: [singular, plural, ilimitado]. */
+const ETIQUETAS: [keyof Omit<PlanLimites, "incluyeAFIP">, string, string, string][] = [
+  ["maxSucursales", "sucursal", "sucursales", "Sucursales ilimitadas"],
+  ["maxUsuarios", "usuario", "usuarios", "Usuarios ilimitados"],
+  ["maxArticulos", "artículo", "artículos", "Artículos ilimitados"],
+];
+
+/** ["1 sucursal", "3 usuarios", "Artículos ilimitados", "ARCA"] */
+const textosLimites = (l: PlanLimites) => [
+  ...ETIQUETAS.map(([clave, singular, plural, ilimitado]) => {
+    const n = l[clave];
+    if (n === null) return ilimitado;
+    return `${n.toLocaleString("es-AR")} ${n === 1 ? singular : plural}`;
+  }),
+  l.incluyeAFIP ? "ARCA" : "Sin ARCA",
+];
 
 const columns: Column[] = [
   { uid: "Nombre", name: "Nombre", sortable: true },
-  { uid: "Descripcion", name: "Descripción", sortable: false },
+  { uid: "Limites", name: "Límites", sortable: false },
   { uid: "CostoMensual", name: "Costo Mensual", sortable: true },
   { uid: "CantidadTenants", name: "Tiendas", sortable: true },
   { uid: "actions", name: "Acciones", sortable: false },
@@ -42,11 +50,20 @@ function renderCell(item: Plan, columnKey: Key, actions: CrudActions<Plan>) {
         </div>
       );
 
-    case "Descripcion":
+    case "Limites":
       return (
-        <p className="text-sm text-slate-600 max-w-xs truncate">
-          {item.Descripcion || "—"}
-        </p>
+        <div className="flex flex-wrap gap-1 max-w-md">
+          {textosLimites(item.Limites).map((texto) => (
+            <Chip
+              key={texto}
+              size="sm"
+              variant="flat"
+              color={texto === "ARCA" ? "success" : "default"}
+            >
+              {texto}
+            </Chip>
+          ))}
+        </div>
       );
 
     case "CostoMensual":
@@ -132,12 +149,14 @@ export default function PlanesPage() {
           columns: [
             { key: "Nombre", header: "Nombre" },
             { key: "Descripcion", header: "Descripción" },
+            { key: "Limites", header: "Límites" },
             { key: "CostoMensual", header: "Costo Mensual" },
             { key: "CantidadTenants", header: "Tiendas Asignadas" },
           ],
           mapItem: (item) => ({
             Nombre: item.Nombre,
             Descripcion: item.Descripcion,
+            Limites: textosLimites(item.Limites).join(" · "),
             CostoMensual: item.CostoMensual,
             CantidadTenants: item.CantidadTenants,
           }),
