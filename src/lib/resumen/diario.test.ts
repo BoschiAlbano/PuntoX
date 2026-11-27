@@ -14,7 +14,7 @@ vi.mock("@/DB/prisma", () => ({
     configuracion: { findMany: vi.fn() },
     notificacion: { findFirst: vi.fn(), create: vi.fn() },
     comprobante: { aggregate: vi.fn() },
-    caja: { count: vi.fn() },
+    caja: { count: vi.fn(), findMany: vi.fn() },
     $queryRaw: vi.fn(),
   },
 }));
@@ -65,8 +65,10 @@ describe("procesarResumenDiario", () => {
       _sum: { Total: 1000 },
       _count: { Id: 4 },
     } as any);
-    vi.mocked(prisma.$queryRaw).mockResolvedValue([{ count: 0n }] as any);
+    // 1ª consulta: stock bajo; 2ª: clientes sobre su límite (ambas vacías)
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([] as any);
     vi.mocked(prisma.caja.count).mockResolvedValue(0);
+    vi.mocked(prisma.caja.findMany).mockResolvedValue([] as any);
     vi.mocked(destinatariosAdministradores).mockResolvedValue({
       adminIds: [10n],
       emails: ["duenio@kiosco.com"],
@@ -96,6 +98,39 @@ describe("procesarResumenDiario", () => {
     expect(email.subject).toBe("Resumen del 25/11/2026 · Kiosco Ana");
     expect(email.html).toContain("$1.000,00");
     expect(email.html).toContain("$250,00"); // ticket promedio
+  });
+
+  it("suma stock bajo, clientes sobre su límite y cajas con diferencia", async () => {
+    vi.mocked(prisma.$queryRaw)
+      .mockResolvedValueOnce([
+        { nombre: "Coca 2L", sucursal: "Centro", stock: 1, minimo: 6, total: 7 },
+        { nombre: "Yerba 1kg", sucursal: "Centro", stock: 2, minimo: 5, total: 7 },
+      ] as any)
+      .mockResolvedValueOnce([
+        { nombre: "Juan Pérez", saldo: 15000, limite: 10000, total: 1 },
+      ] as any);
+    vi.mocked(prisma.caja.findMany).mockResolvedValue([
+      // esperado 1000 + 5000 − 0 = 6000; contado 5800 → faltan 200
+      { MontoInicial: 1000, MontoCierre: 5800, TotalEntradaEfectivo: 5000, TotalSalidaEfectivo: 0, Sucursal: { Nombre: "Centro" } },
+      // sin diferencia: no aparece
+      { MontoInicial: 0, MontoCierre: 300, TotalEntradaEfectivo: 300, TotalSalidaEfectivo: 0, Sucursal: { Nombre: "Norte" } },
+    ] as any);
+
+    await procesarResumenDiario(AHORA);
+
+    const notif = vi.mocked(prisma.notificacion.create).mock.calls[0][0].data as any;
+    expect(notif.Mensaje).toBe(
+      "4 ventas por $1.000,00. 7 productos con stock bajo. 1 cliente superó su límite de crédito. 1 caja cerró con diferencia.",
+    );
+    const html = vi.mocked(sendEmail).mock.calls[0][0].html;
+    expect(html).toContain("Stock bajo (7)");
+    expect(html).toContain("Coca 2L · Centro");
+    expect(html).toContain("y 5 más");
+    expect(html).toContain("Clientes sobre su límite de crédito (1)");
+    expect(html).toContain("$15.000,00 / límite $10.000,00");
+    expect(html).toContain("Cajas cerradas con diferencia (1)");
+    expect(html).toContain("Faltan $200,00");
+    expect(html).not.toContain("Norte");
   });
 
   it("sin ventas crea la notificación pero no manda email", async () => {

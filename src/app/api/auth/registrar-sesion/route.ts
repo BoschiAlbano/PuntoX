@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { notificarNuevoDispositivo } from "@/lib/notificaciones/seguridad";
 import { cookies } from "next/headers";
 import prisma from "@/DB/prisma";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
@@ -185,6 +186,7 @@ export async function POST(req: NextRequest) {
     }
 
     let sesionId = null;
+    let esDispositivoNuevo = false;
 
     if (sesionExistente && sesionExistente.length > 0) {
       // Actualizar sesión existente
@@ -212,6 +214,22 @@ export async function POST(req: NextRequest) {
       );
       sesionId = Number(sesionExistente[0].Id);
     } else {
+      // ¿Dispositivo nuevo? El usuario ya tenía sesiones pero ninguna desde este
+      // navegador (UserAgent). El primer inicio de sesión de alguien no cuenta.
+      const previas = await prisma.$queryRawUnsafe<Array<{ total: number; mismo: number }>>(
+        `
+        SELECT COUNT(*)::int AS total,
+               COUNT(*) FILTER (WHERE COALESCE("UserAgent", '') = COALESCE($3, ''))::int AS mismo
+        FROM "SesionActiva"
+        WHERE "TenantId" = $1 AND "UsuarioId" = $2
+      `,
+        usuario.TenantId,
+        usuario.Id,
+        userAgent,
+      );
+      esDispositivoNuevo =
+        !!userAgent && (previas[0]?.total ?? 0) > 0 && (previas[0]?.mismo ?? 0) === 0;
+
       // Nueva sesión: primero cerrar sesiones anteriores del mismo dispositivo (UserAgent)
       // que hayan quedado huérfanas (el usuario cerró el tab sin hacer logout explícito).
       // Esto previene la acumulación de sesiones activas fantasma.
@@ -252,6 +270,17 @@ export async function POST(req: NextRequest) {
         nuevaSesion && nuevaSesion.length > 0
           ? Number(nuevaSesion[0].Id)
           : null;
+    }
+
+    // Aviso in-app de dispositivo nuevo (si el comercio lo tiene activado).
+    if (esDispositivoNuevo) {
+      await notificarNuevoDispositivo({
+        tenantId: usuario.TenantId,
+        usuarioId: usuario.Id,
+        userAgent,
+        dispositivo: dispositivo || null,
+        ipAddress,
+      });
     }
 
     // Si es confiable, también registrar en DispositivoConfiable

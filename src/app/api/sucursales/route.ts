@@ -16,7 +16,7 @@ import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { PERMISSIONS, GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
-import { assertDentroDeLimite } from "@/lib/planes/features";
+import { assertDentroDeLimite, notificarSiAlcanzoLimite } from "@/lib/planes/features";
 import { handleError } from "@/lib/errors/handler";
 import {
   parsePaginationParams,
@@ -181,6 +181,8 @@ export async function POST(req: NextRequest) {
         },
       },
     });
+
+    await notificarSiAlcanzoLimite(tenantId, "sucursales");
 
     return NextResponse.json(
       {

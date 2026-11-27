@@ -16,6 +16,18 @@ import { Button, Input, Spinner, addToast } from "@heroui/react";
 import { useConfiguracion } from "@/hooks/useConfiguracion";
 import { useUserStore } from "@/store/useUserStore";
 
+/**
+ * Avisa al servidor para crear la notificación de seguridad. No bloqueante:
+ * si falla, el cambio de 2FA ya ocurrió igual.
+ */
+function avisarCambio2FA(evento: "activado" | "desactivado") {
+  fetch("/api/auth/mfa-evento", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ evento }),
+  }).catch((e) => console.warn("[MfaSetup] No se pudo registrar el aviso de 2FA:", e));
+}
+
 export function MfaSetup() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -143,6 +155,7 @@ export function MfaSetup() {
       if (verifyError) throw verifyError;
 
       // Éxito
+      avisarCambio2FA("activado");
       setIsEnrolled(true);
       setSetupData(null);
       setVerifyCode("");
@@ -249,6 +262,7 @@ export function MfaSetup() {
         console.warn("[MfaSetup] Error al revocar dispositivos confiables:", e),
       );
 
+      avisarCambio2FA("desactivado");
       setIsEnrolled(false);
       setFactorId(null);
       setShowDisableForm(false);

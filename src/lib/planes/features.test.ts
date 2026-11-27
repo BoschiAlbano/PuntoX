@@ -1,8 +1,23 @@
 /**
  * Tests unitarios para lib/planes/features
  */
-import { describe, it, expect } from "vitest";
-import { parsePlanFeatures } from "./features";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import prisma from "@/DB/prisma";
+import { notificarAdministradores } from "@/lib/notificaciones/notificar";
+import { notificarSiAlcanzoLimite, parsePlanFeatures } from "./features";
+
+vi.mock("@/DB/prisma", () => ({
+  default: {
+    tenant: { findUnique: vi.fn() },
+    sucursal: { count: vi.fn() },
+    usuario: { count: vi.fn() },
+    articulo: { count: vi.fn() },
+    notificacion: { findFirst: vi.fn() },
+  },
+}));
+vi.mock("@/lib/notificaciones/notificar", () => ({
+  notificarAdministradores: vi.fn(),
+}));
 
 describe("parsePlanFeatures", () => {
   it("parsea un JSON completo y válido", () => {
@@ -95,5 +110,49 @@ describe("parsePlanFeatures", () => {
 
   it("ignora incluyeAFIP con valor no booleano y cae al default (true)", () => {
     expect(parsePlanFeatures('{"incluyeAFIP":"si"}').incluyeAFIP).toBe(true);
+  });
+});
+
+describe("notificarSiAlcanzoLimite", () => {
+  const plan = (json: string) =>
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({ Plan: { Caracteristicas: json } } as any);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    plan('{"maxSucursales":1,"maxUsuarios":3,"maxArticulos":100}');
+    vi.mocked(prisma.notificacion.findFirst).mockResolvedValue(null);
+  });
+
+  it("avisa a los administradores al llegar justo al máximo", async () => {
+    vi.mocked(prisma.usuario.count).mockResolvedValue(3);
+    expect(await notificarSiAlcanzoLimite(1, "usuarios")).toBe(true);
+    expect(notificarAdministradores).toHaveBeenCalledWith(
+      1n,
+      expect.objectContaining({
+        titulo: "Llegaste al límite de tu plan",
+        mensaje: "Tu plan permite hasta 3 usuarios y ya los usaste todos. Para agregar más, cambiá a un plan superior.",
+        entidadTipo: "PLAN_LIMITE",
+        entidadId: "usuarios:3",
+      }),
+    );
+  });
+
+  it("no avisa si todavía queda lugar", async () => {
+    vi.mocked(prisma.sucursal.count).mockResolvedValue(0);
+    expect(await notificarSiAlcanzoLimite(1, "sucursales")).toBe(false);
+    expect(notificarAdministradores).not.toHaveBeenCalled();
+  });
+
+  it("no repite si ya hay un aviso igual sin leer", async () => {
+    vi.mocked(prisma.articulo.count).mockResolvedValue(100);
+    vi.mocked(prisma.notificacion.findFirst).mockResolvedValue({ Id: 1n } as any);
+    expect(await notificarSiAlcanzoLimite(1, "articulos")).toBe(false);
+    expect(notificarAdministradores).not.toHaveBeenCalled();
+  });
+
+  it("no hace nada en planes sin límite", async () => {
+    plan('{"unlimited":true}');
+    expect(await notificarSiAlcanzoLimite(1, "usuarios")).toBe(false);
+    expect(prisma.usuario.count).not.toHaveBeenCalled();
   });
 });

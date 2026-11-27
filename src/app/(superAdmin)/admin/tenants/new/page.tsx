@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, CardBody, CardHeader, Input } from "@heroui/react";
 import { addToast } from "@heroui/react";
@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { registerTenant } from "@/app/actions/register-tenant";
 import { useQuery } from "@tanstack/react-query";
-import { Select, SelectItem } from "@heroui/react";
+import { Radio, RadioGroup, Select, SelectItem } from "@heroui/react";
 
 type RegisterState = {
   ok: boolean;
@@ -31,6 +31,7 @@ const initialState: RegisterState = {
 
 export default function NewTenantPage() {
   const router = useRouter();
+  const [modoAcceso, setModoAcceso] = useState<"invitacion" | "password">("invitacion");
   const [state, formAction, isPending] = useActionState(
     async (
       _prev: RegisterState,
@@ -247,17 +248,40 @@ export default function NewTenantPage() {
                       isRequired={false}
                     />
 
-                    <Input
-                      name="adminPassword"
-                      type="password"
-                      label="Contraseña inicial"
-                      placeholder="Mínimo 6 caracteres"
-                      variant="bordered"
-                      labelPlacement="outside"
-                      classNames={{ label: "font-medium text-slate-700" }}
-                      minLength={6}
-                      isRequired
-                    />
+                    <RadioGroup
+                      name="modoAcceso"
+                      label="¿Cómo ingresa el dueño?"
+                      value={modoAcceso}
+                      onValueChange={(v) => setModoAcceso(v as "invitacion" | "password")}
+                      classNames={{ label: "font-medium text-slate-700 text-sm" }}
+                    >
+                      <Radio
+                        value="invitacion"
+                        description="Le llega un email para elegir su contraseña (recomendado)"
+                      >
+                        Invitar por email
+                      </Radio>
+                      <Radio
+                        value="password"
+                        description="Le pasás vos la contraseña inicial"
+                      >
+                        Definir contraseña ahora
+                      </Radio>
+                    </RadioGroup>
+
+                    {modoAcceso === "password" && (
+                      <Input
+                        name="adminPassword"
+                        type="password"
+                        label="Contraseña inicial"
+                        placeholder="Mínimo 6 caracteres"
+                        variant="bordered"
+                        labelPlacement="outside"
+                        classNames={{ label: "font-medium text-slate-700" }}
+                        minLength={6}
+                        isRequired
+                      />
+                    )}
                   </div>
                 </section>
               </CardBody>

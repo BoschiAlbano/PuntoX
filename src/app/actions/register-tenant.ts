@@ -7,6 +7,7 @@ import { actualizarPermisosEnJWT } from "@/lib/auth/updateUserPermissions";
 import { requireSuperAdminServer } from "@/lib/requireSuperAdmin";
 import { PerfilTipo, Prisma } from "../../../prisma/generated/prisma";
 import { consumidorFinalSchema } from "@/lib/validations/consumidorFinal.schema";
+import { invitarEmpleado } from "@/lib/empleados/invitacion";
 // Helper para convertir cadenas vacías a undefined
 const emptyStringToUndefined = z.preprocess(
   (val) => (val === "" || val === null ? undefined : val),
@@ -20,7 +21,11 @@ const registerTenantSchema = z.object({
   adminApellido: z.string().min(1),
   adminEmail: z.string().email(),
   adminUsername: emptyStringToUndefined, // Opcional: se genera desde email si no se proporciona
-  adminPassword: z.string().min(6),
+  // Obligatoria solo si modoAcceso = "password"
+  adminPassword: z.string().min(6).optional(),
+  // "password": el SuperAdmin define la contraseña del dueño.
+  // "invitacion": se le envía un email para que la elija él.
+  modoAcceso: z.enum(["password", "invitacion"]).optional().default("password"),
   planId: z.coerce.number().positive("Debe seleccionar un plan válido"),
   // Campos alternativos del otro formulario
   storeName: z.string().min(2).optional(),
@@ -30,6 +35,10 @@ const registerTenantSchema = z.object({
   email: z.string().email().optional(),
   username: emptyStringToUndefined,
   password: z.string().min(6).optional(),
+}).superRefine((data, ctx) => {
+  if (data.modoAcceso === "password" && !data.adminPassword) {
+    ctx.addIssue({ code: "custom", path: ["adminPassword"], message: "La contraseña es obligatoria" });
+  }
 });
 
 export async function registerTenant(formData: FormData) {
@@ -60,6 +69,7 @@ export async function registerTenant(formData: FormData) {
     adminEmail: getValue("adminEmail", "email"),
     adminUsername: getValue("adminUsername", "username") || "",
     adminPassword: getValue("adminPassword", "password"),
+    modoAcceso: getValue("modoAcceso"),
     planId: getValue("planId"),
     // Campos alternativos
     storeName: getValue("storeName"),
@@ -95,8 +105,10 @@ export async function registerTenant(formData: FormData) {
     adminEmail,
     adminUsername,
     adminPassword,
+    modoAcceso,
     planId,
   } = parseResult.data;
+  const esInvitacion = modoAcceso === "invitacion";
 
   // Generar username desde email si no se proporciona
   // Normalizar: lowercase, sin espacios, solo caracteres permitidos
@@ -110,26 +122,57 @@ export async function registerTenant(formData: FormData) {
     .replace(/\s+/g, "") // Eliminar espacios
     .replace(/[^a-z0-9._-]/g, ""); // Solo permitir letras, números, punto, guion bajo y guion
 
+  // El nombre de usuario es único en TODA la app (es la entrada del login).
+  // Se verifica antes de crear la cuenta o mandar la invitación.
+  const usernameEnUso = await prisma.usuario.findFirst({
+    where: { Nombre: usernameFinal },
+    select: { Id: true },
+  });
+  if (usernameEnUso) {
+    return {
+      ok: false as const,
+      error: `El nombre de usuario "${usernameFinal}" ya está en uso. Elegí otro.`,
+    };
+  }
+
+  let authUserId: string | null = null;
   try {
-    // Creo el usuario en supabase
-    const { data, error } =
-      await getSupabaseServiceClient().auth.admin.createUser({
+    if (esInvitacion) {
+      // Crea la cuenta y le manda al dueño el email para elegir su contraseña.
+      const invitacion = await invitarEmpleado({
         email: adminEmail,
-        password: adminPassword,
-        email_confirm: true,
+        username: usernameFinal,
+        comercio: tenantName,
       });
+      if (!invitacion.ok) {
+        return {
+          ok: false as const,
+          error:
+            invitacion.motivo === "email_registrado"
+              ? "Ese email ya tiene una cuenta en PuntoX."
+              : "No se pudo enviar la invitación. Probá de nuevo en unos minutos.",
+        };
+      }
+      authUserId = invitacion.user.id;
+    } else {
+      const { data, error } =
+        await getSupabaseServiceClient().auth.admin.createUser({
+          email: adminEmail,
+          password: adminPassword,
+          email_confirm: true,
+        });
 
-    if (error || !data?.user) {
-      console.error("Error creando usuario en Supabase", error);
-      return {
-        ok: false as const,
-        error:
-          "No se pudo crear el usuario en Supabase: " +
-          (error?.message ?? "error desconocido"),
-      };
+      if (error || !data?.user) {
+        console.error("Error creando usuario en Supabase", error);
+        return {
+          ok: false as const,
+          error:
+            "No se pudo crear el usuario en Supabase: " +
+            (error?.message ?? "error desconocido"),
+        };
+      }
+      authUserId = data.user.id;
     }
-
-    const authUserId = data.user.id;
 
     // transaccion prisma
     const tenant = await prisma.$transaction(async (tx) => {
@@ -196,28 +239,13 @@ export async function registerTenant(formData: FormData) {
         },
       });
 
-      // Verificar que el username no esté en uso
-      const existingUsername = await tx.usuario.findFirst({
-        where: {
-          Nombre: usernameFinal,
-          TenantId: newTenant.Id,
-          EstaEliminado: false,
-        },
-      });
-
-      if (existingUsername) {
-        throw new Error(
-          `El nombre de usuario "${usernameFinal}" ya está en uso. Por favor, elige otro.`,
-        );
-      }
-
       const usuario = await tx.usuario.create({
         data: {
           EmpleadoId: persona.Id,
           Nombre: usernameFinal,
           EstaBloqueado: false,
           EstaEliminado: false,
-          AuthUserId: authUserId,
+          AuthUserId: authUserId!,
           TenantId: newTenant.Id,
         },
       });
@@ -362,10 +390,19 @@ export async function registerTenant(formData: FormData) {
     return {
       ok: true as const,
       tenantId: tenant.Id,
-      message: "La tienda fue creada con éxito.",
+      message: esInvitacion
+        ? `La tienda fue creada. Le enviamos a ${adminEmail} un email para que elija su contraseña.`
+        : "La tienda fue creada con éxito.",
     };
   } catch (err) {
     console.error("Error en registerTenant:", err);
+    // Si la base falló, no dejar la cuenta de Auth huérfana (y, si era una
+    // invitación, el link enviado deja de servir).
+    if (authUserId) {
+      await getSupabaseServiceClient()
+        .auth.admin.deleteUser(authUserId)
+        .catch((e) => console.error("No se pudo borrar el usuario de Auth huérfano:", e));
+    }
     return {
       ok: false as const,
       error: "Error interno al registrar el comercio.",

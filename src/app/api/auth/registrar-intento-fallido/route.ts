@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { notificarCuentaBloqueada } from "@/lib/notificaciones/seguridad";
 import prisma from "@/DB/prisma";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 import { aplicarLimites, ipDelCliente, LIMITES_AUTH } from "@/lib/rateLimit";
@@ -151,6 +152,11 @@ export async function POST(req: NextRequest) {
 
     // Registrar auditoría del bloqueo automático
     if (debeBloquear) {
+      await notificarCuentaBloqueada({
+        tenantId: usuario.TenantId,
+        username: usernameNormalized,
+        intentos: nuevosIntentos,
+      });
       try {
         await registrarAuditoria({
           tenantId: usuario.TenantId,

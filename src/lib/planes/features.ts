@@ -1,4 +1,5 @@
 import prisma from "@/DB/prisma";
+import { notificarAdministradores } from "@/lib/notificaciones/notificar";
 import { createError } from "@/lib/errors/types";
 
 export interface PlanFeatures {
@@ -118,6 +119,44 @@ export async function assertDentroDeLimite(
     throw createError.forbidden(
       `Tu plan permite hasta ${max} ${config.etiqueta}. Actualizá tu plan para agregar más.`,
     );
+  }
+}
+
+/**
+ * Después de un alta: si el comercio quedó en el máximo de su plan para
+ * `tipo`, avisa a los administradores (notificación in-app, sin email).
+ * No repite el aviso mientras haya uno igual sin leer. Nunca lanza.
+ */
+export async function notificarSiAlcanzoLimite(
+  tenantId: number,
+  tipo: LimiteTipo,
+): Promise<boolean> {
+  try {
+    const config = LIMITE_CONFIG[tipo];
+    const max = (await getPlanFeaturesDeTenant(tenantId))[config.featureKey];
+    if (max === null) return false;
+
+    const tenant = BigInt(tenantId);
+    if ((await config.contar(tenant)) < max) return false;
+
+    const entidadId = `${tipo}:${max}`;
+    const pendiente = await prisma.notificacion.findFirst({
+      where: { TenantId: tenant, EntidadTipo: "PLAN_LIMITE", EntidadId: entidadId, Leida: false },
+      select: { Id: true },
+    });
+    if (pendiente) return false;
+
+    await notificarAdministradores(tenant, {
+      tipo: "WARNING",
+      titulo: "Llegaste al límite de tu plan",
+      mensaje: `Tu plan permite hasta ${max} ${config.etiqueta} y ya los usaste todos. Para agregar más, cambiá a un plan superior.`,
+      entidadTipo: "PLAN_LIMITE",
+      entidadId,
+    });
+    return true;
+  } catch (error) {
+    console.error("[planes] Aviso de límite alcanzado:", error);
+    return false;
   }
 }
 

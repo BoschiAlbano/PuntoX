@@ -17,7 +17,7 @@ import { ejecutarBorradoFisico } from "@/lib/errors/hardDelete";
 import { fotoDefault } from "@/utilities/fotoDefault";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { resolveStockNotifications } from "@/lib/services/notificaciones";
-import { assertDentroDeLimite } from "@/lib/planes/features";
+import { assertDentroDeLimite, notificarSiAlcanzoLimite } from "@/lib/planes/features";
 import { guardarEnCacheSiCorresponde } from "@/lib/services/imagenProductoCache";
 import { ImagenCacheFuente } from "../../../../prisma/generated/prisma";
 import { optimizeImageToWebp } from "@/lib/utils/imageOptimizer";
@@ -485,6 +485,8 @@ export async function POST(req: NextRequest) {
 
       return nuevoArticulo;
     });
+
+    await notificarSiAlcanzoLimite(tenantId, "articulos");
 
     return NextResponse.json(
       {

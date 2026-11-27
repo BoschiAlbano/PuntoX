@@ -104,7 +104,7 @@ import { ejecutarBorradoFisico } from "@/lib/errors/hardDelete";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 import { PerfilTipo } from "../../../../prisma/generated/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import { assertDentroDeLimite } from "@/lib/planes/features";
+import { assertDentroDeLimite, notificarSiAlcanzoLimite } from "@/lib/planes/features";
 import {
   PERMISSIONS,
   GET_PERMISSIONS,
@@ -848,6 +848,8 @@ export async function POST(req: NextRequest) {
         console.warn("No se pudieron actualizar permisos en JWT:", err);
       });
     }
+
+    await notificarSiAlcanzoLimite(tenantId, "usuarios");
 
     return NextResponse.json({ empleado: empleadoResponse }, { status: 201 });
   } catch (error) {

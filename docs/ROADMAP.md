@@ -51,7 +51,7 @@
 
 ## 📧 Envío de emails
 
-Hoy la app **no envía ningún email**: altas y registros usan `email_confirm: true` y no hay SMTP configurado. El SMTP integrado de Supabase no sirve para producción (2 emails/hora por proyecto y solo a direcciones autorizadas).
+Emails de Auth (recuperar contraseña, invitaciones) vía Supabase con SMTP de Resend (`mail.puntox.com.ar`); emails propios de la app (resumen diario, cierre de caja, vencimientos) vía API de Resend (`src/lib/email/`). Plan gratis de Resend: 100 emails/día.
 
 **Requisito previo**
 - [x] Dominio `mail.puntox.com.ar` verificado en Resend (SPF/DKIM/DMARC en Vercel DNS) y conectado como SMTP de Supabase; plantillas en `docs/email-templates/`.
@@ -59,32 +59,32 @@ Hoy la app **no envía ningún email**: altas y registros usan `email_confirm: t
 **1. Acceso y cuenta** — vía Supabase Auth (plantillas de Supabase + SMTP propio)
 - [x] **"Olvidé mi contraseña"** — `/recuperar-contrasena` → `POST /api/auth/recuperar-contrasena` → email → `/auth/confirm` (`verifyOtp`) → `/restablecer-contrasena` (pide 2FA si está activo y cierra todas las sesiones). Usuarios con email interno (`@puntox.com`) siguen dependiendo del admin.
 - [x] **Invitación de empleados** — en el alta, "Invitar por email" (`inviteUserByEmail` con usuario y comercio en el email) → `/auth/confirm` → "Creá tu contraseña" → login con el usuario precargado. Botón "Reenviar invitación" en la tabla (si Supabase rechaza la reinvitación, envía un link de recuperación). Si falla la base al crear el empleado, se borra el usuario de Auth.
-- [ ] **Confirmación de email al registrar comercio** (hoy se auto-confirma).
-- [ ] **Cambio de email** (confirmar la dirección nueva).
+- [x] **Alta de comercio por invitación** — el SuperAdmin elige "Invitar por email" (por defecto) y el dueño elige su contraseña (mismo flujo que empleados). Reemplaza "confirmación de email" y "bienvenida". Además: el nombre de usuario se valida globalmente antes de crear la cuenta y, si falla la base, se borra la cuenta de Auth.
+- ~~Cambio de email~~ — descartado: la app no permite cambiar el email de un usuario.
 
-**2. Seguridad**
-- [ ] 🟡 **Inicio de sesión desde dispositivo nuevo** (cablear `AlertarNuevoDispositivo`).
-- [ ] **Cuenta bloqueada por intentos fallidos** (el bloqueo existe en `registrar-intento-fallido`, falta el aviso).
-- [ ] **Contraseña cambiada por un admin** (aviso al empleado).
-- [ ] **2FA activado / desactivado**.
+**2. Seguridad** — solo notificaciones in-app, sin email (`src/lib/notificaciones/seguridad.ts`)
+- [x] **Inicio de sesión desde dispositivo nuevo** — al usuario, si el comercio tiene activado `AlertarNuevoDispositivo` (navegador nunca usado antes por ese usuario; el primer inicio de sesión no cuenta).
+- [x] **Cuenta bloqueada por intentos fallidos** — a los administradores.
+- [x] **Contraseña cambiada por un admin** — al empleado.
+- [x] **2FA activado / desactivado** — al usuario; si se desactiva, también a los administradores. `POST /api/auth/mfa-evento` verifica el estado real en Supabase antes de notificar.
 
 **3. Notificaciones operativas** — envío desde la app (hoy solo in-app)
 - [x] **Resumen diario por email** — 07:00 (Argentina) con el día anterior completo (antes resumía un día corrido 3 h por usar UTC). Email a administradores solo si hubo ventas; la notificación in-app siempre (`src/lib/resumen/diario.ts`).
 - [x] **Email al cerrar caja** — arqueo (efectivo esperado/contado/diferencia), ventas por medio de pago, salidas y ganancia; interruptor propio `NotificacionesCierreCaja` (migración `20261126220000_notificaciones_cierre_caja`); se envía en segundo plano con `after()` (`src/lib/caja/emailCierre.ts`).
 - [ ] Elegir la hora del resumen diario por comercio (requiere cron horario: Vercel Pro o `pg_cron` de Supabase).
-- [ ] Stock bajo, límite de crédito superado, caja abierta o con diferencia (idealmente agrupados en el resumen).
+- [x] **Detalle en el resumen diario** — stock bajo (los 5 más críticos + total), clientes sobre su límite de crédito (saldo de cta. cte. > `MontoMaximoCtaCte`) y cajas cerradas con diferencia en el arqueo.
 
 **4. Suscripción SaaS (PuntoX → comercios)**
 - [x] **Aviso de vencimiento** — email + notificación + banner a los 7 días, 1 día y al vencer, con botón "Renovar por WhatsApp" ([saas/avisos-vencimiento.md](saas/avisos-vencimiento.md)). Política: solo avisos, sin bloqueo.
 - [ ] **Bloqueo al vencer / al desactivar**: hoy ni el vencimiento ni `Tenant.EstaActivo = false` restringen el acceso (decisión de negocio pendiente).
 - [ ] Proteger `GET /api/admin/check-subscriptions` (hoy no requiere autenticación).
-- [ ] Bienvenida al registrar el comercio.
-- [ ] Límite del plan alcanzado.
+- [x] Bienvenida al registrar el comercio — cubierta por el alta por invitación.
+- [x] **Límite del plan alcanzado** — notificación in-app a los administradores al llegar al máximo de sucursales, usuarios o artículos (sin email; no se repite mientras esté sin leer).
 
 **5. Comercio → clientes finales** (funcionalidades nuevas)
-- [ ] Enviar factura/comprobante por email (el cliente ya tiene `Mail`).
-- [ ] Estado de cuenta corriente / recordatorio de saldo.
-- [ ] Notificaciones de pedidos B2B (cuando se implemente el Portal de Proveedores).
+- ~~Enviar factura/comprobante por email~~ — descartado por ahora.
+- ~~Estado de cuenta corriente / recordatorio de saldo~~ — descartado por ahora.
+- [ ] Notificaciones de pedidos B2B — después del Portal de Proveedores.
 
 ## 🟡 Prioridad 3 — Testing
 

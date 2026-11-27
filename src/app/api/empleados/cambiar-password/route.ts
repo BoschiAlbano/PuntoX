@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { notificarPasswordCambiadaPorAdmin } from "@/lib/notificaciones/seguridad";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
@@ -122,6 +123,19 @@ export async function PUT(req: NextRequest) {
         : `Cambio de contraseña realizado por usuario ${currentUserId} para usuario ${targetUserId}`,
       req,
     });
+
+    // Si la cambió otra persona (admin), se le avisa al usuario afectado.
+    if (!isSelf) {
+      const quien = await prisma.usuario.findFirst({
+        where: { Id: currentUserIdBig, TenantId: tenantIdBig },
+        select: { Nombre: true },
+      });
+      await notificarPasswordCambiadaPorAdmin({
+        tenantId: tenantIdBig,
+        usuarioAfectadoId: usuario.Id,
+        cambiadaPor: quien?.Nombre ? `El administrador "${quien.Nombre}"` : "Un administrador",
+      });
+    }
 
     return NextResponse.json({
       message: "Contraseña actualizada correctamente",
