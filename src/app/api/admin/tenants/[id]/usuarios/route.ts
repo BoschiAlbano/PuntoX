@@ -5,6 +5,7 @@ import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 import { notificarPasswordCambiadaPorAdmin } from "@/lib/notificaciones/seguridad";
+import { idDuenoDelTenant } from "@/lib/tenant/dueno";
 
 /**
  * GET /api/admin/tenants/[id]/usuarios
@@ -80,8 +81,10 @@ export async function GET(
       orderBy: { Id: "asc" },
     });
 
+    const duenoId = await idDuenoDelTenant(tenantId);
     const formatted = usuarios.map((u) => ({
       id: Number(u.Id),
+      esDueno: duenoId !== null && u.Id === duenoId,
       usuario: u.Nombre,
       nombre: u.Persona_Empleado.Persona.Nombre,
       apellido: u.Persona_Empleado.Persona.Apellido,
@@ -262,6 +265,58 @@ export async function PATCH(
         return NextResponse.json({
           success: true,
           message: `Contraseña de "${usuario.Nombre}" actualizada`,
+        });
+      }
+
+      case "hacerDueno": {
+        // Transferir la propiedad del comercio. El nuevo dueño tiene que ser
+        // administrador y estar activo (el anterior sigue como administrador).
+        const nuevo = await prisma.usuario.findFirst({
+          where: { Id: usuario.Id, TenantId: tenantId, EstaEliminado: false },
+          select: {
+            EstaBloqueado: true,
+            PerfilUsuario: { select: { Perfiles: { select: { Tipo: true } } } },
+          },
+        });
+        const esAdmin = nuevo?.PerfilUsuario.some(
+          (pu) => pu.Perfiles.Tipo === "ADMINISTRADOR",
+        );
+        if (!nuevo || !esAdmin) {
+          return NextResponse.json(
+            { error: "El nuevo dueño tiene que tener el rol Administrador." },
+            { status: 400 },
+          );
+        }
+        if (nuevo.EstaBloqueado) {
+          return NextResponse.json(
+            { error: "El nuevo dueño no puede estar bloqueado." },
+            { status: 400 },
+          );
+        }
+
+        const anterior = await prisma.tenant.findUnique({
+          where: { Id: tenantId },
+          select: { UsuarioDueno: { select: { Id: true, Nombre: true } } },
+        });
+        await prisma.tenant.update({
+          where: { Id: tenantId },
+          data: { UsuarioDuenoId: usuario.Id },
+        });
+
+        await registrarAuditoria({
+          tenantId,
+          usuarioId: superAdminId,
+          accion: "TRANSFERIR_PROPIEDAD",
+          usuarioAfectadoId: usuario.Id,
+          detalle: `Propiedad del comercio transferida por el administrador de PuntoX: de "${anterior?.UsuarioDueno?.Nombre ?? "sin dueño"}" a "${usuario.Nombre}"`,
+          valorAnterior: { usuarioDuenoId: anterior?.UsuarioDueno?.Id?.toString() ?? null },
+          valorNuevo: { usuarioDuenoId: usuario.Id.toString() },
+          req,
+        });
+
+        return NextResponse.json({
+          success: true,
+          message: `"${usuario.Nombre}" ahora es el dueño del comercio`,
         });
       }
 

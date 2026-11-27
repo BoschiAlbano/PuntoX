@@ -22,7 +22,8 @@ type AccionAuditoria =
   | "CAMBIAR_CONFIG_SEGURIDAD"
   | "BLOQUEO_AUTOMATICO"
   | "INTENTO_FALLIDO_ROL_PRIVILEGIADO"
-  | "RESET_TIENDA";
+  | "RESET_TIENDA"
+  | "TRANSFERIR_PROPIEDAD";
 
 type SeveridadAuditoria = "INFO" | "WARNING" | "CRITICAL";
 
@@ -59,6 +60,7 @@ function inferirSeveridad(accion: AccionAuditoria): SeveridadAuditoria {
     accion === "SUSPENDER_USUARIO" ||
     accion === "BLOQUEO_AUTOMATICO" ||
     accion === "INTENTO_FALLIDO_ROL_PRIVILEGIADO" ||
+    accion === "TRANSFERIR_PROPIEDAD" ||
     accion === "CAMBIAR_CONFIG_SEGURIDAD"
   ) {
     return "WARNING";

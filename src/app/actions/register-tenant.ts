@@ -325,6 +325,13 @@ export async function registerTenant(formData: FormData) {
         },
       });
 
+      // Este usuario es el dueño del comercio: se distingue de otros
+      // administradores y nadie más del comercio puede bloquearlo ni borrarlo.
+      await tx.tenant.update({
+        where: { Id: newTenant.Id },
+        data: { UsuarioDuenoId: usuario.Id },
+      });
+
       await tx.configuracion.create({
         data: {
           RazonSocial: tenantName,

@@ -52,7 +52,12 @@ export default function ChangePasswordModal({
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Error al cambiar contraseña");
+        // handleError responde { error: { code, message } }; otras rutas, { error: "..." }
+        throw new Error(
+          typeof data?.error === "string"
+            ? data.error
+            : data?.error?.message || "Error al cambiar contraseña",
+        );
       }
       return await response.json();
     },

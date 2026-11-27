@@ -7,6 +7,7 @@ import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 import { SET_PERMISSIONS } from "@/lib/constants/comprobantes";
+import { assertPuedeActuarSobreDueno } from "@/lib/tenant/dueno";
 
 const cambiarPasswordSchema = z.object({
   usuarioId: z.union([z.number(), z.string()]),
@@ -62,6 +63,15 @@ export async function PUT(req: NextRequest) {
         { status: 403 },
       );
     }
+
+    // La contraseña del dueño solo la cambia él mismo (o el superadmin)
+    await assertPuedeActuarSobreDueno({
+      tenantId,
+      usuarioAfectadoId: targetUserIdBig,
+      actorId: currentUserIdBig,
+      isSuperAdmin,
+      accion: "cambiarle la contraseña",
+    });
 
     const usuario = await prisma.usuario.findFirst({
       where: {

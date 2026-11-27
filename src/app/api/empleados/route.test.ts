@@ -371,4 +371,30 @@ describe("PATCH /api/empleados", () => {
     expect(res.status).toBe(200);
     expect(data.estado).toBe("Suspendido");
   });
+  it("otro administrador no puede bloquear al dueño del comercio", async () => {
+    vi.mocked(getAuthContext).mockResolvedValue({
+      tenantId: 1,
+      usuarioId: 2,
+      user: {} as any,
+      sucursalId: 0,
+      isSuperAdmin: false,
+      isAdministrador: true,
+      permissions: [],
+    } as any);
+    vi.mocked(prisma.usuario.findFirst).mockResolvedValue({
+      Id: 5,
+      EstaBloqueado: false,
+      PerfilUsuario: [{ Perfiles: { Tipo: "ADMINISTRADOR" } }],
+    } as any);
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({ UsuarioDuenoId: 5n } as any);
+    const res = await PATCH(
+      new NextRequest("http://localhost:3000/api/empleados", {
+        method: "PATCH",
+        body: JSON.stringify({ usuarioId: 5, bloquear: true }),
+      }),
+    );
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toBe("No podés bloquear ni desbloquear al dueño del comercio.");
+    expect(prisma.usuario.update).not.toHaveBeenCalled();
+  });
 });

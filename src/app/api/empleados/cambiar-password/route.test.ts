@@ -16,7 +16,11 @@ vi.mock("@/lib/auth/getAuthUser", () => ({
 vi.mock("@/DB/prisma", () => ({
   default: {
     usuario: { findFirst: vi.fn() },
+    tenant: { findUnique: vi.fn() },
   },
+}));
+vi.mock("@/lib/notificaciones/seguridad", () => ({
+  notificarPasswordCambiadaPorAdmin: vi.fn(),
 }));
 vi.mock("@/lib/supabase/serviceClient", () => ({
   getSupabaseServiceClient: vi.fn(),
@@ -27,6 +31,8 @@ vi.mock("@/lib/auditoria/registrarAuditoria", () => ({
 describe("PUT /api/empleados/cambiar-password", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Dueño del comercio: el usuario 50 (ninguno de los de estos tests)
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({ UsuarioDuenoId: 50n } as any);
     vi.mocked(getSupabaseServiceClient).mockReturnValue({
       auth: {
         admin: {
@@ -170,5 +176,43 @@ describe("PUT /api/empleados/cambiar-password", () => {
     const res = await PUT(req);
     expect(res.status).toBe(403);
     expect(prisma.usuario.findFirst).not.toHaveBeenCalled();
+  });
+
+  describe("dueño del comercio", () => {
+    const comoAdmin = (usuarioId: number) =>
+      vi.mocked(getAuthContext).mockResolvedValue({
+        tenantId: 1,
+        usuarioId,
+        user: {} as any,
+        sucursalId: 0,
+        isSuperAdmin: false,
+        isAdministrador: true,
+        permissions: [],
+      } as any);
+    const cambiar = (usuarioId: number) =>
+      PUT(
+        new NextRequest("http://localhost:3000/api/empleados/cambiar-password", {
+          method: "PUT",
+          body: JSON.stringify({ usuarioId, nuevaPassword: "nueva1234" }),
+        }),
+      );
+
+    it("otro administrador no puede cambiarle la contraseña al dueño", async () => {
+      comoAdmin(2);
+      const res = await cambiar(50);
+      expect(res.status).toBe(403);
+      expect(prisma.usuario.findFirst).not.toHaveBeenCalled();
+    });
+
+    it("el dueño sí puede cambiar la suya", async () => {
+      comoAdmin(50);
+      vi.mocked(prisma.usuario.findFirst).mockResolvedValue({
+        Id: 50n,
+        AuthUserId: "auth-50",
+        Persona_Empleado: null,
+      } as any);
+      const res = await cambiar(50);
+      expect(res.status).toBe(200);
+    });
   });
 });

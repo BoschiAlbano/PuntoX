@@ -53,6 +53,8 @@ export type Usuario = {
   dni: string | null;
   ultimaActividad: string | null;
   intentosFallidos?: number;
+  /** Dueño del comercio (Tenant.UsuarioDuenoId). */
+  esDueno?: boolean;
 };
 
 export default function UsuariosCRUD() {
@@ -373,15 +375,24 @@ export default function UsuariosCRUD() {
               );
             case "rolNombre":
               return (
-                <span
-                  className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase ${
-                    item.rolTipo === "ADMINISTRADOR"
-                      ? "bg-[#67afc3]/10 text-[#67afc3]"
-                      : "bg-slate-100 text-slate-600"
-                  }`}
-                >
-                  {item.rolNombre || "Sin rol"}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase ${
+                      item.rolTipo === "ADMINISTRADOR"
+                        ? "bg-[#67afc3]/10 text-[#67afc3]"
+                        : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {item.rolNombre || "Sin rol"}
+                  </span>
+                  {item.esDueno && (
+                    <Tooltip content="Dueño del comercio" placement="top">
+                      <span className="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase bg-[#0066ff]/10 text-[#0050cb] cursor-default">
+                        Dueño
+                      </span>
+                    </Tooltip>
+                  )}
+                </div>
               );
             case "legajo":
               return (
@@ -431,13 +442,23 @@ export default function UsuariosCRUD() {
               // Check if the CURRENT user is an Administrator
               const currentUserIsAdmin = isAdministrador || isSuperAdmin;
 
+              // Al dueño del comercio solo lo toca él mismo (o el superadmin);
+              // el servidor lo exige igual (lib/tenant/dueno.ts).
+              const protegidoPorDueno =
+                !!item.esDueno && !isCurrentUser && !isSuperAdmin;
+
               // 1. Editar / Cambiar Contraseña: admin puede editar a todos; no-admin solo a sí mismo
-              const canEditOrPass = currentUserIsAdmin || isCurrentUser;
-              // 2. Eliminar: admin puede eliminar a todos menos a sí mismo
-              const canDelete = currentUserIsAdmin && !isCurrentUser;
-              // 3. Bloquear/Desbloquear: solo admins, no sobre sí mismos, y solo si tiene usuario
+              const canEditOrPass =
+                (currentUserIsAdmin || isCurrentUser) && !protegidoPorDueno;
+              // 2. Eliminar: admin puede eliminar a todos menos a sí mismo y al dueño
+              const canDelete =
+                currentUserIsAdmin && !isCurrentUser && !item.esDueno;
+              // 3. Bloquear/Desbloquear: solo admins, no sobre sí mismos ni el dueño, y solo si tiene usuario
               const canBlock =
-                currentUserIsAdmin && !isCurrentUser && !!item.usuarioId;
+                currentUserIsAdmin &&
+                !isCurrentUser &&
+                !!item.usuarioId &&
+                !protegidoPorDueno;
               const estaActivo = item.estado !== "Suspendido";
               // 4. Reenviar invitación: solo admins, sobre otros, con email real
               const canInvite =

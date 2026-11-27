@@ -46,6 +46,7 @@ import {
   Tag,
   FolderOpen,
   Truck,
+  Crown,
 } from "lucide-react";
 import ChangePasswordModal from "@/components/empleados/ChangePasswordModal";
 import ResetTiendaCard from "@/components/admin/ResetTiendaCard";
@@ -97,6 +98,8 @@ type TenantUser = {
   sucursales: { id: number; nombre: string }[];
   ultimaActividad: string | null;
   dispositivo: string | null;
+  /** Dueño del comercio (Tenant.UsuarioDuenoId). */
+  esDueno: boolean;
 };
 
 export default function TenantDetailPage() {
@@ -715,6 +718,16 @@ export default function TenantDetailPage() {
                                     {role.descripcion}
                                   </Chip>
                                 ))}
+                                {user.esDueno && (
+                                  <Chip
+                                    size="sm"
+                                    variant="flat"
+                                    startContent={<Crown className="w-3 h-3" />}
+                                    className="bg-[#0066ff]/10 text-[#0050cb]"
+                                  >
+                                    Dueño
+                                  </Chip>
+                                )}
                               </div>
                             </td>
                             <td className="px-5 py-3">
@@ -761,7 +774,18 @@ export default function TenantDetailPage() {
                                   <DropdownMenu
                                     aria-label="Acciones del usuario"
                                     onAction={(key) => {
-                                      if (key === "resetPassword") {
+                                      if (key === "hacerDueno") {
+                                        if (
+                                          !confirm(
+                                            `¿Hacer a "${user.usuario}" dueño del comercio? El dueño actual sigue como administrador, pero pierde la protección de dueño.`,
+                                          )
+                                        )
+                                          return;
+                                        userActionMutation.mutate({
+                                          usuarioId: user.id,
+                                          action: "hacerDueno",
+                                        });
+                                      } else if (key === "resetPassword") {
                                         setPasswordModal({
                                           isOpen: true,
                                           usuarioId: user.id,
@@ -803,6 +827,22 @@ export default function TenantDetailPage() {
                                       }
                                     >
                                       Resetear contraseña
+                                    </DropdownItem>
+                                    <DropdownItem
+                                      key="hacerDueno"
+                                      startContent={
+                                        <Crown className="w-4 h-4" />
+                                      }
+                                      // Solo administradores activos que no son el dueño
+                                      className={
+                                        !user.esDueno &&
+                                        !user.estaBloqueado &&
+                                        user.roles.some((r) => r.tipo === "ADMINISTRADOR")
+                                          ? ""
+                                          : "hidden"
+                                      }
+                                    >
+                                      Hacer dueño
                                     </DropdownItem>
                                     <DropdownItem
                                       key="closeSessions"

@@ -58,7 +58,13 @@ model Tenant {
   Plan                  PlanSaaS               @relation(fields: [PlanId], references: [Id])
   TokensCsrf            TokenCsrf[]
   Unidades              UnidadMedida[]
-  Usuarios              Usuario[]
+  Usuarios              Usuario[]              @relation("UsuariosDelTenant")
+  /// Usuario dueño del comercio (el que se crea con la tienda). Distinto de
+  /// cualquier otro usuario con rol Administrador: nadie más del comercio
+  /// puede bloquearlo, cambiarle la contraseña ni eliminarlo. Solo el
+  /// superadmin transfiere la propiedad.
+  UsuarioDuenoId        BigInt?                @unique
+  UsuarioDueno          Usuario?               @relation("DuenoDelTenant", fields: [UsuarioDuenoId], references: [Id], onDelete: SetNull, onUpdate: NoAction)
   UsuariosSucursales    UsuarioSucursal[]
   Notificaciones        Notificacion[]
   FacturasElectronicas  FacturaElectronica[]
@@ -1173,7 +1179,8 @@ model Usuario {
   TokensCsrf                           TokenCsrf[]
   Notificaciones                       Notificacion[]
   Persona_Empleado                     Persona_Empleado       @relation(fields: [EmpleadoId], references: [Id], onUpdate: NoAction)
-  Tenant                               Tenant                 @relation(fields: [TenantId], references: [Id])
+  Tenant                               Tenant                 @relation("UsuariosDelTenant", fields: [TenantId], references: [Id])
+  TenantDelQueEsDueno                  Tenant?                @relation("DuenoDelTenant")
 
   @@index([TenantId])
   @@index([EmpleadoId])

@@ -11,7 +11,10 @@ import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 
 vi.mock("@/lib/auth/getAuthUser", () => ({ getAuthContext: vi.fn() }));
 vi.mock("@/DB/prisma", () => ({
-  default: { usuario: { findFirst: vi.fn() } },
+  default: {
+    usuario: { findFirst: vi.fn() },
+    tenant: { findUnique: vi.fn(), update: vi.fn() },
+  },
 }));
 vi.mock("@/lib/supabase/serviceClient", () => ({
   getSupabaseServiceClient: vi.fn(),
@@ -132,5 +135,52 @@ describe("PATCH /api/admin/tenants/[id]/usuarios — setPassword", () => {
     const res = await cambiar("nueva-clave-1");
     expect(res.status).toBe(404);
     expect(updateUserById).not.toHaveBeenCalled();
+  });
+});
+
+describe("PATCH /api/admin/tenants/[id]/usuarios — hacerDueno", () => {
+  const hacerDueno = () =>
+    PATCH(
+      new NextRequest("http://localhost:3000/api/admin/tenants/4/usuarios", {
+        method: "PATCH",
+        body: JSON.stringify({ usuarioId: 6, action: "hacerDueno" }),
+      }),
+      { params: Promise.resolve({ id: "4" }) },
+    );
+  const usuarioConRol = (Tipo: string, EstaBloqueado = false) =>
+    vi.mocked(prisma.usuario.findFirst)
+      .mockResolvedValueOnce({ Id: 6n, AuthUserId: "auth-6", Nombre: "boschi1" } as any)
+      .mockResolvedValueOnce({ EstaBloqueado, PerfilUsuario: [{ Perfiles: { Tipo } }] } as any);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getAuthContext).mockResolvedValue({ isSuperAdmin: true, usuarioId: 1 } as any);
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({
+      UsuarioDueno: { Id: 5n, Nombre: "planbasico" },
+    } as any);
+  });
+
+  it("transfiere la propiedad a un administrador activo del comercio", async () => {
+    usuarioConRol("ADMINISTRADOR");
+    const res = await hacerDueno();
+    expect(res.status).toBe(200);
+    expect(prisma.tenant.update).toHaveBeenCalledWith({
+      where: { Id: 4n },
+      data: { UsuarioDuenoId: 6n },
+    });
+  });
+
+  it("rechaza a un usuario que no es administrador", async () => {
+    usuarioConRol("EMPLEADO");
+    const res = await hacerDueno();
+    expect(res.status).toBe(400);
+    expect(prisma.tenant.update).not.toHaveBeenCalled();
+  });
+
+  it("rechaza a un usuario bloqueado", async () => {
+    usuarioConRol("ADMINISTRADOR", true);
+    const res = await hacerDueno();
+    expect(res.status).toBe(400);
+    expect(prisma.tenant.update).not.toHaveBeenCalled();
   });
 });

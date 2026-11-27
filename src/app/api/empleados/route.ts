@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { assertPuedeActuarSobreDueno, idDuenoDelTenant } from "@/lib/tenant/dueno";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
@@ -317,6 +318,8 @@ export async function GET(req: NextRequest) {
 
     let response;
     try {
+      // Para marcar al dueño del comercio en la lista
+      const duenoId = await idDuenoDelTenant(tenantId);
       response = empleados.map((persona) => {
         const legajo = persona.Persona_Empleado?.Legajo ?? null;
         const foto = persona.Persona_Empleado?.Foto ?? null;
@@ -375,6 +378,7 @@ export async function GET(req: NextRequest) {
           dni: persona.Dni,
           ultimaActividad: "Pendiente",
           intentosFallidos: usuario ? Number(usuario.IntentosFallidos ?? 0) : 0,
+          esDueno: !!usuario && duenoId !== null && usuario.Id === duenoId,
         };
       });
     } catch (mapError) {
@@ -959,6 +963,17 @@ export async function PUT(req: NextRequest) {
       (pu: any) => pu.Perfiles?.Tipo === "SUPERADMIN" || pu.Perfiles?.tipo === "SUPERADMIN"
     ) || (dbPerfilAnterior && dbPerfilAnterior.Tipo === "SUPERADMIN");
 
+    // El dueño del comercio solo lo edita él mismo (o el superadmin)
+    if (usuarioActual) {
+      await assertPuedeActuarSobreDueno({
+        tenantId,
+        usuarioAfectadoId: usuarioActual.Id,
+        actorId: usuarioIdAccion,
+        isSuperAdmin,
+        accion: "modificar",
+      });
+    }
+
     if (targetIsSuperAdmin && !isSuperAdmin) {
       return NextResponse.json(
         { error: "Solo un Super Administrador puede modificar a otro Super Administrador" },
@@ -1397,6 +1412,14 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    await assertPuedeActuarSobreDueno({
+      tenantId,
+      usuarioAfectadoId: usuarioIdAfectado,
+      actorId: usuarioIdAccion,
+      isSuperAdmin,
+      accion: "bloquear ni desbloquear",
+    });
+
     const updated = await prisma.usuario.update({
       where: { Id: BigInt(usuarioIdAfectado), TenantId: BigInt(tenantId) },
       data: {
@@ -1499,6 +1522,19 @@ export async function DELETE(req: NextRequest) {
     if (targetIsAdminOrSuper && !isAdministrador && !isSuperAdmin) {
       return NextResponse.json(
         { error: "No tienes permisos para eliminar a un usuario con rol superior" },
+        { status: 403 },
+      );
+    }
+
+    // El dueño del comercio no se puede eliminar (ni siquiera él mismo: se
+    // quedaría el comercio sin dueño). Primero hay que transferir la propiedad.
+    const duenoId = await idDuenoDelTenant(tenantId);
+    if (
+      duenoId !== null &&
+      (persona.Persona_Empleado?.Usuario ?? []).some((u) => u.Id === duenoId)
+    ) {
+      return NextResponse.json(
+        { error: "No se puede eliminar al dueño del comercio." },
         { status: 403 },
       );
     }
