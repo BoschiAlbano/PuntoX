@@ -1,5 +1,23 @@
 # Planes SaaS — Definición de funcionalidades y límites
 
+> **Vigente desde el 27/11/2026** (lo que sigue debajo es el registro
+> histórico de la definición original):
+>
+> | Plan | Precio (ejemplo) | Sucursales | Usuarios | Artículos | ARCA | Para quién |
+> |---|---|---|---|---|---|---|
+> | Plan Básico | $25.000 | 1 | 3 | 1.000 | ✅ | Negocio chico, una sucursal |
+> | Plan Intermedio | $40.000 | 1 | 8 | 5.000 | ✅ | Negocio más grande, una sucursal |
+> | Plan Pro | $60.000 | Sin límite | Sin límite | Sin límite | ✅ | Varias sucursales |
+> | Plan Ilimitado | $0 | Sin límite | Sin límite | Sin límite | ✅ | Uso interno (administración) |
+>
+> - Los precios son de ejemplo; se definen más adelante.
+> - ARCA pasa a estar en todos los planes: los monotributistas están
+>   obligados a facturar electrónicamente, así que los planes se diferencian
+>   por tamaño (sucursales, usuarios, artículos) y no por algo obligatorio.
+> - "Plan Premium" se renombró a "Plan Pro" (mismo Id, sus tiendas pasaron
+>   con él). Los límites se editan desde `/admin/planes` con campos
+>   validados (antes era un JSON escrito a mano).
+
 > Estado: **definición** (punto 4 de `Z-Tareas.txt`: "Planes de tiendas, eliminar
 > funcionalidades y separar los planes"). Este documento es el registro de qué
 > debe bloquear cada plan. El plan de implementación (archivos a tocar, orden

@@ -27,7 +27,9 @@
 
 ## 🔴 Prioridad 1 — Cerrar cabos sueltos
 
-- [ ] **Prueba manual de planes**: tenant Básico (bloquear 2da sucursal, 4to usuario, artículo 101, FA) y tenant Ilimitado (nada bloqueado). Checklist en [saas/planes-saas-implementacion.md](saas/planes-saas-implementacion.md).
+- [x] **Planes Básico / Intermedio / Pro** (27/11/2026): límites verificados contra la base real; `/admin/planes` con campos validados en lugar de JSON a mano; ARCA incluido en todos; Premium renombrado a Pro (todo ilimitado). Ver [saas/planes-saas.md](saas/planes-saas.md).
+- [ ] **Prueba manual de planes** en la app: tenant Básico (bloquear 2da sucursal, 4to usuario, artículo 1.001) y tenant Pro/Ilimitado (nada bloqueado). Checklist en [saas/planes-saas-implementacion.md](saas/planes-saas-implementacion.md).
+- [ ] **Definir precios de los planes** (hoy de ejemplo: $25.000 / $40.000 / $60.000).
 - [x] **Interruptor "Alertar nuevo dispositivo"** — ahora visible en Configuración › Seguridad (se había quitado de la pantalla en un refactor) y conectado al aviso in-app de dispositivo nuevo. Activado por defecto.
 - [ ] **Landing / SEO**: crear `public/og-image.png` y reemplazar el handle `@puntox` de ejemplo en `src/app/page.tsx`.
 
@@ -77,7 +79,7 @@ Emails de Auth (recuperar contraseña, invitaciones) vía Supabase con SMTP de R
 **4. Suscripción SaaS (PuntoX → comercios)**
 - [x] **Aviso de vencimiento** — email + notificación + banner a los 7 días, 1 día y al vencer, con botón "Renovar por WhatsApp" ([saas/avisos-vencimiento.md](saas/avisos-vencimiento.md)). Política: solo avisos, sin bloqueo.
 - [ ] **Bloqueo al vencer / al desactivar**: hoy ni el vencimiento ni `Tenant.EstaActivo = false` restringen el acceso (decisión de negocio pendiente).
-- [ ] Proteger `GET /api/admin/check-subscriptions` (hoy no requiere autenticación).
+- [x] `GET /api/admin/check-subscriptions` y `configuracion/perfil` / `preferencias-venta` solo para superadmin (27/11/2026). Las dos últimas tomaban el comercio de `user_metadata`, editable por el usuario.
 - [x] Bienvenida al registrar el comercio — cubierta por el alta por invitación.
 - [x] **Límite del plan alcanzado** — notificación in-app a los administradores al llegar al máximo de sucursales, usuarios o artículos (sin email; no se repite mientras esté sin leer).
 

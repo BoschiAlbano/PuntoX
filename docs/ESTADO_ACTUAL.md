@@ -45,7 +45,7 @@
 | 👔 **Empleados & Auditoría** | [modules/empleados-roles.md](modules/empleados-roles.md) | 🟢 **95%** | CRUD de empleados, vinculación a cuentas de usuario, asignación de roles y bitácora de auditoría. **Falta:** el reenvío de invitación no envía email real (solo audita). |
 | ⚙️ **Configuración** | [modules/configuracion.md](modules/configuracion.md) | 🟢 **100%** | Perfil comercial, preferencias de venta (stock negativo, venta sin caja), certificados fiscales (.crt/.key), branding y políticas de seguridad. |
 | 📊 **Analíticas** | [modules/analiticas.md](modules/analiticas.md) | 🟢 **90%** | Dashboard con KPIs ejecutivos, gráficos de facturación diaria/mensual, alertas de stock y métricas financieras. |
-| 💎 **Planes SaaS** | [saas/planes-saas-implementacion.md](saas/planes-saas-implementacion.md) | 🟢 **95%** | Tiers Básico / Premium / Ilimitado. Enforcement en API y UI de sucursales, usuarios, artículos/combos y facturación AFIP. **Falta:** prueba manual con tenants reales. |
+| 💎 **Planes SaaS** | [saas/planes-saas-implementacion.md](saas/planes-saas-implementacion.md) | 🟢 **95%** | Tiers Básico / Intermedio / Pro (+ Ilimitado interno). Enforcement en API y UI de sucursales, usuarios, artículos/combos y facturación ARCA, verificado contra los datos reales (27/11/2026). Límites editables desde `/admin/planes` con campos validados. **Falta:** prueba manual en la app y definir precios. |
 | 🔔 **Notificaciones** | [features/notificaciones.md](features/notificaciones.md) | 🟢 **100%** | Polling liviano, alertas de stock bajo y límites de crédito con auto-resolución al corregir condición. |
 
 ---

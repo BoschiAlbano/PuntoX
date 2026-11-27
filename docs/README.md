@@ -93,7 +93,7 @@ Documentación técnica y funcional de cada módulo del sistema:
 
 | Documento | Descripción |
 |---|---|
-| [saas/planes-saas.md](saas/planes-saas.md) | Definición formal de tiers (Plan Básico, Plan Premium, Plan Ilimitado), límites de sucursales, usuarios, artículos y AFIP. |
+| [saas/planes-saas.md](saas/planes-saas.md) | Definición de los planes (Básico, Intermedio, Pro e Ilimitado interno), límites de sucursales, usuarios, artículos y ARCA. |
 | [saas/planes-saas-implementacion.md](saas/planes-saas-implementacion.md) | Plan técnico de implementación del enforcement en backend (`PlanFeatures`) y bloqueos visuales en UI. |
 
 ---

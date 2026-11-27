@@ -58,7 +58,8 @@ export async function GET(req: NextRequest) {
         where,
         skip,
         take: limit,
-        orderBy: { Id: "asc" },
+        // Del más barato al más caro (Básico → Intermedio → Pro)
+        orderBy: [{ CostoMensual: "asc" }, { Id: "asc" }],
         select: {
           Id: true,
           Nombre: true,
