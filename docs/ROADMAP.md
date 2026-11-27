@@ -106,8 +106,8 @@ Emails de Auth (recuperar contraseña, invitaciones) vía Supabase con SMTP de R
 
 - [x] **Tests de rutas de API** — 266/266 en verde (25/11/2026). Destapó un bug real ya corregido: un Administrador no podía cambiar la contraseña de otro empleado (`api/empleados/cambiar-password`).
 - [x] **Tests de componentes y `lib/`** — suite completa 596/596 en verde (25/11/2026).
-- [ ] Tipo `Sucursal` en `src/hooks/useSucursales.ts` declara `id` pero la API devuelve `Id` (los consumidores usan `s.Id || s.id`, sin impacto en runtime).
-- [ ] Sin tests para `api/configuracion/seguridad/sesiones/cerrar-otras` (reemplazó al DELETE por sesión).
+- [x] Tipo `Sucursal` en `src/hooks/useSucursales.ts` ahora declara `Id` (como la API); `UsuarioForm` ya no usa `s.Id || s.id`.
+- [x] Tests de `api/configuracion/seguridad/sesiones/cerrar-otras`. Además: si no identifica la sesión actual ya no cierra todas (incluida la propia); responde 409. Usa `sessionIdDesdeCookies` como el heartbeat.
 
 ### E2E
 
@@ -130,7 +130,7 @@ Estado en [e2e/journey/README.md](../e2e/journey/README.md): fases 0–4 complet
 
 - [x] **ESLint — errores**: 13 → 0 (25/11/2026).
 - [ ] **ESLint — warnings**: ~1100, mayormente `any` y variables sin usar.
-- [ ] Quitar `console.log/error` que quedan en 14 rutas de API.
+- [x] `console.log` en el servidor: quedan solo los resúmenes de los crons. Se quitaron los de ARCA, que volcaban el comprobante y la respuesta de AFIP (datos del cliente) en los logs. Los `console.error/warn` de fallas se mantienen.
 - [ ] Refactor de pantallas largas: ventas, empleados, configuración.
 - [ ] Optimización de queries (N+1, índices faltantes).
 

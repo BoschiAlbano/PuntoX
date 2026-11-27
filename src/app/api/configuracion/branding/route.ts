@@ -119,8 +119,6 @@ export async function PUT(req: NextRequest) {
               
             if (removeError) {
               console.warn("Supabase remove error (old logo):", removeError);
-            } else {
-              console.log("Logo antiguo eliminado exitosamente:", oldFilePath);
             }
           }
         } catch (e) {

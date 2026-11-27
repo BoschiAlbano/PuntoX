@@ -191,7 +191,7 @@ export default function UsuarioForm({
         payload.provinciaId = formData.provinciaId;
       if (formData.rolId !== undefined) payload.rolId = formData.rolId;
       if (formData.sucursales !== undefined)
-        payload.sucursalId = formData.sucursales?.map((s: any) => s.Id || s.id);
+        payload.sucursalId = formData.sucursales?.map((s) => s.Id);
       // Foto: enviar siempre (puede ser base64 nueva, URL existente o null para quitar)
       payload.foto = formData.foto ?? null;
 
@@ -217,7 +217,7 @@ export default function UsuarioForm({
       if (formData.foto) payload.foto = formData.foto;
 
       if (formData.sucursales && formData.sucursales.length > 0) {
-        payload.sucursalId = formData.sucursales.map((s: any) => s.Id || s.id);
+        payload.sucursalId = formData.sucursales.map((s) => s.Id);
       }
 
       onSubmit(payload);
@@ -557,33 +557,22 @@ export default function UsuarioForm({
                 selectionMode="multiple"
                 selectedKeys={
                   formData.sucursales
-                    ? formData.sucursales.map((s: any) =>
-                        (s.Id || s.sucursalId || s.id).toString(),
-                      )
+                    ? formData.sucursales.map((s) => String(s.Id))
                     : []
                 }
                 onSelectionChange={(keys) => {
                   const selectedIds = Array.from(keys).map((k) => Number(k));
-                  const selectedSucursales = sucursales.filter((s: any) =>
-                    selectedIds.includes(Number(s.Id || s.id)),
-                  );
+                  const selectedSucursales = sucursales
+                    .filter((s) => selectedIds.includes(s.Id))
+                    .map((s) => ({ Id: s.Id, Nombre: s.nombre }));
                   handleChange("sucursales", selectedSucursales);
                 }}
                 isLoading={isLoadingSucursales}
                 isDisabled={isSaving}
               >
-                {sucursales.map((sucursal: any) => (
-                  <SelectItem
-                    key={sucursal.id || sucursal.Id}
-                    textValue={
-                      sucursal.nombre ||
-                      sucursal.Nombre ||
-                      sucursal.descripcion
-                    }
-                  >
-                    {sucursal.nombre ||
-                      sucursal.Nombre ||
-                      sucursal.descripcion}
+                {sucursales.map((sucursal) => (
+                  <SelectItem key={sucursal.Id} textValue={sucursal.nombre}>
+                    {sucursal.nombre}
                   </SelectItem>
                 ))}
               </Select>

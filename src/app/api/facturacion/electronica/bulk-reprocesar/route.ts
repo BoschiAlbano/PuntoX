@@ -205,7 +205,7 @@ export async function POST(req: NextRequest) {
                 where: { Id: fe.Id },
               });
             }
-            console.log(
+            console.warn(
               `[bulk-reprocesar] Eliminadas ${conflictingFes.length} FEs conflictivas para tipo ${cbteTipoAfip} PDV ${puntoVenta}`,
             );
 

@@ -3,19 +3,7 @@ import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { handleError } from "@/lib/errors/handler";
 import prisma from "@/DB/prisma";
-import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
-
-// Extrae el session_id del JWT
-function extractSessionIdFromJwt(accessToken: string): string | null {
-  try {
-    const payload = JSON.parse(
-      Buffer.from(accessToken.split(".")[1], "base64url").toString(),
-    );
-    return payload.session_id || null;
-  } catch {
-    return null;
-  }
-}
+import { sessionIdDesdeCookies } from "@/lib/auth/sesionActual";
 
 /**
  * POST /api/configuracion/seguridad/sesiones/cerrar-otras
@@ -36,47 +24,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    // Obtener session_id actual para excluirla del cierre
-    const supabase = await getSupabaseServerClient();
-    const {
-      data: { session: currentSession },
-    } = await supabase.auth.getSession();
-
-    const currentSessionId = currentSession?.access_token
-      ? extractSessionIdFromJwt(currentSession.access_token)
-      : null;
-
-    // Cerrar todas las sesiones del usuario excepto la actual
-    let sesionesCerradas: number;
-
-    if (currentSessionId) {
-      sesionesCerradas = await prisma.$executeRawUnsafe(
-        `
-        UPDATE "SesionActiva"
-        SET "EstaActiva" = false
-        WHERE "TenantId" = $1
-          AND "UsuarioId" = $2
-          AND "EstaActiva" = true
-          AND ("SupabaseSessionId" IS NULL OR "SupabaseSessionId" != $3)
-      `,
-        BigInt(tenantId),
-        BigInt(usuarioId),
-        currentSessionId,
-      );
-    } else {
-      // Fallback: cerrar todas (no debería pasar pero por seguridad)
-      sesionesCerradas = await prisma.$executeRawUnsafe(
-        `
-        UPDATE "SesionActiva"
-        SET "EstaActiva" = false
-        WHERE "TenantId" = $1
-          AND "UsuarioId" = $2
-          AND "EstaActiva" = true
-      `,
-        BigInt(tenantId),
-        BigInt(usuarioId),
+    // Sesión actual (session_id del JWT en la cookie de Supabase), para
+    // excluirla del cierre. Si no se puede identificar no se cierra nada:
+    // antes se cerraban TODAS, incluida la actual, y el heartbeat echaba al
+    // usuario del dispositivo desde el que pidió cerrar las demás.
+    const currentSessionId = sessionIdDesdeCookies(req.cookies.getAll());
+    if (!currentSessionId) {
+      return NextResponse.json(
+        { error: "No se pudo identificar tu sesión actual. Volvé a iniciar sesión e intentá de nuevo." },
+        { status: 409 },
       );
     }
+
+    const sesionesCerradas = await prisma.$executeRawUnsafe(
+      `
+      UPDATE "SesionActiva"
+      SET "EstaActiva" = false
+      WHERE "TenantId" = $1
+        AND "UsuarioId" = $2
+        AND "EstaActiva" = true
+        AND ("SupabaseSessionId" IS NULL OR "SupabaseSessionId" != $3)
+    `,
+      BigInt(tenantId),
+      BigInt(usuarioId),
+      currentSessionId,
+    );
 
     return NextResponse.json(
       {

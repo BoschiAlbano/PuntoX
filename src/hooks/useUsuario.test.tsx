@@ -16,7 +16,7 @@ vi.mock("./useRoles", () => ({
 }));
 vi.mock("./useSucursales", () => ({
   useSucursales: vi.fn(() => ({
-    data: [{ id: 1, nombre: "Central", esPrincipal: true }],
+    data: [{ Id: 1, nombre: "Central", esPrincipal: true }],
     isLoading: false,
   })),
 }));

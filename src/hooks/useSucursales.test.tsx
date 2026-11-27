@@ -24,7 +24,7 @@ describe("useSucursales", () => {
 
   it("devuelve sucursales cuando fetch resuelve", async () => {
     const mockSucursales = [
-      { id: 1, nombre: "Central", direccion: "Calle 1", esPrincipal: true, estaActiva: true },
+      { Id: 1, nombre: "Central", direccion: "Calle 1", esPrincipal: true, estaActiva: true },
     ];
     vi.stubGlobal(
       "fetch",

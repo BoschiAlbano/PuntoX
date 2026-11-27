@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 
+/** Como la devuelve GET /api/sucursales (el Id va con mayúscula). */
 export interface Sucursal {
-  id: number;
+  Id: number;
   nombre: string;
   direccion: string | null;
   telefono: string | null;

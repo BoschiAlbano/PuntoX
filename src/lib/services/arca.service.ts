@@ -271,13 +271,10 @@ export async function autorizarVoucher(
       production: arcaConfig.production,
     });
 
-    console.log(
-      "[ARCA] Enviando voucher:",
-      JSON.stringify(voucherData, null, 2),
-    );
+    // Sin volcar el comprobante ni la respuesta a los logs: llevan CUIT /
+    // documento del cliente e importes.
     const result =
       await arca.electronicBillingService.createVoucher(voucherData);
-    console.log("[ARCA] Respuesta raw:", JSON.stringify(result, null, 2));
 
     // La respuesta del SDK tiene la estructura: result.response.FeDetResp.FECAEDetResponse[0]
     const rawResult = result as any;
