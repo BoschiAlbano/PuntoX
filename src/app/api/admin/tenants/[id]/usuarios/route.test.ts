@@ -1,5 +1,5 @@
 /**
- * Tests para PATCH /api/admin/tenants/[id]/usuarios (acción resetPassword).
+ * Tests para PATCH /api/admin/tenants/[id]/usuarios (resetPassword, setPassword).
  * generateLink de Supabase NO envía email: la ruta debe devolver el link.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -16,6 +16,8 @@ vi.mock("@/DB/prisma", () => ({
 vi.mock("@/lib/supabase/serviceClient", () => ({
   getSupabaseServiceClient: vi.fn(),
 }));
+vi.mock("@/lib/auditoria/registrarAuditoria", () => ({ registrarAuditoria: vi.fn() }));
+vi.mock("@/lib/notificaciones/seguridad", () => ({ notificarPasswordCambiadaPorAdmin: vi.fn() }));
 
 const generateLink = vi.fn();
 
@@ -81,5 +83,54 @@ describe("PATCH /api/admin/tenants/[id]/usuarios — resetPassword", () => {
     const res = await patchReset();
     expect(res.status).toBe(403);
     expect(generateLink).not.toHaveBeenCalled();
+  });
+});
+
+describe("PATCH /api/admin/tenants/[id]/usuarios — setPassword", () => {
+  const updateUserById = vi.fn();
+  const cambiar = (nuevaPassword: unknown, tenant = "4") =>
+    PATCH(
+      new NextRequest(`http://localhost:3000/api/admin/tenants/${tenant}/usuarios`, {
+        method: "PATCH",
+        body: JSON.stringify({ usuarioId: 7, action: "setPassword", nuevaPassword }),
+      }),
+      { params: Promise.resolve({ id: tenant }) },
+    );
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // El superadmin es del comercio 1; el usuario, del 4.
+    vi.mocked(getAuthContext).mockResolvedValue({ isSuperAdmin: true, tenantId: 1, usuarioId: 1 } as any);
+    vi.mocked(prisma.usuario.findFirst).mockResolvedValue({
+      Id: 7n,
+      AuthUserId: "auth-7",
+      Nombre: "boschi1",
+    } as any);
+    updateUserById.mockResolvedValue({ error: null });
+    vi.mocked(getSupabaseServiceClient).mockReturnValue({
+      auth: { admin: { updateUserById } },
+    } as any);
+  });
+
+  it("busca el usuario en el comercio de la URL, no en el del superadmin", async () => {
+    const res = await cambiar("nueva-clave-1");
+    expect(res.status).toBe(200);
+    expect(prisma.usuario.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { Id: 7n, TenantId: 4n, EstaEliminado: false } }),
+    );
+    expect(updateUserById).toHaveBeenCalledWith("auth-7", { password: "nueva-clave-1" });
+  });
+
+  it("rechaza una contraseña corta sin tocar Supabase", async () => {
+    const res = await cambiar("corta");
+    expect(res.status).toBe(400);
+    expect(updateUserById).not.toHaveBeenCalled();
+  });
+
+  it("404 si el usuario no es de ese comercio", async () => {
+    vi.mocked(prisma.usuario.findFirst).mockResolvedValue(null);
+    const res = await cambiar("nueva-clave-1");
+    expect(res.status).toBe(404);
+    expect(updateUserById).not.toHaveBeenCalled();
   });
 });

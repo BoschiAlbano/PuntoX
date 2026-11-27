@@ -839,6 +839,7 @@ export default function TenantDetailPage() {
         onClose={() => setPasswordModal((prev) => ({ ...prev, isOpen: false }))}
         usuarioId={passwordModal.usuarioId}
         userName={passwordModal.userName}
+        tenantId={tenantId}
       />
     </div>
   );

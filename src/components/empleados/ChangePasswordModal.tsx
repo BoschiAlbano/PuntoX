@@ -18,6 +18,11 @@ interface ChangePasswordModalProps {
   onClose: () => void;
   usuarioId: number;
   userName: string;
+  /**
+   * Desde el panel del superadmin: el comercio del usuario. Sin esto se usa
+   * la ruta de empleados, que solo encuentra usuarios del propio comercio.
+   */
+  tenantId?: number | string;
 }
 
 export default function ChangePasswordModal({
@@ -25,6 +30,7 @@ export default function ChangePasswordModal({
   onClose,
   usuarioId,
   userName,
+  tenantId,
 }: ChangePasswordModalProps) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -32,11 +38,17 @@ export default function ChangePasswordModal({
 
   const changePasswordMutation = useMutation({
     mutationFn: async (nuevaPassword: string) => {
-      const response = await fetch("/api/empleados/cambiar-password", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ usuarioId, nuevaPassword }),
-      });
+      const response = tenantId
+        ? await fetch(`/api/admin/tenants/${tenantId}/usuarios`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ usuarioId, action: "setPassword", nuevaPassword }),
+          })
+        : await fetch("/api/empleados/cambiar-password", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ usuarioId, nuevaPassword }),
+          });
 
       if (!response.ok) {
         const data = await response.json();

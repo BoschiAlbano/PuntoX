@@ -3,6 +3,8 @@ import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
+import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
+import { notificarPasswordCambiadaPorAdmin } from "@/lib/notificaciones/seguridad";
 
 /**
  * GET /api/admin/tenants/[id]/usuarios
@@ -107,14 +109,15 @@ export async function GET(
 
 /**
  * PATCH /api/admin/tenants/[id]/usuarios
- * Block/unblock a user or reset their password
+ * Block/unblock a user, reset or set their password, close sessions.
+ * Siempre sobre un usuario del tenant de la URL (no del superadmin).
  */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { isSuperAdmin } = await getAuthContext({ req });
+    const { isSuperAdmin, usuarioId: superAdminId } = await getAuthContext({ req });
     if (!isSuperAdmin) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
@@ -122,7 +125,7 @@ export async function PATCH(
     const { id } = await params;
     const tenantId = BigInt(id);
     const body = await req.json();
-    const { usuarioId, action } = body;
+    const { usuarioId, action, nuevaPassword } = body;
 
     if (!usuarioId || !action) {
       return NextResponse.json(
@@ -212,6 +215,53 @@ export async function PATCH(
           success: true,
           message: `Link de recuperación generado para ${authUser.user.email}. No se envió ningún email: compartilo con el usuario.`,
           link,
+        });
+      }
+
+      case "setPassword": {
+        // El panel usaba /api/empleados/cambiar-password, que busca el
+        // usuario en el comercio de quien está logueado (el del superadmin)
+        // y respondía "Usuario no encontrado" para usuarios de otro comercio.
+        if (
+          typeof nuevaPassword !== "string" ||
+          nuevaPassword.length < 8 ||
+          nuevaPassword.length > 72
+        ) {
+          return NextResponse.json(
+            { error: "La contraseña debe tener entre 8 y 72 caracteres" },
+            { status: 400 },
+          );
+        }
+
+        const { error: authError } =
+          await getSupabaseServiceClient().auth.admin.updateUserById(
+            usuario.AuthUserId,
+            { password: nuevaPassword },
+          );
+        if (authError) {
+          return NextResponse.json(
+            { error: "No se pudo actualizar la contraseña" },
+            { status: 500 },
+          );
+        }
+
+        await registrarAuditoria({
+          tenantId,
+          usuarioId: superAdminId,
+          accion: "CAMBIAR_PASSWORD",
+          usuarioAfectadoId: usuario.Id,
+          detalle: `Contraseña de "${usuario.Nombre}" cambiada por el administrador de PuntoX`,
+          req,
+        });
+        await notificarPasswordCambiadaPorAdmin({
+          tenantId,
+          usuarioAfectadoId: usuario.Id,
+          cambiadaPor: "El administrador de PuntoX",
+        });
+
+        return NextResponse.json({
+          success: true,
+          message: `Contraseña de "${usuario.Nombre}" actualizada`,
         });
       }
 
