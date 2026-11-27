@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { handleError } from "@/lib/errors/handler";
+import { aplicarLimites, ipDelCliente, LIMITES_AUTH } from "@/lib/rateLimit";
 
 /**
  * Endpoint para obtener el email interno de un usuario por su nombre de usuario
@@ -8,6 +9,11 @@ import { handleError } from "@/lib/errors/handler";
  */
 export async function POST(req: NextRequest) {
   try {
+    const limitado = await aplicarLimites([
+      { regla: LIMITES_AUTH.loginLookupIp, valor: ipDelCliente(req) },
+    ]);
+    if (limitado) return limitado;
+
     const body = await req.json();
     const { username } = body;
 
@@ -63,20 +69,15 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         email: internalEmail,
-        isInternal: true,
         isBlocked: usuario.EstaBloqueado,
-        tenantId: usuario.TenantId ? Number(usuario.TenantId) : null,
       });
     }
 
-    // Si tiene email, puede ser real o interno
-    const isInternal = email.endsWith("@puntox.com");
-
+    // Solo lo que necesita el login (email para signInWithPassword y si está
+    // bloqueada); no se expone el tenant ni si el email es interno.
     return NextResponse.json({
       email,
-      isInternal,
       isBlocked: usuario.EstaBloqueado,
-      tenantId: usuario.TenantId ? Number(usuario.TenantId) : null,
     });
   } catch (error) {
     return handleError(error);

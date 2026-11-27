@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
 import { esEmailInterno } from "@/lib/auth/generateInternalEmail";
+import { aplicarLimites, ipDelCliente, LIMITES_AUTH } from "@/lib/rateLimit";
 
 const bodySchema = z.object({
   username: z.string().trim().min(2).max(100),
@@ -40,6 +41,14 @@ export async function POST(req: NextRequest) {
   }
 
   const username = parsed.data.username.toLowerCase();
+
+  // Por IP (abuso general) y por usuario (no inundar a una persona de
+  // emails ni gastar el cupo diario de Resend).
+  const limitado = await aplicarLimites([
+    { regla: LIMITES_AUTH.recuperarIp, valor: ipDelCliente(req) },
+    { regla: LIMITES_AUTH.recuperarUsuario, valor: username },
+  ]);
+  if (limitado) return limitado;
 
   try {
     const usuario = await prisma.usuario.findFirst({

@@ -1481,3 +1481,12 @@ model FacturaElectronicaIva {
 
   @@index([FacturaElectronicaId])
 }
+
+/// Límite de pedidos (rate limiting) para rutas públicas: un contador por
+/// clave (ej. "recuperar:ip:<hash>") dentro de una ventana fija de tiempo.
+/// Las filas viejas se borran en el cron diario cleanup-sesiones.
+model RateLimit {
+  Clave         String   @id @db.VarChar(200)
+  VentanaInicio DateTime
+  Conteo        Int
+}

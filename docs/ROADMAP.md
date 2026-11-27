@@ -37,11 +37,16 @@
 - [x] Credenciales rotadas (contraseña de la base, claves de Supabase con las *legacy* desactivadas, `CRON_SECRET`) y `.env` fuera del repo.
 - [x] Revisión de la base: tabla de sondeo `hermes_probe_1a3f99ad` creada con acceso directo a Postgres (entre 18/03/2026 y 26/11/2026) y usuario de Auth de Burp Collaborator (`oastify.com`, 25/07/2026): ambos borrados. Sin roles, funciones, triggers ni esquemas ajenos. La API REST pública de Supabase no expone tablas (`anon`/`authenticated` sin permisos).
 - [x] Eliminada `POST /api/auth/register`: era pública y permitía crear un empleado confirmado en cualquier comercio (no se usaba).
-- [ ] Desactivar el registro público de Supabase (Authentication › Sign In / Providers › "Allow new users to sign up").
+- [x] Registro público de Supabase desactivado (`disable_signup: true`, verificado 26/11/2026).
 - [ ] Pedir a los usuarios que cambien su contraseña (los hashes pudieron copiarse).
 - [ ] Evaluar aviso a titulares de datos (Ley 25.326) si la base contiene datos reales de clientes.
 
-- [ ] **Rate limiting** — no implementado. Empezar por `/api/auth/*` (≈5 req/min), luego `/api/*` general y `/api/admin/*`. Opción: `@upstash/ratelimit`.
+- [x] **Rate limiting en rutas públicas de `/api/auth`** (`src/lib/rateLimit.ts`, tabla `RateLimit` en Postgres, IP/usuario hasheados): búsqueda de email del login 10/min por IP; intentos fallidos 10/15 min por IP; recuperar contraseña 5/h por IP y 3/h por usuario. Respuesta 429 con `Retry-After`.
+- [x] `get-email-by-username` ya no devuelve `tenantId` ni `isInternal`.
+- [x] Cron `cleanup-sesiones` acepta GET (Vercel Cron usa GET; antes respondía 405 y nunca corría). Además purga `RateLimit`.
+- [ ] Login del lado del servidor: hoy el navegador llama a Supabase directo, así que el bloqueo por intentos fallidos es solo informativo (un atacante puede probar contraseñas contra Supabase sin pasar por la app) y `get-email-by-username` tiene que revelar el email. Moverlo a una ruta propia (`POST /api/auth/login`) cierra las dos cosas.
+- [ ] Bloqueo por intentos: hoy es permanente hasta que un admin desbloquea; evaluar desbloqueo automático a los N minutos para que nadie pueda dejar a un empleado sin acceso indefinidamente.
+- [ ] Rate limiting en `/api/*` autenticadas y `/api/admin/*` (menor prioridad: requieren sesión).
 - [ ] **Revisión de permisos granulares** — todas las rutas privadas validan sesión/tenant, pero solo 51 de 94 declaran un permiso explícito. Revisar que las restantes no lo necesiten.
 
 ## 📧 Envío de emails

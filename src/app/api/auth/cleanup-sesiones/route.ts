@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 
 /**
- * POST /api/auth/cleanup-sesiones
+ * GET|POST /api/auth/cleanup-sesiones
+ *
+ * Vercel Cron llama con GET (antes solo existía POST y el cron recibía 405,
+ * así que esta limpieza nunca se ejecutaba en producción).
  *
  * Job de limpieza bulk: cierra todas las sesiones que superaron el período
  * de inactividad configurado por cada tenant.
@@ -71,8 +74,14 @@ export async function POST(req: NextRequest) {
       retentionDays,
     );
 
+    // PASO 3: Borrar contadores de límite de pedidos vencidos (la ventana
+    // más larga es de 1 hora; se deja 1 día de margen).
+    const limitesEliminados = await prisma.$executeRaw`
+      DELETE FROM "RateLimit" WHERE "VentanaInicio" < NOW() - INTERVAL '1 day'
+    `;
+
     console.log(
-      `[cleanup-sesiones] Expiradas: ${sesionesExpiradas} | Eliminadas (>${retentionDays}d): ${sesionesEliminadas}`,
+      `[cleanup-sesiones] Expiradas: ${sesionesExpiradas} | Eliminadas (>${retentionDays}d): ${sesionesEliminadas} | Límites borrados: ${limitesEliminados}`,
     );
 
     return NextResponse.json(
@@ -80,6 +89,7 @@ export async function POST(req: NextRequest) {
         message: "Limpieza completada",
         sesionesExpiradas,
         sesionesEliminadas,
+        limitesEliminados,
         retentionDays,
         timestamp: new Date().toISOString(),
       },
@@ -93,3 +103,6 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+/** Vercel Cron invoca los cron jobs con GET. */
+export const GET = POST;

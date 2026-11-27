@@ -8,6 +8,7 @@ import { NextRequest } from "next/server";
 import { POST } from "./route";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
+import { aplicarLimites, respuestaLimiteExcedido } from "@/lib/rateLimit";
 
 const resetPasswordForEmail = vi.fn();
 const getUserById = vi.fn();
@@ -17,6 +18,11 @@ vi.mock("@/DB/prisma", () => ({
 }));
 vi.mock("@/lib/supabase/serviceClient", () => ({
   getSupabaseServiceClient: vi.fn(),
+}));
+// El límite de pedidos se prueba en src/lib/rateLimit.test.ts; acá se controla.
+vi.mock("@/lib/rateLimit", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/rateLimit")>()),
+  aplicarLimites: vi.fn().mockResolvedValue(null),
 }));
 vi.mock("@supabase/supabase-js", () => ({
   createClient: vi.fn(() => ({ auth: { resetPasswordForEmail } })),
@@ -98,6 +104,21 @@ describe("POST /api/auth/recuperar-contrasena", () => {
     expect(res.status).toBe(200);
     expect(data.ok).toBe(true);
     errorSpy.mockRestore();
+  });
+
+  it("aplica el límite por IP y por usuario", async () => {
+    await pedir({ username: "Ana" });
+    const reglas = vi.mocked(aplicarLimites).mock.calls[0][0];
+    expect(reglas.map((r) => r.regla.nombre)).toEqual(["recuperar:ip", "recuperar:usuario"]);
+    expect(reglas[1].valor).toBe("ana");
+  });
+
+  it("retorna 429 y no envía nada si se superó el límite", async () => {
+    vi.mocked(aplicarLimites).mockResolvedValueOnce(respuestaLimiteExcedido(1800));
+    const res = await pedir({ username: "ana" });
+    expect(res.status).toBe(429);
+    expect((await res.json()).error).toBe("Demasiados intentos. Probá de nuevo en 30 minutos.");
+    expect(resetPasswordForEmail).not.toHaveBeenCalled();
   });
 
   it("retorna 400 si falta el nombre de usuario", async () => {

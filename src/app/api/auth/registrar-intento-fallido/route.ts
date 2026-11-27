@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
+import { aplicarLimites, ipDelCliente, LIMITES_AUTH } from "@/lib/rateLimit";
 import { PerfilTipo } from "../../../../../prisma/generated/prisma";
 
 const RESET_MINUTOS = 30;
@@ -17,6 +18,13 @@ const RESET_MINUTOS = 30;
  */
 export async function POST(req: NextRequest) {
   try {
+    // Limita cuántos intentos puede registrar una IP: evita que alguien
+    // bloquee cuentas ajenas en masa llamando a esta ruta.
+    const limitado = await aplicarLimites([
+      { regla: LIMITES_AUTH.intentoFallidoIp, valor: ipDelCliente(req) },
+    ]);
+    if (limitado) return limitado;
+
     const body = await req.json().catch(() => ({}));
     const { username } = body;
 
