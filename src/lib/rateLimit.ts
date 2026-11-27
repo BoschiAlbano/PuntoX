@@ -96,10 +96,14 @@ export async function aplicarLimites(
 
 /** Límites de las rutas públicas de /api/auth. */
 export const LIMITES_AUTH = {
-  /** Búsqueda del email para el login: 10 por minuto por IP. */
-  loginLookupIp: { nombre: "login-lookup:ip", limite: 10, ventanaSeg: 60 },
-  /** Registro de intentos fallidos: 10 cada 15 minutos por IP. */
-  intentoFallidoIp: { nombre: "intento-fallido:ip", limite: 10, ventanaSeg: 15 * 60 },
+  /** Login: 10 por minuto por IP... */
+  loginIp: { nombre: "login:ip", limite: 10, ventanaSeg: 60 },
+  /**
+   * ...y 10 cada 15 minutos por nombre de usuario: frena la prueba de
+   * contraseñas contra cuentas que no se bloquean solas (administradores, o
+   * comercios con "Bloquear tras intentos" en "Nunca").
+   */
+  loginUsuario: { nombre: "login:usuario", limite: 10, ventanaSeg: 15 * 60 },
   /** Recuperar contraseña: 5 por hora por IP... */
   recuperarIp: { nombre: "recuperar:ip", limite: 5, ventanaSeg: 60 * 60 },
   /** ...y 3 por hora por nombre de usuario (cuida el cupo de emails). */

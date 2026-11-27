@@ -41,10 +41,10 @@
 - [ ] Pedir a los usuarios que cambien su contraseña (los hashes pudieron copiarse).
 - [ ] Evaluar aviso a titulares de datos (Ley 25.326) si la base contiene datos reales de clientes.
 
-- [x] **Rate limiting en rutas públicas de `/api/auth`** (`src/lib/rateLimit.ts`, tabla `RateLimit` en Postgres, IP/usuario hasheados): búsqueda de email del login 10/min por IP; intentos fallidos 10/15 min por IP; recuperar contraseña 5/h por IP y 3/h por usuario. Respuesta 429 con `Retry-After`.
-- [x] `get-email-by-username` ya no devuelve `tenantId` ni `isInternal`.
+- [x] **Rate limiting en rutas públicas de `/api/auth`** (`src/lib/rateLimit.ts`, tabla `RateLimit` en Postgres, IP/usuario hasheados): login 10/min por IP y 10/15 min por usuario; recuperar contraseña 5/h por IP y 3/h por usuario. Respuesta 429 con `Retry-After`.
 - [x] Cron `cleanup-sesiones` acepta GET (Vercel Cron usa GET; antes respondía 405 y nunca corría). Además purga `RateLimit`.
-- [ ] Login del lado del servidor: hoy el navegador llama a Supabase directo, así que el bloqueo por intentos fallidos es solo informativo (un atacante puede probar contraseñas contra Supabase sin pasar por la app) y `get-email-by-username` tiene que revelar el email. Moverlo a una ruta propia (`POST /api/auth/login`) cierra las dos cosas.
+- [x] **Login del lado del servidor** (`POST /api/auth/login`, 27/11/2026): el bloqueo por intentos fallidos ahora se aplica de verdad y el email no sale del servidor. Se eliminaron las rutas públicas `get-email-by-username` (revelaba el email) y `registrar-intento-fallido` (permitía bloquear cuentas ajenas).
+- [x] `security_sb_forwarded_for_enabled` activado en Supabase (27/11/2026): sus límites propios usan la IP real del usuario (header `Sb-Forwarded-For` que manda `/api/auth/login` con la clave secreta) y no la de Vercel.
 - [ ] Bloqueo por intentos: hoy es permanente hasta que un admin desbloquea; evaluar desbloqueo automático a los N minutos para que nadie pueda dejar a un empleado sin acceso indefinidamente.
 - [ ] Rate limiting en `/api/*` autenticadas y `/api/admin/*` (menor prioridad: requieren sesión).
 - [ ] **Revisión de permisos granulares** — todas las rutas privadas validan sesión/tenant, pero solo 51 de 94 declaran un permiso explícito. Revisar que las restantes no lo necesiten.

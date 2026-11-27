@@ -260,7 +260,7 @@ describe("POST /api/empleados", () => {
   });
 
   it("verifica el nombre de usuario disponible de forma GLOBAL, sin filtrar por tenant", async () => {
-    // El login (get-email-by-username) resuelve el username sin filtrar por
+    // El login (/api/auth/login) resuelve el username sin filtrar por
     // tenant, así que dos tenants con el mismo username romperían el login.
     // Esta prueba fija el bug: la consulta de unicidad no debe llevar
     // TenantId en su `where`, sin importar el tenant que está creando el

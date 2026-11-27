@@ -7,9 +7,13 @@ import Link from "next/link";
 import { CheckCircle2, Eye, EyeOff, Shield } from "lucide-react";
 import { useAuthTransition } from "./AuthTransitionContext";
 
+/** Error de /api/auth/login: su mensaje ya está listo para mostrar. */
+class LoginError extends Error {}
+
 // Función para mapear errores de Supabase a mensajes específicos
 const getErrorMessage = (error: unknown): string => {
   if (!error) return "Credenciales inválidas";
+  if (error instanceof LoginError) return error.message;
 
   // Manejar diferentes tipos de error
   let errorMessage: string;
@@ -153,65 +157,29 @@ export default function CredentialsForm() {
     startDelayedLoadingTimer();
 
     try {
-      // Primero, obtener el email interno por username
-      const emailResponse = await fetch("/api/auth/get-email-by-username", {
+      // El login lo hace el servidor (aplica el bloqueo por intentos fallidos
+      // y no expone el email); acá solo se guarda la sesión que devuelve.
+      const loginRes = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: normalizedUsername }),
+        body: JSON.stringify({ username: normalizedUsername, password }),
       });
-
-      if (!emailResponse.ok) {
-        const errorData = await emailResponse.json().catch(() => ({}));
-        throw new Error(errorData.error || "Usuario no encontrado");
+      const loginData = await loginRes.json().catch(() => ({}));
+      if (!loginRes.ok) {
+        throw new LoginError(
+          loginData?.error || "No se pudo iniciar sesión. Probá de nuevo.",
+        );
       }
 
-      const { email: internalEmail, isBlocked } = await emailResponse.json();
-
-      if (!internalEmail) {
-        throw new Error("No se pudo obtener el email del usuario");
-      }
-
-      // Si la cuenta ya está bloqueada, informar antes de intentar con Supabase
-      if (isBlocked) {
-        throw new Error("ACCOUNT_BLOCKED");
-      }
-
-      // Ahora hacer login con el email interno
+      // setSession escribe las cookies y emite SIGNED_IN, igual que antes
+      // signInWithPassword desde el navegador.
       const supabase = getSupabaseBrowserClient();
       const { data: authData, error: authError } =
-        await supabase.auth.signInWithPassword({
-          email: internalEmail,
-          password,
+        await supabase.auth.setSession({
+          access_token: loginData.access_token,
+          refresh_token: loginData.refresh_token,
         });
-
-      if (authError) {
-        // Registrar intento fallido en el servidor para bloqueo automático
-        try {
-          const intentoRes = await fetch(
-            "/api/auth/registrar-intento-fallido",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ username: normalizedUsername }),
-            },
-          );
-          if (intentoRes.ok) {
-            const intentoData = await intentoRes.json().catch(() => ({}));
-            if (intentoData?.bloqueado) {
-              throw new Error("ACCOUNT_BLOCKED");
-            }
-          }
-        } catch (intentoErr: unknown) {
-          if (
-            intentoErr instanceof Error &&
-            intentoErr.message === "ACCOUNT_BLOCKED"
-          ) {
-            throw intentoErr;
-          }
-        }
-
-        throw authError;
-      }
+      if (authError) throw authError;
 
       // Login exitoso en Supabase
       setError("");

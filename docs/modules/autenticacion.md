@@ -20,35 +20,28 @@
 **IMPORTANTE:** A partir de Enero 2025, el sistema utiliza **nombre de usuario** en lugar de email para el login.
 
 ```typescript
-// Usuario ingresa username (no email)
-const response = await fetch("/api/auth/get-email-by-username", {
+// El navegador solo manda username y contraseña a la app...
+const res = await fetch("/api/auth/login", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ username }),
+  body: JSON.stringify({ username, password }),
 });
+const { access_token, refresh_token } = await res.json();
 
-const { email, isInternal, tenantId } = await response.json();
-
-// Luego se usa el email resuelto para Supabase Auth
-const { error } = await supabase.auth.signInWithPassword({
-  email, // Email resuelto desde el username
-  password,
-});
+// ...y guarda la sesión que devuelve (escribe las cookies y emite SIGNED_IN)
+await supabase.auth.setSession({ access_token, refresh_token });
 ```
 
-**¿Qué hace?**
+**¿Qué hace?** (`src/app/api/auth/login/route.ts`, desde 27/11/2026)
 1. ✅ Usuario ingresa **username** (no email)
-2. ✅ El sistema resuelve el username a email mediante `/api/auth/get-email-by-username`
-3. ✅ Valida credenciales contra **Supabase Auth** usando el email resuelto
-4. ✅ Si es válido, crea una sesión JWT
-5. ✅ Almacena el token en cookies (gestionado por Supabase SSR)
+2. ✅ Límite de pedidos: 10/min por IP y 10 cada 15 min por usuario
+3. ✅ El servidor busca el `Usuario` por `Nombre` y obtiene el email desde **Supabase Auth** (`admin.getUserById`). El email nunca llega al navegador.
+4. ✅ Valida la contraseña con `signInWithPassword` usando la clave secreta y reenvía la IP del usuario en `Sb-Forwarded-For`
+5. ❌ Contraseña incorrecta → suma un intento fallido (`src/lib/auth/intentosFallidos.ts`) y bloquea si llegó al umbral del tenant. Admins y superadmins nunca se bloquean solos.
+6. 🔒 Cuenta bloqueada con contraseña correcta → revoca la sesión recién creada y responde 403
+7. ✅ Si todo está bien, reinicia el contador y devuelve los tokens; el formulario sigue con 2FA / dispositivo confiable / registrar-sesion como antes
 
-**Resolución de Username a Email:**
-- **Endpoint:** `/api/auth/get-email-by-username`
-- Busca el usuario en la tabla `Usuario` por `Nombre` (username normalizado)
-- Si el usuario tiene email en `Persona.Mail`, lo usa
-- Si no tiene email, genera uno automático: `username@puntox.com`
-- Retorna el email, si es interno, y el `tenantId`
+Usuario inexistente y contraseña incorrecta responden igual (401), sin revelar si la cuenta existe.
 
 **Resultado:**
 - Usuario autenticado en Supabase
@@ -311,8 +304,8 @@ const esSuperAdmin = usuario.PerfilUsuario.some(
                    │
                    ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ 1.5. Sistema resuelve username a email                      │
-│     (GET /api/auth/get-email-by-username)                   │
+│ 1.5. POST /api/auth/login: el servidor resuelve el email,   │
+│      aplica límites y bloqueo por intentos fallidos         │
 └──────────────────┬──────────────────────────────────────────┘
                    │
                    ▼
@@ -592,6 +585,7 @@ El sistema es **híbrido**: Supabase maneja la autenticación, PostgreSQL maneja
 
 **Archivos relacionados:**
 - `src/components/auth/CredentialsForm.tsx` - Formulario de login actualizado
-- `src/app/api/auth/get-email-by-username/route.ts` - Endpoint de resolución
+- `src/app/api/auth/login/route.ts` - Login del lado del servidor
+- `src/lib/auth/intentosFallidos.ts` - Conteo de intentos fallidos y bloqueo automático
 - `src/lib/auth/generateInternalEmail.ts` - Generación de emails internos
 
