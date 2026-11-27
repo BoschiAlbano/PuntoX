@@ -21,7 +21,8 @@ type AccionAuditoria =
   | "ELIMINAR_ROL"
   | "CAMBIAR_CONFIG_SEGURIDAD"
   | "BLOQUEO_AUTOMATICO"
-  | "INTENTO_FALLIDO_ROL_PRIVILEGIADO";
+  | "INTENTO_FALLIDO_ROL_PRIVILEGIADO"
+  | "RESET_TIENDA";
 
 type SeveridadAuditoria = "INFO" | "WARNING" | "CRITICAL";
 
@@ -43,7 +44,11 @@ interface RegistrarAuditoriaParams {
  */
 function inferirSeveridad(accion: AccionAuditoria): SeveridadAuditoria {
   // CRITICAL: Eliminaciones definitivas
-  if (accion === "ELIMINAR_USUARIO" || accion === "ELIMINAR_ROL") {
+  if (
+    accion === "ELIMINAR_USUARIO" ||
+    accion === "ELIMINAR_ROL" ||
+    accion === "RESET_TIENDA"
+  ) {
     return "CRITICAL";
   }
 

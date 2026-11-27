@@ -123,7 +123,7 @@ Estado en [e2e/journey/README.md](../e2e/journey/README.md): fases 0–4 complet
 
 - [ ] **Portal de Proveedores & Marketplace B2B** — spec `SPEC-PROV-001` escrita, sin código ([features/portal-proveedores-marketplace.md](features/portal-proveedores-marketplace.md)).
 - [ ] **Notas de Débito A/B/C (ARCA)** — códigos AFIP ya reservados en `src/lib/constants/afip.ts` (2/7/12); falta el tipo de comprobante local y la emisión. Reutilizar el patrón de la Nota de Crédito.
-- [ ] **Botón de Reset / Purga de Tienda** — limpiar datos transaccionales (total o desde una fecha).
+- [x] **Reset de tienda** (27/11/2026) — solo superadmin, desde `/admin/tenants/[id]` (zona de peligro), confirmando con el nombre exacto del comercio. Borra todos los movimientos (comprobantes, facturas electrónicas incluidas las de ARCA, cajas, gastos, cheques, cuentas corrientes, bajas, numeración local) en una sola transacción y deja el stock en cero; conserva productos, clientes, proveedores, empleados, sucursales y configuración. Audita (`RESET_TIENDA`) y avisa a los administradores del comercio. `src/lib/tenant/reset.ts` (con modo `simular`, validado contra la base real). Por ahora sin "desde una fecha".
 - [ ] **Factura E / Factura M (ARCA)** — solo si algún cliente exporta o está en ese régimen.
 
 ## 🟢 Prioridad 5 — Calidad de código

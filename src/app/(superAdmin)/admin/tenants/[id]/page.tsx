@@ -48,6 +48,7 @@ import {
   Truck,
 } from "lucide-react";
 import ChangePasswordModal from "@/components/empleados/ChangePasswordModal";
+import ResetTiendaCard from "@/components/admin/ResetTiendaCard";
 
 type TenantDetail = {
   id: number;
@@ -636,6 +637,8 @@ export default function TenantDetailPage() {
               </CardBody>
             </Card>
           </div>
+
+          <ResetTiendaCard tenantId={tenantId} />
         </Tab>
 
         {/* Users Tab */}
