@@ -26,6 +26,7 @@ import {
   CheckCircle,
   Calendar,
   Globe,
+  MonitorSmartphone,
 } from "lucide-react";
 import { useConfiguracion, Seguridad } from "@/hooks/useConfiguracion";
 import { VentasSection, ToggleRow } from "./ventas/VentasPrimitives";
@@ -299,6 +300,15 @@ export function SeguridadTab() {
                 <SelectItem key="10">10 intentos</SelectItem>
               </Select>
             </ToggleRow>
+            <ToggleRow
+              icon={MonitorSmartphone}
+              title="Alertar inicio de sesión desde un dispositivo nuevo"
+              description="Cada usuario recibe una notificación cuando alguien entra a su cuenta desde un navegador que nunca usó, con el dispositivo, la IP y la hora"
+              isSelected={seguridad.alertarNuevoDispositivo}
+              onValueChange={(v) =>
+                setSeguridad({ ...seguridad, alertarNuevoDispositivo: v })
+              }
+            />
 
             {hasChanges && (
               <div className="flex justify-end pt-2">

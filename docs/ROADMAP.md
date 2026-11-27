@@ -28,7 +28,7 @@
 ## 🔴 Prioridad 1 — Cerrar cabos sueltos
 
 - [ ] **Prueba manual de planes**: tenant Básico (bloquear 2da sucursal, 4to usuario, artículo 101, FA) y tenant Ilimitado (nada bloqueado). Checklist en [saas/planes-saas-implementacion.md](saas/planes-saas-implementacion.md).
-- [ ] **Interruptor "Alertar nuevo dispositivo" sin efecto** — se guarda en Configuración › Seguridad (`AlertarNuevoDispositivo`) pero ningún código lo lee. Implementarlo (ver 📧) u ocultarlo.
+- [x] **Interruptor "Alertar nuevo dispositivo"** — ahora visible en Configuración › Seguridad (se había quitado de la pantalla en un refactor) y conectado al aviso in-app de dispositivo nuevo. Activado por defecto.
 - [ ] **Landing / SEO**: crear `public/og-image.png` y reemplazar el handle `@puntox` de ejemplo en `src/app/page.tsx`.
 
 ## 🔴 Prioridad 2 — Seguridad
