@@ -153,21 +153,23 @@ export async function getAuthContext(
   if (req) {
     const sucursalHeader = req.headers.get("x-sucursal-id");
     if (sucursalHeader) {
-      sucursalId = Number(sucursalHeader);
+      if (!/^\d+$/.test(sucursalHeader.trim())) {
+        throw createError.forbidden("No tienes acceso a la sucursal solicitada");
+      }
+      sucursalId = Number(sucursalHeader.trim());
 
-      // SuperAdmin y Administrador tienen acceso a todas las sucursales de su tenant
-      if (!isSuperAdmin && !isAdministrador) {
-        const tieneAcceso = await getCachedBranchAccess(
-          usuarioId,
-          sucursalId,
-          tenantId,
+      // SuperAdmin y Administrador acceden a todas las sucursales de SU
+      // tenant; antes no se verificaba nada y podían mandar el Id de una
+      // sucursal de otro comercio. El resto, solo a las asignadas.
+      const tieneAcceso =
+        isSuperAdmin || isAdministrador
+          ? await getCachedBranchInTenant(sucursalId, tenantId)
+          : await getCachedBranchAccess(usuarioId, sucursalId, tenantId);
+
+      if (!tieneAcceso) {
+        throw createError.forbidden(
+          "No tienes acceso a la sucursal solicitada",
         );
-
-        if (!tieneAcceso) {
-          throw createError.forbidden(
-            "No tienes acceso a la sucursal solicitada",
-          );
-        }
       }
     }
   }
@@ -330,6 +332,33 @@ async function getCachedBranchAccess(
       UsuarioId: BigInt(usuarioId),
       SucursalId: BigInt(sucursalId),
       TenantId: BigInt(tenantId),
+    },
+  });
+
+  const isValid = count > 0;
+  branchAccessCache.set(cacheKey, { valid: isValid, timestamp: now });
+  return isValid;
+}
+
+/**
+ * La sucursal existe, no está eliminada y es del tenant (con cache).
+ */
+async function getCachedBranchInTenant(
+  sucursalId: number,
+  tenantId: number,
+): Promise<boolean> {
+  const cacheKey = `tenant-${sucursalId}-${tenantId}`;
+  const now = Date.now();
+  const cached = branchAccessCache.get(cacheKey);
+  if (cached && now - cached.timestamp < DB_CACHE_TTL) {
+    return cached.valid;
+  }
+
+  const count = await prisma.sucursal.count({
+    where: {
+      Id: BigInt(sucursalId),
+      TenantId: BigInt(tenantId),
+      EstaEliminado: false,
     },
   });
 

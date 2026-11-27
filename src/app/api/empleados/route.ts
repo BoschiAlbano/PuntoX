@@ -973,6 +973,22 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    // VALIDACIÓN: el rol nuevo tiene que ser de este comercio. El alta ya lo
+    // verificaba; la edición no, y se podía asignar un rol de otro tenant
+    // (y heredar sus permisos).
+    if (data.rolId !== undefined && data.rolId !== null) {
+      const rolIdNum = Number(data.rolId);
+      const rolDelTenant = Number.isInteger(rolIdNum)
+        ? await prisma.perfiles.findFirst({
+            where: { Id: BigInt(rolIdNum), TenantId: tenantIdBig, EstaEliminado: false },
+            select: { Id: true },
+          })
+        : null;
+      if (!rolDelTenant) {
+        return NextResponse.json({ error: "Rol no válido" }, { status: 400 });
+      }
+    }
+
     // VALIDACIÓN: Un Super Administrador no puede ser bajado de rango
     if (targetIsSuperAdmin && data.rolId !== undefined && data.rolId !== null) {
       const nuevoRolDb = await prisma.perfiles.findUnique({

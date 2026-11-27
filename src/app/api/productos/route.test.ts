@@ -29,6 +29,10 @@ vi.mock("@/DB/prisma", () => ({
     $transaction: vi.fn(),
   },
 }));
+// La pertenencia de marca/rubro/listas al tenant se prueba en src/lib/tenant.
+vi.mock("@/lib/tenant/pertenencia", () => ({
+  assertReferenciasDelTenant: vi.fn(),
+}));
 vi.mock("@/lib/pagination", () => ({
   parsePaginationParams: vi.fn(() => ({ page: 1, limit: 20, skip: 0 })),
   createPaginationResponse: vi.fn((data: unknown[], total: number) => ({

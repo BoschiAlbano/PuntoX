@@ -346,6 +346,20 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
+    // Solo un superadmin puede tocar el tipo SUPERADMIN. Antes un
+    // administrador de cualquier comercio podía cambiar un rol común a
+    // SUPERADMIN y, con un empleado que tuviera ese rol, entrar al panel de
+    // la plataforma (todos los comercios). El alta (POST) ya lo bloqueaba.
+    if (
+      !isSuperAdmin &&
+      (data.tipo === "SUPERADMIN" || rolExistente.Tipo === "SUPERADMIN")
+    ) {
+      return NextResponse.json(
+        { error: "Solo un Superadmin puede asignar o modificar roles de tipo Superadmin" },
+        { status: 403 },
+      );
+    }
+
     // Si es rol del sistema, no permitir cambiar nombre ni tipo
     if (esRolSistema) {
       if (

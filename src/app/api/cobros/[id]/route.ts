@@ -141,14 +141,20 @@ export async function POST(
 
     let clienteParaValidar = clienteActual;
     if (nuevoClienteId) {
+      // El cliente nuevo tiene que ser de este comercio (antes no se
+      // filtraba por tenant y el cobro podía quedar a nombre de un cliente
+      // de otro comercio).
       const nuevoPersonaCliente = await prisma.persona_Cliente.findFirst({
-        where: { Id: BigInt(nuevoClienteId) },
+        where: { Id: BigInt(nuevoClienteId), Persona: { TenantId: BigInt(tenantId) } },
         select: {
           ActivarCtaCte: true,
           TieneLimiteCompra: true,
           MontoMaximoCtaCte: true,
         },
       });
+      if (!nuevoPersonaCliente) {
+        return NextResponse.json({ error: "Cliente no encontrado" }, { status: 404 });
+      }
       clienteParaValidar = nuevoPersonaCliente as typeof clienteActual;
     }
 

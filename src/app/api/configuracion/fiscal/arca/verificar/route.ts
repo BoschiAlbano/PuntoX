@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { GET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
 import { getArcaConfig, verificarConexionArca } from "@/lib/services/arca.service";
 
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext({ req });
+    const { tenantId } = await getAuthContext({ req, permission: GET_PERMISSIONS.CONFIGURACION });
     if (!tenantId) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }

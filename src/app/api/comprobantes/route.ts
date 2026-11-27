@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma"; // Assuming this is the correct path for prisma client
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
-import {
-  GET_PERMISSIONS,
-  SET_PERMISSIONS,
-  TIPO_COMPROBANTE_VENTA,
-} from "@/lib/constants/comprobantes";
+import { GET_PERMISSIONS, SET_PERMISSIONS, TIPO_COMPROBANTE_VENTA } from "@/lib/constants/comprobantes";
 import {
   createComprobanteBaseSchema,
   createFacturaA,
@@ -378,9 +374,11 @@ export async function POST(req: NextRequest) {
       if (clienteIdFinal == 0) {
         clienteIdFinal = await ensureConsumerFinal(tx, tenantIdBigInt);
       } else {
-        // verificar si existe el cliente
-        cliente = await tx.persona.findUnique({
-          where: { Id: clienteIdFinal },
+        // Verificar que el cliente exista y sea de este comercio (antes no
+        // se filtraba por tenant: una venta podía quedar a nombre de un
+        // cliente de otro comercio y mostrar sus datos en el comprobante).
+        cliente = await tx.persona.findFirst({
+          where: { Id: clienteIdFinal, TenantId: tenantIdBigInt },
         });
         if (!cliente) {
           throw new Error("Cliente no encontrado");
@@ -681,7 +679,7 @@ export async function GET(req: NextRequest) {
 // PATCH: Actualizar fecha o tipo de comprobante con FE rechazada
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext({ req });
+    const { tenantId } = await getAuthContext({ req, permission: SET_PERMISSIONS.VENTAS });
 
     const body = await req.json();
     const { comprobanteId, fecha, tipoComprobante } = body;

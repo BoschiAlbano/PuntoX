@@ -41,7 +41,7 @@ vi.mock("@/lib/pagination", () => ({
 describe("GET /api/ivas", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getAuthContext).mockResolvedValue({ tenantId: 1 } as any);
+    vi.mocked(getAuthContext).mockResolvedValue({ tenantId: 1, isSuperAdmin: true } as any);
     vi.mocked(prisma.iva.count).mockResolvedValue(1);
     vi.mocked(prisma.iva.findMany).mockResolvedValue([
       { Id: 1, Descripcion: "IVA 21", Porcentaje: 21, EstaEliminado: false },
@@ -70,7 +70,7 @@ describe("GET /api/ivas", () => {
 describe("POST /api/ivas", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getAuthContext).mockResolvedValue({ tenantId: 1 } as any);
+    vi.mocked(getAuthContext).mockResolvedValue({ tenantId: 1, isSuperAdmin: true } as any);
     vi.mocked(prisma.iva.create).mockResolvedValue({
       Id: BigInt(1),
       Descripcion: "IVA 21",
@@ -107,7 +107,7 @@ describe("POST /api/ivas", () => {
 describe("PATCH /api/ivas", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getAuthContext).mockResolvedValue({ tenantId: 1 } as any);
+    vi.mocked(getAuthContext).mockResolvedValue({ tenantId: 1, isSuperAdmin: true } as any);
     vi.mocked(prisma.iva.update).mockResolvedValue({
       Id: BigInt(1),
       Descripcion: "IVA 10.5",
@@ -145,7 +145,7 @@ describe("PATCH /api/ivas", () => {
 describe("DELETE /api/ivas", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getAuthContext).mockResolvedValue({ tenantId: 1 } as any);
+    vi.mocked(getAuthContext).mockResolvedValue({ tenantId: 1, isSuperAdmin: true } as any);
   });
 
   it("retorna 400 cuando id inválido", async () => {
@@ -180,5 +180,32 @@ describe("DELETE /api/ivas", () => {
     expect(res.status).toBe(200);
     expect(data.success).toBe(true);
     expect(data.Id).toBe(1);
+  });
+});
+
+describe("IVA: catálogo global, solo el superadmin lo modifica", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getAuthContext).mockResolvedValue({ tenantId: 1, isSuperAdmin: false, isAdministrador: true } as any);
+  });
+
+  it("un administrador de comercio no puede crear, editar ni borrar tasas", async () => {
+    const post = await POST(
+      new NextRequest("http://localhost:3000/api/ivas", {
+        method: "POST",
+        body: JSON.stringify({ Descripcion: "IVA 0%", Porcentaje: 0 }),
+      }),
+    );
+    const patch = await PATCH(
+      new NextRequest("http://localhost:3000/api/ivas", {
+        method: "PATCH",
+        body: JSON.stringify({ Id: 1, Descripcion: "IVA 21%", Porcentaje: 0, EstaEliminado: false }),
+      }),
+    );
+    const del = await DELETE(new NextRequest("http://localhost:3000/api/ivas?Id=1", { method: "DELETE" }));
+    expect([post.status, patch.status, del.status]).toEqual([403, 403, 403]);
+    expect(prisma.iva.create).not.toHaveBeenCalled();
+    expect(prisma.iva.update).not.toHaveBeenCalled();
+    expect(prisma.iva.delete).not.toHaveBeenCalled();
   });
 });

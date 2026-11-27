@@ -47,9 +47,17 @@
 - [x] Cron `cleanup-sesiones` acepta GET (Vercel Cron usa GET; antes respondía 405 y nunca corría). Además purga `RateLimit`.
 - [x] **Login del lado del servidor** (`POST /api/auth/login`, 27/11/2026): el bloqueo por intentos fallidos ahora se aplica de verdad y el email no sale del servidor. Se eliminaron las rutas públicas `get-email-by-username` (revelaba el email) y `registrar-intento-fallido` (permitía bloquear cuentas ajenas).
 - [x] `security_sb_forwarded_for_enabled` activado en Supabase (27/11/2026): sus límites propios usan la IP real del usuario (header `Sb-Forwarded-For` que manda `/api/auth/login` con la clave secreta) y no la de Vercel.
-- [ ] Bloqueo por intentos: hoy es permanente hasta que un admin desbloquea; evaluar desbloqueo automático a los N minutos para que nadie pueda dejar a un empleado sin acceso indefinidamente.
+- ~~Desbloqueo automático tras N minutos~~ — **descartado** (27/11/2026): el bloqueo por intentos queda hasta que un administrador desbloquea la cuenta. Desde el login del lado del servidor ya no se pueden bloquear cuentas ajenas por una ruta pública, y el límite por usuario frena los intentos.
 - [ ] Rate limiting en `/api/*` autenticadas y `/api/admin/*` (menor prioridad: requieren sesión).
-- [ ] **Revisión de permisos granulares** — todas las rutas privadas validan sesión/tenant, pero solo 51 de 94 declaran un permiso explícito. Revisar que las restantes no lo necesiten.
+- [x] **Revisión de permisos** (27/11/2026) — inventario de los 164 métodos de `/api`. Corregido:
+  - **Crítico:** un administrador de comercio podía cambiar un rol común a tipo SUPERADMIN (el PATCH de roles no lo impedía) y entrar al panel de la plataforma. Verificado en la base que nadie lo usó.
+  - `x-sucursal-id`: para administradores no se validaba que la sucursal fuera de su comercio.
+  - Tasas de IVA (catálogo global): cualquier comercio podía cambiarlas o borrarlas para todos → solo superadmin.
+  - Venta, cobro y edición de empleado aceptaban un cliente o rol de otro comercio; productos y clientes, marca/rubro/unidad/lista de precios/componentes de otro comercio (`src/lib/tenant/pertenencia.ts`).
+  - Permisos faltantes: certificados y puntos de venta ARCA, verificar ARCA, editar comprobante rechazado, reprocesar facturas, completar onboarding, nombre del comercio.
+  - Eliminados: `POST /api/auditoria-empleados` (permitía cargar entradas falsas) y la ruta `/api/test`.
+  - Test que fija el permiso de cada ruta corregida: `src/app/api/permisos-rutas.test.ts`.
+- **Dashboard visible para todos los usuarios** — decidido (27/11/2026): `/api/dashboard/*` (ventas del día, medios de pago, más vendidos) queda solo con sesión; cualquier empleado ve el resumen de su sucursal.
 
 ## 📧 Envío de emails
 

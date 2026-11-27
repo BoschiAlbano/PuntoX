@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/DB/prisma";
-import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
+import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { handleError } from "@/lib/errors/handler";
 
 const updateTenantSchema = z.object({
@@ -13,51 +14,22 @@ function tenantNotFound() {
   return NextResponse.json({ error: "Tenant no encontrado" }, { status: 404 });
 }
 
-async function resolveTenantId() {
-  const supabase = await getSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return null;
-  }
-
-  // Buscar tenantId en diferentes lugares del metadata
-  const metadata = user.app_metadata || {};
-  const tenantId = 
-    metadata.tenantId || 
-    metadata.tenant_id || 
-    (user as any).tenantId;
-
-  if (tenantId) {
-    return Number(tenantId);
-  }
-
-  // Si no está en metadata, buscar en la base de datos
-  try {
-    const usuario = await prisma.usuario.findFirst({
-      where: { AuthUserId: user.id, EstaEliminado: false },
-      select: { TenantId: true },
-    });
-
-    if (usuario?.TenantId) {
-      return Number(usuario.TenantId);
-    }
-  } catch {
-    // Error no crítico, retornar null
-  }
-
-  return null;
+/**
+ * El tenant sale de la sesión (getAuthContext: app_metadata + usuario no
+ * bloqueado). Leer el nombre lo puede cualquier usuario; cambiarlo requiere
+ * "Modificar configuración" (antes lo podía cambiar cualquier empleado).
+ */
+async function resolveTenantId(req: NextRequest | null, escribir: boolean) {
+  const { tenantId } = await getAuthContext({
+    ...(req ? { req } : {}),
+    ...(escribir ? { permission: SET_PERMISSIONS.CONFIGURACION } : {}),
+  });
+  return tenantId;
 }
 
 export async function GET() {
-  const tenantId = await resolveTenantId();
-  if (!tenantId) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-  }
-
   try {
+    const tenantId = await resolveTenantId(null, false);
     const tenant = await prisma.tenant.findUnique({
       where: { Id: tenantId },
       select: {
@@ -87,9 +59,11 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
-  const tenantId = await resolveTenantId();
-  if (!tenantId) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  let tenantId: number;
+  try {
+    tenantId = await resolveTenantId(req, true);
+  } catch (error) {
+    return handleError(error);
   }
 
   const json = await req.json().catch(() => null);

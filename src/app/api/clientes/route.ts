@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { assertReferenciasDelTenant } from "@/lib/tenant/pertenencia";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import {
@@ -208,6 +209,11 @@ export async function POST(req: NextRequest) {
 
     const data = parsed.data;
 
+    // La lista de precios tiene que ser de este comercio
+    await assertReferenciasDelTenant(tenantId, {
+      listaPrecioIds: data.ListaPrecioId ? [data.ListaPrecioId] : [],
+    });
+
     // Validar localidad
     const localidadIdNumber = Number(data.LocalidadId);
     if (!Number.isInteger(localidadIdNumber)) {
@@ -412,6 +418,11 @@ export async function PATCH(req: NextRequest) {
     const validarCliente = updateClienteSchema.parse(body);
 
     const tenantIdBigInt = BigInt(tenantId);
+
+    // La lista de precios tiene que ser de este comercio
+    await assertReferenciasDelTenant(tenantId, {
+      listaPrecioIds: validarCliente.ListaPrecioId ? [validarCliente.ListaPrecioId] : [],
+    });
 
     // Verificar que el cliente existe y pertenece al tenant
     // (sin filtrar por EstaEliminado: también se puede editar/reactivar un cliente inactivo)

@@ -1,4 +1,5 @@
 import { getAuthContext } from "@/lib/auth/getAuthUser";
+import { assertReferenciasDelTenant } from "@/lib/tenant/pertenencia";
 import { PERMISSIONS, GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
@@ -317,6 +318,14 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const validarProducto = createProductoSchema.parse(body);
+    // Marca, rubro, unidad, listas y componentes tienen que ser de este comercio
+    await assertReferenciasDelTenant(tenantId, {
+      marcaId: validarProducto.MarcaId,
+      rubroId: validarProducto.RubroId,
+      unidadMedidaId: validarProducto.UnidadMedidaId,
+      listaPrecioIds: validarProducto.PreciosLista?.map((pl) => pl.ListaPrecioId) ?? [],
+      articuloIds: validarProducto.ComponentesCombo?.map((c) => c.ComponenteId) ?? [],
+    });
 
     const codigoExistente = await prisma.articulo.findFirst({
       where: {
@@ -523,6 +532,14 @@ export async function PATCH(req: NextRequest) {
 
     const body = await req.json();
     const validarProducto = updateProductoSchema.parse(body);
+    // Marca, rubro, unidad, listas y componentes tienen que ser de este comercio
+    await assertReferenciasDelTenant(tenantId, {
+      marcaId: validarProducto.MarcaId,
+      rubroId: validarProducto.RubroId,
+      unidadMedidaId: validarProducto.UnidadMedidaId,
+      listaPrecioIds: validarProducto.PreciosLista?.map((pl) => pl.ListaPrecioId) ?? [],
+      articuloIds: validarProducto.ComponentesCombo?.map((c) => c.ComponenteId) ?? [],
+    });
 
     const tenantIdBigInt = BigInt(tenantId);
 

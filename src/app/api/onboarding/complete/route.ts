@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
 
 export async function POST(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext({ req });
+    const { tenantId } = await getAuthContext({ req, permission: SET_PERMISSIONS.CONFIGURACION });
 
     if (!tenantId) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });

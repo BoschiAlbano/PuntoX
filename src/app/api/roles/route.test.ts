@@ -1,10 +1,10 @@
 /**
- * Tests para la API de roles (GET, POST).
+ * Tests para la API de roles (GET, POST, PATCH).
  * Estructura de referencia: src/app/api/marcas/route.test.ts
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import { GET, POST } from "./route";
+import { GET, POST, PATCH } from "./route";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import prisma from "@/DB/prisma";
 import { PermisoError } from "@/lib/requirePermiso";
@@ -139,5 +139,49 @@ describe("POST /api/roles", () => {
     expect(data.rol.nombre).toBe("Rol Test");
     // La respuesta usa "Id" (estándar GenericCrud); useRoles acepta id o Id
     expect(data.rol.Id).toBe(1);
+  });
+});
+
+describe("PATCH /api/roles - tipo SUPERADMIN", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const editar = (body: unknown) =>
+    PATCH(new NextRequest("http://localhost:3000/api/roles", { method: "PATCH", body: JSON.stringify(body) }));
+
+  const comoAdministrador = () =>
+    vi.mocked(getAuthContext).mockResolvedValue({
+      tenantId: 2,
+      usuarioId: 5,
+      user: {} as any,
+      sucursalId: 0,
+      isSuperAdmin: false,
+      isAdministrador: true,
+      permissions: [],
+    } as any);
+
+  it("un administrador de comercio no puede convertir un rol común en SUPERADMIN", async () => {
+    comoAdministrador();
+    vi.mocked(prisma.perfiles.findFirst).mockResolvedValueOnce({
+      Id: 7n,
+      Descripcion: "Cajero",
+      Tipo: "EMPLEADO",
+      PerfilPermiso: [],
+    } as any);
+    const res = await editar({ Id: 7, nombre: "Cajero", tipo: "SUPERADMIN", permisos: [] });
+    expect(res.status).toBe(403);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("tampoco puede editar un rol que ya es SUPERADMIN", async () => {
+    comoAdministrador();
+    vi.mocked(prisma.perfiles.findFirst).mockResolvedValueOnce({
+      Id: 8n,
+      Descripcion: "Plataforma",
+      Tipo: "SUPERADMIN",
+      PerfilPermiso: [],
+    } as any);
+    const res = await editar({ Id: 8, nombre: "Plataforma", tipo: "EMPLEADO", permisos: [] });
+    expect(res.status).toBe(403);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 });

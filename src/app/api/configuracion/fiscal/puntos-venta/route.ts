@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
 import prisma from "@/DB/prisma";
@@ -6,7 +7,7 @@ import { puntosVentaBulkSchema } from "@/lib/validations/facturacion.schema";
 
 export async function GET(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext({ req });
+    const { tenantId } = await getAuthContext({ req, permission: GET_PERMISSIONS.CONFIGURACION });
     if (!tenantId) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
@@ -44,7 +45,7 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext({ req });
+    const { tenantId } = await getAuthContext({ req, permission: SET_PERMISSIONS.CONFIGURACION });
     if (!tenantId) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }

@@ -3,7 +3,7 @@ import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { createIvaSchema, updateIvaSchema } from "@/lib/validations/iva.schema";
 import { ZodError } from "zod";
-import { GET_PERMISSIONS, SET_PERMISSIONS } from "@/lib/constants/comprobantes";
+import { GET_PERMISSIONS } from "@/lib/constants/comprobantes";
 
 import {
   parsePaginationParams,
@@ -11,6 +11,21 @@ import {
 } from "@/lib/pagination";
 import { createError } from "@/lib/errors/types";
 import { handleError } from "@/lib/errors/handler";
+
+/**
+ * Las tasas de IVA son un catálogo GLOBAL (el modelo Iva no tiene TenantId):
+ * las comparten todos los comercios. Antes cualquier usuario con permiso de
+ * productos podía crearlas, cambiar su porcentaje o borrarlas para todos.
+ * Ahora solo el superadmin; los comercios solo las leen.
+ */
+async function exigirSuperAdmin(req: NextRequest) {
+  const { isSuperAdmin } = await getAuthContext({ req });
+  if (!isSuperAdmin) {
+    throw createError.forbidden(
+      "Las tasas de IVA son comunes a todos los comercios y solo las modifica el administrador de PuntoX.",
+    );
+  }
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -62,10 +77,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    await getAuthContext({
-      req,
-      permission: SET_PERMISSIONS.PRODUCTOS,
-    });
+    await exigirSuperAdmin(req);
 
     const body = await req.json();
 
@@ -109,10 +121,7 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    await getAuthContext({
-      req,
-      permission: SET_PERMISSIONS.PRODUCTOS,
-    });
+    await exigirSuperAdmin(req);
 
     const idParam =
       req.nextUrl.searchParams.get("Id") ?? req.nextUrl.searchParams.get("id");
@@ -152,14 +161,7 @@ export async function DELETE(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { tenantId } = await getAuthContext({
-      req,
-      permission: SET_PERMISSIONS.PRODUCTOS,
-    });
-
-    if (!tenantId || tenantId <= 0) {
-      throw createError.unauthorized("TenantId inválido o no proporcionado");
-    }
+    await exigirSuperAdmin(req);
 
     const body = await req.json();
 
@@ -182,7 +184,6 @@ export async function PATCH(req: NextRequest) {
       {
         ...iva,
         Id: Number(iva.Id),
-        TenantId: tenantId,
       },
       { status: 201 },
     );

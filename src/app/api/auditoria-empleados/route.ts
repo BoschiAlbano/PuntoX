@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import prisma from "@/DB/prisma";
 import { PermisoError } from "@/lib/requirePermiso";
 import {
@@ -7,37 +6,9 @@ import {
   createPaginationResponse,
 } from "@/lib/pagination";
 import { handleError } from "@/lib/errors/handler";
-import { registrarAuditoria } from "@/lib/auditoria/registrarAuditoria";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
-import {
-  PERMISSIONS,
-  GET_PERMISSIONS,
-  SET_PERMISSIONS,
-} from "@/lib/constants/comprobantes";
+import { GET_PERMISSIONS } from "@/lib/constants/comprobantes";
 
-const crearAuditoriaSchema = z.object({
-  accion: z.enum([
-    "CREAR_USUARIO",
-    "EDITAR_USUARIO",
-    "INVITAR_USUARIO",
-    "REENVIAR_INVITACION",
-    "ACEPTAR_INVITACION",
-    "CAMBIAR_ROL",
-    "CAMBIAR_PASSWORD",
-    "SUSPENDER_USUARIO",
-    "REACTIVAR_USUARIO",
-    "ELIMINAR_USUARIO",
-    "CREAR_ROL",
-    "EDITAR_ROL",
-    "ELIMINAR_ROL",
-    "CAMBIAR_CONFIG_SEGURIDAD",
-  ]),
-  empleadoId: z.number().optional().nullable(),
-  usuarioAfectadoId: z.number().optional().nullable(),
-  detalle: z.string().optional().nullable(),
-  valorAnterior: z.record(z.string(), z.unknown()).optional().nullable(),
-  valorNuevo: z.record(z.string(), z.unknown()).optional().nullable(),
-});
 export async function GET(req: NextRequest) {
   try {
     const { tenantId } = await getAuthContext({
@@ -249,46 +220,7 @@ export async function GET(req: NextRequest) {
     return handleError(error);
   }
 }
-export async function POST(req: NextRequest) {
-  try {
-    const { tenantId, usuarioId } = await getAuthContext({
-      req,
-      permission: GET_PERMISSIONS.AUDITORIA,
-    });
 
-    const json = await req.json().catch(() => null);
-    const parsed = crearAuditoriaSchema.safeParse(json);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Datos inválidos", details: parsed.error.issues },
-        { status: 400 },
-      );
-    }
-
-    const data = parsed.data;
-
-    await registrarAuditoria({
-      tenantId,
-      usuarioId,
-      accion: data.accion,
-      empleadoId: data.empleadoId ?? null,
-      usuarioAfectadoId: data.usuarioAfectadoId ?? null,
-      detalle: data.detalle ?? undefined,
-      valorAnterior: data.valorAnterior ?? null,
-      valorNuevo: data.valorNuevo ?? null,
-    });
-
-    return NextResponse.json(
-      { message: "Auditoría registrada correctamente" },
-      { status: 201 },
-    );
-  } catch (error) {
-    if (error instanceof PermisoError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: error.status },
-      );
-    }
-    return handleError(error);
-  }
-}
+// Sin POST: las entradas de auditoría solo las escribe el servidor
+// (registrarAuditoria). Antes había un POST que, con permiso de LEER la
+// auditoría, permitía cargar entradas falsas.
