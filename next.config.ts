@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: [
+    "localhost",
+    "unpersonalizing-backboned-cherry.ngrok-free.dev",
+  ],
   images: {
     unoptimized: true,
   },

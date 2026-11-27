@@ -159,16 +159,60 @@ describe("POST /api/auth/registrar-sesion", () => {
 });
 
 describe("DELETE /api/auth/registrar-sesion", () => {
-  beforeEach(() => vi.clearAllMocks());
+  const conUsuario = (user: { id: string } | null) =>
+    vi.mocked(getSupabaseServerClient).mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user } }) },
+    } as any);
+  /** Cookie de Supabase en el formato actual ("base64-..."), con session_id. */
+  const cookieSesion = (sessionId: string) => {
+    const b64 = (x: string) => Buffer.from(x).toString("base64url");
+    const token = `h.${b64(JSON.stringify({ session_id: sessionId }))}.s`;
+    return `sb-abc-auth-token=base64-${b64(JSON.stringify({ access_token: token }))}`;
+  };
 
-  it("retorna 200 al cerrar sesión (siempre retorna 200 por diseño)", async () => {
-    vi.mocked(prisma.$executeRawUnsafe).mockResolvedValue(undefined as any);
-    const req = new NextRequest("http://localhost:3000/api/auth/registrar-sesion?sesionId=1", {
-      method: "DELETE",
-    });
-    const res = await DELETE(req);
-    const data = await res.json();
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(prisma.$executeRawUnsafe).mockResolvedValue(1 as any);
+  });
+
+  it("con sesionId cierra solo esa sesión y solo si es del usuario autenticado", async () => {
+    conUsuario({ id: "auth-1" });
+    const res = await DELETE(
+      new NextRequest("http://localhost:3000/api/auth/registrar-sesion?sesionId=12", { method: "DELETE" }),
+    );
     expect(res.status).toBe(200);
-    expect(data.message).toBeDefined();
+    const [sql, id, authId] = vi.mocked(prisma.$executeRawUnsafe).mock.calls[0];
+    expect(sql).toContain(`u."AuthUserId" = $2`);
+    expect(id).toBe(12n);
+    expect(authId).toBe("auth-1");
+  });
+
+  it("sin sesionId cierra solo la sesión de la cookie actual (nunca todas)", async () => {
+    conUsuario({ id: "auth-1" });
+    await DELETE(
+      new NextRequest("http://localhost:3000/api/auth/registrar-sesion", {
+        method: "DELETE",
+        headers: { cookie: cookieSesion("sess-pc") },
+      }),
+    );
+    const [sql, sessionId, authId] = vi.mocked(prisma.$executeRawUnsafe).mock.calls[0];
+    expect(sql).toContain(`sa."SupabaseSessionId" = $1`);
+    expect(sessionId).toBe("sess-pc");
+    expect(authId).toBe("auth-1");
+  });
+
+  it("sin sesionId ni cookie identificable no cierra nada", async () => {
+    conUsuario({ id: "auth-1" });
+    await DELETE(new NextRequest("http://localhost:3000/api/auth/registrar-sesion", { method: "DELETE" }));
+    expect(prisma.$executeRawUnsafe).not.toHaveBeenCalled();
+  });
+
+  it("sin usuario autenticado no cierra nada (antes cualquiera podía cerrar cualquier sesión por id)", async () => {
+    conUsuario(null);
+    const res = await DELETE(
+      new NextRequest("http://localhost:3000/api/auth/registrar-sesion?sesionId=12", { method: "DELETE" }),
+    );
+    expect(res.status).toBe(200);
+    expect(prisma.$executeRawUnsafe).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import prisma from "@/DB/prisma";
+import { sessionIdDesdeCookies } from "@/lib/auth/sesionActual";
 
 /**
  * GET /api/auth/session-status
@@ -58,73 +59,33 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ activa: false }, { status: 200 });
     }
 
-    // Extraer SupabaseSessionId directamente de la cookie del JWT
-    // (no usamos getSession() porque podría intentar refrescar el token y escribir cookies)
-    let supabaseSessionId: string | null = null;
-    const allCookies = req.cookies.getAll();
-    
-    // Supabase puede fragmentar las cookies si son muy grandes (ej. sb-xxx-auth-token.0, sb-xxx-auth-token.1)
-    const authTokenChunks = allCookies
-      .filter((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"))
-      .sort((a, b) => a.name.localeCompare(b.name));
-
-    const authTokenValue = authTokenChunks.map((c) => c.value).join("");
-
-    if (authTokenValue) {
-      try {
-        const parsed = JSON.parse(authTokenValue);
-        const accessToken =
-          parsed?.access_token || parsed?.[0]?.access_token;
-        if (accessToken) {
-          const payload = JSON.parse(
-            Buffer.from(
-              accessToken.split(".")[1],
-              "base64url",
-            ).toString(),
-          );
-          supabaseSessionId = payload.session_id || null;
-        }
-      } catch {
-        // Cookie en formato inesperado — continuar sin session_id
-      }
+    // Identificar ESTA sesión por el session_id del JWT (cookie de Supabase).
+    // Si no se puede identificar, no se expulsa a nadie: antes se tomaba "la
+    // sesión más reciente del usuario", que podía ser la de otro dispositivo,
+    // y cerrar sesión en uno desconectaba a todos.
+    const supabaseSessionId = sessionIdDesdeCookies(req.cookies.getAll());
+    if (!supabaseSessionId) {
+      return NextResponse.json({ activa: true }, { status: 200 });
     }
 
-    // Buscar la sesión en nuestra DB — tanto activa como inactiva —
-    // para distinguir entre "usuario nuevo sin registro" vs "sesión cerrada remotamente".
     const [sesiones, configTenant] = await Promise.all([
-      supabaseSessionId
-        ? prisma.$queryRawUnsafe<
-            Array<{ Id: bigint; FechaUltimaActividad: Date; EstaActiva: boolean }>
-          >(
-            `
-            SELECT sa."Id", sa."FechaUltimaActividad", sa."EstaActiva"
-            FROM "SesionActiva" sa
-            INNER JOIN "Usuario" u ON sa."UsuarioId" = u."Id"
-            WHERE u."AuthUserId" = $1
-              AND sa."TenantId" = $2
-              AND sa."SupabaseSessionId" = $3
-            ORDER BY sa."FechaUltimaActividad" DESC
-            LIMIT 1
-          `,
-            user.id,
-            BigInt(tenantId),
-            supabaseSessionId,
-          )
-        : prisma.$queryRawUnsafe<
-            Array<{ Id: bigint; FechaUltimaActividad: Date; EstaActiva: boolean }>
-          >(
-            `
-            SELECT sa."Id", sa."FechaUltimaActividad", sa."EstaActiva"
-            FROM "SesionActiva" sa
-            INNER JOIN "Usuario" u ON sa."UsuarioId" = u."Id"
-            WHERE u."AuthUserId" = $1
-              AND sa."TenantId" = $2
-            ORDER BY sa."FechaUltimaActividad" DESC
-            LIMIT 1
-          `,
-            user.id,
-            BigInt(tenantId),
-          ),
+      prisma.$queryRawUnsafe<
+        Array<{ Id: bigint; FechaUltimaActividad: Date; EstaActiva: boolean }>
+      >(
+        `
+        SELECT sa."Id", sa."FechaUltimaActividad", sa."EstaActiva"
+        FROM "SesionActiva" sa
+        INNER JOIN "Usuario" u ON sa."UsuarioId" = u."Id"
+        WHERE u."AuthUserId" = $1
+          AND sa."TenantId" = $2
+          AND sa."SupabaseSessionId" = $3
+        ORDER BY sa."FechaUltimaActividad" DESC
+        LIMIT 1
+      `,
+        user.id,
+        BigInt(tenantId),
+        supabaseSessionId,
+      ),
       prisma.configuracion.findFirst({
         where: { TenantId: BigInt(tenantId), EstaEliminado: false },
         select: {

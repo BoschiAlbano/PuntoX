@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { sessionIdDesdeCookies } from "@/lib/auth/sesionActual";
 import { notificarNuevoDispositivo } from "@/lib/notificaciones/seguridad";
 import { cookies } from "next/headers";
 import prisma from "@/DB/prisma";
@@ -241,6 +242,7 @@ export async function POST(req: NextRequest) {
           WHERE "TenantId" = $1
             AND "UsuarioId" = $2
             AND "EstaActiva" = true
+            AND "SupabaseSessionId" IS NULL
             AND COALESCE("UserAgent", '') = COALESCE($3, '')
         `,
           usuario.TenantId,
@@ -385,68 +387,58 @@ export async function POST(req: NextRequest) {
  * Cierra una sesión (logout)
  */
 export async function DELETE(req: NextRequest) {
+  // Cierra SOLO la sesión de quien llama (nunca todas: antes, sin sesionId se
+  // marcaban como cerradas todas las sesiones del usuario y el heartbeat de los
+  // otros dispositivos los expulsaba). Requiere usuario autenticado.
   try {
+    const supabase = await getSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ message: "Sin sesión" }, { status: 200 });
+    }
+
     const { searchParams } = new URL(req.url);
-    const sesionId = searchParams.get("sesionId");
+    const sesionIdParam = searchParams.get("sesionId");
+    const sesionId = sesionIdParam && /^\d+$/.test(sesionIdParam) ? BigInt(sesionIdParam) : null;
+    const supabaseSessionId = sessionIdDesdeCookies(req.cookies.getAll());
 
     if (sesionId) {
-      // Cerrar sesión específica
+      // La sesión indicada, solo si pertenece al usuario autenticado.
       await prisma.$executeRawUnsafe(
         `
-        UPDATE "SesionActiva"
+        UPDATE "SesionActiva" sa
         SET "EstaActiva" = false
-        WHERE "Id" = $1
+        FROM "Usuario" u
+        WHERE sa."Id" = $1
+          AND sa."UsuarioId" = u."Id"
+          AND u."AuthUserId" = $2
       `,
-        BigInt(sesionId),
+        sesionId,
+        user.id,
       );
-    } else {
-      // Cerrar todas las sesiones del usuario actual
-      const supabase = await getSupabaseServerClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        const tenantId = user.app_metadata?.tenantId || user.app_metadata?.tenant_id;
-        if (tenantId) {
-          const usuario = await prisma.$queryRawUnsafe<
-            Array<{
-              Id: bigint;
-              TenantId: bigint;
-            }>
-          >(
-            `
-            SELECT "Id", "TenantId" FROM "Usuario"
-            WHERE "AuthUserId" = $1 AND "TenantId" = $2
-            LIMIT 1
-          `,
-            user.id,
-            BigInt(tenantId),
-          );
-
-          if (usuario && usuario.length > 0) {
-            await prisma.$executeRawUnsafe(
-              `
-              UPDATE "SesionActiva"
-              SET "EstaActiva" = false
-              WHERE "TenantId" = $1
-                AND "UsuarioId" = $2
-                AND "EstaActiva" = true
-            `,
-              usuario[0].TenantId,
-              usuario[0].Id,
-            );
-          }
-        }
-      }
+    } else if (supabaseSessionId) {
+      // Sin id: la sesión de esta cookie.
+      await prisma.$executeRawUnsafe(
+        `
+        UPDATE "SesionActiva" sa
+        SET "EstaActiva" = false
+        FROM "Usuario" u
+        WHERE sa."SupabaseSessionId" = $1
+          AND sa."UsuarioId" = u."Id"
+          AND u."AuthUserId" = $2
+      `,
+        supabaseSessionId,
+        user.id,
+      );
     }
 
     return NextResponse.json(
       { message: "Sesión cerrada correctamente" },
       { status: 200 },
     );
-  } catch (error) {
-    // handleError ya registra el error internamente
+  } catch {
     return NextResponse.json(
       { message: "Error al cerrar sesión (no crítico)" },
       { status: 200 },
