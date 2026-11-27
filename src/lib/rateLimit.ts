@@ -36,12 +36,15 @@ function hash(valor: string): string {
   return createHash("sha256").update(valor).digest("hex").slice(0, 32);
 }
 
+const claveDe = (regla: ReglaLimite, valor: string) =>
+  `${regla.nombre}:${hash(valor.toLowerCase())}`;
+
 /** Suma un pedido a la clave `regla.nombre + valor` y dice si está permitido. */
 export async function consumirLimite(
   regla: ReglaLimite,
   valor: string,
 ): Promise<ResultadoLimite> {
-  const clave = `${regla.nombre}:${hash(valor.toLowerCase())}`;
+  const clave = claveDe(regla, valor);
   try {
     const filas = await prisma.$queryRaw<{ conteo: number; restan: number }[]>`
       INSERT INTO "RateLimit" ("Clave", "VentanaInicio", "Conteo")
@@ -64,6 +67,18 @@ export async function consumirLimite(
   } catch (error) {
     console.error(`[rateLimit] ${regla.nombre}: no se pudo verificar`, error);
     return { ok: true, restantes: regla.limite };
+  }
+}
+
+/**
+ * Vuelve a cero el contador de una clave (ej. el del usuario tras un login
+ * correcto). Si la base falla no pasa nada: el contador vence solo.
+ */
+export async function reiniciarLimite(regla: ReglaLimite, valor: string): Promise<void> {
+  try {
+    await prisma.$executeRaw`DELETE FROM "RateLimit" WHERE "Clave" = ${claveDe(regla, valor)}`;
+  } catch (error) {
+    console.error(`[rateLimit] ${regla.nombre}: no se pudo reiniciar`, error);
   }
 }
 
@@ -96,12 +111,17 @@ export async function aplicarLimites(
 
 /** Límites de las rutas públicas de /api/auth. */
 export const LIMITES_AUTH = {
-  /** Login: 10 por minuto por IP... */
-  loginIp: { nombre: "login:ip", limite: 10, ventanaSeg: 60 },
+  /**
+   * Login: 20 por minuto por IP (cuenta también los correctos: deja margen
+   * para un comercio con varios cajeros entrando a la vez desde la misma
+   * conexión)...
+   */
+  loginIp: { nombre: "login:ip", limite: 20, ventanaSeg: 60 },
   /**
    * ...y 10 cada 15 minutos por nombre de usuario: frena la prueba de
    * contraseñas contra cuentas que no se bloquean solas (administradores, o
-   * comercios con "Bloquear tras intentos" en "Nunca").
+   * comercios con "Bloquear tras intentos" en "Nunca"). Un login correcto
+   * lo vuelve a cero.
    */
   loginUsuario: { nombre: "login:usuario", limite: 10, ventanaSeg: 15 * 60 },
   /** Recuperar contraseña: 5 por hora por IP... */

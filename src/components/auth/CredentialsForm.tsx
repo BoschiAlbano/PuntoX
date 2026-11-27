@@ -3,12 +3,27 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
+import { useQueryClient } from "@tanstack/react-query";
+import { useUserStore } from "@/store/useUserStore";
 import Link from "next/link";
 import { CheckCircle2, Eye, EyeOff, Shield } from "lucide-react";
 import { useAuthTransition } from "./AuthTransitionContext";
 
 /** Error de /api/auth/login: su mensaje ya está listo para mostrar. */
 class LoginError extends Error {}
+
+/** 429 de /api/auth/login: hay que esperar `segundos` antes de reintentar. */
+class EsperaError extends Error {
+  constructor(public segundos: number) {
+    super("RATE_LIMIT");
+  }
+}
+
+/** 53 -> "53 segundos"; 125 -> "2:05 minutos". */
+const formatearEspera = (seg: number) =>
+  seg < 60
+    ? `${seg} segundo${seg !== 1 ? "s" : ""}`
+    : `${Math.floor(seg / 60)}:${String(seg % 60).padStart(2, "0")} minutos`;
 
 // Función para mapear errores de Supabase a mensajes específicos
 const getErrorMessage = (error: unknown): string => {
@@ -84,12 +99,33 @@ export default function CredentialsForm() {
   const [showMfa, setShowMfa] = useState(false);
   const [mfaCode, setMfaCode] = useState("");
   const [factorId, setFactorId] = useState("");
+  // Límite de pedidos: momento a partir del cual se puede reintentar
+  const [esperaHasta, setEsperaHasta] = useState<number | null>(null);
+  const [segundosEspera, setSegundosEspera] = useState(0);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const { startSigningIn, startVerifying, resetTransition } =
     useAuthTransition();
 
   const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cuenta regresiva del límite de pedidos (se actualiza cada segundo)
+  useEffect(() => {
+    if (esperaHasta === null) return;
+    const actualizar = () => {
+      const restan = Math.ceil((esperaHasta - Date.now()) / 1000);
+      if (restan <= 0) {
+        setEsperaHasta(null);
+        setSegundosEspera(0);
+      } else {
+        setSegundosEspera(restan);
+      }
+    };
+    actualizar();
+    const id = setInterval(actualizar, 1000);
+    return () => clearInterval(id);
+  }, [esperaHasta]);
 
   // Limpiar timer al desmontar el componente
   useEffect(() => {
@@ -125,6 +161,8 @@ export default function CredentialsForm() {
     setUsername(value);
     setError(""); // Limpiar error general al escribir
     setUsernameError(""); // Limpiar error de username
+    // El límite puede ser por usuario: con otro usuario se vuelve a consultar
+    setEsperaHasta(null);
 
     // Validar que el username no esté vacío
     if (value && value.length < 2) {
@@ -165,6 +203,10 @@ export default function CredentialsForm() {
         body: JSON.stringify({ username: normalizedUsername, password }),
       });
       const loginData = await loginRes.json().catch(() => ({}));
+      if (loginRes.status === 429) {
+        const segundos = Number(loginRes.headers.get("Retry-After"));
+        if (segundos > 0) throw new EsperaError(segundos);
+      }
       if (!loginRes.ok) {
         throw new LoginError(
           loginData?.error || "No se pudo iniciar sesión. Probá de nuevo.",
@@ -233,9 +275,14 @@ export default function CredentialsForm() {
       startVerifying();
       await processSuccessfulLogin(authData, normalizedUsername);
     } catch (err) {
-      console.error("Error al iniciar sesion:", err);
       clearLoadingTimer();
       resetTransition();
+      if (err instanceof EsperaError) {
+        setError("");
+        setEsperaHasta(Date.now() + err.segundos * 1000);
+        return;
+      }
+      console.error("Error al iniciar sesion:", err);
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
     } finally {
@@ -252,6 +299,11 @@ export default function CredentialsForm() {
     },
     normalizedUsername: string,
   ) => {
+    // Empezar de cero: sin esto, si antes hubo otra sesión en esta pestaña,
+    // el dashboard mostraba los datos del usuario anterior hasta recargar.
+    useUserStore.getState().reset();
+    queryClient.clear();
+
     // Login exitoso - registrar intento exitoso y sesión
     if (authData?.user) {
       // Obtener información del dispositivo
@@ -584,6 +636,20 @@ export default function CredentialsForm() {
         </div>
       )}
 
+      {esperaHasta !== null && segundosEspera > 0 && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-lg border border-landing-error/20 bg-landing-error-container p-3.5 text-sm text-landing-on-error-container"
+        >
+          Demasiados intentos. Podés volver a intentar en{" "}
+          <span className="font-semibold tabular-nums">
+            {formatearEspera(segundosEspera)}
+          </span>
+          .
+        </div>
+      )}
+
       <div className="flex items-center pt-1 pb-1">
         <input
           id="recordar-dispositivo"
@@ -602,9 +668,9 @@ export default function CredentialsForm() {
 
       <button
         type="submit"
-        disabled={isLoading || !!usernameError}
+        disabled={isLoading || !!usernameError || esperaHasta !== null}
         className={`w-full min-h-[48px] sm:min-h-[44px] rounded-lg bg-landing-secondary-container px-4 py-3 text-base font-semibold text-landing-on-secondary shadow-sm transition-colors hover:bg-landing-secondary focus:outline-none focus:ring-4 focus:ring-landing-secondary-container/25 sm:text-sm ${
-          isLoading || usernameError
+          isLoading || usernameError || esperaHasta !== null
             ? "opacity-60 cursor-not-allowed"
             : "cursor-pointer"
         }`}

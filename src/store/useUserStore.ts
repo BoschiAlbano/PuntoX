@@ -65,28 +65,43 @@ interface UserState {
   removeBranch: (branchId: string) => void;
   updateBranch: (branch: UserBranch) => void;
   updateUserFoto: (foto: string | null) => void;
+  /** Vuelve al estado inicial (al cerrar sesión o iniciar una nueva). */
+  reset: () => void;
 }
+
+type DatosUsuario = Omit<
+  UserState,
+  | "initialize"
+  | "refreshUserData"
+  | "setCurrentBranch"
+  | "hasPermission"
+  | "canAccessRoute"
+  | "pushBranch"
+  | "removeBranch"
+  | "updateBranch"
+  | "updateUserFoto"
+  | "reset"
+>;
+
+const ESTADO_INICIAL: DatosUsuario = {
+  user: null,
+  branches: [],
+  currentBranch: { Id: "", Nombre: "", EsPrincipal: false, esDefault: false },
+  tenant: null,
+  permissions: [],
+  roles: [],
+  isSuperAdmin: false,
+  isAdministrador: false,
+  isLoading: false,
+  isInitialized: false,
+  planFeatures: null,
+  planUsage: null,
+};
 
 export const useUserStore = create<UserState>()(
   devtools(
     (set, get) => ({
-      user: null,
-      branches: [],
-      currentBranch: {
-        Id: "",
-        Nombre: "",
-        EsPrincipal: false,
-        esDefault: false,
-      },
-      tenant: null,
-      permissions: [],
-      roles: [],
-      isSuperAdmin: false,
-      isAdministrador: false,
-      isLoading: false,
-      isInitialized: false,
-      planFeatures: null,
-      planUsage: null,
+      ...ESTADO_INICIAL,
 
       initialize: async () => {
         // Prevent double init
@@ -205,6 +220,11 @@ export const useUserStore = create<UserState>()(
         if (!user) return;
         set({ user: { ...user, Foto: foto } }, false, "updateUserFoto");
       },
+
+      // El store vive en memoria mientras no se recargue la página: sin esto,
+      // al cerrar sesión e iniciar con otro usuario se seguían viendo el
+      // nombre, roles, permisos y sucursales del anterior.
+      reset: () => set({ ...ESTADO_INICIAL }, false, "reset"),
     }),
     { name: "UserStore" },
   ),

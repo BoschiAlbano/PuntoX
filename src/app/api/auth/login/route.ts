@@ -3,7 +3,12 @@ import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import prisma from "@/DB/prisma";
 import { getSupabaseServiceClient } from "@/lib/supabase/serviceClient";
-import { aplicarLimites, ipDelCliente, LIMITES_AUTH } from "@/lib/rateLimit";
+import {
+  aplicarLimites,
+  ipDelCliente,
+  LIMITES_AUTH,
+  reiniciarLimite,
+} from "@/lib/rateLimit";
 import {
   registrarIntentoFallido,
   selectUsuarioIntentos,
@@ -31,7 +36,8 @@ const responder = (status: number, error: string, extra?: object) =>
  * - el bloqueo por intentos fallidos se aplique de verdad;
  * - el email de la cuenta nunca salga del servidor (antes había que
  *   pedirlo a una ruta pública con el nombre de usuario);
- * - haya límite de pedidos por IP y por usuario.
+ * - haya límite de pedidos por IP y por usuario (el de usuario se reinicia
+ *   con un login correcto).
  *
  * Usuario inexistente y contraseña incorrecta responden lo mismo (401).
  * Una cuenta bloqueada solo se informa si la contraseña es correcta, o si
@@ -101,6 +107,11 @@ export async function POST(req: NextRequest) {
       await admin.auth.admin.signOut(data.session.access_token, "local").catch(() => {});
       return responder(403, CUENTA_BLOQUEADA, { bloqueado: true });
     }
+
+    // Quien acertó la contraseña no tiene por qué seguir frenado. El límite
+    // por IP NO se reinicia: si no, una cuenta válida serviría para borrarlo
+    // y seguir probando contraseñas de otras cuentas.
+    await reiniciarLimite(LIMITES_AUTH.loginUsuario, username);
 
     if (usuario.IntentosFallidos > 0) {
       await prisma.usuario.update({

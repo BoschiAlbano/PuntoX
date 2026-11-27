@@ -6,7 +6,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 import { POST } from "./route";
 import prisma from "@/DB/prisma";
-import { aplicarLimites, respuestaLimiteExcedido } from "@/lib/rateLimit";
+import {
+  aplicarLimites,
+  reiniciarLimite,
+  respuestaLimiteExcedido,
+  LIMITES_AUTH,
+} from "@/lib/rateLimit";
 import { registrarIntentoFallido } from "@/lib/auth/intentosFallidos";
 
 const signInWithPassword = vi.fn();
@@ -32,6 +37,7 @@ vi.mock("@/DB/prisma", () => ({
 vi.mock("@/lib/rateLimit", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/rateLimit")>()),
   aplicarLimites: vi.fn().mockResolvedValue(null),
+  reiniciarLimite: vi.fn(),
 }));
 vi.mock("@/lib/auth/intentosFallidos", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/auth/intentosFallidos")>()),
@@ -109,6 +115,26 @@ describe("POST /api/auth/login", () => {
     expect(clave).toBe("sb_secret_test");
     expect(opciones.global.headers["Sb-Forwarded-For"]).toBe("9.9.9.9");
     expect(opciones.auth.persistSession).toBe(false);
+  });
+
+  it("login correcto reinicia el límite del usuario, pero no el de la IP", async () => {
+    await login({ username: "Juan", password: "secreta" });
+    expect(reiniciarLimite).toHaveBeenCalledTimes(1);
+    expect(reiniciarLimite).toHaveBeenCalledWith(LIMITES_AUTH.loginUsuario, "juan");
+  });
+
+  it("contraseña incorrecta o cuenta bloqueada no reinician el límite", async () => {
+    signInWithPassword.mockResolvedValueOnce({
+      data: { session: null },
+      error: { status: 400, code: "invalid_credentials", message: "Invalid login credentials" },
+    });
+    await login({ username: "juan", password: "mala" });
+    vi.mocked(prisma.usuario.findFirst).mockResolvedValueOnce({
+      ...usuarioBase,
+      EstaBloqueado: true,
+    } as any);
+    await login({ username: "juan", password: "secreta" });
+    expect(reiniciarLimite).not.toHaveBeenCalled();
   });
 
   it("usuario inexistente responde igual que contraseña incorrecta", async () => {

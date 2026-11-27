@@ -5,17 +5,38 @@ import {
   aplicarLimites,
   consumirLimite,
   ipDelCliente,
+  reiniciarLimite,
   respuestaLimiteExcedido,
   type ReglaLimite,
 } from "./rateLimit";
 
-vi.mock("@/DB/prisma", () => ({ default: { $queryRaw: vi.fn() } }));
+vi.mock("@/DB/prisma", () => ({ default: { $queryRaw: vi.fn(), $executeRaw: vi.fn() } }));
 
 const regla: ReglaLimite = { nombre: "prueba:ip", limite: 3, ventanaSeg: 60 };
 
 /** Simula la fila que devuelve el INSERT ... RETURNING. */
 const fila = (conteo: number, restan = 40) =>
   vi.mocked(prisma.$queryRaw).mockResolvedValueOnce([{ conteo, restan }] as any);
+
+describe("reiniciarLimite", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("borra la misma clave (hasheada) que usa consumirLimite", async () => {
+    fila(1);
+    await consumirLimite(regla, "Ana");
+    await reiniciarLimite(regla, "ana");
+    const [, claveConsumo] = vi.mocked(prisma.$queryRaw).mock.calls[0];
+    const [sql, claveBorrada] = vi.mocked(prisma.$executeRaw).mock.calls[0];
+    expect(sql.join("?")).toContain('DELETE FROM "RateLimit"');
+    expect(claveBorrada).toBe(claveConsumo);
+  });
+
+  it("si la base falla, no lanza error", async () => {
+    vi.mocked(prisma.$executeRaw).mockRejectedValueOnce(new Error("db caída"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    await expect(reiniciarLimite(regla, "ana")).resolves.toBeUndefined();
+  });
+});
 
 describe("consumirLimite", () => {
   beforeEach(() => vi.clearAllMocks());

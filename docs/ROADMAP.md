@@ -41,7 +41,7 @@
 - [ ] Pedir a los usuarios que cambien su contraseña (los hashes pudieron copiarse).
 - [ ] Evaluar aviso a titulares de datos (Ley 25.326) si la base contiene datos reales de clientes.
 
-- [x] **Rate limiting en rutas públicas de `/api/auth`** (`src/lib/rateLimit.ts`, tabla `RateLimit` en Postgres, IP/usuario hasheados): login 10/min por IP y 10/15 min por usuario; recuperar contraseña 5/h por IP y 3/h por usuario. Respuesta 429 con `Retry-After`.
+- [x] **Rate limiting en rutas públicas de `/api/auth`** (`src/lib/rateLimit.ts`, tabla `RateLimit` en Postgres, IP/usuario hasheados): login 20/min por IP y 10/15 min por usuario (este se reinicia con un login correcto); recuperar contraseña 5/h por IP y 3/h por usuario. Respuesta 429 con `Retry-After`.
 - [x] Cron `cleanup-sesiones` acepta GET (Vercel Cron usa GET; antes respondía 405 y nunca corría). Además purga `RateLimit`.
 - [x] **Login del lado del servidor** (`POST /api/auth/login`, 27/11/2026): el bloqueo por intentos fallidos ahora se aplica de verdad y el email no sale del servidor. Se eliminaron las rutas públicas `get-email-by-username` (revelaba el email) y `registrar-intento-fallido` (permitía bloquear cuentas ajenas).
 - [x] `security_sb_forwarded_for_enabled` activado en Supabase (27/11/2026): sus límites propios usan la IP real del usuario (header `Sb-Forwarded-For` que manda `/api/auth/login` con la clave secreta) y no la de Vercel.

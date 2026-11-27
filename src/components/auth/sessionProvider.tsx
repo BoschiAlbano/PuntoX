@@ -357,6 +357,9 @@ export const SessionProviderComponent = ({
 
         // Cerrar sesiones cuando hay un logout
         if (event === "SIGNED_OUT") {
+          // Olvidar los datos del usuario (nombre, roles, permisos, sucursales)
+          useUserStore.getState().reset();
+
           // Recuperar el sesionId guardado al iniciar sesión.
           // Como estamos en un useEffect que solo se monta una vez, buscamos
           // dinámicamente en localStorage con getStoredSesionId().

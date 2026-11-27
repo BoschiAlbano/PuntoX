@@ -59,6 +59,7 @@ export function UserDropdown() {
       setIsLoggingOut(true);
       queryClient.cancelQueries();
       queryClient.clear();
+      useUserStore.getState().reset();
 
       // 1. Recuperar sesionId ANTES de limpiar el localStorage
       const sesionId = getStoredSesionId();

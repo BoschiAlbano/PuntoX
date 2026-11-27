@@ -34,7 +34,7 @@ await supabase.auth.setSession({ access_token, refresh_token });
 
 **¿Qué hace?** (`src/app/api/auth/login/route.ts`, desde 27/11/2026)
 1. ✅ Usuario ingresa **username** (no email)
-2. ✅ Límite de pedidos: 10/min por IP y 10 cada 15 min por usuario
+2. ✅ Límite de pedidos: 20/min por IP y 10 cada 15 min por usuario (el de usuario se reinicia con un login correcto). Al superarlo, el formulario muestra una cuenta regresiva
 3. ✅ El servidor busca el `Usuario` por `Nombre` y obtiene el email desde **Supabase Auth** (`admin.getUserById`). El email nunca llega al navegador.
 4. ✅ Valida la contraseña con `signInWithPassword` usando la clave secreta y reenvía la IP del usuario en `Sb-Forwarded-For`
 5. ❌ Contraseña incorrecta → suma un intento fallido (`src/lib/auth/intentosFallidos.ts`) y bloquea si llegó al umbral del tenant. Admins y superadmins nunca se bloquean solos.
