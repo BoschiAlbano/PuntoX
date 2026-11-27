@@ -31,7 +31,8 @@
 - [ ] **Prueba manual de planes** en la app: tenant Básico (bloquear 2da sucursal, 4to usuario, artículo 1.001) y tenant Pro/Ilimitado (nada bloqueado). Checklist en [saas/planes-saas-implementacion.md](saas/planes-saas-implementacion.md).
 - [ ] **Definir precios de los planes** (hoy de ejemplo: $25.000 / $40.000 / $60.000).
 - [x] **Interruptor "Alertar nuevo dispositivo"** — ahora visible en Configuración › Seguridad (se había quitado de la pantalla en un refactor) y conectado al aviso in-app de dispositivo nuevo. Activado por defecto.
-- [ ] **Landing / SEO**: crear `public/og-image.png` y reemplazar el handle `@puntox` de ejemplo en `src/app/page.tsx`.
+- [x] **Landing / SEO** (27/11/2026): imagen para compartir generada por código (`src/app/opengraph-image.tsx` y `twitter-image.tsx`, 1200x630, fuentes de la landing). `robots.txt` y `sitemap.xml` redirigían al login (también en producción) y Google no podía leerlos: ahora son públicos en el proxy. `robots` excluye las rutas reales de la app (antes `/(dashboard)/`, que no es una ruta) y se borró el `public/robots.txt` duplicado; el sitemap ya no lista `/login` ni `/register` (no existen). Todo con `www.puntox.com.ar`. Se quitaron el handle `@puntox` y los links de redes de ejemplo. Se borró la página de prueba `/pruebas`.
+- [ ] Agregar las redes reales (X, Instagram, LinkedIn) a la metadata y al JSON-LD de la landing cuando existan.
 
 ## 🔴 Prioridad 2 — Seguridad
 

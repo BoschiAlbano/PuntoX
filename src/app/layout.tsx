@@ -33,7 +33,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://puntox.com.ar"),
+  metadataBase: new URL("https://www.puntox.com.ar"),
   title: {
     default: "Punto X - Sistema de Gestión Empresarial",
     template: "%s | Punto X",

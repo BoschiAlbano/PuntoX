@@ -52,14 +52,7 @@ export const metadata: Metadata = {
     locale: "es_AR",
     siteName: "Punto X",
     url: "https://www.puntox.com.ar",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Punto X - Sistema de Gestión Empresarial",
-      },
-    ],
+    // La imagen la genera app/opengraph-image.tsx (1200x630)
   },
 
   // Twitter Card
@@ -68,8 +61,7 @@ export const metadata: Metadata = {
     title: "Punto X - Sistema de Gestión Integral",
     description:
       "Control total de tu negocio en una sola plataforma. Prueba gratuita.",
-    images: ["/og-image.png"], // TODO: Crear imagen para Twitter
-    creator: "@puntox", // TODO: Actualizar con tu handle
+    // Imagen: app/twitter-image.tsx. Sin `creator` hasta tener una cuenta real.
   },
 
   // Robots
@@ -126,11 +118,7 @@ export default function LandingPage() {
       contactType: "Sales",
       email: "Boschi.albano.jose@gmail.com",
     },
-    sameAs: [
-      "https://www.facebook.com/puntox",
-      "https://twitter.com/puntox",
-      "https://www.linkedin.com/company/puntox",
-    ],
+    // sameAs: agregar las URLs de las redes cuando existan cuentas reales
   };
 
   return (

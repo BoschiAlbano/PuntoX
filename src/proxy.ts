@@ -30,6 +30,12 @@ export async function proxy(req: NextRequest) {
     "/auth/confirm",
     "/recuperar-contrasena",
     "/restablecer-contrasena",
+    // SEO: los buscadores y las redes los leen sin sesión (antes redirigían
+    // al login y Google no podía leer robots.txt ni sitemap.xml).
+    "/robots.txt",
+    "/sitemap.xml",
+    "/opengraph-image",
+    "/twitter-image",
     // /seleccionar-sucursal requiere autenticación, no está en publicPaths
   ];
 
