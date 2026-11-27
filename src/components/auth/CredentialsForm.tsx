@@ -482,7 +482,7 @@ export default function CredentialsForm() {
           type="button"
           onClick={async () => {
             const supabase = getSupabaseBrowserClient();
-            await supabase.auth.signOut();
+            await supabase.auth.signOut({ scope: "local" });
             clearLoadingTimer();
             resetTransition();
             setShowMfa(false);

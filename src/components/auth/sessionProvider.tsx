@@ -157,7 +157,7 @@ export const SessionProviderComponent = ({
             setStatus("unauthenticated");
 
             // Cerrar sesión en Supabase (no bloqueante)
-            supabase.auth.signOut().catch((error) => {
+            supabase.auth.signOut({ scope: "local" }).catch((error) => {
               console.warn("[SessionProvider] Error al cerrar sesión:", error);
             });
 
@@ -416,7 +416,7 @@ export const SessionProviderComponent = ({
           );
           setSession(null);
           setStatus("unauthenticated");
-          supabase.auth.signOut().catch(() => {});
+          supabase.auth.signOut({ scope: "local" }).catch(() => {});
           setTimeout(() => {
             window.location.replace("/signin?reason=session_closed");
           }, 100);

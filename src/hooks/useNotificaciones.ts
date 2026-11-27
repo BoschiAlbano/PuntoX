@@ -17,7 +17,8 @@ export interface Notificacion {
 export function useNotificaciones() {
   const queryClient = useQueryClient();
 
-  // Polling cada 2 minutos = 120000ms
+  // Polling cada 30 s (solo con la pestaña visible) y al volver a la pestaña,
+  // para que los avisos (ej. inicio de sesión desde otro dispositivo) lleguen rápido.
   const query = useQuery({
     queryKey: ["notificaciones"],
     queryFn: async () => {
@@ -28,7 +29,9 @@ export function useNotificaciones() {
         pagination: { unreadCount: number; total: number };
       }>;
     },
-    refetchInterval: 120000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 
   const markAsReadMutation = useMutation({

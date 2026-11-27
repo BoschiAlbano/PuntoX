@@ -9,6 +9,7 @@
  */
 import prisma from "@/DB/prisma";
 import { notificarAdministradores, notificarUsuarios } from "./notificar";
+import { entidadAvisoNuevoDispositivo } from "@/lib/auth/sesionActual";
 
 export const ENTIDAD_SEGURIDAD = "SEGURIDAD";
 
@@ -56,6 +57,8 @@ export async function notificarNuevoDispositivo(params: {
   userAgent: string | null;
   dispositivo?: string | null;
   ipAddress: string;
+  /** Sesión que originó el aviso: esa sesión no lo muestra (ver /api/notificaciones). */
+  supabaseSessionId?: string | null;
   ahora?: Date;
 }): Promise<boolean> {
   try {
@@ -74,7 +77,9 @@ export async function notificarNuevoDispositivo(params: {
       mensaje: `Se inició sesión en tu cuenta desde ${donde}${ip} el ${fechaHora(params.ahora ?? new Date())}. Si no fuiste vos, cambiá tu contraseña y avisale a un administrador.`,
       accionUrl: "/configuracion",
       entidadTipo: ENTIDAD_SEGURIDAD,
-      entidadId: "NUEVO_DISPOSITIVO",
+      entidadId: params.supabaseSessionId
+        ? entidadAvisoNuevoDispositivo(params.supabaseSessionId)
+        : "NUEVO_DISPOSITIVO",
     });
     return true;
   } catch (error) {

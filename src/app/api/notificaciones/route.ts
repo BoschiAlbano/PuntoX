@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/DB/prisma";
 import { getAuthContext } from "@/lib/auth/getAuthUser";
 import { handleError } from "@/lib/errors/handler";
+import type { Prisma } from "../../../../prisma/generated/prisma";
+import {
+  entidadAvisoNuevoDispositivo,
+  supabaseSessionIdActual,
+} from "@/lib/auth/sesionActual";
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,21 +21,35 @@ export async function GET(req: NextRequest) {
 
     // Obtiene notificaciones (si es UsuarioId null es global para el admin, o bien específicas para el usuario)
     // Para simplificar, obtenemos las del Tenant donde UsuarioId = null O UsuarioId = current user
+    // El aviso de "dispositivo nuevo" no se muestra en la misma sesión que lo
+    // generó: es para los OTROS dispositivos del usuario. (EntidadId null o
+    // distinto: un "not" solo excluiría también las filas con EntidadId null.)
+    const sesionId = await supabaseSessionIdActual();
+    const where: Prisma.NotificacionWhereInput = {
+      TenantId: BigInt(tenantId),
+      AND: [
+        { OR: [{ UsuarioId: null }, { UsuarioId: BigInt(usuarioId) }] },
+        ...(sesionId
+          ? [
+              {
+                OR: [
+                  { EntidadId: null },
+                  { EntidadId: { not: entidadAvisoNuevoDispositivo(sesionId) } },
+                ],
+              },
+            ]
+          : []),
+      ],
+    };
+
     const notificaciones = await prisma.notificacion.findMany({
-      where: {
-        TenantId: BigInt(tenantId),
-        OR: [{ UsuarioId: null }, { UsuarioId: BigInt(usuarioId) }],
-      },
+      where,
       orderBy: { Fecha: "desc" },
       take: limit,
     });
 
     const unreadCount = await prisma.notificacion.count({
-      where: {
-        TenantId: BigInt(tenantId),
-        OR: [{ UsuarioId: null }, { UsuarioId: BigInt(usuarioId) }],
-        Leida: false,
-      },
+      where: { ...where, Leida: false },
     });
 
     // Convertimos a string BigInts

@@ -77,8 +77,9 @@ export function UserDropdown() {
       // 3. Limpiar TODO el estado del cliente (localStorage, sessionStorage, cookies)
       clearAllClientState();
 
-      // 4. Cerrar sesión en Supabase
-      await supabase.auth.signOut();
+      // 4. Cerrar sesión en Supabase SOLO en este dispositivo. Sin scope,
+      // signOut() es "global" y cierra la sesión en todos los dispositivos.
+      await supabase.auth.signOut({ scope: "local" });
 
       router.push("/signin");
     } catch (error) {

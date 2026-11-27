@@ -56,6 +56,15 @@ describe("notificarNuevoDispositivo", () => {
       "Se inició sesión en tu cuenta desde Chrome en Windows (IP 200.1.2.3) el 26/11, 20:30. Si no fuiste vos, cambiá tu contraseña y avisale a un administrador.",
     );
   });
+
+  it("marca el aviso con la sesión que lo generó (esa sesión no lo muestra)", async () => {
+    vi.mocked(prisma.configuracion.findFirst).mockResolvedValue({ AlertarNuevoDispositivo: true } as any);
+    await notificarNuevoDispositivo({
+      tenantId: 1n, usuarioId: 7n, userAgent: "Chrome/130 (Windows)", ipAddress: "1.2.3.4",
+      supabaseSessionId: "sess-abc",
+    });
+    expect(datosCreados()[0].EntidadId).toBe("NUEVO_DISPOSITIVO:sess-abc");
+  });
 });
 
 describe("avisos a administradores y usuarios", () => {

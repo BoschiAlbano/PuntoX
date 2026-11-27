@@ -5,7 +5,7 @@ import Image from "next/image";
 export default function page() {
   const handleLogout = async () => {
     const supabase = getSupabaseBrowserClient();
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "local" });
     redirect("/signin");
   };
   return (

@@ -280,6 +280,7 @@ export async function POST(req: NextRequest) {
         userAgent,
         dispositivo: dispositivo || null,
         ipAddress,
+        supabaseSessionId,
       });
     }
 

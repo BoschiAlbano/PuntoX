@@ -61,7 +61,7 @@ export default function ProtectRoute({
                   const trustedData = await trustedRes.json();
                   if (!trustedData?.isTrusted) {
                     console.warn("MFA Forzado: Intento de evasión detectado o sesión sin AAL2 en dispositivo no confiable. Expulsando...");
-                    await supabase.auth.signOut();
+                    await supabase.auth.signOut({ scope: "local" });
                     router.push("/signin");
                     return;
                   }
@@ -70,7 +70,7 @@ export default function ProtectRoute({
               } catch (e) {
                 console.error("Error validando dispositivo confiable en ProtectRoute", e);
                 // Ante la duda, si falla la API, lo expulsamos por seguridad
-                await supabase.auth.signOut();
+                await supabase.auth.signOut({ scope: "local" });
                 router.push("/signin");
                 return;
               }
